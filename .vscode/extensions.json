@@ -1,12 +1,8 @@
 {
-    "recommendations": [
-        "Jason2866.esp-decoder",
-        "ms-python.python",
-        "ms-python.vscode-pylance",
-        "pioarduino.pioarduino-ide",
-        "platformio.platformio-ide"
-    ],
-    "unwantedRecommendations": [
-        "ms-vscode.cpptools-extension-pack"
-    ]
+  "recommendations": [
+    "espressif.esp-idf-extension",
+    "Jason2866.esp-decoder",
+    "ms-python.python",
+    "ms-python.vscode-pylance"
+  ]
 }
