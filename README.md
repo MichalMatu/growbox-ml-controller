@@ -12,22 +12,60 @@ GPIO**.
 > This is an engineering demo, not a calibrated physical model or a validated controller for
 > unattended heaters, pumps, or other real equipment.
 
-## Architecture
+## How it works
 
-```text
-Python scenarios -> rollout teacher -> Keras MLP -> emlearn C model
-                                                    |
-Nodeflow provider (future) ---+                     v
-Dummy simulator (today) ------+-> FeatureEncoder -> ModelRuntime -> SafetySupervisor
-                                                                    |
-                                      Nodeflow ActionRegistry <-----+
-                                           (future adapter)
+The project has two separate phases. Python runs on the development computer to create and train the
+model. The ESP32 runs only the exported C model, applies independent safety rules, and feeds the safe
+result back into a local simulator. TensorFlow is not needed on the board.
+
+```mermaid
+flowchart TB
+    subgraph Host["Development computer"]
+        Contract["Data contract<br/>40 features and 4 outputs"] --> Simulation["Python simulator<br/>and rollout teacher"]
+        Simulation --> Training["Keras MLP training<br/>40 to 32 to 32 to 4"]
+        Training --> Export["emlearn C model"]
+    end
+
+    subgraph Board["ESP32-S3 control cycle"]
+        Input["Sensors, validity, targets,<br/>and actuator capabilities"] --> Encoder["FeatureEncoder<br/>clamp and normalize"]
+        Encoder --> Runtime["ModelRuntime<br/>emlearn inference"]
+        Runtime --> Raw["Raw ML proposal<br/>heater, fan, humidifier, irrigation"]
+        Raw --> Safety["SafetySupervisor<br/>deterministic hard limits"]
+        Input --> Safety
+        Safety --> Safe["Safe control decision"]
+        Safe --> Demo["Demo simulator<br/>no GPIO"]
+        Demo --> Input
+        Safe --> Log["One NDJSON decision line"]
+    end
+
+    Contract --> Encoder
+    Export --> Runtime
 ```
 
-The reusable `lib/environment_control` library has no dependency on Arduino, `Serial`,
-ArduinoJson, GPIO, Wi-Fi, FreeRTOS, sensor drivers, actuator drivers, or the demo simulator. It uses
-fixed-size structures and performs no dynamic allocation during inference. See
-[Architecture](docs/ARCHITECTURE.md).
+Every control cycle follows the same five steps:
+
+1. The demo simulator, or an external replay command, provides sensor readings, validity masks,
+   targets, enclosure parameters, and actuator capabilities.
+2. `FeatureEncoder` converts that state into the exact 40-element model input. Values are clamped to
+   the contract ranges and normalized to `0..1`. A masked sensor uses its contract default, while
+   `NaN` or infinity sends the controller to a fail-safe path.
+3. `ModelRuntime` verifies the schema hash and input/output sizes, then runs the committed emlearn
+   model. The MLP produces four continuous proposals in `0..1`.
+4. `SafetySupervisor` treats those values as suggestions. It disables unavailable devices, switches
+   the heater off when temperature is missing or too high, enforces the alarm fan minimum, applies
+   binary ON/OFF timing, and limits irrigation pulses and their minimum interval.
+5. Firmware logs both `raw_output` and `safe_output`. In `closed_loop` mode only the safe result is
+   applied to the simulator; in `replay` mode the next sensor state comes from Serial input.
+
+For example, the model may propose `heater = 0.78`, but the safe result will still be `heater = 0`
+when the heater is unavailable or the enclosure is above the configured temperature limit. The log
+also records the reason for every safety modification.
+
+The demonstration executes one control cycle per wall-clock second, representing ten simulated
+seconds. It never configures or writes GPIO. The reusable `lib/environment_control` library has no
+dependency on Arduino, `Serial`, ArduinoJson, GPIO, Wi-Fi, FreeRTOS, sensor drivers, actuator
+drivers, or the demo simulator. It uses fixed-size structures and performs no dynamic allocation
+during inference. See [Architecture](docs/ARCHITECTURE.md) for the detailed component boundaries.
 
 ## Hardware and software
 
