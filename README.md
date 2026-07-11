@@ -3,20 +3,19 @@
 Production-oriented TinyML environment-controller demo for ESP32-S3, designed for future GrowClip
 Nodeflow integration.
 
-The project trains a small neural-network controller on deterministic, physically inspired
-growbox simulations, exports it to portable C with emlearn, and runs that exact generated model on
-an ESP32-S3-DevKitC-1. A separate deterministic safety supervisor remains in control of hard
-limits. The demonstration firmware only drives its local simulator: **it never configures or writes
-GPIO**.
+The project trains a small neural-network controller on deterministic, physically inspired growbox
+simulations, exports it to portable C with emlearn, and runs that exact generated model in a native
+ESP-IDF application. A separate deterministic safety supervisor remains in control of hard limits.
+The demonstration firmware only drives its local simulator: **it never configures or writes GPIO**.
 
 > This is an engineering demo, not a calibrated physical model or a validated controller for
 > unattended heaters, pumps, or other real equipment.
 
 ## How it works
 
-The project has two separate phases. Python runs on the development computer to create and train the
-model. The ESP32 runs only the exported C model, applies independent safety rules, and feeds the safe
-result back into a local simulator. TensorFlow is not needed on the board.
+Python runs on the development computer to create and train the model. The ESP32-S3 runs only the
+exported C model, applies independent safety rules, and feeds the safe result back into a local
+simulator. TensorFlow is not needed on the board.
 
 ```mermaid
 flowchart TB
@@ -25,11 +24,10 @@ flowchart TB
         Simulation --> Training["Keras MLP training<br/>40 to 32 to 32 to 4"]
         Training --> Export["emlearn C model"]
     end
-
-    subgraph Board["ESP32-S3 control cycle"]
+    subgraph Board["ESP32-S3 / ESP-IDF"]
         Input["Sensors, validity, targets,<br/>and actuator capabilities"] --> Encoder["FeatureEncoder<br/>clamp and normalize"]
         Encoder --> Runtime["ModelRuntime<br/>emlearn inference"]
-        Runtime --> Raw["Raw ML proposal<br/>heater, fan, humidifier, irrigation"]
+        Runtime --> Raw["Raw ML proposal"]
         Raw --> Safety["SafetySupervisor<br/>deterministic hard limits"]
         Input --> Safety
         Safety --> Safe["Safe control decision"]
@@ -37,7 +35,6 @@ flowchart TB
         Demo --> Input
         Safe --> Log["One NDJSON decision line"]
     end
-
     Contract --> Encoder
     Export --> Runtime
 ```
@@ -46,112 +43,108 @@ Every control cycle follows the same five steps:
 
 1. The demo simulator, or an external replay command, provides sensor readings, validity masks,
    targets, enclosure parameters, and actuator capabilities.
-2. `FeatureEncoder` converts that state into the exact 40-element model input. Values are clamped to
-   the contract ranges and normalized to `0..1`. A masked sensor uses its contract default, while
-   `NaN` or infinity sends the controller to a fail-safe path.
-3. `ModelRuntime` verifies the schema hash and input/output sizes, then runs the committed emlearn
-   model. The MLP produces four continuous proposals in `0..1`.
-4. `SafetySupervisor` treats those values as suggestions. It disables unavailable devices, switches
-   the heater off when temperature is missing or too high, enforces the alarm fan minimum, applies
-   binary ON/OFF timing, and limits irrigation pulses and their minimum interval.
-5. Firmware logs both `raw_output` and `safe_output`. In `closed_loop` mode only the safe result is
-   applied to the simulator; in `replay` mode the next sensor state comes from Serial input.
+2. `FeatureEncoder` converts that state into the exact 40-element input vector. Values are clamped
+   to contract ranges and normalized to `0..1`.
+3. `ModelRuntime` verifies schema identity and dimensions, then runs the committed generated model.
+4. `SafetySupervisor` treats model outputs as suggestions and independently enforces availability,
+   temperature limits, binary dwell times, and irrigation limits.
+5. Firmware logs both `raw_output` and `safe_output`. Only the safe result is applied to the demo
+   simulator.
 
-For example, the model may propose `heater = 0.78`, but the safe result will still be `heater = 0`
-when the heater is unavailable or the enclosure is above the configured temperature limit. The log
-also records the reason for every safety modification.
+The reusable `lib/environment_control` library has no dependency on ESP-IDF, Arduino, serial I/O,
+JSON, GPIO, Wi-Fi, FreeRTOS, sensor drivers, actuator drivers, or the simulator. See
+[Architecture](docs/ARCHITECTURE.md).
 
-The demonstration executes one control cycle per wall-clock second, representing ten simulated
-seconds. It never configures or writes GPIO. The reusable `lib/environment_control` library has no
-dependency on Arduino, `Serial`, ArduinoJson, GPIO, Wi-Fi, FreeRTOS, sensor drivers, actuator
-drivers, or the demo simulator. It uses fixed-size structures and performs no dynamic allocation
-during inference. See [Architecture](docs/ARCHITECTURE.md) for the detailed component boundaries.
+## Firmware stack
 
-## Hardware and software
+- ESP-IDF 5.5.1 baseline in CI.
+- ESP32-S3 target, C++17 application and controller components.
+- ESP-IDF `json` component for the bounded NDJSON demo protocol.
+- ESP-IDF UART, monotonic timer, FreeRTOS, and heap APIs.
+- A narrow in-tree emlearn-compatible runtime pinned to the exact upstream revision used by the
+  generated model.
+- No Arduino framework and no PlatformIO firmware build.
 
-- ESP32-S3-DevKitC-1; PlatformIO's
-  [`esp32-s3-devkitc-1` board definition](https://docs.platformio.org/en/latest/boards/espressif32/esp32-s3-devkitc-1.html)
-  targets the N8 module (8 MB quad flash, no PSRAM).
-- A data-capable USB cable connected to the board's USB-to-UART port.
-- VS Code with the recommended PlatformIO extension, or PlatformIO Core on `PATH`.
-- Python 3.11 and the pinned packages in `requirements-lock.txt`.
+The default profile is an ESP32-S3-DevKitC-1 with an N8 module: 8 MB quad flash and no PSRAM. An
+explicit N32R16V profile is provided for modules marked `ESP32-S3-WROOM-2-N32R16V`. Do not select the
+octal flash/PSRAM profile for N8 or N8R8 hardware.
 
-Check the module marking before using a different memory profile. On octal flash/PSRAM variants,
-GPIO35 through GPIO37 can be reserved internally. The demo avoids all GPIO, including the RGB LED,
-so board-revision LED routing does not affect the smoke test. Refer to Espressif's
-[ESP32-S3-DevKitC-1 v1.1 guide](https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32s3/esp32-s3-devkitc-1/user_guide_v1.1.html).
+## Prerequisites
 
-An optional `esp32s3-devkitc1-n32r16v` environment is provided for the module explicitly marked
-`ESP32-S3-WROOM-2-N32R16V`. It uses 32 MB octal flash, 16 MB octal PSRAM, a 32 MB partition table,
-and USB Serial/JTAG CDC. It is never selected by default; do not use it for an N8/N8R8 board.
+- ESP-IDF 5.5.1 installed and exported into the active shell.
+- CMake and a host C++17 compiler for portable tests.
+- Python 3.11 and the pinned packages in `requirements-lock.txt` for training and analysis.
+- A data-capable USB cable connected to the development board's USB-to-UART port.
+
+For a standard ESP-IDF installation, activate it before running firmware commands:
+
+```bash
+. "$HOME/esp/esp-idf/export.sh"
+idf.py --version
+```
 
 ## Quick start
-
-Run these commands from the repository root:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -r requirements-lock.txt
+
 python -m tools.ml.pipeline --quick
-pio test -e native
-pio run -e esp32s3-devkitc1-n8
-pio run -e esp32s3-devkitc1-n8 -t upload
-pio device monitor -b 115200
+cmake -S test/host -B build/host-tests
+cmake --build build/host-tests --parallel
+ctest --test-dir build/host-tests --output-on-failure
+
+idf.py -B build/idf -D GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n8 build
+idf.py -B build/idf -p /dev/cu.usbserial-10 flash monitor
 ```
 
-For a verified N32R16V module, replace the environment in the build/upload commands:
+Equivalent shortcuts are available through `make setup`, `make train-quick`, `make test`,
+`make build`, `make flash`, and `make monitor`.
+
+## Optional N32R16V build
+
+Only for a module explicitly marked `ESP32-S3-WROOM-2-N32R16V`:
 
 ```bash
-pio run -e esp32s3-devkitc1-n32r16v
-pio run -e esp32s3-devkitc1-n32r16v -t upload
-pio device monitor -b 115200
+idf.py -B build/idf-n32r16v \
+  -D "SDKCONFIG_DEFAULTS=sdkconfig.defaults.n32r16v" \
+  -D GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n32r16v \
+  build
 ```
 
-If `pio` is not on `PATH` but the VS Code PlatformIO extension is installed, use its Core binary on
-macOS/Linux:
+The profile enables 32 MB octal flash and octal PSRAM. The default build remains the safer N8/no-
+PSRAM configuration.
 
-```bash
-~/.platformio/penv/bin/pio run -e esp32s3-devkitc1-n8
+## Project layout
+
+```text
+components/emlearn_runtime/       minimal pinned inference runtime
+lib/environment_control/          portable controller ESP-IDF component and package
+src/                              ESP-IDF application component
+src/demo/                         simulator and bounded UART/JSON adapter
+schemas/                          versioned model/controller contract
+tools/ml/                         simulation, training, export, parity checks
+tools/serial/                     capture and replay tools
+test/host/                        CMake/CTest harness
+test/test_environment_controller/ portable controller test cases
+tests/                            Python tests and golden fixtures
 ```
 
-## VS Code workflow
-
-1. Open this repository as the VS Code folder and install the recommended extensions.
-2. Create and select `.venv` as the Python interpreter.
-3. Run `PlatformIO: Build` or use the PlatformIO toolbar for the
-   `esp32s3-devkitc1-n8` environment.
-4. Select the USB-to-UART port before Upload/Monitor if multiple serial devices are present.
-
-PlatformIO downloads the pinned Espressif platform and ArduinoJson version declared in
-`platformio.ini`. A system-wide Arduino installation is not needed.
-
-## Python setup on macOS
-
-The quick-start virtual environment keeps TensorFlow, emlearn, NumPy, and test dependencies out of
-the system Python. The pinned TensorFlow 2.21 package provides a macOS arm64 wheel but no Intel
-macOS wheel; use a native Apple Silicon Python process rather than Rosetta. Command Line Tools are
-required for the exported-model host compiler check:
-
-```bash
-xcode-select --install
-file "$(command -v python3)"
-```
-
-Recreate `.venv` after changing Python architecture or minor version; do not mix packages from
-another environment.
+The root `CMakeLists.txt` registers `src/` and `lib/environment_control` as ESP-IDF components.
+`library.json` remains in the portable library because LiteGraph is still expected to consume an
+immutable release of that library through its PlatformIO build.
 
 ## Training and export
 
-The quick profile trains a real, compact two-hidden-layer MLP and exercises the complete export
-path on a small deterministic dataset:
+The quick profile exercises the complete deterministic path with a small dataset:
 
 ```bash
 python -m tools.ml.pipeline --quick
 ```
 
-Use the larger scenario/epoch budget for an offline training run:
+Use the larger scenario and epoch budget for an offline run:
 
 ```bash
 python -m tools.ml.pipeline --full
@@ -159,31 +152,37 @@ python -m tools.ml.pipeline --full
 
 Both modes generate whole time-series scenarios, split by scenario seed, label them with a
 deterministic finite-action rollout teacher, train and test Keras, export via emlearn, and compare
-Python with compiled-C predictions. The generated firmware model, manifest, and small golden
-vectors are committed; large datasets and working model files are ignored. See
+Python predictions with compiled-C predictions. Generated firmware model headers, metadata, and
+small golden vectors are committed; large datasets and working model files are ignored. See
 [Model pipeline](docs/MODEL_PIPELINE.md).
 
-## Build, upload, and monitor
+## Build, flash, and monitor
 
 ```bash
-pio test -e native
-pio run -e esp32s3-devkitc1-n8
-pio run -e esp32s3-devkitc1-n8 -t upload
-pio device monitor -b 115200
+idf.py -B build/idf build
+idf.py -B build/idf -p /dev/cu.usbserial-10 flash
+idf.py -B build/idf -p /dev/cu.usbserial-10 monitor
 ```
 
-Add `--upload-port /dev/cu.usbserial-10` or the appropriate local device when automatic selection
-is ambiguous. Upload uses `esptool`; monitoring is 115200 baud.
-
-On boot, firmware emits one startup NDJSON object containing the schema/model identity, followed by
-one decision object per step. One wall-clock second represents a ten-second simulation step. Every
-record occupies exactly one line, making it safe to stream into the host tools.
+On boot, firmware emits one startup NDJSON object containing framework, ESP-IDF, schema, model, and
+board-profile identity. It then emits one decision object per step. One wall-clock second represents
+a ten-second simulation step.
 
 ## Serial protocol and scenarios
 
-Commands are one JSON object per line. Supported operations are `status`, `reset`, `seed`, `pause`,
-`resume`, `step`, `target`, `load_scenario`, and `mode` (`closed_loop` or `replay`). Firmware uses a
-bounded line buffer and returns an error record for oversized, malformed, or unsupported input.
+Commands are one JSON object per line. Supported operations remain:
+
+- `status`
+- `reset`
+- `seed`
+- `pause` and `resume`
+- `step`
+- `target`
+- `load_scenario`
+- `mode` with `closed_loop` or `replay`
+
+The ESP-IDF UART adapter uses a bounded 1536-byte line buffer and returns structured errors for
+oversized, malformed, or unsupported input.
 
 Replay a committed scenario and save the bidirectional session:
 
@@ -194,7 +193,7 @@ python -m tools.serial.replay \
   --output logs/nominal-session.ndjson
 ```
 
-Capture autonomous output until Ctrl+C:
+Capture autonomous output until interrupted:
 
 ```bash
 python -m tools.serial.capture \
@@ -209,15 +208,12 @@ Analyse a capture and optionally export decision rows to CSV:
 python -m tools.analysis.report logs/closed-loop.ndjson --csv logs/closed-loop.csv
 ```
 
-The report validates records and summarizes target error, safety modifications, inference errors,
-output oscillation, and inference latency.
-
 ## Contract and availability
 
 `schemas/environment-controller-v1.json` is the single source of truth for field names, order,
-units, ranges, defaults, and model inputs/outputs. Generation embeds its canonical short hash in
-the C++ schema metadata, model, manifest, firmware, and startup logs. Firmware rejects a model built
-for a different hash.
+units, ranges, defaults, and model inputs/outputs. Generation embeds its canonical short hash in the
+C++ schema metadata, model, manifest, firmware, and startup logs. Firmware rejects a model built for
+a different contract identity.
 
 After changing the contract, regenerate its C++ view before retraining:
 
@@ -226,7 +222,7 @@ python tools/schema/generate_environment_schema.py
 python -m tools.ml.pipeline --quick
 ```
 
-Each sensor has an independent validity mask. A missing actuator is represented in configuration by
+Each sensor has an independent validity mask. A missing actuator is represented by
 `available: false` and zero maximum capability. The encoder exposes this to the model, while the
 safety supervisor independently forces that actuator's final output to zero. See
 [Data contract](docs/DATA_CONTRACT.md).
@@ -235,15 +231,16 @@ safety supervisor independently forces that actuator's final output to zero. See
 
 ```bash
 python -m pytest
-python -m tools.ml.pipeline --quick
-pio test -e native
-pio run -e esp32s3-devkitc1-n8
+python tools/schema/generate_environment_schema.py --check
+python -m tools.ml.pipeline --quick --check-generated
+cmake -S test/host -B build/host-tests
+cmake --build build/host-tests --parallel
+ctest --test-dir build/host-tests --output-on-failure
+idf.py -B build/idf build
 ```
 
-CI runs these checks without a physical board. It requires byte-identical regenerated model and
-manifest headers, exact golden metadata/order, and numerically equivalent golden predictions across
-CPU math kernels. Native tests cover feature order/ranges, invalid inputs, actuator masking, safety
-alarms and timing, model/schema identity, golden inference, and output bounds.
+CI runs Python validation, deterministic model regeneration, compiled-C golden-vector parity tests,
+and an ESP-IDF 5.5.1 ESP32-S3 firmware build. No physical board is required for CI.
 
 ## Demo limitations
 
@@ -252,21 +249,16 @@ alarms and timing, model/schema identity, golden inference, and output bounds.
 - The v1 teacher is a short-horizon deterministic search, not model-predictive control or RL.
 - The exported float model favors a transparent demonstration over aggressive quantization.
 - No physical sensors or actuators are connected, calibrated, or driven.
-- Upload and serial smoke testing require a locally attached board; CI only builds firmware.
+- Flashing and serial smoke testing require a locally attached board.
 
 ## GrowClip Nodeflow path
 
 A future integration with `MichalMatu/esp32s3_LiteGraph` will replace the dummy simulator with a
-provider adapter and pass safe decisions to `ActionRegistry`. The encoder, runtime, supervisor,
-schema identity checks, and fixed-size public types should move unchanged. No integration with that
-repository is implemented here. See [Porting to LiteGraph](docs/PORTING_TO_LITEGRAPH.md).
-
-## Convenience targets
-
-`make setup`, `make train-quick`, `make train-full`, `make test`, `make build`, `make upload`,
-`make monitor`, and `make clean` wrap the documented commands. Override `PIO` when necessary, for
-example `make build PIO="$HOME/.platformio/penv/bin/pio"`.
+provider adapter and pass safe decisions to a typed actuator bridge. The encoder, runtime,
+supervisor, schema identity checks, and fixed-size public types should move unchanged. No integration
+with that repository is implemented here. See [Porting to LiteGraph](docs/PORTING_TO_LITEGRAPH.md).
 
 ## License
 
-Released under the [MIT License](LICENSE).
+Released under the [MIT License](LICENSE). The in-tree emlearn runtime subset retains its upstream
+MIT notice in `components/emlearn_runtime/LICENSE`.
