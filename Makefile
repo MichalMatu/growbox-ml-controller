@@ -1,8 +1,12 @@
 PYTHON ?= python3
-PIO ?= pio
+IDF_PY ?= idf.py
 VENV ?= .venv
+IDF_BUILD_DIR ?= build/idf
+HOST_BUILD_DIR ?= build/host-tests
+N32R16V_BUILD_DIR ?= build/idf-n32r16v
 
-.PHONY: setup train-quick train-full test build upload monitor clean
+.PHONY: setup train-quick train-full test test-python test-host build build-n32r16v \
+        flash monitor flash-monitor menuconfig clean
 
 setup:
 	$(PYTHON) -m venv $(VENV)
@@ -15,19 +19,35 @@ train-quick:
 train-full:
 	$(VENV)/bin/python -m tools.ml.pipeline --full
 
-test:
+test: test-python test-host
+
+test-python:
 	$(VENV)/bin/python -m pytest
-	$(PIO) test -e native
+
+test-host:
+	cmake -S test/host -B $(HOST_BUILD_DIR)
+	cmake --build $(HOST_BUILD_DIR) --parallel
+	ctest --test-dir $(HOST_BUILD_DIR) --output-on-failure
 
 build:
-	$(PIO) run -e esp32s3-devkitc1-n8
+	$(IDF_PY) -B $(IDF_BUILD_DIR) -D GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n8 build
 
-upload:
-	$(PIO) run -e esp32s3-devkitc1-n8 -t upload
+build-n32r16v:
+	$(IDF_PY) -B $(N32R16V_BUILD_DIR) \
+		-D "SDKCONFIG_DEFAULTS=sdkconfig.defaults.n32r16v" \
+		-D GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n32r16v build
+
+flash:
+	$(IDF_PY) -B $(IDF_BUILD_DIR) flash
 
 monitor:
-	$(PIO) device monitor -b 115200
+	$(IDF_PY) -B $(IDF_BUILD_DIR) monitor
+
+flash-monitor:
+	$(IDF_PY) -B $(IDF_BUILD_DIR) flash monitor
+
+menuconfig:
+	$(IDF_PY) -B $(IDF_BUILD_DIR) menuconfig
 
 clean:
-	$(PIO) run -t clean
-	rm -rf .pio build .pytest_cache .coverage htmlcov artifacts
+	rm -rf build sdkconfig sdkconfig.old managed_components dependencies.lock
