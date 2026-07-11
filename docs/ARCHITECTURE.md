@@ -3,13 +3,13 @@
 ## Design goals
 
 The repository separates a portable, deterministic controller from every deployment concern. The
-same `environment_control` library is used by the ESP32-S3 demonstration and is intended to move
-unchanged into GrowClip Nodeflow. The library does not include Arduino headers and does not depend
-on serial I/O, JSON, GPIO, Wi-Fi, FreeRTOS, a sensor driver, an actuator driver, or either simulator.
+same `environment_control` library is used by the ESP-IDF demonstration and is intended to move
+unchanged into GrowClip Nodeflow. The library does not depend on ESP-IDF, Arduino, serial I/O, JSON,
+GPIO, networking, FreeRTOS, a sensor driver, an actuator driver, or either simulator.
 
 ```text
-Demo today                                      GrowClip later
------------                                     --------------
+Standalone ESP-IDF demo                         GrowClip later
+----------------------                         --------------
 DummyEnvironmentSimulator                      Nodeflow sensor providers
              |                                               |
              +--------------- ControllerInput ---------------+
@@ -23,8 +23,19 @@ DummyEnvironmentSimulator                      Nodeflow sensor providers
                            SafeControlDecision
              +------------------------+-----------------------+
              |                                                |
-Demo simulator adapter                           Nodeflow ActionRegistry
+Demo simulator adapter                           Nodeflow actuator bridge
 ```
+
+## ESP-IDF project boundary
+
+The root is a native ESP-IDF project targeting ESP32-S3. `src/` is registered as the application
+component, `lib/environment_control` is a separate portable component, and
+`components/emlearn_runtime` provides only the dense-network API required by the generated model.
+The current CI firmware baseline is ESP-IDF 5.5.1.
+
+The application component owns UART setup, monotonic scheduling, cJSON parsing/serialization,
+heap diagnostics, and the local demo lifecycle. It executes one controller cycle per wall-clock
+second, representing ten simulated seconds. No code path configures or writes GPIO.
 
 ## Layers
 
@@ -51,9 +62,10 @@ exceptions.
 
 ### Demonstration firmware
 
-The Arduino application runs a local closed loop against `DummyEnvironmentSimulator`. It uses
-ArduinoJson only to parse bounded serial commands and serialize NDJSON records. No code path drives
-GPIO. The simulator is an adapter and is not linked into the controller library.
+The ESP-IDF application runs a local closed loop against `DummyEnvironmentSimulator`. It uses the
+built-in `json` component only to parse bounded serial commands and serialize NDJSON records. The
+UART adapter is outside the controller library, and the simulator is not linked into the portable
+component.
 
 ### Host pipeline
 
@@ -61,6 +73,9 @@ The Python pipeline generates complete time-series scenarios, labels them with a
 finite-action rollout teacher, trains a small regression MLP, exports it through emlearn, compares
 Python and compiled-C predictions on golden vectors, and writes deterministic generated headers.
 Splits are by scenario seed, so steps from one simulated run cannot cross data partitions.
+
+Portable C++ tests use ordinary CMake and CTest. They compile the same controller sources and the
+same generated model as the firmware build.
 
 ## Safety boundary
 
