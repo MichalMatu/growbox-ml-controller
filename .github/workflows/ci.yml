@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 jobs:
-  test-and-build:
+  host-tests:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:
@@ -44,8 +44,26 @@ jobs:
           python -m tools.ml.pipeline --quick --check-generated
           git diff --exit-code
 
-      - name: Run portable C++ tests
-        run: pio test -e native
+      - name: Configure portable C++ tests
+        run: cmake -S test/host -B build/host-tests
 
-      - name: Build ESP32-S3 N8 firmware
-        run: pio run -e esp32s3-devkitc1-n8
+      - name: Build portable C++ tests
+        run: cmake --build build/host-tests --parallel
+
+      - name: Run portable C++ tests
+        run: ctest --test-dir build/host-tests --output-on-failure
+
+  esp-idf-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Check out source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Build ESP32-S3 firmware with ESP-IDF 5.5.1
+        uses: espressif/esp-idf-ci-action@v1
+        with:
+          esp_idf_version: v5.5.1
+          target: esp32s3
+          path: .
+          command: idf.py -B build/idf-ci -D GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n8 build
