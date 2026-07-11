@@ -2,27 +2,34 @@
 
 #include "EnvironmentSchema.h"
 
-#include <ArduinoJson.h>
+#include <cJSON.h>
 
 #include <cmath>
 #include <cstring>
+#include <limits>
 
 namespace growbox {
 namespace demo {
-
 namespace {
 
-using ArduinoJson::JsonDocument;
-using ArduinoJson::JsonObjectConst;
-using ArduinoJson::JsonVariantConst;
 using control::schema::FeatureIndex;
 
-bool readFiniteFloat(JsonObjectConst object, const char* key, float& destination) noexcept {
-  const JsonVariantConst value = object[key];
-  if (value.isNull() || !value.is<float>()) {
+const cJSON* item(const cJSON* object, const char* key) noexcept {
+  return cJSON_IsObject(object) ? cJSON_GetObjectItemCaseSensitive(object, key) : nullptr;
+}
+
+const cJSON* objectItem(const cJSON* object, const char* key) noexcept {
+  const cJSON* value = item(object, key);
+  return cJSON_IsObject(value) ? value : nullptr;
+}
+
+bool readFiniteFloat(const cJSON* object, const char* key, float& destination) noexcept {
+  const cJSON* value = item(object, key);
+  if (!cJSON_IsNumber(value) || !std::isfinite(value->valuedouble) ||
+      std::fabs(value->valuedouble) > std::numeric_limits<float>::max()) {
     return false;
   }
-  const float parsed = value.as<float>();
+  const float parsed = static_cast<float>(value->valuedouble);
   if (!std::isfinite(parsed)) {
     return false;
   }
@@ -30,17 +37,34 @@ bool readFiniteFloat(JsonObjectConst object, const char* key, float& destination
   return true;
 }
 
-bool readBool(JsonObjectConst object, const char* key, bool& destination) noexcept {
-  const JsonVariantConst value = object[key];
-  if (!value.is<bool>()) {
+bool readBool(const cJSON* object, const char* key, bool& destination) noexcept {
+  const cJSON* value = item(object, key);
+  if (!cJSON_IsBool(value)) {
     return false;
   }
-  destination = value.as<bool>();
+  destination = cJSON_IsTrue(value);
   return true;
 }
 
-bool parseSensors(JsonObjectConst object, control::SensorState& sensors) noexcept {
-  return readFiniteFloat(object, control::schema::wireKey(FeatureIndex::AirTemperatureC),
+bool readUnsigned(const cJSON* object, const char* key, std::uint32_t& destination) noexcept {
+  const cJSON* value = item(object, key);
+  if (!cJSON_IsNumber(value) || !std::isfinite(value->valuedouble) || value->valuedouble < 0.0 ||
+      value->valuedouble > static_cast<double>(std::numeric_limits<std::uint32_t>::max()) ||
+      std::floor(value->valuedouble) != value->valuedouble) {
+    return false;
+  }
+  destination = static_cast<std::uint32_t>(value->valuedouble);
+  return true;
+}
+
+const char* readString(const cJSON* object, const char* key) noexcept {
+  const cJSON* value = item(object, key);
+  return cJSON_IsString(value) && value->valuestring != nullptr ? value->valuestring : nullptr;
+}
+
+bool parseSensors(const cJSON* object, control::SensorState& sensors) noexcept {
+  return object != nullptr &&
+         readFiniteFloat(object, control::schema::wireKey(FeatureIndex::AirTemperatureC),
                          sensors.air_temperature_c) &&
          readFiniteFloat(object, control::schema::wireKey(FeatureIndex::AirHumidityPct),
                          sensors.air_humidity_pct) &&
@@ -53,8 +77,9 @@ bool parseSensors(JsonObjectConst object, control::SensorState& sensors) noexcep
                          sensors.outside_humidity_pct);
 }
 
-bool parseValidity(JsonObjectConst object, control::SensorValidity& validity) noexcept {
-  return readBool(object, control::schema::wireKey(FeatureIndex::AirTemperatureValid),
+bool parseValidity(const cJSON* object, control::SensorValidity& validity) noexcept {
+  return object != nullptr &&
+         readBool(object, control::schema::wireKey(FeatureIndex::AirTemperatureValid),
                   validity.air_temperature) &&
          readBool(object, control::schema::wireKey(FeatureIndex::AirHumidityValid),
                   validity.air_humidity) &&
@@ -67,8 +92,9 @@ bool parseValidity(JsonObjectConst object, control::SensorValidity& validity) no
                   validity.outside_humidity);
 }
 
-bool parseEnvironment(JsonObjectConst object, control::EnvironmentConfig& config) noexcept {
-  return readFiniteFloat(object, control::schema::wireKey(FeatureIndex::GrowboxVolumeM3),
+bool parseEnvironment(const cJSON* object, control::EnvironmentConfig& config) noexcept {
+  return object != nullptr &&
+         readFiniteFloat(object, control::schema::wireKey(FeatureIndex::GrowboxVolumeM3),
                          config.growbox_volume_m3) &&
          readFiniteFloat(object, control::schema::wireKey(FeatureIndex::ThermalMassJPerK),
                          config.thermal_mass_j_per_k) &&
@@ -78,8 +104,9 @@ bool parseEnvironment(JsonObjectConst object, control::EnvironmentConfig& config
                          config.air_leak_rate_ach);
 }
 
-bool parseCultivation(JsonObjectConst object, control::CultivationConfig& config) noexcept {
-  return readFiniteFloat(object, control::schema::wireKey(FeatureIndex::PotVolumeL),
+bool parseCultivation(const cJSON* object, control::CultivationConfig& config) noexcept {
+  return object != nullptr &&
+         readFiniteFloat(object, control::schema::wireKey(FeatureIndex::PotVolumeL),
                          config.pot_volume_l) &&
          readFiniteFloat(object, control::schema::wireKey(FeatureIndex::SubstrateWaterCapacityMl),
                          config.substrate_water_capacity_ml) &&
@@ -87,16 +114,21 @@ bool parseCultivation(JsonObjectConst object, control::CultivationConfig& config
                          config.transpiration_factor);
 }
 
-bool parseTargets(JsonObjectConst object, control::ControlTargets& targets,
-                  bool require_all) noexcept {
+bool parseTargets(const cJSON* object, control::ControlTargets& targets, bool require_all) noexcept {
+  if (object == nullptr) {
+    return false;
+  }
+
   bool parsed_any = false;
   auto read_optional = [&](const char* key, float& destination) {
-    if (object[key].isNull()) {
+    const cJSON* value = item(object, key);
+    if (value == nullptr || cJSON_IsNull(value)) {
       return !require_all;
     }
     parsed_any = true;
     return readFiniteFloat(object, key, destination);
   };
+
   const bool valid =
       read_optional(control::schema::wireKey(FeatureIndex::TargetAirTemperatureC),
                     targets.air_temperature_c) &&
@@ -108,32 +140,35 @@ bool parseTargets(JsonObjectConst object, control::ControlTargets& targets,
   return valid && (require_all || parsed_any);
 }
 
-bool parsePrevious(JsonObjectConst object, control::PreviousControlState& previous) noexcept {
-  return readFiniteFloat(object, control::schema::wireKey(FeatureIndex::PreviousHeater),
+bool parsePrevious(const cJSON* object, control::PreviousControlState& previous) noexcept {
+  return object != nullptr &&
+         readFiniteFloat(object, control::schema::wireKey(FeatureIndex::PreviousHeater),
                          previous.heater) &&
-         readFiniteFloat(object, control::schema::wireKey(FeatureIndex::PreviousFan),
-                         previous.fan) &&
+         readFiniteFloat(object, control::schema::wireKey(FeatureIndex::PreviousFan), previous.fan) &&
          readFiniteFloat(object, control::schema::wireKey(FeatureIndex::PreviousHumidifier),
                          previous.humidifier) &&
          readFiniteFloat(object, control::schema::wireKey(FeatureIndex::PreviousIrrigation),
                          previous.irrigation);
 }
 
-bool parseActuators(JsonObjectConst object, control::ActuatorCapabilities& actuators) noexcept {
-  const JsonObjectConst heater = object[control::schema::kWireObjectHeater].as<JsonObjectConst>();
-  const JsonObjectConst fan = object[control::schema::kWireObjectFan].as<JsonObjectConst>();
-  const JsonObjectConst humidifier =
-      object[control::schema::kWireObjectHumidifier].as<JsonObjectConst>();
-  const JsonObjectConst irrigation =
-      object[control::schema::kWireObjectIrrigation].as<JsonObjectConst>();
-  if (heater.isNull() || fan.isNull() || humidifier.isNull() || irrigation.isNull()) {
+bool parseActuators(const cJSON* object, control::ActuatorCapabilities& actuators) noexcept {
+  if (object == nullptr) {
     return false;
   }
 
-  const char* control_type = heater[control::schema::wireKey(FeatureIndex::HeaterControlType)] | "";
-  if (std::strcmp(control_type, "binary") == 0) {
+  const cJSON* heater = objectItem(object, control::schema::kWireObjectHeater);
+  const cJSON* fan = objectItem(object, control::schema::kWireObjectFan);
+  const cJSON* humidifier = objectItem(object, control::schema::kWireObjectHumidifier);
+  const cJSON* irrigation = objectItem(object, control::schema::kWireObjectIrrigation);
+  if (heater == nullptr || fan == nullptr || humidifier == nullptr || irrigation == nullptr) {
+    return false;
+  }
+
+  const char* control_type =
+      readString(heater, control::schema::wireKey(FeatureIndex::HeaterControlType));
+  if (control_type != nullptr && std::strcmp(control_type, "binary") == 0) {
     actuators.heater.control_type = control::ActuatorControlType::Binary;
-  } else if (std::strcmp(control_type, "pwm") == 0) {
+  } else if (control_type != nullptr && std::strcmp(control_type, "pwm") == 0) {
     actuators.heater.control_type = control::ActuatorControlType::Pwm;
   } else {
     return false;
@@ -167,30 +202,58 @@ bool parseActuators(JsonObjectConst object, control::ActuatorCapabilities& actua
                          actuators.irrigation_pump.minimum_interval_s);
 }
 
-void serializeLine(Stream& stream, JsonDocument& document) noexcept {
-  serializeJson(document, stream);
-  stream.write('\n');
+}  // namespace
+
+esp_err_t SerialJsonProtocol::begin(int baud_rate) noexcept {
+  if (baud_rate <= 0) {
+    return ESP_ERR_INVALID_ARG;
+  }
+
+  uart_config_t config{};
+  config.baud_rate = baud_rate;
+  config.data_bits = UART_DATA_8_BITS;
+  config.parity = UART_PARITY_DISABLE;
+  config.stop_bits = UART_STOP_BITS_1;
+  config.flow_ctrl = UART_HW_FLOWCTRL_DISABLE;
+  config.source_clk = UART_SCLK_DEFAULT;
+
+  esp_err_t error = uart_param_config(port_, &config);
+  if (error != ESP_OK) {
+    return error;
+  }
+  error = uart_set_pin(port_, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE,
+                       UART_PIN_NO_CHANGE);
+  if (error != ESP_OK) {
+    return error;
+  }
+  if (!uart_is_driver_installed(port_)) {
+    error = uart_driver_install(port_, 4096, 0, 0, nullptr, 0);
+    if (error != ESP_OK) {
+      return error;
+    }
+  }
+  return uart_flush_input(port_);
 }
 
-} // namespace
-
-void SerialJsonProtocol::poll(Stream& stream, DummyEnvironmentSimulator& simulator,
+void SerialJsonProtocol::poll(DummyEnvironmentSimulator& simulator,
                               DemoRuntimeState& runtime) noexcept {
-  while (stream.available() > 0) {
-    const int next = stream.read();
-    if (next < 0) {
-      return;
-    }
-    const char character = static_cast<char>(next);
+  std::uint8_t buffer[128]{};
+  const int received = uart_read_bytes(port_, buffer, sizeof(buffer), 0);
+  if (received <= 0) {
+    return;
+  }
+
+  for (int index = 0; index < received; ++index) {
+    const char character = static_cast<char>(buffer[index]);
     if (character == '\r') {
       continue;
     }
     if (character == '\n') {
       if (discarding_) {
-        emitError(stream, "line_too_long", "input exceeds the bounded line buffer");
+        emitError("line_too_long", "input exceeds the bounded line buffer");
       } else if (length_ > 0U) {
         line_[length_] = '\0';
-        processLine(stream, simulator, runtime);
+        processLine(simulator, runtime);
       }
       length_ = 0U;
       discarding_ = false;
@@ -208,23 +271,25 @@ void SerialJsonProtocol::poll(Stream& stream, DummyEnvironmentSimulator& simulat
   }
 }
 
-void SerialJsonProtocol::processLine(Stream& stream, DummyEnvironmentSimulator& simulator,
+void SerialJsonProtocol::processLine(DummyEnvironmentSimulator& simulator,
                                      DemoRuntimeState& runtime) noexcept {
-  JsonDocument document;
-  const DeserializationError error = deserializeJson(document, line_, length_);
-  if (error) {
-    emitError(stream, "invalid_json", error.c_str());
+  cJSON* root = cJSON_ParseWithLength(line_, length_);
+  if (!cJSON_IsObject(root)) {
+    cJSON_Delete(root);
+    emitError("invalid_json", "input must be a valid JSON object");
     return;
   }
-  const JsonObjectConst root = document.as<JsonObjectConst>();
-  const char* command = root["command"] | "";
-  if (command[0] == '\0') {
-    emitError(stream, "missing_command", "command must be a non-empty string");
+
+  const char* command = readString(root, "command");
+  if (command == nullptr || command[0] == '\0') {
+    cJSON_Delete(root);
+    emitError("missing_command", "command must be a non-empty string");
     return;
   }
 
   if (std::strcmp(command, "status") == 0) {
-    emitStatus(stream, simulator, runtime);
+    emitStatus(simulator, runtime);
+    cJSON_Delete(root);
     return;
   }
   if (std::strcmp(command, "reset") == 0) {
@@ -232,139 +297,173 @@ void SerialJsonProtocol::processLine(Stream& stream, DummyEnvironmentSimulator& 
     runtime.step = 0U;
     runtime.step_requested = false;
     runtime.controller_reset_requested = true;
-    emitAck(stream, command);
+    emitAck(command);
+    cJSON_Delete(root);
     return;
   }
   if (std::strcmp(command, "seed") == 0) {
-    if (!root["value"].is<std::uint32_t>()) {
-      emitError(stream, "invalid_seed", "value must be an unsigned integer");
+    std::uint32_t seed = 0U;
+    if (!readUnsigned(root, "value", seed)) {
+      cJSON_Delete(root);
+      emitError("invalid_seed", "value must be an unsigned integer");
       return;
     }
-    simulator.setSeed(root["value"].as<std::uint32_t>());
-    emitAck(stream, command);
+    simulator.setSeed(seed);
+    emitAck(command);
+    cJSON_Delete(root);
     return;
   }
   if (std::strcmp(command, "pause") == 0) {
     runtime.paused = true;
-    emitAck(stream, command);
+    emitAck(command);
+    cJSON_Delete(root);
     return;
   }
   if (std::strcmp(command, "resume") == 0) {
     runtime.paused = false;
-    emitAck(stream, command);
+    emitAck(command);
+    cJSON_Delete(root);
     return;
   }
   if (std::strcmp(command, "mode") == 0) {
-    const char* value = root["value"] | "";
-    if (std::strcmp(value, "closed_loop") == 0) {
+    const char* value = readString(root, "value");
+    if (value != nullptr && std::strcmp(value, "closed_loop") == 0) {
       runtime.mode = DemoMode::ClosedLoop;
-    } else if (std::strcmp(value, "replay") == 0) {
+    } else if (value != nullptr && std::strcmp(value, "replay") == 0) {
       runtime.mode = DemoMode::Replay;
       runtime.paused = true;
     } else {
-      emitError(stream, "invalid_mode", "value must be closed_loop or replay");
+      cJSON_Delete(root);
+      emitError("invalid_mode", "value must be closed_loop or replay");
       return;
     }
-    emitAck(stream, command);
+    emitAck(command);
+    cJSON_Delete(root);
     return;
   }
   if (std::strcmp(command, "target") == 0) {
     control::ControlTargets targets = simulator.input().targets;
     if (!parseTargets(root, targets, false)) {
-      emitError(stream, "invalid_target", "provide at least one finite target field");
+      cJSON_Delete(root);
+      emitError("invalid_target", "provide at least one finite target field");
       return;
     }
     simulator.setTargets(targets);
-    emitAck(stream, command);
+    emitAck(command);
+    cJSON_Delete(root);
     return;
   }
   if (std::strcmp(command, "step") == 0) {
-    if (!root[control::schema::kWireRootSensors].isNull() ||
-        !root[control::schema::kWireRootValidity].isNull()) {
+    const cJSON* sensors_json = item(root, control::schema::kWireRootSensors);
+    const cJSON* validity_json = item(root, control::schema::kWireRootValidity);
+    const bool has_sensors = sensors_json != nullptr && !cJSON_IsNull(sensors_json);
+    const bool has_validity = validity_json != nullptr && !cJSON_IsNull(validity_json);
+    if (has_sensors || has_validity) {
       control::SensorState sensors = simulator.input().sensors;
       control::SensorValidity validity = simulator.input().validity;
-      const JsonObjectConst sensors_json =
-          root[control::schema::kWireRootSensors].as<JsonObjectConst>();
-      const JsonObjectConst validity_json =
-          root[control::schema::kWireRootValidity].as<JsonObjectConst>();
-      if (sensors_json.isNull() || validity_json.isNull() || !parseSensors(sensors_json, sensors) ||
-          !parseValidity(validity_json, validity)) {
-        emitError(stream, "invalid_step", "sensors and validity must be complete");
+      if (!parseSensors(sensors_json, sensors) || !parseValidity(validity_json, validity)) {
+        cJSON_Delete(root);
+        emitError("invalid_step", "sensors and validity must be complete");
         return;
       }
       simulator.setSensors(sensors, validity);
     }
     runtime.step_requested = true;
+    cJSON_Delete(root);
     return;
   }
   if (std::strcmp(command, "load_scenario") == 0) {
     control::ControllerInput scenario{};
-    const JsonObjectConst sensors = root[control::schema::kWireRootSensors].as<JsonObjectConst>();
-    const JsonObjectConst validity = root[control::schema::kWireRootValidity].as<JsonObjectConst>();
-    const JsonObjectConst environment =
-        root[control::schema::kWireRootEnvironment].as<JsonObjectConst>();
-    const JsonObjectConst cultivation =
-        root[control::schema::kWireRootCultivation].as<JsonObjectConst>();
-    const JsonObjectConst actuators =
-        root[control::schema::kWireRootActuators].as<JsonObjectConst>();
-    const JsonObjectConst targets = root[control::schema::kWireRootTargets].as<JsonObjectConst>();
-    const JsonObjectConst previous = root[control::schema::kWireRootPrevious].as<JsonObjectConst>();
-    if (!root["seed"].is<std::uint32_t>() || sensors.isNull() || validity.isNull() ||
-        environment.isNull() || cultivation.isNull() || actuators.isNull() || targets.isNull() ||
-        previous.isNull() || !parseSensors(sensors, scenario.sensors) ||
+    std::uint32_t seed = 0U;
+    const cJSON* sensors = objectItem(root, control::schema::kWireRootSensors);
+    const cJSON* validity = objectItem(root, control::schema::kWireRootValidity);
+    const cJSON* environment = objectItem(root, control::schema::kWireRootEnvironment);
+    const cJSON* cultivation = objectItem(root, control::schema::kWireRootCultivation);
+    const cJSON* actuators = objectItem(root, control::schema::kWireRootActuators);
+    const cJSON* targets = objectItem(root, control::schema::kWireRootTargets);
+    const cJSON* previous = objectItem(root, control::schema::kWireRootPrevious);
+    if (!readUnsigned(root, "seed", seed) || !parseSensors(sensors, scenario.sensors) ||
         !parseValidity(validity, scenario.validity) ||
         !parseEnvironment(environment, scenario.environment) ||
         !parseCultivation(cultivation, scenario.cultivation) ||
         !parseActuators(actuators, scenario.actuators) ||
         !parseTargets(targets, scenario.targets, true) ||
         !parsePrevious(previous, scenario.previous)) {
-      emitError(stream, "invalid_scenario", "scenario fields must be complete and finite");
+      cJSON_Delete(root);
+      emitError("invalid_scenario", "scenario fields must be complete and finite");
       return;
     }
-    simulator.load(scenario, root["seed"].as<std::uint32_t>());
+    simulator.load(scenario, seed);
     runtime.step = 0U;
     runtime.step_requested = false;
     runtime.controller_reset_requested = true;
-    emitAck(stream, command);
+    emitAck(command);
+    cJSON_Delete(root);
     return;
   }
 
-  emitError(stream, "unsupported_command", command);
+  char unsupported[kMaximumLineBytes + 1U]{};
+  std::strncpy(unsupported, command, kMaximumLineBytes);
+  cJSON_Delete(root);
+  emitError("unsupported_command", unsupported);
 }
 
-void SerialJsonProtocol::emitError(Stream& stream, const char* code,
-                                   const char* message) const noexcept {
-  JsonDocument document;
-  document["type"] = "error";
-  document["schema_version"] = control::schema::kSchemaVersion;
-  document["schema_hash"] = control::schema::kSchemaHash;
-  document["code"] = code;
-  document["message"] = message;
-  serializeLine(stream, document);
+void SerialJsonProtocol::emitError(const char* code, const char* message) const noexcept {
+  cJSON* document = cJSON_CreateObject();
+  if (document == nullptr) {
+    return;
+  }
+  cJSON_AddStringToObject(document, "type", "error");
+  cJSON_AddNumberToObject(document, "schema_version", control::schema::kSchemaVersion);
+  cJSON_AddStringToObject(document, "schema_hash", control::schema::kSchemaHash);
+  cJSON_AddStringToObject(document, "code", code != nullptr ? code : "unknown_error");
+  cJSON_AddStringToObject(document, "message", message != nullptr ? message : "");
+  writeJson(document);
 }
 
-void SerialJsonProtocol::emitAck(Stream& stream, const char* command) const noexcept {
-  JsonDocument document;
-  document["type"] = "ack";
-  document["schema_version"] = control::schema::kSchemaVersion;
-  document["schema_hash"] = control::schema::kSchemaHash;
-  document["command"] = command;
-  serializeLine(stream, document);
+void SerialJsonProtocol::emitAck(const char* command) const noexcept {
+  cJSON* document = cJSON_CreateObject();
+  if (document == nullptr) {
+    return;
+  }
+  cJSON_AddStringToObject(document, "type", "ack");
+  cJSON_AddNumberToObject(document, "schema_version", control::schema::kSchemaVersion);
+  cJSON_AddStringToObject(document, "schema_hash", control::schema::kSchemaHash);
+  cJSON_AddStringToObject(document, "command", command != nullptr ? command : "");
+  writeJson(document);
 }
 
-void SerialJsonProtocol::emitStatus(Stream& stream, const DummyEnvironmentSimulator& simulator,
+void SerialJsonProtocol::emitStatus(const DummyEnvironmentSimulator& simulator,
                                     const DemoRuntimeState& runtime) const noexcept {
-  JsonDocument document;
-  document["type"] = "status";
-  document["schema_version"] = control::schema::kSchemaVersion;
-  document["schema_hash"] = control::schema::kSchemaHash;
-  document["mode"] = runtime.mode == DemoMode::ClosedLoop ? "closed_loop" : "replay";
-  document["paused"] = runtime.paused;
-  document["step"] = runtime.step;
-  document["seed"] = simulator.seed();
-  document["simulated_time_s"] = simulator.input().monotonic_time_ms / 1000U;
-  serializeLine(stream, document);
+  cJSON* document = cJSON_CreateObject();
+  if (document == nullptr) {
+    return;
+  }
+  cJSON_AddStringToObject(document, "type", "status");
+  cJSON_AddNumberToObject(document, "schema_version", control::schema::kSchemaVersion);
+  cJSON_AddStringToObject(document, "schema_hash", control::schema::kSchemaHash);
+  cJSON_AddStringToObject(document, "mode",
+                          runtime.mode == DemoMode::ClosedLoop ? "closed_loop" : "replay");
+  cJSON_AddBoolToObject(document, "paused", runtime.paused);
+  cJSON_AddNumberToObject(document, "step", runtime.step);
+  cJSON_AddNumberToObject(document, "seed", simulator.seed());
+  cJSON_AddNumberToObject(document, "simulated_time_s",
+                          simulator.input().monotonic_time_ms / 1000U);
+  writeJson(document);
 }
 
-} // namespace demo
-} // namespace growbox
+void SerialJsonProtocol::writeJson(cJSON* document) const noexcept {
+  if (document == nullptr) {
+    return;
+  }
+  char* encoded = cJSON_PrintUnformatted(document);
+  if (encoded != nullptr) {
+    uart_write_bytes(port_, encoded, std::strlen(encoded));
+    uart_write_bytes(port_, "\n", 1U);
+    cJSON_free(encoded);
+  }
+  cJSON_Delete(document);
+}
+
+}  // namespace demo
+}  // namespace growbox
