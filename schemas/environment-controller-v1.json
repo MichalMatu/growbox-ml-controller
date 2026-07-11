@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Growbox Environment Controller Contract v1",
+  "schema_id": "environment-controller-v1",
+  "schema_version": 1,
+  "hash": {
+    "algorithm": "sha256",
+    "canonicalization": "UTF-8 JSON with lexicographically sorted keys and separators ',' and ':'",
+    "short_hex_characters": 12
+  },
+  "groups": {
+    "sensors": [
+      "air_temperature_c",
+      "air_humidity_pct",
+      "co2_ppm",
+      "soil_moisture_pct",
+      "outside_temperature_c",
+      "outside_humidity_pct"
+    ],
+    "validity": [
+      "air_temperature_valid",
+      "air_humidity_valid",
+      "co2_valid",
+      "soil_moisture_valid",
+      "outside_temperature_valid",
+      "outside_humidity_valid"
+    ],
+    "environment": [
+      "growbox_volume_m3",
+      "thermal_mass_j_per_k",
+      "heat_loss_w_per_k",
+      "air_leak_rate_ach"
+    ],
+    "cultivation": [
+      "pot_volume_l",
+      "substrate_water_capacity_ml",
+      "transpiration_factor"
+    ],
+    "actuators.heater": [
+      "heater_available",
+      "heater_max_power_w",
+      "heater_efficiency",
+      "heater_control_type"
+    ],
+    "actuators.fan": [
+      "fan_available",
+      "fan_max_airflow_m3_h",
+      "fan_minimum_command"
+    ],
+    "actuators.humidifier": [
+      "humidifier_available",
+      "humidifier_max_output_g_h"
+    ],
+    "actuators.irrigation": [
+      "irrigation_available",
+      "irrigation_flow_ml_s",
+      "irrigation_maximum_pulse_s",
+      "irrigation_minimum_interval_s"
+    ],
+    "targets": [
+      "target_air_temperature_c",
+      "target_air_humidity_pct",
+      "target_co2_ppm",
+      "target_soil_moisture_pct"
+    ],
+    "previous": [
+      "previous_heater",
+      "previous_fan",
+      "previous_humidifier",
+      "previous_irrigation"
+    ]
+  },
+  "model": {
+    "normalization": "minmax_to_zero_one",
+    "features": [
+      {"name": "air_temperature_c", "path": "sensors.air_temperature_c", "type": "number", "unit": "degC", "minimum": -20.0, "maximum": 60.0, "default": 24.0},
+      {"name": "air_humidity_pct", "path": "sensors.air_humidity_pct", "type": "number", "unit": "percent", "minimum": 0.0, "maximum": 100.0, "default": 60.0},
+      {"name": "co2_ppm", "path": "sensors.co2_ppm", "type": "number", "unit": "ppm", "minimum": 0.0, "maximum": 5000.0, "default": 850.0},
+      {"name": "soil_moisture_pct", "path": "sensors.soil_moisture_pct", "type": "number", "unit": "percent", "minimum": 0.0, "maximum": 100.0, "default": 50.0},
+      {"name": "outside_temperature_c", "path": "sensors.outside_temperature_c", "type": "number", "unit": "degC", "minimum": -40.0, "maximum": 60.0, "default": 20.0},
+      {"name": "outside_humidity_pct", "path": "sensors.outside_humidity_pct", "type": "number", "unit": "percent", "minimum": 0.0, "maximum": 100.0, "default": 50.0},
+
+      {"name": "air_temperature_valid", "path": "validity.air_temperature_c", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "air_humidity_valid", "path": "validity.air_humidity_pct", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "co2_valid", "path": "validity.co2_ppm", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "soil_moisture_valid", "path": "validity.soil_moisture_pct", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "outside_temperature_valid", "path": "validity.outside_temperature_c", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "outside_humidity_valid", "path": "validity.outside_humidity_pct", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+
+      {"name": "growbox_volume_m3", "path": "environment.growbox_volume_m3", "type": "number", "unit": "m3", "minimum": 0.05, "maximum": 100.0, "default": 1.0},
+      {"name": "thermal_mass_j_per_k", "path": "environment.thermal_mass_j_per_k", "type": "number", "unit": "J/K", "minimum": 1000.0, "maximum": 10000000.0, "default": 100000.0},
+      {"name": "heat_loss_w_per_k", "path": "environment.heat_loss_w_per_k", "type": "number", "unit": "W/K", "minimum": 0.0, "maximum": 5000.0, "default": 30.0},
+      {"name": "air_leak_rate_ach", "path": "environment.air_leak_rate_ach", "type": "number", "unit": "1/h", "minimum": 0.0, "maximum": 20.0, "default": 1.0},
+
+      {"name": "pot_volume_l", "path": "cultivation.pot_volume_l", "type": "number", "unit": "L", "minimum": 0.1, "maximum": 100.0, "default": 10.0},
+      {"name": "substrate_water_capacity_ml", "path": "cultivation.substrate_water_capacity_ml", "type": "number", "unit": "mL", "minimum": 10.0, "maximum": 100000.0, "default": 3000.0},
+      {"name": "transpiration_factor", "path": "cultivation.transpiration_factor", "type": "number", "unit": "ratio", "minimum": 0.0, "maximum": 10.0, "default": 1.0},
+
+      {"name": "heater_available", "path": "actuators.heater.available", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "heater_max_power_w", "path": "actuators.heater.max_power_w", "type": "number", "unit": "W", "minimum": 0.0, "maximum": 10000.0, "default": 0.0},
+      {"name": "heater_efficiency", "path": "actuators.heater.efficiency", "type": "number", "unit": "ratio", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "heater_control_type", "path": "actuators.heater.control_type", "type": "enum", "unit": "enum", "minimum": 0.0, "maximum": 1.0, "default": 0.0, "encoding": {"binary": 0.0, "pwm": 1.0}},
+
+      {"name": "fan_available", "path": "actuators.fan.available", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "fan_max_airflow_m3_h", "path": "actuators.fan.max_airflow_m3_h", "type": "number", "unit": "m3/h", "minimum": 0.0, "maximum": 10000.0, "default": 0.0},
+      {"name": "fan_minimum_command", "path": "actuators.fan.minimum_command", "type": "number", "unit": "ratio", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+
+      {"name": "humidifier_available", "path": "actuators.humidifier.available", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "humidifier_max_output_g_h", "path": "actuators.humidifier.max_output_g_h", "type": "number", "unit": "g/h", "minimum": 0.0, "maximum": 10000.0, "default": 0.0},
+
+      {"name": "irrigation_available", "path": "actuators.irrigation.available", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "irrigation_flow_ml_s", "path": "actuators.irrigation.flow_ml_s", "type": "number", "unit": "mL/s", "minimum": 0.0, "maximum": 1000.0, "default": 0.0},
+      {"name": "irrigation_maximum_pulse_s", "path": "actuators.irrigation.maximum_pulse_s", "type": "number", "unit": "s", "minimum": 0.0, "maximum": 600.0, "default": 0.0},
+      {"name": "irrigation_minimum_interval_s", "path": "actuators.irrigation.minimum_interval_s", "type": "number", "unit": "s", "minimum": 0.0, "maximum": 86400.0, "default": 0.0},
+
+      {"name": "target_air_temperature_c", "path": "targets.air_temperature_c", "type": "number", "unit": "degC", "minimum": -20.0, "maximum": 60.0, "default": 25.0},
+      {"name": "target_air_humidity_pct", "path": "targets.air_humidity_pct", "type": "number", "unit": "percent", "minimum": 0.0, "maximum": 100.0, "default": 65.0},
+      {"name": "target_co2_ppm", "path": "targets.co2_ppm", "type": "number", "unit": "ppm", "minimum": 0.0, "maximum": 5000.0, "default": 850.0},
+      {"name": "target_soil_moisture_pct", "path": "targets.soil_moisture_pct", "type": "number", "unit": "percent", "minimum": 0.0, "maximum": 100.0, "default": 50.0},
+
+      {"name": "previous_heater", "path": "previous.heater", "type": "number", "unit": "ratio", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "previous_fan", "path": "previous.fan", "type": "number", "unit": "ratio", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "previous_humidifier", "path": "previous.humidifier", "type": "number", "unit": "ratio", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "previous_irrigation", "path": "previous.irrigation", "type": "number", "unit": "ratio", "minimum": 0.0, "maximum": 1.0, "default": 0.0}
+    ],
+    "outputs": [
+      {"name": "heater", "unit": "ratio", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "fan", "unit": "ratio", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "humidifier", "unit": "ratio", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "irrigation", "unit": "ratio", "minimum": 0.0, "maximum": 1.0, "default": 0.0}
+    ]
+  },
+  "availability_rule": "When an actuator is unavailable, available is false, its maximum capacity is zero, and its final safe output is zero.",
+  "safety_defaults": {
+    "maximum_air_temperature_c": 35.0,
+    "alarm_air_temperature_c": 32.0,
+    "alarm_minimum_fan": 0.6,
+    "binary_threshold": 0.5,
+    "heater_minimum_on_s": 30.0,
+    "heater_minimum_off_s": 30.0,
+    "humidifier_minimum_on_s": 15.0,
+    "humidifier_minimum_off_s": 15.0
+  }
+}
