@@ -43,6 +43,9 @@ captures/
 *.swp
 *~
 
+# PlatformIO build artifacts
+.pio/
+
 # Secrets and local configuration
 .env
 .env.*
