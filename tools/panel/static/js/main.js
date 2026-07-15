@@ -1,13 +1,11 @@
 function bindFormInputRoot(root) {
   if (!root) return;
-  root.addEventListener("click", (event) => {
-    const toggle = event.target.closest(".control-type-toggle");
-    if (!toggle || !root.contains(toggle)) return;
-    event.preventDefault();
-    toggleControlType(toggle);
-  });
   root.addEventListener("change", (event) => {
-    if (event.target?.id === "f-pseudo_lights_active") syncLightsActiveDisplay();
+    const el = event.target;
+    if (el?.matches?.("select.setup-control-type-select[data-path]")) {
+      syncControlTypeField(el.dataset.path, el.value);
+    }
+    if (el?.id === "f-pseudo_lights_active") syncLightsActiveDisplay();
     collectScenario();
   });
   root.addEventListener("input", (event) => {

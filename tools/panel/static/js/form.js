@@ -594,6 +594,54 @@ function renderGrowboxCultivationSubCard(section) {
   return `<div class="sub-card pots-block"><div class="card-head"><h3>Donice</h3></div><div class="compact-row pots-row">${cards}</div></div>`;
 }
 
+function controlTypeFieldFromGroup(names, sectionId) {
+  const controlTypeName = names.find(name => name.endsWith("_control_type"));
+  return controlTypeName ? fieldByName(controlTypeName, sectionId) : null;
+}
+
+function renderGrowboxActuatorTypeSelect(field, title, { disabled = false } = {}) {
+  if (!field || field.type !== "enum") return "";
+  const value = normalizeControlType(getNested(scenario, field.path) ?? field.default);
+  const id = `f-setup-${field.path.replaceAll(".", "_")}`;
+  const hintAttr = disabled ? inactiveZoneDependentHintAttr() : fieldHintAttr(field.name);
+  const disabledAttr = disabled ? " disabled" : "";
+  const opts = (field.options || []).map(o =>
+    `<option value="${o.value}" ${value === o.value ? "selected" : ""}>${formatEnumOptionLabel(o.value)}</option>`
+  ).join("");
+  return `<select class="field-control setup-control-type-select" data-path="${field.path}" id="${id}"${hintAttr}${disabledAttr}
+    aria-label="Typ sterowania ${escapeHtml(title)}">${opts}</select>`;
+}
+
+function renderGrowboxActuatorTypeCard(title, names, sectionId) {
+  const controlTypeField = controlTypeFieldFromGroup(names, sectionId);
+  if (!controlTypeField) return "";
+  const zoneIndex = zoneIndexFromPumpGroup(names);
+  const zonePumpInactive = zoneIndex !== null && !isZoneActive(zoneIndex);
+  const inactiveClass = zonePumpInactive ? " inactive-zone-pump" : "";
+  const titleHintAttr = zonePumpInactive ? inactiveZoneDependentHintAttr() : "";
+  return `<div class="pot-card setup-actuator-type-card${inactiveClass}">
+    <div class="head-row"><span class="name"${titleHintAttr}>${title}</span></div>
+    ${renderGrowboxActuatorTypeSelect(controlTypeField, title, { disabled: zonePumpInactive })}
+  </div>`;
+}
+
+function renderGrowboxActuatorTypeRow(groups, sectionId) {
+  return groups.map(([title, names]) => renderGrowboxActuatorTypeCard(title, names, sectionId)).join("");
+}
+
+function renderGrowboxActuatorsSubCard() {
+  const climate = renderGrowboxActuatorTypeRow(ACTUATOR_CLIMATE_GROUPS, "actuators");
+  const pumps = renderGrowboxActuatorTypeRow(ACTUATOR_PUMP_GROUPS, "zones");
+  if (!climate && !pumps) return "";
+  return `<div class="sub-card setup-actuators-block">
+    <div class="card-head"><h3>Aktuary</h3></div>
+    <div class="setup-actuators-groups">
+      <div class="sub-card"><div class="card-head"><h3>Klimat</h3></div><div class="compact-row actuators-type-row">${climate}</div></div>
+      <div class="sub-card"><div class="card-head"><h3>Pompy</h3></div><div class="compact-row actuators-type-row">${pumps}</div></div>
+    </div>
+  </div>`;
+}
+
 function renderGrowboxPanel(inSetup = false) {
   const env = panelSchema.sections.find(s => s.id === "environment");
   const zonesSection = sectionById("zones");
@@ -601,7 +649,8 @@ function renderGrowboxPanel(inSetup = false) {
   const obudowa = env ? renderSubCard("Obudowa", env.fields, inSetup ? null : "environment") : "";
   const donice = zonesSection ? renderGrowboxCultivationSubCard(zonesSection) : "";
   if (inSetup) {
-    return `<div class="setup-growbox-body">${obudowa}${donice}</div>`;
+    const aktuary = renderGrowboxActuatorsSubCard();
+    return `<div class="setup-growbox-body">${obudowa}${donice}${aktuary}</div>`;
   }
   return `<div class="card growbox-panel environment-panel">${renderSectionHead("Parametry growboxa", "environment")}${obudowa}${donice}</div>`;
 }
@@ -667,8 +716,18 @@ function syncInactiveZonePumpInputs() {
       if (!active) availEl.checked = false;
       availEl.title = active ? (fieldHint(field.name) || "") : INACTIVE_ZONE_DEPENDENT_HINT;
     }
+    const controlField = fieldByName(`zone_${index + 1}_irrigation_control_type`, "zones");
+    if (controlField) {
+      const selectEl = document.querySelector(`select.setup-control-type-select[data-path="${controlField.path}"]`);
+      const typeCard = selectEl?.closest(".setup-actuator-type-card");
+      if (typeCard) typeCard.classList.toggle("inactive-zone-pump", !active);
+      if (selectEl) {
+        selectEl.disabled = !active;
+        selectEl.title = active ? (fieldHint(controlField.name) || "") : INACTIVE_ZONE_DEPENDENT_HINT;
+      }
+    }
     if (!cell) continue;
-    cell.querySelectorAll("input.field-control, select.field-control, .control-type-toggle").forEach(el => {
+    cell.querySelectorAll("input.field-control, select.field-control").forEach(el => {
       el.disabled = !active;
     });
     const titleEl = cell.querySelector(".head-row .name");
@@ -714,28 +773,12 @@ function renderZoneCultivationCard(fields, index) {
   return `<div class="pot-card cultivation-pot-card"><div class="head-row"><span class="name">Donica ${index + 1}</span></div><div class="compact-row">${cells}</div></div>`;
 }
 
-function renderControlTypeToggle(field, { disabled = false } = {}) {
-  if (!field || field.type !== "enum") return "";
-  const value = normalizeControlType(getNested(scenario, field.path) ?? field.default);
-  const label = formatEnumOptionLabel(value);
-  const hintAttr = disabled
-    ? inactiveZoneDependentHintAttr()
-    : (fieldHintAttr(field.name) || ' title="Kliknij: bin ↔ pwm"');
-  const disabledAttr = disabled ? " disabled" : "";
-  return `<button type="button" class="control-type-toggle" data-path="${field.path}"
-    data-value="${value}"${hintAttr}${disabledAttr} aria-label="Typ sterowania: ${label}">${label}</button>`;
-}
-
-function toggleControlType(button) {
-  const path = button.dataset.path;
+function syncControlTypeField(path, value) {
   if (!path) return;
-  const current = normalizeControlType(button.dataset.value);
-  const next = current === "pwm" ? "binary" : "pwm";
-  button.dataset.value = next;
-  const label = formatEnumOptionLabel(next);
-  button.textContent = label;
-  button.setAttribute("aria-label", `Typ sterowania: ${label}`);
-  collectScenario();
+  const normalized = normalizeControlType(value);
+  document.querySelectorAll(`select.setup-control-type-select[data-path="${path}"]`).forEach(el => {
+    el.value = normalized;
+  });
 }
 
 function renderActuatorParamField(field, { disabled = false } = {}) {
@@ -768,11 +811,9 @@ function renderActuatorParamField(field, { disabled = false } = {}) {
 function renderActuatorGroupCell(title, names, sectionId) {
   const field = name => fieldByName(name, sectionId);
   const availableName = names.find(n => n.endsWith("_available"));
-  const controlTypeName = names.find(n => n.endsWith("_control_type"));
   const availableField = availableName ? field(availableName) : null;
-  const controlTypeField = controlTypeName ? field(controlTypeName) : null;
   const paramFields = names
-    .filter(n => n !== availableName && n !== controlTypeName)
+    .filter(n => n !== availableName && !n.endsWith("_control_type"))
     .map(n => field(n))
     .filter(Boolean);
   const zoneIndex = zoneIndexFromPumpGroup(names);
@@ -795,7 +836,6 @@ function renderActuatorGroupCell(title, names, sectionId) {
     <div class="head-row">
       <span class="name"${titleHintAttr}>${title}</span>
       <div class="actuator-head-actions">
-        ${controlTypeField ? renderControlTypeToggle(controlTypeField, { disabled: zonePumpInactive }) : ""}
         ${availableField ? `<input type="checkbox" data-path="${availableField.path}" id="${availId}"${availHintAttr}${disabledAttr} ${availVal ? "checked" : ""} />` : ""}
       </div>
     </div>

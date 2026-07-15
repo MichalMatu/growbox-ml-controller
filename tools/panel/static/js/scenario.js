@@ -177,10 +177,6 @@ function readScenarioFromForm(base = scenario) {
   forEachScenarioField(el => {
     const path = el.dataset.path;
     if (!path) return;
-    if (el.classList?.contains("control-type-toggle")) {
-      setNested(next, path, normalizeControlType(el.dataset.value));
-      return;
-    }
     let value;
     if (el.type === "checkbox") value = el.checked;
     else if (el.tagName === "SELECT") {

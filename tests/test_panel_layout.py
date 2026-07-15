@@ -173,31 +173,32 @@ def test_mini_cell_number_fields_use_in_input_unit_suffixes_and_hints():
     assert "fieldUnitSuffix" in wrap_fn
 
 
-def test_actuator_control_type_is_header_toggle_not_param_select():
+def test_main_actuator_cells_have_no_control_type_toggle():
     form_js = FORM_JS.read_text(encoding="utf-8")
     panel_css = PANEL_CSS.read_text(encoding="utf-8")
     cell_fn = _extract_js_function(form_js, "renderActuatorGroupCell")
-    toggle_fn = _extract_js_function(form_js, "renderControlTypeToggle")
     assert cell_fn
-    assert toggle_fn
-    assert "control-type-toggle" in toggle_fn
-    assert 'data-value="${value}"' in toggle_fn
-    assert "normalizeControlType" in toggle_fn
-    assert "controlTypeName" in cell_fn
-    assert "renderControlTypeToggle" in cell_fn
-    assert ".control-type-toggle" in panel_css
+    assert "control-type-toggle" not in cell_fn
+    assert "renderControlTypeToggle" not in form_js
+    assert "toggleControlType" not in form_js
+    assert ".control-type-toggle" not in panel_css
+    assert "_control_type" in cell_fn
 
 
-def test_collect_scenario_reads_control_type_from_toggle_buttons():
+def test_collect_scenario_reads_control_type_from_setup_selects():
     scenario_js = SCENARIO_JS.read_text(encoding="utf-8")
+    form_js = FORM_JS.read_text(encoding="utf-8")
     read_fn = _extract_js_function(scenario_js, "readScenarioFromForm")
     collect_fn = _extract_js_function(scenario_js, "collectScenario")
     badge_fn = _extract_js_function(scenario_js, "updateScenarioSyncBadge")
+    select_fn = _extract_js_function(form_js, "renderGrowboxActuatorTypeSelect")
     assert read_fn
     assert collect_fn
     assert badge_fn
-    assert "control-type-toggle" in read_fn
-    assert "normalizeControlType(el.dataset.value)" in read_fn
+    assert select_fn
+    assert "control-type-toggle" not in read_fn
+    assert 'el.tagName === "SELECT"' in read_fn
+    assert "setup-control-type-select" in select_fn
     assert "readScenarioFromForm(scenario)" in collect_fn
     assert "wyślij zmiany" in badge_fn
     assert '"lokalne"' not in badge_fn
@@ -293,6 +294,34 @@ def test_growbox_setup_cultivation_fields_use_compact_widths():
     assert "#setup-pane-growbox .cultivation-pot-card > .compact-row" in panel_css
     assert "display: flex" in panel_css
     assert "#setup-pane-growbox .pots-row" in panel_css
+
+
+def test_growbox_setup_has_actuator_control_type_selects():
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
+    main_js = (PANEL_STATIC / "js" / "main.js").read_text(encoding="utf-8")
+    growbox_fn = _extract_js_function(form_js, "renderGrowboxPanel")
+    actuators_fn = _extract_js_function(form_js, "renderGrowboxActuatorsSubCard")
+    card_fn = _extract_js_function(form_js, "renderGrowboxActuatorTypeCard")
+    select_fn = _extract_js_function(form_js, "renderGrowboxActuatorTypeSelect")
+    sync_fn = _extract_js_function(form_js, "syncControlTypeField")
+    assert growbox_fn
+    assert actuators_fn
+    assert card_fn
+    assert select_fn
+    assert sync_fn
+    assert "renderGrowboxActuatorsSubCard()" in growbox_fn
+    assert "setup-actuator-type-card" in card_fn
+    assert "setup-control-type-select" in select_fn
+    assert "formatEnumOptionLabel" in select_fn
+    assert "field-stack" not in card_fn
+    assert "renderControlTypeToggle" not in card_fn
+    assert "setup-actuators-block" in actuators_fn
+    assert "actuators-type-row" in actuators_fn
+    assert "#setup-pane-growbox .setup-actuator-type-card" in panel_css
+    assert "#setup-pane-growbox .actuators-type-row" in panel_css
+    assert "select.setup-control-type-select[data-path]" in main_js
+    assert "syncControlTypeField" in main_js
 
 
 def test_growbox_setup_modal_has_single_help_entry_point():
