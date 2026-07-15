@@ -1483,55 +1483,6 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
 .note { color: var(--muted); font-size: var(--text-base); margin: 0.3rem 0 0; }
 .note.flush { margin: 0; }
 .live-box { min-height: 120px; }
-.previous-live {
-  margin-top: 0.42rem;
-  padding-top: 0.38rem;
-  border-top: 1px solid var(--border);
-}
-.previous-live-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.35rem;
-  margin-bottom: 0.22rem;
-}
-.previous-live-head h3 {
-  margin: 0;
-  font-size: var(--card-subtitle-font);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--muted);
-  font-weight: 600;
-}
-.previous-live-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.28rem;
-}
-.previous-live-item {
-  padding: var(--gap-md) 0.34rem;
-  border-radius: var(--cell-radius);
-  border: 1px solid var(--border);
-  background: var(--surface-muted);
-  text-align: center;
-}
-.previous-live-label {
-  display: block;
-  font-size: var(--text-xs);
-  color: var(--muted);
-  margin-bottom: 0.1rem;
-}
-.previous-live-empty {
-  font-size: var(--text-base);
-  color: var(--muted);
-}
-.previous-live-pct {
-  display: block;
-  font-size: var(--text-xl);
-  font-weight: 600;
-  color: var(--safe);
-  font-variant-numeric: tabular-nums;
-}
 .panel-actions {
   display: flex;
   flex-wrap: wrap;

@@ -81,7 +81,7 @@ function closeModal() {
   const backdrop = document.getElementById("modal-backdrop");
   const returnTo = modalReturnFocus;
   modalReturnFocus = null;
-  restoreFocusFromDialog(backdrop, returnTo, "#btn-json-scenario");
+  restoreFocusFromDialog(backdrop, returnTo, "#btn-panel-scenario");
   backdrop.classList.remove("open");
   backdrop.setAttribute("inert", "");
   backdrop.setAttribute("aria-hidden", "true");

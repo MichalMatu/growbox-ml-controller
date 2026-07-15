@@ -150,8 +150,3 @@ async function refreshDiagnosticsView(refreshDevice = true) {
   }
   if (activeModal === "diagnostics") refreshModalContent({ force: refreshDevice });
 }
-
-async function openDiagnosticsModal() {
-  await refreshDiagnosticsView(true);
-  openModal("diagnostics");
-}

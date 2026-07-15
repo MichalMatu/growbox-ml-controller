@@ -283,8 +283,8 @@ function syncPreviousActuators(safe, decision = lastDecision) {
     }
     scenario.previous[name] = value;
   }
-  if (typeof syncPreviousFormInputs === "function") {
-    syncPreviousFormInputs();
+  if (typeof syncPreviousDisplay === "function") {
+    syncPreviousDisplay();
   }
   saveScenarioDraft();
 }

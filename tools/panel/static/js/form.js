@@ -25,7 +25,7 @@ function formatPreviousDisplayValue(path) {
   return `${pct}%`;
 }
 
-function syncPreviousFormInputs() {
+function syncPreviousDisplay() {
   document.querySelectorAll("#previous-section [data-previous-path]").forEach((el) => {
     const path = el.dataset.previousPath;
     if (!path) return;

@@ -250,7 +250,7 @@ def test_previous_actuators_use_readonly_live_style_two_column_tables():
     prev_block = _extract_js_function(form_js, "renderPreviousBlock")
     prev_group = _extract_js_function(form_js, "renderPreviousGroupTable")
     prev_row = _extract_js_function(form_js, "renderPreviousRow")
-    sync_fn = _extract_js_function(form_js, "syncPreviousFormInputs")
+    sync_fn = _extract_js_function(form_js, "syncPreviousDisplay")
     assert prev_block
     assert prev_group
     assert prev_row
@@ -511,6 +511,21 @@ def test_growbox_setup_has_actuator_control_type_selects():
     assert "syncControlTypeField" in main_js
 
 
+def test_panel_legacy_cleanup_removes_dead_code_and_renames_helpers():
+    html = INDEX_HTML.read_text(encoding="utf-8")
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    live_js = (PANEL_STATIC / "js" / "live.js").read_text(encoding="utf-8")
+    diagnostics_js = (PANEL_STATIC / "js" / "diagnostics.js").read_text(encoding="utf-8")
+    assert ".previous-live" not in panel_css
+    assert "syncPreviousFormInputs" not in form_js
+    assert "syncPreviousDisplay" in form_js
+    assert "syncPreviousDisplay" in live_js
+    assert "openDiagnosticsModal" not in diagnostics_js
+    assert "btn-json-scenario" not in html
+    assert 'id="btn-panel-scenario"' in html
+
+
 def test_live_section_includes_pots_lights_and_zone_readings():
     live_js = (PANEL_STATIC / "js" / "live.js").read_text(encoding="utf-8")
     constants_js = (PANEL_STATIC / "js" / "constants.js").read_text(encoding="utf-8")
@@ -589,10 +604,10 @@ def test_panel_action_buttons_share_ghost_style_tokens():
     assert 'data-panel-modal="growbox"' in html
     assert 'data-panel-modal="safety"' in html
     assert 'data-panel-modal="scenario"' in html
-    assert 'id="btn-json-scenario" class="ghost"' in html
+    assert 'id="btn-panel-scenario" class="ghost"' in html
     assert "data-setup-open" not in html
     assert "[data-panel-modal]" in main_js
-    assert html.index("btn-json-diagnostics") < html.index("btn-setup-growbox")
+    assert html.index("btn-panel-diagnostics") < html.index("btn-setup-growbox")
     assert "--panel-action-pad:" in panel_css
     assert "--panel-action-font:" in panel_css
     assert "--panel-action-gap:" in panel_css
