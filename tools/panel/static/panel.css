@@ -885,7 +885,7 @@ body.modal-open {
 }
 .modal-head {
   display: grid;
-  grid-template-columns: 10.5rem 1fr 4.2rem;
+  grid-template-columns: 10.5rem 1fr;
   align-items: center;
   gap: 0.35rem 0.5rem;
   padding: 0.55rem 0.65rem;
@@ -916,7 +916,6 @@ body.modal-open {
   white-space: nowrap;
 }
 .modal-tabs button.active { background: var(--accent); color: #fff; border-color: #2f6fd1; }
-#modal-close { justify-self: end; }
 .modal-body {
   padding: 0.55rem 0.65rem;
   overflow: auto;
@@ -952,11 +951,13 @@ body.modal-open {
   display: flex;
   gap: 0.35rem;
   justify-content: flex-end;
+  align-items: center;
   flex: 0 0 auto;
+  min-height: 2.15rem;
+  box-sizing: border-box;
 }
-.modal-foot .btn-slot-hidden {
-  visibility: hidden;
-  pointer-events: none;
+.modal-foot button[hidden] {
+  display: none !important;
 }
 .help-modal-body {
   font-size: 0.78rem;

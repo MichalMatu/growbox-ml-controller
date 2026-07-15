@@ -35,7 +35,7 @@ function openModal(view) {
   updateModalLock();
   renderModalTabs();
   refreshModalContent({ force: true });
-  document.getElementById("modal-close").focus();
+  document.getElementById("modal-close")?.focus();
 }
 
 function closeModal() {
@@ -101,12 +101,8 @@ function refreshModalContent({ force = false } = {}) {
   const isHtml = Boolean(meta.html);
   textarea.hidden = isHtml;
   panel.hidden = !isHtml;
-  copyBtn.classList.toggle("btn-slot-hidden", isHtml);
-  copyBtn.disabled = isHtml;
-  if (refreshBtn) {
-    refreshBtn.classList.toggle("btn-slot-hidden", !isHtml);
-    refreshBtn.disabled = !isHtml;
-  }
+  copyBtn.hidden = isHtml;
+  if (refreshBtn) refreshBtn.hidden = !isHtml;
   const cacheKey = `${activeModal}:${isHtml ? "html" : "text"}`;
   if (isHtml) {
     const html = formatDiagnosticsHtml(diagnosticsSnapshot);

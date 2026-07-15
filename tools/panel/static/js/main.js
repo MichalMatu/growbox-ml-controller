@@ -164,7 +164,6 @@ document.getElementById("btn-diagnostics-toolbar").onclick = () => openDiagnosti
 document.getElementById("modal-refresh").onclick = () => refreshDiagnosticsView(true);
 document.getElementById("resources-strip").onclick = () => openDiagnosticsModal();
 document.getElementById("modal-close").onclick = closeModal;
-document.getElementById("modal-close-2").onclick = closeModal;
 document.getElementById("modal-backdrop").onclick = (e) => { if (e.target.id === "modal-backdrop") closeModal(); };
 document.addEventListener("click", (e) => {
   const btn = e.target.closest("[data-help]");
