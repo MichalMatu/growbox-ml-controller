@@ -100,7 +100,9 @@
   --btn-font: var(--text-md);
   --btn-pad: 0.22rem 0.48rem;
   --btn-pad-row: 0.28rem 0.5rem;
-  --chip-pad: 0.1rem 0.4rem;
+  --chip-pad-y: 0.1rem;
+  --chip-pad-x: 0.4rem;
+  --chip-pad: var(--chip-pad-y) var(--chip-pad-x);
   --chip-font: var(--text-badge);
   --chip-font-compact: var(--text-2xs);
   --chip-font-toolbar: var(--text-xs);
@@ -225,14 +227,14 @@ h1 { margin: 0; font-size: var(--text-title); font-weight: 600; }
 .top-message {
   height: var(--toolbar-h);
   max-width: 9.5rem;
-  padding: 0 0.42rem;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--border);
+  padding: 0 var(--chip-pad-x);
+  border-radius: var(--chip-radius);
+  border: var(--chip-border);
   background: var(--surface-muted);
-  color: var(--muted);
-  font-size: var(--text-2xs);
-  font-weight: 600;
-  line-height: 1;
+  color: var(--chip-color);
+  font-size: var(--chip-font-compact);
+  font-weight: var(--chip-weight);
+  line-height: var(--chip-btn-line);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -427,9 +429,9 @@ h1 { margin: 0; font-size: var(--text-title); font-weight: 600; }
 }
 .port-picker-chevron {
   flex-shrink: 0;
-  font-size: 0.48rem;
+  font-size: var(--text-2xs);
   color: var(--muted);
-  line-height: 1;
+  line-height: var(--chip-btn-line);
 }
 .port-picker-menu {
   position: absolute;
@@ -475,8 +477,8 @@ h1 { margin: 0; font-size: var(--text-title); font-weight: 600; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.58rem;
-  line-height: 1;
+  font-size: var(--text-xs);
+  line-height: var(--chip-btn-line);
   color: var(--accent);
 }
 .port-picker-item-label {
@@ -1217,8 +1219,8 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
   right: 0.24rem;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 0.58rem;
-  line-height: 1;
+  font-size: var(--text-xs);
+  line-height: var(--chip-btn-line);
   color: var(--muted);
   pointer-events: none;
   font-weight: 600;

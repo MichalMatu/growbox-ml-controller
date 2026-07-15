@@ -32,12 +32,21 @@ def _root_block(source: str) -> str:
     return _extract_css_rule(source, ":root")
 
 
+def _css_outside_root(source: str) -> str:
+    root = _root_block(source)
+    if not root:
+        return source
+    return source.replace(root, "", 1)
+
+
 def test_chip_tokens_declared_in_root():
     css = PANEL_CSS.read_text(encoding="utf-8")
     root = _root_block(css)
     assert root
     for token in (
         "--chip-pad:",
+        "--chip-pad-y:",
+        "--chip-pad-x:",
         "--chip-font:",
         "--chip-font-compact:",
         "--chip-font-toolbar:",
@@ -100,3 +109,28 @@ def test_panel_css_documents_chip_token_layer():
     header = css.split(":root {", 1)[0]
     assert "--chip-" in header
     assert ".sync-badge" in header
+
+
+def test_top_message_uses_chip_tokens():
+    css = PANEL_CSS.read_text(encoding="utf-8")
+    rule = _extract_css_rule(css, ".top-message")
+    assert rule
+    assert "border-radius: var(--chip-radius)" in rule
+    assert "border: var(--chip-border)" in rule
+    assert "font-size: var(--chip-font-compact)" in rule
+    assert "font-weight: var(--chip-weight)" in rule
+    assert "padding: 0 var(--chip-pad-x)" in rule
+
+
+def test_panel_css_avoids_banned_raw_font_sizes_outside_root():
+    css = PANEL_CSS.read_text(encoding="utf-8")
+    outside = _css_outside_root(css)
+    banned = (
+        "font-size: 0.58rem",
+        "font-size: 0.48rem",
+        "font-size: 0.65rem",
+        "font-size: 0.68rem",
+        "font-size: 0.72rem",
+    )
+    for pattern in banned:
+        assert pattern not in outside, pattern
