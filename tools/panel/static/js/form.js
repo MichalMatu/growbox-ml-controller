@@ -47,6 +47,15 @@ function fieldHint(name) {
   if (/^zone_\d+_target_soil_moisture_pct$/.test(name)) {
     return FIELD_HINTS.target_soil_moisture_pct || "";
   }
+  if (/^soil_moisture_zone_\d+_pct$/.test(name)) {
+    return FIELD_HINTS.soil_moisture_pct || "";
+  }
+  if (/^soil_temperature_zone_\d+_c$/.test(name)) {
+    return FIELD_HINTS.soil_temperature_c || "";
+  }
+  if (/^zone_\d+_previous_irrigation$/.test(name)) {
+    return FIELD_HINTS.previous_irrigation || "";
+  }
   const zoneIrr = name.match(/^zone_\d+_irrigation_(.+)$/);
   if (zoneIrr) {
     const baseKey = `irrigation_${zoneIrr[1]}`;
@@ -55,6 +64,11 @@ function fieldHint(name) {
   const zoneCult = name.match(/^zone_\d+_(pot_volume_l|substrate_water_capacity_ml|transpiration_factor)$/);
   if (zoneCult && FIELD_HINTS[zoneCult[1]]) return FIELD_HINTS[zoneCult[1]];
   return "";
+}
+
+function fieldHintAttr(name) {
+  const hint = fieldHint(name);
+  return hint ? ` title="${hint}"` : "";
 }
 
 function fieldControlClassAttr() {
@@ -74,17 +88,88 @@ function sectionById(id) {
   return panelSchema.sections.find(section => section.id === id) || null;
 }
 
+function fieldUnitSuffix(field) {
+  const suffixByName = {
+    heater_max_power_w: "W",
+    heater_efficiency: "η",
+    fan_max_airflow_m3_h: "m³/h",
+    fan_minimum_command: "min",
+    humidifier_max_output_g_h: "g/h",
+    dehumidifier_max_removal_g_h: "g/h",
+    cooler_max_cooling_w: "W",
+    co2_doser_dose_ppm_per_full_pulse: "ppm",
+    co2_doser_maximum_pulse_s: "s",
+    growbox_volume_m3: "m³",
+    thermal_mass_j_per_k: "J/K",
+    heat_loss_w_per_k: "W/K",
+    air_leak_rate_ach: "1/h",
+    pot_volume_l: "L",
+    substrate_water_capacity_ml: "mL",
+    transpiration_factor: "×",
+    irrigation_flow_ml_s: "mL/s",
+    irrigation_maximum_pulse_s: "s",
+    irrigation_minimum_interval_s: "s",
+    binary_threshold: "0–1",
+    alarm_minimum_fan: "min",
+    fan_venting_co2_threshold: "ppm",
+  };
+  if (suffixByName[field.name]) return suffixByName[field.name];
+  const zoneIrr = field.name.match(/^zone_\d+_irrigation_(flow_ml_s|maximum_pulse_s|minimum_interval_s)$/);
+  if (zoneIrr) {
+    if (zoneIrr[1] === "flow_ml_s") return "mL/s";
+    return "s";
+  }
+  const zoneCult = field.name.match(/^zone_\d+_(pot_volume_l|substrate_water_capacity_ml|transpiration_factor)$/);
+  if (zoneCult) {
+    if (zoneCult[1] === "pot_volume_l") return "L";
+    if (zoneCult[1] === "substrate_water_capacity_ml") return "mL";
+    return "×";
+  }
+  const name = field.name;
+  const path = field.path || "";
+  if (name.endsWith("_temperature_c") || path.includes("temperature_c")) return "°C";
+  if (name.endsWith("_pct") || path.includes("_pct")) return "%";
+  if (name.includes("co2") && (name.includes("ppm") || path.includes("co2"))) return "ppm";
+  if (name.endsWith("_s") || path.endsWith("_s")) return "s";
+  if (name.startsWith("previous_") || name.includes("previous_irrigation")) return "0–1";
+  return "";
+}
+
+function fieldSuffixSizeClass(suffix) {
+  if (!suffix) return "";
+  if (suffix.length >= 7) return " suffix-long";
+  if (suffix.length >= 3) return " suffix-med";
+  return " suffix-short";
+}
+
+function renderWrappedNumberInput(field, opts = {}) {
+  const id = opts.id || `f-${field.path.replaceAll(".", "_")}`;
+  const hintAttr = opts.hintAttr ?? fieldHintAttr(field.name);
+  const ariaLabel = opts.ariaLabel ?? escapeHtml(shortLabel(field.name));
+  const displayValue = opts.displayValue
+    ?? formatFieldNumber(getNested(scenario, field.path) ?? field.default, field.path);
+  const suffix = fieldUnitSuffix(field);
+  const suffixClass = fieldSuffixSizeClass(suffix);
+  const wrapClass = opts.wrapClass || "field-input-wrap";
+  const suffixClassName = opts.suffixClass || "field-input-suffix";
+  const suffixMarkup = suffix
+    ? `<span class="${suffixClassName}" aria-hidden="true">${escapeHtml(suffix)}</span>`
+    : "";
+  return `<div class="${wrapClass}${suffixClass}">
+    <input type="number"${fieldControlClassAttr()} data-path="${field.path}" id="${id}"${hintAttr}
+      aria-label="${ariaLabel}" min="${field.minimum}" max="${field.maximum}" step="${fieldStep(field)}"
+      value="${displayValue}" />
+    ${suffixMarkup}
+  </div>`;
+}
+
 function renderNumberField(field, extraClass = "field-num") {
   const id = `f-${field.path.replaceAll(".", "_")}`;
-  const value = getNested(scenario, field.path);
-  const step = fieldStep(field);
   const wide = field.path.includes("thermal_mass") || field.path.includes("substrate_water");
-  const displayValue = formatFieldNumber(value ?? field.default, field.path);
+  const hintAttr = fieldHintAttr(field.name);
   return `<label class="${wide ? "field-wide" : extraClass}">
-    <span class="lbl">${shortLabel(field.name)}</span>
-    <input type="number"${fieldControlClassAttr()} data-path="${field.path}" id="${id}"
-      min="${field.minimum}" max="${field.maximum}" step="${step}"
-      value="${displayValue}" />
+    <span class="lbl"${hintAttr}>${shortLabel(field.name)}</span>
+    ${renderWrappedNumberInput(field, { id })}
   </label>`;
 }
 
@@ -235,10 +320,8 @@ function renderPathSensorMiniCell(sensorField, validityField, displayLabel) {
   const sensorPath = sensorField.path;
   const sId = `f-${sensorPath.replaceAll(".", "_")}`;
   const sVal = getNested(scenario, sensorPath);
-  const step = fieldStepForPath(sensorPath);
   const displayValue = formatFieldNumber(sVal ?? sensorField.default, sensorPath);
-  const hint = fieldHint(sensorField.name);
-  const hintAttr = hint ? ` title="${hint}"` : "";
+  const hintAttr = fieldHintAttr(sensorField.name);
   const validityControl = validityField
     ? (() => {
         const vId = `f-${validityField.path.replaceAll(".", "_")}`;
@@ -249,13 +332,19 @@ function renderPathSensorMiniCell(sensorField, validityField, displayLabel) {
         return `<input type="checkbox" data-path="${validityField.path}" id="${vId}" title="${vHint}" ${vVal ? "checked" : ""} />`;
       })()
     : "";
+  const wrappedSensor = {
+    path: sensorPath,
+    name: sensorField.name,
+    minimum: sensorField.minimum,
+    maximum: sensorField.maximum,
+    default: sensorField.default,
+  };
   return `<div class="mini-cell">
     <div class="head-row">
       <span class="name"${hintAttr}>${displayLabel || shortLabel(sensorField.name)}</span>
       ${validityControl}
     </div>
-    <input type="number"${fieldControlClassAttr()} data-path="${sensorPath}" id="${sId}"${hintAttr}
-      min="${sensorField.minimum}" max="${sensorField.maximum}" step="${step}" value="${displayValue}" />
+    ${renderWrappedNumberInput(wrappedSensor, { id: sId, displayValue })}
   </div>`;
 }
 
@@ -426,9 +515,8 @@ function sanitizeScenarioNumeric(obj, pathPrefix = "") {
 function renderMiniCellInput(field) {
   const id = `f-${field.path.replaceAll(".", "_")}`;
   const value = getNested(scenario, field.path);
-  const hint = fieldHint(field.name);
-  const hintAttr = hint ? ` title="${hint}"` : "";
-  const label = `<div class="label-row"><span class="name"${hint ? ` title="${hint}"` : ""}>${shortLabel(field.name)}</span></div>`;
+  const hintAttr = fieldHintAttr(field.name);
+  const label = `<div class="label-row"><span class="name"${hintAttr}>${shortLabel(field.name)}</span></div>`;
 
   if (field.type === "enum") {
     const opts = (field.options || []).map(o =>
@@ -436,9 +524,7 @@ function renderMiniCellInput(field) {
     ).join("");
     return `${label}<select${fieldControlClassAttr()} data-path="${field.path}" id="${id}"${hintAttr}>${opts}</select>`;
   }
-  const displayValue = formatFieldNumber(value ?? field.default, field.path);
-  return `${label}<input type="number"${fieldControlClassAttr()} data-path="${field.path}" id="${id}"${hintAttr}
-    min="${field.minimum}" max="${field.maximum}" step="${fieldStep(field)}" value="${displayValue}" />`;
+  return `${label}${renderWrappedNumberInput(field, { id })}`;
 }
 
 function renderMiniCell(field) {
@@ -456,10 +542,11 @@ function renderMiniCell(field) {
         </div>
       </div>`;
     }
+    const hintAttr = fieldHintAttr(field.name);
     return `<div class="mini-cell bool-only${wide}">
       <div class="head-row">
-        <span class="name">${shortLabel(field.name)}</span>
-        <input type="checkbox" data-path="${field.path}" id="${id}" ${value ? "checked" : ""} />
+        <span class="name"${hintAttr}>${shortLabel(field.name)}</span>
+        <input type="checkbox" data-path="${field.path}" id="${id}"${hintAttr} ${value ? "checked" : ""} />
       </div>
     </div>`;
   }
@@ -542,8 +629,7 @@ function renderControlTypeToggle(field) {
   if (!field || field.type !== "enum") return "";
   const value = normalizeControlType(getNested(scenario, field.path) ?? field.default);
   const label = formatEnumOptionLabel(value);
-  const hint = fieldHint(field.name);
-  const hintAttr = hint ? ` title="${hint}"` : ' title="Kliknij: bin ↔ pwm"';
+  const hintAttr = fieldHintAttr(field.name) || ' title="Kliknij: bin ↔ pwm"';
   return `<button type="button" class="control-type-toggle" data-path="${field.path}"
     data-value="${value}"${hintAttr} aria-label="Typ sterowania: ${label}">${label}</button>`;
 }
@@ -563,38 +649,42 @@ function toggleControlType(button) {
 function renderActuatorParamField(field) {
   const id = `f-${field.path.replaceAll(".", "_")}`;
   const value = getNested(scenario, field.path);
-  const hint = fieldHint(field.name);
-  const hintAttr = hint ? ` title="${hint}"` : "";
-  const label = `<span class="name"${hint ? ` title="${hint}"` : ""}>${shortLabel(field.name)}</span>`;
+  const hintAttr = fieldHintAttr(field.name);
+  const ariaLabel = escapeHtml(shortLabel(field.name));
   let control;
   if (field.type === "enum") {
     const opts = (field.options || []).map(o =>
       `<option value="${o.value}" ${value === o.value ? "selected" : ""}>${formatEnumOptionLabel(o.value)}</option>`
     ).join("");
-    control = `<select${fieldControlClassAttr()} data-path="${field.path}" id="${id}"${hintAttr}>${opts}</select>`;
+    control = `<select${fieldControlClassAttr()} data-path="${field.path}" id="${id}"${hintAttr}
+      aria-label="${ariaLabel}">${opts}</select>`;
   } else {
-    const displayValue = formatFieldNumber(value ?? field.default, field.path);
-    control = `<input type="number"${fieldControlClassAttr()} data-path="${field.path}" id="${id}"${hintAttr}
-      min="${field.minimum}" max="${field.maximum}" step="${fieldStep(field)}" value="${displayValue}" />`;
+    control = renderWrappedNumberInput(field, {
+      id,
+      hintAttr,
+      ariaLabel,
+      wrapClass: "actuator-input-wrap",
+      suffixClass: "actuator-input-suffix",
+    });
   }
   const wideClass = isWideField(field) ? " wide-param" : "";
-  return `<div class="actuator-param${wideClass}">${label}${control}</div>`;
+  return `<div class="actuator-param${wideClass}">${control}</div>`;
 }
 
-function renderActuatorGroupCell(title, names) {
+function renderActuatorGroupCell(title, names, sectionId) {
+  const field = name => fieldByName(name, sectionId);
   const availableName = names.find(n => n.endsWith("_available"));
   const controlTypeName = names.find(n => n.endsWith("_control_type"));
-  const availableField = availableName ? fieldByName(availableName, "actuators") : null;
-  const controlTypeField = controlTypeName ? fieldByName(controlTypeName, "actuators") : null;
+  const availableField = availableName ? field(availableName) : null;
+  const controlTypeField = controlTypeName ? field(controlTypeName) : null;
   const paramFields = names
     .filter(n => n !== availableName && n !== controlTypeName)
-    .map(n => fieldByName(n, "actuators"))
+    .map(n => field(n))
     .filter(Boolean);
   const wide = paramFields.some(isWideField) ? " wide" : "";
   const availId = availableField ? `f-${availableField.path.replaceAll(".", "_")}` : "";
   const availVal = availableField ? getNested(scenario, availableField.path) : false;
-  const availHint = availableField ? fieldHint(availableField.name) : "";
-  const availHintAttr = availHint ? ` title="${availHint}"` : "";
+  const availHintAttr = availableField ? fieldHintAttr(availableField.name) : "";
   const stack = `<div class="field-stack">${paramFields.map(renderActuatorParamField).join("")}</div>`;
   return `<div class="mini-cell actuator-cell${wide}">
     <div class="head-row">
@@ -608,13 +698,13 @@ function renderActuatorGroupCell(title, names) {
   </div>`;
 }
 
-function renderActuatorRow(groups) {
-  return groups.map(([title, names]) => renderActuatorGroupCell(title, names)).join("");
+function renderActuatorRow(groups, sectionId) {
+  return groups.map(([title, names]) => renderActuatorGroupCell(title, names, sectionId)).join("");
 }
 
 function renderActuatorBlock() {
-  const climate = renderActuatorRow(ACTUATOR_CLIMATE_GROUPS);
-  const pumps = renderActuatorRow(ACTUATOR_PUMP_GROUPS);
+  const climate = renderActuatorRow(ACTUATOR_CLIMATE_GROUPS, "actuators");
+  const pumps = renderActuatorRow(ACTUATOR_PUMP_GROUPS, "zones");
   return `<div class="actuators-split">
     <div class="sub-card actuators-climate-block"><div class="card-head"><h3>Klimat</h3></div><div class="compact-row">${climate}</div></div>
     <div class="sub-card actuators-pumps-block"><div class="card-head"><h3>Pompy</h3></div><div class="compact-row">${pumps}</div></div>

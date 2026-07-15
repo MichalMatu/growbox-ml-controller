@@ -120,6 +120,41 @@ def test_main_page_keeps_two_column_layout():
     )
 
 
+def test_actuator_param_fields_use_in_input_unit_suffixes():
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
+    render_fn = _extract_js_function(form_js, "renderActuatorParamField")
+    wrap_fn = _extract_js_function(form_js, "renderWrappedNumberInput")
+    assert render_fn
+    assert wrap_fn
+    assert "renderWrappedNumberInput" in render_fn
+    assert "actuator-input-wrap" in render_fn
+    assert "actuator-input-suffix" in render_fn
+    assert "fieldUnitSuffix" in form_js
+    assert ".actuator-input-wrap" in panel_css
+    assert ".actuator-input-suffix" in panel_css
+    assert ".field-input-wrap" in panel_css
+    assert ".field-input-suffix" in panel_css
+    assert "--climate-input-w:" in panel_css
+
+
+def test_mini_cell_number_fields_use_in_input_unit_suffixes_and_hints():
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    mini_fn = _extract_js_function(form_js, "renderMiniCellInput")
+    sensor_fn = _extract_js_function(form_js, "renderPathSensorMiniCell")
+    wrap_fn = _extract_js_function(form_js, "renderWrappedNumberInput")
+    assert mini_fn
+    assert sensor_fn
+    assert wrap_fn
+    assert "renderWrappedNumberInput" in mini_fn
+    assert "renderWrappedNumberInput" in sensor_fn
+    assert "fieldHintAttr" in mini_fn
+    assert "fieldHintAttr" in sensor_fn
+    assert "field-input-wrap" in wrap_fn
+    assert "field-input-suffix" in wrap_fn
+    assert "fieldUnitSuffix" in wrap_fn
+
+
 def test_actuator_control_type_is_header_toggle_not_param_select():
     form_js = FORM_JS.read_text(encoding="utf-8")
     panel_css = PANEL_CSS.read_text(encoding="utf-8")
@@ -161,11 +196,14 @@ def test_normalize_control_type_coerces_encoded_defaults():
 def test_field_by_name_supports_section_scope_for_duplicate_names():
     form_js = FORM_JS.read_text(encoding="utf-8")
     cell_fn = _extract_js_function(form_js, "renderActuatorGroupCell")
+    block_fn = _extract_js_function(form_js, "renderActuatorBlock")
     safety_fn = _extract_js_function(form_js, "renderSafetyFieldsSubCard")
     by_name_fn = _extract_js_function(form_js, "fieldByName")
     assert by_name_fn
     assert "sectionId && section.id !== sectionId" in by_name_fn
-    assert 'fieldByName(availableName, "actuators")' in cell_fn
+    assert "fieldByName(name, sectionId)" in cell_fn
+    assert 'renderActuatorRow(ACTUATOR_CLIMATE_GROUPS, "actuators")' in block_fn
+    assert 'renderActuatorRow(ACTUATOR_PUMP_GROUPS, "zones")' in block_fn
     assert 'fieldByName(name, "safety")' in safety_fn
 
 
@@ -206,10 +244,29 @@ def test_actuators_main_page_use_compact_climate_and_pump_rows():
     assert "renderActuatorPanel()" in render_fn
     assert "actuators-climate-block" in block_fn
     assert "actuators-pumps-block" in block_fn
-    assert ".actuators-panel .actuators-climate-block .compact-row" in panel_css
-    assert ".actuators-panel .actuators-pumps-block .compact-row" in panel_css
+    actuator_rows = re.search(
+        r"\.actuators-panel\s+\.actuators-climate-block\s+\.compact-row,\s*"
+        r"\.actuators-panel\s+\.actuators-pumps-block\s+\.compact-row\s*\{[^}]+\}",
+        panel_css,
+    )
+    assert actuator_rows
+    rule = actuator_rows.group(0)
+    assert "flex-wrap: wrap" in rule
+    assert "flex-wrap: nowrap" not in rule
+    assert not re.search(
+        r"\.actuators-panel\s+\.actuators-(?:climate|pumps)-block[^{]*\{[^}]*overflow-x:\s*auto",
+        panel_css,
+    )
     assert "--pump-input-w:" in panel_css
     assert "--climate-input-w:" in panel_css
+    assert re.search(
+        r"\.actuators-panel\s+\.actuators-climate-block\s+\.mini-cell\.actuator-cell\s*\{[^}]*flex:\s*0\s+0\s+auto",
+        panel_css,
+    )
+    assert re.search(
+        r"\.actuators-panel\s+\.actuators-climate-block\s+\.actuator-input-wrap\s*\{[^}]*width:\s*var\(--climate-input-w\)",
+        panel_css,
+    )
 
 
 def test_growbox_setup_cultivation_fields_use_compact_widths():
