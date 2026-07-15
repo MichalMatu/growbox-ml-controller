@@ -192,6 +192,28 @@
       flex-direction: column;
       gap: 0.22rem;
     }
+    .growbox-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.35rem;
+      align-items: start;
+    }
+    @media (max-width: 700px) { .growbox-split { grid-template-columns: 1fr; } }
+    .sub-card {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.35rem 0.4rem;
+      background: rgba(15, 20, 25, 0.35);
+      min-width: 0;
+    }
+    .sub-card h3 {
+      margin: 0 0 0.3rem;
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      font-weight: 600;
+    }
     .subhead {
       font-size: 0.62rem;
       color: var(--muted);
@@ -579,6 +601,20 @@
       return `<div class="card"><h2>${title}</h2><div class="compact-row">${cells}</div></div>`;
     }
 
+    function renderSubCard(title, fields) {
+      const cells = fields.map(renderMiniCell).join("");
+      return `<div class="sub-card"><h3>${title}</h3><div class="compact-row">${cells}</div></div>`;
+    }
+
+    function renderGrowboxPanel() {
+      const env = panelSchema.sections.find(s => s.id === "environment");
+      const cult = panelSchema.sections.find(s => s.id === "cultivation");
+      if (!env && !cult) return "";
+      const left = env ? renderSubCard(env.title, env.fields) : "";
+      const right = cult ? renderSubCard(cult.title, cult.fields) : "";
+      return `<div class="card growbox-panel"><div class="growbox-split">${left}${right}</div></div>`;
+    }
+
     function renderActuatorGroupCell(title, names, byName) {
       const availableName = names.find(n => n.endsWith("_available"));
       const availableField = availableName ? byName[availableName] : null;
@@ -605,15 +641,15 @@
     function renderForm() {
       const root = document.getElementById("form-sections");
       root.innerHTML = renderSensorBlock();
+      root.innerHTML += renderGrowboxPanel();
       for (const section of panelSchema.sections) {
-        if (section.id === "sensors" || section.id === "validity") continue;
+        if (section.id === "sensors" || section.id === "validity"
+            || section.id === "environment" || section.id === "cultivation") continue;
         const card = document.createElement("div");
         card.className = "card";
         card.innerHTML = `<h2>${section.title}</h2>`;
         if (section.id === "actuators") {
           root.innerHTML += `<div class="card"><h2>${section.title}</h2>${renderActuatorBlock(section)}</div>`;
-        } else if (section.id === "environment" || section.id === "cultivation") {
-          root.innerHTML += renderCompactBlock(section.title, section.fields);
         } else {
           const grid = document.createElement("div");
           grid.className = "section-grid";
