@@ -592,7 +592,9 @@ def test_panel_modal_unifies_all_entry_points_in_one_wide_shell():
     assert 'id="setup-pane-safety"' in modal_block
     assert 'id="modal-tabs"' not in modal_block
     assert "modal-foot" not in modal_block
+    assert 'id="modal-close"' in modal_block
     assert "panel-modal-head" in modal_block
+    assert "panel-modal-close" in modal_block
     assert "panelModalViews" in modal_js
     assert "syncPanelModalActions" in modal_js
     assert "renderPanelModalTabs" not in modal_js

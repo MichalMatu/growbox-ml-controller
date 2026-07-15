@@ -212,6 +212,7 @@ document.getElementById("btn-export").onclick = () => {
   a.download = "scenario.json";
   a.click();
 };
+document.getElementById("modal-close")?.addEventListener("click", closeModal);
 document.addEventListener("click", async (e) => {
   const panelBtn = e.target.closest("[data-panel-modal]");
   if (panelBtn) {

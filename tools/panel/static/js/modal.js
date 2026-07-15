@@ -74,7 +74,7 @@ function openModal(view) {
   updateModalLock();
   syncPanelModalActions();
   refreshModalContent({ force: true });
-  document.getElementById("modal-title")?.focus({ preventScroll: true });
+  document.getElementById("modal-close")?.focus({ preventScroll: true });
 }
 
 function closeModal() {

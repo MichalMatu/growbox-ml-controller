@@ -1517,10 +1517,17 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
   border-color: var(--accent-border);
 }
 .panel-modal-head {
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr auto;
+  align-items: center;
 }
 .panel-modal-head h3 {
-  grid-column: 1 / -1;
+  grid-column: 1;
+  min-width: 0;
+}
+.panel-modal-close {
+  grid-column: 2;
+  justify-self: end;
+  flex-shrink: 0;
 }
 
 

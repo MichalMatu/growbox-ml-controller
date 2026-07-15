@@ -124,7 +124,7 @@ const HELP_TOPICS = {
       </ul>
       <p>Kod safety i czas inferencji — w legendzie pasków. Szczegóły w panelu modal → <strong>Decyzja</strong>.</p>
       <h4>Przyciski pod paskami</h4>
-      <p><strong>Scenariusz</strong>, <strong>Decyzja</strong>, <strong>Historia</strong>, <strong>Startup / status</strong>, <strong>Zasoby</strong>, <strong>Growbox</strong>, <strong>Safety</strong> — jeden przesuwalny modal; przełącz widok przyciskami pod <strong>Na żywo</strong> (aktywny podświetlony). Zamknij: <strong>Esc</strong>.</p>
+      <p><strong>Scenariusz</strong>, <strong>Decyzja</strong>, <strong>Historia</strong>, <strong>Startup / status</strong>, <strong>Zasoby</strong>, <strong>Growbox</strong>, <strong>Safety</strong> — jeden przesuwalny modal; przełącz widok przyciskami pod <strong>Na żywo</strong> (aktywny podświetlony). Zamknij: <strong>Zamknij</strong> w nagłówku lub <strong>Esc</strong>.</p>
     `,
   },
 };
