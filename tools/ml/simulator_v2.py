@@ -245,6 +245,16 @@ class SequentialEnvironmentSimulatorV2:
         self.previous_command = ControlAction()
         return copy.deepcopy(self.state)
 
+    def clone(self) -> SequentialEnvironmentSimulatorV2:
+        other = SequentialEnvironmentSimulatorV2(self.scenario, seed=self.seed)
+        other.state = copy.deepcopy(self.state)
+        other.elapsed_s = self.elapsed_s
+        other.last_irrigation_s = list(self.last_irrigation_s)
+        other.effective_action = self.effective_action
+        other.previous_command = self.previous_command
+        other.rng.bit_generator.state = copy.deepcopy(self.rng.bit_generator.state)
+        return other
+
     def irrigation_ready(self, zone_index: int) -> bool:
         zone = self.scenario.zones[zone_index]
         interval = zone.irrigation.minimum_interval_s

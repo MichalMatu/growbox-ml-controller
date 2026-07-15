@@ -181,7 +181,7 @@ Cztery donice (strefy 1–4) w tym samym boxie:
   zones[N].available — czy w ogóle masz N-tą donicę (mix & match sprzętu)
 ```
 
-**Fizyka (nie w tym pliku):** jedna komora, sprzężenia T↔RH↔gleba↔fan są **złożone i nieliniowe** — odwzorowuje je **symulator treningowy** (możliwie blisko termodynamiki growboxa). Szczegóły: [plan.md](plan.md) → *Symulator — termodynamika growboxa*. Kontrakt I/O tylko nazywa sloty; ML uczy się sterowania na trajektoriach z symulatora.
+**Fizyka (nie w tym pliku):** jedna komora; **do 4 slotów** donic w symulatorze — **mix & match** jak w kontrakcie (0–4 aktywne, reszta wyłączona w scenariuszu). Sprzężenia T↔RH↔gleba↔fan → [plan.md](plan.md) → *Symulator — termodynamika growboxa*.
 
 Mix & match dotyczy **które donice i sprzęt** masz w profilu — nie osobnych komór klimatycznych.
 

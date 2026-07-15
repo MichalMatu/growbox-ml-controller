@@ -285,7 +285,7 @@ Growbox to **jedna komora** z **wieloma sprzężonymi** procesami: temperatura i
 
 **Sprzężenia do odwzorowania w v2** (wzory w kodzie, nie lista reguł w dokumentacji):
 
-1. **Donica → powietrze** — parowanie i transpiracja z każdej strefy do wspólnego `air_humidity_pct`: wilgotność gleby, temp. gleby (gdy valid), RH i T powietrza (deficyt wilgoci: suche + ciepłe → szybciej), impuls podlewania.
+1. **Donica → powietrze** — **suma po aktywnych strefach** (0–4, nie zawsze cztery): parowanie / transpiracja do wspólnego `air_humidity_pct`; per slot wilgotność gleby, temp. gleby (gdy valid), RH i T powietrza; wyłączona strefa = brak składnika (jak `validity: false` / `zone.available: false`).
 2. **T ↔ RH komory** — wymiana z `outside_*` (fan, przecieki), nawilżacz / osuszacz / chłodzenie, **ciepło utajone** parowania (RH ↑ może iść w parze z krótkim T ↓).
 3. **Podlewanie** — dyskretny impuls per strefa → gleba N + natychmiastowy i utajony składnik evap.
 4. **CO₂** — `co2_doser`, wymiana przez fan w stronę `outside_co2_ppm`, uproszczony metabolizm.
@@ -365,7 +365,7 @@ Kolejność wewnątrz fazy:
 
 1. `schemas/environment-controller-v2.json` + generator → `EnvironmentSchema.h`
 2. `EnvironmentTypes.h`, `FeatureEncoder`, `SafetySupervisor`
-3. Symulator Python (`tools/ml/simulator.py`) — **termodynamika v2** (sprzężenia powyżej); teacher (`teacher.py`) na tych trajektoriach
+3. Symulator Python (`tools/ml/simulator.py`) — **termodynamika v2**; **do 4 slotów** donic (mix & match: `zones[N].available`, `validity`, `irrigation.available` — scenariusze losują 0–4 aktywne); teacher na tych trajektoriach
 4. `DummyEnvironmentSimulator.cpp` — **ta sama fizyka** co Python; wire codec + panel (`form_schema.py`)
 5. Testy kontraktu i hosta (wymiary, golden vectors — po retreningu)
 
