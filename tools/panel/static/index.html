@@ -15,17 +15,22 @@
       <div class="top-brand">
         <h1>Growbox ML</h1>
         <span id="top-status-badge" class="badge mono top-status-badge disconnected" aria-live="polite">podłącz płytkę</span>
+        <div id="top-messages" class="top-messages" hidden aria-live="polite"></div>
       </div>
       <div class="top-connect">
-        <select id="port-select"></select>
+        <div class="port-picker" id="port-picker">
+          <button type="button" id="port-picker-trigger" class="port-picker-trigger" aria-haspopup="listbox" aria-expanded="false">
+            <span id="port-picker-label" class="port-picker-label">—</span>
+            <span class="port-picker-chevron" aria-hidden="true">▾</span>
+          </button>
+          <div id="port-picker-menu" class="port-picker-menu" role="listbox" hidden></div>
+        </div>
         <button type="button" id="btn-refresh-ports" class="badge-btn ghost" data-ui="refresh">↻</button>
         <button type="button" class="badge-btn primary" data-ui="connect" id="btn-connect">Połącz</button>
         <button type="button" class="badge-btn danger" data-ui="disconnect" id="btn-disconnect">×</button>
       </div>
     </div>
   </header>
-
-  <div id="panel-alerts" class="panel-alerts" hidden aria-live="polite"></div>
 
   <main>
     <section class="left-panel card-stack">
@@ -113,6 +118,32 @@
     </section>
   </main>
 
+  <div class="modal-backdrop" id="confirm-modal-backdrop" aria-hidden="true" inert>
+    <div class="modal confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="confirm-modal-title">
+      <div class="modal-head">
+        <h3 id="confirm-modal-title">Potwierdź</h3>
+      </div>
+      <div class="modal-body confirm-modal-body" id="confirm-modal-content"></div>
+      <div class="modal-foot">
+        <button class="ghost" id="confirm-modal-cancel" type="button">Anuluj</button>
+        <button class="primary" id="confirm-modal-ok" type="button">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="notice-modal-backdrop" aria-hidden="true" inert>
+    <div class="modal notice-modal" role="dialog" aria-modal="true" aria-labelledby="notice-modal-title">
+      <div class="modal-head">
+        <h3 id="notice-modal-title">Informacja</h3>
+        <button class="ghost" id="notice-modal-close" type="button">Zamknij</button>
+      </div>
+      <div class="modal-body notice-modal-body" id="notice-modal-content"></div>
+      <div class="modal-foot">
+        <button class="primary" id="notice-modal-close-2" type="button">OK</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-backdrop" id="help-modal-backdrop" aria-hidden="true" inert>
     <div class="modal help-modal" role="dialog" aria-modal="true" aria-labelledby="help-modal-title">
       <div class="modal-head">
@@ -150,6 +181,7 @@
   <script src="/js/api.js"></script>
   <script src="/js/scenario.js"></script>
   <script src="/js/form.js"></script>
+  <script src="/js/dialogs.js"></script>
   <script src="/js/live.js"></script>
   <script src="/js/toolbar.js"></script>
   <script src="/js/diagnostics.js"></script>

@@ -48,27 +48,59 @@ function bindToolbar() {
     }
     if (btn.id === "btn-connect") {
       event.preventDefault();
+      closePortPickerMenu();
+      const port = getSelectedPortDevice();
+      if (!port) {
+        setConnectFailure("Wybierz port", resolveConnectError("port must not be empty"));
+        return;
+      }
+      if (isSelectedPortUnlikely()) {
+        const portLabel = formatPortOption(getSelectedPort()).replace(/\s*⚠\s*$/, "").trim();
+        const proceed = await openConfirm({
+          title: "Nietypowy port",
+          html: `<p>Port <code>${escapeHtml(portLabel)}</code> nie wygląda na ESP32-S3.</p>
+            <p>Prawdopodobnie to Bluetooth lub inne urządzenie — połączenie się nie uda.</p>`,
+          okLabel: "Połącz mimo to",
+          cancelLabel: "Anuluj",
+        });
+        if (!proceed) return;
+      }
       try {
+        setConnectFailure(null);
         deviceScenarioSynced = false;
         lastRenderedDecisionStep = null;
         await runAction(() => api("/api/connect", {
           method: "POST",
           body: JSON.stringify({
-            port: document.getElementById("port-select").value,
+            port,
             baud: 115200,
           }),
         }), btn);
         await refreshState();
-        await waitForDeviceStartup();
-        await requestDeviceScenario();
+        if (!await waitForDeviceHandshake()) {
+          throw new Error(
+            "Połączono z portem, ale płytka nie odpowiedziała jak growbox ML — sprawdź port lub zresetuj ESP32-S3"
+          );
+        }
+        if (!await requestDeviceScenario()) {
+          throw new Error(
+            "Płytka nie zwróciła scenariusza — upewnij się, że to growbox ML na ESP32-S3"
+          );
+        }
+        setConnectFailure(null);
         updateToolbarState(lastState);
-        updatePanelAlerts(lastState);
-      } catch (_) { /* btn flash */ }
+        renderTopBarMessages(lastState);
+      } catch (err) {
+        const errInfo = resolveConnectError(err.message);
+        setConnectFailure(errInfo.short, errInfo);
+        await refreshState();
+      }
       return;
     }
     if (btn.id === "btn-disconnect") {
       event.preventDefault();
       try {
+        setConnectFailure(null);
         await runAction(() => api("/api/disconnect", { method: "POST", body: "{}" }), btn);
         lastRenderedDecisionStep = null;
         deviceScenarioSynced = false;

@@ -27,6 +27,33 @@ _SCENARIO_SNAPSHOT_KEYS = (
     "previous",
 )
 
+_HANDSHAKE_TIMEOUT_S = 2.5
+_PORT_UNLIKELY_MARKERS = (
+    "bluetooth",
+    "incoming-port",
+    "airpods",
+    "headphone",
+    "headset",
+    "audio",
+    "bose",
+    "sony wh",
+    "beats",
+    "keyboard",
+    "mouse",
+    "debug-console",
+    "wlan-debug",
+)
+_PORT_LIKELY_MARKERS = (
+    "esp",
+    "espressif",
+    "usb jtag",
+    "jtag/serial",
+    "cp210",
+    "ch340",
+    "silicon labs",
+    "uart",
+)
+
 
 class SerialBridge:
     def __init__(self, *, history_limit: int = 50) -> None:
@@ -52,16 +79,58 @@ class SerialBridge:
             "history": [],
         }
 
-    def list_ports(self) -> list[dict[str, str]]:
-        ports: list[dict[str, str]] = []
+    @staticmethod
+    def port_is_listable(kind: str) -> bool:
+        return kind != "unlikely"
+
+    @staticmethod
+    def classify_port(device: str, description: str = "", hwid: str = "") -> str:
+        text = f"{device} {description} {hwid}".lower()
+        if any(marker in text for marker in _PORT_UNLIKELY_MARKERS):
+            return "unlikely"
+        if "usbmodem" in device.lower() or any(marker in text for marker in _PORT_LIKELY_MARKERS):
+            return "likely_esp"
+        if "usbserial" in device.lower():
+            return "unknown"
+        return "unlikely"
+
+    @staticmethod
+    def is_growbox_handshake(state: dict[str, Any]) -> bool:
+        startup = state.get("last_startup")
+        if isinstance(startup, dict) and startup.get("type") == "startup":
+            if startup.get("framework") == "esp-idf" and startup.get("schema_hash"):
+                return True
+        status = state.get("last_status")
+        if isinstance(status, dict) and status.get("type") == "status":
+            if status.get("schema_hash") and status.get("mode") in {"replay", "closed_loop"}:
+                return True
+        return False
+
+    def list_ports(self) -> list[dict[str, Any]]:
+        ports: list[dict[str, Any]] = []
         for entry in list_ports.comports():
+            device = entry.device
+            description = entry.description or ""
+            hwid = entry.hwid or ""
+            kind = self.classify_port(device, description, hwid)
+            if not self.port_is_listable(kind):
+                continue
             ports.append(
                 {
-                    "device": entry.device,
-                    "description": entry.description or "",
-                    "hwid": entry.hwid or "",
+                    "device": device,
+                    "description": description,
+                    "hwid": hwid,
+                    "kind": kind,
+                    "recommended": kind == "likely_esp",
                 }
             )
+        ports.sort(
+            key=lambda item: (
+                0 if item["recommended"] else 1,
+                0 if "usbmodem" in item["device"] else 1,
+                item["device"],
+            )
+        )
         return ports
 
     def snapshot(self) -> dict[str, Any]:
@@ -112,7 +181,21 @@ class SerialBridge:
         self._last_status_tx_at = 0.0
         self._pending_mode_value = None
 
-    def connect(self, port: str, *, baud: int = 115200) -> None:
+    def _wait_for_growbox_handshake(self, timeout_s: float = _HANDSHAKE_TIMEOUT_S) -> bool:
+        try:
+            self.send_command({"command": "status"})
+        except SerialBridgeError:
+            return False
+        deadline = time.monotonic() + timeout_s
+        while time.monotonic() < deadline:
+            with self._lock:
+                if self.is_growbox_handshake(self._state):
+                    return True
+            time.sleep(0.05)
+        with self._lock:
+            return self.is_growbox_handshake(self._state)
+
+    def connect(self, port: str, *, baud: int = 115200, verify: bool = True) -> None:
         port = port.strip()
         if not port:
             raise SerialBridgeError("port must not be empty")
@@ -130,9 +213,21 @@ class SerialBridge:
             self._state["baud"] = baud
             self._state["last_error"] = None
 
+        try:
+            device.reset_input_buffer()
+        except serial.SerialException:
+            pass
+
         self._stop.clear()
         self._reader = threading.Thread(target=self._reader_loop, name="panel-serial", daemon=True)
         self._reader.start()
+
+        if verify and not self._wait_for_growbox_handshake():
+            self.disconnect()
+            raise SerialBridgeError(
+                "Wybrany port nie odpowiada jak growbox ML (ESP32-S3). "
+                "Wybierz port USB z „usbmodem” / Espressif, nie Bluetooth ani inne urządzenia."
+            )
 
     def disconnect(self) -> None:
         self._stop.set()

@@ -141,10 +141,12 @@ function selectWithinElement(root) {
 function handleModalSelectAll(event) {
   if (!isSelectAllShortcut(event)) return false;
   const helpBackdrop = document.getElementById("help-modal-backdrop");
+  const noticeBackdrop = document.getElementById("notice-modal-backdrop");
   const jsonBackdrop = document.getElementById("modal-backdrop");
   const helpOpen = helpBackdrop?.classList.contains("open");
+  const noticeOpen = noticeBackdrop?.classList.contains("open");
   const jsonOpen = jsonBackdrop?.classList.contains("open");
-  if (!helpOpen && !jsonOpen) return false;
+  if (!helpOpen && !noticeOpen && !jsonOpen) return false;
 
   event.preventDefault();
   event.stopPropagation();
@@ -152,6 +154,10 @@ function handleModalSelectAll(event) {
 
   if (helpOpen) {
     selectWithinElement(document.getElementById("help-modal-content"));
+    return true;
+  }
+  if (noticeOpen) {
+    selectWithinElement(document.getElementById("notice-modal-content"));
     return true;
   }
 
@@ -167,6 +173,7 @@ function handleModalSelectAll(event) {
 
 function handleModalKeydown(event) {
   if (handleModalSelectAll(event)) return;
+  handleDialogKeydown(event);
   if (event.key !== "Escape") return;
   const helpBackdrop = document.getElementById("help-modal-backdrop");
   const jsonBackdrop = document.getElementById("modal-backdrop");

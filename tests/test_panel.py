@@ -35,8 +35,16 @@ class FakeBridge:
             "history": [],
         }
 
-    def list_ports(self) -> list[dict[str, str]]:
-        return [{"device": "/dev/fake", "description": "fake", "hwid": "FAKE"}]
+    def list_ports(self) -> list[dict[str, Any]]:
+        return [
+            {
+                "device": "/dev/cu.usbmodemFAKE",
+                "description": "USB JTAG/serial",
+                "hwid": "ESP32",
+                "kind": "likely_esp",
+                "recommended": True,
+            }
+        ]
 
     def snapshot(self) -> dict[str, Any]:
         return dict(self._state)
@@ -50,7 +58,7 @@ class FakeBridge:
             "startup": self._state.get("last_startup"),
         }
 
-    def connect(self, port: str, *, baud: int = 115200) -> None:
+    def connect(self, port: str, *, baud: int = 115200, verify: bool = True) -> None:
         port = port.strip()
         if not port:
             raise SerialBridgeError("port must not be empty")
@@ -59,6 +67,19 @@ class FakeBridge:
         self._state["port"] = port
         self._state["baud"] = baud
         self._state["last_error"] = None
+        if verify:
+            self._state["last_status"] = {
+                "type": "status",
+                "schema_hash": "e12b0cc20edf",
+                "mode": "replay",
+                "paused": True,
+                "step": 0,
+            }
+            self._state["last_startup"] = {
+                "type": "startup",
+                "framework": "esp-idf",
+                "schema_hash": "e12b0cc20edf",
+            }
 
     def disconnect(self) -> None:
         self._state["connected"] = False
@@ -290,12 +311,67 @@ def test_bridge_stores_diagnostics_message():
     assert snapshot["device"]["heap"]["free_psram"] == 7000000
 
 
+def test_classify_port_marks_esp_usbmodem_likely():
+    kind = SerialBridge.classify_port("/dev/cu.usbmodem1101", "USB JTAG/serial debug unit")
+    assert kind == "likely_esp"
+
+
+def test_classify_port_marks_bluetooth_unlikely():
+    kind = SerialBridge.classify_port("/dev/cu.BoseQC", "Bose QC Headphones Bluetooth")
+    assert kind == "unlikely"
+
+
+def test_list_ports_excludes_unlikely_devices(monkeypatch):
+    class FakeComPort:
+        def __init__(self, device: str, description: str = "", hwid: str = "") -> None:
+            self.device = device
+            self.description = description
+            self.hwid = hwid
+
+    monkeypatch.setattr(
+        "tools.panel.bridge.list_ports.comports",
+        lambda: [
+            FakeComPort("/dev/cu.usbmodem1101", "USB JTAG/serial debug unit"),
+            FakeComPort("/dev/cu.BoseQCUltraHeadphones"),
+            FakeComPort("/dev/cu.Bluetooth-Incoming-Port"),
+            FakeComPort("/dev/cu.debug-console"),
+        ],
+    )
+    ports = SerialBridge().list_ports()
+    assert [port["device"] for port in ports] == ["/dev/cu.usbmodem1101"]
+
+
+def test_is_growbox_handshake_accepts_status_and_startup():
+    assert SerialBridge.is_growbox_handshake(
+        {
+            "last_status": {
+                "type": "status",
+                "schema_hash": "e12b0cc20edf",
+                "mode": "replay",
+            }
+        }
+    )
+    assert SerialBridge.is_growbox_handshake(
+        {
+            "last_startup": {
+                "type": "startup",
+                "framework": "esp-idf",
+                "schema_hash": "e12b0cc20edf",
+            }
+        }
+    )
+    assert not SerialBridge.is_growbox_handshake(
+        {"last_status": {"type": "status", "mode": "replay"}}
+    )
+
+
 def test_http_connect_and_disconnect(panel_http_server):
     fake, base = panel_http_server
-    status, payload = _http_json("POST", base, "/api/connect", {"port": "/dev/fake"})
+    status, payload = _http_json("POST", base, "/api/connect", {"port": "/dev/cu.usbmodemFAKE"})
     assert status == 200
     assert payload["connected"] is True
-    assert payload["port"] == "/dev/fake"
+    assert payload["port"] == "/dev/cu.usbmodemFAKE"
+    assert payload["last_status"]["type"] == "status"
 
     status, payload = _http_json("POST", base, "/api/disconnect", {})
     assert status == 200

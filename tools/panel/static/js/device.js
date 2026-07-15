@@ -1,68 +1,215 @@
+function isGrowboxHandshake(state) {
+  const startup = state?.last_startup;
+  if (startup?.type === "startup" && startup.framework === "esp-idf" && startup.schema_hash) {
+    return true;
+  }
+  const status = state?.last_status;
+  return Boolean(
+    status?.type === "status"
+    && status.schema_hash
+    && (status.mode === "replay" || status.mode === "closed_loop")
+  );
+}
+
 function buildCompatibilityAlerts(state) {
   const alerts = [];
   if (!state?.connected || !panelSchema) return alerts;
   const startup = state.last_startup;
-  if (!startup || typeof startup !== "object") return alerts;
-  const deviceHash = startup.schema_hash;
+  const status = state.last_status;
+  const deviceHash = (startup?.type === "startup" ? startup.schema_hash : null)
+    || (status?.type === "status" ? status.schema_hash : null);
   const panelHash = panelSchema.schema_hash;
   if (deviceHash && panelHash && deviceHash !== panelHash) {
     alerts.push({
       level: "danger",
-      html: `Niezgodny kontrakt scenariusza: płytka <code>${escapeHtml(deviceHash)}</code>, panel <code>${escapeHtml(panelHash)}</code>. Zaktualizuj firmware lub panel przed pracą.`,
+      short: "Kontrakt ≠",
+      detail: {
+        title: "Niezgodny kontrakt scenariusza",
+        html: `<p>Płytka <code>${escapeHtml(deviceHash)}</code>, panel <code>${escapeHtml(panelHash)}</code>.</p>
+          <h4>Co zrobić?</h4>
+          <ul><li>Zaktualizuj firmware lub panel do tej samej wersji kontraktu</li></ul>`,
+      },
     });
   }
-  if (startup.model_compatible === false) {
+  if (startup?.type === "startup" && startup.model_compatible === false) {
     const modelHash = startup.model_schema_hash || "?";
     alerts.push({
       level: "warn",
-      html: `Model na płytce niezgodny z kontraktem (<code>${escapeHtml(modelHash)}</code>). Inferencja może być błędna.`,
+      short: "Model ≠",
+      detail: {
+        title: "Model niezgodny z kontraktem",
+        html: `<p>Hash modelu na płytce: <code>${escapeHtml(modelHash)}</code>.</p>
+          <h4>Co zrobić?</h4>
+          <ul><li>Wgraj model zgodny z aktualnym kontraktem przed inferencją</li></ul>`,
+      },
     });
   }
   return alerts;
 }
 
-function updatePanelAlerts(state = lastState) {
-  const el = document.getElementById("panel-alerts");
+function shortenPortDescription(description) {
+  if (!description || description === "n/a") return "";
+  const lower = description.toLowerCase();
+  if (lower.includes("jtag")) return "JTAG";
+  if (lower.includes("espressif")) return "ESP";
+  if (lower.includes("serial")) return "USB";
+  if (description.length > 10) return `${description.slice(0, 8)}…`;
+  return description;
+}
+
+function formatPortOption(port) {
+  const name = port.device.replace("/dev/cu.", "");
+  if (!port.recommended) return `${name} ⚠`;
+  const hint = shortenPortDescription(port.description);
+  return hint ? `${name} · ${hint}` : name;
+}
+
+function setConnectFailure(message, detail) {
+  connectFailureMessage = message || null;
+  connectFailureDetail = detail || (message ? resolveConnectError(message) : null);
+  renderTopBarMessages(lastState);
+}
+
+function renderTopBarMessages(state = lastState) {
+  const el = document.getElementById("top-messages");
   if (!el) return;
-  const parts = buildCompatibilityAlerts(state).map(alert =>
-    `<div class="panel-alert panel-alert-${alert.level}">${alert.html}</div>`
-  );
-  const err = state?.last_firmware_error;
-  if (state?.connected && err && typeof err === "object") {
-    const code = escapeHtml(err.code || "?");
-    const message = escapeHtml(err.message || "nieznany błąd");
-    parts.push(
-      `<div class="panel-alert panel-alert-danger"><strong>Błąd płytki:</strong> ${message} <span class="panel-alert-code">(${code})</span></div>`
-    );
+  const items = [];
+  if (connectFailureMessage) {
+    items.push({
+      level: "danger",
+      short: connectFailureMessage,
+      detail: connectFailureDetail,
+    });
   }
-  if (!parts.length) {
+  for (const alert of buildCompatibilityAlerts(state)) {
+    items.push({
+      level: alert.level,
+      short: alert.short,
+      detail: alert.detail,
+    });
+  }
+  const fwErr = state?.last_firmware_error;
+  if (state?.connected && fwErr && typeof fwErr === "object") {
+    const code = fwErr.code || "?";
+    const message = fwErr.message || "nieznany błąd";
+    items.push({
+      level: "danger",
+      short: `Błąd ${code}`,
+      detail: {
+        title: "Błąd płytki",
+        body: message,
+        instructions: "<ul><li>Sprawdź log serial i spróbuj zresetować płytkę</li></ul>",
+      },
+    });
+  }
+  topBarMessageItems = items;
+  if (!items.length) {
     el.hidden = true;
     el.innerHTML = "";
     return;
   }
   el.hidden = false;
-  el.innerHTML = parts.join("");
+  el.innerHTML = items.map((item, index) =>
+    `<button type="button" class="top-message top-message-${item.level}" data-msg-idx="${index}" title="Szczegóły">${escapeHtml(item.short)}</button>`
+  ).join("");
+}
+
+function getSelectedPort() {
+  return portCatalog.find(port => port.device === selectedPortDevice) || null;
+}
+
+function getSelectedPortDevice() {
+  return selectedPortDevice;
+}
+
+function isSelectedPortUnlikely() {
+  const port = getSelectedPort();
+  return Boolean(port && !port.recommended);
+}
+
+function closePortPickerMenu() {
+  const menu = document.getElementById("port-picker-menu");
+  const trigger = document.getElementById("port-picker-trigger");
+  if (!menu || menu.hidden) return;
+  menu.hidden = true;
+  trigger?.setAttribute("aria-expanded", "false");
+}
+
+function renderPortPicker() {
+  const label = document.getElementById("port-picker-label");
+  const menu = document.getElementById("port-picker-menu");
+  const picker = document.getElementById("port-picker");
+  const selected = getSelectedPort();
+  if (!label || !menu) return;
+
+  if (!portCatalog.length) {
+    label.textContent = "brak portu";
+    menu.innerHTML = "";
+    menu.hidden = true;
+    selectedPortDevice = "";
+    picker?.classList.remove("port-picker-warn");
+    return;
+  }
+
+  label.textContent = selected ? formatPortOption(selected) : "wybierz port";
+  picker?.classList.toggle("port-picker-warn", Boolean(selected && !selected.recommended));
+  menu.innerHTML = portCatalog.map(port => {
+    const active = port.device === selectedPortDevice;
+    const unlikely = !port.recommended ? " port-unlikely" : "";
+    return `<button type="button" class="port-picker-item${active ? " active" : ""}${unlikely}" role="option" aria-selected="${active}" data-port="${escapeHtml(port.device)}" title="${escapeHtml(port.recommended ? "ESP32-S3 (USB)" : "Prawdopodobnie nie ESP32")}">
+      <span class="port-picker-check" aria-hidden="true">${active ? "✓" : ""}</span>
+      <span class="port-picker-item-label">${escapeHtml(formatPortOption(port))}</span>
+    </button>`;
+  }).join("");
+}
+
+function selectPortDevice(device) {
+  if (!portCatalog.some(port => port.device === device)) return;
+  selectedPortDevice = device;
+  renderPortPicker();
+  closePortPickerMenu();
+}
+
+function togglePortPickerMenu() {
+  const menu = document.getElementById("port-picker-menu");
+  const trigger = document.getElementById("port-picker-trigger");
+  if (!menu || !portCatalog.length) return;
+  const open = menu.hidden;
+  menu.hidden = !open;
+  trigger?.setAttribute("aria-expanded", String(open));
+  if (open) menu.querySelector(".port-picker-item.active")?.focus();
+}
+
+function initPortPicker() {
+  document.getElementById("port-picker-trigger")?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    togglePortPickerMenu();
+  });
+  document.getElementById("port-picker-menu")?.addEventListener("click", (event) => {
+    const item = event.target.closest("[data-port]");
+    if (!item) return;
+    selectPortDevice(item.dataset.port);
+  });
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest("#port-picker")) closePortPickerMenu();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closePortPickerMenu();
+  });
 }
 
 async function refreshPorts() {
   const data = await api("/api/ports");
-  const select = document.getElementById("port-select");
-  const prev = select.value;
-  select.innerHTML = "";
-  const ports = (data.ports || []).slice().sort((a, b) => {
-    const score = (p) => (p.device.includes("usbmodem") ? 0 : p.device.includes("usbserial") ? 1 : 2);
-    return score(a) - score(b);
-  });
-  for (const p of ports) {
-    const opt = document.createElement("option");
-    opt.value = p.device;
-    opt.textContent = p.device.replace("/dev/cu.", "");
-    select.appendChild(opt);
-  }
-  const preferred = ports.find(p => p.device.includes("usbmodem"));
-  if (prev && ports.some(p => p.device === prev)) select.value = prev;
-  else if (preferred) select.value = preferred.device;
+  const ports = data.ports || [];
+  const prev = selectedPortDevice;
+  portCatalog = ports;
+  const preferred = ports.find(port => port.recommended);
+  if (prev && ports.some(port => port.device === prev)) selectedPortDevice = prev;
+  else selectedPortDevice = preferred?.device || ports[0]?.device || "";
+  renderPortPicker();
 }
+
+initPortPicker();
 
 async function refreshState(options = {}) {
   try {
@@ -73,7 +220,7 @@ async function refreshState(options = {}) {
     return;
   }
       updateToolbarState(lastState);
-  updatePanelAlerts(lastState);
+  renderTopBarMessages(lastState);
   if (lastState?.connected && lastState.last_diagnostics) {
     diagnosticsSnapshot = {
       connected: lastState.connected,
@@ -122,14 +269,14 @@ function tryApplyScenarioFromDevice(state, { force = false } = {}) {
   return true;
 }
 
-async function waitForDeviceStartup(maxAttempts = 20) {
+async function waitForDeviceHandshake(maxAttempts = 20) {
   if (!lastState?.connected) return false;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    if (lastState?.last_startup?.schema_hash) return true;
+    if (isGrowboxHandshake(lastState)) return true;
     await new Promise(resolve => setTimeout(resolve, 100));
     await refreshState();
   }
-  return Boolean(lastState?.last_startup);
+  return isGrowboxHandshake(lastState);
 }
 
 async function requestDeviceStatus(maxAttempts = 10) {
