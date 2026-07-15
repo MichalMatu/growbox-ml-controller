@@ -55,7 +55,19 @@ function liveNoTargetHint(metric) {
   return "Brak celu — warunki zewnętrzne";
 }
 
-function renderLiveMetricRow(metric, sensors, targets, validity) {
+function renderLiveMetricRow(metric, decision) {
+  const sensors = decision?.sensors || {};
+  const targets = decision?.targets || {};
+  const validity = decision?.validity || {};
+  if (metric.kind === "pseudo") {
+    const active = Boolean(decision?.pseudo?.[metric.key]);
+    const label = metric.label || shortLabel(metric.key);
+    return `<tr class="env-row">
+      <th scope="row">${label}</th>
+      <td class="num"><strong>${active ? "ON" : "OFF"}</strong></td>
+      <td class="num"><span class="live-no-target" title="Brak celu — stan symulacji">—</span></td>
+    </tr>`;
+  }
   const valueText = formatLiveSensorValue(sensors[metric.key], metric.decimals);
   const valid = validity[metric.key] !== false;
   const targetText = metric.targetKey
@@ -64,18 +76,91 @@ function renderLiveMetricRow(metric, sensors, targets, validity) {
   const invalidMark = valid ? "" : '<span class="live-invalid" title="Czujnik nieważny">⊘</span>';
   const envClass = metric.targetKey ? "" : " env-row";
   const invalidClass = valid ? "" : " invalid";
+  const label = metric.label || shortLabel(metric.key);
   return `<tr class="${envClass}${invalidClass}">
-    <th scope="row">${shortLabel(metric.key)}${invalidMark}</th>
+    <th scope="row">${label}${invalidMark}</th>
     <td class="num"><strong>${valueText}${metric.unit}</strong></td>
     <td class="num">${targetText}</td>
   </tr>`;
 }
 
-function renderLiveSensorGroupTable(group, sensors, targets, validity) {
+function liveZoneSoilTarget(zoneIndex) {
+  const field = fieldByName(`zone_${zoneIndex + 1}_target_soil_moisture_pct`);
+  if (field) return getNested(scenario, field.path);
+  return getNested(scenario, `zones.${zoneIndex}.targets.soil_moisture_pct`);
+}
+
+function renderLivePotMetricRow(label, value, decimals, unit, targetValue, targetDecimals, targetUnit, valid) {
+  const valueText = formatLiveSensorValue(value, decimals);
+  const targetText = typeof targetValue === "number" && Number.isFinite(targetValue)
+    ? formatLiveTargetValue(targetValue, targetDecimals, targetUnit)
+    : `<span class="live-no-target" title="Brak celu — temperatura gleby bez targetu">—</span>`;
+  const invalidMark = valid ? "" : '<span class="live-invalid" title="Czujnik nieważny">⊘</span>';
+  const invalidClass = valid ? "" : " invalid";
+  return `<tr class="${invalidClass}">
+    <th scope="row">${label}${invalidMark}</th>
+    <td class="num"><strong>${valueText}${unit}</strong></td>
+    <td class="num">${targetText}</td>
+  </tr>`;
+}
+
+function renderLivePotGroupTable(decision) {
+  const rows = POT_SENSOR_ROWS.flatMap((_pot, index) => {
+    const zone = decision?.zones?.[index] || {};
+    const sensors = zone.sensors || {};
+    const validity = zone.validity || {};
+    const target = liveZoneSoilTarget(index);
+    const potNo = index + 1;
+    return [
+      renderLivePotMetricRow(
+        `${potNo} Wilg.`,
+        sensors.soil_moisture_pct,
+        0,
+        "%",
+        target,
+        0,
+        "%",
+        validity.soil_moisture_pct !== false,
+      ),
+      renderLivePotMetricRow(
+        `${potNo} Gleba T`,
+        sensors.soil_temperature_c,
+        1,
+        "°C",
+        null,
+        1,
+        "°C",
+        validity.soil_temperature_c !== false,
+      ),
+    ];
+  }).join("");
+  return `<div class="live-sensor-col live-sensor-col-pots">
+    <div class="live-sensor-col-head">Donice</div>
+    <div class="live-data-table-wrap">
+      <table class="live-data-table" aria-label="Donice">
+        <colgroup>
+          <col class="sensor-col" />
+          <col class="reading-col" />
+          <col class="target-col" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th scope="col" class="sensor-col"></th>
+            <th scope="col" class="num">Odczyt</th>
+            <th scope="col" class="num">Cel</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function renderLiveSensorGroupBlock(group, decision) {
   const rows = group.metrics.map(metric =>
-    renderLiveMetricRow(metric, sensors, targets, validity)
+    renderLiveMetricRow(metric, decision)
   ).join("");
-  return `<div class="live-sensor-col">
+  return `<div class="live-sensor-block">
     <div class="live-sensor-col-head">${group.title}</div>
     <div class="live-data-table-wrap">
       <table class="live-data-table" aria-label="${group.title}">
@@ -97,14 +182,17 @@ function renderLiveSensorGroupTable(group, sensors, targets, validity) {
   </div>`;
 }
 
-function renderLiveMetricsTable(decision) {
-  const sensors = decision?.sensors || {};
-  const targets = decision?.targets || {};
-  const validity = decision?.validity || {};
-  const cols = LIVE_SENSOR_GROUPS.map(group =>
-    renderLiveSensorGroupTable(group, sensors, targets, validity)
+function renderLiveClimateColumn(decision) {
+  const blocks = LIVE_SENSOR_GROUPS.map(group =>
+    renderLiveSensorGroupBlock(group, decision)
   ).join("");
-  return `<div class="live-sensors-split" aria-label="Czujniki i cele">${cols}</div>`;
+  return `<div class="live-sensor-col live-sensor-col-climate" aria-label="Klimat">${blocks}</div>`;
+}
+
+function renderLiveMetricsTable(decision) {
+  const climate = renderLiveClimateColumn(decision);
+  const pots = renderLivePotGroupTable(decision);
+  return `<div class="live-sensors-split" aria-label="Czujniki i cele">${climate}${pots}</div>`;
 }
 function formatOutputPct(value) {
   const n = Number(value) || 0;

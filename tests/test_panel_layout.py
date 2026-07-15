@@ -511,6 +511,31 @@ def test_growbox_setup_has_actuator_control_type_selects():
     assert "syncControlTypeField" in main_js
 
 
+def test_live_section_includes_pots_lights_and_zone_readings():
+    live_js = (PANEL_STATIC / "js" / "live.js").read_text(encoding="utf-8")
+    constants_js = (PANEL_STATIC / "js" / "constants.js").read_text(encoding="utf-8")
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
+    metrics_fn = _extract_js_function(live_js, "renderLiveMetricsTable")
+    climate_fn = _extract_js_function(live_js, "renderLiveClimateColumn")
+    pots_fn = _extract_js_function(live_js, "renderLivePotGroupTable")
+    assert metrics_fn
+    assert climate_fn
+    assert pots_fn
+    assert "renderLiveClimateColumn(decision)" in metrics_fn
+    assert "renderLivePotGroupTable(decision)" in metrics_fn
+    assert "live-sensor-col-climate" in climate_fn
+    assert "LIVE_SENSOR_GROUPS.map" in climate_fn
+    assert "POT_SENSOR_ROWS" in pots_fn
+    assert "${potNo} Wilg." in pots_fn
+    assert "Donica" not in pots_fn.split("live-sensor-col-head", 1)[1]
+    assert 'kind: "pseudo"' in constants_js
+    assert 'label: "Lampa"' in constants_js
+    assert "decision?.zones?.[index]" in pots_fn
+    assert "liveZoneSoilTarget" in live_js
+    assert re.search(r"\.live-sensors-split\s*\{[^}]*grid-template-columns:\s*1fr\s+1fr", panel_css)
+    assert ".live-sensor-col-climate" in panel_css
+
+
 def test_panel_modal_unifies_all_entry_points_in_one_wide_shell():
     html = INDEX_HTML.read_text(encoding="utf-8")
     panel_css = PANEL_CSS.read_text(encoding="utf-8")

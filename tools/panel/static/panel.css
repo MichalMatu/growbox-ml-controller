@@ -1233,6 +1233,12 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
   gap: var(--live-split-gap);
   align-items: start;
 }
+.live-sensor-col-climate {
+  display: flex;
+  flex-direction: column;
+  gap: var(--live-split-gap);
+  min-width: 0;
+}
 .live-sensor-col-head {
   font-size: var(--text-xs);
   font-weight: 600;

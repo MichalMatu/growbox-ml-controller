@@ -326,6 +326,7 @@ const LIVE_SENSOR_GROUPS = [
       { key: "air_humidity_pct", targetKey: "air_humidity_pct", decimals: 0, unit: "%" },
       { key: "co2_ppm", targetKey: "co2_ppm", decimals: 0, unit: " ppm" },
       { key: "nutrient_solution_temperature_c", targetKey: null, decimals: 1, unit: "°C" },
+      { key: "lights_active", kind: "pseudo", label: "Lampa" },
     ],
   },
   {
