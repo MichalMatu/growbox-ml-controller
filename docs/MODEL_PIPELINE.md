@@ -4,6 +4,10 @@ Deterministic path: simulation → teacher labels → Keras MLP → emlearn C ex
 
 > **Do not treat `--quick` as the production model.** See [plan.md](plan.md): complete contract v2 first, then `train-full`.
 
+## Simulator fidelity
+
+The training simulator (`tools/ml/simulator.py`, mirrored in firmware `DummyEnvironmentSimulator`) should model growbox **thermodynamics as closely as practical**: one air volume, up to four coupled pots, nonlinear T↔RH↔soil↔fan↔outside exchange. It is a lumped-parameter model, not CFD — but weak physics yields weak ML policies. Full coupling spec: [plan.md](plan.md) → *Symulator — termodynamika growboxa*. I/O slots live in [IO_MAP.md](IO_MAP.md), not physics equations.
+
 ## Commands
 
 ```bash
@@ -21,6 +25,6 @@ python -m tools.ml.pipeline --check-generated   # CI: byte-stable headers
 5. Export emlearn + manifest + golden vectors
 6. Host C++ tests match Python within tolerance
 
-Simulator is physically inspired, not a calibrated twin. Teacher is explicit cost search, not RL.
+Teacher is explicit cost search on simulator rollouts, not RL. Calibrate simulator parameters against real growbox replay over time.
 
 Details: `tools/ml/pipeline.py`, `teacher.py`, `simulator.py`.

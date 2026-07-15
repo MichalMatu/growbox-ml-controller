@@ -11,6 +11,10 @@ The demonstration firmware only drives its local simulator: **it never configure
 > This is an engineering demo, not a calibrated physical model or a validated controller for
 > unattended heaters, pumps, or other real equipment.
 
+The long-term target is a **commercial configurable controller** (multi-zone irrigation, optional
+ML, deterministic safety), not a single hobby growbox. Product scope, v2 I/O, and work order:
+[docs/plan.md](docs/plan.md) (section *Wizja produktu*).
+
 ## How it works
 
 Python runs on the development computer to create and train the model. The ESP32-S3 runs only the
@@ -261,7 +265,7 @@ and an ESP-IDF 5.5.1 ESP32-S3 firmware build. No physical board is required for 
 
 ## Demo limitations
 
-- The simulator uses simplified thermal, humidity, CO2, and soil-water relationships.
+- The v1 simulator uses simplified physics; **v2** targets training-grade coupled growbox thermodynamics ([plan.md](docs/plan.md) → *Symulator — termodynamika growboxa*).
 - Synthetic training cannot establish real-world performance or safety.
 - The v1 teacher is a short-horizon deterministic search, not model-predictive control or RL.
 - The exported float model favors a transparent demonstration over aggressive quantization.

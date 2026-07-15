@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Growbox Environment Controller Contract v2 (draft)",
+  "schema_id": "environment-controller-v2",
+  "schema_version": 2,
+  "status": "draft",
+  "io_status": "definitive",
+  "sensing_status": "definitive",
+  "draft_note": "Sensing + actuator slots DEFINITYWNE 2026-07 — docs/IO_MAP.md § Sensing v2. Mix-and-match validity/available. Not wired to firmware/CI.",
+  "sensing_scope": {
+    "physical_slots": 15,
+    "pseudo_inputs": ["lights_active"],
+    "groups": {
+      "air_inside": ["air_temperature_c", "air_humidity_pct", "co2_ppm"],
+      "nutrient_tank": ["nutrient_solution_temperature_c"],
+      "air_outside_intake": ["outside_temperature_c", "outside_humidity_pct", "outside_co2_ppm"],
+      "soil_per_zone": [
+        "soil_moisture_zone_1_pct", "soil_temperature_zone_1_c",
+        "soil_moisture_zone_2_pct", "soil_temperature_zone_2_c",
+        "soil_moisture_zone_3_pct", "soil_temperature_zone_3_c",
+        "soil_moisture_zone_4_pct", "soil_temperature_zone_4_c"
+      ]
+    },
+    "explicitly_not_v2": ["ppfd_umol", "leaf_temperature_c", "ec_ms_cm", "ph", "flood_sensor", "exhaust_air_sensors", "weather_station"]
+  },
+  "configuration_model": {
+    "mix_and_match": true,
+    "sensor_off": "validity.<slot> = false",
+    "actuator_off": "actuators.<slot>.available = false",
+    "zone_off": "zones[N].available = false",
+    "no_required_bundles": true
+  },
+  "hash": {
+    "algorithm": "sha256",
+    "canonicalization": "UTF-8 JSON with lexicographically sorted keys and separators ',' and ':'",
+    "short_hex_characters": 12
+  },
+  "groups": {
+    "sensors.air": [
+      "air_temperature_c",
+      "air_humidity_pct",
+      "co2_ppm"
+    ],
+    "sensors.irrigation": [
+      "nutrient_solution_temperature_c"
+    ],
+    "sensors.outside": [
+      "outside_temperature_c",
+      "outside_humidity_pct",
+      "outside_co2_ppm"
+    ],
+    "validity.air": [
+      "air_temperature_valid",
+      "air_humidity_valid",
+      "co2_valid"
+    ],
+    "validity.irrigation": [
+      "nutrient_solution_temperature_valid"
+    ],
+    "validity.outside": [
+      "outside_temperature_valid",
+      "outside_humidity_valid",
+      "outside_co2_valid"
+    ],
+    "zones.soil_sensors": [
+      "soil_moisture_zone_1_pct",
+      "soil_temperature_zone_1_c",
+      "soil_moisture_zone_2_pct",
+      "soil_temperature_zone_2_c",
+      "soil_moisture_zone_3_pct",
+      "soil_temperature_zone_3_c",
+      "soil_moisture_zone_4_pct",
+      "soil_temperature_zone_4_c"
+    ],
+    "validity.zones.soil": [
+      "soil_moisture_zone_1_valid",
+      "soil_temperature_zone_1_valid",
+      "soil_moisture_zone_2_valid",
+      "soil_temperature_zone_2_valid",
+      "soil_moisture_zone_3_valid",
+      "soil_temperature_zone_3_valid",
+      "soil_moisture_zone_4_valid",
+      "soil_temperature_zone_4_valid"
+    ],
+    "zones.meta": [
+      "zone_1_available",
+      "zone_2_available",
+      "zone_3_available",
+      "zone_4_available"
+    ],
+    "outputs.global": [
+      "heater",
+      "fan",
+      "humidifier",
+      "dehumidifier",
+      "cooler",
+      "co2_doser"
+    ],
+    "outputs.zones": [
+      "irrigation_zone_1",
+      "irrigation_zone_2",
+      "irrigation_zone_3",
+      "irrigation_zone_4"
+    ]
+  },
+  "output_scope": {
+    "ml_output_count": 10,
+    "non_ml_actuators": [
+      "lights"
+    ],
+    "notes": [
+      "lights: pseudo-input lights_active (ML feature); relay via schedule/Nodeflow; safety thermal cutoff forces OFF; optional heat-assist policy; lamp heat watts in simulator config.",
+      "fan: jedno wyjście ML; kilka fizycznych wentylatorów → mapowanie w mostku sprzętowym.",
+      "irrigation_zone_N: 0–4 aktywnych stref (zones[N].irrigation.available); nieaktywne = available false, safe output 0."
+    ]
+  },
+  "independence_rules": [
+    "soil_moisture_pct and soil_temperature_c per zone are unrelated inputs (e.g. moisture probe + DS18B20 in pot).",
+    "nutrient_solution_temperature_c is separate from soil_temperature_c (DS18B20 in nutrient tank / feed line).",
+    "Compare solution vs soil temp in safety before irrigation — avoid cold nutrient on warm substrate."
+  ],
+  "model": {
+    "normalization": "minmax_to_zero_one",
+    "features": [
+      {"name": "air_temperature_c", "path": "sensors.air_temperature_c", "type": "number", "unit": "degC", "minimum": -20.0, "maximum": 60.0, "default": 24.0},
+      {"name": "air_humidity_pct", "path": "sensors.air_humidity_pct", "type": "number", "unit": "percent", "minimum": 0.0, "maximum": 100.0, "default": 60.0},
+      {"name": "co2_ppm", "path": "sensors.co2_ppm", "type": "number", "unit": "ppm", "minimum": 0.0, "maximum": 5000.0, "default": 850.0},
+      {"name": "air_temperature_valid", "path": "validity.air_temperature_c", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "air_humidity_valid", "path": "validity.air_humidity_pct", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "co2_valid", "path": "validity.co2_ppm", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "nutrient_solution_temperature_c", "path": "sensors.nutrient_solution_temperature_c", "type": "number", "unit": "degC", "minimum": 0.0, "maximum": 50.0, "default": 20.0},
+      {"name": "nutrient_solution_temperature_valid", "path": "validity.nutrient_solution_temperature_c", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "outside_temperature_c", "path": "sensors.outside_temperature_c", "type": "number", "unit": "degC", "minimum": -40.0, "maximum": 60.0, "default": 20.0},
+      {"name": "outside_humidity_pct", "path": "sensors.outside_humidity_pct", "type": "number", "unit": "percent", "minimum": 0.0, "maximum": 100.0, "default": 50.0},
+      {"name": "outside_co2_ppm", "path": "sensors.outside_co2_ppm", "type": "number", "unit": "ppm", "minimum": 0.0, "maximum": 5000.0, "default": 420.0},
+      {"name": "outside_temperature_valid", "path": "validity.outside_temperature_c", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "outside_humidity_valid", "path": "validity.outside_humidity_pct", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "outside_co2_valid", "path": "validity.outside_co2_ppm", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+
+      {"name": "zone_1_available", "path": "zones.0.available", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "soil_moisture_zone_1_pct", "path": "zones.0.sensors.soil_moisture_pct", "type": "number", "unit": "percent", "minimum": 0.0, "maximum": 100.0, "default": 50.0},
+      {"name": "soil_temperature_zone_1_c", "path": "zones.0.sensors.soil_temperature_c", "type": "number", "unit": "degC", "minimum": -10.0, "maximum": 50.0, "default": 20.0},
+      {"name": "soil_moisture_zone_1_valid", "path": "zones.0.validity.soil_moisture_pct", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "soil_temperature_zone_1_valid", "path": "zones.0.validity.soil_temperature_c", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+
+      {"name": "zone_2_available", "path": "zones.1.available", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "soil_moisture_zone_2_pct", "path": "zones.1.sensors.soil_moisture_pct", "type": "number", "unit": "percent", "minimum": 0.0, "maximum": 100.0, "default": 50.0},
+      {"name": "soil_temperature_zone_2_c", "path": "zones.1.sensors.soil_temperature_c", "type": "number", "unit": "degC", "minimum": -10.0, "maximum": 50.0, "default": 20.0},
+      {"name": "soil_moisture_zone_2_valid", "path": "zones.1.validity.soil_moisture_pct", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "soil_temperature_zone_2_valid", "path": "zones.1.validity.soil_temperature_c", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+
+      {"name": "zone_3_available", "path": "zones.2.available", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "soil_moisture_zone_3_pct", "path": "zones.2.sensors.soil_moisture_pct", "type": "number", "unit": "percent", "minimum": 0.0, "maximum": 100.0, "default": 50.0},
+      {"name": "soil_temperature_zone_3_c", "path": "zones.2.sensors.soil_temperature_c", "type": "number", "unit": "degC", "minimum": -10.0, "maximum": 50.0, "default": 20.0},
+      {"name": "soil_moisture_zone_3_valid", "path": "zones.2.validity.soil_moisture_pct", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "soil_temperature_zone_3_valid", "path": "zones.2.validity.soil_temperature_c", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+
+      {"name": "zone_4_available", "path": "zones.3.available", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "soil_moisture_zone_4_pct", "path": "zones.3.sensors.soil_moisture_pct", "type": "number", "unit": "percent", "minimum": 0.0, "maximum": 100.0, "default": 50.0},
+      {"name": "soil_temperature_zone_4_c", "path": "zones.3.sensors.soil_temperature_c", "type": "number", "unit": "degC", "minimum": -10.0, "maximum": 50.0, "default": 20.0},
+      {"name": "soil_moisture_zone_4_valid", "path": "zones.3.validity.soil_moisture_pct", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "soil_temperature_zone_4_valid", "path": "zones.3.validity.soil_temperature_c", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0}
+    ],
+    "outputs": [
+      {"name": "heater", "unit": "ratio", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "fan", "unit": "ratio", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "humidifier", "unit": "ratio", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "dehumidifier", "unit": "ratio", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "cooler", "unit": "ratio", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "co2_doser", "unit": "ratio", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "irrigation_zone_1", "unit": "ratio", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "irrigation_zone_2", "unit": "ratio", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "irrigation_zone_3", "unit": "ratio", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "irrigation_zone_4", "unit": "ratio", "minimum": 0.0, "maximum": 1.0, "default": 0.0}
+    ]
+  },
+  "availability_rule": "When an actuator is unavailable, available is false, its maximum capability is zero, and its final safe output is zero.",
+  "safety_defaults": {
+    "maximum_air_temperature_c": 35.0,
+    "alarm_air_temperature_c": 32.0,
+    "alarm_minimum_fan": 0.6,
+    "binary_threshold": 0.5,
+    "heater_minimum_on_s": 30.0,
+    "heater_minimum_off_s": 30.0,
+    "humidifier_minimum_on_s": 15.0,
+    "humidifier_minimum_off_s": 15.0,
+    "dehumidifier_minimum_on_s": 15.0,
+    "dehumidifier_minimum_off_s": 15.0,
+    "cooler_minimum_on_s": 30.0,
+    "cooler_minimum_off_s": 30.0,
+    "co2_doser_minimum_interval_s": 60.0,
+    "co2_doser_maximum_pulse_s": 5.0,
+    "fan_venting_co2_threshold": 0.05
+  }
+}

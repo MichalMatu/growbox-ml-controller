@@ -71,10 +71,12 @@ component.
 
 ### Host pipeline
 
-The Python pipeline generates complete time-series scenarios, labels them with a deterministic
-finite-action rollout teacher, trains a small regression MLP, exports it through emlearn, compares
-Python and compiled-C predictions on golden vectors, and writes deterministic generated headers.
-Splits are by scenario seed, so steps from one simulated run cannot cross data partitions.
+The Python pipeline generates complete time-series scenarios from a growbox thermodynamics
+simulator (lumped-parameter, coupled T/RH/soil/fan/outside — see [plan.md](plan.md)), labels them
+with a deterministic finite-action rollout teacher, trains a small regression MLP, exports it
+through emlearn, compares Python and compiled-C predictions on golden vectors, and writes
+deterministic generated headers. Splits are by scenario seed, so steps from one simulated run
+cannot cross data partitions.
 
 Portable C++ tests use ordinary CMake and CTest. They compile the same controller sources and the
 same generated model as the firmware build.
@@ -85,5 +87,6 @@ The model only proposes continuous values in `[0, 1]`. The safety supervisor can
 quantize proposals and reports a reason bitmask. Physical adapters remain responsible for mapping a
 safe normalized command to PWM, duty cycles, relay states, or timed pump pulses.
 
-The demo is an integration test, not a validated agronomic controller or a high-fidelity physical
-simulation. Hardware interlocks remain mandatory in a real deployment.
+The demo is an integration test, not a validated agronomic controller. The bundled environment
+simulator targets training-grade thermodynamic fidelity (not runtime on real hardware — sensors
+provide state there). Hardware interlocks remain mandatory in a real deployment.
