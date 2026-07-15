@@ -782,13 +782,6 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
   opacity: 0.55;
   font-weight: 400;
 }
-.actuator-extra {
-  font-size: var(--text-xs);
-  color: var(--muted);
-  margin-top: 0.12rem;
-  font-variant-numeric: tabular-nums;
-}
-
 .growbox-split {
   display: grid;
   grid-template-columns: 1fr 1fr;

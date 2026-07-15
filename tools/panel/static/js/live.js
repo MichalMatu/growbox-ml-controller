@@ -141,7 +141,7 @@ function resolveActuatorAvailability(name, decision) {
   return isActuatorAvailable(name);
 }
 
-function renderActuatorCard(label, rawVal, safeVal, extraHtml = "", { available = true } = {}) {
+function renderActuatorCard(label, rawVal, safeVal, { available = true } = {}) {
   const displayRaw = available ? rawVal : 0;
   const displaySafe = available ? safeVal : 0;
   const rPct = formatOutputPct(displayRaw);
@@ -168,7 +168,6 @@ function renderActuatorCard(label, rawVal, safeVal, extraHtml = "", { available 
       <div class="bar safe" title="Wysyłane na płytkę: ${sPct}%"><span style="width:${sPct}%"></span></div>
       <span class="output-pct">${sPct}%</span>
     </div>
-    ${extraHtml}
   </article>`;
 }
 
@@ -238,20 +237,14 @@ function renderOutputs(decision, { force = false } = {}) {
   const safe = decision.safe_output || {};
   const outputsEl = document.getElementById("outputs-bars");
   const visible = names.filter(name => resolveActuatorAvailability(name, decision));
-  const pulseS = Number(safe.irrigation_pulse_s);
   if (!visible.length) {
     outputsEl.className = "outputs-empty";
     outputsEl.innerHTML = "Wszystkie aktuary wyłączone w scenariuszu na płytce.";
   } else {
     outputsEl.className = "actuator-grid";
-    outputsEl.innerHTML = visible.map(name => {
-      let extra = "";
-      if (name === "irrigation" && Number.isFinite(pulseS) && pulseS > 0.005) {
-        const pulseText = pulseS >= 10 ? pulseS.toFixed(0) : pulseS.toFixed(1);
-        extra = `<div class="actuator-extra">impuls ${pulseText} s</div>`;
-      }
-      return renderActuatorCard(labels[name], raw[name], safe[name], extra, { available: true });
-    }).join("");
+    outputsEl.innerHTML = visible.map(name =>
+      renderActuatorCard(labels[name], raw[name], safe[name], { available: true })
+    ).join("");
   }
 
   setLiveStepBadge(decision.step ?? "?");
