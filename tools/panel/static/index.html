@@ -541,6 +541,8 @@
     .outputs-legend {
       display: flex;
       flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
       gap: 0.35rem 0.75rem;
       font-size: 0.64rem;
       color: var(--muted);
@@ -550,7 +552,27 @@
       border-radius: 6px;
       border: 1px solid var(--border);
     }
+    .legend-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem 0.75rem;
+      align-items: center;
+      min-width: 0;
+    }
     .legend-item { display: inline-flex; align-items: center; gap: 0.3rem; }
+    .legend-meta {
+      margin-left: auto;
+      font-size: 0.62rem;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .legend-meta code {
+      font-family: ui-monospace, monospace;
+      font-size: 0.6rem;
+      color: var(--ok);
+    }
     .legend-dot {
       width: 8px;
       height: 8px;
@@ -638,22 +660,7 @@
       border-radius: 8px;
       text-align: center;
     }
-    .safety-footer {
-      margin-top: 0.4rem;
-      padding: 0.34rem 0.42rem;
-      background: rgba(15, 20, 25, 0.45);
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      font-size: 0.7rem;
-      line-height: 1.4;
-    }
-    .safety-footer .safety-code {
-      display: block;
-      margin-top: 0.12rem;
-      font-size: 0.62rem;
-      color: var(--muted);
-      opacity: 0.85;
-    }
+
     .pill {
       display: inline-block;
       padding: 0.1rem 0.4rem;
@@ -868,17 +875,18 @@
         </div>
         <div id="decision-summary" class="live-summary note flush">Połącz → Wyślij → ▶ → Krok</div>
         <div class="outputs-legend" aria-label="Legenda pasków">
-          <span class="legend-item"><span class="legend-dot raw" aria-hidden="true"></span> Model — propozycja sieci</span>
-          <span class="legend-item"><span class="legend-dot safe" aria-hidden="true"></span> Safety — wysyłane na płytkę</span>
+          <div class="legend-items">
+            <span class="legend-item"><span class="legend-dot raw" aria-hidden="true"></span> Model — propozycja sieci</span>
+            <span class="legend-item"><span class="legend-dot safe" aria-hidden="true"></span> Safety — wysyłane na płytkę</span>
+          </div>
+          <span id="live-inference-meta" class="legend-meta" hidden></span>
         </div>
         <div id="outputs-bars" class="outputs-empty">Uruchom <strong>Krok</strong>, aby zobaczyć wyjścia aktuatorów.</div>
-        <div class="safety-footer note flush" id="safety-reason" hidden></div>
         <div class="previous-live" id="previous-live-box">
           <div class="previous-live-head">
             <h3>Poprzedni stan aktuatorów</h3>
             <button type="button" class="help-btn" data-help="previous" aria-label="Pomoc — poprzedni stan">?</button>
           </div>
-          <p class="note flush">Ostatnie wyjścia Safety — kontekst modelu przy następnym kroku.</p>
           <div id="previous-live" class="previous-live-grid" aria-live="polite"></div>
         </div>
         <div class="json-actions btn-row">
@@ -1087,30 +1095,9 @@
           </ul>
           <p>Pomarańczowa ramka i znak <strong>≠</strong> — tylko tam, gdzie safety <em>tego aktuatora</em> zmieniło wyjście modelu.</p>
           <p>Jeśli oba paski są takie same (np. fan 14% / 14%), karta ma etykietę <strong>bez zmian</strong> — safety przepuściło propozycję modelu.</p>
-          <p>Na dole: czy safety coś zmieniło i dlaczego (np. próg ON/OFF, min. przerwa pompy, alarm temperatury).</p>
-          <p>Przyciski JSON — surowe dane do debugowania i eksportu scenariusza.</p>
+          <p>Kod safety i czas inferencji — po prawej w legendzie pasków. Pełna diagnostyka w <strong>JSON decyzji</strong>.</p>
         `,
       },
-    };
-
-    const SAFETY_REASON_LABELS = {
-      none: "Bez korekty — wyjścia modelu przeszły bez zmian",
-      non_finite_input: "Nieprawidłowe dane wejściowe",
-      model_failure: "Błąd modelu — wyjścia wyzerowane",
-      schema_mismatch: "Niezgodność schematu danych",
-      non_finite_model_output: "Nieprawidłowe wyjście modelu",
-      output_clamped: "Wyjście obcięte do dozwolonego zakresu",
-      temperature_unavailable: "Brak temperatury — grzałka wyłączona",
-      actuator_unavailable: "Aktuator oznaczony jako niedostępny",
-      over_temperature: "Za wysoka temperatura — grzałka zablokowana",
-      temperature_alarm_fan: "Alarm temperatury — wymuszony min. wentylator",
-      pump_pulse_limited: "Ograniczenie czasu impulsu pompy",
-      pump_minimum_interval: "Za krótka przerwa między podlewaniem",
-      binary_threshold: "Poniżej progu ON/OFF — urządzenie wyłączone",
-      binary_minimum_on: "Min. czas włączenia — urządzenie pozostaje ON",
-      binary_minimum_off: "Min. czas wyłączenia — urządzenie pozostaje OFF",
-      invalid_capability: "Nieprawidłowa konfiguracja aktuatora",
-      unknown: "Nieznany powód korekty safety",
     };
 
     function setNested(obj, path, value) {
@@ -1378,6 +1365,32 @@
       }
       el.hidden = false;
       el.textContent = `Krok ${step}`;
+    }
+
+    function setLiveInferenceMeta(decision) {
+      const el = document.getElementById("live-inference-meta");
+      if (!el) return;
+      const diag = decision?.diagnostics;
+      if (!diag) {
+        el.hidden = true;
+        el.innerHTML = "";
+        return;
+      }
+      const parts = [];
+      const reason = diag.safety_reason || "none";
+      if (reason !== "none") {
+        parts.push(`Kod: <code>${reason}</code>`);
+      }
+      if (diag.inference_us !== undefined && diag.inference_us !== null) {
+        parts.push(`inferencja ${diag.inference_us} µs`);
+      }
+      if (!parts.length) {
+        el.hidden = true;
+        el.innerHTML = "";
+        return;
+      }
+      el.hidden = false;
+      el.innerHTML = parts.join(" · ");
     }
 
     function renderLiveMetricsTable(decision) {
@@ -1836,9 +1849,7 @@
       const outputsEl = document.getElementById("outputs-bars");
       outputsEl.className = "outputs-empty";
       outputsEl.innerHTML = "Uruchom <strong>Krok</strong>, aby zobaczyć wyjścia aktuatorów.";
-      const safetyEl = document.getElementById("safety-reason");
-      safetyEl.hidden = true;
-      safetyEl.innerHTML = "";
+      setLiveInferenceMeta(null);
     }
 
     function renderOutputs(decision) {
@@ -1858,22 +1869,7 @@
 
       setLiveStepBadge(decision.step ?? "?");
       document.getElementById("decision-summary").innerHTML = renderLiveMetricsTable(decision);
-
-      const diag = decision.diagnostics || {};
-      const reason = diag.safety_reason || "none";
-      const reasonLabel = SAFETY_REASON_LABELS[reason] || SAFETY_REASON_LABELS.unknown;
-      const modified = !!diag.safety_modified;
-      const statusPill = modified
-        ? '<span class="pill warn">Safety zmieniło wyjścia</span>'
-        : '<span class="pill">Zgodne z modelem</span>';
-      const reasonText = modified || reason !== "none"
-        ? reasonLabel
-        : "Safety nie zmieniło propozycji modelu.";
-      const safetyEl = document.getElementById("safety-reason");
-      safetyEl.hidden = false;
-      safetyEl.innerHTML =
-        `${statusPill} ${reasonText}` +
-        `<span class="safety-code">Kod: <code>${reason}</code> · inferencja ${diag.inference_us ?? "?"} µs</span>`;
+      setLiveInferenceMeta(decision);
       syncPreviousActuators(safe);
     }
 
@@ -1978,10 +1974,6 @@
         renderOutputs(lastState.last_decision);
       } else if (lastState.last_status?.step !== undefined) {
         clearLivePreview(lastState.last_status.step);
-      }
-      if (lastState.last_firmware_error) {
-        document.getElementById("safety-reason").innerHTML =
-          `<span class="pill warn">${lastState.last_firmware_error.code}</span> ${lastState.last_firmware_error.message || ""}`;
       }
       if (document.getElementById("modal-backdrop").classList.contains("open")) {
         refreshModalContent();
