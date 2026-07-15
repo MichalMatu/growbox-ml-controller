@@ -114,19 +114,22 @@ function renderSensorMiniCell(sensorKey, validityKey) {
   const sensorPath = `sensors.${sensorKey}`;
   const step = fieldStepForPath(sensorPath);
   const displayValue = formatFieldNumber(sVal ?? sensorField.default, sensorPath);
+  const hint = fieldHint(sensorKey);
+  const hintAttr = hint ? ` title="${hint}"` : "";
   const validityControl = validityKey
     ? (() => {
         const vId = `f-validity_${validityKey}`;
         const vVal = getNested(scenario, `validity.${validityKey}`);
-        return `<input type="checkbox" data-path="validity.${validityKey}" id="${vId}" title="Czujnik ważny" ${vVal ? "checked" : ""} />`;
+        const vHint = validityHint(validityKey);
+        return `<input type="checkbox" data-path="validity.${validityKey}" id="${vId}" title="${vHint}" ${vVal ? "checked" : ""} />`;
       })()
     : "";
   return `<div class="mini-cell">
     <div class="head-row">
-      <span class="name">${shortLabel(sensorKey)}</span>
+      <span class="name"${hintAttr}>${shortLabel(sensorKey)}</span>
       ${validityControl}
     </div>
-    <input type="number" data-path="${sensorPath}" id="${sId}"
+    <input type="number" data-path="${sensorPath}" id="${sId}"${hintAttr}
       min="${sensorField.minimum}" max="${sensorField.maximum}" step="${step}" value="${displayValue}" />
   </div>`;
 }
@@ -244,9 +247,11 @@ function renderMiniCell(field) {
     const id = `f-${field.path.replaceAll(".", "_")}`;
     const value = getNested(scenario, field.path);
     if (isAvailabilityField(field.name)) {
+      const hint = fieldHint(field.name);
+      const hintAttr = hint ? ` title="${hint}"` : "";
       return `<div class="mini-cell bool-only${wide}">
         <div class="head-row tick-only">
-          <input type="checkbox" data-path="${field.path}" id="${id}" ${value ? "checked" : ""} />
+          <input type="checkbox" data-path="${field.path}" id="${id}"${hintAttr} ${value ? "checked" : ""} />
         </div>
       </div>`;
     }
@@ -314,11 +319,13 @@ function renderActuatorGroupCell(title, names, byName) {
   const wide = paramFields.some(isWideField) || isIrrigation ? " wide" : "";
   const availId = availableField ? `f-${availableField.path.replaceAll(".", "_")}` : "";
   const availVal = availableField ? getNested(scenario, availableField.path) : false;
+  const availHint = availableField ? fieldHint(availableField.name) : "";
+  const availHintAttr = availHint ? ` title="${availHint}"` : "";
   const stack = `<div class="field-stack">${paramFields.map(renderActuatorParamField).join("")}</div>`;
   return `<div class="mini-cell actuator-cell${wide}${isIrrigation ? " actuator-cell-irrigation" : ""}">
     <div class="head-row">
       <span class="name">${title}</span>
-      ${availableField ? `<input type="checkbox" data-path="${availableField.path}" id="${availId}" ${availVal ? "checked" : ""} />` : ""}
+      ${availableField ? `<input type="checkbox" data-path="${availableField.path}" id="${availId}"${availHintAttr} ${availVal ? "checked" : ""} />` : ""}
     </div>
     ${stack}
   </div>`;
@@ -333,9 +340,11 @@ function renderActuatorBlock(section) {
 function renderForm() {
   if (!panelSchema) return;
   const root = document.getElementById("form-sections");
+  const safetyRoot = document.getElementById("safety-section");
   root.innerHTML = renderSensorBlock();
   updateSeedInput();
   root.innerHTML += renderGrowboxPanel();
+  if (safetyRoot) safetyRoot.innerHTML = "";
   for (const section of panelSchema.sections) {
     if (section.id === "sensors" || section.id === "validity"
         || section.id === "environment" || section.id === "cultivation"
@@ -345,7 +354,11 @@ function renderForm() {
     card.innerHTML = `<h2>${section.title}</h2>`;
     if (section.id === "actuators") {
       root.innerHTML += `<div class="card">${renderSectionHead(section.title, "actuators")}${renderActuatorBlock(section)}</div>`;
-    } else if (section.id === "targets" || section.id === "safety") {
+    } else if (section.id === "safety") {
+      if (safetyRoot) {
+        safetyRoot.innerHTML = renderFieldsSubCard(section, section.id);
+      }
+    } else if (section.id === "targets") {
       root.innerHTML += renderFieldsSubCard(section, section.id);
     } else {
       const grid = document.createElement("div");

@@ -1,9 +1,14 @@
-function bindFormSync() {
-  const root = document.getElementById("form-sections");
+function bindFormInputRoot(root) {
+  if (!root) return;
   root.addEventListener("change", () => { collectScenario(); });
   root.addEventListener("input", (event) => {
     if (event.target && event.target.type === "number") collectScenario();
   });
+}
+
+function bindFormSync() {
+  bindFormInputRoot(document.getElementById("form-sections"));
+  bindFormInputRoot(document.getElementById("safety-section"));
   const toolbar = document.getElementById("panel-toolbar");
   const onSeedChange = (event) => {
     if (event.target?.id === "seed") collectScenario();

@@ -111,7 +111,7 @@ SECTION_TITLES = {
     "validity": "Ważność czujników",
     "environment": "Parametry growboxa",
     "cultivation": "Uprawa / doniczka",
-    "actuators": "Aktuary (możliwości)",
+    "actuators": "Aktuary",
     "targets": "Cele",
     "safety": "Limity safety",
     "previous": "Poprzedni stan aktuatorów",

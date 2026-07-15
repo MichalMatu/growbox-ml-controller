@@ -71,29 +71,40 @@ function renderLiveMetricRow(metric, sensors, targets, validity) {
   </tr>`;
 }
 
+function renderLiveSensorGroupTable(group, sensors, targets, validity) {
+  const rows = group.metrics.map(metric =>
+    renderLiveMetricRow(metric, sensors, targets, validity)
+  ).join("");
+  return `<div class="live-sensor-col">
+    <div class="live-sensor-col-head">${group.title}</div>
+    <div class="live-data-table-wrap">
+      <table class="live-data-table" aria-label="${group.title}">
+        <colgroup>
+          <col class="sensor-col" />
+          <col class="reading-col" />
+          <col class="target-col" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th scope="col" class="sensor-col"></th>
+            <th scope="col" class="num">Odczyt</th>
+            <th scope="col" class="num">Cel</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
 function renderLiveMetricsTable(decision) {
   const sensors = decision?.sensors || {};
   const targets = decision?.targets || {};
   const validity = decision?.validity || {};
-  const rows = LIVE_SENSOR_GROUPS.map(group => {
-    const header = `<tr class="group-row"><th scope="row" colspan="3">${group.title}</th></tr>`;
-    const metricRows = group.metrics.map(metric =>
-      renderLiveMetricRow(metric, sensors, targets, validity)
-    ).join("");
-    return `${header}${metricRows}`;
-  }).join("");
-  return `<div class="live-data-table-wrap">
-    <table class="live-data-table" aria-label="Czujniki i cele">
-      <thead>
-        <tr>
-          <th scope="col">Czujnik</th>
-          <th scope="col">Odczyt</th>
-          <th scope="col">Cel</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
-  </div>`;
+  const cols = LIVE_SENSOR_GROUPS.map(group =>
+    renderLiveSensorGroupTable(group, sensors, targets, validity)
+  ).join("");
+  return `<div class="live-sensors-split" aria-label="Czujniki i cele">${cols}</div>`;
 }
 function formatOutputPct(value) {
   const n = Number(value) || 0;

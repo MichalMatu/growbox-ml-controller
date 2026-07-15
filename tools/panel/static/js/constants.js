@@ -53,7 +53,7 @@ const HELP_TOPICS = {
     `,
   },
   actuators: {
-    title: "Aktuary (możliwości)",
+    title: "Aktuary",
     html: `
       <p>Co jest podłączone w growboxie i jakie ma limity. Checkbox przy nazwie = urządzenie jest w zestawie.</p>
       <ul>
@@ -224,6 +224,29 @@ function isAvailabilityField(name) {
 }
 
 const FIELD_HINTS = {
+  air_temperature_c: "Temperatura powietrza w growboxie (wejście modelu ML)",
+  air_humidity_pct: "Wilgotność powietrza w growboxie (wejście ML)",
+  co2_ppm: "Stężenie CO₂ w growboxie (wejście ML)",
+  soil_moisture_pct: "Wilgotność podłoża w doniczce (wejście ML)",
+  outside_temperature_c: "Temperatura na zewnątrz (wpływa na symulację, nie trafia do ML)",
+  outside_humidity_pct: "Wilgotność na zewnątrz (wpływa na symulację)",
+  outside_co2_ppm: "CO₂ na zewnątrz — tylko symulacja; nie trafia do modelu ML",
+  growbox_volume_m3: "Kubatura powietrza w growboxie (m³)",
+  thermal_mass_j_per_k: "Bezwładność termiczna — jak szybko zmienia się temperatura",
+  heat_loss_w_per_k: "Strata ciepła do otoczenia (W/K)",
+  air_leak_rate_ach: "Wymiana powietrza — air changes per hour (1/h)",
+  pot_volume_l: "Objętość doniczki (litry)",
+  substrate_water_capacity_ml: "Pojemność wodna podłoża (mL)",
+  transpiration_factor: "Mnożnik transpiracji — wyżej = szybsze suszenie i pobór wody",
+  heater_available: "Grzałka w zestawie — odznaczone = wyjście zawsze 0 po wysłaniu",
+  heater_max_power_w: "Maksymalna moc grzałki (W)",
+  heater_efficiency: "Sprawność grzałki (0–1) — ułamek mocy idącej do powietrza",
+  fan_available: "Wentylator w zestawie — odznaczone = wyjście zawsze 0 po wysłaniu",
+  fan_max_airflow_m3_h: "Maks. przepływ wentylatora (m³/h)",
+  humidifier_available: "Nawilżacz w zestawie — odznaczone = wyjście zawsze 0 po wysłaniu",
+  humidifier_max_output_g_h: "Maks. wydajność nawilżacza (g/h)",
+  irrigation_available: "Pompa w zestawie — odznaczone = wyjście zawsze 0 po wysłaniu",
+  irrigation_flow_ml_s: "Przepływ pompy podlewania (mL/s)",
   irrigation_maximum_pulse_s: "Maks. czas jednego impulsu podlewania (sekundy)",
   irrigation_minimum_interval_s: "Min. przerwa między kolejnymi podlaniami (sekundy)",
   fan_minimum_command: "Min. PWM przy alarmie temperatury (nie przy normalnej pracy)",
@@ -231,6 +254,10 @@ const FIELD_HINTS = {
   fan_control_type: "Typowo pwm (regulacja obrotów). bin = wł/wył",
   humidifier_control_type: "Typowo bin (wł/wył). pwm = modulacja",
   irrigation_control_type: "Typowo bin (impuls ON/OFF). pwm = długość impulsu z modelu",
+  target_air_temperature_c: "Docelowa temperatura powietrza w growboxie",
+  target_air_humidity_pct: "Docelowa wilgotność powietrza",
+  target_co2_ppm: "Docelowe stężenie CO₂",
+  target_soil_moisture_pct: "Docelowa wilgotność gleby",
   maximum_air_temperature_c: "Powyżej tej T wewnętrznej grzałka = 0 (niezależnie od modelu)",
   alarm_air_temperature_c: "Od tej T włącza się alarm wentylacji",
   alarm_minimum_fan: "Minimalny fan przy alarmie temperatury (max z Fan min w aktuatorach)",
@@ -240,6 +267,13 @@ const FIELD_HINTS = {
   humidifier_minimum_on_s: "Min. czas nawilżacza ON",
   humidifier_minimum_off_s: "Min. czas nawilżacza OFF",
 };
+
+function validityHint(sensorKey) {
+  if (sensorKey === "outside_co2_ppm") {
+    return "Odznaczony = symulator używa 420 ppm CO₂ zewnętrznego";
+  }
+  return "Odznaczony = odczyt nieważny (ML i safety ignorują)";
+}
 const ACTUATOR_AVAILABILITY_PATHS = {
   heater: "actuators.heater.available",
   fan: "actuators.fan.available",

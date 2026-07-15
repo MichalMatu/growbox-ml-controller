@@ -31,6 +31,8 @@ def test_panel_schema_matches_contract_feature_count():
     assert schema["feature_count"] == 43
     assert schema["outputs"] == ["heater", "fan", "humidifier", "irrigation"]
     assert len(schema["sections"]) >= 6
+    actuators = next(section for section in schema["sections"] if section["id"] == "actuators")
+    assert actuators["title"] == "Aktuary"
     safety = next(section for section in schema["sections"] if section["id"] == "safety")
     assert len(safety["fields"]) == 8
 

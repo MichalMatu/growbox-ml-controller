@@ -494,12 +494,8 @@ label.field-bool span.lbl { font-size: 0.65rem; }
 .mini-cell.bool-only { justify-content: center; }
 .mini-cell.actuator-cell {
   width: auto;
-  min-width: 5.5rem;
-  gap: 0.22rem;
-}
-.mini-cell.actuator-cell.wide { min-width: 6.8rem; }
-.mini-cell.actuator-cell.actuator-cell-irrigation {
-  min-width: 13rem;
+  min-width: 0;
+  gap: 0.28rem;
 }
 .mini-cell.actuator-cell.actuator-cell-irrigation .field-stack {
   flex-wrap: nowrap;
@@ -514,12 +510,12 @@ label.field-bool span.lbl { font-size: 0.65rem; }
 .actuator-param {
   display: flex;
   flex-direction: column;
-  gap: 0.12rem;
+  gap: 0.28rem;
   flex: 0 0 auto;
   min-width: 0;
 }
 .actuator-param .name {
-  font-size: 0.58rem;
+  font-size: 0.62rem;
   color: var(--muted);
   font-weight: 600;
   white-space: nowrap;
@@ -528,8 +524,8 @@ label.field-bool span.lbl { font-size: 0.65rem; }
 .actuator-param select {
   width: 3.1rem;
   min-width: 3.1rem;
-  padding: 0.18rem 0.24rem;
-  font-size: 0.68rem;
+  padding: 0.22rem 0.3rem;
+  font-size: 0.72rem;
   border: 1px solid #3a4d68;
   border-radius: 5px;
   background: #0f1419;
@@ -542,10 +538,10 @@ label.field-bool span.lbl { font-size: 0.65rem; }
 .actuator-param select {
   width: 2.8rem;
   min-width: 2.8rem;
-  padding-left: 0.16rem;
-  padding-right: 0.1rem;
+  padding: 0.22rem 0.1rem 0.22rem 0.16rem;
 }
-.targets-panel .sub-card .compact-row {
+.targets-panel .sub-card .compact-row,
+.safety-panel .sub-card .compact-row {
   justify-content: flex-start;
 }
 .live-no-target {
@@ -598,6 +594,49 @@ label.field-bool span.lbl { font-size: 0.65rem; }
   font-size: 0.72rem;
 }
 .live-idle { margin: 0; }
+.live-sensors-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.28rem;
+  align-items: start;
+}
+.live-sensor-col-head {
+  font-size: 0.58rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 0.18rem;
+  padding: 0 0.08rem;
+}
+.live-sensors-split .live-data-table-wrap {
+  overflow-x: hidden;
+}
+.live-sensors-split .live-data-table {
+  table-layout: fixed;
+  font-size: 0.64rem;
+}
+.live-sensors-split .live-data-table col.sensor-col { width: 30%; }
+.live-sensors-split .live-data-table col.reading-col { width: 35%; }
+.live-sensors-split .live-data-table col.target-col { width: 35%; }
+.live-sensors-split .live-data-table th,
+.live-sensors-split .live-data-table td {
+  padding: 0.2rem 0.24rem;
+}
+.live-sensors-split .live-data-table thead th {
+  font-size: 0.54rem;
+}
+.live-sensors-split .live-data-table thead th.num {
+  text-align: right;
+}
+.live-sensors-split .live-data-table tbody th {
+  font-size: 0.62rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 420px) {
+  .live-sensors-split { grid-template-columns: 1fr; }
+}
 .live-data-table-wrap {
   overflow-x: auto;
   border: 1px solid var(--border);
@@ -631,10 +670,14 @@ label.field-bool span.lbl { font-size: 0.65rem; }
   text-align: left;
   white-space: nowrap;
 }
+.live-data-table th.num,
 .live-data-table td.num {
   font-variant-numeric: tabular-nums;
   text-align: right;
   color: var(--text);
+}
+.live-data-table thead th.num {
+  color: var(--muted);
 }
 .live-data-table td.num strong { font-weight: 600; }
 .live-data-table tr.invalid th,
