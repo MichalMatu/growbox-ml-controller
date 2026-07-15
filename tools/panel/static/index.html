@@ -72,6 +72,13 @@
       white-space: nowrap;
     }
     .badge.mono { font-family: ui-monospace, monospace; font-size: 0.62rem; }
+    .badge.action-status {
+      max-width: 16rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .badge.action-status.ok { color: var(--ok); border-color: rgba(61, 214, 140, 0.45); }
+    .badge.action-status.error { color: #ffb4b6; border-color: var(--danger); }
     .top-controls {
       display: flex;
       flex-wrap: wrap;
@@ -401,23 +408,24 @@
         <div class="top-badges" id="schema-meta"><span class="badge">Ładowanie…</span></div>
       </div>
       <div class="top-controls">
-        <button class="badge-btn" data-cmd='{"command":"pause"}'>Pauza</button>
-        <button class="badge-btn" data-cmd='{"command":"resume"}'>Wznów</button>
-        <button class="badge-btn" data-cmd='{"command":"reset"}'>Reset</button>
-        <button class="badge-btn" data-cmd='{"command":"mode","value":"replay"}'>Replay</button>
-        <button class="badge-btn" data-cmd='{"command":"mode","value":"closed_loop"}'>Loop</button>
-        <button class="badge-btn" data-cmd='{"command":"status"}'>Status</button>
+        <button type="button" class="badge-btn" data-cmd='{"command":"pause"}'>Pauza</button>
+        <button type="button" class="badge-btn" data-cmd='{"command":"resume"}'>Wznów</button>
+        <button type="button" class="badge-btn" data-cmd='{"command":"reset"}'>Reset</button>
+        <button type="button" class="badge-btn" data-cmd='{"command":"mode","value":"replay"}'>Replay</button>
+        <button type="button" class="badge-btn" data-cmd='{"command":"mode","value":"closed_loop"}'>Loop</button>
+        <button type="button" class="badge-btn" data-cmd='{"command":"status"}'>Status</button>
         <label class="seed-badge">Seed<input type="number" id="seed" value="101" step="1" /></label>
-        <button class="badge-btn primary" id="btn-load">Wczytaj</button>
-        <button class="badge-btn primary" id="btn-step">Krok</button>
-        <button class="badge-btn" id="btn-defaults">Domyślne</button>
+        <button type="button" class="badge-btn primary" id="btn-load">Wczytaj</button>
+        <button type="button" class="badge-btn primary" id="btn-step">Krok</button>
+        <button type="button" class="badge-btn" id="btn-defaults">Domyślne</button>
       </div>
       <div class="top-connect">
         <span class="status-dot" id="conn-dot"></span>
+        <span class="badge action-status" id="action-status" hidden></span>
         <select id="port-select"></select>
-        <button id="btn-refresh-ports" class="badge-btn ghost">↻</button>
-        <button class="badge-btn primary" id="btn-connect">Połącz</button>
-        <button class="badge-btn danger" id="btn-disconnect">×</button>
+        <button type="button" id="btn-refresh-ports" class="badge-btn ghost">↻</button>
+        <button type="button" class="badge-btn primary" id="btn-connect">Połącz</button>
+        <button type="button" class="badge-btn danger" id="btn-disconnect">×</button>
       </div>
     </div>
   </header>
@@ -489,13 +497,57 @@
       return path.split(".").reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), obj);
     }
 
+    let actionStatusTimer = null;
+
+    function friendlyError(message) {
+      const map = {
+        "serial port is not connected": "Brak połączenia — kliknij Połącz",
+        "port must not be empty": "Wybierz port USB",
+        "Failed to fetch": "Panel offline — uruchom: make panel",
+      };
+      return map[message] || message;
+    }
+
+    function showActionStatus(message, kind = "ok") {
+      const el = document.getElementById("action-status");
+      if (!message) {
+        el.hidden = true;
+        el.textContent = "";
+        el.className = "badge action-status";
+        return;
+      }
+      el.hidden = false;
+      el.textContent = message;
+      el.className = `badge action-status ${kind}`;
+      clearTimeout(actionStatusTimer);
+      if (kind !== "error") {
+        actionStatusTimer = setTimeout(() => showActionStatus(""), 2800);
+      }
+    }
+
+    async function runAction(label, fn) {
+      try {
+        const result = await fn();
+        showActionStatus(`${label}: OK`, "ok");
+        return result;
+      } catch (err) {
+        showActionStatus(`${label}: ${friendlyError(err.message)}`, "error");
+        throw err;
+      }
+    }
+
     async function api(path, options = {}) {
-      const res = await fetch(path, {
-        headers: { "Content-Type": "application/json" },
-        ...options,
-      });
+      let res;
+      try {
+        res = await fetch(path, {
+          headers: { "Content-Type": "application/json" },
+          ...options,
+        });
+      } catch (err) {
+        throw new Error(friendlyError(err.message || "Failed to fetch"));
+      }
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || res.statusText);
+      if (!res.ok) throw new Error(friendlyError(data.error || res.statusText));
       return data;
     }
 
@@ -721,6 +773,7 @@
     }
 
     function renderForm() {
+      if (!panelSchema) return;
       const root = document.getElementById("form-sections");
       root.innerHTML = renderSensorBlock();
       root.innerHTML += renderGrowboxPanel();
@@ -865,6 +918,9 @@
         return;
       }
       document.getElementById("conn-dot").classList.toggle("on", lastState.connected);
+      if (lastState.last_error) {
+        showActionStatus(friendlyError(lastState.last_error), "error");
+      }
       if (lastState.last_decision) renderOutputs(lastState.last_decision);
       if (lastState.last_firmware_error) {
         document.getElementById("safety-reason").innerHTML =
@@ -893,41 +949,95 @@
       refreshState();
     }
 
-    document.getElementById("btn-refresh-ports").onclick = () => refreshPorts().catch(alert);
-    document.getElementById("btn-connect").onclick = async () => {
-      await api("/api/connect", { method: "POST", body: JSON.stringify({
-        port: document.getElementById("port-select").value, baud: 115200
-      })});
-      refreshState();
-    };
-    document.getElementById("btn-disconnect").onclick = async () => {
-      await api("/api/disconnect", { method: "POST", body: "{}" });
-      refreshState();
-    };
-    document.querySelectorAll("[data-cmd]").forEach(btn => {
-      btn.onclick = async () => {
-        await api("/api/command", { method: "POST", body: btn.dataset.cmd });
-        setTimeout(refreshState, 200);
-      };
-    });
-    document.getElementById("btn-defaults").onclick = async () => {
-      const data = await api("/api/defaults", { method: "POST", body: JSON.stringify({
-        seed: Number(document.getElementById("seed").value || 101)
-      })});
-      scenario = data.scenario;
-      renderForm();
-    };
-    document.getElementById("btn-load").onclick = async () => {
-      const payload = collectScenario();
-      const { seed, ...body } = payload;
-      await api("/api/load_scenario", { method: "POST", body: JSON.stringify({ seed, scenario: body }) });
-      setTimeout(refreshState, 300);
-    };
-    document.getElementById("btn-step").onclick = async () => {
-      collectScenario();
-      await api("/api/step", { method: "POST", body: "{}" });
-      setTimeout(refreshState, 300);
-    };
+    function bindToolbar() {
+      const topBar = document.querySelector(".top-bar");
+      topBar.addEventListener("click", async (event) => {
+        const btn = event.target.closest("button");
+        if (!btn || !topBar.contains(btn)) return;
+
+        if (btn.id === "btn-refresh-ports") {
+          event.preventDefault();
+          try { await runAction("Porty", refreshPorts); } catch (_) { /* shown in badge */ }
+          return;
+        }
+        if (btn.id === "btn-connect") {
+          event.preventDefault();
+          try {
+            await runAction("Połącz", () => api("/api/connect", {
+              method: "POST",
+              body: JSON.stringify({
+                port: document.getElementById("port-select").value,
+                baud: 115200,
+              }),
+            }));
+            refreshState();
+          } catch (_) { /* shown in badge */ }
+          return;
+        }
+        if (btn.id === "btn-disconnect") {
+          event.preventDefault();
+          try {
+            await runAction("Rozłącz", () => api("/api/disconnect", { method: "POST", body: "{}" }));
+            refreshState();
+          } catch (_) { /* shown in badge */ }
+          return;
+        }
+        if (btn.dataset.cmd) {
+          event.preventDefault();
+          const label = btn.textContent.trim();
+          try {
+            await runAction(label, () => api("/api/command", {
+              method: "POST",
+              body: btn.dataset.cmd,
+            }));
+            setTimeout(refreshState, 200);
+          } catch (_) { /* shown in badge */ }
+          return;
+        }
+        if (btn.id === "btn-defaults") {
+          event.preventDefault();
+          try {
+            await runAction("Domyślne", async () => {
+              const data = await api("/api/defaults", {
+                method: "POST",
+                body: JSON.stringify({ seed: Number(document.getElementById("seed").value || 101) }),
+              });
+              scenario = data.scenario;
+              document.getElementById("seed").value = scenario.seed || 101;
+              if (!panelSchema) throw new Error("Schemat panelu niezaładowany — odśwież stronę");
+              renderForm();
+            });
+          } catch (_) { /* shown in badge */ }
+          return;
+        }
+        if (btn.id === "btn-load") {
+          event.preventDefault();
+          try {
+            await runAction("Wczytaj", async () => {
+              const payload = collectScenario();
+              const { seed, ...body } = payload;
+              await api("/api/load_scenario", {
+                method: "POST",
+                body: JSON.stringify({ seed, scenario: body }),
+              });
+            });
+            setTimeout(refreshState, 300);
+          } catch (_) { /* shown in badge */ }
+          return;
+        }
+        if (btn.id === "btn-step") {
+          event.preventDefault();
+          try {
+            await runAction("Krok", async () => {
+              collectScenario();
+              await api("/api/step", { method: "POST", body: "{}" });
+            });
+            setTimeout(refreshState, 300);
+          } catch (_) { /* shown in badge */ }
+        }
+      });
+    }
+    bindToolbar();
     document.getElementById("btn-export").onclick = () => {
       const blob = new Blob([JSON.stringify(collectScenario(), null, 2)], { type: "application/json" });
       const a = document.createElement("a");
@@ -946,9 +1056,14 @@
       await navigator.clipboard.writeText(document.getElementById("modal-content").value);
     };
 
+    if (location.protocol === "file:") {
+      showActionStatus("Otwórz http://127.0.0.1:8765 (make panel)", "error");
+    }
+
     init().catch(err => {
       document.getElementById("schema-meta").innerHTML =
-        `<span class="badge" style="color:var(--danger)">Błąd: ${err.message}</span>`;
+        `<span class="badge" style="color:var(--danger)">Błąd: ${friendlyError(err.message)}</span>`;
+      showActionStatus(`Init: ${friendlyError(err.message)}`, "error");
     });
   </script>
 </body>
