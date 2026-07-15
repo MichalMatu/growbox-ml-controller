@@ -34,7 +34,7 @@ Testy są źródłem prawdy: `tests/test_panel_layout.py`.
 ### Układ strony
 
 - **Lewa kolumna** — `card-stack`: Sterowanie, **Czujniki**, **Cele**, **Aktuary** (`#form-sections.card-stack`)
-- **Prawa kolumna** — **Na żywo** (tabele czujników + paski aktuatorów + `panel-actions`), **Poprzedni stan** (tylko odczyt)
+- **Prawa kolumna** — **Na żywo** (tabele czujników + paski aktuatorów + `panel-actions`; **Poprzedni stan** w modalu przez przycisk **Poprzedni**)
 - **Panel modal** (`#modal-backdrop` → `.panel-modal.modal--wide`) — jeden przesuwalny modal; widoki z `panel-actions` pod Na żywo (bez zakładek/stopki w modalu)
 - Donice w parametrach growboxa (modal **Growbox**): **ta sama szerokość** karty co w Czujnikach (`--pot-card-w`), 3 pola w poziomym gridzie
 
