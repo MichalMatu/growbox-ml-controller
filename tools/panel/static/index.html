@@ -445,16 +445,96 @@
       margin-top: 0.15rem;
       opacity: 0.85;
     }
-    .outputs { display: grid; gap: var(--cell-gap); margin-top: 0.3rem; }
-    .output-row {
-      display: grid;
-      grid-template-columns: 72px 1fr 36px 1fr 36px;
-      gap: 0.25rem;
+    .live-step {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.28rem 0.55rem;
       align-items: center;
       font-size: 0.72rem;
     }
+    .live-step .step-pill {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .live-metric strong { color: var(--text); }
+    .outputs-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem 0.75rem;
+      font-size: 0.64rem;
+      color: var(--muted);
+      margin-top: 0.35rem;
+      padding: 0.28rem 0.38rem;
+      background: rgba(15, 20, 25, 0.45);
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+    .legend-item { display: inline-flex; align-items: center; gap: 0.3rem; }
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .legend-dot.raw { background: var(--raw); }
+    .legend-dot.safe { background: var(--safe); }
+    .actuator-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--cell-gap);
+      margin-top: 0.35rem;
+    }
+    .actuator-card {
+      padding: 0.34rem 0.4rem;
+      background: rgba(15, 20, 25, 0.45);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .actuator-card.differs {
+      border-color: rgba(245, 165, 36, 0.5);
+      box-shadow: inset 0 0 0 1px rgba(245, 165, 36, 0.12);
+    }
+    .actuator-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.25rem;
+      margin-bottom: 0.28rem;
+    }
+    .actuator-name {
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+    .actuator-diff {
+      font-size: 0.58rem;
+      color: var(--warn);
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+    .output-line {
+      display: grid;
+      grid-template-columns: 3.4rem 1fr 2.1rem;
+      gap: 0.22rem;
+      align-items: center;
+      font-size: 0.66rem;
+      margin-bottom: 0.14rem;
+    }
+    .output-line:last-child { margin-bottom: 0; }
+    .lane-label {
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .output-line.model .lane-label { color: var(--raw); }
+    .output-line.safety .lane-label { color: var(--safe); }
+    .output-pct {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      color: var(--muted);
+    }
     .bar {
-      height: 7px;
+      height: 8px;
       background: #0f1419;
       border-radius: 999px;
       overflow: hidden;
@@ -463,6 +543,31 @@
     .bar > span { display: block; height: 100%; }
     .bar.raw > span { background: var(--raw); }
     .bar.safe > span { background: var(--safe); }
+    .outputs-empty {
+      margin-top: 0.35rem;
+      font-size: 0.68rem;
+      color: var(--muted);
+      padding: 0.45rem 0.5rem;
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      text-align: center;
+    }
+    .safety-footer {
+      margin-top: 0.4rem;
+      padding: 0.34rem 0.42rem;
+      background: rgba(15, 20, 25, 0.45);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 0.7rem;
+      line-height: 1.4;
+    }
+    .safety-footer .safety-code {
+      display: block;
+      margin-top: 0.12rem;
+      font-size: 0.62rem;
+      color: var(--muted);
+      opacity: 0.85;
+    }
     .pill {
       display: inline-block;
       padding: 0.1rem 0.4rem;
@@ -609,9 +714,13 @@
           <h2>Na żywo</h2>
           <button type="button" class="help-btn" data-help="live" aria-label="Pomoc — na żywo">?</button>
         </div>
-        <div id="decision-summary" class="note flush">Połącz → Wczytaj → ▶ → Krok</div>
-        <div class="outputs" id="outputs-bars"></div>
-        <p class="note" id="safety-reason"></p>
+        <div id="decision-summary" class="live-step note flush">Połącz → Wczytaj → ▶ → Krok</div>
+        <div class="outputs-legend" aria-label="Legenda pasków">
+          <span class="legend-item"><span class="legend-dot raw" aria-hidden="true"></span> Model — propozycja sieci</span>
+          <span class="legend-item"><span class="legend-dot safe" aria-hidden="true"></span> Safety — wysyłane na płytkę</span>
+        </div>
+        <div id="outputs-bars" class="outputs-empty">Uruchom <strong>Krok</strong>, aby zobaczyć wyjścia aktuatorów.</div>
+        <div class="safety-footer note flush" id="safety-reason" hidden></div>
         <div class="json-actions btn-row">
           <button id="btn-json-scenario" class="ghost">JSON scenariusza</button>
           <button id="btn-json-decision" class="ghost">JSON decyzji</button>
@@ -764,14 +873,36 @@
         title: "Na żywo",
         html: `
           <p>Podgląd ostatniej decyzji z firmware po <strong>Krok</strong>.</p>
+          <p>Każdy aktuator ma <strong>dwa paski</strong>:</p>
           <ul>
-            <li><strong>Raw</strong> (niebieski) — surowe wyjście sieci</li>
-            <li><strong>Safe</strong> (zielony) — po warstwie safety</li>
-            <li><strong>safety_reason</strong> — dlaczego safety zmieniło wyjście (np. <code>over_temperature</code>)</li>
+            <li><strong>Model</strong> (niebieski) — co proponuje sieć neuronowa (0–100% mocy)</li>
+            <li><strong>Safety</strong> (zielony) — co faktycznie idzie na płytkę po regułach bezpieczeństwa</li>
           </ul>
+          <p>Gdy model i safety się różnią, karta aktuatora jest podświetlona na pomarańczowo.</p>
+          <p>Na dole: czy safety coś zmieniło i dlaczego (np. próg ON/OFF, min. przerwa pompy, alarm temperatury).</p>
           <p>Przyciski JSON — surowe dane do debugowania i eksportu scenariusza.</p>
         `,
       },
+    };
+
+    const SAFETY_REASON_LABELS = {
+      none: "Bez korekty — wyjścia modelu przeszły bez zmian",
+      non_finite_input: "Nieprawidłowe dane wejściowe",
+      model_failure: "Błąd modelu — wyjścia wyzerowane",
+      schema_mismatch: "Niezgodność schematu danych",
+      non_finite_model_output: "Nieprawidłowe wyjście modelu",
+      output_clamped: "Wyjście obcięte do dozwolonego zakresu",
+      temperature_unavailable: "Brak temperatury — grzałka wyłączona",
+      actuator_unavailable: "Aktuator oznaczony jako niedostępny",
+      over_temperature: "Za wysoka temperatura — grzałka zablokowana",
+      temperature_alarm_fan: "Alarm temperatury — wymuszony min. wentylator",
+      pump_pulse_limited: "Ograniczenie czasu impulsu pompy",
+      pump_minimum_interval: "Za krótka przerwa między podlewaniem",
+      binary_threshold: "Poniżej progu ON/OFF — urządzenie wyłączone",
+      binary_minimum_on: "Min. czas włączenia — urządzenie pozostaje ON",
+      binary_minimum_off: "Min. czas wyłączenia — urządzenie pozostaje OFF",
+      invalid_capability: "Nieprawidłowa konfiguracja aktuatora",
+      unknown: "Nieznany powód korekty safety",
     };
 
     function setNested(obj, path, value) {
@@ -1267,36 +1398,71 @@
       return next;
     }
 
+    function formatOutputPct(value) {
+      const n = Number(value) || 0;
+      return Math.min(100, Math.max(0, Math.round(n * 100)));
+    }
+
+    function renderActuatorCard(label, rawVal, safeVal) {
+      const rPct = formatOutputPct(rawVal);
+      const sPct = formatOutputPct(safeVal);
+      const differs = Math.abs((Number(rawVal) || 0) - (Number(safeVal) || 0)) > 0.005;
+      return `<article class="actuator-card${differs ? " differs" : ""}">
+        <div class="actuator-head">
+          <span class="actuator-name">${label}</span>
+          ${differs ? '<span class="actuator-diff" title="Model i safety się różnią">≠</span>' : ""}
+        </div>
+        <div class="output-line model">
+          <span class="lane-label">Model</span>
+          <div class="bar raw" title="Propozycja modelu: ${rPct}%"><span style="width:${rPct}%"></span></div>
+          <span class="output-pct">${rPct}%</span>
+        </div>
+        <div class="output-line safety">
+          <span class="lane-label">Safety</span>
+          <div class="bar safe" title="Wysyłane na płytkę: ${sPct}%"><span style="width:${sPct}%"></span></div>
+          <span class="output-pct">${sPct}%</span>
+        </div>
+      </article>`;
+    }
+
     function renderOutputs(decision) {
       lastDecision = decision;
       const names = ["heater", "fan", "humidifier", "irrigation"];
-      const labels = { heater: "Grzałka", fan: "Fan", humidifier: "Nawilż.", irrigation: "Pompa" };
+      const labels = { heater: "Grzałka", fan: "Fan", humidifier: "Nawilżacz", irrigation: "Pompa" };
       const raw = decision.raw_output || {};
       const safe = decision.safe_output || {};
-      document.getElementById("outputs-bars").innerHTML = names.map(name => {
-        const r = Number(raw[name] || 0);
-        const s = Number(safe[name] || 0);
-        return `<div class="output-row">
-          <strong>${labels[name]}</strong>
-          <div class="bar raw"><span style="width:${(r*100).toFixed(0)}%"></span></div>
-          <span>${(r*100).toFixed(0)}</span>
-          <div class="bar safe"><span style="width:${(s*100).toFixed(0)}%"></span></div>
-          <span>${(s*100).toFixed(0)}</span>
-        </div>`;
-      }).join("");
+      const outputsEl = document.getElementById("outputs-bars");
+      outputsEl.className = "actuator-grid";
+      outputsEl.innerHTML = names.map(name =>
+        renderActuatorCard(labels[name], raw[name], safe[name])
+      ).join("");
 
       const sensors = decision.sensors || {};
       const targets = decision.targets || {};
+      const temp = sensors.air_temperature_c;
+      const hum = sensors.air_humidity_pct;
+      const fmtTemp = typeof temp === "number" ? temp.toFixed(1) : (temp ?? "—");
+      const fmtHum = typeof hum === "number" ? hum.toFixed(0) : (hum ?? "—");
       document.getElementById("decision-summary").innerHTML =
-        `#${decision.step ?? "?"} · ` +
-        `<strong>${sensors.air_temperature_c?.toFixed?.(1) ?? sensors.air_temperature_c}°C</strong>/${targets.air_temperature_c} · ` +
-        `wilg <strong>${sensors.air_humidity_pct?.toFixed?.(0) ?? sensors.air_humidity_pct}%</strong>/${targets.air_humidity_pct}`;
+        `<span class="pill step-pill">Krok ${decision.step ?? "?"}</span>` +
+        `<span class="live-metric">Temp. <strong>${fmtTemp}°C</strong> → cel ${targets.air_temperature_c ?? "—"}°C</span>` +
+        `<span class="live-metric">Wilg. <strong>${fmtHum}%</strong> → cel ${targets.air_humidity_pct ?? "—"}%</span>`;
 
       const diag = decision.diagnostics || {};
-      const modified = diag.safety_modified
-        ? '<span class="pill warn">safety</span>' : '<span class="pill">ok</span>';
-      document.getElementById("safety-reason").innerHTML =
-        `${modified} <code>${diag.safety_reason || "—"}</code> · ${diag.inference_us ?? "?"} µs`;
+      const reason = diag.safety_reason || "none";
+      const reasonLabel = SAFETY_REASON_LABELS[reason] || SAFETY_REASON_LABELS.unknown;
+      const modified = !!diag.safety_modified;
+      const statusPill = modified
+        ? '<span class="pill warn">Safety zmieniło wyjścia</span>'
+        : '<span class="pill">Zgodne z modelem</span>';
+      const reasonText = modified || reason !== "none"
+        ? reasonLabel
+        : "Safety nie zmieniło propozycji modelu.";
+      const safetyEl = document.getElementById("safety-reason");
+      safetyEl.hidden = false;
+      safetyEl.innerHTML =
+        `${statusPill} ${reasonText}` +
+        `<span class="safety-code">Kod: <code>${reason}</code> · inferencja ${diag.inference_us ?? "?"} µs</span>`;
     }
 
     function formatHistory(state) {
