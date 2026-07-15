@@ -19,7 +19,7 @@ enum class DemoMode : std::uint8_t {
 
 struct DemoRuntimeState {
   DemoMode mode = DemoMode::ClosedLoop;
-  bool paused = false;
+  bool paused = true;
   bool step_requested = false;
   bool controller_reset_requested = true;
   std::uint32_t step = 0U;

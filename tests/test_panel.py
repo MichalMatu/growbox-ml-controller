@@ -36,6 +36,61 @@ def test_bridge_snapshot_serializes_history_deque():
     assert snapshot["history"][0]["payload"]["type"] == "ack"
 
 
+def test_bridge_patches_last_status_on_transport_commands():
+    bridge = SerialBridge()
+    bridge._state["last_status"] = {"mode": "closed_loop", "paused": False, "step": 3}
+    SerialBridge._patch_status_from_command(
+        bridge._state,
+        {"command": "mode", "value": "replay"},
+    )
+    assert bridge._state["last_status"]["mode"] == "replay"
+    assert bridge._state["last_status"]["paused"] is True
+    SerialBridge._patch_status_from_command(bridge._state, {"command": "resume"})
+    assert bridge._state["last_status"]["paused"] is False
+
+
+def test_bridge_ignores_stale_status_after_transport_command():
+    bridge = SerialBridge()
+    bridge._state["last_status"] = {"mode": "closed_loop", "paused": False, "step": 1}
+    bridge._last_status_tx_at = 10.0
+    bridge._last_transport_tx_at = 11.0
+    bridge._apply_status_message({"type": "status", "mode": "closed_loop", "paused": True, "step": 1})
+    assert bridge._state["last_status"]["paused"] is False
+
+
+def test_bridge_connect_clears_stale_device_state():
+    bridge = SerialBridge()
+    bridge._state["last_status"] = {"mode": "closed_loop", "paused": True, "step": 9}
+    bridge._state["last_decision"] = {"type": "decision", "step": 9}
+    bridge._last_transport_tx_at = 99.0
+    bridge._reset_session_state()
+    assert bridge._state["last_status"] is None
+    assert bridge._state["last_decision"] is None
+    assert bridge._last_transport_tx_at == 0.0
+
+
+def test_bridge_reset_clears_decision_and_step():
+    bridge = SerialBridge()
+    bridge._state["last_decision"] = {"type": "decision", "step": 12}
+    bridge._state["last_status"] = {"mode": "closed_loop", "paused": False, "step": 12}
+    SerialBridge._patch_status_from_command(bridge._state, {"command": "reset"})
+    assert bridge._state["last_status"]["step"] == 0
+    assert bridge._state["last_status"]["paused"] is True
+    bridge._apply_ack_message({"type": "ack", "command": "reset"})
+    assert bridge._state["last_decision"] is None
+
+
+def test_bridge_confirms_transport_on_ack():
+    bridge = SerialBridge()
+    bridge._state["last_status"] = {"mode": "closed_loop", "paused": True, "step": 0}
+    bridge._pending_mode_value = "replay"
+    bridge._apply_ack_message({"type": "ack", "command": "mode"})
+    assert bridge._state["last_status"]["mode"] == "replay"
+    assert bridge._state["last_status"]["paused"] is True
+    bridge._apply_ack_message({"type": "ack", "command": "resume"})
+    assert bridge._state["last_status"]["paused"] is False
+
+
 def test_panel_serves_favicon_assets():
     server = ThreadingHTTPServer(("127.0.0.1", 0), PanelHandler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)

@@ -23,6 +23,9 @@ class SerialBridge:
         self._reader: threading.Thread | None = None
         self._serial: serial.Serial | None = None
         self._history_limit = history_limit
+        self._pending_mode_value: str | None = None
+        self._last_status_tx_at = 0.0
+        self._last_transport_tx_at = 0.0
         self._state: dict[str, Any] = {
             "connected": False,
             "port": None,
@@ -56,6 +59,15 @@ class SerialBridge:
                 state["history"] = list(history)
             return state
 
+    def _reset_session_state(self) -> None:
+        self._state["last_status"] = None
+        self._state["last_decision"] = None
+        self._state["last_ack"] = None
+        self._state["last_startup"] = None
+        self._last_transport_tx_at = 0.0
+        self._last_status_tx_at = 0.0
+        self._pending_mode_value = None
+
     def connect(self, port: str, *, baud: int = 115200) -> None:
         port = port.strip()
         if not port:
@@ -68,6 +80,7 @@ class SerialBridge:
 
         with self._lock:
             self._serial = device
+            self._reset_session_state()
             self._state["connected"] = True
             self._state["port"] = port
             self._state["baud"] = baud
@@ -94,6 +107,63 @@ class SerialBridge:
             self._state["connected"] = False
             self._state["port"] = None
 
+    @staticmethod
+    def _patch_status_from_command(state: dict[str, Any], command: dict[str, Any]) -> None:
+        """Keep last_status transport fields in sync when firmware only returns ack."""
+        cmd = command.get("command")
+        if cmd not in {"mode", "pause", "resume", "reset", "load_scenario"}:
+            return
+        status = state.get("last_status")
+        if not isinstance(status, dict):
+            status = {}
+            state["last_status"] = status
+        if cmd == "pause":
+            status["paused"] = True
+        elif cmd == "resume":
+            status["paused"] = False
+        elif cmd in {"reset", "load_scenario"}:
+            status["step"] = 0
+            if cmd == "reset":
+                status["paused"] = True
+        elif cmd == "mode":
+            value = command.get("value")
+            if value in {"replay", "closed_loop"}:
+                status["mode"] = value
+            if value == "replay":
+                status["paused"] = True
+
+    def _apply_status_message(self, message: dict[str, Any]) -> None:
+        if self._last_transport_tx_at > self._last_status_tx_at:
+            current = self._state.get("last_status")
+            if isinstance(current, dict):
+                merged = dict(message)
+                if "mode" in current:
+                    merged["mode"] = current["mode"]
+                if "paused" in current:
+                    merged["paused"] = current["paused"]
+                self._state["last_status"] = merged
+                return
+        self._state["last_status"] = message
+
+    def _apply_ack_message(self, message: dict[str, Any]) -> None:
+        cmd = message.get("command")
+        if cmd == "mode" and self._pending_mode_value in {"replay", "closed_loop"}:
+            self._patch_status_from_command(
+                self._state,
+                {"command": "mode", "value": self._pending_mode_value},
+            )
+            self._pending_mode_value = None
+        elif cmd == "pause":
+            self._patch_status_from_command(self._state, {"command": "pause"})
+        elif cmd == "resume":
+            self._patch_status_from_command(self._state, {"command": "resume"})
+        elif cmd == "reset":
+            self._state["last_decision"] = None
+            self._patch_status_from_command(self._state, {"command": "reset"})
+        elif cmd == "load_scenario":
+            self._state["last_decision"] = None
+            self._patch_status_from_command(self._state, {"command": "load_scenario"})
+
     def send_command(self, command: dict[str, Any]) -> None:
         if "command" not in command:
             raise SerialBridgeError("payload must include command")
@@ -101,6 +171,19 @@ class SerialBridge:
         with self._lock:
             if self._serial is None:
                 raise SerialBridgeError("serial port is not connected")
+            cmd = command.get("command")
+            now = time.monotonic()
+            if cmd == "status":
+                self._last_status_tx_at = now
+            elif cmd in {"mode", "pause", "resume", "reset", "load_scenario"}:
+                if cmd in {"mode", "pause", "resume"}:
+                    self._last_transport_tx_at = now
+                if cmd == "mode":
+                    value = command.get("value")
+                    self._pending_mode_value = value if value in {"replay", "closed_loop"} else None
+                if cmd in {"reset", "load_scenario"}:
+                    self._state["last_decision"] = None
+            self._patch_status_from_command(self._state, command)
             try:
                 self._serial.write(encoded)
                 self._serial.flush()
@@ -163,8 +246,9 @@ class SerialBridge:
             elif message_type == "decision":
                 self._state["last_decision"] = message
             elif message_type == "status":
-                self._state["last_status"] = message
+                self._apply_status_message(message)
             elif message_type == "ack":
                 self._state["last_ack"] = message
+                self._apply_ack_message(message)
             elif message_type == "error":
                 self._state["last_firmware_error"] = message

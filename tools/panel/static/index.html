@@ -686,7 +686,7 @@
         <div class="top-badges" id="schema-meta"><span class="badge">Ładowanie…</span></div>
       </div>
       <div class="top-controls">
-        <button type="button" class="badge-btn playpause-btn" data-ui="playpause" id="btn-playpause" aria-label="Start">
+        <button type="button" class="badge-btn playpause-btn" data-ui="playpause" id="btn-playpause" data-cmd='{"command":"resume"}' aria-label="Start">
           <span class="playpause-icon" aria-hidden="true">▶</span>
         </button>
         <button type="button" class="badge-btn" data-ui="reset" data-cmd='{"command":"reset"}'>Reset</button>
@@ -984,8 +984,7 @@
       "state-play", "state-stop",
       "state-off", "state-disabled", "state-error",
     ];
-    const uiOverride = { mode: null };
-    let transportPaused = true;
+    let lastRenderedDecisionStep = null;
 
     function friendlyError(message) {
       const map = {
@@ -1017,24 +1016,40 @@
     }
 
     function resolvePaused(state) {
-      const ack = state?.last_ack;
-      if (ack?.command === "pause") transportPaused = true;
-      else if (ack?.command === "resume") transportPaused = false;
-      if (state?.last_status?.paused !== undefined && ack?.command === "status") {
-        transportPaused = Boolean(state.last_status.paused);
+      if (state?.last_status?.paused !== undefined) {
+        return Boolean(state.last_status.paused);
       }
-      return transportPaused;
+      if (state?.connected && state?.last_decision) {
+        return false;
+      }
+      return true;
+    }
+
+    function hasDeviceStatus(state) {
+      return state?.last_status?.paused !== undefined && Boolean(state?.last_status?.mode);
     }
 
     function resolveMode(state) {
-      if (uiOverride.mode !== null) return uiOverride.mode;
       if (state?.last_status?.mode) return state.last_status.mode;
-      return "replay";
+      return "closed_loop";
     }
 
-    function syncUiOverrideFromState(state) {
-      if (state?.last_ack?.command === "mode") {
-        uiOverride.mode = null;
+    function patchLocalTransportStatus(cmd) {
+      if (!lastState) lastState = {};
+      if (!lastState.last_status || typeof lastState.last_status !== "object") {
+        lastState.last_status = {};
+      }
+      const status = lastState.last_status;
+      if (cmd.command === "pause") status.paused = true;
+      else if (cmd.command === "resume") status.paused = false;
+      else if (cmd.command === "reset") {
+        status.step = 0;
+        status.paused = true;
+      } else if (cmd.command === "load_scenario") {
+        status.step = 0;
+      } else if (cmd.command === "mode") {
+        status.mode = cmd.value;
+        if (cmd.value === "replay") status.paused = true;
       }
     }
 
@@ -1093,7 +1108,7 @@
         updatePlayPauseBtn(true, false);
         document.querySelectorAll(".top-controls .badge-btn[data-ui]").forEach(btn => {
           btn.classList.add("state-disabled");
-          if (btn.dataset.ui !== "playpause") btn.title = "Najpierw Połącz urządzenie";
+          btn.title = "Najpierw Połącz urządzenie";
         });
       }
     }
@@ -1101,11 +1116,14 @@
     function applyCommandOptimistic(cmdJson) {
       try {
         const cmd = JSON.parse(cmdJson);
-        if (cmd.command === "pause") transportPaused = true;
-        else if (cmd.command === "resume") transportPaused = false;
-        else if (cmd.command === "mode") {
-          uiOverride.mode = cmd.value;
-          if (cmd.value === "replay") transportPaused = true;
+        if (cmd.command === "pause" || cmd.command === "resume" || cmd.command === "mode") {
+          patchLocalTransportStatus(cmd);
+        } else if (cmd.command === "reset") {
+          patchLocalTransportStatus(cmd);
+          clearLivePreview(0);
+        } else if (cmd.command === "load_scenario") {
+          patchLocalTransportStatus(cmd);
+          clearLivePreview(0);
         }
       } catch (_) { /* ignore */ }
       updateToolbarState(lastState);
@@ -1494,7 +1512,24 @@
       </article>`;
     }
 
+    function clearLivePreview(step = 0) {
+      lastRenderedDecisionStep = null;
+      lastDecision = null;
+      document.getElementById("decision-summary").innerHTML =
+        `<span class="pill step-pill">Krok ${step}</span>` +
+        `<span class="live-metric note">Symulacja zresetowana — uruchom <strong>Krok</strong> lub <strong>▶</strong></span>`;
+      const outputsEl = document.getElementById("outputs-bars");
+      outputsEl.className = "outputs-empty";
+      outputsEl.innerHTML = "Uruchom <strong>Krok</strong>, aby zobaczyć wyjścia aktuatorów.";
+      const safetyEl = document.getElementById("safety-reason");
+      safetyEl.hidden = true;
+      safetyEl.innerHTML = "";
+    }
+
     function renderOutputs(decision) {
+      const step = decision?.step;
+      if (step !== undefined && step === lastRenderedDecisionStep) return;
+      lastRenderedDecisionStep = step;
       lastDecision = decision;
       const names = ["heater", "fan", "humidifier", "irrigation"];
       const labels = { heater: "Grzałka", fan: "Fan", humidifier: "Nawilżacz", irrigation: "Pompa" };
@@ -1615,14 +1650,13 @@
       else if (preferred) select.value = preferred.device;
     }
 
-    async function refreshState() {
+    async function refreshState(options = {}) {
       try {
         lastState = await api("/api/state");
       } catch (err) {
         document.getElementById("decision-summary").textContent = "Błąd API: " + err.message;
         return;
       }
-      syncUiOverrideFromState(lastState);
       updateToolbarState(lastState);
       if (lastState.last_error) {
         const errBtn = lastState.connected ? toolbarBtn("disconnect") : toolbarBtn("connect");
@@ -1631,7 +1665,11 @@
           setTimeout(() => errBtn.classList.remove("state-error"), 1600);
         }
       }
-      if (lastState.last_decision) renderOutputs(lastState.last_decision);
+      if (lastState.last_decision) {
+        renderOutputs(lastState.last_decision);
+      } else if (lastState.last_status?.step !== undefined) {
+        clearLivePreview(lastState.last_status.step);
+      }
       if (lastState.last_firmware_error) {
         document.getElementById("safety-reason").innerHTML =
           `<span class="pill warn">${lastState.last_firmware_error.code}</span> ${lastState.last_firmware_error.message || ""}`;
@@ -1669,11 +1707,22 @@
       return true;
     }
 
+    async function requestDeviceStatus(maxAttempts = 10) {
+      if (!lastState?.connected) return false;
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        await api("/api/command", { method: "POST", body: '{"command":"status"}' });
+        await new Promise(resolve => setTimeout(resolve, 140));
+        await refreshState();
+        if (hasDeviceStatus(lastState)) return true;
+      }
+      return hasDeviceStatus(lastState);
+    }
+
     async function requestDeviceScenario() {
       if (!lastState?.connected) return false;
-      await api("/api/command", { method: "POST", body: '{"command":"status"}' });
-      await new Promise(resolve => setTimeout(resolve, 180));
-      await refreshState();
+      const ok = await requestDeviceStatus();
+      updateToolbarState(lastState);
+      if (!ok) return false;
       return tryApplyScenarioFromDevice(lastState, { force: true });
     }
 
@@ -1701,7 +1750,7 @@
       document.getElementById("seed").value = scenario.seed || 101;
       renderForm();
       bindFormSync();
-      setInterval(refreshState, 900);
+      setInterval(() => refreshState(), 900);
       refreshState();
     }
 
@@ -1720,6 +1769,7 @@
           event.preventDefault();
           try {
             deviceScenarioSynced = false;
+            lastRenderedDecisionStep = null;
             await runAction(() => api("/api/connect", {
               method: "POST",
               body: JSON.stringify({
@@ -1729,6 +1779,7 @@
             }), btn);
             await refreshState();
             await requestDeviceScenario();
+            updateToolbarState(lastState);
           } catch (_) { /* btn flash */ }
           return;
         }
@@ -1736,8 +1787,7 @@
           event.preventDefault();
           try {
             await runAction(() => api("/api/disconnect", { method: "POST", body: "{}" }), btn);
-            uiOverride.mode = null;
-            transportPaused = true;
+            lastRenderedDecisionStep = null;
             deviceScenarioSynced = false;
             await refreshState();
           } catch (_) { /* btn flash */ }
@@ -1751,15 +1801,15 @@
               method: "POST",
               body: btn.dataset.cmd,
             }), btn);
-            applyCommandOptimistic(btn.dataset.cmd);
-            updateToolbarState(lastState);
             const cmdBody = btn.dataset.cmd;
+            applyCommandOptimistic(cmdBody);
+            updateToolbarState(lastState);
             setTimeout(async () => {
               await refreshState();
               if (cmdBody.includes('"status"')) {
                 tryApplyScenarioFromDevice(lastState, { force: true });
               }
-            }, 350);
+            }, 280);
           } catch (_) { /* btn flash */ }
           return;
         }
@@ -1794,6 +1844,7 @@
                 body: JSON.stringify({ seed, scenario: body }),
               });
             }, btn);
+            clearLivePreview(0);
             setTimeout(refreshState, 300);
           } catch (_) { /* btn flash */ }
           return;
