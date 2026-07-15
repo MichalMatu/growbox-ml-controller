@@ -249,6 +249,10 @@
       font-size: 0.58rem;
       color: var(--muted);
     }
+    .top-status-badge.disconnected {
+      opacity: 0.8;
+      font-weight: 500;
+    }
     .top-status-badge.live {
       color: var(--ok);
       border-color: rgba(61, 214, 140, 0.35);
@@ -937,7 +941,7 @@
     <div class="card top-card">
       <div class="top-brand">
         <h1>Growbox ML</h1>
-        <span id="top-status-badge" class="badge mono top-status-badge" hidden aria-live="polite"></span>
+        <span id="top-status-badge" class="badge mono top-status-badge disconnected" aria-live="polite">podłącz płytkę</span>
       </div>
       <div class="top-connect">
         <select id="port-select"></select>
@@ -1202,7 +1206,19 @@
             <li>CO₂</li>
             <li>Wilgotność gleby</li>
           </ul>
-          <p>To nie są limity safety (np. alarm temperatury) — te są na razie stałe w firmware.</p>
+        `,
+      },
+      safety: {
+        title: "Limity safety",
+        html: `
+          <p>Deterministyczne reguły <strong>SafetySupervisor</strong> — nie wchodzą do modelu ML, ale korygują <strong>safe_output</strong> (zielone paski).</p>
+          <ul>
+            <li><strong>T max</strong> — powyżej tej temperatury grzałka jest blokowana</li>
+            <li><strong>Alarm T</strong> + <strong>Fan min</strong> — przy alarmie wymuszany minimalny fan</li>
+            <li><strong>Próg bin</strong> — próg ON/OFF dla aktuatorów typu bin (domyślnie 0.5)</li>
+            <li><strong>Grz./Naw. ON/OFF s</strong> — minimalny czas włączenia/wyłączenia (anty-flapping)</li>
+          </ul>
+          <p>Po zmianie kliknij <strong>Wyślij</strong>. W JSON decyzji: <code>diagnostics.safety_reason</code>.</p>
         `,
       },
       previous: {
@@ -1382,6 +1398,7 @@
         cultivation: snap.cultivation,
         actuators: snap.actuators,
         targets: snap.targets,
+        safety: snap.safety,
       }));
     }
 
@@ -1418,9 +1435,11 @@
       const el = document.getElementById("top-status-badge");
       if (!el) return;
       if (!state?.connected) {
-        el.hidden = true;
-        el.textContent = "";
+        el.hidden = false;
+        el.textContent = "podłącz płytkę";
+        el.title = "Wybierz port USB i kliknij Połącz";
         el.classList.remove("live");
+        el.classList.add("disconnected");
         return;
       }
       const step = resolveDisplayStep(state);
@@ -1429,6 +1448,7 @@
       const modeLabel = mode === "replay" ? "replay" : "loop";
       const runLabel = paused ? "pauza" : "działa";
       el.hidden = false;
+      el.classList.remove("disconnected");
       el.classList.add("live");
       el.textContent = `krok ${step} · ${modeLabel} · ${runLabel}`;
       el.title = `Połączono — krok ${step}, tryb ${modeLabel}, ${paused ? "w pauzie" : "symulacja działa"}`;
@@ -1553,6 +1573,14 @@
       target_air_humidity_pct: "Wilg %",
       target_co2_ppm: "CO₂",
       target_soil_moisture_pct: "Gleba %",
+      maximum_air_temperature_c: "T max",
+      alarm_air_temperature_c: "Alarm T",
+      alarm_minimum_fan: "Fan min",
+      binary_threshold: "Próg bin",
+      heater_minimum_on_s: "Grz. ON s",
+      heater_minimum_off_s: "Grz. OFF s",
+      humidifier_minimum_on_s: "Naw. ON s",
+      humidifier_minimum_off_s: "Naw. OFF s",
       previous_heater: "Grzałka",
       previous_fan: "Fan",
       previous_humidifier: "Nawilż.",
@@ -1604,7 +1632,7 @@
     ];
 
     const SCENARIO_SYNC_KEYS = [
-      "sensors", "validity", "environment", "cultivation", "actuators", "targets",
+      "sensors", "validity", "environment", "cultivation", "actuators", "targets", "safety",
     ];
 
     function formatLiveSensorValue(value, decimals) {
@@ -1724,6 +1752,14 @@
       fan_control_type: "Typowo pwm (regulacja obrotów). bin = wł/wył",
       humidifier_control_type: "Typowo bin (wł/wył). pwm = modulacja",
       irrigation_control_type: "Typowo bin (impuls ON/OFF). pwm = długość impulsu z modelu",
+      maximum_air_temperature_c: "Powyżej tej T wewnętrznej grzałka = 0 (niezależnie od modelu)",
+      alarm_air_temperature_c: "Od tej T włącza się alarm wentylacji",
+      alarm_minimum_fan: "Minimalny fan przy alarmie temperatury (max z Fan min w aktuatorach)",
+      binary_threshold: "Próg 0–1: propozycja modelu ≥ próg → ON dla typu bin",
+      heater_minimum_on_s: "Min. czas grzałki ON zanim można wyłączyć",
+      heater_minimum_off_s: "Min. czas grzałki OFF zanim można włączyć",
+      humidifier_minimum_on_s: "Min. czas nawilżacza ON",
+      humidifier_minimum_off_s: "Min. czas nawilżacza OFF",
     };
 
     function shortLabel(name) {
@@ -1895,6 +1931,11 @@
     }
 
     function fieldStepForPath(path) {
+      if (path.startsWith("safety.")) {
+        if (path.endsWith("_s")) return "1";
+        if (path.includes("threshold") || path.includes("minimum_fan")) return "0.01";
+        return "0.1";
+      }
       if (path.startsWith("sensors.")) {
         return path.includes("co2") ? "1" : "0.1";
       }
@@ -1993,9 +2034,10 @@
       return `<div class="card">${renderSectionHead(title, helpTopic)}<div class="compact-row">${cells}</div></div>`;
     }
 
-    function renderTargetsBlock(section) {
+    function renderFieldsSubCard(section, helpTopic) {
       const cells = section.fields.map(renderMiniCell).join("");
-      return `<div class="card growbox-panel targets-panel">${renderSectionHead(section.title, "targets")}<div class="sub-card"><div class="compact-row">${cells}</div></div></div>`;
+      const panelClass = section.id ? ` ${section.id}-panel` : "";
+      return `<div class="card growbox-panel${panelClass}">${renderSectionHead(section.title, helpTopic)}<div class="sub-card"><div class="compact-row">${cells}</div></div></div>`;
     }
 
     function renderSubCard(title, fields, helpTopic) {
@@ -2072,8 +2114,8 @@
         card.innerHTML = `<h2>${section.title}</h2>`;
         if (section.id === "actuators") {
           root.innerHTML += `<div class="card">${renderSectionHead(section.title, "actuators")}${renderActuatorBlock(section)}</div>`;
-        } else if (section.id === "targets") {
-          root.innerHTML += renderTargetsBlock(section);
+        } else if (section.id === "targets" || section.id === "safety") {
+          root.innerHTML += renderFieldsSubCard(section, section.id);
         } else {
           const grid = document.createElement("div");
           grid.className = "section-grid";
@@ -2333,6 +2375,7 @@
         cultivation: snap.cultivation,
         actuators: snap.actuators,
         targets: snap.targets,
+        safety: snap.safety,
         previous: snap.previous,
       }));
       renderForm();

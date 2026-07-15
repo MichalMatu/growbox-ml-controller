@@ -161,6 +161,24 @@ bool parsePrevious(const cJSON* object, control::PreviousControlState& previous)
                          previous.irrigation);
 }
 
+bool parseSafety(const cJSON* object, control::SafetyConfig& safety) noexcept {
+  if (object == nullptr || cJSON_IsNull(object)) {
+    return true;
+  }
+  return readOptionalFiniteFloat(object, "maximum_air_temperature_c",
+                                 safety.maximum_air_temperature_c) &&
+         readOptionalFiniteFloat(object, "alarm_air_temperature_c",
+                                 safety.alarm_air_temperature_c) &&
+         readOptionalFiniteFloat(object, "alarm_minimum_fan", safety.alarm_minimum_fan) &&
+         readOptionalFiniteFloat(object, "binary_threshold", safety.binary_threshold) &&
+         readOptionalFiniteFloat(object, "heater_minimum_on_s", safety.heater_minimum_on_s) &&
+         readOptionalFiniteFloat(object, "heater_minimum_off_s", safety.heater_minimum_off_s) &&
+         readOptionalFiniteFloat(object, "humidifier_minimum_on_s",
+                                 safety.humidifier_minimum_on_s) &&
+         readOptionalFiniteFloat(object, "humidifier_minimum_off_s",
+                                 safety.humidifier_minimum_off_s);
+}
+
 const char* controlTypeName(control::ActuatorControlType type) noexcept {
   return type == control::ActuatorControlType::Pwm ? "pwm" : "binary";
 }
@@ -278,6 +296,17 @@ void addScenarioSnapshot(cJSON* document, const control::ControllerInput& input)
                           input.previous.humidifier);
   cJSON_AddNumberToObject(previous, control::schema::wireKey(FeatureIndex::PreviousIrrigation),
                           input.previous.irrigation);
+
+  cJSON* safety = cJSON_AddObjectToObject(document, "safety");
+  cJSON_AddNumberToObject(safety, "maximum_air_temperature_c",
+                          input.safety.maximum_air_temperature_c);
+  cJSON_AddNumberToObject(safety, "alarm_air_temperature_c", input.safety.alarm_air_temperature_c);
+  cJSON_AddNumberToObject(safety, "alarm_minimum_fan", input.safety.alarm_minimum_fan);
+  cJSON_AddNumberToObject(safety, "binary_threshold", input.safety.binary_threshold);
+  cJSON_AddNumberToObject(safety, "heater_minimum_on_s", input.safety.heater_minimum_on_s);
+  cJSON_AddNumberToObject(safety, "heater_minimum_off_s", input.safety.heater_minimum_off_s);
+  cJSON_AddNumberToObject(safety, "humidifier_minimum_on_s", input.safety.humidifier_minimum_on_s);
+  cJSON_AddNumberToObject(safety, "humidifier_minimum_off_s", input.safety.humidifier_minimum_off_s);
 }
 
 bool parseControlType(const char* control_type,
@@ -526,13 +555,15 @@ void SerialJsonProtocol::processLine(DummyEnvironmentSimulator& simulator,
     const cJSON* actuators = objectItem(root, control::schema::kWireRootActuators);
     const cJSON* targets = objectItem(root, control::schema::kWireRootTargets);
     const cJSON* previous = objectItem(root, control::schema::kWireRootPrevious);
+    const cJSON* safety = item(root, "safety");
     if (!readUnsigned(root, "seed", seed) || !parseSensors(sensors, scenario.sensors) ||
         !parseValidity(validity, scenario.validity) ||
         !parseEnvironment(environment, scenario.environment) ||
         !parseCultivation(cultivation, scenario.cultivation) ||
         !parseActuators(actuators, scenario.actuators) ||
         !parseTargets(targets, scenario.targets, true) ||
-        !parsePrevious(previous, scenario.previous)) {
+        !parsePrevious(previous, scenario.previous) ||
+        !parseSafety(safety, scenario.safety)) {
       cJSON_Delete(root);
       emitError("invalid_scenario", "scenario fields must be complete and finite");
       return;

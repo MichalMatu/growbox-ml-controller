@@ -66,6 +66,28 @@ NOMINAL_PRESET: dict[str, Any] = {
     "previous": {"heater": 0.0, "fan": 0.0, "humidifier": 0.0, "irrigation": 0.0},
 }
 
+SAFETY_FIELD_ORDER = (
+    "maximum_air_temperature_c",
+    "alarm_air_temperature_c",
+    "alarm_minimum_fan",
+    "binary_threshold",
+    "heater_minimum_on_s",
+    "heater_minimum_off_s",
+    "humidifier_minimum_on_s",
+    "humidifier_minimum_off_s",
+)
+
+SAFETY_FIELD_BOUNDS: dict[str, tuple[float, float]] = {
+    "maximum_air_temperature_c": (-20.0, 60.0),
+    "alarm_air_temperature_c": (-20.0, 60.0),
+    "alarm_minimum_fan": (0.0, 1.0),
+    "binary_threshold": (0.0, 1.0),
+    "heater_minimum_on_s": (0.0, 86400.0),
+    "heater_minimum_off_s": (0.0, 86400.0),
+    "humidifier_minimum_on_s": (0.0, 86400.0),
+    "humidifier_minimum_off_s": (0.0, 86400.0),
+}
+
 SECTION_ORDER = (
     "connection",
     "sensors",
@@ -74,6 +96,7 @@ SECTION_ORDER = (
     "cultivation",
     "actuators",
     "targets",
+    "safety",
     "previous",
 )
 
@@ -85,8 +108,30 @@ SECTION_TITLES = {
     "cultivation": "Uprawa / doniczka",
     "actuators": "Aktuary (możliwości)",
     "targets": "Cele",
+    "safety": "Limity safety",
     "previous": "Poprzedni stan aktuatorów",
 }
+
+
+def _safety_fields(contract: Contract) -> list[dict[str, Any]]:
+    defaults = contract.document.get("safety_defaults", {})
+    fields: list[dict[str, Any]] = []
+    for name in SAFETY_FIELD_ORDER:
+        if name not in defaults:
+            continue
+        minimum, maximum = SAFETY_FIELD_BOUNDS.get(name, (0.0, 1.0))
+        fields.append(
+            {
+                "name": name,
+                "path": f"safety.{name}",
+                "label": name,
+                "type": "number",
+                "minimum": minimum,
+                "maximum": maximum,
+                "default": float(defaults[name]),
+            }
+        )
+    return fields
 
 
 def _set_nested(document: dict[str, Any], path: str, value: Any) -> None:
@@ -130,6 +175,9 @@ def default_scenario(*, seed: int = 101, preset: str = "nominal") -> dict[str, A
             _set_nested(scenario, path, feature.default)
     if preset == "nominal":
         scenario = _deep_merge(scenario, NOMINAL_PRESET)
+    safety_defaults = contract.document.get("safety_defaults", {})
+    if safety_defaults:
+        scenario = _deep_merge(scenario, {"safety": dict(safety_defaults)})
     scenario["seed"] = seed
     return scenario
 
@@ -194,6 +242,16 @@ def build_panel_schema(contract: Contract | None = None) -> dict[str, Any]:
                 "id": section_id,
                 "title": SECTION_TITLES.get(section_id, section_id),
                 "fields": fields,
+            }
+        )
+
+    safety_fields = _safety_fields(contract)
+    if safety_fields:
+        ordered_sections.append(
+            {
+                "id": "safety",
+                "title": SECTION_TITLES["safety"],
+                "fields": safety_fields,
             }
         )
 

@@ -20,6 +20,8 @@ def test_default_scenario_has_nominal_actuators():
     assert scenario["actuators"]["irrigation"]["control_type"] == "binary"
     assert scenario["sensors"]["air_temperature_c"] == 22.0
     assert scenario["sensors"]["outside_co2_ppm"] == 420.0
+    assert scenario["safety"]["maximum_air_temperature_c"] == 35.0
+    assert scenario["safety"]["binary_threshold"] == 0.5
 
 
 def test_panel_schema_matches_contract_feature_count():
@@ -27,6 +29,8 @@ def test_panel_schema_matches_contract_feature_count():
     assert schema["feature_count"] == 43
     assert schema["outputs"] == ["heater", "fan", "humidifier", "irrigation"]
     assert len(schema["sections"]) >= 6
+    safety = next(section for section in schema["sections"] if section["id"] == "safety")
+    assert len(safety["fields"]) == 8
 
 
 def test_bridge_snapshot_serializes_history_deque():
