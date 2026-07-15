@@ -130,6 +130,11 @@
   --bar-track-bg: var(--field-bg);
   --checkbox-size: 14px;
   --checkbox-size-sm: 13px;
+  --checkbox-bg: #2a3548;
+  --checkbox-border: #4a5f78;
+  --checkbox-checked-bg: #315a9a;
+  --checkbox-checked-border: #4a7fd0;
+  --checkbox-check: #d8e0ec;
   --modal-pad: 0.55rem 0.65rem;
   --modal-title-font: var(--text-2xl);
   --modal-body-font: 0.7rem;
@@ -655,7 +660,37 @@ input, select, button, textarea {
   padding: var(--control-pad);
   font-size: var(--control-font);
 }
-input[type="checkbox"] { width: var(--checkbox-size); height: var(--checkbox-size); margin: 0.15rem 0 0; padding: 0; }
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: var(--checkbox-size);
+  height: var(--checkbox-size);
+  margin: 0.15rem 0 0;
+  padding: 0;
+  flex-shrink: 0;
+  border: 1px solid var(--checkbox-border);
+  border-radius: 3px;
+  background-color: var(--checkbox-bg);
+  cursor: pointer;
+  vertical-align: middle;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+input[type="checkbox"]:checked {
+  background-color: var(--checkbox-checked-bg);
+  border-color: var(--checkbox-checked-border);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='%23d8e0ec' d='M4.2 9.1 1.4 6.3l.9-.9 1.9 1.9 4.5-4.5.9.9z'/%3E%3C/svg%3E");
+  background-size: calc(var(--checkbox-size) - 3px) calc(var(--checkbox-size) - 3px);
+  background-position: center;
+  background-repeat: no-repeat;
+}
+input[type="checkbox"]:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 1px;
+}
+input[type="checkbox"]:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
 input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
