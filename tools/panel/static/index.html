@@ -81,15 +81,6 @@
     }
     .badge.mono { font-family: ui-monospace, monospace; font-size: 0.62rem; }
     .top-bar .badge.mono { font-size: 0.58rem; }
-    .top-controls {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      gap: 0.2rem;
-      flex: 1 1 320px;
-      min-width: 0;
-    }
     .top-connect {
       display: flex;
       flex-wrap: wrap;
@@ -204,6 +195,79 @@
       align-items: start;
     }
     @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+    .panel-toolbar .compact-row { margin-top: 0; }
+    .panel-toolbar .mini-cell.toolbar-cell {
+      width: auto;
+      min-width: 8.1rem;
+    }
+    .panel-toolbar .mini-cell.toolbar-cell-wide {
+      min-width: 12.6rem;
+    }
+    .toolbar-btn-stack {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: 0.2rem;
+      width: 100%;
+      min-width: 0;
+      min-height: 1.5rem;
+    }
+    .toolbar-btn-stack .badge-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1 1 0;
+      min-width: 0;
+      max-width: 100%;
+      height: 1.5rem;
+      min-height: 1.5rem;
+      box-sizing: border-box;
+      font-size: 0.68rem;
+      line-height: 1;
+      padding: 0 0.28rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .toolbar-btn-stack .playpause-btn {
+      flex: 0 0 1.5rem;
+      width: 1.5rem;
+      min-width: 1.5rem;
+      max-width: 1.5rem;
+      padding: 0;
+      border-radius: 999px;
+    }
+    .toolbar-btn-stack .playpause-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.58rem;
+      line-height: 1;
+    }
+    .toolbar-btn-stack .toggle-group {
+      display: flex;
+      align-items: stretch;
+      flex: 1.4 1 0;
+      min-width: 0;
+      height: 1.5rem;
+      box-sizing: border-box;
+      gap: 0.06rem;
+      padding: 0.05rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(15, 20, 25, 0.45);
+    }
+    .toolbar-btn-stack .toggle-group .badge-btn {
+      flex: 1 1 0;
+      min-width: 0;
+      height: auto;
+      min-height: 0;
+      align-self: stretch;
+      padding: 0 0.14rem;
+      font-size: 0.62rem;
+      border-radius: 999px;
+    }
     .card-stack {
       display: flex;
       flex-direction: column;
@@ -693,32 +757,52 @@
       <div class="top-brand">
         <h1>Growbox ML</h1>
       </div>
-      <div class="top-controls">
-        <button type="button" class="badge-btn playpause-btn" data-ui="playpause" id="btn-playpause" data-cmd='{"command":"resume"}' aria-label="Start">
-          <span class="playpause-icon" aria-hidden="true">▶</span>
-        </button>
-        <button type="button" class="badge-btn" data-ui="reset" data-cmd='{"command":"reset"}'>Reset</button>
-        <div class="toggle-group" role="group" aria-label="Tryb pracy">
-          <button type="button" class="badge-btn" data-ui="mode-replay" data-cmd='{"command":"mode","value":"replay"}'>Replay</button>
-          <button type="button" class="badge-btn" data-ui="mode-loop" data-cmd='{"command":"mode","value":"closed_loop"}'>Loop</button>
-        </div>
-        <button type="button" class="badge-btn" data-ui="status" data-cmd='{"command":"status"}'>Status</button>
-        <button type="button" class="badge-btn primary" data-ui="load" id="btn-load">Wyślij</button>
-        <button type="button" class="badge-btn primary" data-ui="step" id="btn-step">Krok</button>
-        <button type="button" class="badge-btn" data-ui="defaults" id="btn-defaults">Domyślne</button>
-      </div>
       <div class="top-connect">
         <select id="port-select"></select>
         <button type="button" id="btn-refresh-ports" class="badge-btn ghost" data-ui="refresh">↻</button>
         <button type="button" class="badge-btn primary" data-ui="connect" id="btn-connect">Połącz</button>
         <button type="button" class="badge-btn danger" data-ui="disconnect" id="btn-disconnect">×</button>
-        <button type="button" class="badge-btn ghost help-btn help-btn-top" data-help="app" aria-label="Pomoc — panel">?</button>
       </div>
     </div>
   </header>
 
   <main>
-    <section class="left-panel">
+    <section class="left-panel card-stack">
+      <div class="card panel-toolbar" data-panel-toolbar id="panel-toolbar">
+        <div class="card-head">
+          <h2>Sterowanie</h2>
+          <button type="button" class="help-btn" data-help="app" aria-label="Pomoc — panel">?</button>
+        </div>
+        <div class="compact-row">
+          <div class="mini-cell toolbar-cell" aria-label="Scenariusz">
+            <div class="head-row"><span class="name">Scenariusz</span></div>
+            <div class="toolbar-btn-stack">
+              <button type="button" class="badge-btn primary" data-ui="load" id="btn-load">Wyślij</button>
+              <button type="button" class="badge-btn" data-ui="defaults" id="btn-defaults">Domyślne</button>
+            </div>
+          </div>
+          <div class="mini-cell toolbar-cell toolbar-cell-wide" aria-label="Praca">
+            <div class="head-row"><span class="name">Praca</span></div>
+            <div class="toolbar-btn-stack">
+              <button type="button" class="badge-btn playpause-btn" data-ui="playpause" id="btn-playpause" data-cmd='{"command":"resume"}' aria-label="Start">
+                <span class="playpause-icon" aria-hidden="true">▶</span>
+              </button>
+              <div class="toggle-group" role="group" aria-label="Tryb pracy">
+                <button type="button" class="badge-btn" data-ui="mode-replay" data-cmd='{"command":"mode","value":"replay"}'>Replay</button>
+                <button type="button" class="badge-btn" data-ui="mode-loop" data-cmd='{"command":"mode","value":"closed_loop"}'>Loop</button>
+              </div>
+              <button type="button" class="badge-btn primary" data-ui="step" id="btn-step">Krok</button>
+            </div>
+          </div>
+          <div class="mini-cell toolbar-cell" aria-label="Diagnostyka">
+            <div class="head-row"><span class="name">Diag.</span></div>
+            <div class="toolbar-btn-stack">
+              <button type="button" class="badge-btn" data-ui="status" data-cmd='{"command":"status"}'>Status</button>
+              <button type="button" class="badge-btn" data-ui="reset" data-cmd='{"command":"reset"}'>Reset</button>
+            </div>
+          </div>
+        </div>
+      </div>
       <div id="form-sections" class="card-stack"></div>
     </section>
 
@@ -857,20 +941,14 @@
           <p>Panel wysyła scenariusz do firmware ESP32 i odczytuje decyzje modelu ML + warstwy safety.</p>
           <h4>Typowa ścieżka (Replay)</h4>
           <p><code>Połącz → Wyślij → ▶ → Krok</code></p>
-          <h4>Przyciski</h4>
+          <h4>Sterowanie (lewa kolumna)</h4>
           <ul>
-            <li><strong>▶ / ■</strong> — start / stop sterowania na płytce</li>
-            <li><strong>Reset</strong> — reset symulacji (krok 0), bez zmiany formularza</li>
-            <li><strong>Replay</strong> — krok ręczny; <strong>Loop</strong> — automatyczne kroki</li>
-            <li><strong>Status</strong> — odświeża raport z firmware</li>
-            <li><strong>Wyślij</strong> — wysyła cały formularz (scenariusz) na płytkę</li>
-            <li><strong>Seed</strong> — w sekcji Czujniki (ziarno symulatora, wysyłane przy Wyślij)</li>
-            <li><strong>Krok</strong> — tylko jedna inferencja; <em>nie</em> wysyła zmian z formularza</li>
-            <li><strong>Krok</strong> — jedna inferencja</li>
-            <li><strong>Połączony</strong> — formularz wczytuje scenariusz z płytki (komenda status)</li>
-            <li><strong>Rozłączony</strong> — ostatni formularz z pamięci przeglądarki (localStorage)</li>
-            <li><strong>Domyślne</strong> — fabryczne wartości (nie wysyła na płytkę; czyści zapis lokalny)</li>
-            <li><strong>Połącz / ×</strong> — port USB serial</li>
+            <li><strong>Scenariusz</strong> — <strong>Wyślij</strong> (cały formularz na płytkę), <strong>Domyślne</strong> (reset formularza)</li>
+            <li><strong>Praca</strong> — <strong>▶ / ■</strong>, <strong>Replay</strong> / <strong>Loop</strong>, <strong>Krok</strong></li>
+            <li><strong>Diag.</strong> — <strong>Status</strong> (odśwież z płytki), <strong>Reset</strong> (symulacja krok 0)</li>
+            <li><strong>Seed</strong> — w Czujnikach (wysyłane przy Wyślij)</li>
+            <li><strong>Połącz / ×</strong> — górny pasek, port USB</li>
+            <li><strong>Na żywo</strong> — prawa kolumna: tylko podgląd decyzji</li>
           </ul>
         `,
       },
@@ -1012,11 +1090,11 @@
     }
 
     function toolbarBtn(ui) {
-      return document.querySelector(`.top-bar [data-ui="${ui}"]`);
+      return document.querySelector(`[data-panel-toolbar] [data-ui="${ui}"], .top-bar [data-ui="${ui}"]`);
     }
 
     function clearToolbarStates() {
-      document.querySelectorAll(".top-bar .badge-btn[data-ui]").forEach(btn => {
+      document.querySelectorAll("[data-panel-toolbar] .badge-btn[data-ui], .top-bar .badge-btn[data-ui]").forEach(btn => {
         btn.classList.remove(...TOOLBAR_STATE_CLASSES);
       });
     }
@@ -1122,7 +1200,7 @@
         setBtnHint("connect", "Połącz z portem USB (usbmodem)");
         setBtnHint("disconnect", "Brak połączenia");
         updatePlayPauseBtn(true, false);
-        document.querySelectorAll(".top-controls .badge-btn[data-ui]").forEach(btn => {
+        document.querySelectorAll("[data-panel-toolbar] .badge-btn[data-ui]").forEach(btn => {
           btn.classList.add("state-disabled");
           btn.title = "Najpierw Połącz urządzenie";
         });
@@ -1809,10 +1887,11 @@
     }
 
     function bindToolbar() {
-      const topBar = document.querySelector(".top-bar");
-      topBar.addEventListener("click", async (event) => {
+      document.addEventListener("click", async (event) => {
         const btn = event.target.closest("button");
-        if (!btn || !topBar.contains(btn)) return;
+        if (!btn) return;
+        const scope = btn.closest("[data-panel-toolbar]") || btn.closest(".top-bar");
+        if (!scope) return;
 
         if (btn.id === "btn-refresh-ports") {
           event.preventDefault();
