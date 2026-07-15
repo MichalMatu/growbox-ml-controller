@@ -709,6 +709,24 @@ button.danger { background: var(--danger-bg); border-color: var(--danger); color
   width: 100%;
   max-width: 100%;
 }
+/* Cultivation params: horizontal row per donica (see tests/test_panel_layout.py). */
+.pot-card.cultivation-pot-card {
+  width: auto;
+  min-width: calc(3 * var(--cell-w-wide) + 2 * var(--cell-gap) + 0.75rem);
+}
+.cultivation-pot-card > .compact-row {
+  flex-wrap: nowrap;
+  width: 100%;
+}
+.cultivation-pot-card > .compact-row .mini-cell {
+  width: var(--cell-w);
+  min-width: var(--cell-w);
+  flex-shrink: 0;
+}
+.cultivation-pot-card > .compact-row .mini-cell.wide {
+  width: var(--cell-w-wide);
+  min-width: var(--cell-w-wide);
+}
 .pots-block .sub-card {
   overflow-x: auto;
 }

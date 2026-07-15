@@ -33,24 +33,21 @@ const HELP_TOPICS = {
   environment: {
     title: "Parametry growboxa",
     html: `
-      <p>Parametry fizyczne obudowy — wpływają na to, jak symulator reaguje na grzałkę, fan i wyciek ciepła.</p>
+      <p>Fizyczny model symulacji — obudowa i donice. To nie są odczyty z czujników; wpływają na termikę, wilgotność powietrza i gleby w symulatorze oraz wektorze ML.</p>
+      <p><strong>Obudowa</strong></p>
       <ul>
-        <li><strong>Objętość</strong> — kubatura powietrza w m³</li>
+        <li><strong>Obj. m³</strong> — kubatura powietrza</li>
         <li><strong>Ciepło J/K</strong> — bezwładność termiczna</li>
         <li><strong>Strata W/K</strong> — utrata ciepła do otoczenia</li>
         <li><strong>Wyciek 1/h</strong> — wymiana powietrza (ACH)</li>
       </ul>
-    `,
-  },
-  cultivation: {
-    title: "Uprawa / doniczka",
-    html: `
-      <p>Parametry rośliny i podłoża w symulacji.</p>
+      <p><strong>Donice</strong> (per donica)</p>
       <ul>
         <li><strong>Don. L</strong> — objętość doniczki</li>
         <li><strong>Woda mL</strong> — pojemność wodna podłoża</li>
         <li><strong>Transp.</strong> — mnożnik transpiracji (wyżej = szybsze suszenie / pobór wody)</li>
       </ul>
+      <p>Czujniki gleby, cele i pompy — w sekcjach Czujniki, Cele i Aktuary.</p>
     `,
   },
   actuators: {
@@ -101,18 +98,7 @@ const HELP_TOPICS = {
       <p>Prawa kolumna, pod <strong>Na żywo</strong>. Po <strong>Krok</strong> wartości uzupełniają się z ostatnich wyjść <strong>Safety</strong> (kontekst modelu na następny krok).</p>
     `,
   },
-  zones: {
-    title: "Uprawa donic",
-    html: `
-      <p>Parametry fizyczne doniczki w symulacji (nie odczyty z czujników).</p>
-      <ul>
-        <li><strong>Don. L</strong> — objętość</li>
-        <li><strong>Woda mL</strong> — pojemność wodna podłoża</li>
-        <li><strong>Transp.</strong> — mnożnik transpiracji</li>
-        <li>Czujniki, cele i pompy — w sekcjach Czujniki, Cele i Aktuary</li>
-      </ul>
-    `,
-  },
+
 
   live: {
     title: "Na żywo",

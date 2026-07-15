@@ -392,10 +392,24 @@ function renderSubCard(title, fields, helpTopic) {
   return `<div class="sub-card">${renderSectionHead(title, helpTopic, "h3")}<div class="compact-row">${cells}</div></div>`;
 }
 
+function renderGrowboxCultivationSubCard(section) {
+  const zones = [[], [], [], []];
+  for (const field of section.fields) {
+    const match = field.path.match(/^zones\.(\d+)\.cultivation\./);
+    if (match) zones[Number(match[1])].push(field);
+  }
+  const cards = zones.map((fields, index) => renderZoneCultivationCard(fields, index)).join("");
+  if (!cards) return "";
+  return `<div class="sub-card pots-block"><div class="card-head"><h3>Donice</h3></div><div class="compact-row pots-row">${cards}</div></div>`;
+}
+
 function renderGrowboxPanel() {
   const env = panelSchema.sections.find(s => s.id === "environment");
-  if (!env) return "";
-  return `<div class="card growbox-panel">${renderSubCard(env.title, env.fields, "environment")}</div>`;
+  const zonesSection = sectionById("zones");
+  if (!env && !zonesSection) return "";
+  const obudowa = env ? renderSubCard("Obudowa", env.fields, "environment") : "";
+  const donice = zonesSection ? renderGrowboxCultivationSubCard(zonesSection) : "";
+  return `<div class="card growbox-panel environment-panel">${renderSectionHead("Parametry growboxa", "environment")}${obudowa}${donice}</div>`;
 }
 
 function renderTargetsBlock() {
@@ -425,17 +439,7 @@ function renderPreviousBlock() {
 function renderZoneCultivationCard(fields, index) {
   if (!fields.length) return "";
   const cells = fields.map(renderMiniCell).join("");
-  return `<div class="sub-card zone-card zone-card-slim"><div class="card-head"><h3>Donica ${index + 1}</h3></div><div class="compact-row">${cells}</div></div>`;
-}
-
-function renderZonesCultivationBlock(section) {
-  const zones = [[], [], [], []];
-  for (const field of section.fields) {
-    const match = field.path.match(/^zones\.(\d+)\.cultivation\./);
-    if (match) zones[Number(match[1])].push(field);
-  }
-  const cards = zones.map((fields, index) => renderZoneCultivationCard(fields, index)).join("");
-  return `<div class="card zones-panel zones-cultivation-panel">${renderSectionHead("Uprawa donic", "zones")}<div class="zones-grid">${cards}</div></div>`;
+  return `<div class="pot-card cultivation-pot-card"><div class="head-row"><span class="name">Donica ${index + 1}</span></div><div class="compact-row">${cells}</div></div>`;
 }
 
 function renderActuatorParamField(field) {
@@ -500,10 +504,6 @@ function renderForm() {
   root.innerHTML += renderGrowboxPanel();
   root.innerHTML += renderTargetsBlock();
   root.innerHTML += `<div class="card actuators-panel">${renderSectionHead("Aktuary", "actuators")}${renderActuatorBlock()}</div>`;
-  const zonesSection = sectionById("zones");
-  if (zonesSection) {
-    root.innerHTML += renderZonesCultivationBlock(zonesSection);
-  }
   const previousRoot = document.getElementById("previous-section");
   if (previousRoot) {
     previousRoot.innerHTML = renderPreviousBlock();
