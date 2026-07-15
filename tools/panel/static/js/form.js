@@ -8,8 +8,14 @@ function formatEnumOptionLabel(value) {
   return value;
 }
 
+const FIELD_CONTROL_CLASS = "field-control";
+
 function fieldHint(name) {
   return FIELD_HINTS[name] || "";
+}
+
+function fieldControlClassAttr() {
+  return ` class="${FIELD_CONTROL_CLASS}"`;
 }
 
 function fieldByName(name) {
@@ -28,7 +34,7 @@ function renderNumberField(field, extraClass = "field-num") {
   const displayValue = formatFieldNumber(value ?? field.default, field.path);
   return `<label class="${wide ? "field-wide" : extraClass}">
     <span class="lbl">${shortLabel(field.name)}</span>
-    <input type="number" data-path="${field.path}" id="${id}"
+    <input type="number"${fieldControlClassAttr()} data-path="${field.path}" id="${id}"
       min="${field.minimum}" max="${field.maximum}" step="${step}"
       value="${displayValue}" />
   </label>`;
@@ -56,7 +62,7 @@ function renderEnumField(field) {
   ).join("");
   return `<label class="field-num">
     <span class="lbl">${shortLabel(field.name)}</span>
-    <select data-path="${field.path}" id="${id}">${opts}</select>
+    <select${fieldControlClassAttr()} data-path="${field.path}" id="${id}">${opts}</select>
   </label>`;
 }
 
@@ -129,7 +135,7 @@ function renderSensorMiniCell(sensorKey, validityKey) {
       <span class="name"${hintAttr}>${shortLabel(sensorKey)}</span>
       ${validityControl}
     </div>
-    <input type="number" data-path="${sensorPath}" id="${sId}"${hintAttr}
+    <input type="number"${fieldControlClassAttr()} data-path="${sensorPath}" id="${sId}"${hintAttr}
       min="${sensorField.minimum}" max="${sensorField.maximum}" step="${step}" value="${displayValue}" />
   </div>`;
 }
@@ -233,10 +239,10 @@ function renderMiniCellInput(field) {
     const opts = (field.options || []).map(o =>
       `<option value="${o.value}" ${value === o.value ? "selected" : ""}>${formatEnumOptionLabel(o.value)}</option>`
     ).join("");
-    return `${label}<select data-path="${field.path}" id="${id}"${hintAttr}>${opts}</select>`;
+    return `${label}<select${fieldControlClassAttr()} data-path="${field.path}" id="${id}"${hintAttr}>${opts}</select>`;
   }
   const displayValue = formatFieldNumber(value ?? field.default, field.path);
-  return `${label}<input type="number" data-path="${field.path}" id="${id}"${hintAttr}
+  return `${label}<input type="number"${fieldControlClassAttr()} data-path="${field.path}" id="${id}"${hintAttr}
     min="${field.minimum}" max="${field.maximum}" step="${fieldStep(field)}" value="${displayValue}" />`;
 }
 
@@ -301,10 +307,10 @@ function renderActuatorParamField(field) {
     const opts = (field.options || []).map(o =>
       `<option value="${o.value}" ${value === o.value ? "selected" : ""}>${formatEnumOptionLabel(o.value)}</option>`
     ).join("");
-    control = `<select data-path="${field.path}" id="${id}"${hintAttr}>${opts}</select>`;
+    control = `<select${fieldControlClassAttr()} data-path="${field.path}" id="${id}"${hintAttr}>${opts}</select>`;
   } else {
     const displayValue = formatFieldNumber(value ?? field.default, field.path);
-    control = `<input type="number" data-path="${field.path}" id="${id}"${hintAttr}
+    control = `<input type="number"${fieldControlClassAttr()} data-path="${field.path}" id="${id}"${hintAttr}
       min="${field.minimum}" max="${field.maximum}" step="${fieldStep(field)}" value="${displayValue}" />`;
   }
   const wideClass = isWideField(field) ? " wide-param" : "";

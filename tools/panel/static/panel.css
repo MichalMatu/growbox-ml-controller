@@ -1,3 +1,23 @@
+/*
+ * Growbox panel — design tokens
+ *
+ * Zmiany wyglądu: edytuj wyłącznie :root (warstwy poniżej).
+ * Nie duplikuj kolorów / fontów / paddingów w selektorach komponentów.
+ *
+ * Warstwy:
+ *   --bg, --card, --border, --text, --muted, --accent, --ok, --warn, --danger
+ *   --surface-*     tła komórek, legend, kart live
+ *   --text-*        skala typografii (formularz + UI)
+ *   --live-*        kompaktowa skala sekcji Na żywo
+ *   --field-*       inputy formularza (.field-control)
+ *   --cell-*        mini-cell (kafelki pól)
+ *   --actuator-*    węższe pola w sekcji Aktuary
+ *   --btn-*, --toolbar-*   przyciski i pasek sterowania
+ *   --modal-*       okna dialogowe
+ *
+ * Komponenty formularza: klasa .field-control na input/select (form.js).
+ * Szerokość: mini-cell → 100%; aktuary → --actuator-input-w / --actuator-select-w.
+ */
 :root {
   --bg: #0f1419;
   --card: #1a2332;
@@ -113,6 +133,7 @@
   --modal-body-font: 0.7rem;
   --modal-help-font: var(--text-xl);
   --modal-foot-min-h: 2.15rem;
+  --body-font: 13px;
 }
 * { box-sizing: border-box; }
 body {
@@ -120,7 +141,7 @@ body {
   font-family: system-ui, sans-serif;
   background: var(--bg);
   color: var(--text);
-  font-size: 13px;
+  font-size: var(--body-font);
   line-height: 1.35;
 }
 h1 { margin: 0; font-size: var(--text-title); font-weight: 600; }
@@ -580,10 +601,7 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
   height: var(--checkbox-size-sm);
   flex-shrink: 0;
 }
-.mini-cell input[type="number"],
-.mini-cell select,
-.actuator-param input[type="number"],
-.actuator-param select {
+.field-control {
   padding: var(--field-pad-y) var(--field-pad-x);
   font-size: var(--field-font);
   border: 1px solid var(--field-border);
@@ -591,8 +609,7 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
   background: var(--field-bg);
   color: var(--text);
 }
-.mini-cell input[type="number"],
-.mini-cell select {
+.mini-cell .field-control {
   width: 100%;
 }
 .mini-cell.bool-only { justify-content: center; }
@@ -618,15 +635,15 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
   flex: 0 0 auto;
   min-width: 0;
 }
-.actuator-param input[type="number"] {
+.actuator-param .field-control {
   width: var(--actuator-input-w);
   min-width: var(--actuator-input-w);
 }
-.actuator-param.wide-param input[type="number"] {
+.actuator-param.wide-param .field-control {
   width: var(--actuator-input-w-wide);
   min-width: var(--actuator-input-w-wide);
 }
-.actuator-param select {
+.actuator-param select.field-control {
   width: var(--actuator-select-w);
   min-width: var(--actuator-select-w);
   padding: var(--field-pad-y) var(--field-pad-x-select) var(--field-pad-y) var(--field-pad-x-select-left);
