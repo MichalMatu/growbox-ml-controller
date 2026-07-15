@@ -965,7 +965,7 @@
         if (!parsed || parsed.v !== SCENARIO_DRAFT_VERSION || typeof parsed.scenario !== "object") {
           return null;
         }
-        return deepMergeScenario(schema.default_scenario, parsed.scenario);
+        return sanitizeScenarioNumeric(deepMergeScenario(schema.default_scenario, parsed.scenario));
       } catch (_) {
         return null;
       }
@@ -1453,13 +1453,14 @@
     function renderNumberField(field, extraClass = "field-num") {
       const id = `f-${field.path.replaceAll(".", "_")}`;
       const value = getNested(scenario, field.path);
-      const step = field.path.includes("pct") || field.path.includes("ratio") ? "0.1" : (field.path.includes("co2") ? "1" : "0.01");
+      const step = fieldStep(field);
       const wide = field.path.includes("thermal_mass") || field.path.includes("substrate_water");
+      const displayValue = formatFieldNumber(value ?? field.default, field.path);
       return `<label class="${wide ? "field-wide" : extraClass}">
         <span class="lbl">${shortLabel(field.name)}</span>
         <input type="number" data-path="${field.path}" id="${id}"
           min="${field.minimum}" max="${field.maximum}" step="${step}"
-          value="${value ?? field.default}" />
+          value="${displayValue}" />
       </label>`;
     }
 
@@ -1547,14 +1548,16 @@
         const vId = `f-validity_${validityKey}`;
         const sVal = getNested(scenario, `sensors.${sensorKey}`);
         const vVal = getNested(scenario, `validity.${validityKey}`);
-        const step = sensorKey.includes("co2") ? "1" : "0.1";
+        const sensorPath = `sensors.${sensorKey}`;
+        const step = fieldStepForPath(sensorPath);
+        const displayValue = formatFieldNumber(sVal ?? sensorField.default, sensorPath);
         return `<div class="mini-cell">
           <div class="head-row">
             <span class="name">${shortLabel(sensorKey)}</span>
             <input type="checkbox" data-path="validity.${validityKey}" id="${vId}" title="Czujnik ważny" ${vVal ? "checked" : ""} />
           </div>
-          <input type="number" data-path="sensors.${sensorKey}" id="${sId}"
-            min="${sensorField.minimum}" max="${sensorField.maximum}" step="${step}" value="${sVal ?? sensorField.default}" />
+          <input type="number" data-path="${sensorPath}" id="${sId}"
+            min="${sensorField.minimum}" max="${sensorField.maximum}" step="${step}" value="${displayValue}" />
         </div>`;
       }).join("");
       const seedVal = scenario.seed ?? 101;
@@ -1579,6 +1582,59 @@
       return "0.01";
     }
 
+    function fieldStepForPath(path) {
+      if (path.startsWith("sensors.")) {
+        return path.includes("co2") ? "1" : "0.1";
+      }
+      if (path.startsWith("previous.")) return "0.001";
+      if (path.includes("pct") || path.includes("ratio") || path.includes("efficiency") || path.includes("minimum_command") || path.includes("transpiration")) {
+        return "0.01";
+      }
+      if (path.includes("co2")) return "1";
+      if (path.includes("thermal_mass") || path.includes("substrate_water") || path.includes("minimum_interval")) return "1";
+      return "0.01";
+    }
+
+    function decimalPlacesFromStep(step) {
+      const text = String(step);
+      const dot = text.indexOf(".");
+      return dot < 0 ? 0 : text.length - dot - 1;
+    }
+
+    function normalizeFieldNumber(value, path) {
+      if (typeof value !== "number" || !Number.isFinite(value)) return value;
+      if (path === "seed") return Math.round(value);
+      const decimals = decimalPlacesFromStep(fieldStepForPath(path));
+      const factor = 10 ** decimals;
+      return Math.round(value * factor) / factor;
+    }
+
+    function formatFieldNumber(value, path) {
+      const normalized = normalizeFieldNumber(value, path);
+      if (typeof normalized !== "number" || !Number.isFinite(normalized)) {
+        return normalized ?? "";
+      }
+      const decimals = decimalPlacesFromStep(fieldStepForPath(path));
+      if (decimals === 0) return String(normalized);
+      return normalized.toFixed(decimals).replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
+    }
+
+    function sanitizeScenarioNumeric(obj, pathPrefix = "") {
+      if (obj === null || typeof obj !== "object" || Array.isArray(obj)) return obj;
+      const out = {};
+      for (const [key, value] of Object.entries(obj)) {
+        const path = pathPrefix ? `${pathPrefix}.${key}` : key;
+        if (typeof value === "number") {
+          out[key] = normalizeFieldNumber(value, path);
+        } else if (typeof value === "object" && value !== null) {
+          out[key] = sanitizeScenarioNumeric(value, path);
+        } else {
+          out[key] = value;
+        }
+      }
+      return out;
+    }
+
     function renderMiniCellInput(field) {
       const id = `f-${field.path.replaceAll(".", "_")}`;
       const value = getNested(scenario, field.path);
@@ -1592,8 +1648,9 @@
         ).join("");
         return `${label}<select data-path="${field.path}" id="${id}"${hintAttr}>${opts}</select>`;
       }
+      const displayValue = formatFieldNumber(value ?? field.default, field.path);
       return `${label}<input type="number" data-path="${field.path}" id="${id}"${hintAttr}
-        min="${field.minimum}" max="${field.maximum}" step="${fieldStep(field)}" value="${value ?? field.default}" />`;
+        min="${field.minimum}" max="${field.maximum}" step="${fieldStep(field)}" value="${displayValue}" />`;
     }
 
     function renderMiniCell(field) {
@@ -1697,12 +1754,12 @@
         let value;
         if (el.type === "checkbox") value = el.checked;
         else if (el.tagName === "SELECT") value = el.value;
-        else value = Number(el.value);
+        else value = normalizeFieldNumber(Number(el.value), path);
         setNested(next, path, value);
       });
-      scenario = next;
+      scenario = sanitizeScenarioNumeric(next);
       saveScenarioDraft();
-      return next;
+      return scenario;
     }
 
     function formatOutputPct(value) {
@@ -1935,7 +1992,7 @@
       const snap = state?.last_status?.scenario;
       if (!state?.connected || !snap || typeof snap !== "object") return false;
       if (!force && deviceScenarioSynced) return false;
-      scenario = deepMergeScenario(panelSchema.default_scenario, {
+      scenario = sanitizeScenarioNumeric(deepMergeScenario(panelSchema.default_scenario, {
         seed: state.last_status.seed ?? panelSchema.default_scenario.seed,
         sensors: snap.sensors,
         validity: snap.validity,
@@ -1944,7 +2001,7 @@
         actuators: snap.actuators,
         targets: snap.targets,
         previous: snap.previous,
-      });
+      }));
       renderForm();
       renderPreviousLive();
       saveScenarioDraft();
@@ -1985,10 +2042,10 @@
       await refreshState();
       if (lastState?.connected) {
         if (!await requestDeviceScenario()) {
-          scenario = loadScenarioDraft(panelSchema) || panelSchema.default_scenario;
+          scenario = sanitizeScenarioNumeric(loadScenarioDraft(panelSchema) || panelSchema.default_scenario);
         }
       } else {
-        scenario = loadScenarioDraft(panelSchema) || panelSchema.default_scenario;
+        scenario = sanitizeScenarioNumeric(loadScenarioDraft(panelSchema) || panelSchema.default_scenario);
       }
       renderForm();
       renderPreviousLive();
@@ -2065,7 +2122,7 @@
                 method: "POST",
                 body: JSON.stringify({ seed: Number(document.getElementById("seed").value || 101) }),
               });
-              scenario = data.scenario;
+              scenario = sanitizeScenarioNumeric(data.scenario);
               if (!panelSchema) throw new Error("Schemat panelu niezaładowany — odśwież stronę");
               clearScenarioDraft();
               saveScenarioDraft();
