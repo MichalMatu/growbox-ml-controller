@@ -3,6 +3,10 @@ idf_component_register(
     "main.cpp"
     "demo/DummyEnvironmentSimulator.cpp"
     "demo/SerialJsonProtocol.cpp"
+    "demo/protocol/JsonLineWriter.cpp"
+    "demo/protocol/ScenarioWireCodec.cpp"
+    "demo/protocol/DecisionWireCodec.cpp"
+    "demo/protocol/StatusWireCodec.cpp"
   INCLUDE_DIRS
     "."
     "demo"

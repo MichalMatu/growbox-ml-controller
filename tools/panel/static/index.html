@@ -2487,11 +2487,23 @@
       return hasDeviceStatus(lastState);
     }
 
+    function hasDeviceScenario(state) {
+      return Boolean(state?.last_status?.scenario?.actuators);
+    }
+
     async function requestDeviceScenario() {
       if (!lastState?.connected) return false;
       const ok = await requestDeviceStatus();
       updateToolbarState(lastState);
       if (!ok) return false;
+      for (let attempt = 0; attempt < 10; attempt++) {
+        await api("/api/command", { method: "POST", body: '{"command":"get_scenario"}' });
+        await new Promise(resolve => setTimeout(resolve, 140));
+        await refreshState();
+        if (hasDeviceScenario(lastState)) {
+          return tryApplyScenarioFromDevice(lastState, { force: true });
+        }
+      }
       return tryApplyScenarioFromDevice(lastState, { force: true });
     }
 

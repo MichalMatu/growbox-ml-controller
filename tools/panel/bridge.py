@@ -154,6 +154,14 @@ class SerialBridge:
                 status["paused"] = True
 
     def _apply_status_message(self, message: dict[str, Any]) -> None:
+        current = self._state.get("last_status")
+        if isinstance(current, dict):
+            merged = dict(message)
+            if "scenario" not in merged and isinstance(current.get("scenario"), dict):
+                merged["scenario"] = current["scenario"]
+            if "seed" not in merged and "seed" in current:
+                merged["seed"] = current["seed"]
+            message = merged
         if self._last_transport_tx_at > self._last_status_tx_at:
             current = self._state.get("last_status")
             if isinstance(current, dict):
@@ -165,6 +173,17 @@ class SerialBridge:
                 self._state["last_status"] = merged
                 return
         self._state["last_status"] = message
+
+    def _apply_scenario_message(self, message: dict[str, Any]) -> None:
+        status = self._state.get("last_status")
+        if not isinstance(status, dict):
+            status = {}
+            self._state["last_status"] = status
+        if "seed" in message:
+            status["seed"] = message["seed"]
+        scenario = message.get("scenario")
+        if isinstance(scenario, dict):
+            status["scenario"] = scenario
 
     def _apply_ack_message(self, message: dict[str, Any]) -> None:
         cmd = message.get("command")
@@ -268,6 +287,8 @@ class SerialBridge:
                 self._state["last_decision"] = message
             elif message_type == "status":
                 self._apply_status_message(message)
+            elif message_type == "scenario":
+                self._apply_scenario_message(message)
             elif message_type == "ack":
                 self._state["last_ack"] = message
                 self._apply_ack_message(message)

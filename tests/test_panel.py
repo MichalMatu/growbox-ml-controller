@@ -108,6 +108,42 @@ def test_bridge_patches_scenario_on_load_scenario():
     assert status["scenario"]["targets"]["co2_ppm"] == 800.0
 
 
+def test_bridge_applies_scenario_message():
+    bridge = SerialBridge()
+    bridge._state["last_status"] = {"mode": "closed_loop", "paused": True, "step": 2}
+    bridge._apply_scenario_message(
+        {
+            "type": "scenario",
+            "seed": 101,
+            "scenario": {
+                "actuators": {"irrigation": {"available": False}},
+                "targets": {"co2_ppm": 800.0},
+            },
+        }
+    )
+    status = bridge._state["last_status"]
+    assert status["seed"] == 101
+    assert status["mode"] == "closed_loop"
+    assert status["scenario"]["actuators"]["irrigation"]["available"] is False
+
+
+def test_bridge_light_status_preserves_scenario_snapshot():
+    bridge = SerialBridge()
+    bridge._state["last_status"] = {
+        "mode": "closed_loop",
+        "paused": False,
+        "step": 1,
+        "seed": 101,
+        "scenario": {"actuators": {"irrigation": {"available": False}}},
+    }
+    bridge._apply_status_message(
+        {"type": "status", "mode": "closed_loop", "paused": True, "step": 1, "seed": 101}
+    )
+    status = bridge._state["last_status"]
+    assert status["paused"] is True
+    assert status["scenario"]["actuators"]["irrigation"]["available"] is False
+
+
 def test_bridge_confirms_transport_on_ack():
     bridge = SerialBridge()
     bridge._state["last_status"] = {"mode": "closed_loop", "paused": True, "step": 0}

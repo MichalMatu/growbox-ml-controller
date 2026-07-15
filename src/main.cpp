@@ -10,11 +10,11 @@
 #include "EnvironmentController.h"
 #include "EnvironmentSchema.h"
 #include "ModelRuntime.h"
-#include "SafetySupervisor.h"
 #include "demo/DummyEnvironmentSimulator.h"
 #include "demo/SerialJsonProtocol.h"
+#include "demo/protocol/DecisionWireCodec.h"
+#include "demo/protocol/JsonLineWriter.h"
 
-#include <array>
 #include <cstdint>
 #include <cstring>
 
@@ -28,14 +28,11 @@ using growbox::control::ControllerOutput;
 using growbox::control::ControllerStatus;
 using growbox::control::EnvironmentController;
 using growbox::control::ModelRuntime;
-using growbox::control::ModelStatus;
-using growbox::control::SafetyReason;
-using growbox::control::SafetySupervisor;
 using growbox::demo::DemoMode;
 using growbox::demo::DemoRuntimeState;
 using growbox::demo::DummyEnvironmentSimulator;
 using growbox::demo::SerialJsonProtocol;
-
+using growbox::demo::wire::DecisionEmitRequest;
 
 constexpr std::uint64_t kRealStepIntervalMs = 1000U;
 constexpr float kSimulationStepSeconds = 10.0f;
@@ -48,75 +45,6 @@ std::uint64_t last_real_step_ms = 0U;
 
 std::uint64_t monotonicMilliseconds() noexcept {
   return static_cast<std::uint64_t>(esp_timer_get_time()) / 1000U;
-}
-
-const char* controllerStatusCode(ControllerStatus status) noexcept {
-  switch (status) {
-    case ControllerStatus::Ok:
-      return "ok";
-    case ControllerStatus::EncoderError:
-      return "encoder_error";
-    case ControllerStatus::ModelError:
-      return "model_error";
-  }
-  return "unknown";
-}
-
-const char* modelStatusCode(ModelStatus status) noexcept {
-  switch (status) {
-    case ModelStatus::Ok:
-      return "ok";
-    case ModelStatus::SchemaMismatch:
-      return "schema_mismatch";
-    case ModelStatus::ShapeMismatch:
-      return "shape_mismatch";
-    case ModelStatus::NonFiniteInput:
-      return "non_finite_input";
-    case ModelStatus::InferenceFailure:
-      return "inference_failure";
-    case ModelStatus::NonFiniteOutput:
-      return "non_finite_output";
-  }
-  return "unknown";
-}
-
-const char* primarySafetyReason(std::uint32_t mask) noexcept {
-  constexpr std::array<SafetyReason, 15> reasons{{
-      SafetyReason::NonFiniteInput,
-      SafetyReason::ModelFailure,
-      SafetyReason::SchemaMismatch,
-      SafetyReason::NonFiniteModelOutput,
-      SafetyReason::OutputClamped,
-      SafetyReason::TemperatureUnavailable,
-      SafetyReason::ActuatorUnavailable,
-      SafetyReason::OverTemperature,
-      SafetyReason::TemperatureAlarmFan,
-      SafetyReason::PumpPulseLimited,
-      SafetyReason::PumpMinimumInterval,
-      SafetyReason::BinaryThreshold,
-      SafetyReason::BinaryMinimumOn,
-      SafetyReason::BinaryMinimumOff,
-      SafetyReason::InvalidCapability,
-  }};
-  for (const SafetyReason reason : reasons) {
-    if ((mask & growbox::control::reasonBit(reason)) != 0U) {
-      return SafetySupervisor::reasonCode(reason);
-    }
-  }
-  return SafetySupervisor::reasonCode(SafetyReason::None);
-}
-
-void writeLine(cJSON* document) noexcept {
-  if (document == nullptr) {
-    return;
-  }
-  char* encoded = cJSON_PrintUnformatted(document);
-  if (encoded != nullptr) {
-    usb_serial_jtag_write_bytes(encoded, std::strlen(encoded), 0);
-    usb_serial_jtag_write_bytes("\n", 1U, 0);
-    cJSON_free(encoded);
-  }
-  cJSON_Delete(document);
 }
 
 void emitStartup() noexcept {
@@ -141,98 +69,7 @@ void emitStartup() noexcept {
   cJSON_AddNumberToObject(document, "seed", simulator.seed());
   cJSON_AddNumberToObject(document, "free_heap", heap_caps_get_free_size(MALLOC_CAP_8BIT));
   cJSON_AddNumberToObject(document, "free_psram", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
-  writeLine(document);
-}
-
-void emitDecision(const ControllerOutput& output, ControllerStatus status) noexcept {
-  const auto& input = simulator.input();
-  cJSON* document = cJSON_CreateObject();
-  if (document == nullptr) {
-    return;
-  }
-
-  cJSON_AddStringToObject(document, "type", "decision");
-  cJSON_AddNumberToObject(document, "schema_version", growbox::control::schema::kSchemaVersion);
-  cJSON_AddStringToObject(document, "schema_hash", growbox::control::schema::kSchemaHash);
-  cJSON_AddStringToObject(document, "model_version", ModelRuntime::modelVersion());
-  cJSON_AddNumberToObject(document, "step", runtime.step);
-  cJSON_AddNumberToObject(document, "simulated_time_s", input.monotonic_time_ms / 1000U);
-
-  cJSON* sensors = cJSON_AddObjectToObject(document, "sensors");
-  cJSON_AddNumberToObject(sensors, "air_temperature_c", input.sensors.air_temperature_c);
-  cJSON_AddNumberToObject(sensors, "air_humidity_pct", input.sensors.air_humidity_pct);
-  cJSON_AddNumberToObject(sensors, "co2_ppm", input.sensors.co2_ppm);
-  cJSON_AddNumberToObject(sensors, "soil_moisture_pct", input.sensors.soil_moisture_pct);
-  cJSON_AddNumberToObject(sensors, "outside_temperature_c", input.sensors.outside_temperature_c);
-  cJSON_AddNumberToObject(sensors, "outside_humidity_pct", input.sensors.outside_humidity_pct);
-  cJSON_AddNumberToObject(sensors, "outside_co2_ppm", input.sensors.outside_co2_ppm);
-
-  cJSON* validity = cJSON_AddObjectToObject(document, "validity");
-  cJSON_AddBoolToObject(validity, "air_temperature_c", input.validity.air_temperature);
-  cJSON_AddBoolToObject(validity, "air_humidity_pct", input.validity.air_humidity);
-  cJSON_AddBoolToObject(validity, "co2_ppm", input.validity.co2);
-  cJSON_AddBoolToObject(validity, "soil_moisture_pct", input.validity.soil_moisture);
-  cJSON_AddBoolToObject(validity, "outside_temperature_c", input.validity.outside_temperature);
-  cJSON_AddBoolToObject(validity, "outside_humidity_pct", input.validity.outside_humidity);
-  cJSON_AddBoolToObject(validity, "outside_co2_ppm", input.validity.outside_co2);
-
-  cJSON* targets = cJSON_AddObjectToObject(document, "targets");
-  cJSON_AddNumberToObject(targets, "air_temperature_c", input.targets.air_temperature_c);
-  cJSON_AddNumberToObject(targets, "air_humidity_pct", input.targets.air_humidity_pct);
-  cJSON_AddNumberToObject(targets, "co2_ppm", input.targets.co2_ppm);
-  cJSON_AddNumberToObject(targets, "soil_moisture_pct", input.targets.soil_moisture_pct);
-
-  const auto& actuators = input.actuators;
-  cJSON* actuators_json = cJSON_AddObjectToObject(document, "actuators");
-  cJSON* heater_json = cJSON_AddObjectToObject(actuators_json, "heater");
-  cJSON_AddBoolToObject(heater_json, "available", actuators.heater.available);
-  cJSON* fan_json = cJSON_AddObjectToObject(actuators_json, "fan");
-  cJSON_AddBoolToObject(fan_json, "available", actuators.fan.available);
-  cJSON* humidifier_json = cJSON_AddObjectToObject(actuators_json, "humidifier");
-  cJSON_AddBoolToObject(humidifier_json, "available", actuators.humidifier.available);
-  cJSON* irrigation_json = cJSON_AddObjectToObject(actuators_json, "irrigation");
-  cJSON_AddBoolToObject(irrigation_json, "available", actuators.irrigation_pump.available);
-  const float raw_heater = actuators.heater.available ? output.raw.heater : 0.0f;
-  const float raw_fan = actuators.fan.available ? output.raw.fan : 0.0f;
-  const float raw_humidifier = actuators.humidifier.available ? output.raw.humidifier : 0.0f;
-  const float raw_irrigation =
-      actuators.irrigation_pump.available ? output.raw.irrigation : 0.0f;
-
-  cJSON* raw = cJSON_AddObjectToObject(document, "raw_output");
-  cJSON_AddNumberToObject(raw, "heater", raw_heater);
-  cJSON_AddNumberToObject(raw, "fan", raw_fan);
-  cJSON_AddNumberToObject(raw, "humidifier", raw_humidifier);
-  cJSON_AddNumberToObject(raw, "irrigation", raw_irrigation);
-
-  cJSON* safe = cJSON_AddObjectToObject(document, "safe_output");
-  cJSON_AddNumberToObject(safe, "heater", output.safe.heater);
-  cJSON_AddNumberToObject(safe, "fan", output.safe.fan);
-  cJSON_AddNumberToObject(safe, "humidifier", output.safe.humidifier);
-  cJSON_AddNumberToObject(safe, "irrigation", output.safe.irrigation);
-  cJSON_AddNumberToObject(safe, "irrigation_pulse_s", output.safe.irrigation_pulse_s);
-
-  cJSON* diagnostics = cJSON_AddObjectToObject(document, "diagnostics");
-  cJSON_AddStringToObject(diagnostics, "controller_status", controllerStatusCode(status));
-  cJSON_AddStringToObject(diagnostics, "inference_status",
-                          modelStatusCode(output.diagnostics.model_status));
-  cJSON_AddNumberToObject(diagnostics, "inference_us", output.diagnostics.inference_us);
-  cJSON_AddBoolToObject(diagnostics, "safety_modified", output.diagnostics.safety.modified);
-  cJSON_AddStringToObject(diagnostics, "safety_reason",
-                          primarySafetyReason(output.diagnostics.safety.reason_mask));
-  cJSON_AddNumberToObject(diagnostics, "safety_reason_mask",
-                          output.diagnostics.safety.reason_mask);
-  cJSON* output_reasons = cJSON_AddObjectToObject(diagnostics, "output_reason_masks");
-  cJSON_AddNumberToObject(output_reasons, "heater",
-                          output.diagnostics.safety.output_reason_masks[0]);
-  cJSON_AddNumberToObject(output_reasons, "fan",
-                          output.diagnostics.safety.output_reason_masks[1]);
-  cJSON_AddNumberToObject(output_reasons, "humidifier",
-                          output.diagnostics.safety.output_reason_masks[2]);
-  cJSON_AddNumberToObject(output_reasons, "irrigation",
-                          output.diagnostics.safety.output_reason_masks[3]);
-  cJSON_AddNumberToObject(diagnostics, "free_heap", heap_caps_get_free_size(MALLOC_CAP_8BIT));
-  cJSON_AddNumberToObject(diagnostics, "free_psram", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
-  writeLine(document);
+  growbox::demo::wire::emitJsonDocument(document);
 }
 
 void runControllerStep() noexcept {
@@ -242,7 +79,9 @@ void runControllerStep() noexcept {
   const std::int64_t elapsed_us = esp_timer_get_time() - started_us;
   output.diagnostics.inference_us =
       elapsed_us > 0 ? static_cast<std::uint32_t>(elapsed_us) : 0U;
-  emitDecision(output, status);
+
+  const DecisionEmitRequest request{&simulator.input(), &output, status, runtime.step};
+  growbox::demo::wire::emitDecision(request);
 
   if (runtime.mode == DemoMode::ClosedLoop) {
     simulator.advance(output.safe, kSimulationStepSeconds);
