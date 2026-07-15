@@ -210,6 +210,55 @@
     .panel-toolbar .mini-cell.toolbar-cell-seed input[type="number"] {
       font-variant-numeric: tabular-nums;
     }
+    @media (max-width: 820px) {
+      .panel-toolbar .compact-row {
+        row-gap: 0.28rem;
+      }
+      .panel-toolbar .mini-cell.toolbar-cell-wide {
+        flex: 1 1 100%;
+        min-width: 0;
+      }
+      .panel-toolbar .mini-cell.toolbar-cell-seed {
+        margin-left: auto;
+      }
+    }
+    .sync-badge {
+      font-size: 0.52rem;
+      font-weight: 600;
+      padding: 0.06rem 0.34rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .sync-badge.synced {
+      color: var(--ok);
+      border-color: rgba(61, 214, 140, 0.45);
+      background: rgba(61, 214, 140, 0.1);
+    }
+    .sync-badge.local {
+      color: var(--warn);
+      border-color: rgba(245, 165, 36, 0.45);
+      background: rgba(245, 165, 36, 0.1);
+    }
+    .sync-badge.unknown {
+      color: var(--muted);
+      opacity: 0.85;
+    }
+    .top-status-badge {
+      font-size: 0.58rem;
+      color: var(--muted);
+    }
+    .top-status-badge.live {
+      color: var(--ok);
+      border-color: rgba(61, 214, 140, 0.35);
+    }
+    .toolbar-btn-stack .badge-btn.export-btn {
+      flex: 0 0 auto;
+      min-width: 0;
+      padding: 0 0.38rem;
+      font-size: 0.62rem;
+    }
     .toolbar-btn-stack {
       display: flex;
       flex-direction: row;
@@ -455,6 +504,12 @@
       gap: 0.22rem;
     }
     .mini-cell.actuator-cell.wide { min-width: 6.8rem; }
+    .mini-cell.actuator-cell.actuator-cell-irrigation {
+      min-width: 13rem;
+    }
+    .mini-cell.actuator-cell.actuator-cell-irrigation .field-stack {
+      flex-wrap: nowrap;
+    }
     .mini-cell.actuator-cell .field-stack {
       display: flex;
       flex-direction: row;
@@ -495,6 +550,20 @@
       min-width: 2.8rem;
       padding-left: 0.16rem;
       padding-right: 0.1rem;
+    }
+    .targets-panel .sub-card .compact-row {
+      justify-content: flex-start;
+    }
+    .live-no-target {
+      color: var(--muted);
+      opacity: 0.55;
+      font-weight: 400;
+    }
+    .actuator-extra {
+      font-size: 0.58rem;
+      color: var(--muted);
+      margin-top: 0.12rem;
+      font-variant-numeric: tabular-nums;
     }
 
     .growbox-split {
@@ -868,6 +937,7 @@
     <div class="card top-card">
       <div class="top-brand">
         <h1>Growbox ML</h1>
+        <span id="top-status-badge" class="badge mono top-status-badge" hidden aria-live="polite"></span>
       </div>
       <div class="top-connect">
         <select id="port-select"></select>
@@ -887,10 +957,14 @@
         </div>
         <div class="compact-row">
           <div class="mini-cell toolbar-cell" aria-label="Scenariusz">
-            <div class="head-row"><span class="name">Scenariusz</span></div>
+            <div class="head-row">
+              <span class="name">Scenariusz</span>
+              <span id="scenario-sync-badge" class="sync-badge unknown" hidden></span>
+            </div>
             <div class="toolbar-btn-stack">
               <button type="button" class="badge-btn primary" data-ui="load" id="btn-load">Wyślij</button>
               <button type="button" class="badge-btn" data-ui="defaults" id="btn-defaults">Domyślne</button>
+              <button type="button" class="badge-btn export-btn" id="btn-export" title="Pobierz scenariusz jako JSON">Pobierz</button>
             </div>
           </div>
           <div class="mini-cell toolbar-cell toolbar-cell-wide" aria-label="Praca">
@@ -915,8 +989,8 @@
           </div>
           <div class="mini-cell toolbar-cell toolbar-cell-seed" aria-label="Seed symulatora">
             <div class="head-row"><span class="name">Seed</span></div>
-            <input type="number" id="seed" min="0" step="1" value="101"
-              title="Ziarno symulatora — wysyłane przy Wyślij" />
+            <input type="number" id="seed" min="0" max="4294967295" step="1" value="101"
+              title="Ziarno symulatora (0–4294967295) — wysyłane przy Wyślij" />
           </div>
         </div>
       </div>
@@ -953,7 +1027,6 @@
           <button id="btn-json-decision" class="ghost">JSON decyzji</button>
           <button id="btn-json-history" class="ghost">Historia</button>
           <button id="btn-json-device" class="ghost">Startup / status</button>
-          <button id="btn-export" class="ghost">Pobierz scenariusz</button>
         </div>
       </div>
     </section>
@@ -1064,11 +1137,12 @@
           <p><code>Połącz → Wyślij → ▶ → Krok</code></p>
           <h4>Sterowanie (lewa kolumna)</h4>
           <ul>
-            <li><strong>Scenariusz</strong> — <strong>Wyślij</strong> (cały formularz na płytkę), <strong>Domyślne</strong> (reset formularza)</li>
+            <li><strong>Scenariusz</strong> — <strong>Wyślij</strong> (cały formularz na płytkę), <strong>Domyślne</strong> (reset formularza), <strong>Pobierz</strong> (JSON)</li>
+            <li><strong>OK / lokalne</strong> — badge przy Scenariuszu: zgodność formularza ze scenariuszem na płytce</li>
             <li><strong>Praca</strong> — <strong>▶ / ■</strong>, <strong>Replay</strong> / <strong>Loop</strong>, <strong>Krok</strong></li>
             <li><strong>Diag.</strong> — <strong>Status</strong> (odśwież z płytki), <strong>Reset</strong> (symulacja krok 0)</li>
             <li><strong>Seed</strong> — ziarno symulatora; ta sama wartość + te same odczyty = powtarzalna symulacja (wysyłane przy <strong>Wyślij</strong>)</li>
-            <li><strong>Połącz / ×</strong> — górny pasek, port USB</li>
+            <li><strong>Połącz / ×</strong> — górny pasek, port USB; badge obok tytułu pokazuje krok, tryb i stan po połączeniu</li>
             <li><strong>Na żywo</strong> — prawa kolumna: tylko podgląd decyzji</li>
           </ul>
         `,
@@ -1112,7 +1186,7 @@
         html: `
           <p>Co jest podłączone w growboxie i jakie ma limity. Checkbox przy nazwie = urządzenie jest w zestawie.</p>
           <ul>
-            <li><strong>typ</strong> — <code>binary</code> (wł/wył, próg 50%) lub <code>pwm</code> (0–100%). Po zmianie kliknij <strong>Wyślij</strong>.</li>
+            <li><strong>typ</strong> — <code>bin</code> (wł/wył, próg 50%) lub <code>pwm</code> (0–100%). Po zmianie kliknij <strong>Wyślij</strong>.</li>
             <li><strong>Fan min</strong> — dolna granica PWM przy alarmie temperatury</li>
             <li><strong>Pompa</strong> — przepływ mL/s, <strong>Impuls s</strong> (krótki, np. 4), <strong>Przerwa s</strong> (długi, np. 600 między podlaniami)</li>
           </ul>
@@ -1227,6 +1301,17 @@
       return "closed_loop";
     }
 
+    function resolveDisplayStep(state) {
+      const decisionStep = state?.last_decision?.step;
+      if (decisionStep !== undefined && decisionStep !== null) {
+        return decisionStep;
+      }
+      if (state?.last_status?.step !== undefined) {
+        return state.last_status.step;
+      }
+      return 0;
+    }
+
     function patchLocalTransportStatus(cmd) {
       if (!lastState) lastState = {};
       if (!lastState.last_status || typeof lastState.last_status !== "object") {
@@ -1263,8 +1348,96 @@
       }
     }
 
+    function scenarioSyncPayload(doc) {
+      const payload = { seed: doc?.seed ?? 101 };
+      for (const key of SCENARIO_SYNC_KEYS) {
+        if (doc?.[key] !== undefined) payload[key] = doc[key];
+      }
+      return sanitizeScenarioNumeric(payload);
+    }
+
+    function stableStringify(value) {
+      if (Array.isArray(value)) {
+        return `[${value.map(stableStringify).join(",")}]`;
+      }
+      if (value && typeof value === "object") {
+        const keys = Object.keys(value).sort();
+        return `{${keys.map(key => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(",")}}`;
+      }
+      return JSON.stringify(value);
+    }
+
+    function scenarioSyncFingerprint(doc) {
+      return stableStringify(scenarioSyncPayload(doc));
+    }
+
+    function deviceScenarioFromState(state) {
+      const snap = state?.last_status?.scenario;
+      if (!state?.connected || !snap || typeof snap !== "object" || !panelSchema) return null;
+      return scenarioSyncPayload(deepMergeScenario(panelSchema.default_scenario, {
+        seed: state.last_status.seed ?? panelSchema.default_scenario.seed,
+        sensors: snap.sensors,
+        validity: snap.validity,
+        environment: snap.environment,
+        cultivation: snap.cultivation,
+        actuators: snap.actuators,
+        targets: snap.targets,
+      }));
+    }
+
+    function updateScenarioSyncBadge() {
+      const el = document.getElementById("scenario-sync-badge");
+      if (!el) return;
+      if (!lastState?.connected) {
+        el.hidden = true;
+        return;
+      }
+      const deviceDoc = deviceScenarioFromState(lastState);
+      if (!deviceDoc) {
+        el.hidden = false;
+        el.className = "sync-badge unknown";
+        el.textContent = "?";
+        el.title = "Brak scenariusza z płytki — wyślij Status lub Wyślij";
+        return;
+      }
+      const localDoc = scenarioSyncPayload(scenario);
+      const synced = scenarioSyncFingerprint(localDoc) === scenarioSyncFingerprint(deviceDoc);
+      el.hidden = false;
+      if (synced) {
+        el.className = "sync-badge synced";
+        el.textContent = "OK";
+        el.title = "Formularz zgodny ze scenariuszem na płytce";
+      } else {
+        el.className = "sync-badge local";
+        el.textContent = "lokalne";
+        el.title = "Masz niezapisane zmiany — kliknij Wyślij";
+      }
+    }
+
+    function updateTopStatusBadge(state = lastState) {
+      const el = document.getElementById("top-status-badge");
+      if (!el) return;
+      if (!state?.connected) {
+        el.hidden = true;
+        el.textContent = "";
+        el.classList.remove("live");
+        return;
+      }
+      const step = resolveDisplayStep(state);
+      const mode = resolveMode(state);
+      const paused = resolvePaused(state);
+      const modeLabel = mode === "replay" ? "replay" : "loop";
+      const runLabel = paused ? "pauza" : "działa";
+      el.hidden = false;
+      el.classList.add("live");
+      el.textContent = `krok ${step} · ${modeLabel} · ${runLabel}`;
+      el.title = `Połączono — krok ${step}, tryb ${modeLabel}, ${paused ? "w pauzie" : "symulacja działa"}`;
+    }
+
     function updateToolbarState(state = lastState) {
       clearToolbarStates();
+      updateTopStatusBadge(state);
+      updateScenarioSyncBadge();
       const connected = Boolean(state?.connected);
       const mode = resolveMode(state);
       const paused = resolvePaused(state);
@@ -1414,20 +1587,24 @@
       {
         title: "Wewnętrzne",
         metrics: [
-          { key: "air_temperature_c", label: "Temp.", targetKey: "air_temperature_c", decimals: 1, unit: "°C" },
-          { key: "air_humidity_pct", label: "Wilg.", targetKey: "air_humidity_pct", decimals: 0, unit: "%" },
-          { key: "co2_ppm", label: "CO₂", targetKey: "co2_ppm", decimals: 0, unit: " ppm" },
-          { key: "soil_moisture_pct", label: "Gleba", targetKey: "soil_moisture_pct", decimals: 0, unit: "%" },
+          { key: "air_temperature_c", targetKey: "air_temperature_c", decimals: 1, unit: "°C" },
+          { key: "air_humidity_pct", targetKey: "air_humidity_pct", decimals: 0, unit: "%" },
+          { key: "co2_ppm", targetKey: "co2_ppm", decimals: 0, unit: " ppm" },
+          { key: "soil_moisture_pct", targetKey: "soil_moisture_pct", decimals: 0, unit: "%" },
         ],
       },
       {
         title: "Zewnętrzne",
         metrics: [
-          { key: "outside_temperature_c", label: "T zewn.", targetKey: null, decimals: 1, unit: "°C" },
-          { key: "outside_humidity_pct", label: "Wilg. zewn.", targetKey: null, decimals: 0, unit: "%" },
-          { key: "outside_co2_ppm", label: "CO₂ zewn.", targetKey: null, decimals: 0, unit: " ppm", simulationOnly: true },
+          { key: "outside_temperature_c", targetKey: null, decimals: 1, unit: "°C" },
+          { key: "outside_humidity_pct", targetKey: null, decimals: 0, unit: "%" },
+          { key: "outside_co2_ppm", targetKey: null, decimals: 0, unit: " ppm", simulationOnly: true },
         ],
       },
+    ];
+
+    const SCENARIO_SYNC_KEYS = [
+      "sensors", "validity", "environment", "cultivation", "actuators", "targets",
     ];
 
     function formatLiveSensorValue(value, decimals) {
@@ -1482,17 +1659,22 @@
       return fieldByName(sensorKey) || SIMULATION_SENSOR_FIELDS[sensorKey] || null;
     }
 
+    function liveNoTargetHint(metric) {
+      if (metric.simulationOnly) return "Brak celu — parametr symulacji";
+      return "Brak celu — warunki zewnętrzne";
+    }
+
     function renderLiveMetricRow(metric, sensors, targets, validity) {
       const valueText = formatLiveSensorValue(sensors[metric.key], metric.decimals);
       const valid = metric.simulationOnly || validity[metric.key] !== false;
       const targetText = metric.targetKey
         ? formatLiveTargetValue(targets[metric.targetKey], metric.decimals, metric.unit)
-        : "—";
+        : `<span class="live-no-target" title="${liveNoTargetHint(metric)}">—</span>`;
       const invalidMark = valid ? "" : '<span class="live-invalid" title="Czujnik nieważny">⊘</span>';
       const envClass = metric.targetKey ? "" : " env-row";
       const invalidClass = valid ? "" : " invalid";
       return `<tr class="${envClass}${invalidClass}">
-        <th scope="row">${metric.label}${invalidMark}</th>
+        <th scope="row">${shortLabel(metric.key)}${invalidMark}</th>
         <td class="num"><strong>${valueText}${metric.unit}</strong></td>
         <td class="num">${targetText}</td>
       </tr>`;
@@ -1538,10 +1720,10 @@
       irrigation_maximum_pulse_s: "Maks. czas jednego impulsu podlewania (sekundy)",
       irrigation_minimum_interval_s: "Min. przerwa między kolejnymi podlaniami (sekundy)",
       fan_minimum_command: "Min. PWM przy alarmie temperatury (nie przy normalnej pracy)",
-      heater_control_type: "binary = przekaźnik, pwm = modulacja mocy",
-      fan_control_type: "Typowo pwm (regulacja obrotów). binary = wł/wył",
-      humidifier_control_type: "Typowo binary (wł/wył). pwm = modulacja",
-      irrigation_control_type: "Typowo binary (impuls ON/OFF). pwm = długość impulsu z modelu",
+      heater_control_type: "bin = przekaźnik wł/wył, pwm = modulacja mocy",
+      fan_control_type: "Typowo pwm (regulacja obrotów). bin = wł/wył",
+      humidifier_control_type: "Typowo bin (wł/wył). pwm = modulacja",
+      irrigation_control_type: "Typowo bin (impuls ON/OFF). pwm = długość impulsu z modelu",
     };
 
     function shortLabel(name) {
@@ -1698,7 +1880,7 @@
     function updateSeedInput() {
       const el = document.getElementById("seed");
       if (!el) return;
-      el.value = String(scenario.seed ?? 101);
+      el.value = String(normalizeSeed(scenario.seed ?? 101));
     }
 
     function isWideField(field) {
@@ -1811,6 +1993,11 @@
       return `<div class="card">${renderSectionHead(title, helpTopic)}<div class="compact-row">${cells}</div></div>`;
     }
 
+    function renderTargetsBlock(section) {
+      const cells = section.fields.map(renderMiniCell).join("");
+      return `<div class="card growbox-panel targets-panel">${renderSectionHead(section.title, "targets")}<div class="sub-card"><div class="compact-row">${cells}</div></div></div>`;
+    }
+
     function renderSubCard(title, fields, helpTopic) {
       const cells = fields.map(renderMiniCell).join("");
       return `<div class="sub-card">${renderSectionHead(title, helpTopic, "h3")}<div class="compact-row">${cells}</div></div>`;
@@ -1850,16 +2037,17 @@
       const availableName = names.find(n => n.endsWith("_available"));
       const availableField = availableName ? byName[availableName] : null;
       const paramFields = names.filter(n => n !== availableName).map(n => byName[n]).filter(Boolean);
-      const wide = paramFields.some(isWideField) ? " wide" : "";
+      const isIrrigation = title === "Pompa";
+      const wide = paramFields.some(isWideField) || isIrrigation ? " wide" : "";
       const availId = availableField ? `f-${availableField.path.replaceAll(".", "_")}` : "";
       const availVal = availableField ? getNested(scenario, availableField.path) : false;
-      const stack = paramFields.map(renderActuatorParamField).join("");
-      return `<div class="mini-cell actuator-cell${wide}">
+      const stack = `<div class="field-stack">${paramFields.map(renderActuatorParamField).join("")}</div>`;
+      return `<div class="mini-cell actuator-cell${wide}${isIrrigation ? " actuator-cell-irrigation" : ""}">
         <div class="head-row">
           <span class="name">${title}</span>
           ${availableField ? `<input type="checkbox" data-path="${availableField.path}" id="${availId}" ${availVal ? "checked" : ""} />` : ""}
         </div>
-        <div class="field-stack">${stack}</div>
+        ${stack}
       </div>`;
     }
 
@@ -1885,7 +2073,7 @@
         if (section.id === "actuators") {
           root.innerHTML += `<div class="card">${renderSectionHead(section.title, "actuators")}${renderActuatorBlock(section)}</div>`;
         } else if (section.id === "targets") {
-          root.innerHTML += renderCompactBlock(section.title, section.fields, "targets");
+          root.innerHTML += renderTargetsBlock(section);
         } else {
           const grid = document.createElement("div");
           grid.className = "section-grid";
@@ -1896,9 +2084,14 @@
       }
     }
 
+    function normalizeSeed(value) {
+      const parsed = Math.round(Number(value) || 101);
+      return Math.min(4294967295, Math.max(0, parsed));
+    }
+
     function collectScenario() {
       const next = {
-        seed: Number(document.getElementById("seed").value || 101),
+        seed: normalizeSeed(document.getElementById("seed").value),
         previous: { ...(scenario.previous || { heater: 0, fan: 0, humidifier: 0, irrigation: 0 }) },
       };
       document.querySelectorAll("[data-path]").forEach(el => {
@@ -1911,6 +2104,7 @@
       });
       scenario = sanitizeScenarioNumeric(next);
       saveScenarioDraft();
+      updateScenarioSyncBadge();
       return scenario;
     }
 
@@ -1919,7 +2113,7 @@
       return Math.min(100, Math.max(0, Math.round(n * 100)));
     }
 
-    function renderActuatorCard(label, rawVal, safeVal) {
+    function renderActuatorCard(label, rawVal, safeVal, extraHtml = "") {
       const rPct = formatOutputPct(rawVal);
       const sPct = formatOutputPct(safeVal);
       const differs = Math.abs((Number(rawVal) || 0) - (Number(safeVal) || 0)) > 0.005;
@@ -1940,6 +2134,7 @@
           <div class="bar safe" title="Wysyłane na płytkę: ${sPct}%"><span style="width:${sPct}%"></span></div>
           <span class="output-pct">${sPct}%</span>
         </div>
+        ${extraHtml}
       </article>`;
     }
 
@@ -2002,11 +2197,18 @@
       const safe = decision.safe_output || {};
       const outputsEl = document.getElementById("outputs-bars");
       outputsEl.className = "actuator-grid";
-      outputsEl.innerHTML = names.map(name =>
-        renderActuatorCard(labels[name], raw[name], safe[name])
-      ).join("");
+      const pulseS = Number(safe.irrigation_pulse_s);
+      outputsEl.innerHTML = names.map(name => {
+        let extra = "";
+        if (name === "irrigation" && Number.isFinite(pulseS) && pulseS > 0.005) {
+          const pulseText = pulseS >= 10 ? pulseS.toFixed(0) : pulseS.toFixed(1);
+          extra = `<div class="actuator-extra">impuls ${pulseText} s</div>`;
+        }
+        return renderActuatorCard(labels[name], raw[name], safe[name], extra);
+      }).join("");
 
       setLiveStepBadge(decision.step ?? "?");
+      if (lastState) updateTopStatusBadge(lastState);
       document.getElementById("decision-summary").innerHTML = renderLiveMetricsTable(decision);
       setLiveInferenceMeta(decision);
       syncPreviousActuators(safe);
@@ -2137,6 +2339,7 @@
       renderPreviousLive();
       saveScenarioDraft();
       deviceScenarioSynced = true;
+      updateScenarioSyncBadge();
       return true;
     }
 
@@ -2257,7 +2460,7 @@
             await runAction(async () => {
               const data = await api("/api/defaults", {
                 method: "POST",
-                body: JSON.stringify({ seed: Number(document.getElementById("seed").value || 101) }),
+                body: JSON.stringify({ seed: normalizeSeed(document.getElementById("seed").value) }),
               });
               scenario = sanitizeScenarioNumeric(data.scenario);
               if (!panelSchema) throw new Error("Schemat panelu niezaładowany — odśwież stronę");
@@ -2281,9 +2484,13 @@
                 method: "POST",
                 body: JSON.stringify({ seed, scenario: body }),
               });
+              deviceScenarioSynced = true;
             }, btn);
             clearLivePreview(0);
-            setTimeout(refreshState, 300);
+            setTimeout(async () => {
+              await refreshState();
+              updateScenarioSyncBadge();
+            }, 300);
           } catch (_) { /* btn flash */ }
           return;
         }
