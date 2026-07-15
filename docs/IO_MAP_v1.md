@@ -189,6 +189,10 @@ Odpowiedź `decision`: `sensors`, `targets`, `raw_output`, `safe_output`, `diagn
 ## Szybkie komendy
 
 ```bash
+# panel WWW (formularz wszystkich parametrów + podgląd decyzji)
+make panel
+# otwórz http://127.0.0.1:8765
+
 # trening + regeneracja modelu
 python -m tools.ml.pipeline --quick
 

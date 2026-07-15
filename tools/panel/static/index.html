@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Growbox ML — panel v1</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --card: #1a2332;
+      --border: #2d3a4f;
+      --text: #e7ecf3;
+      --muted: #8b9cb3;
+      --accent: #3d8bfd;
+      --ok: #3dd68c;
+      --warn: #f5a524;
+      --danger: #f2555a;
+      --raw: #7eb6ff;
+      --safe: #3dd68c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+    header {
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      justify-content: space-between;
+      background: #121a24;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    h1 { margin: 0; font-size: 0.95rem; font-weight: 600; }
+    .sub { color: var(--muted); font-size: 0.72rem; }
+    main {
+      display: grid;
+      grid-template-columns: minmax(280px, 1.15fr) minmax(260px, 0.85fr);
+      gap: 0.6rem;
+      padding: 0.6rem;
+      align-items: start;
+    }
+    @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.55rem 0.65rem;
+      margin-bottom: 0.5rem;
+    }
+    .card h2 {
+      margin: 0 0 0.45rem;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+    }
+    .row { display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; }
+    .btn-row button { padding: 0.28rem 0.5rem; font-size: 0.72rem; }
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+      font-size: 0.68rem;
+      color: var(--muted);
+      min-width: 0;
+    }
+    label span.lbl { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    input, select, button, textarea {
+      font: inherit;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+      background: #0f1419;
+      color: var(--text);
+      padding: 0.28rem 0.4rem;
+      font-size: 0.75rem;
+    }
+    input[type="checkbox"] { width: 14px; height: 14px; margin: 0.15rem 0 0; padding: 0; }
+    input[type="number"] {
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    button { cursor: pointer; background: #243044; }
+    button.primary { background: var(--accent); color: #fff; border-color: #2f6fd1; }
+    button.ghost { background: transparent; border-color: var(--border); color: var(--muted); }
+    button.danger { background: #4a2024; border-color: var(--danger); color: #ffd8da; }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--danger); flex-shrink: 0;
+    }
+    .status-dot.on { background: var(--ok); }
+    .left-panel .card { padding: 0.35rem 0.45rem; margin-bottom: 0.3rem; }
+    .left-panel .card h2 { margin-bottom: 0.3rem; }
+    .section-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.2rem 0.3rem;
+    }
+    @media (max-width: 1100px) { .section-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 700px) { .section-grid { grid-template-columns: repeat(2, 1fr); } }
+    label.field-num input, label.field-num select { width: 100%; max-width: 4.8rem; }
+    label.field-wide input, label.field-wide select { max-width: 100%; }
+    label.field-bool {
+      flex-direction: row;
+      align-items: center;
+      gap: 0.2rem;
+      justify-content: flex-start;
+    }
+    label.field-bool input[type="checkbox"] { margin: 0; flex-shrink: 0; }
+    label.field-bool span.lbl { font-size: 0.65rem; }
+    .sensor-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 0.3rem;
+      align-items: end;
+    }
+    @media (max-width: 900px) {
+      .sensor-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    .sensor-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 0.28rem;
+      min-width: 0;
+      padding: 0.35rem 0.4rem 0.4rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: rgba(15, 20, 25, 0.35);
+    }
+    .sensor-cell .head-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.35rem;
+      min-width: 0;
+    }
+    .sensor-cell .name {
+      font-size: 0.62rem;
+      color: var(--muted);
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    .sensor-cell .head-row input[type="checkbox"] {
+      margin: 0;
+      width: 13px;
+      height: 13px;
+      flex-shrink: 0;
+    }
+    .sensor-cell input[type="number"] {
+      width: 100%;
+      max-width: none;
+      padding: 0.22rem 0.3rem;
+      font-size: 0.72rem;
+      border-color: #3a4d68;
+    }
+    .subhead {
+      font-size: 0.62rem;
+      color: var(--muted);
+      grid-column: 1 / -1;
+      margin-top: 0.15rem;
+      opacity: 0.85;
+    }
+    .outputs { display: grid; gap: 0.35rem; }
+    .output-row {
+      display: grid;
+      grid-template-columns: 72px 1fr 36px 1fr 36px;
+      gap: 0.25rem;
+      align-items: center;
+      font-size: 0.72rem;
+    }
+    .bar {
+      height: 7px;
+      background: #0f1419;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .bar > span { display: block; height: 100%; }
+    .bar.raw > span { background: var(--raw); }
+    .bar.safe > span { background: var(--safe); }
+    .pill {
+      display: inline-block;
+      padding: 0.1rem 0.4rem;
+      border-radius: 999px;
+      font-size: 0.68rem;
+      background: #243044;
+      border: 1px solid var(--border);
+    }
+    .pill.warn { color: var(--warn); }
+    .note { color: var(--muted); font-size: 0.72rem; margin: 0.25rem 0 0; }
+    .live-box { min-height: 120px; }
+    .json-actions { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.45rem; }
+
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      z-index: 50;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      width: min(720px, 100%);
+      max-height: 85vh;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+    }
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.55rem 0.65rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-head h3 { margin: 0; font-size: 0.82rem; }
+    .modal-tabs { display: flex; gap: 0.25rem; flex-wrap: wrap; }
+    .modal-tabs button.active { background: var(--accent); color: #fff; border-color: #2f6fd1; }
+    .modal-body {
+      padding: 0.55rem 0.65rem;
+      overflow: auto;
+      flex: 1;
+    }
+    .modal-body pre, .modal-body textarea {
+      width: 100%;
+      min-height: 320px;
+      margin: 0;
+      font-family: ui-monospace, monospace;
+      font-size: 0.7rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      resize: vertical;
+    }
+    .modal-foot {
+      padding: 0.45rem 0.65rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 0.35rem;
+      justify-content: flex-end;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Growbox ML panel</h1>
+      <div class="sub" id="schema-meta">Ładowanie…</div>
+    </div>
+    <div class="row">
+      <span class="status-dot" id="conn-dot"></span>
+      <select id="port-select" style="min-width: 180px; max-width: 220px;"></select>
+      <button id="btn-refresh-ports" class="ghost">↻</button>
+      <button class="primary" id="btn-connect">Połącz</button>
+      <button class="danger" id="btn-disconnect">×</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="left-panel">
+      <div class="card">
+        <div class="row btn-row">
+          <button data-cmd='{"command":"pause"}'>Pauza</button>
+          <button data-cmd='{"command":"resume"}'>Wznów</button>
+          <button data-cmd='{"command":"reset"}'>Reset</button>
+          <button data-cmd='{"command":"mode","value":"replay"}'>Replay</button>
+          <button data-cmd='{"command":"mode","value":"closed_loop"}'>Loop</button>
+          <button data-cmd='{"command":"status"}'>Status</button>
+        </div>
+        <div class="row btn-row" style="margin-top:0.4rem">
+          <label style="flex:0 0 72px">Seed<input type="number" id="seed" value="101" step="1" /></label>
+          <button class="primary" id="btn-load">Wczytaj</button>
+          <button class="primary" id="btn-step">Krok</button>
+          <button id="btn-defaults">Domyślne</button>
+        </div>
+      </div>
+      <div id="form-sections"></div>
+    </section>
+
+    <section>
+      <div class="card live-box">
+        <h2>Na żywo</h2>
+        <div id="decision-summary" class="note">Połącz → Wczytaj → Krok</div>
+        <div class="outputs" id="outputs-bars" style="margin-top:0.4rem"></div>
+        <p class="note" id="safety-reason"></p>
+        <div class="json-actions btn-row">
+          <button id="btn-json-scenario" class="ghost">JSON scenariusza</button>
+          <button id="btn-json-decision" class="ghost">JSON decyzji</button>
+          <button id="btn-json-history" class="ghost">Historia</button>
+          <button id="btn-json-device" class="ghost">Startup / status</button>
+          <button id="btn-export" class="ghost">Pobierz scenariusz</button>
+        </div>
+      </div>
+      <p class="note" id="safety-note" style="padding:0 0.2rem"></p>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="modal-backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-head">
+        <h3 id="modal-title">JSON</h3>
+        <div class="modal-tabs btn-row" id="modal-tabs"></div>
+        <button class="ghost" id="modal-close" type="button">Zamknij</button>
+      </div>
+      <div class="modal-body">
+        <textarea id="modal-content" readonly></textarea>
+      </div>
+      <div class="modal-foot">
+        <button id="modal-copy" type="button">Kopiuj</button>
+        <button class="primary" id="modal-close-2" type="button">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let panelSchema = null;
+    let scenario = {};
+    let lastDecision = null;
+    let lastState = null;
+
+    const modalViews = {
+      scenario: { title: "Scenariusz (payload)", get: () => JSON.stringify(collectScenario(), null, 2) },
+      decision: { title: "Ostatnia decyzja", get: () => lastDecision ? JSON.stringify(lastDecision, null, 2) : "Brak decyzji." },
+      history: { title: "Historia serial", get: () => formatHistory(lastState) },
+      device: { title: "Startup / status", get: () => formatDevice(lastState) },
+    };
+    let activeModal = "scenario";
+
+    function setNested(obj, path, value) {
+      const parts = path.split(".");
+      let cur = obj;
+      for (let i = 0; i < parts.length - 1; i++) {
+        if (typeof cur[parts[i]] !== "object" || cur[parts[i]] === null) cur[parts[i]] = {};
+        cur = cur[parts[i]];
+      }
+      cur[parts[parts.length - 1]] = value;
+    }
+
+    function getNested(obj, path) {
+      return path.split(".").reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), obj);
+    }
+
+    async function api(path, options = {}) {
+      const res = await fetch(path, {
+        headers: { "Content-Type": "application/json" },
+        ...options,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || res.statusText);
+      return data;
+    }
+
+    const LABEL_MAP = {
+      air_temperature_c: "T wewn.",
+      air_humidity_pct: "Wilg.",
+      co2_ppm: "CO₂",
+      soil_moisture_pct: "Gleba",
+      outside_temperature_c: "T zewn.",
+      outside_humidity_pct: "Wilg. zewn.",
+      growbox_volume_m3: "Obj. m³",
+      thermal_mass_j_per_k: "Ciepło J/K",
+      heat_loss_w_per_k: "Strata W/K",
+      air_leak_rate_ach: "Wyciek 1/h",
+      pot_volume_l: "Don. L",
+      substrate_water_capacity_ml: "Woda mL",
+      transpiration_factor: "Transp.",
+      heater_available: "jest",
+      heater_max_power_w: "W max",
+      heater_efficiency: "η",
+      heater_control_type: "typ",
+      fan_available: "jest",
+      fan_max_airflow_m3_h: "m³/h",
+      fan_minimum_command: "min",
+      humidifier_available: "jest",
+      humidifier_max_output_g_h: "g/h",
+      irrigation_available: "jest",
+      irrigation_flow_ml_s: "mL/s",
+      irrigation_maximum_pulse_s: "max s",
+      irrigation_minimum_interval_s: "min s",
+      target_air_temperature_c: "T °C",
+      target_air_humidity_pct: "Wilg %",
+      target_co2_ppm: "CO₂",
+      target_soil_moisture_pct: "Gleba %",
+      previous_heater: "Grzałka",
+      previous_fan: "Fan",
+      previous_humidifier: "Nawilż.",
+      previous_irrigation: "Pompa",
+    };
+
+    const SENSOR_VALIDITY = [
+      ["air_temperature_c", "air_temperature_c"],
+      ["air_humidity_pct", "air_humidity_pct"],
+      ["co2_ppm", "co2_ppm"],
+      ["soil_moisture_pct", "soil_moisture_pct"],
+      ["outside_temperature_c", "outside_temperature_c"],
+      ["outside_humidity_pct", "outside_humidity_pct"],
+    ];
+
+    const ACTUATOR_GROUPS = [
+      ["Grzałka", ["heater_available", "heater_max_power_w", "heater_efficiency", "heater_control_type"]],
+      ["Fan", ["fan_available", "fan_max_airflow_m3_h", "fan_minimum_command"]],
+      ["Nawilżacz", ["humidifier_available", "humidifier_max_output_g_h"]],
+      ["Pompa", ["irrigation_available", "irrigation_flow_ml_s", "irrigation_maximum_pulse_s", "irrigation_minimum_interval_s"]],
+    ];
+
+    function shortLabel(name) {
+      return LABEL_MAP[name] || name.replace(/_/g, " ");
+    }
+
+    function fieldByName(name) {
+      for (const section of panelSchema.sections) {
+        const hit = section.fields.find(f => f.name === name);
+        if (hit) return hit;
+      }
+      return null;
+    }
+
+    function renderNumberField(field, extraClass = "field-num") {
+      const id = `f-${field.path.replaceAll(".", "_")}`;
+      const value = getNested(scenario, field.path);
+      const step = field.path.includes("pct") || field.path.includes("ratio") ? "0.1" : (field.path.includes("co2") ? "1" : "0.01");
+      const wide = field.path.includes("thermal_mass") || field.path.includes("substrate_water");
+      return `<label class="${wide ? "field-wide" : extraClass}">
+        <span class="lbl">${shortLabel(field.name)}</span>
+        <input type="number" data-path="${field.path}" id="${id}"
+          min="${field.minimum}" max="${field.maximum}" step="${step}"
+          value="${value ?? field.default}" />
+      </label>`;
+    }
+
+    function renderBoolField(field) {
+      const id = `f-${field.path.replaceAll(".", "_")}`;
+      const value = getNested(scenario, field.path);
+      return `<label class="field-bool">
+        <input type="checkbox" data-path="${field.path}" id="${id}" ${value ? "checked" : ""} />
+        <span class="lbl">${shortLabel(field.name)}</span>
+      </label>`;
+    }
+
+    function renderEnumField(field) {
+      const id = `f-${field.path.replaceAll(".", "_")}`;
+      const value = getNested(scenario, field.path);
+      const opts = (field.options || []).map(o =>
+        `<option value="${o.value}" ${value === o.value ? "selected" : ""}>${o.value}</option>`
+      ).join("");
+      return `<label class="field-num">
+        <span class="lbl">${shortLabel(field.name)}</span>
+        <select data-path="${field.path}" id="${id}">${opts}</select>
+      </label>`;
+    }
+
+    function renderField(field) {
+      if (field.type === "boolean") return renderBoolField(field);
+      if (field.type === "enum") return renderEnumField(field);
+      return renderNumberField(field);
+    }
+
+    function renderSensorBlock() {
+      const rows = SENSOR_VALIDITY.map(([sensorKey, validityKey]) => {
+        const sensorField = fieldByName(sensorKey);
+        const sId = `f-sensors_${sensorKey}`;
+        const vId = `f-validity_${validityKey}`;
+        const sVal = getNested(scenario, `sensors.${sensorKey}`);
+        const vVal = getNested(scenario, `validity.${validityKey}`);
+        const step = sensorKey.includes("co2") ? "1" : "0.1";
+        return `<div class="sensor-cell">
+          <div class="head-row">
+            <span class="name">${shortLabel(sensorKey)}</span>
+            <input type="checkbox" data-path="validity.${validityKey}" id="${vId}" title="Czujnik ważny" ${vVal ? "checked" : ""} />
+          </div>
+          <input type="number" data-path="sensors.${sensorKey}" id="${sId}"
+            min="${sensorField.minimum}" max="${sensorField.maximum}" step="${step}" value="${sVal ?? sensorField.default}" />
+        </div>`;
+      }).join("");
+      return `<div class="card"><h2>Czujniki</h2><div class="sensor-grid">${rows}</div></div>`;
+    }
+
+    function renderActuatorBlock(section) {
+      const byName = Object.fromEntries(section.fields.map(f => [f.name, f]));
+      let html = "";
+      for (const [title, names] of ACTUATOR_GROUPS) {
+        html += `<div class="subhead">${title}</div>`;
+        html += names.map(name => byName[name] ? renderField(byName[name]) : "").join("");
+      }
+      return `<div class="section-grid">${html}</div>`;
+    }
+
+    function renderForm() {
+      const root = document.getElementById("form-sections");
+      root.innerHTML = renderSensorBlock();
+      for (const section of panelSchema.sections) {
+        if (section.id === "sensors" || section.id === "validity") continue;
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `<h2>${section.title}</h2>`;
+        if (section.id === "actuators") {
+          card.innerHTML += renderActuatorBlock(section);
+        } else {
+          const grid = document.createElement("div");
+          grid.className = "section-grid";
+          grid.innerHTML = section.fields.map(renderField).join("");
+          card.appendChild(grid);
+        }
+        root.appendChild(card);
+      }
+    }
+
+    function collectScenario() {
+      const next = { seed: Number(document.getElementById("seed").value || 101) };
+      document.querySelectorAll("[data-path]").forEach(el => {
+        const path = el.dataset.path;
+        let value;
+        if (el.type === "checkbox") value = el.checked;
+        else if (el.tagName === "SELECT") value = el.value;
+        else value = Number(el.value);
+        setNested(next, path, value);
+      });
+      scenario = next;
+      return next;
+    }
+
+    function renderOutputs(decision) {
+      lastDecision = decision;
+      const names = ["heater", "fan", "humidifier", "irrigation"];
+      const labels = { heater: "Grzałka", fan: "Fan", humidifier: "Nawilż.", irrigation: "Pompa" };
+      const raw = decision.raw_output || {};
+      const safe = decision.safe_output || {};
+      document.getElementById("outputs-bars").innerHTML = names.map(name => {
+        const r = Number(raw[name] || 0);
+        const s = Number(safe[name] || 0);
+        return `<div class="output-row">
+          <strong>${labels[name]}</strong>
+          <div class="bar raw"><span style="width:${(r*100).toFixed(0)}%"></span></div>
+          <span>${(r*100).toFixed(0)}</span>
+          <div class="bar safe"><span style="width:${(s*100).toFixed(0)}%"></span></div>
+          <span>${(s*100).toFixed(0)}</span>
+        </div>`;
+      }).join("");
+
+      const sensors = decision.sensors || {};
+      const targets = decision.targets || {};
+      document.getElementById("decision-summary").innerHTML =
+        `#${decision.step ?? "?"} · ` +
+        `<strong>${sensors.air_temperature_c?.toFixed?.(1) ?? sensors.air_temperature_c}°C</strong>/${targets.air_temperature_c} · ` +
+        `wilg <strong>${sensors.air_humidity_pct?.toFixed?.(0) ?? sensors.air_humidity_pct}%</strong>/${targets.air_humidity_pct}`;
+
+      const diag = decision.diagnostics || {};
+      const modified = diag.safety_modified
+        ? '<span class="pill warn">safety</span>' : '<span class="pill">ok</span>';
+      document.getElementById("safety-reason").innerHTML =
+        `${modified} <code>${diag.safety_reason || "—"}</code> · ${diag.inference_us ?? "?"} µs`;
+    }
+
+    function formatHistory(state) {
+      if (!state?.history?.length) return "Brak historii.";
+      return state.history.slice(0, 20).map(h =>
+        `${h.direction}: ${JSON.stringify(h.payload)}`
+      ).join("\n\n");
+    }
+
+    function formatDevice(state) {
+      if (!state) return "Brak danych.";
+      const parts = [];
+      if (state.last_startup) parts.push("=== startup ===\n" + JSON.stringify(state.last_startup, null, 2));
+      if (state.last_status) parts.push("=== status ===\n" + JSON.stringify(state.last_status, null, 2));
+      if (state.last_firmware_error) parts.push("=== error ===\n" + JSON.stringify(state.last_firmware_error, null, 2));
+      return parts.length ? parts.join("\n\n") : "Brak startup/status.";
+    }
+
+    function openModal(view) {
+      activeModal = view;
+      const backdrop = document.getElementById("modal-backdrop");
+      backdrop.classList.add("open");
+      backdrop.setAttribute("aria-hidden", "false");
+      renderModalTabs();
+      refreshModalContent();
+    }
+
+    function closeModal() {
+      const backdrop = document.getElementById("modal-backdrop");
+      backdrop.classList.remove("open");
+      backdrop.setAttribute("aria-hidden", "true");
+    }
+
+    function renderModalTabs() {
+      const tabs = document.getElementById("modal-tabs");
+      tabs.innerHTML = Object.entries(modalViews).map(([key, meta]) =>
+        `<button type="button" data-tab="${key}" class="${key === activeModal ? "active" : ""}">${meta.title.split(" ")[0]}</button>`
+      ).join("");
+      tabs.querySelectorAll("[data-tab]").forEach(btn => {
+        btn.onclick = () => { activeModal = btn.dataset.tab; renderModalTabs(); refreshModalContent(); };
+      });
+    }
+
+    function refreshModalContent() {
+      const meta = modalViews[activeModal];
+      document.getElementById("modal-title").textContent = meta.title;
+      document.getElementById("modal-content").value = meta.get();
+    }
+
+    async function refreshPorts() {
+      const data = await api("/api/ports");
+      const select = document.getElementById("port-select");
+      const prev = select.value;
+      select.innerHTML = "";
+      const ports = (data.ports || []).slice().sort((a, b) => {
+        const score = (p) => (p.device.includes("usbmodem") ? 0 : p.device.includes("usbserial") ? 1 : 2);
+        return score(a) - score(b);
+      });
+      for (const p of ports) {
+        const opt = document.createElement("option");
+        opt.value = p.device;
+        opt.textContent = p.device.replace("/dev/cu.", "");
+        select.appendChild(opt);
+      }
+      const preferred = ports.find(p => p.device.includes("usbmodem"));
+      if (prev && ports.some(p => p.device === prev)) select.value = prev;
+      else if (preferred) select.value = preferred.device;
+    }
+
+    async function refreshState() {
+      try {
+        lastState = await api("/api/state");
+      } catch (err) {
+        document.getElementById("decision-summary").textContent = "Błąd API: " + err.message;
+        return;
+      }
+      document.getElementById("conn-dot").classList.toggle("on", lastState.connected);
+      if (lastState.last_decision) renderOutputs(lastState.last_decision);
+      if (lastState.last_firmware_error) {
+        document.getElementById("safety-reason").innerHTML =
+          `<span class="pill warn">${lastState.last_firmware_error.code}</span> ${lastState.last_firmware_error.message || ""}`;
+      }
+      if (document.getElementById("modal-backdrop").classList.contains("open")) {
+        refreshModalContent();
+      }
+    }
+
+    async function init() {
+      panelSchema = await api("/api/schema");
+      scenario = panelSchema.default_scenario;
+      document.getElementById("seed").value = scenario.seed || 101;
+      document.getElementById("schema-meta").textContent =
+        `v${panelSchema.schema_version} · ${panelSchema.feature_count}→${panelSchema.outputs.length} · ${panelSchema.schema_hash}`;
+      document.getElementById("safety-note").textContent = panelSchema.safety_note || "";
+      renderForm();
+      await refreshPorts();
+      setInterval(refreshState, 900);
+      refreshState();
+    }
+
+    document.getElementById("btn-refresh-ports").onclick = () => refreshPorts().catch(alert);
+    document.getElementById("btn-connect").onclick = async () => {
+      await api("/api/connect", { method: "POST", body: JSON.stringify({
+        port: document.getElementById("port-select").value, baud: 115200
+      })});
+      refreshState();
+    };
+    document.getElementById("btn-disconnect").onclick = async () => {
+      await api("/api/disconnect", { method: "POST", body: "{}" });
+      refreshState();
+    };
+    document.querySelectorAll("[data-cmd]").forEach(btn => {
+      btn.onclick = async () => {
+        await api("/api/command", { method: "POST", body: btn.dataset.cmd });
+        setTimeout(refreshState, 200);
+      };
+    });
+    document.getElementById("btn-defaults").onclick = async () => {
+      const data = await api("/api/defaults", { method: "POST", body: JSON.stringify({
+        seed: Number(document.getElementById("seed").value || 101)
+      })});
+      scenario = data.scenario;
+      renderForm();
+    };
+    document.getElementById("btn-load").onclick = async () => {
+      const payload = collectScenario();
+      const { seed, ...body } = payload;
+      await api("/api/load_scenario", { method: "POST", body: JSON.stringify({ seed, scenario: body }) });
+      setTimeout(refreshState, 300);
+    };
+    document.getElementById("btn-step").onclick = async () => {
+      collectScenario();
+      await api("/api/step", { method: "POST", body: "{}" });
+      setTimeout(refreshState, 300);
+    };
+    document.getElementById("btn-export").onclick = () => {
+      const blob = new Blob([JSON.stringify(collectScenario(), null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "scenario.json";
+      a.click();
+    };
+    document.getElementById("btn-json-scenario").onclick = () => { collectScenario(); openModal("scenario"); };
+    document.getElementById("btn-json-decision").onclick = () => openModal("decision");
+    document.getElementById("btn-json-history").onclick = () => openModal("history");
+    document.getElementById("btn-json-device").onclick = () => openModal("device");
+    document.getElementById("modal-close").onclick = closeModal;
+    document.getElementById("modal-close-2").onclick = closeModal;
+    document.getElementById("modal-backdrop").onclick = (e) => { if (e.target.id === "modal-backdrop") closeModal(); };
+    document.getElementById("modal-copy").onclick = async () => {
+      await navigator.clipboard.writeText(document.getElementById("modal-content").value);
+    };
+
+    init().catch(err => {
+      document.getElementById("schema-meta").textContent = "Błąd: " + err.message;
+    });
+  </script>
+</body>
+</html>

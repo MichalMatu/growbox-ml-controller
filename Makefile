@@ -5,7 +5,7 @@ IDF_BUILD_DIR ?= build/idf
 HOST_BUILD_DIR ?= build/host-tests
 N32R16V_BUILD_DIR ?= build/idf-n32r16v
 
-.PHONY: setup train-quick train-full test test-python test-host build build-n32r16v \
+.PHONY: setup train-quick train-full test test-python test-host panel build build-n32r16v \
         flash monitor flash-monitor menuconfig clean
 
 setup:
@@ -28,6 +28,9 @@ test-host:
 	cmake -S test/host -B $(HOST_BUILD_DIR)
 	cmake --build $(HOST_BUILD_DIR) --parallel
 	ctest --test-dir $(HOST_BUILD_DIR) --output-on-failure
+
+panel:
+	$(VENV)/bin/python -m tools.panel --host 127.0.0.1 --port 8765
 
 build:
 	$(IDF_PY) -B $(IDF_BUILD_DIR) -D GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n8 build
