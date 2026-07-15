@@ -118,14 +118,20 @@ def test_main_page_keeps_two_column_layout():
     )
 
 
-def test_actuators_setup_pumps_use_compact_row_layout():
+def test_actuators_main_page_use_compact_climate_and_pump_rows():
     form_js = FORM_JS.read_text(encoding="utf-8")
     panel_css = PANEL_CSS.read_text(encoding="utf-8")
+    render_fn = _extract_js_function(form_js, "renderForm")
     block_fn = _extract_js_function(form_js, "renderActuatorBlock")
+    assert render_fn
     assert block_fn
+    assert "renderActuatorPanel()" in render_fn
+    assert "actuators-climate-block" in block_fn
     assert "actuators-pumps-block" in block_fn
-    assert "#setup-pane-actuators .actuators-pumps-block .compact-row" in panel_css
+    assert ".actuators-panel .actuators-climate-block .compact-row" in panel_css
+    assert ".actuators-panel .actuators-pumps-block .compact-row" in panel_css
     assert "--pump-input-w:" in panel_css
+    assert "--climate-input-w:" in panel_css
 
 
 def test_growbox_setup_cultivation_fields_use_compact_widths():
@@ -149,6 +155,14 @@ def test_growbox_setup_modal_has_single_help_entry_point():
     assert "SETUP_TAB_HELP" in form_js
 
 
+def test_toolbar_has_no_scenario_preset_selector():
+    html = INDEX_HTML.read_text(encoding="utf-8")
+    form_js = (PANEL_STATIC / "js" / "main.js").read_text(encoding="utf-8")
+    assert "scenario-preset" not in html
+    assert "populatePresetSelect" not in form_js
+    assert "btn-defaults" in html
+
+
 def test_infrequent_settings_live_in_setup_modal_not_inline_form():
     html = INDEX_HTML.read_text(encoding="utf-8")
     form_js = FORM_JS.read_text(encoding="utf-8")
@@ -156,10 +170,11 @@ def test_infrequent_settings_live_in_setup_modal_not_inline_form():
     assert render_fn
     assert 'id="setup-modal-backdrop"' in html
     assert 'data-setup-open="growbox"' in html
-    assert 'data-setup-open="actuators"' in html
     assert 'data-setup-open="safety"' in html
+    assert 'data-setup-open="actuators"' not in html
     assert "renderGrowboxPanel()" not in render_fn
-    assert "renderActuatorBlock()" not in render_fn
+    assert "renderActuatorPanel()" in render_fn
     assert "renderSafetyBlock()" not in render_fn
     assert "renderSetupPanes()" in render_fn
     assert 'id="safety-section"' not in html
+    assert 'data-setup-tab="actuators"' not in html

@@ -46,9 +46,6 @@
               <span id="scenario-sync-badge" class="sync-badge unknown" hidden></span>
             </div>
             <div class="toolbar-btn-stack">
-              <label class="preset-picker" title="Preset scenariusza">
-                <select id="scenario-preset" class="field-control" aria-label="Preset scenariusza" title="Scenariusz testowy v2"></select>
-              </label>
               <button type="button" class="badge-btn primary" data-ui="load" id="btn-load">Wyślij</button>
               <button type="button" class="badge-btn" data-ui="defaults" id="btn-defaults">Domyślne</button>
               <button type="button" class="badge-btn export-btn" id="btn-export" title="Pobierz scenariusz jako JSON">Pobierz</button>
@@ -85,7 +82,6 @@
             <div class="head-row"><span class="name">Konfig.</span></div>
             <div class="toolbar-btn-stack">
               <button type="button" class="badge-btn" data-setup-open="growbox" id="btn-setup-growbox">Growbox</button>
-              <button type="button" class="badge-btn" data-setup-open="actuators" id="btn-setup-actuators">Aktuary</button>
               <button type="button" class="badge-btn" data-setup-open="safety" id="btn-setup-safety">Safety</button>
             </div>
           </div>
@@ -157,7 +153,6 @@
         <div class="setup-modal-tabs-wrap">
           <div class="modal-tabs btn-row" id="setup-modal-tabs" role="tablist" aria-label="Sekcje konfiguracji">
             <button type="button" class="active" data-setup-tab="growbox" role="tab" aria-selected="true" aria-controls="setup-pane-growbox" id="setup-tab-growbox">Growbox</button>
-            <button type="button" data-setup-tab="actuators" role="tab" aria-selected="false" aria-controls="setup-pane-actuators" id="setup-tab-actuators">Aktuary</button>
             <button type="button" data-setup-tab="safety" role="tab" aria-selected="false" aria-controls="setup-pane-safety" id="setup-tab-safety">Safety</button>
           </div>
         </div>
@@ -168,7 +163,6 @@
       </div>
       <div class="modal-body setup-modal-body" id="setup-modal-body">
         <div id="setup-pane-growbox" class="setup-pane active" role="tabpanel" aria-labelledby="setup-tab-growbox"></div>
-        <div id="setup-pane-actuators" class="setup-pane" role="tabpanel" aria-labelledby="setup-tab-actuators" hidden></div>
         <div id="setup-pane-safety" class="setup-pane" role="tabpanel" aria-labelledby="setup-tab-safety" hidden></div>
       </div>
     </div>

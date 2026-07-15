@@ -20,17 +20,8 @@ function bindFormSync() {
   toolbar?.addEventListener("input", onSeedChange);
 }
 
-function populatePresetSelect() {
-  const select = document.getElementById("scenario-preset");
-  if (!select || !panelSchema?.presets) return;
-  select.innerHTML = panelSchema.presets.map(preset =>
-    `<option value="${preset.id}" title="${preset.description}">${preset.title}</option>`
-  ).join("");
-}
-
 async function init() {
   panelSchema = await api("/api/schema");
-  populatePresetSelect();
   await refreshPorts();
   await refreshState();
   if (lastState?.connected) {
@@ -143,12 +134,10 @@ function bindToolbar() {
       event.preventDefault();
       try {
         await runAction(async () => {
-          const preset = document.getElementById("scenario-preset")?.value || "nominal";
           const data = await api("/api/defaults", {
             method: "POST",
             body: JSON.stringify({
               seed: normalizeSeed(document.getElementById("seed").value),
-              preset,
             }),
           });
           scenario = sanitizeScenarioNumeric(data.scenario);

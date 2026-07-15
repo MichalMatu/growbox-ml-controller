@@ -163,13 +163,11 @@ let setupReturnFocus = null;
 
 const SETUP_TAB_LABELS = {
   growbox: "Parametry growboxa",
-  actuators: "Aktuary",
   safety: "Limity safety",
 };
 
 const SETUP_TAB_HELP = {
   growbox: "environment",
-  actuators: "actuators",
   safety: "safety",
 };
 
@@ -223,10 +221,8 @@ function closeSetup() {
 
 function renderSetupPanes() {
   const growbox = document.getElementById("setup-pane-growbox");
-  const actuators = document.getElementById("setup-pane-actuators");
   const safety = document.getElementById("setup-pane-safety");
   if (growbox) growbox.innerHTML = renderGrowboxPanel(true);
-  if (actuators) actuators.innerHTML = renderActuatorPanel(true);
   if (safety) {
     const safetySection = sectionById("safety");
     safety.innerHTML = safetySection ? renderSafetyBlock(true) : "";
@@ -585,19 +581,17 @@ function renderActuatorRow(groups) {
   return groups.map(([title, names]) => renderActuatorGroupCell(title, names)).join("");
 }
 
-function renderActuatorBlock(inSetup = false) {
+function renderActuatorBlock() {
   const climate = renderActuatorRow(ACTUATOR_CLIMATE_GROUPS);
   const pumps = renderActuatorRow(ACTUATOR_PUMP_GROUPS);
-  const pumpsClass = inSetup ? "sub-card actuators-pumps-block" : "sub-card";
   return `<div class="actuators-split">
-    <div class="sub-card"><div class="card-head"><h3>Klimat</h3></div><div class="compact-row">${climate}</div></div>
-    <div class="${pumpsClass}"><div class="card-head"><h3>Pompy</h3></div><div class="compact-row">${pumps}</div></div>
+    <div class="sub-card actuators-climate-block"><div class="card-head"><h3>Klimat</h3></div><div class="compact-row">${climate}</div></div>
+    <div class="sub-card actuators-pumps-block"><div class="card-head"><h3>Pompy</h3></div><div class="compact-row">${pumps}</div></div>
   </div>`;
 }
 
-function renderActuatorPanel(inSetup = false) {
-  const head = inSetup ? "" : renderSectionHead("Aktuary", "actuators");
-  return `<div class="card actuators-panel">${head}${renderActuatorBlock(inSetup)}</div>`;
+function renderActuatorPanel() {
+  return `<div class="card actuators-panel">${renderSectionHead("Aktuary", "actuators")}${renderActuatorBlock()}</div>`;
 }
 
 function renderSafetyParamCell(title, fieldNames) {
@@ -639,6 +633,7 @@ function renderForm() {
   root.innerHTML = renderSensorBlock();
   updateSeedInput();
   root.innerHTML += renderTargetsBlock();
+  root.innerHTML += renderActuatorPanel();
   renderSetupPanes();
   const previousRoot = document.getElementById("previous-section");
   if (previousRoot) {

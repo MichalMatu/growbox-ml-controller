@@ -117,7 +117,8 @@ def test_panel_static_includes_v2_scripts():
             assert "OUTPUT_LABELS" in body
         with urllib.request.urlopen(f"{base}/index.html") as response:
             body = response.read().decode("utf-8")
-            assert "scenario-preset" in body
+            assert "scenario-preset" not in body
+            assert "btn-defaults" in body
             assert "panel v2" in body
     finally:
         server.shutdown()

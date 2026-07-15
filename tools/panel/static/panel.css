@@ -779,23 +779,6 @@ button.danger { background: var(--danger-bg); border-color: var(--danger); color
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
-.preset-picker {
-  display: flex;
-  align-items: center;
-  flex: 1.2 1 0;
-  min-width: 7.5rem;
-  max-width: 10.5rem;
-  margin: 0;
-}
-.toolbar-btn-stack .preset-picker .field-control {
-  width: 100%;
-  height: var(--toolbar-btn-h);
-  min-height: var(--toolbar-btn-h);
-  padding: 0 var(--field-pad-x-select-left);
-  font-size: var(--text-sm);
-  line-height: 1;
-}
-
 .section-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -895,6 +878,76 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
 }
 .actuators-split > .sub-card {
   min-width: 0;
+}
+.actuators-panel .actuators-climate-block,
+.actuators-panel .actuators-pumps-block {
+  overflow-x: auto;
+}
+.actuators-panel .actuators-climate-block .compact-row,
+.actuators-panel .actuators-pumps-block .compact-row {
+  flex-wrap: nowrap;
+  gap: var(--cell-gap);
+  min-width: min-content;
+}
+.actuators-panel .actuators-climate-block {
+  --climate-input-w: 2.48rem;
+  --climate-input-w-wide: 2.78rem;
+  --climate-select-w: 2.32rem;
+  --climate-stack-gap: 0.12rem 0.16rem;
+}
+.actuators-panel .actuators-climate-block .mini-cell.actuator-cell {
+  flex: 0 0 auto;
+  padding: 0.18rem 0.16rem 0.2rem;
+}
+.actuators-panel .actuators-climate-block .field-stack {
+  flex-wrap: nowrap;
+  gap: var(--climate-stack-gap);
+}
+.actuators-panel .actuators-climate-block .actuator-param .field-control {
+  width: var(--climate-input-w);
+  min-width: 0;
+  max-width: var(--climate-input-w);
+  padding-left: 0.12rem;
+  padding-right: 0.12rem;
+}
+.actuators-panel .actuators-climate-block .actuator-param.wide-param .field-control {
+  width: var(--climate-input-w-wide);
+  max-width: var(--climate-input-w-wide);
+}
+.actuators-panel .actuators-climate-block .actuator-param select.field-control {
+  width: var(--climate-select-w);
+  min-width: 0;
+  max-width: var(--climate-select-w);
+}
+.actuators-panel .actuators-pumps-block {
+  --pump-input-w: 2.42rem;
+  --pump-input-w-interval: 2.72rem;
+  --pump-select-w: 2.28rem;
+  --pump-stack-gap: 0.12rem 0.16rem;
+}
+.actuators-panel .actuators-pumps-block .mini-cell.actuator-cell {
+  flex: 0 0 auto;
+  padding: 0.18rem 0.16rem 0.2rem;
+}
+.actuators-panel .actuators-pumps-block .field-stack {
+  flex-wrap: nowrap;
+  gap: var(--pump-stack-gap);
+}
+.actuators-panel .actuators-pumps-block .actuator-param .field-control {
+  width: var(--pump-input-w);
+  min-width: 0;
+  max-width: var(--pump-input-w);
+  padding-left: 0.12rem;
+  padding-right: 0.12rem;
+}
+.actuators-panel .actuators-pumps-block .actuator-param.wide-param .field-control {
+  width: var(--pump-input-w-interval);
+  max-width: var(--pump-input-w-interval);
+}
+.actuators-panel .actuators-pumps-block .actuator-param select.field-control {
+  width: var(--pump-select-w);
+  min-width: 0;
+  max-width: var(--pump-select-w);
 }
 .mini-cell.actuator-cell .field-stack {
   display: flex;
@@ -1521,46 +1574,6 @@ body.modal-open {
 }
 #setup-pane-growbox .cultivation-pot-card > .compact-row .mini-cell.wide .field-control {
   width: var(--cultivation-input-w-wide);
-}
-#setup-pane-actuators {
-  --cell-w: 5rem;
-  --actuator-input-w: 3.05rem;
-  --actuator-input-w-wide: 3.65rem;
-  --actuator-select-w: 2.75rem;
-}
-#setup-pane-actuators .actuators-pumps-block {
-  --pump-input-w: 2.42rem;
-  --pump-input-w-interval: 2.72rem;
-  --pump-select-w: 2.28rem;
-  --pump-stack-gap: 0.12rem 0.16rem;
-}
-#setup-pane-actuators .actuators-pumps-block .compact-row {
-  flex-wrap: nowrap;
-  gap: var(--cell-gap);
-}
-#setup-pane-actuators .actuators-pumps-block .mini-cell.actuator-cell {
-  flex: 0 0 auto;
-  padding: 0.18rem 0.16rem 0.2rem;
-}
-#setup-pane-actuators .actuators-pumps-block .field-stack {
-  flex-wrap: nowrap;
-  gap: var(--pump-stack-gap);
-}
-#setup-pane-actuators .actuators-pumps-block .actuator-param .field-control {
-  width: var(--pump-input-w);
-  min-width: 0;
-  max-width: var(--pump-input-w);
-  padding-left: 0.12rem;
-  padding-right: 0.12rem;
-}
-#setup-pane-actuators .actuators-pumps-block .actuator-param.wide-param .field-control {
-  width: var(--pump-input-w-interval);
-  max-width: var(--pump-input-w-interval);
-}
-#setup-pane-actuators .actuators-pumps-block .actuator-param select.field-control {
-  width: var(--pump-select-w);
-  min-width: 0;
-  max-width: var(--pump-select-w);
 }
 #setup-pane-safety {
   --cell-w: 4.95rem;
