@@ -732,7 +732,7 @@
             <li><strong>Grzałka</strong> — moc, sprawność, typ sterowania (binary/pwm)</li>
             <li><strong>Fan</strong> — przepływ, minimalne PWM</li>
             <li><strong>Nawilżacz</strong> — max wydajność g/h</li>
-            <li><strong>Pompa</strong> — przepływ, max impuls, min przerwa między podlewami</li>
+            <li><strong>Pompa</strong> — przepływ mL/s, <strong>Impuls s</strong> (krótki, np. 4), <strong>Przerwa s</strong> (długi, np. 600 między podlaniami)</li>
           </ul>
           <p>Brak urządzenia (checkbox off) → model i safety wymuszają 0 na tym wyjściu.</p>
         `,
@@ -968,8 +968,8 @@
       fan_minimum_command: "min",
       humidifier_max_output_g_h: "g/h",
       irrigation_flow_ml_s: "mL/s",
-      irrigation_maximum_pulse_s: "max s",
-      irrigation_minimum_interval_s: "min s",
+      irrigation_maximum_pulse_s: "Impuls s",
+      irrigation_minimum_interval_s: "Przerwa s",
       target_air_temperature_c: "T °C",
       target_air_humidity_pct: "Wilg %",
       target_co2_ppm: "CO₂",
@@ -1000,8 +1000,19 @@
       return name.endsWith("_available");
     }
 
+    const FIELD_HINTS = {
+      irrigation_maximum_pulse_s: "Maks. czas jednego impulsu podlewania (sekundy)",
+      irrigation_minimum_interval_s: "Min. przerwa między kolejnymi podlaniami (sekundy)",
+      fan_minimum_command: "Minimalne PWM wentylatora, gdy jest włączony",
+      heater_control_type: "binary = wł/wył, pwm = modulacja",
+    };
+
     function shortLabel(name) {
       return LABEL_MAP[name] || name.replace(/_/g, " ");
+    }
+
+    function fieldHint(name) {
+      return FIELD_HINTS[name] || "";
     }
 
     function fieldByName(name) {
@@ -1136,15 +1147,17 @@
     function renderMiniCellInput(field) {
       const id = `f-${field.path.replaceAll(".", "_")}`;
       const value = getNested(scenario, field.path);
-      const label = `<div class="label-row"><span class="name">${shortLabel(field.name)}</span></div>`;
+      const hint = fieldHint(field.name);
+      const hintAttr = hint ? ` title="${hint}"` : "";
+      const label = `<div class="label-row"><span class="name"${hint ? ` title="${hint}"` : ""}>${shortLabel(field.name)}</span></div>`;
 
       if (field.type === "enum") {
         const opts = (field.options || []).map(o =>
           `<option value="${o.value}" ${value === o.value ? "selected" : ""}>${o.value}</option>`
         ).join("");
-        return `${label}<select data-path="${field.path}" id="${id}">${opts}</select>`;
+        return `${label}<select data-path="${field.path}" id="${id}"${hintAttr}>${opts}</select>`;
       }
-      return `${label}<input type="number" data-path="${field.path}" id="${id}"
+      return `${label}<input type="number" data-path="${field.path}" id="${id}"${hintAttr}
         min="${field.minimum}" max="${field.maximum}" step="${fieldStep(field)}" value="${value ?? field.default}" />`;
     }
 
