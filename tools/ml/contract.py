@@ -14,6 +14,7 @@ import numpy as np
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CONTRACT_PATH = PROJECT_ROOT / "schemas" / "environment-controller-v1.json"
+V2_CONTRACT_PATH = PROJECT_ROOT / "schemas" / "environment-controller-v2.json"
 
 
 def canonical_json_bytes(document: Mapping[str, Any]) -> bytes:
@@ -88,9 +89,8 @@ class Contract:
             # encoding for "missing"; use a false mask plus a finite value or
             # omit the value so its schema default is used.
             normalized = feature.normalize(value)
-            if feature.path.startswith("sensors."):
-                sensor_name = feature.path.split(".", 1)[1]
-                validity_path = f"validity.{sensor_name}"
+            validity_path = _validity_path_for_sensor_feature(feature.path)
+            if validity_path is not None:
                 validity_feature = feature_by_path.get(validity_path)
                 if validity_feature is None:
                     raise ValueError(f"contract has no validity feature for {feature.path!r}")
@@ -192,6 +192,16 @@ def load_contract(path: str | Path = DEFAULT_CONTRACT_PATH) -> Contract:
         features=features,
         outputs=outputs,
     )
+
+
+def _validity_path_for_sensor_feature(feature_path: str) -> str | None:
+    if feature_path.startswith("sensors."):
+        sensor_name = feature_path.split(".", 1)[1]
+        return f"validity.{sensor_name}"
+    if ".sensors." in feature_path:
+        prefix, sensor_name = feature_path.rsplit(".sensors.", 1)
+        return f"{prefix}.validity.{sensor_name}"
+    return None
 
 
 def _resolve_path(document: Mapping[str, Any], path: str) -> Any:

@@ -28,7 +28,8 @@
     "sensor_off": "validity.<slot> = false",
     "actuator_off": "actuators.<slot>.available = false",
     "zone_off": "zones[N].available = false",
-    "no_required_bundles": true
+    "no_required_bundles": true,
+    "simulator_note": "Up to 4 zone slots; training scenarios randomize active count 0-4 and per-slot validity/irrigation — not always four pots."
   },
   "hash": {
     "algorithm": "sha256",
@@ -159,7 +160,9 @@
       {"name": "soil_moisture_zone_4_pct", "path": "zones.3.sensors.soil_moisture_pct", "type": "number", "unit": "percent", "minimum": 0.0, "maximum": 100.0, "default": 50.0},
       {"name": "soil_temperature_zone_4_c", "path": "zones.3.sensors.soil_temperature_c", "type": "number", "unit": "degC", "minimum": -10.0, "maximum": 50.0, "default": 20.0},
       {"name": "soil_moisture_zone_4_valid", "path": "zones.3.validity.soil_moisture_pct", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
-      {"name": "soil_temperature_zone_4_valid", "path": "zones.3.validity.soil_temperature_c", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0}
+      {"name": "soil_temperature_zone_4_valid", "path": "zones.3.validity.soil_temperature_c", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+
+      {"name": "lights_active", "path": "pseudo.lights_active", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0}
     ],
     "outputs": [
       {"name": "heater", "unit": "ratio", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
