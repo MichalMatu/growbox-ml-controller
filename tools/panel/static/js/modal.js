@@ -92,6 +92,7 @@ function closeModal() {
   backdrop.classList.remove("open");
   backdrop.setAttribute("inert", "");
   backdrop.setAttribute("aria-hidden", "true");
+  refreshModalStepBadge(null);
   updateModalLock();
   syncPanelModalActions();
 }
@@ -128,7 +129,7 @@ function updatePanelModalChrome(meta) {
   const isJson = meta.type === "json";
 
   document.getElementById("modal-title").textContent = meta.title;
-  if (activeModal === "previous" && typeof lastRenderedDecisionStep !== "undefined") {
+  if (meta.pane === "previous") {
     refreshModalStepBadge(lastRenderedDecisionStep);
   } else {
     refreshModalStepBadge(null);

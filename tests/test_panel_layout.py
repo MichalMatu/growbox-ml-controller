@@ -787,6 +787,8 @@ def test_previous_modal_shows_step_badge_synced_with_live():
     assert 'activeModal === "previous"' in modal_js
     assert "refreshModalStepBadge(step)" in live_js
     assert ".modal-step-badge" in panel_css
+    assert ".pill[hidden]" in panel_css
+    assert "display: none !important" in panel_css.split(".pill[hidden]", 1)[1]
 
 
 def test_toolbar_has_no_scenario_preset_selector():

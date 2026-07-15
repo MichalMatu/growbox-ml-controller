@@ -299,6 +299,11 @@ h1 { margin: 0; font-size: var(--text-title); font-weight: 600; }
   white-space: nowrap;
   line-height: var(--chip-btn-line);
 }
+.badge[hidden],
+.sync-badge[hidden],
+.pill[hidden] {
+  display: none !important;
+}
 .badge {
   background: var(--chip-bg);
   color: var(--chip-color);
