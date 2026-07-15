@@ -197,10 +197,6 @@ def build_panel_schema(contract: Contract | None = None) -> dict[str, Any]:
         "feature_count": len(contract.features),
         "outputs": list(contract.outputs),
         "safety_defaults": safety,
-        "safety_note": (
-            "Limity safety (maximum_air_temperature_c, alarm_*) są na razie stałe w firmware. "
-            "Nie są wysyłane przez load_scenario."
-        ),
         "sections": ordered_sections,
         "default_scenario": default_scenario(),
     }

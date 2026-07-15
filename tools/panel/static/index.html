@@ -17,6 +17,11 @@
       --danger: #f2555a;
       --raw: #7eb6ff;
       --safe: #3dd68c;
+      --panel-pad: 0.5rem;
+      --card-gap: 0.4rem;
+      --card-pad-y: 0.42rem;
+      --card-pad-x: 0.52rem;
+      --cell-gap: 0.3rem;
     }
     * { box-sizing: border-box; }
     body {
@@ -30,7 +35,7 @@
     h1 { margin: 0; font-size: 0.85rem; font-weight: 600; }
     .sub { color: var(--muted); font-size: 0.72rem; }
     .top-bar {
-      padding: 0.45rem 0.6rem 0;
+      padding: var(--panel-pad) var(--panel-pad) 0;
       position: sticky;
       top: 0;
       z-index: 20;
@@ -40,8 +45,7 @@
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 0.35rem 0.5rem;
-      padding: 0.38rem 0.5rem;
+      gap: var(--cell-gap) 0.45rem;
       margin-bottom: 0;
     }
     .top-brand {
@@ -121,20 +125,26 @@
     main {
       display: grid;
       grid-template-columns: minmax(280px, 1.15fr) minmax(260px, 0.85fr);
-      gap: 0.6rem;
-      padding: 0.6rem;
+      gap: var(--card-gap);
+      padding: var(--card-gap) var(--panel-pad) var(--panel-pad);
       align-items: start;
     }
     @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+    .card-stack {
+      display: flex;
+      flex-direction: column;
+      gap: var(--card-gap);
+      min-width: 0;
+    }
     .card {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 0.55rem 0.65rem;
-      margin-bottom: 0.5rem;
+      padding: var(--card-pad-y) var(--card-pad-x);
+      margin: 0;
     }
     .card h2 {
-      margin: 0 0 0.45rem;
+      margin: 0 0 0.35rem;
       font-size: 0.68rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
@@ -179,8 +189,6 @@
       background: var(--danger); flex-shrink: 0;
     }
     .status-dot.on { background: var(--ok); }
-    .left-panel .card { padding: 0.35rem 0.45rem; margin-bottom: 0.3rem; }
-    .left-panel .card h2 { margin-bottom: 0.3rem; }
     .section-grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -201,7 +209,7 @@
     .compact-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.3rem;
+      gap: var(--cell-gap);
       justify-content: flex-start;
       align-items: flex-start;
     }
@@ -271,8 +279,8 @@
     .growbox-split {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 0.35rem;
-      align-items: start;
+      gap: var(--cell-gap);
+      align-items: stretch;
     }
     @media (max-width: 700px) { .growbox-split { grid-template-columns: 1fr; } }
     .sub-card {
@@ -283,7 +291,7 @@
       min-width: 0;
     }
     .sub-card h3 {
-      margin: 0 0 0.3rem;
+      margin: 0 0 0.35rem;
       font-size: 0.62rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
@@ -297,7 +305,7 @@
       margin-top: 0.15rem;
       opacity: 0.85;
     }
-    .outputs { display: grid; gap: 0.35rem; }
+    .outputs { display: grid; gap: var(--cell-gap); margin-top: 0.3rem; }
     .output-row {
       display: grid;
       grid-template-columns: 72px 1fr 36px 1fr 36px;
@@ -324,9 +332,10 @@
       border: 1px solid var(--border);
     }
     .pill.warn { color: var(--warn); }
-    .note { color: var(--muted); font-size: 0.72rem; margin: 0.25rem 0 0; }
+    .note { color: var(--muted); font-size: 0.72rem; margin: 0.3rem 0 0; }
+    .note.flush { margin: 0; }
     .live-box { min-height: 120px; }
-    .json-actions { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.45rem; }
+    .json-actions { display: flex; flex-wrap: wrap; gap: var(--cell-gap); margin-top: 0.35rem; }
 
     .modal-backdrop {
       display: none;
@@ -415,14 +424,14 @@
 
   <main>
     <section class="left-panel">
-      <div id="form-sections"></div>
+      <div id="form-sections" class="card-stack"></div>
     </section>
 
-    <section>
+    <section class="right-panel card-stack">
       <div class="card live-box">
         <h2>Na żywo</h2>
-        <div id="decision-summary" class="note">Połącz → Wczytaj → Krok</div>
-        <div class="outputs" id="outputs-bars" style="margin-top:0.4rem"></div>
+        <div id="decision-summary" class="note flush">Połącz → Wczytaj → Krok</div>
+        <div class="outputs" id="outputs-bars"></div>
         <p class="note" id="safety-reason"></p>
         <div class="json-actions btn-row">
           <button id="btn-json-scenario" class="ghost">JSON scenariusza</button>
@@ -432,7 +441,6 @@
           <button id="btn-export" class="ghost">Pobierz scenariusz</button>
         </div>
       </div>
-      <p class="note" id="safety-note" style="padding:0 0.2rem"></p>
     </section>
   </main>
 
@@ -879,7 +887,6 @@
       scenario = panelSchema.default_scenario;
       document.getElementById("seed").value = scenario.seed || 101;
       renderSchemaBadges(panelSchema);
-      document.getElementById("safety-note").textContent = panelSchema.safety_note || "";
       renderForm();
       await refreshPorts();
       setInterval(refreshState, 900);
