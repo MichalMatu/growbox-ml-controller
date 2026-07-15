@@ -1,5 +1,7 @@
 # Architecture
 
+Work plan and v2 I/O roadmap: [plan.md](plan.md). Hardware mapping: [IO_MAP.md](IO_MAP.md).
+
 ## Design goals
 
 The repository separates a portable, deterministic controller from every deployment concern. The

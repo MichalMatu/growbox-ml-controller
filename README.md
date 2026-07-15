@@ -52,8 +52,9 @@ Every control cycle follows the same five steps:
    simulator.
 
 The reusable `lib/environment_control` library has no dependency on ESP-IDF, Arduino, serial I/O,
-JSON, GPIO, Wi-Fi, FreeRTOS, sensor drivers, actuator drivers, or the simulator. See
-[Architecture](docs/ARCHITECTURE.md).
+JSON, GPIO, Wi-Fi, FreeRTOS, sensor drivers, actuator drivers, or the simulator.
+
+**Docs:** [Plan prac (v2)](docs/plan.md) · [Architecture](docs/ARCHITECTURE.md) · [I/O map](docs/IO_MAP.md) · [Contract](docs/DATA_CONTRACT.md) · [Training](docs/MODEL_PIPELINE.md)
 
 ## Firmware stack
 
@@ -162,23 +163,15 @@ immutable release of that library through its PlatformIO build.
 
 ## Training and export
 
-The quick profile exercises the complete deterministic path with a small dataset:
+The quick profile is for CI and smoke tests only. Production training waits for contract v2 — see
+[plan.md](docs/plan.md).
 
 ```bash
-python -m tools.ml.pipeline --quick
+make train-quick   # CI / smoke
+make train-full    # after v2 contract is complete
 ```
 
-Use the larger scenario and epoch budget for an offline run:
-
-```bash
-python -m tools.ml.pipeline --full
-```
-
-Both modes generate whole time-series scenarios, split by scenario seed, label them with a
-deterministic finite-action rollout teacher, train and test Keras, export via emlearn, and compare
-Python predictions with compiled-C predictions. Generated firmware model headers, metadata, and
-small golden vectors are committed; large datasets and working model files are ignored. See
-[Model pipeline](docs/MODEL_PIPELINE.md).
+See [Model pipeline](docs/MODEL_PIPELINE.md).
 
 ## Build, flash, and monitor
 

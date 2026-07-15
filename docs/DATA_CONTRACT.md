@@ -1,45 +1,25 @@
-# Data contract v1
+# Data contract
 
-The machine-readable source of truth is
-[`schemas/environment-controller-v1.json`](../schemas/environment-controller-v1.json). Do not add a
-Python-only or C++-only feature. Change the schema, regenerate derived files, retrain the model, and
-commit all resulting deterministic artifacts together.
+**Source of truth:** [`schemas/environment-controller-v1.json`](../schemas/environment-controller-v1.json)
+**Roadmap v2:** [plan.md](plan.md)
 
-## Inputs
+Change the schema → regenerate C++ headers → retrain → commit generated artifacts together. Do not add features only in Python or only in firmware.
 
-The contract includes:
+## Rules
 
-- six measurements and a separate validity mask for every measurement;
-- growbox volume, thermal mass, heat loss, and air leakage;
-- pot volume, substrate water capacity, and transpiration factor;
-- heater, fan, humidifier, and irrigation-pump availability and capabilities;
-- temperature, humidity, CO2, and soil-moisture targets;
-- the previous four normalized actuator commands.
+**Sensors:** each measurement has a `validity` flag. If false, the encoder substitutes the contract default and the mask tells the model the value is imputed.
 
-Every scalar has a unit, allowed range, normalization range, and default. The generated header owns
-the exact model-feature order and count.
+**Actuators:** `available: false` and zero max capability. The model sees unavailability; safety independently forces final output to zero.
 
-## Missing sensors
+**Outputs:** continuous `[0, 1]` per actuator. Safety may clamp, quantize binary actuators, or limit pump pulses.
 
-A missing or rejected reading has a false validity mask. Its numeric slot is replaced with the
-contract default before normalization; the mask tells the model that the value is imputed. A
-non-finite reading is still an invalid controller input and causes the independent safety layer to
-select a fail-safe decision.
+**Version:** schema version + hash. `ModelRuntime` rejects mismatched model dimensions or hash.
 
-## Missing actuators
+## Regenerate
 
-An absent actuator is represented by `available = false` and zero maximum capability. The feature
-encoder supplies that state to the model, and the safety supervisor independently forces the final
-command to zero. Availability is therefore both learnable context and a hard constraint.
+```bash
+python tools/schema/generate_environment_schema.py
+python tools/schema/generate_environment_schema.py --check   # CI
+```
 
-## Outputs
-
-The model output order is `heater`, `fan`, `humidifier`, `irrigation`. All four are continuous and
-normalized to `[0, 1]`. A physical adapter interprets them according to an actuator's control type.
-Safety may quantize a binary actuator or suppress/limit an irrigation pulse.
-
-## Version and hash
-
-The schema version identifies compatibility policy; the canonical short hash detects an exact
-contract mismatch. Firmware boot records expose both. `ModelRuntime` rejects a generated model
-whose input/output dimensions or schema hash do not match the compiled contract.
+I/O worksheet (hardware mapping): [IO_MAP.md](IO_MAP.md).
