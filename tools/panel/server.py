@@ -80,6 +80,12 @@ class PanelHandler(BaseHTTPRequestHandler):
                 self._serve_favicon()
             elif path == "/panel.css":
                 self._serve_static_file(STATIC_DIR / "panel.css")
+            elif path.startswith("/css/"):
+                rel = path.removeprefix("/css/")
+                if ".." in rel or rel.startswith("/"):
+                    _json_response(self, HTTPStatus.NOT_FOUND, {"error": "not_found"})
+                else:
+                    self._serve_static_file(STATIC_DIR / "css" / rel)
             elif path.startswith("/js/"):
                 rel = path.removeprefix("/js/")
                 if ".." in rel or rel.startswith("/"):
