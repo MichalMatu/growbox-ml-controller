@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import json
 import math
-from pathlib import Path
 import re
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -11,7 +11,6 @@ import pytest
 from tools.ml.contract import load_contract
 from tools.ml.generate_dataset import controller_input_record
 from tools.ml.simulator import ControlAction
-
 
 CANONICAL_GROUPS = (
     "sensors",
@@ -37,8 +36,7 @@ def _resolve_path(document, path):
 def test_contract_count_order_and_hash_match_generated_cpp(scenario):
     contract = load_contract()
     header = (
-        contract.path.parent.parent
-        / "lib/environment_control/src/EnvironmentSchema.h"
+        contract.path.parent.parent / "lib/environment_control/src/EnvironmentSchema.h"
     ).read_text(encoding="utf-8")
     cpp_hash = re.search(r'kSchemaHash\[\] = "([0-9a-f]+)"', header)
     assert cpp_hash is not None
@@ -50,9 +48,7 @@ def test_contract_count_order_and_hash_match_generated_cpp(scenario):
         "air_humidity_pct",
         "co2_ppm",
     )
-    paths_block = re.search(
-        r"kFeaturePaths\{\{(?P<paths>.*?)\}\};", header, flags=re.DOTALL
-    )
+    paths_block = re.search(r"kFeaturePaths\{\{(?P<paths>.*?)\}\};", header, flags=re.DOTALL)
     assert paths_block is not None
     assert tuple(re.findall(r'"([^"]+)"', paths_block.group("paths"))) == tuple(
         feature.path for feature in contract.features
@@ -84,9 +80,7 @@ def test_example_scenarios_contain_every_contract_feature_path():
             for line in scenario_path.read_text(encoding="utf-8").splitlines()
             if line.strip()
         ]
-        scenario = next(
-            record for record in records if record.get("command") == "load_scenario"
-        )
+        scenario = next(record for record in records if record.get("command") == "load_scenario")
         for feature in contract.features:
             _resolve_path(scenario, feature.path)
         encoded = contract.encode(scenario)
@@ -176,14 +170,12 @@ def test_encoder_clamps_ranges_and_applies_validity_masks(scenario):
     sensors["soil_moisture_pct"] = -1.0e9
     validity = {name: True for name in sensors}
     validity["air_temperature_c"] = False
-    record = controller_input_record(
-        scenario, sensors, validity, ControlAction()
-    )
+    record = controller_input_record(scenario, sensors, validity, ControlAction())
     encoded = contract.encode(record)
     temperature = contract.features[0]
-    expected_default = (
-        temperature.default - temperature.minimum
-    ) / (temperature.maximum - temperature.minimum)
+    expected_default = (temperature.default - temperature.minimum) / (
+        temperature.maximum - temperature.minimum
+    )
     assert encoded.dtype == np.float32
     assert encoded.shape == (43,)
     assert math.isclose(float(encoded[0]), expected_default, abs_tol=1e-7)

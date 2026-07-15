@@ -6,7 +6,7 @@ import argparse
 import json
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -18,7 +18,7 @@ class ReplayError(RuntimeError):
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def load_commands(path: Path) -> list[dict[str, Any]]:
@@ -156,7 +156,13 @@ def main(argv: list[str] | None = None) -> int:
             timeout=args.timeout,
             settle=args.settle,
         )
-    except (ValueError, ReplayError, TimeoutError, serial.SerialException, OSError) as exc:
+    except (
+        ValueError,
+        ReplayError,
+        TimeoutError,
+        serial.SerialException,
+        OSError,
+    ) as exc:
         print(f"replay failed: {exc}", file=sys.stderr)
         return 2
     print(f"replayed {count} commands; session written to {args.output}")

@@ -8,6 +8,6 @@ namespace wire {
 
 void emitJsonDocument(cJSON* document) noexcept;
 
-}  // namespace wire
-}  // namespace demo
-}  // namespace growbox
+} // namespace wire
+} // namespace demo
+} // namespace growbox

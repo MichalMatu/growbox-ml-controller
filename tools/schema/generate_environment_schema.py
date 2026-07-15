@@ -11,12 +11,9 @@ import re
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SCHEMA = ROOT / "schemas" / "environment-controller-v1.json"
-DEFAULT_OUTPUT = (
-    ROOT / "lib" / "environment_control" / "src" / "EnvironmentSchema.h"
-)
+DEFAULT_OUTPUT = ROOT / "lib" / "environment_control" / "src" / "EnvironmentSchema.h"
 CANONICAL_GROUPS = (
     "sensors",
     "validity",
@@ -33,9 +30,9 @@ CANONICAL_GROUPS = (
 
 def canonical_bytes(document: dict[str, Any]) -> bytes:
     """Return the canonical bytes used everywhere to identify the contract."""
-    return json.dumps(
-        document, sort_keys=True, separators=(",", ":"), ensure_ascii=True
-    ).encode("utf-8")
+    return json.dumps(document, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode(
+        "utf-8"
+    )
 
 
 def schema_hash(document: dict[str, Any]) -> str:
@@ -102,9 +99,7 @@ def validate(document: dict[str, Any]) -> None:
         for name in names:
             path = features_by_name[name]["path"]
             if path.split(".")[:-1] != expected_prefix:
-                raise ValueError(
-                    f"feature path {path!r} does not match group {group_path!r}"
-                )
+                raise ValueError(f"feature path {path!r} does not match group {group_path!r}")
     for item in features + outputs:
         minimum = float(item["minimum"])
         maximum = float(item["maximum"])
@@ -167,9 +162,7 @@ def render(document: dict[str, Any]) -> str:
 
     path_parts = [item["path"].split(".") for item in features]
     wire_roots = list(dict.fromkeys(parts[0] for parts in path_parts))
-    wire_objects = list(
-        dict.fromkeys(parts[1] for parts in path_parts if len(parts) == 3)
-    )
+    wire_objects = list(dict.fromkeys(parts[1] for parts in path_parts if len(parts) == 3))
     wire_root_constants = "\n".join(
         f"inline constexpr char kWireRoot{cpp_identifier(key)}[] = {cpp_string(key)};"
         for key in wire_roots
@@ -180,9 +173,9 @@ def render(document: dict[str, Any]) -> str:
     )
 
     safety = document["safety_defaults"]
-    heater_control = next(
-        item for item in features if item["name"] == "heater_control_type"
-    )["encoding"]
+    heater_control = next(item for item in features if item["name"] == "heater_control_type")[
+        "encoding"
+    ]
     heater_binary = int(heater_control["binary"])
     heater_pwm = int(heater_control["pwm"])
     if float(heater_binary) != float(heater_control["binary"]) or not 0 <= heater_binary <= 255:
@@ -200,8 +193,8 @@ namespace growbox {{
 namespace control {{
 namespace schema {{
 
-inline constexpr std::uint32_t kSchemaVersion = {document['schema_version']}U;
-inline constexpr char kSchemaId[] = {cpp_string(document['schema_id'])};
+inline constexpr std::uint32_t kSchemaVersion = {document["schema_version"]}U;
+inline constexpr char kSchemaId[] = {cpp_string(document["schema_id"])};
 inline constexpr char kSchemaHash[] = {cpp_string(digest)};
 inline constexpr std::size_t kFeatureCount = {len(features)}U;
 inline constexpr std::size_t kOutputCount = {len(outputs)}U;
@@ -263,14 +256,14 @@ inline constexpr std::array<float, kOutputCount> kOutputDefaults{{{{
 {output_defaults}
 }}}};
 
-inline constexpr float kDefaultMaximumAirTemperatureC = {cpp_float(safety['maximum_air_temperature_c'])};
-inline constexpr float kDefaultAlarmAirTemperatureC = {cpp_float(safety['alarm_air_temperature_c'])};
-inline constexpr float kDefaultAlarmMinimumFan = {cpp_float(safety['alarm_minimum_fan'])};
-inline constexpr float kDefaultBinaryThreshold = {cpp_float(safety['binary_threshold'])};
-inline constexpr float kDefaultHeaterMinimumOnS = {cpp_float(safety['heater_minimum_on_s'])};
-inline constexpr float kDefaultHeaterMinimumOffS = {cpp_float(safety['heater_minimum_off_s'])};
-inline constexpr float kDefaultHumidifierMinimumOnS = {cpp_float(safety['humidifier_minimum_on_s'])};
-inline constexpr float kDefaultHumidifierMinimumOffS = {cpp_float(safety['humidifier_minimum_off_s'])};
+inline constexpr float kDefaultMaximumAirTemperatureC = {cpp_float(safety["maximum_air_temperature_c"])};
+inline constexpr float kDefaultAlarmAirTemperatureC = {cpp_float(safety["alarm_air_temperature_c"])};
+inline constexpr float kDefaultAlarmMinimumFan = {cpp_float(safety["alarm_minimum_fan"])};
+inline constexpr float kDefaultBinaryThreshold = {cpp_float(safety["binary_threshold"])};
+inline constexpr float kDefaultHeaterMinimumOnS = {cpp_float(safety["heater_minimum_on_s"])};
+inline constexpr float kDefaultHeaterMinimumOffS = {cpp_float(safety["heater_minimum_off_s"])};
+inline constexpr float kDefaultHumidifierMinimumOnS = {cpp_float(safety["humidifier_minimum_on_s"])};
+inline constexpr float kDefaultHumidifierMinimumOffS = {cpp_float(safety["humidifier_minimum_off_s"])};
 
 constexpr std::size_t index(FeatureIndex value) noexcept {{
     return static_cast<std::size_t>(value);

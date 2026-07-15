@@ -11,7 +11,7 @@ from tools.ml.simulator import (
     PumpCapabilities,
     SequentialEnvironmentSimulator,
 )
-from tools.ml.teacher import CostConfig, FIXED_CANDIDATES, RolloutTeacher
+from tools.ml.teacher import FIXED_CANDIDATES, CostConfig, RolloutTeacher
 
 
 def test_candidate_set_and_tie_order_are_fixed():
@@ -58,9 +58,7 @@ def test_teacher_never_selects_unavailable_outputs(scenario):
         humidifier=HumidifierCapabilities(False, 0.0),
         irrigation_pump=PumpCapabilities(False, 0.0, 0.0, 300.0),
     )
-    simulator = SequentialEnvironmentSimulator(
-        replace(scenario, actuators=unavailable)
-    )
+    simulator = SequentialEnvironmentSimulator(replace(scenario, actuators=unavailable))
     result = RolloutTeacher(horizon_steps=2).choose(simulator)
     assert result.action == ControlAction()
 

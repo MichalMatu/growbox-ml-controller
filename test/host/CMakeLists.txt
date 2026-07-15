@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 project(environment_control_host_tests LANGUAGES CXX)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 get_filename_component(PROJECT_ROOT "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
 
 add_executable(

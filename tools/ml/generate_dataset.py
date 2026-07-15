@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 import argparse
+from collections.abc import Iterable, Mapping
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Iterable, Mapping
 
 import numpy as np
 
 from .contract import Contract, load_contract
 from .simulator import (
+    SENSOR_NAMES,
     ActuatorCapabilities,
     ControlAction,
     ControlTargets,
@@ -22,7 +23,6 @@ from .simulator import (
     HumidifierCapabilities,
     PumpCapabilities,
     ResponseLag,
-    SENSOR_NAMES,
     Scenario,
     SensorNoise,
     SequentialEnvironmentSimulator,
@@ -38,11 +38,11 @@ class DatasetConfig:
     invalid_reading_probability: float = 0.025
 
     @classmethod
-    def quick(cls, seed: int = 1847) -> "DatasetConfig":
+    def quick(cls, seed: int = 1847) -> DatasetConfig:
         return cls(scenario_count=12, steps_per_scenario=20, seed=seed)
 
     @classmethod
-    def full(cls, seed: int = 1847) -> "DatasetConfig":
+    def full(cls, seed: int = 1847) -> DatasetConfig:
         return cls(scenario_count=72, steps_per_scenario=120, seed=seed)
 
 
@@ -60,9 +60,15 @@ class Dataset:
         rows = self.features.shape[0]
         if self.features.ndim != 2 or self.labels.ndim != 2:
             raise ValueError("features and labels must be matrices")
-        if not all(len(values) == rows for values in (
-            self.labels, self.scenario_ids, self.scenario_seeds, self.splits
-        )):
+        if not all(
+            len(values) == rows
+            for values in (
+                self.labels,
+                self.scenario_ids,
+                self.scenario_seeds,
+                self.splits,
+            )
+        ):
             raise ValueError("dataset columns have inconsistent row counts")
 
     def select(self, split: str) -> tuple[np.ndarray, np.ndarray]:
@@ -84,7 +90,7 @@ class Dataset:
         )
 
     @classmethod
-    def load(cls, path: str | Path) -> "Dataset":
+    def load(cls, path: str | Path) -> Dataset:
         with np.load(path, allow_pickle=False) as data:
             return cls(
                 features=data["features"],

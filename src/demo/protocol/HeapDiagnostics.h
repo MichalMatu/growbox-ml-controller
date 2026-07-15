@@ -28,6 +28,6 @@ struct TaskSnapshot {
 HeapSnapshot captureHeapSnapshot() noexcept;
 TaskSnapshot captureTaskSnapshot() noexcept;
 
-}  // namespace wire
-}  // namespace demo
-}  // namespace growbox
+} // namespace wire
+} // namespace demo
+} // namespace growbox

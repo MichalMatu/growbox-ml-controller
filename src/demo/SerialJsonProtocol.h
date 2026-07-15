@@ -26,7 +26,7 @@ struct DemoRuntimeState {
 };
 
 class SerialJsonProtocol {
- public:
+public:
   static constexpr std::size_t kMaximumLineBytes = 1536U;
 
   SerialJsonProtocol() noexcept = default;
@@ -38,7 +38,7 @@ class SerialJsonProtocol {
   esp_err_t begin() noexcept;
   void poll(DummyEnvironmentSimulator& simulator, DemoRuntimeState& runtime) noexcept;
 
- private:
+private:
   void processLine(DummyEnvironmentSimulator& simulator, DemoRuntimeState& runtime) noexcept;
   void emitError(const char* code, const char* message) const noexcept;
   void emitAck(const char* command) const noexcept;
@@ -51,5 +51,5 @@ class SerialJsonProtocol {
   bool discarding_ = false;
 };
 
-}  // namespace demo
-}  // namespace growbox
+} // namespace demo
+} // namespace growbox

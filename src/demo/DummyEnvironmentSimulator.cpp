@@ -9,7 +9,9 @@ namespace {
 constexpr float kSecondsPerHour = 3600.0f;
 }
 
-DummyEnvironmentSimulator::DummyEnvironmentSimulator() noexcept { reset(); }
+DummyEnvironmentSimulator::DummyEnvironmentSimulator() noexcept {
+  reset();
+}
 
 void DummyEnvironmentSimulator::reset(std::uint32_t seed) noexcept {
   input_ = control::ControllerInput{};
@@ -89,14 +91,15 @@ void DummyEnvironmentSimulator::setTargets(const control::ControlTargets& target
   input_.targets = targets;
 }
 
-void DummyEnvironmentSimulator::setActuators(const control::ActuatorCapabilities& actuators) noexcept {
+void DummyEnvironmentSimulator::setActuators(
+    const control::ActuatorCapabilities& actuators) noexcept {
   input_.actuators = actuators;
 }
 
 float DummyEnvironmentSimulator::uniformSigned() noexcept {
   rng_state_ = rng_state_ * 1664525U + 1013904223U;
-  const float zero_to_one = static_cast<float>((rng_state_ >> 8U) & 0x00FFFFFFU) /
-                            static_cast<float>(0x01000000U);
+  const float zero_to_one =
+      static_cast<float>((rng_state_ >> 8U) & 0x00FFFFFFU) / static_cast<float>(0x01000000U);
   return zero_to_one * 2.0f - 1.0f;
 }
 
@@ -118,27 +121,24 @@ void DummyEnvironmentSimulator::advance(const control::SafeControlDecision& deci
       response * (clamp(decision.humidifier, 0.0f, 1.0f) - effective_humidifier_);
 
   const float volume = clamp(input_.environment.growbox_volume_m3, 0.05f, 100.0f);
-  const float thermal_mass =
-      clamp(input_.environment.thermal_mass_j_per_k, 1000.0f, 10000000.0f);
+  const float thermal_mass = clamp(input_.environment.thermal_mass_j_per_k, 1000.0f, 10000000.0f);
   const float air_changes_per_hour =
       clamp(input_.environment.air_leak_rate_ach, 0.0f, 20.0f) +
       effective_fan_ * clamp(input_.actuators.fan.max_airflow_m3_h, 0.0f, 10000.0f) / volume;
-  const float exchange_fraction = clamp(air_changes_per_hour * step_seconds / kSecondsPerHour,
-                                        0.0f, 0.85f);
+  const float exchange_fraction =
+      clamp(air_changes_per_hour * step_seconds / kSecondsPerHour, 0.0f, 0.85f);
 
   const float heater_w = effective_heater_ * input_.actuators.heater.max_power_w *
                          clamp(input_.actuators.heater.efficiency, 0.0f, 1.0f);
-  const float heat_loss_w = input_.environment.heat_loss_w_per_k *
-                            (input_.sensors.air_temperature_c -
-                             input_.sensors.outside_temperature_c);
+  const float heat_loss_w =
+      input_.environment.heat_loss_w_per_k *
+      (input_.sensors.air_temperature_c - input_.sensors.outside_temperature_c);
   input_.sensors.air_temperature_c += (heater_w - heat_loss_w) * step_seconds / thermal_mass;
   input_.sensors.air_temperature_c +=
-      exchange_fraction * (input_.sensors.outside_temperature_c -
-                           input_.sensors.air_temperature_c);
+      exchange_fraction * (input_.sensors.outside_temperature_c - input_.sensors.air_temperature_c);
 
-  const float humidifier_gain = effective_humidifier_ *
-                                input_.actuators.humidifier.max_output_g_h * step_seconds /
-                                kSecondsPerHour / volume * 0.55f;
+  const float humidifier_gain = effective_humidifier_ * input_.actuators.humidifier.max_output_g_h *
+                                step_seconds / kSecondsPerHour / volume * 0.55f;
   const float transpiration_gain = input_.cultivation.transpiration_factor * step_seconds / 300.0f;
   input_.sensors.air_humidity_pct += humidifier_gain + transpiration_gain;
   input_.sensors.air_humidity_pct +=
@@ -149,14 +149,13 @@ void DummyEnvironmentSimulator::advance(const control::SafeControlDecision& deci
       input_.validity.outside_co2 ? input_.sensors.outside_co2_ppm : 420.0f;
   input_.sensors.co2_ppm += exchange_fraction * (outdoor_co2_ppm - input_.sensors.co2_ppm);
 
-  const float capacity =
-      clamp(input_.cultivation.substrate_water_capacity_ml, 10.0f, 100000.0f);
-  const float pulse_seconds = clamp(decision.irrigation_pulse_s, 0.0f,
-                                    input_.actuators.irrigation_pump.maximum_pulse_s);
+  const float capacity = clamp(input_.cultivation.substrate_water_capacity_ml, 10.0f, 100000.0f);
+  const float pulse_seconds =
+      clamp(decision.irrigation_pulse_s, 0.0f, input_.actuators.irrigation_pump.maximum_pulse_s);
   const float irrigation_ml = input_.actuators.irrigation_pump.flow_ml_s * pulse_seconds;
   const float soil_gain_pct = irrigation_ml / capacity * 100.0f;
-  const float drying_pct = (0.004f + 0.003f * effective_fan_) *
-                           input_.cultivation.transpiration_factor * step_seconds;
+  const float drying_pct =
+      (0.004f + 0.003f * effective_fan_) * input_.cultivation.transpiration_factor * step_seconds;
   input_.sensors.soil_moisture_pct += soil_gain_pct - drying_pct;
 
   // Small deterministic sensor noise; the Python simulator is the training source of truth.
@@ -177,5 +176,5 @@ void DummyEnvironmentSimulator::advance(const control::SafeControlDecision& deci
   input_.monotonic_time_ms += static_cast<std::uint64_t>(step_seconds * 1000.0f);
 }
 
-}  // namespace demo
-}  // namespace growbox
+} // namespace demo
+} // namespace growbox

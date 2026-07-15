@@ -81,8 +81,7 @@ void runControllerStep() noexcept {
   const std::int64_t started_us = esp_timer_get_time();
   const ControllerStatus status = controller.process(simulator.input(), output);
   const std::int64_t elapsed_us = esp_timer_get_time() - started_us;
-  output.diagnostics.inference_us =
-      elapsed_us > 0 ? static_cast<std::uint32_t>(elapsed_us) : 0U;
+  output.diagnostics.inference_us = elapsed_us > 0 ? static_cast<std::uint32_t>(elapsed_us) : 0U;
 
   const DecisionEmitRequest request{&simulator.input(), &output, status, runtime.step};
   growbox::demo::wire::emitDecision(request);
@@ -95,13 +94,12 @@ void runControllerStep() noexcept {
     input.previous.fan = output.safe.fan;
     input.previous.humidifier = output.safe.humidifier;
     input.previous.irrigation = output.safe.irrigation;
-    input.monotonic_time_ms +=
-        static_cast<std::uint64_t>(kSimulationStepSeconds * 1000.0f);
+    input.monotonic_time_ms += static_cast<std::uint64_t>(kSimulationStepSeconds * 1000.0f);
   }
   ++runtime.step;
 }
 
-}  // namespace
+} // namespace
 
 extern "C" void app_main() {
   ESP_ERROR_CHECK(protocol.begin());

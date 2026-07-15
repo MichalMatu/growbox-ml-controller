@@ -45,8 +45,7 @@ void addMemoryObject(cJSON* parent, const char* key, const char* serial_line_buf
   cJSON_AddNumberToObject(object, "serial_line_bytes",
                           static_cast<double>(SerialJsonProtocol::kMaximumLineBytes + 1U));
   if (serial_line_buffer != nullptr) {
-    cJSON_AddBoolToObject(object, "serial_line_in_psram",
-                          esp_ptr_external_ram(serial_line_buffer));
+    cJSON_AddBoolToObject(object, "serial_line_in_psram", esp_ptr_external_ram(serial_line_buffer));
   }
 #if CONFIG_SPIRAM_USE_CAPS_ALLOC
   cJSON_AddBoolToObject(object, "spiram_caps_alloc", true);
@@ -61,7 +60,7 @@ void addMemoryObject(cJSON* parent, const char* key, const char* serial_line_buf
   cJSON_AddItemToObject(parent, key, object);
 }
 
-}  // namespace
+} // namespace
 
 cJSON* buildDiagnosticsDocument(const DummyEnvironmentSimulator& simulator,
                                 const DemoRuntimeState& runtime,
@@ -100,12 +99,11 @@ cJSON* buildDiagnosticsDocument(const DummyEnvironmentSimulator& simulator,
   return document;
 }
 
-void emitDiagnostics(const DummyEnvironmentSimulator& simulator,
-                     const DemoRuntimeState& runtime,
+void emitDiagnostics(const DummyEnvironmentSimulator& simulator, const DemoRuntimeState& runtime,
                      const char* serial_line_buffer) noexcept {
   emitJsonDocument(buildDiagnosticsDocument(simulator, runtime, serial_line_buffer));
 }
 
-}  // namespace wire
-}  // namespace demo
-}  // namespace growbox
+} // namespace wire
+} // namespace demo
+} // namespace growbox

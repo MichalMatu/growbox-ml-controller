@@ -133,7 +133,8 @@ bool parseCultivation(const cJSON* object, control::CultivationConfig& config) n
                          config.transpiration_factor);
 }
 
-bool parseTargets(const cJSON* object, control::ControlTargets& targets, bool require_all) noexcept {
+bool parseTargets(const cJSON* object, control::ControlTargets& targets,
+                  bool require_all) noexcept {
   if (object == nullptr) {
     return false;
   }
@@ -163,7 +164,8 @@ bool parsePrevious(const cJSON* object, control::PreviousControlState& previous)
   return object != nullptr &&
          readFiniteFloat(object, control::schema::wireKey(FeatureIndex::PreviousHeater),
                          previous.heater) &&
-         readFiniteFloat(object, control::schema::wireKey(FeatureIndex::PreviousFan), previous.fan) &&
+         readFiniteFloat(object, control::schema::wireKey(FeatureIndex::PreviousFan),
+                         previous.fan) &&
          readFiniteFloat(object, control::schema::wireKey(FeatureIndex::PreviousHumidifier),
                          previous.humidifier) &&
          readFiniteFloat(object, control::schema::wireKey(FeatureIndex::PreviousIrrigation),
@@ -218,8 +220,9 @@ bool parseActuators(const cJSON* object, control::ActuatorCapabilities& actuator
     return false;
   }
 
-  if (!parseControlType(readString(heater, control::schema::wireKey(FeatureIndex::HeaterControlType)),
-                       actuators.heater.control_type) ||
+  if (!parseControlType(
+          readString(heater, control::schema::wireKey(FeatureIndex::HeaterControlType)),
+          actuators.heater.control_type) ||
       !parseControlType(readString(fan, control::schema::wireKey(FeatureIndex::FanControlType)),
                         actuators.fan.control_type) ||
       !parseControlType(
@@ -275,7 +278,7 @@ void addActuatorAvailability(cJSON* document,
   cJSON_AddBoolToObject(irrigation_json, "available", actuators.irrigation_pump.available);
 }
 
-}  // namespace
+} // namespace
 
 void addScenarioSnapshot(cJSON* document, const control::ControllerInput& input) noexcept {
   if (document == nullptr) {
@@ -302,7 +305,8 @@ void addScenarioSnapshot(cJSON* document, const control::ControllerInput& input)
                         input.validity.air_temperature);
   cJSON_AddBoolToObject(validity, control::schema::wireKey(FeatureIndex::AirHumidityValid),
                         input.validity.air_humidity);
-  cJSON_AddBoolToObject(validity, control::schema::wireKey(FeatureIndex::Co2Valid), input.validity.co2);
+  cJSON_AddBoolToObject(validity, control::schema::wireKey(FeatureIndex::Co2Valid),
+                        input.validity.co2);
   cJSON_AddBoolToObject(validity, control::schema::wireKey(FeatureIndex::SoilMoistureValid),
                         input.validity.soil_moisture);
   cJSON_AddBoolToObject(validity, control::schema::wireKey(FeatureIndex::OutsideTemperatureValid),
@@ -364,7 +368,8 @@ void addScenarioSnapshot(cJSON* document, const control::ControllerInput& input)
                         input.actuators.irrigation_pump.available);
   cJSON_AddNumberToObject(irrigation, control::schema::wireKey(FeatureIndex::IrrigationFlowMlS),
                           input.actuators.irrigation_pump.flow_ml_s);
-  cJSON_AddNumberToObject(irrigation, control::schema::wireKey(FeatureIndex::IrrigationMaximumPulseS),
+  cJSON_AddNumberToObject(irrigation,
+                          control::schema::wireKey(FeatureIndex::IrrigationMaximumPulseS),
                           input.actuators.irrigation_pump.maximum_pulse_s);
   cJSON_AddNumberToObject(irrigation,
                           control::schema::wireKey(FeatureIndex::IrrigationMinimumIntervalS),
@@ -401,7 +406,8 @@ void addScenarioSnapshot(cJSON* document, const control::ControllerInput& input)
   cJSON_AddNumberToObject(safety, "heater_minimum_on_s", input.safety.heater_minimum_on_s);
   cJSON_AddNumberToObject(safety, "heater_minimum_off_s", input.safety.heater_minimum_off_s);
   cJSON_AddNumberToObject(safety, "humidifier_minimum_on_s", input.safety.humidifier_minimum_on_s);
-  cJSON_AddNumberToObject(safety, "humidifier_minimum_off_s", input.safety.humidifier_minimum_off_s);
+  cJSON_AddNumberToObject(safety, "humidifier_minimum_off_s",
+                          input.safety.humidifier_minimum_off_s);
 }
 
 void addDecisionContext(cJSON* document, const control::ControllerInput& input) noexcept {
@@ -456,9 +462,8 @@ bool parseLoadScenario(const cJSON* root, control::ControllerInput& scenario,
 }
 
 bool parseStepOverrides(const cJSON* root, control::SensorState& sensors,
-                        control::SensorValidity& validity,
-                        control::ActuatorCapabilities& actuators, bool& has_sensors,
-                        bool& has_validity, bool& has_actuators) noexcept {
+                        control::SensorValidity& validity, control::ActuatorCapabilities& actuators,
+                        bool& has_sensors, bool& has_validity, bool& has_actuators) noexcept {
   const cJSON* sensors_json = item(root, control::schema::kWireRootSensors);
   const cJSON* validity_json = item(root, control::schema::kWireRootValidity);
   const cJSON* actuators_json = objectItem(root, control::schema::kWireRootActuators);
@@ -485,8 +490,7 @@ bool parseSeedValue(const cJSON* root, std::uint32_t& seed) noexcept {
   return readUnsigned(root, "value", seed);
 }
 
-cJSON* buildScenarioDocument(const control::ControllerInput& input,
-                             std::uint32_t seed) noexcept {
+cJSON* buildScenarioDocument(const control::ControllerInput& input, std::uint32_t seed) noexcept {
   cJSON* document = cJSON_CreateObject();
   if (document == nullptr) {
     return nullptr;
@@ -500,6 +504,6 @@ cJSON* buildScenarioDocument(const control::ControllerInput& input,
   return document;
 }
 
-}  // namespace wire
-}  // namespace demo
-}  // namespace growbox
+} // namespace wire
+} // namespace demo
+} // namespace growbox

@@ -22,6 +22,6 @@ void emitJsonDocument(cJSON* document) noexcept {
   cJSON_Delete(document);
 }
 
-}  // namespace wire
-}  // namespace demo
-}  // namespace growbox
+} // namespace wire
+} // namespace demo
+} // namespace growbox

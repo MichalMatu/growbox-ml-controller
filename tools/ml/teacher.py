@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import itertools
 import math
-from typing import Iterable, Sequence
+from collections.abc import Iterable, Sequence
+from dataclasses import dataclass
 
 from .simulator import ControlAction, ControlTargets, SequentialEnvironmentSimulator
 
@@ -102,9 +102,7 @@ class RolloutTeacher:
         for horizon_index in range(self.horizon_steps):
             state = rollout.step(candidate, add_sensor_noise=False)
             terminal_scale = (
-                weights.terminal_multiplier
-                if horizon_index == self.horizon_steps - 1
-                else 1.0
+                weights.terminal_multiplier if horizon_index == self.horizon_steps - 1 else 1.0
             )
             temperature = (state.air_temperature_c - targets.target_air_temperature_c) / 10.0
             humidity = (state.air_humidity_pct - targets.target_air_humidity_pct) / 35.0
@@ -142,9 +140,7 @@ class RolloutTeacher:
         )
         switches = sum(
             abs(now - before)
-            for now, before in zip(
-                candidate.as_array(), simulator.previous_command.as_array()
-            )
+            for now, before in zip(candidate.as_array(), simulator.previous_command.as_array())
         )
 
         violation = 0.0
@@ -169,9 +165,15 @@ class RolloutTeacher:
         unreachable = 0.0
         if not caps.heater.available and state.air_temperature_c < targets.target_air_temperature_c:
             unreachable += (targets.target_air_temperature_c - state.air_temperature_c) / 10.0
-        if not caps.humidifier.available and state.air_humidity_pct < targets.target_air_humidity_pct:
+        if (
+            not caps.humidifier.available
+            and state.air_humidity_pct < targets.target_air_humidity_pct
+        ):
             unreachable += (targets.target_air_humidity_pct - state.air_humidity_pct) / 35.0
-        if not caps.irrigation_pump.available and state.soil_moisture_pct < targets.target_soil_moisture_pct:
+        if (
+            not caps.irrigation_pump.available
+            and state.soil_moisture_pct < targets.target_soil_moisture_pct
+        ):
             unreachable += (targets.target_soil_moisture_pct - state.soil_moisture_pct) / 50.0
         if not caps.fan.available:
             unreachable += abs(state.co2_ppm - targets.target_co2_ppm) / 1200.0

@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import asdict, dataclass
 import importlib.metadata
 import json
-from pathlib import Path
 import tempfile
+from dataclasses import asdict, dataclass
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -22,10 +22,9 @@ from .export_model import (
     render_golden_header,
 )
 from .generate_dataset import Dataset, DatasetConfig, generate_dataset
-from .teacher import CostConfig, RolloutTeacher
+from .teacher import RolloutTeacher
 from .train_model import TrainingConfig, TrainingResult, train
 from .verify_export import VerificationResult, verify_export
-
 
 DEFAULT_ARTIFACT_ROOT = PROJECT_ROOT / "build" / "ml"
 GOLDEN_FEATURE_ATOL = 5.0e-7
@@ -124,16 +123,10 @@ def run_pipeline(
     if mode not in ("quick", "full"):
         raise ValueError("mode must be quick or full")
     contract = load_contract()
-    dataset_config = (
-        DatasetConfig.quick(seed) if mode == "quick" else DatasetConfig.full(seed)
-    )
-    training_config = (
-        TrainingConfig.quick(seed) if mode == "quick" else TrainingConfig.full(seed)
-    )
+    dataset_config = DatasetConfig.quick(seed) if mode == "quick" else DatasetConfig.full(seed)
+    training_config = TrainingConfig.quick(seed) if mode == "quick" else TrainingConfig.full(seed)
     teacher = RolloutTeacher(horizon_steps=2 if mode == "quick" else 4)
-    dataset = generate_dataset(
-        dataset_config, contract=contract, teacher=teacher
-    )
+    dataset = generate_dataset(dataset_config, contract=contract, teacher=teacher)
 
     mode_artifacts = artifact_root / mode
     mode_artifacts.mkdir(parents=True, exist_ok=True)
@@ -179,18 +172,12 @@ def run_pipeline(
     )
 
 
-def _golden_mismatches(
-    temporary: dict[str, Any], committed: dict[str, Any]
-) -> list[str]:
+def _golden_mismatches(temporary: dict[str, Any], committed: dict[str, Any]) -> list[str]:
     if not isinstance(temporary, dict) or not isinstance(committed, dict):
         return ["golden-vector documents must be JSON objects"]
     mismatches: list[str] = []
-    temporary_metadata = {
-        key: value for key, value in temporary.items() if key != "vectors"
-    }
-    committed_metadata = {
-        key: value for key, value in committed.items() if key != "vectors"
-    }
+    temporary_metadata = {key: value for key, value in temporary.items() if key != "vectors"}
+    committed_metadata = {key: value for key, value in committed.items() if key != "vectors"}
     if temporary_metadata != committed_metadata:
         mismatches.append("golden-vector metadata or feature/output order differs")
 
@@ -203,8 +190,7 @@ def _golden_mismatches(
             or not temporary_vectors
             or not committed_vectors
             or any(
-                not isinstance(vector, dict)
-                or set(vector) != {"features", "expected"}
+                not isinstance(vector, dict) or set(vector) != {"features", "expected"}
                 for vector in temporary_vectors + committed_vectors
             )
         ):
@@ -259,7 +245,10 @@ def _golden_mismatches(
 
 def _compare_generated(temporary: ExportResult) -> None:
     byte_exact_pairs = (
-        (temporary.environment_model_header, DEFAULT_GENERATED_DIR / "EnvironmentModel.h"),
+        (
+            temporary.environment_model_header,
+            DEFAULT_GENERATED_DIR / "EnvironmentModel.h",
+        ),
         (temporary.model_manifest_header, DEFAULT_GENERATED_DIR / "ModelManifest.h"),
     )
     mismatches: list[str] = []
@@ -287,9 +276,7 @@ def _compare_generated(temporary: ExportResult) -> None:
                 mismatches.append(f"cannot validate {label} golden header: {error}")
             else:
                 if header_text != expected_header:
-                    mismatches.append(
-                        f"{label} golden header does not match its JSON fixture"
-                    )
+                    mismatches.append(f"{label} golden header does not match its JSON fixture")
     if mismatches:
         raise RuntimeError("\n".join(mismatches))
 

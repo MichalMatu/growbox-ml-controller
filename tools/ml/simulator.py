@@ -7,13 +7,12 @@ pipeline, but they are not a calibrated model of a real enclosure.
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
 import copy
 import math
-from typing import Mapping
+from collections.abc import Mapping
+from dataclasses import asdict, dataclass, field
 
 import numpy as np
-
 
 SENSOR_NAMES = (
     "air_temperature_c",
@@ -99,7 +98,7 @@ class ControlAction:
     humidifier: float = 0.0
     irrigation: float = 0.0
 
-    def clipped(self) -> "ControlAction":
+    def clipped(self) -> ControlAction:
         return ControlAction(*(_clamp(v, 0.0, 1.0) for v in self.as_array()))
 
     def as_array(self) -> tuple[float, float, float, float]:
@@ -184,7 +183,7 @@ class SequentialEnvironmentSimulator:
         self.effective_action = ControlAction()
         self.previous_command = ControlAction()
 
-    def clone(self) -> "SequentialEnvironmentSimulator":
+    def clone(self) -> SequentialEnvironmentSimulator:
         other = SequentialEnvironmentSimulator(self.scenario, seed=self.seed)
         other.state = copy.deepcopy(self.state)
         other.elapsed_s = self.elapsed_s
@@ -284,8 +283,10 @@ class SequentialEnvironmentSimulator:
             state.outside_temperature_c - state.air_temperature_c
         )
         air_heat_capacity_j_k = volume * 1.225 * 1005.0
-        exchange_heat_w = air_heat_capacity_j_k * exchange_rate_s * (
-            state.outside_temperature_c - state.air_temperature_c
+        exchange_heat_w = (
+            air_heat_capacity_j_k
+            * exchange_rate_s
+            * (state.outside_temperature_c - state.air_temperature_c)
         )
         temperature_delta = (heater_w + passive_heat_w + exchange_heat_w) * dt / thermal_mass
 
@@ -308,9 +309,7 @@ class SequentialEnvironmentSimulator:
         )
         transpiration_pp_s = transpiration_ml_s * 100.0 / air_moisture_capacity_g
 
-        humidity_delta = (
-            humidity_exchange_pp_s + humidifier_pp_s + transpiration_pp_s
-        ) * dt
+        humidity_delta = (humidity_exchange_pp_s + humidifier_pp_s + transpiration_pp_s) * dt
 
         irrigation_ml = 0.0
         if command.irrigation > 0.0 and self.irrigation_ready:
@@ -331,16 +330,10 @@ class SequentialEnvironmentSimulator:
         outside_co2_ppm = 420.0
         co2_exchange_ppm_s = exchange_rate_s * (outside_co2_ppm - state.co2_ppm)
         # A gentle source/sink term keeps CO2 dynamic when the fan is off.
-        biological_co2_ppm_s = 0.0025 * crop.transpiration_factor * (
-            850.0 - state.co2_ppm
-        )
+        biological_co2_ppm_s = 0.0025 * crop.transpiration_factor * (850.0 - state.co2_ppm)
 
-        state.air_temperature_c = _clamp(
-            state.air_temperature_c + temperature_delta, -30.0, 70.0
-        )
-        state.air_humidity_pct = _clamp(
-            state.air_humidity_pct + humidity_delta, 0.0, 100.0
-        )
+        state.air_temperature_c = _clamp(state.air_temperature_c + temperature_delta, -30.0, 70.0)
+        state.air_humidity_pct = _clamp(state.air_humidity_pct + humidity_delta, 0.0, 100.0)
         state.co2_ppm = _clamp(
             state.co2_ppm + (co2_exchange_ppm_s + biological_co2_ppm_s) * dt,
             250.0,

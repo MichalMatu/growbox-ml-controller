@@ -18,6 +18,6 @@ struct DecisionEmitRequest {
 
 void emitDecision(const DecisionEmitRequest& request) noexcept;
 
-}  // namespace wire
-}  // namespace demo
-}  // namespace growbox
+} // namespace wire
+} // namespace demo
+} // namespace growbox

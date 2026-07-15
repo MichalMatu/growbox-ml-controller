@@ -45,9 +45,7 @@ def _decision() -> dict[str, object]:
     }
 
 
-@pytest.mark.parametrize(
-    "field", ("sensors", "validity", "targets", "safe_output", "diagnostics")
-)
+@pytest.mark.parametrize("field", ("sensors", "validity", "targets", "safe_output", "diagnostics"))
 @pytest.mark.parametrize("invalid_value", (None, [], "not-an-object"))
 def test_malformed_nested_objects_are_validation_errors(field, invalid_value):
     record = _decision()
@@ -82,8 +80,7 @@ def test_metric_extraction_ignores_invalid_types_and_overflowing_integers():
     report = analyse_records([record])
 
     assert all(
-        summary["mean_absolute_error"] is None
-        for summary in report["target_errors"].values()
+        summary["mean_absolute_error"] is None for summary in report["target_errors"].values()
     )
     assert report["mean_inference_us"] is None
     assert report["maximum_inference_us"] is None

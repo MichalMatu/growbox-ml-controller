@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import hashlib
 import json
 import math
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 import numpy as np
-
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CONTRACT_PATH = PROJECT_ROOT / "schemas" / "environment-controller-v1.json"
@@ -82,9 +82,7 @@ class Contract:
         encoded: list[float] = []
         feature_by_path = {feature.path: feature for feature in self.features}
         for feature in self.features:
-            value = _resolve_path_or_default(
-                controller_input, feature.path, feature.default
-            )
+            value = _resolve_path_or_default(controller_input, feature.path, feature.default)
             # Validate every supplied value before applying a sensor mask. This
             # mirrors the firmware fail-safe contract: NaN/Inf is never an
             # encoding for "missing"; use a false mask plus a finite value or
@@ -95,9 +93,7 @@ class Contract:
                 validity_path = f"validity.{sensor_name}"
                 validity_feature = feature_by_path.get(validity_path)
                 if validity_feature is None:
-                    raise ValueError(
-                        f"contract has no validity feature for {feature.path!r}"
-                    )
+                    raise ValueError(f"contract has no validity feature for {feature.path!r}")
                 valid = _resolve_path_or_default(
                     controller_input, validity_path, validity_feature.default
                 )
@@ -207,9 +203,7 @@ def _resolve_path(document: Mapping[str, Any], path: str) -> Any:
     return current
 
 
-def _resolve_path_or_default(
-    document: Mapping[str, Any], path: str, default: Any
-) -> Any:
+def _resolve_path_or_default(document: Mapping[str, Any], path: str, default: Any) -> Any:
     try:
         return _resolve_path(document, path)
     except KeyError:

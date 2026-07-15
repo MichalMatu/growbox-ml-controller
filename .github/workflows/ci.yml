@@ -30,8 +30,14 @@ jobs:
       - name: Install pinned dependencies
         run: python -m pip install -r requirements-lock.txt
 
+      - name: Install dev tooling
+        run: python -m pip install -r requirements-dev.txt
+
       - name: Verify dependency resolution
         run: python -m pip check
+
+      - name: Run pre-commit quality gate
+        run: pre-commit run --all-files
 
       - name: Run Python tests
         run: python -m pytest
@@ -53,6 +59,12 @@ jobs:
       - name: Run portable C++ tests
         run: ctest --test-dir build/host-tests --output-on-failure
 
+      - name: Install LLVM clang-tidy
+        run: sudo apt-get update && sudo apt-get install -y clang-tidy
+
+      - name: Host clang-tidy (portable controller)
+        run: bash scripts/run_clang_tidy_host.sh
+
   esp-idf-build:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
@@ -66,4 +78,7 @@ jobs:
           esp_idf_version: v5.5.1
           target: esp32s3
           path: .
-          command: idf.py -B build/idf-ci -D GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n8 build
+          command: |
+            python "$IDF_PATH/tools/idf_tools.py" install esp-clang
+            idf.py -B build/idf-ci -D GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n8 build
+            idf.py -B build/idf-ci clang-check --exit-code src

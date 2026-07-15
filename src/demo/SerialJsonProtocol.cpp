@@ -22,7 +22,7 @@ const char* readString(const cJSON* object, const char* key) noexcept {
   return cJSON_IsString(value) && value->valuestring != nullptr ? value->valuestring : nullptr;
 }
 
-}  // namespace
+} // namespace
 
 SerialJsonProtocol::~SerialJsonProtocol() noexcept {
   if (line_ != nullptr) {
@@ -34,8 +34,8 @@ SerialJsonProtocol::~SerialJsonProtocol() noexcept {
 esp_err_t SerialJsonProtocol::begin() noexcept {
   if (line_ == nullptr) {
     constexpr std::size_t kLineCapacity = kMaximumLineBytes + 1U;
-    line_ = static_cast<char*>(heap_caps_malloc(
-        kLineCapacity, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
+    line_ =
+        static_cast<char*>(heap_caps_malloc(kLineCapacity, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
     if (line_ == nullptr) {
       line_ = static_cast<char*>(heap_caps_malloc(kLineCapacity, MALLOC_CAP_8BIT));
     }
@@ -275,5 +275,5 @@ void SerialJsonProtocol::writeJson(cJSON* document) const noexcept {
   wire::emitJsonDocument(document);
 }
 
-}  // namespace demo
-}  // namespace growbox
+} // namespace demo
+} // namespace growbox

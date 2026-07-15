@@ -264,9 +264,9 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
                       input.monotonic_time_ms, humidifier_, report, humidifierIndex);
   }
   if (input.actuators.irrigation_pump.control_type == ActuatorControlType::Binary) {
-    safe.irrigation = enforceBinary(safe.irrigation, input.previous.irrigation, threshold, 0.0f,
-                                    0.0f, input.monotonic_time_ms, irrigation_, report,
-                                    irrigationIndex);
+    safe.irrigation =
+        enforceBinary(safe.irrigation, input.previous.irrigation, threshold, 0.0f, 0.0f,
+                      input.monotonic_time_ms, irrigation_, report, irrigationIndex);
   }
 
   const bool heater_control_type_valid =
@@ -316,8 +316,8 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
   const bool humidifier_control_type_valid =
       input.actuators.humidifier.control_type == ActuatorControlType::Binary ||
       input.actuators.humidifier.control_type == ActuatorControlType::Pwm;
-  const bool humidifier_capability_valid = input.actuators.humidifier.max_output_g_h > 0.0f &&
-                                           humidifier_control_type_valid;
+  const bool humidifier_capability_valid =
+      input.actuators.humidifier.max_output_g_h > 0.0f && humidifier_control_type_valid;
   if (!input.actuators.humidifier.available || !humidifier_capability_valid) {
     if (!input.actuators.humidifier.available) {
       addReason(report, humidifierIndex, SafetyReason::ActuatorUnavailable);

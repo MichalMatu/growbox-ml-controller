@@ -83,6 +83,30 @@ For a standard ESP-IDF installation, activate it before running firmware command
 idf.py --version
 ```
 
+## Quality gate (local)
+
+One-time setup installs pre-commit hooks and dev linters:
+
+```bash
+make setup-dev
+```
+
+| Command | When |
+|---------|------|
+| `make check-fast` | Lint/format + schema check (matches CI pre-commit step) |
+| `make check` | Full gate: pre-commit + pre-push steps below |
+| `make check-push` | pytest, host C++ tests, **idf build** (N8 gate), **clang-tidy** (lib) |
+| `make idf-gate-build` | Firmware compile gate only (`build/idf-gate`, fast N8 profile) |
+| `make clang-tidy-host` | Static analysis on portable controller (`lib/environment_control`) |
+| `make fmt` | Auto-fix Python (ruff) and C++ (clang-format) on the tree |
+
+On `git commit`, fast hooks run on staged files. On `git push`, `make check-push` runs
+(`scripts/quality_gate_push.sh`). Requires ESP-IDF in the shell (`source export.sh`). For
+`idf.py clang-check` in CI, install esp-clang once: `python $IDF_PATH/tools/idf_tools.py install esp-clang`.
+
+Skip temporarily: `SKIP=quality-gate-push git push`, `SKIP_IDF_BUILD=1`, `SKIP_CLANG_TIDY=1`, or
+`git commit --no-verify` when needed.
+
 ## Quick start
 
 ```bash

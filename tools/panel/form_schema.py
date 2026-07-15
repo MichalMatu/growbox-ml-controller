@@ -49,7 +49,11 @@ NOMINAL_PRESET: dict[str, Any] = {
             "minimum_command": 0.2,
             "control_type": "pwm",
         },
-        "humidifier": {"available": True, "max_output_g_h": 180.0, "control_type": "binary"},
+        "humidifier": {
+            "available": True,
+            "max_output_g_h": 180.0,
+            "control_type": "binary",
+        },
         "irrigation": {
             "available": True,
             "flow_ml_s": 22.0,
@@ -228,8 +232,7 @@ def build_panel_schema(contract: Contract | None = None) -> dict[str, Any]:
         }
         if feature.encoding is not None:
             field["options"] = [
-                {"value": name, "encoded": encoded}
-                for name, encoded in feature.encoding.items()
+                {"value": name, "encoded": encoded} for name, encoded in feature.encoding.items()
             ]
         sections.setdefault(section, []).append(field)
 

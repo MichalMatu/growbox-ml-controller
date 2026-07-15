@@ -6,7 +6,6 @@ import pytest
 
 from tools.ml.simulator import (
     ControlAction,
-    EnvironmentState,
     SequentialEnvironmentSimulator,
 )
 
@@ -53,15 +52,9 @@ def test_heating_humidification_ventilation_and_irrigation_have_effects(scenario
     )
     actuators = replace(
         scenario.actuators,
-        heater=replace(
-            scenario.actuators.heater, available=True, max_power_w=300.0
-        ),
-        fan=replace(
-            scenario.actuators.fan, available=True, max_airflow_m3_h=120.0
-        ),
-        humidifier=replace(
-            scenario.actuators.humidifier, available=True, max_output_g_h=150.0
-        ),
+        heater=replace(scenario.actuators.heater, available=True, max_power_w=300.0),
+        fan=replace(scenario.actuators.fan, available=True, max_airflow_m3_h=120.0),
+        humidifier=replace(scenario.actuators.humidifier, available=True, max_output_g_h=150.0),
         irrigation_pump=replace(
             scenario.actuators.irrigation_pump,
             available=True,
@@ -98,9 +91,7 @@ def test_soil_dries_slowly_without_pump(scenario):
 
 
 def test_unavailable_actuator_is_masked(scenario):
-    missing_heater = replace(
-        scenario.actuators.heater, available=False, max_power_w=0.0
-    )
+    missing_heater = replace(scenario.actuators.heater, available=False, max_power_w=0.0)
     scenario = replace(
         scenario,
         actuators=replace(scenario.actuators, heater=missing_heater),

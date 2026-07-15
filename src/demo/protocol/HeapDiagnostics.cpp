@@ -18,8 +18,7 @@ HeapSnapshot captureHeapSnapshot() noexcept {
   snapshot.free_psram = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
   snapshot.min_free_internal = heap_caps_get_minimum_free_size(MALLOC_CAP_INTERNAL);
   snapshot.min_free_psram = heap_caps_get_minimum_free_size(MALLOC_CAP_SPIRAM);
-  snapshot.largest_free_internal =
-      heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL);
+  snapshot.largest_free_internal = heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL);
   snapshot.largest_free_psram = heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM);
   if (snapshot.total_internal > snapshot.free_internal) {
     snapshot.used_internal = snapshot.total_internal - snapshot.free_internal;
@@ -38,6 +37,6 @@ TaskSnapshot captureTaskSnapshot() noexcept {
   return snapshot;
 }
 
-}  // namespace wire
-}  // namespace demo
-}  // namespace growbox
+} // namespace wire
+} // namespace demo
+} // namespace growbox

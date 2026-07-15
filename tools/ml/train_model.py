@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import dataclass
 import json
 import os
+from collections.abc import Mapping
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 import numpy as np
 
@@ -24,11 +25,11 @@ class TrainingConfig:
     export_weight_decimals: int = 5
 
     @classmethod
-    def quick(cls, seed: int = 1847) -> "TrainingConfig":
+    def quick(cls, seed: int = 1847) -> TrainingConfig:
         return cls(seed=seed, epochs=18, batch_size=32, learning_rate=0.025)
 
     @classmethod
-    def full(cls, seed: int = 1847) -> "TrainingConfig":
+    def full(cls, seed: int = 1847) -> TrainingConfig:
         return cls(seed=seed, epochs=70, batch_size=64, learning_rate=0.012)
 
 
@@ -126,9 +127,7 @@ def train(dataset: Dataset, config: TrainingConfig) -> TrainingResult:
 
     tf = configure_tensorflow_determinism(config.seed)
     tf.keras.backend.clear_session()
-    model = build_model(
-        dataset.features.shape[1], dataset.labels.shape[1], config=config
-    )
+    model = build_model(dataset.features.shape[1], dataset.labels.shape[1], config=config)
     optimizer = tf.keras.optimizers.SGD(
         learning_rate=config.learning_rate, momentum=0.0, nesterov=False
     )
@@ -147,15 +146,9 @@ def train(dataset: Dataset, config: TrainingConfig) -> TrainingResult:
             stop = start + batch_size
             model.train_on_batch(x_train[start:stop], y_train[start:stop])
         training_prediction = np.asarray(model(x_train, training=False), dtype=np.float32)
-        validation_prediction = np.asarray(
-            model(x_validation, training=False), dtype=np.float32
-        )
-        history_values["loss"].append(
-            float(np.mean(np.square(training_prediction - y_train)))
-        )
-        history_values["mae"].append(
-            float(np.mean(np.abs(training_prediction - y_train)))
-        )
+        validation_prediction = np.asarray(model(x_validation, training=False), dtype=np.float32)
+        history_values["loss"].append(float(np.mean(np.square(training_prediction - y_train))))
+        history_values["mae"].append(float(np.mean(np.abs(training_prediction - y_train))))
         history_values["val_loss"].append(
             float(np.mean(np.square(validation_prediction - y_validation)))
         )
@@ -175,9 +168,7 @@ def train(dataset: Dataset, config: TrainingConfig) -> TrainingResult:
     validation_prediction = np.asarray(model(x_validation, training=False), dtype=np.float32)
     test_prediction = np.asarray(model(x_test, training=False), dtype=np.float32)
     metrics: dict[str, object] = {
-        "validation": prediction_metrics(
-            y_validation, validation_prediction, dataset.output_names
-        ),
+        "validation": prediction_metrics(y_validation, validation_prediction, dataset.output_names),
         "test": prediction_metrics(y_test, test_prediction, dataset.output_names),
         "parameter_count": int(model.count_params()),
         "epochs": config.epochs,

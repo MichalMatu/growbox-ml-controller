@@ -38,6 +38,6 @@ void emitScenarioSnapshot(const DummyEnvironmentSimulator& simulator) noexcept {
   emitJsonDocument(buildScenarioDocument(simulator.input(), simulator.seed()));
 }
 
-}  // namespace wire
-}  // namespace demo
-}  // namespace growbox
+} // namespace wire
+} // namespace demo
+} // namespace growbox

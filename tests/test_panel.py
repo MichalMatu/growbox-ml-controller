@@ -1,10 +1,10 @@
 """Tests for the growbox control panel helpers."""
 
-from collections import deque
 import json
 import threading
-from http.server import ThreadingHTTPServer
 import urllib.request
+from collections import deque
+from http.server import ThreadingHTTPServer
 
 from tools.panel.bridge import SerialBridge
 from tools.panel.form_schema import build_panel_schema, default_scenario
@@ -61,7 +61,9 @@ def test_bridge_ignores_stale_status_after_transport_command():
     bridge._state["last_status"] = {"mode": "closed_loop", "paused": False, "step": 1}
     bridge._last_status_tx_at = 10.0
     bridge._last_transport_tx_at = 11.0
-    bridge._apply_status_message({"type": "status", "mode": "closed_loop", "paused": True, "step": 1})
+    bridge._apply_status_message(
+        {"type": "status", "mode": "closed_loop", "paused": True, "step": 1}
+    )
     assert bridge._state["last_status"]["paused"] is False
 
 
@@ -138,7 +140,13 @@ def test_bridge_light_status_preserves_scenario_snapshot():
         "scenario": {"actuators": {"irrigation": {"available": False}}},
     }
     bridge._apply_status_message(
-        {"type": "status", "mode": "closed_loop", "paused": True, "step": 1, "seed": 101}
+        {
+            "type": "status",
+            "mode": "closed_loop",
+            "paused": True,
+            "step": 1,
+            "seed": 101,
+        }
     )
     status = bridge._state["last_status"]
     assert status["paused"] is True
@@ -161,7 +169,11 @@ def test_bridge_stores_diagnostics_message():
     bridge._handle_message(
         {
             "type": "diagnostics",
-            "heap": {"psram_enabled": True, "free_internal": 120000, "free_psram": 7000000},
+            "heap": {
+                "psram_enabled": True,
+                "free_internal": 120000,
+                "free_psram": 7000000,
+            },
             "task": {"main_stack_free_bytes": 4096},
         }
     )
@@ -180,7 +192,7 @@ def test_panel_serves_static_assets():
             "/favicon.ico": (b"<svg", "image"),
             "/favicon.svg": (b"<svg", "image"),
             "/panel.css": (b":root", "text/css"),
-            "/js/state.js": (b"let panelSchema", "javascript"),
+            "/js/state.js": (b"var panelSchema", "javascript"),
             "/js/main.js": (b"async function init", "javascript"),
         }
         for path, (needle, kind) in cases.items():

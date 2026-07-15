@@ -1,0 +1,3 @@
+# Local quality gates (pre-commit, lint). Install via: make setup-dev
+pre-commit==4.2.0
+ruff==0.11.2

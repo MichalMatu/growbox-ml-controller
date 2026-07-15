@@ -8,7 +8,7 @@ namespace growbox {
 namespace demo {
 
 class DummyEnvironmentSimulator {
- public:
+public:
   static constexpr float kDefaultStepSeconds = 10.0f;
 
   DummyEnvironmentSimulator() noexcept;
@@ -23,11 +23,17 @@ class DummyEnvironmentSimulator {
   void advance(const control::SafeControlDecision& decision,
                float step_seconds = kDefaultStepSeconds) noexcept;
 
-  control::ControllerInput& input() noexcept { return input_; }
-  const control::ControllerInput& input() const noexcept { return input_; }
-  std::uint32_t seed() const noexcept { return initial_seed_; }
+  control::ControllerInput& input() noexcept {
+    return input_;
+  }
+  const control::ControllerInput& input() const noexcept {
+    return input_;
+  }
+  std::uint32_t seed() const noexcept {
+    return initial_seed_;
+  }
 
- private:
+private:
   float uniformSigned() noexcept;
   static float clamp(float value, float lower, float upper) noexcept;
 
@@ -39,5 +45,5 @@ class DummyEnvironmentSimulator {
   float effective_humidifier_ = 0.0f;
 };
 
-}  // namespace demo
-}  // namespace growbox
+} // namespace demo
+} // namespace growbox
