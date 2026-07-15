@@ -512,6 +512,12 @@
       font-weight: 600;
       letter-spacing: 0.03em;
     }
+    .actuator-same {
+      font-size: 0.58rem;
+      color: var(--ok);
+      font-weight: 500;
+      opacity: 0.9;
+    }
     .output-line {
       display: grid;
       grid-template-columns: 3.4rem 1fr 2.1rem;
@@ -878,7 +884,8 @@
             <li><strong>Model</strong> (niebieski) — co proponuje sieć neuronowa (0–100% mocy)</li>
             <li><strong>Safety</strong> (zielony) — co faktycznie idzie na płytkę po regułach bezpieczeństwa</li>
           </ul>
-          <p>Gdy model i safety się różnią, karta aktuatora jest podświetlona na pomarańczowo.</p>
+          <p>Pomarańczowa ramka i znak <strong>≠</strong> — tylko tam, gdzie safety <em>tego aktuatora</em> zmieniło wyjście modelu.</p>
+          <p>Jeśli oba paski są takie same (np. fan 14% / 14%), karta ma etykietę <strong>bez zmian</strong> — safety przepuściło propozycję modelu.</p>
           <p>Na dole: czy safety coś zmieniło i dlaczego (np. próg ON/OFF, min. przerwa pompy, alarm temperatury).</p>
           <p>Przyciski JSON — surowe dane do debugowania i eksportu scenariusza.</p>
         `,
@@ -1410,7 +1417,9 @@
       return `<article class="actuator-card${differs ? " differs" : ""}">
         <div class="actuator-head">
           <span class="actuator-name">${label}</span>
-          ${differs ? '<span class="actuator-diff" title="Model i safety się różnią">≠</span>' : ""}
+          ${differs
+            ? '<span class="actuator-diff" title="Safety zmieniło wyjście tego aktuatora">≠</span>'
+            : '<span class="actuator-same" title="Model i safety zgodne — bez korekty">bez zmian</span>'}
         </div>
         <div class="output-line model">
           <span class="lane-label">Model</span>
