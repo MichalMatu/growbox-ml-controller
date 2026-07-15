@@ -37,6 +37,8 @@ struct SensorState {
   float soil_moisture_pct = detail::schemaDefault(schema::FeatureIndex::SoilMoisturePct);
   float outside_temperature_c = detail::schemaDefault(schema::FeatureIndex::OutsideTemperatureC);
   float outside_humidity_pct = detail::schemaDefault(schema::FeatureIndex::OutsideHumidityPct);
+  // Simulation-only boundary condition; not encoded into the ML feature vector.
+  float outside_co2_ppm = 420.0f;
 };
 
 struct SensorValidity {

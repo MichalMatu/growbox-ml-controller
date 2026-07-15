@@ -203,6 +203,10 @@
     .panel-toolbar .mini-cell.toolbar-cell-wide {
       min-width: 12.6rem;
     }
+    .panel-toolbar .mini-cell.toolbar-cell-seed {
+      min-width: 4.6rem;
+      width: 4.6rem;
+    }
     .toolbar-btn-stack {
       display: flex;
       flex-direction: row;
@@ -533,6 +537,16 @@
     .live-data-table tr.invalid th,
     .live-data-table tr.invalid td { opacity: 0.55; }
     .live-data-table tr.env-row th { font-style: normal; }
+    .live-data-table tr.group-row th {
+      font-size: 0.58rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      background: rgba(15, 20, 25, 0.55);
+      padding-top: 0.38rem;
+    }
+    .live-data-table tbody tr.group-row:first-child th { padding-top: 0.3rem; }
     .live-invalid {
       font-size: 0.62rem;
       color: var(--warn);
@@ -859,6 +873,11 @@
               <button type="button" class="badge-btn" data-ui="reset" data-cmd='{"command":"reset"}'>Reset</button>
             </div>
           </div>
+          <div class="mini-cell toolbar-cell toolbar-cell-seed" aria-label="Seed symulatora">
+            <div class="head-row"><span class="name">Seed</span></div>
+            <input type="number" id="seed" min="0" step="1" value="101"
+              title="Ziarno symulatora — wysyłane przy Wyślij" />
+          </div>
         </div>
       </div>
       <div id="form-sections" class="card-stack"></div>
@@ -1008,7 +1027,7 @@
             <li><strong>Scenariusz</strong> — <strong>Wyślij</strong> (cały formularz na płytkę), <strong>Domyślne</strong> (reset formularza)</li>
             <li><strong>Praca</strong> — <strong>▶ / ■</strong>, <strong>Replay</strong> / <strong>Loop</strong>, <strong>Krok</strong></li>
             <li><strong>Diag.</strong> — <strong>Status</strong> (odśwież z płytki), <strong>Reset</strong> (symulacja krok 0)</li>
-            <li><strong>Seed</strong> — w Czujnikach (wysyłane przy Wyślij)</li>
+            <li><strong>Seed</strong> — ziarno symulatora; ta sama wartość + te same odczyty = powtarzalna symulacja (wysyłane przy <strong>Wyślij</strong>)</li>
             <li><strong>Połącz / ×</strong> — górny pasek, port USB</li>
             <li><strong>Na żywo</strong> — prawa kolumna: tylko podgląd decyzji</li>
           </ul>
@@ -1017,12 +1036,11 @@
       sensors: {
         title: "Czujniki",
         html: `
-          <p>Sześć wejść pomiarowych modelu v1. Wartości trafiają do <code>load_scenario</code> i kolejnych kroków.</p>
+          <p>Siedem odczytów w scenariuszu: sześć wejść modelu v1 + CO₂ zewnętrzne (tylko symulacja).</p>
           <ul>
-            <li><strong>T wewn., wilgotność, CO₂, gleba</strong> — stan w growboxie</li>
-            <li><strong>T zewn., wilg. zewn.</strong> — warunki na zewnątrz (wpływ na symulację)</li>
-            <li><strong>Checkbox</strong> — ważność odczytu; odznaczony = czujnik nieważny (safety może wymusić tryb awaryjny)</li>
-            <li><strong>Seed</strong> — ziarno generatora symulatora; ta sama wartość + te same odczyty = powtarzalna symulacja (wysyłane przy <strong>Wyślij</strong>)</li>
+            <li><strong>Wewnętrzne</strong> — T, wilgotność, CO₂, gleba (stan w growboxie, wejścia ML)</li>
+            <li><strong>Zewnętrzne</strong> — T, wilgotność i CO₂ na zewnątrz (wpływ na symulację; CO₂ zewn. nie trafia do modelu)</li>
+            <li><strong>Checkbox</strong> — ważność odczytu ML; odznaczony = czujnik nieważny (safety może wymusić tryb awaryjny)</li>
           </ul>
         `,
       },
@@ -1298,6 +1316,7 @@
       soil_moisture_pct: "Gleba",
       outside_temperature_c: "T zewn.",
       outside_humidity_pct: "Wilg. zewn.",
+      outside_co2_ppm: "CO₂ zewn.",
       growbox_volume_m3: "Obj. m³",
       thermal_mass_j_per_k: "Ciepło J/K",
       heat_loss_w_per_k: "Strata W/K",
@@ -1327,22 +1346,48 @@
       previous_irrigation: "Pompa",
     };
 
-    const SENSOR_VALIDITY = [
-      ["air_temperature_c", "air_temperature_c"],
-      ["air_humidity_pct", "air_humidity_pct"],
-      ["co2_ppm", "co2_ppm"],
-      ["soil_moisture_pct", "soil_moisture_pct"],
-      ["outside_temperature_c", "outside_temperature_c"],
-      ["outside_humidity_pct", "outside_humidity_pct"],
+    const SIMULATION_SENSOR_FIELDS = {
+      outside_co2_ppm: { minimum: 0, maximum: 5000, default: 420 },
+    };
+
+    const SENSOR_GROUPS = [
+      {
+        title: "Wewnętrzne",
+        sensors: [
+          ["air_temperature_c", "air_temperature_c"],
+          ["air_humidity_pct", "air_humidity_pct"],
+          ["co2_ppm", "co2_ppm"],
+          ["soil_moisture_pct", "soil_moisture_pct"],
+        ],
+      },
+      {
+        title: "Zewnętrzne",
+        sensors: [
+          ["outside_temperature_c", "outside_temperature_c"],
+          ["outside_humidity_pct", "outside_humidity_pct"],
+          ["outside_co2_ppm", null],
+        ],
+      },
     ];
 
-    const LIVE_SENSOR_METRICS = [
-      { key: "air_temperature_c", label: "Temp.", targetKey: "air_temperature_c", decimals: 1, unit: "°C" },
-      { key: "air_humidity_pct", label: "Wilg.", targetKey: "air_humidity_pct", decimals: 0, unit: "%" },
-      { key: "co2_ppm", label: "CO₂", targetKey: "co2_ppm", decimals: 0, unit: " ppm" },
-      { key: "soil_moisture_pct", label: "Gleba", targetKey: "soil_moisture_pct", decimals: 0, unit: "%" },
-      { key: "outside_temperature_c", label: "T zewn.", targetKey: null, decimals: 1, unit: "°C" },
-      { key: "outside_humidity_pct", label: "Wilg. zewn.", targetKey: null, decimals: 0, unit: "%" },
+    const LIVE_SENSOR_GROUPS = [
+      {
+        title: "Wewnętrzne",
+        metrics: [
+          { key: "air_temperature_c", label: "Temp.", targetKey: "air_temperature_c", decimals: 1, unit: "°C" },
+          { key: "air_humidity_pct", label: "Wilg.", targetKey: "air_humidity_pct", decimals: 0, unit: "%" },
+          { key: "co2_ppm", label: "CO₂", targetKey: "co2_ppm", decimals: 0, unit: " ppm" },
+          { key: "soil_moisture_pct", label: "Gleba", targetKey: "soil_moisture_pct", decimals: 0, unit: "%" },
+        ],
+      },
+      {
+        title: "Zewnętrzne",
+        metrics: [
+          { key: "outside_temperature_c", label: "T zewn.", targetKey: null, decimals: 1, unit: "°C" },
+          { key: "outside_humidity_pct", label: "Wilg. zewn.", targetKey: null, decimals: 0, unit: "%" },
+          { key: "outside_co2_ppm", label: "CO₂ zewn.", targetKey: null, decimals: 0, unit: " ppm", simulationOnly: true },
+        ],
+      },
     ];
 
     function formatLiveSensorValue(value, decimals) {
@@ -1393,24 +1438,36 @@
       el.innerHTML = parts.join(" · ");
     }
 
+    function sensorFieldMeta(sensorKey) {
+      return fieldByName(sensorKey) || SIMULATION_SENSOR_FIELDS[sensorKey] || null;
+    }
+
+    function renderLiveMetricRow(metric, sensors, targets, validity) {
+      const valueText = formatLiveSensorValue(sensors[metric.key], metric.decimals);
+      const valid = metric.simulationOnly || validity[metric.key] !== false;
+      const targetText = metric.targetKey
+        ? formatLiveTargetValue(targets[metric.targetKey], metric.decimals, metric.unit)
+        : "—";
+      const invalidMark = valid ? "" : '<span class="live-invalid" title="Czujnik nieważny">⊘</span>';
+      const envClass = metric.targetKey ? "" : " env-row";
+      const invalidClass = valid ? "" : " invalid";
+      return `<tr class="${envClass}${invalidClass}">
+        <th scope="row">${metric.label}${invalidMark}</th>
+        <td class="num"><strong>${valueText}${metric.unit}</strong></td>
+        <td class="num">${targetText}</td>
+      </tr>`;
+    }
+
     function renderLiveMetricsTable(decision) {
       const sensors = decision?.sensors || {};
       const targets = decision?.targets || {};
       const validity = decision?.validity || {};
-      const rows = LIVE_SENSOR_METRICS.map(metric => {
-        const valueText = formatLiveSensorValue(sensors[metric.key], metric.decimals);
-        const valid = validity[metric.key] !== false;
-        const targetText = metric.targetKey
-          ? formatLiveTargetValue(targets[metric.targetKey], metric.decimals, metric.unit)
-          : "—";
-        const invalidMark = valid ? "" : '<span class="live-invalid" title="Czujnik nieważny">⊘</span>';
-        const envClass = metric.targetKey ? "" : " env-row";
-        const invalidClass = valid ? "" : " invalid";
-        return `<tr class="${envClass}${invalidClass}">
-          <th scope="row">${metric.label}${invalidMark}</th>
-          <td class="num"><strong>${valueText}${metric.unit}</strong></td>
-          <td class="num">${targetText}</td>
-        </tr>`;
+      const rows = LIVE_SENSOR_GROUPS.map(group => {
+        const header = `<tr class="group-row"><th scope="row" colspan="3">${group.title}</th></tr>`;
+        const metricRows = group.metrics.map(metric =>
+          renderLiveMetricRow(metric, sensors, targets, validity)
+        ).join("");
+        return `${header}${metricRows}`;
       }).join("");
       return `<div class="live-data-table-wrap">
         <table class="live-data-table" aria-label="Czujniki i cele">
@@ -1554,34 +1611,48 @@
       updateModalLock();
     }
 
+    function renderSensorMiniCell(sensorKey, validityKey) {
+      const sensorField = sensorFieldMeta(sensorKey);
+      if (!sensorField) return "";
+      const sId = `f-sensors_${sensorKey}`;
+      const sVal = getNested(scenario, `sensors.${sensorKey}`);
+      const sensorPath = `sensors.${sensorKey}`;
+      const step = fieldStepForPath(sensorPath);
+      const displayValue = formatFieldNumber(sVal ?? sensorField.default, sensorPath);
+      const validityControl = validityKey
+        ? (() => {
+            const vId = `f-validity_${validityKey}`;
+            const vVal = getNested(scenario, `validity.${validityKey}`);
+            return `<input type="checkbox" data-path="validity.${validityKey}" id="${vId}" title="Czujnik ważny" ${vVal ? "checked" : ""} />`;
+          })()
+        : "";
+      return `<div class="mini-cell">
+        <div class="head-row">
+          <span class="name">${shortLabel(sensorKey)}</span>
+          ${validityControl}
+        </div>
+        <input type="number" data-path="${sensorPath}" id="${sId}"
+          min="${sensorField.minimum}" max="${sensorField.maximum}" step="${step}" value="${displayValue}" />
+      </div>`;
+    }
+
+    function renderSensorSubCard(title, sensors) {
+      const cells = sensors.map(([sensorKey, validityKey]) =>
+        renderSensorMiniCell(sensorKey, validityKey)
+      ).join("");
+      return `<div class="sub-card"><div class="card-head"><h3>${title}</h3></div><div class="compact-row">${cells}</div></div>`;
+    }
+
     function renderSensorBlock() {
-      const rows = SENSOR_VALIDITY.map(([sensorKey, validityKey]) => {
-        const sensorField = fieldByName(sensorKey);
-        const sId = `f-sensors_${sensorKey}`;
-        const vId = `f-validity_${validityKey}`;
-        const sVal = getNested(scenario, `sensors.${sensorKey}`);
-        const vVal = getNested(scenario, `validity.${validityKey}`);
-        const sensorPath = `sensors.${sensorKey}`;
-        const step = fieldStepForPath(sensorPath);
-        const displayValue = formatFieldNumber(sVal ?? sensorField.default, sensorPath);
-        return `<div class="mini-cell">
-          <div class="head-row">
-            <span class="name">${shortLabel(sensorKey)}</span>
-            <input type="checkbox" data-path="validity.${validityKey}" id="${vId}" title="Czujnik ważny" ${vVal ? "checked" : ""} />
-          </div>
-          <input type="number" data-path="${sensorPath}" id="${sId}"
-            min="${sensorField.minimum}" max="${sensorField.maximum}" step="${step}" value="${displayValue}" />
-        </div>`;
-      }).join("");
-      const seedVal = scenario.seed ?? 101;
-      const seedCell = `<div class="mini-cell">
-          <div class="head-row">
-            <span class="name">Seed</span>
-          </div>
-          <input type="number" id="seed" min="0" step="1" value="${seedVal}"
-            title="Ziarno symulatora — wysyłane przy Wyślij" />
-        </div>`;
-      return `<div class="card">${renderSectionHead("Czujniki", "sensors")}<div class="compact-row sensor-grid">${rows}${seedCell}</div></div>`;
+      const left = renderSensorSubCard(SENSOR_GROUPS[0].title, SENSOR_GROUPS[0].sensors);
+      const right = renderSensorSubCard(SENSOR_GROUPS[1].title, SENSOR_GROUPS[1].sensors);
+      return `<div class="card growbox-panel">${renderSectionHead("Czujniki", "sensors")}<div class="growbox-split">${left}${right}</div></div>`;
+    }
+
+    function updateSeedInput() {
+      const el = document.getElementById("seed");
+      if (!el) return;
+      el.value = String(scenario.seed ?? 101);
     }
 
     function isWideField(field) {
@@ -1735,6 +1806,7 @@
       if (!panelSchema) return;
       const root = document.getElementById("form-sections");
       root.innerHTML = renderSensorBlock();
+      updateSeedInput();
       root.innerHTML += renderGrowboxPanel();
       for (const section of panelSchema.sections) {
         if (section.id === "sensors" || section.id === "validity"
@@ -2026,6 +2098,12 @@
       root.addEventListener("input", (event) => {
         if (event.target && event.target.type === "number") collectScenario();
       });
+      const toolbar = document.getElementById("panel-toolbar");
+      const onSeedChange = (event) => {
+        if (event.target?.id === "seed") collectScenario();
+      };
+      toolbar?.addEventListener("change", onSeedChange);
+      toolbar?.addEventListener("input", onSeedChange);
     }
 
     async function init() {

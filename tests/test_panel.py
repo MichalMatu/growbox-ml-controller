@@ -19,6 +19,7 @@ def test_default_scenario_has_nominal_actuators():
     assert scenario["actuators"]["humidifier"]["control_type"] == "binary"
     assert scenario["actuators"]["irrigation"]["control_type"] == "binary"
     assert scenario["sensors"]["air_temperature_c"] == 22.0
+    assert scenario["sensors"]["outside_co2_ppm"] == 420.0
 
 
 def test_panel_schema_matches_contract_feature_count():

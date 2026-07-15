@@ -14,6 +14,7 @@ NOMINAL_PRESET: dict[str, Any] = {
         "soil_moisture_pct": 44.0,
         "outside_temperature_c": 18.0,
         "outside_humidity_pct": 52.0,
+        "outside_co2_ppm": 420.0,
     },
     "validity": {
         "air_temperature_c": True,

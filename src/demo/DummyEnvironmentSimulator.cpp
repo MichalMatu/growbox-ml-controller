@@ -7,7 +7,6 @@ namespace demo {
 
 namespace {
 constexpr float kSecondsPerHour = 3600.0f;
-constexpr float kOutdoorCo2Ppm = 420.0f;
 }
 
 DummyEnvironmentSimulator::DummyEnvironmentSimulator() noexcept { reset(); }
@@ -20,6 +19,7 @@ void DummyEnvironmentSimulator::reset(std::uint32_t seed) noexcept {
   input_.sensors.soil_moisture_pct = 44.0f;
   input_.sensors.outside_temperature_c = 18.0f;
   input_.sensors.outside_humidity_pct = 52.0f;
+  input_.sensors.outside_co2_ppm = 420.0f;
   input_.validity.air_temperature = true;
   input_.validity.air_humidity = true;
   input_.validity.co2 = true;
@@ -144,7 +144,8 @@ void DummyEnvironmentSimulator::advance(const control::SafeControlDecision& deci
       exchange_fraction * (input_.sensors.outside_humidity_pct - input_.sensors.air_humidity_pct);
 
   input_.sensors.co2_ppm += 0.4f * input_.cultivation.transpiration_factor * step_seconds;
-  input_.sensors.co2_ppm += exchange_fraction * (kOutdoorCo2Ppm - input_.sensors.co2_ppm);
+  input_.sensors.co2_ppm +=
+      exchange_fraction * (input_.sensors.outside_co2_ppm - input_.sensors.co2_ppm);
 
   const float capacity =
       clamp(input_.cultivation.substrate_water_capacity_ml, 10.0f, 100000.0f);

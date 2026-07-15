@@ -38,6 +38,14 @@ bool readFiniteFloat(const cJSON* object, const char* key, float& destination) n
   return true;
 }
 
+bool readOptionalFiniteFloat(const cJSON* object, const char* key, float& destination) noexcept {
+  const cJSON* value = item(object, key);
+  if (value == nullptr || cJSON_IsNull(value)) {
+    return true;
+  }
+  return readFiniteFloat(object, key, destination);
+}
+
 bool readBool(const cJSON* object, const char* key, bool& destination) noexcept {
   const cJSON* value = item(object, key);
   if (!cJSON_IsBool(value)) {
@@ -75,7 +83,8 @@ bool parseSensors(const cJSON* object, control::SensorState& sensors) noexcept {
          readFiniteFloat(object, control::schema::wireKey(FeatureIndex::OutsideTemperatureC),
                          sensors.outside_temperature_c) &&
          readFiniteFloat(object, control::schema::wireKey(FeatureIndex::OutsideHumidityPct),
-                         sensors.outside_humidity_pct);
+                         sensors.outside_humidity_pct) &&
+         readOptionalFiniteFloat(object, "outside_co2_ppm", sensors.outside_co2_ppm);
 }
 
 bool parseValidity(const cJSON* object, control::SensorValidity& validity) noexcept {
@@ -174,6 +183,7 @@ void addScenarioSnapshot(cJSON* document, const control::ControllerInput& input)
                           input.sensors.outside_temperature_c);
   cJSON_AddNumberToObject(sensors, control::schema::wireKey(FeatureIndex::OutsideHumidityPct),
                           input.sensors.outside_humidity_pct);
+  cJSON_AddNumberToObject(sensors, "outside_co2_ppm", input.sensors.outside_co2_ppm);
 
   cJSON* validity = cJSON_AddObjectToObject(document, control::schema::kWireRootValidity);
   cJSON_AddBoolToObject(validity, control::schema::wireKey(FeatureIndex::AirTemperatureValid),
