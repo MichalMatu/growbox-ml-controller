@@ -75,6 +75,18 @@ def test_e2e_load_scenario_all_presets(panel_http_server):
         assert len(sent["zones"]) == 4
 
 
+def test_default_scenario_has_all_v2_sections():
+    scenario = default_scenario()
+    assert isinstance(scenario["zones"], list)
+    assert len(scenario["zones"]) == 4
+    assert "pseudo" in scenario
+    assert "lights_active" in scenario["pseudo"]
+    assert len(scenario["previous"]) == 6
+    assert "dehumidifier" in scenario["previous"]
+    assert "irrigation_zone_1" not in scenario["previous"]
+    assert scenario["zones"][0]["irrigation"]["control_type"] in {"binary", "pwm"}
+
+
 def test_saturated_soil_preset_has_high_moisture():
     scenario = default_scenario(seed=1, preset="saturated_soil")
     zone0 = scenario["zones"][0]

@@ -293,17 +293,49 @@ function renderGrowboxPanel() {
   return `<div class="card growbox-panel">${renderSubCard(env.title, env.fields, "environment")}</div>`;
 }
 
+const ZONE_FIELD_GROUPS = [
+  { title: "Aktywna", match: path => path.endsWith(".available") },
+  {
+    title: "Czujniki gleby",
+    match: path => path.includes(".sensors.") || path.includes(".validity."),
+  },
+  { title: "Uprawa", match: path => path.includes(".cultivation.") },
+  { title: "Cel gleby", match: path => path.includes(".targets.") },
+  {
+    title: "Pompa",
+    match: path => path.includes(".irrigation.") || path.includes(".previous."),
+  },
+];
+
+function groupZoneFields(fields) {
+  const groups = ZONE_FIELD_GROUPS.map(group => ({
+    title: group.title,
+    fields: fields.filter(field => group.match(field.path)),
+  })).filter(group => group.fields.length > 0);
+  const matched = new Set(groups.flatMap(group => group.fields));
+  const rest = fields.filter(field => !matched.has(field));
+  if (rest.length) groups.push({ title: "Inne", fields: rest });
+  return groups;
+}
+
+function renderZoneCard(fields, index) {
+  if (!fields.length) return "";
+  const groups = groupZoneFields(fields)
+    .map(group => {
+      const cells = group.fields.map(renderMiniCell).join("");
+      return `<div class="zone-subgroup"><div class="zone-subgroup-head">${group.title}</div><div class="compact-row">${cells}</div></div>`;
+    })
+    .join("");
+  return `<div class="sub-card zone-card"><div class="card-head"><h3>Strefa ${index + 1}</h3></div>${groups}</div>`;
+}
+
 function renderZonesBlock(section) {
   const zones = [[], [], [], []];
   for (const field of section.fields) {
     const match = field.path.match(/^zones\.(\d+)\./);
     if (match) zones[Number(match[1])].push(field);
   }
-  const cards = zones.map((fields, index) => {
-    if (!fields.length) return "";
-    const cells = fields.map(renderMiniCell).join("");
-    return `<div class="sub-card zone-card"><div class="card-head"><h3>Strefa ${index + 1}</h3></div><div class="compact-row">${cells}</div></div>`;
-  }).join("");
+  const cards = zones.map((fields, index) => renderZoneCard(fields, index)).join("");
   return `<div class="card zones-panel">${renderSectionHead(section.title, "zones")}<div class="zones-grid">${cards}</div></div>`;
 }
 
@@ -364,8 +396,7 @@ function renderForm() {
   if (safetyRoot) safetyRoot.innerHTML = "";
   for (const section of panelSchema.sections) {
     if (section.id === "sensors" || section.id === "validity"
-        || section.id === "environment" || section.id === "cultivation"
-        || section.id === "previous") continue;
+        || section.id === "environment" || section.id === "cultivation") continue;
     if (section.id === "zones") {
       root.innerHTML += renderZonesBlock(section);
       continue;
@@ -379,7 +410,7 @@ function renderForm() {
       if (safetyRoot) {
         safetyRoot.innerHTML = renderFieldsSubCard(section, section.id);
       }
-    } else if (section.id === "targets") {
+    } else if (section.id === "targets" || section.id === "previous" || section.id === "pseudo") {
       root.innerHTML += renderFieldsSubCard(section, section.id);
     } else {
       const grid = document.createElement("div");

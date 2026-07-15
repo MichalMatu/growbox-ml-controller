@@ -103,6 +103,23 @@ const HELP_TOPICS = {
       <p>W panelu <strong>Na żywo</strong>, pod paskami aktuatorów. Po <strong>Krok</strong> pokazuje procenty z ostatnich wyjść <strong>Safety</strong> (kontekst modelu na następny krok).</p>
     `,
   },
+  zones: {
+    title: "Strefy uprawy",
+    html: `
+      <p>Do 4 donic — mix &amp; match. Każda strefa ma własne czujniki gleby, uprawę, cel wilgotności i pompę.</p>
+      <ul>
+        <li><strong>Aktywna</strong> — wyłączona strefa nie trafia do symulatora</li>
+        <li><strong>Czujniki</strong> — wilgotność i temp. gleby (osobne validity)</li>
+        <li><strong>Pompa</strong> — przepływ, impuls, przerwa, typ bin/pwm</li>
+      </ul>
+    `,
+  },
+  pseudo: {
+    title: "Wejścia pseudo",
+    html: `
+      <p><strong>lights_active</strong> — czy lampa świeci (harmonogram / readback przekaźnika). Wpływa na termikę symulatora, nie jest wyjściem ML.</p>
+    `,
+  },
   live: {
     title: "Na żywo",
     html: `

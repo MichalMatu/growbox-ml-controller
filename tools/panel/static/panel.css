@@ -656,6 +656,41 @@ button.primary { background: var(--accent); color: var(--on-accent); border-colo
 button.ghost { background: transparent; border-color: var(--border); color: var(--muted); }
 button.danger { background: var(--danger-bg); border-color: var(--danger); color: var(--danger-text); }
 
+.zones-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+@media (max-width: 900px) {
+  .zones-grid { grid-template-columns: 1fr; }
+}
+.zone-card {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.35rem 0.45rem 0.5rem;
+  background: var(--surface-subtle);
+}
+.zone-subgroup {
+  margin-top: 0.35rem;
+}
+.zone-subgroup-head {
+  font-size: var(--text-badge);
+  color: var(--muted);
+  margin-bottom: 0.15rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.preset-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 9rem;
+}
+.preset-picker .name {
+  font-size: var(--text-badge);
+  color: var(--muted);
+}
+
 .section-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

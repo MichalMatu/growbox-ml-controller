@@ -6,18 +6,75 @@ function escapeHtml(text) {
     .replaceAll('"', "&quot;");
 }
 
+function isIndexSegment(segment) {
+  return /^\d+$/.test(segment);
+}
+
+function coerceContainer(parent, key, nextKey) {
+  const existing = parent[key];
+  if (isIndexSegment(nextKey)) {
+    if (Array.isArray(existing)) return existing;
+    if (existing && typeof existing === "object") {
+      const arr = [];
+      for (const [idx, entry] of Object.entries(existing)) {
+        if (isIndexSegment(idx)) arr[Number(idx)] = entry;
+      }
+      parent[key] = arr;
+      return arr;
+    }
+    parent[key] = [];
+    return parent[key];
+  }
+  if (existing && typeof existing === "object" && !Array.isArray(existing)) return existing;
+  parent[key] = {};
+  return parent[key];
+}
+
 function setNested(obj, path, value) {
   const parts = path.split(".");
   let cur = obj;
-  for (let i = 0; i < parts.length - 1; i++) {
-    if (typeof cur[parts[i]] !== "object" || cur[parts[i]] === null) cur[parts[i]] = {};
-    cur = cur[parts[i]];
+  for (let i = 0; i < parts.length - 1; ) {
+    const key = parts[i];
+    if (isIndexSegment(key)) {
+      const index = Number(key);
+      const next = parts[i + 1];
+      if (cur[index] === undefined || cur[index] === null) {
+        cur[index] = isIndexSegment(next) ? [] : {};
+      }
+      cur = cur[index];
+      i += 1;
+      continue;
+    }
+    const next = parts[i + 1];
+    if (cur[key] === undefined || cur[key] === null) {
+      cur[key] = isIndexSegment(next) ? [] : {};
+    } else if (isIndexSegment(next)) {
+      cur[key] = coerceContainer({ [key]: cur[key] }, key, next);
+    }
+    if (isIndexSegment(next)) {
+      const index = Number(next);
+      if (cur[key][index] === undefined || cur[key][index] === null) {
+        cur[key][index] = isIndexSegment(parts[i + 2]) ? [] : {};
+      }
+      cur = cur[key][index];
+      i += 2;
+      continue;
+    }
+    cur = cur[key];
+    i += 1;
   }
-  cur[parts[parts.length - 1]] = value;
+  const leaf = parts[parts.length - 1];
+  if (isIndexSegment(leaf)) cur[Number(leaf)] = value;
+  else cur[leaf] = value;
 }
 
 function getNested(obj, path) {
-  return path.split(".").reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), obj);
+  if (!obj || !path) return undefined;
+  return path.split(".").reduce((acc, key) => {
+    if (acc === undefined || acc === null) return undefined;
+    if (Array.isArray(acc) && isIndexSegment(key)) return acc[Number(key)];
+    return acc[key];
+  }, obj);
 }
 
 function restoreFocusFromDialog(backdrop, returnTo, fallbackSelector) {

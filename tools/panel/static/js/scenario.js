@@ -3,12 +3,33 @@ function scenarioStorageKey(schemaHash) {
 }
 
 function deepMergeScenario(base, overlay) {
+  if (Array.isArray(base) && Array.isArray(overlay)) {
+    const length = Math.max(base.length, overlay.length);
+    const merged = [];
+    for (let index = 0; index < length; index += 1) {
+      const left = base[index];
+      const right = overlay[index];
+      if (left !== undefined && right !== undefined
+          && left !== null && right !== null
+          && typeof left === "object" && typeof right === "object"
+          && !Array.isArray(left) && !Array.isArray(right)) {
+        merged[index] = deepMergeScenario(left, right);
+      } else if (right !== undefined) {
+        merged[index] = right;
+      } else {
+        merged[index] = left;
+      }
+    }
+    return merged;
+  }
   const merged = Array.isArray(base) ? [...base] : { ...base };
   for (const [key, value] of Object.entries(overlay || {})) {
-    if (value !== null && typeof value === "object" && !Array.isArray(value)
+    if (Array.isArray(value) && Array.isArray(merged[key])) {
+      merged[key] = deepMergeScenario(merged[key], value);
+    } else if (value !== null && typeof value === "object" && !Array.isArray(value)
         && merged[key] !== null && typeof merged[key] === "object" && !Array.isArray(merged[key])) {
       merged[key] = deepMergeScenario(merged[key], value);
-    } else {
+    } else if (value !== undefined) {
       merged[key] = value;
     }
   }
@@ -126,11 +147,13 @@ function deviceScenarioFromState(state) {
     seed: state.last_status.seed ?? panelSchema.default_scenario.seed,
     sensors: snap.sensors,
     validity: snap.validity,
+    zones: snap.zones,
+    pseudo: snap.pseudo,
     environment: snap.environment,
-    cultivation: snap.cultivation,
     actuators: snap.actuators,
     targets: snap.targets,
     safety: snap.safety,
+    previous: snap.previous,
   }));
 }
 
@@ -168,10 +191,8 @@ function normalizeSeed(value) {
 }
 
 function collectScenario() {
-  const next = {
-    seed: normalizeSeed(document.getElementById("seed").value),
-    previous: { ...(scenario.previous || { heater: 0, fan: 0, humidifier: 0, irrigation: 0 }) },
-  };
+  const next = sanitizeScenarioNumeric(deepMergeScenario({}, scenario));
+  next.seed = normalizeSeed(document.getElementById("seed").value);
   document.querySelectorAll("[data-path]").forEach(el => {
     const path = el.dataset.path;
     let value;
