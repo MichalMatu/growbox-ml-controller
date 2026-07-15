@@ -197,7 +197,9 @@ function collectScenario() {
     const path = el.dataset.path;
     let value;
     if (el.type === "checkbox") value = el.checked;
-    else if (el.tagName === "SELECT") value = el.value;
+    else if (el.tagName === "SELECT") {
+      value = el.dataset.bool !== undefined ? el.value === "true" : el.value;
+    }
     else value = normalizeFieldNumber(Number(el.value), path);
     setNested(next, path, value);
   });

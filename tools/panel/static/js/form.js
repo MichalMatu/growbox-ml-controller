@@ -236,17 +236,28 @@ function renderPotsSubCard() {
   return `<div class="sub-card pots-block"><div class="card-head"><h3>Donice</h3></div><div class="compact-row pots-row">${cards}</div></div>`;
 }
 
+function syncLightsActiveDisplay() {
+  const checkbox = document.getElementById("f-pseudo_lights_active");
+  const display = document.getElementById("f-pseudo_lights_active_display");
+  if (!checkbox || !display) return;
+  display.value = checkbox.checked ? "ON" : "OFF";
+}
+
 function renderLightsActiveCell() {
   const field = fieldByName("lights_active");
   if (!field) return "";
   const id = "f-pseudo_lights_active";
   const value = getNested(scenario, field.path);
   const hint = "Harmonogram / readback przekaźnika — wpływa na termikę symulatora (wejście ML, nie czujnik)";
+  const displayValue = value ? "ON" : "OFF";
   return `<div class="mini-cell pseudo-lights-cell">
     <div class="head-row">
       <span class="name" title="${hint}">${shortLabel(field.name)}</span>
       <input type="checkbox" data-path="${field.path}" id="${id}" title="${hint}" ${value ? "checked" : ""} />
     </div>
+    <input type="text" class="field-control pseudo-lights-display" id="f-pseudo_lights_active_display" disabled
+      value="${displayValue}" aria-hidden="true" tabindex="-1"
+      title="Podgląd stanu — edycja checkboxem" />
   </div>`;
 }
 
@@ -555,4 +566,5 @@ function renderForm() {
       safetyRoot.innerHTML = renderSafetyBlock();
     }
   }
+  syncLightsActiveDisplay();
 }

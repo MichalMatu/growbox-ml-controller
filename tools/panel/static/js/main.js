@@ -1,6 +1,9 @@
 function bindFormInputRoot(root) {
   if (!root) return;
-  root.addEventListener("change", () => { collectScenario(); });
+  root.addEventListener("change", (event) => {
+    if (event.target?.id === "f-pseudo_lights_active") syncLightsActiveDisplay();
+    collectScenario();
+  });
   root.addEventListener("input", (event) => {
     if (event.target && event.target.type === "number") collectScenario();
   });

@@ -23,7 +23,7 @@ const HELP_TOPICS = {
     html: `
       <p>v2: powietrze + gleba w jednej karcie. Checkbox przy polu = czujnik ważny (encoder + safety).</p>
       <ul>
-        <li><strong>Wewnętrzne</strong> — T, wilgotność, CO₂, temp. roztworu nawozu + <strong>Lampa</strong> (pseudo: świeci tak/nie, nie odczyt PPFD)</li>
+        <li><strong>Wewnętrzne</strong> — T, wilgotność, CO₂, temp. roztworu nawozu + <strong>Lampa</strong> (pseudo: checkbox + podgląd ON/OFF, nie czujnik PPFD)</li>
         <li><strong>Zewnętrzne</strong> — T, wilgotność, CO₂ (symulacja, nie ML)</li>
         <li><strong>Donice</strong> — wilgotność i temp. gleby per donica; tick przy polu = czujnik podłączony</li>
         <li><strong>Donica aktywna</strong> — checkbox w nagłówku wiersza = strefa w profilu</li>
