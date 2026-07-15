@@ -82,8 +82,13 @@ def test_cultivation_pots_match_sensor_pot_card_width():
     render_fn = _extract_js_function(form_js, "renderZoneCultivationCard")
     assert render_fn
     assert "pot-card cultivation-pot-card" in render_fn
+    assert "--pot-sensor-card-w: calc(" in panel_css
     assert re.search(
-        r"\.pot-card\s*\{[^}]*width:\s*var\(--pot-card-w\)",
+        r"\.pot-card\s*\{[^}]*width:\s*var\(--pot-sensor-card-w\)",
+        panel_css,
+    )
+    assert re.search(
+        r"\.pot-card\.cultivation-pot-card\s*\{[^}]*width:\s*var\(--pot-card-w\)",
         panel_css,
     )
 
@@ -94,8 +99,13 @@ def test_sensor_pot_fields_use_horizontal_layout_reference():
     assert ".pot-card-sensors" in panel_css
     assert "grid-template-columns: var(--pot-sensor-w) var(--pot-sensor-w-temp)" in panel_css
     assert "--pot-sensor-w: var(--cell-w-pct)" in panel_css
+    assert "--pot-sensor-card-w: calc(" in panel_css
     assert "--pot-card-w: calc(" in panel_css
     assert "--pot-cult-vol-w:" in panel_css
+    assert re.search(
+        r"\.compact-row\.pots-row\s*\{[^}]*flex-wrap:\s*nowrap",
+        panel_css,
+    )
 
 
 def test_zone_soil_target_labels_use_donica_names():

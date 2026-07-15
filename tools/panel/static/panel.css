@@ -131,6 +131,10 @@
   --field-input-w-ppm: var(--cell-w-ppm);
   --field-input-w-factor: var(--cell-w-factor);
   --pot-card-inline-pad: 0.3rem;
+  --pot-sensor-card-w: calc(
+    var(--pot-sensor-w) + var(--pot-sensor-w-temp) + var(--cell-gap)
+    + 2 * var(--pot-card-inline-pad)
+  );
   --pot-card-w: calc(
     var(--pot-cult-vol-w) + var(--pot-cult-water-w) + var(--pot-cult-factor-w)
     + 2 * var(--cell-gap) + 2 * var(--pot-card-inline-pad)
@@ -742,7 +746,7 @@ button.danger { background: var(--danger-bg); border-color: var(--danger); color
   padding-top: 0.45rem;
   border-top: 1px solid var(--border);
 }
-.pots-row {
+.compact-row.pots-row {
   align-items: flex-start;
   flex-wrap: nowrap;
 }
@@ -751,12 +755,16 @@ button.danger { background: var(--danger-bg); border-color: var(--danger); color
   flex-direction: column;
   gap: var(--cell-gap-inner);
   flex: 0 0 auto;
-  width: var(--pot-card-w);
-  min-width: var(--pot-card-w);
+  width: var(--pot-sensor-card-w);
+  min-width: var(--pot-sensor-card-w);
   padding: var(--cell-pad);
   border: 1px solid var(--border);
   border-radius: var(--cell-radius);
   background: var(--cell-bg);
+}
+.pot-card.cultivation-pot-card {
+  width: var(--pot-card-w);
+  min-width: var(--pot-card-w);
 }
 .pot-card > .head-row {
   display: flex;
@@ -771,6 +779,12 @@ button.danger { background: var(--danger-bg); border-color: var(--danger); color
   font-weight: 600;
   white-space: nowrap;
 }
+.pot-card-avail {
+  display: flex;
+  align-items: center;
+  line-height: 0;
+  flex-shrink: 0;
+}
 .pot-card-avail input[type="checkbox"] { margin: 0; flex-shrink: 0; }
 .pot-card-sensors {
   display: grid;
@@ -782,14 +796,18 @@ button.danger { background: var(--danger-bg); border-color: var(--danger); color
 .pot-card .mini-cell {
   width: 100%;
   min-width: 0;
-  padding: var(--cell-pad);
+  padding: 0.18rem 0.26rem 0.2rem;
+  gap: 0.14rem;
+}
+.pot-card .mini-cell .head-row {
+  min-height: var(--checkbox-size-sm);
+  line-height: 1;
 }
 .pot-card .mini-cell .field-input-wrap {
   position: relative;
-  display: inline-block;
+  display: block;
   width: 100%;
   max-width: 100%;
-  vertical-align: bottom;
 }
 .pot-card .mini-cell .field-control {
   width: 100%;
@@ -810,7 +828,7 @@ button.danger { background: var(--danger-bg); border-color: var(--danger); color
   overflow-x: auto;
 }
 @media (max-width: 520px) {
-  .pots-row { flex-wrap: wrap; }
+  .compact-row.pots-row { flex-wrap: wrap; }
 }
 .targets-split {
   display: grid;
@@ -914,7 +932,7 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
 }
 .sensors-panel .mini-cell.pseudo-lights-cell {
   width: var(--cell-w-lights);
