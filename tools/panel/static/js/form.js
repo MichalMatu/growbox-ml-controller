@@ -17,21 +17,53 @@ function shortLabel(name) {
   return name.replace(/_/g, " ");
 }
 
+function formatPreviousDisplayValue(path) {
+  const value = getNested(scenario, path);
+  const pct = typeof formatOutputPct === "function"
+    ? formatOutputPct(value)
+    : Math.min(100, Math.max(0, Math.round((Number(value) || 0) * 100)));
+  return `${pct}%`;
+}
+
 function syncPreviousFormInputs() {
-  document.querySelectorAll("#previous-section [data-path]").forEach((el) => {
-    const path = el.dataset.path;
+  document.querySelectorAll("#previous-section [data-previous-path]").forEach((el) => {
+    const path = el.dataset.previousPath;
     if (!path) return;
-    const value = getNested(scenario, path);
-    if (el.type === "checkbox") {
-      el.checked = Boolean(value);
-      return;
-    }
-    if (el.tagName === "SELECT") {
-      el.value = value ?? "";
-      return;
-    }
-    el.value = formatFieldNumber(value ?? 0, path);
+    el.innerHTML = `<strong>${formatPreviousDisplayValue(path)}</strong>`;
   });
+}
+
+function renderPreviousRow(field) {
+  const hint = fieldHint(field.name);
+  const hintAttr = hint ? ` title="${escapeHtml(hint)}"` : "";
+  const value = formatPreviousDisplayValue(field.path);
+  return `<tr>
+    <th scope="row"${hintAttr}>${shortLabel(field.name)}</th>
+    <td class="num" data-previous-path="${field.path}"><strong>${value}</strong></td>
+  </tr>`;
+}
+
+function renderPreviousGroupTable(title, fields) {
+  if (!fields.length) return "";
+  const rows = fields.map(renderPreviousRow).join("");
+  return `<div class="live-sensor-col">
+    <div class="live-sensor-col-head">${title}</div>
+    <div class="live-data-table-wrap">
+      <table class="live-data-table previous-data-table" aria-label="${title}">
+        <colgroup>
+          <col class="sensor-col" />
+          <col class="reading-col" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th scope="col" class="sensor-col"></th>
+            <th scope="col" class="num">Wyjście</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  </div>`;
 }
 
 function formatEnumOptionLabel(value) {
@@ -271,66 +303,6 @@ function closeHelp() {
   const returnTo = helpReturnFocus;
   helpReturnFocus = null;
   restoreFocusFromDialog(backdrop, returnTo, "#btn-connect");
-  backdrop.classList.remove("open");
-  backdrop.setAttribute("inert", "");
-  backdrop.setAttribute("aria-hidden", "true");
-  updateModalLock();
-}
-
-let setupReturnFocus = null;
-
-const SETUP_TAB_LABELS = {
-  growbox: "Parametry growboxa",
-  safety: "Limity safety",
-};
-
-const SETUP_TAB_HELP = {
-  growbox: "environment",
-  safety: "safety",
-};
-
-function switchSetupTab(tabId) {
-  const tab = SETUP_TAB_LABELS[tabId] ? tabId : "growbox";
-  document.querySelectorAll("#setup-modal-tabs [data-setup-tab]").forEach((btn) => {
-    const active = btn.dataset.setupTab === tab;
-    btn.classList.toggle("active", active);
-    btn.setAttribute("aria-selected", active ? "true" : "false");
-  });
-  document.querySelectorAll(".setup-pane").forEach((pane) => {
-    const active = pane.id === `setup-pane-${tab}`;
-    pane.classList.toggle("active", active);
-    pane.hidden = !active;
-  });
-  document.getElementById("setup-modal-title").textContent = SETUP_TAB_LABELS[tab];
-  const helpBtn = document.getElementById("setup-modal-help");
-  if (helpBtn) {
-    const topic = SETUP_TAB_HELP[tab];
-    helpBtn.dataset.help = topic;
-    helpBtn.setAttribute("aria-label", `Pomoc — ${SETUP_TAB_LABELS[tab]}`);
-  }
-}
-
-function openSetup(tabId = "growbox") {
-  const backdrop = document.getElementById("setup-modal-backdrop");
-  if (!backdrop) return;
-  if (!backdrop.classList.contains("open")) {
-    setupReturnFocus = document.activeElement;
-    backdrop.classList.add("open");
-    backdrop.removeAttribute("inert");
-    backdrop.setAttribute("aria-hidden", "false");
-    updateModalLock();
-  }
-  const tab = SETUP_TAB_LABELS[tabId] ? tabId : "growbox";
-  switchSetupTab(tab);
-  document.getElementById(`setup-tab-${tab}`)?.focus();
-}
-
-function closeSetup() {
-  const backdrop = document.getElementById("setup-modal-backdrop");
-  if (!backdrop?.classList.contains("open")) return;
-  const returnTo = setupReturnFocus;
-  setupReturnFocus = null;
-  restoreFocusFromDialog(backdrop, returnTo, "#btn-setup-growbox");
   backdrop.classList.remove("open");
   backdrop.setAttribute("inert", "");
   backdrop.setAttribute("aria-hidden", "true");
@@ -837,13 +809,10 @@ function renderTargetsBlock() {
 function renderPreviousBlock() {
   const globalFields = PREVIOUS_GLOBAL_FIELDS.map(name => fieldByName(name)).filter(Boolean);
   const pumpFields = PREVIOUS_PUMP_FIELDS.map(name => fieldByName(name)).filter(Boolean);
-  const globalCells = globalFields.map(renderMiniCell).join("");
-  const pumpCells = pumpFields.map(renderMiniCell).join("");
+  const climate = renderPreviousGroupTable("Klimat", globalFields);
+  const pumps = renderPreviousGroupTable("Pompy", pumpFields);
   return `<div class="card previous-panel">${renderSectionHead("Poprzedni stan aktuatorów", "previous")}
-    <div class="targets-split">
-      <div class="sub-card"><div class="card-head"><h3>Klimat</h3></div><div class="compact-row">${globalCells}</div></div>
-      <div class="sub-card"><div class="card-head"><h3>Pompy</h3></div><div class="compact-row">${pumpCells}</div></div>
-    </div></div>`;
+    <div class="live-sensors-split previous-split" aria-label="Poprzedni stan aktuatorów">${climate}${pumps}</div></div>`;
 }
 
 function renderZoneCultivationCard(fields, index) {

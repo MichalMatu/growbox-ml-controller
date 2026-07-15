@@ -242,21 +242,30 @@ def test_temperature_sensor_cells_render_wrapped_with_narrower_mini_cell():
     assert "calc(var(--cell-w) - 2ch)" in panel_css
 
 
-def test_previous_ratio_cells_use_three_ch_narrower_width():
+def test_previous_actuators_use_readonly_live_style_two_column_tables():
     form_js = FORM_JS.read_text(encoding="utf-8")
     panel_css = PANEL_CSS.read_text(encoding="utf-8")
-    cell_fn = _extract_js_function(form_js, "fieldMiniCellWidthClass")
-    prev_fn = _extract_js_function(form_js, "isPreviousRatioPath")
+    main_js = (PANEL_STATIC / "js" / "main.js").read_text(encoding="utf-8")
+    scenario_js = (PANEL_STATIC / "js" / "scenario.js").read_text(encoding="utf-8")
     prev_block = _extract_js_function(form_js, "renderPreviousBlock")
-    assert prev_fn
-    assert cell_fn
+    prev_group = _extract_js_function(form_js, "renderPreviousGroupTable")
+    prev_row = _extract_js_function(form_js, "renderPreviousRow")
+    sync_fn = _extract_js_function(form_js, "syncPreviousFormInputs")
     assert prev_block
-    assert "previous." in prev_fn
-    assert '" mini-cell-prev"' in cell_fn
-    assert "renderMiniCell" in prev_block
-    assert "--cell-w-prev:" in panel_css
-    assert "calc(var(--cell-w) - 3ch)" in panel_css
-    assert ".mini-cell.mini-cell-prev" in panel_css
+    assert prev_group
+    assert prev_row
+    assert sync_fn
+    assert "live-sensors-split" in prev_block
+    assert "previous-split" in prev_block
+    assert "renderPreviousGroupTable" in prev_block
+    assert "live-data-table" in prev_group
+    assert "data-previous-path" in prev_row
+    assert "renderMiniCell" not in prev_block
+    assert "targets-split" not in prev_block
+    assert "[data-previous-path]" in sync_fn
+    assert 'bindFormInputRoot(document.getElementById("previous-section"))' not in main_js
+    assert 'document.getElementById("previous-section")' not in scenario_js
+    assert ".previous-split .live-data-table col.sensor-col" in panel_css
 
 
 def test_lights_cell_is_two_ch_narrower_without_separate_display_width():
@@ -425,7 +434,7 @@ def test_scenario_sync_uses_baseline_fingerprint():
     assert "deviceScenarioBaseline" in state_js
     assert "setDeviceScenarioBaseline" in scenario_js
     assert "deviceScenarioBaseline === null" in badge_fn
-    assert 'bindFormInputRoot(document.getElementById("previous-section"))' in main_js
+    assert 'bindFormInputRoot(document.getElementById("previous-section"))' not in main_js
     assert "cloneScenarioDoc(base)" in read_fn
     assert "forEachScenarioField" in read_fn
     assert 'document.querySelectorAll("[data-path]")' not in read_fn
@@ -502,8 +511,36 @@ def test_growbox_setup_has_actuator_control_type_selects():
     assert "syncControlTypeField" in main_js
 
 
+def test_panel_modal_unifies_all_entry_points_in_one_wide_shell():
+    html = INDEX_HTML.read_text(encoding="utf-8")
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
+    modal_js = (PANEL_STATIC / "js" / "modal.js").read_text(encoding="utf-8")
+    modal_block = html.split('id="modal-backdrop"', 1)[1].split("help-modal-backdrop", 1)[0]
+    assert 'class="modal modal--wide panel-modal"' in html
+    assert "setup-modal-backdrop" not in html
+    assert 'id="panel-modal-body"' in modal_block
+    assert 'id="setup-pane-growbox"' in modal_block
+    assert 'id="setup-pane-safety"' in modal_block
+    assert 'id="modal-help"' in modal_block
+    assert 'id="modal-close"' in modal_block
+    assert "panelModalViews" in modal_js
+    for key in ("scenario", "decision", "history", "device", "diagnostics", "growbox", "safety"):
+        assert f"{key}:" in modal_js
+    assert 'tab: "Scenariusz"' in modal_js
+    assert 'tab: "Decyzja"' in modal_js
+    assert 'tab: "Startup / status"' in modal_js
+    assert 'tab: "Growbox"' in modal_js
+    assert "--modal-w-wide:" in panel_css
+    assert ".panel-modal .modal-tabs" in panel_css
+    assert ".panel-modal-body" in panel_css
+    assert ".panel-modal-body > textarea:not([hidden])" in panel_css
+    assert "min-height: calc(min(var(--modal-body-min-h-wide), 58vh)" in panel_css
+    assert re.search(r"\.modal-tabs\s*\{[^}]*justify-content:\s*flex-end", panel_css)
+
+
 def test_growbox_setup_modal_has_single_help_entry_point():
     form_js = FORM_JS.read_text(encoding="utf-8")
+    modal_js = (PANEL_STATIC / "js" / "modal.js").read_text(encoding="utf-8")
     growbox_fn = _extract_js_function(form_js, "renderGrowboxPanel")
     setup_fn = _extract_js_function(form_js, "renderSetupPanes")
     html = INDEX_HTML.read_text(encoding="utf-8")
@@ -511,8 +548,37 @@ def test_growbox_setup_modal_has_single_help_entry_point():
     assert setup_fn
     assert "renderGrowboxPanel(true)" in setup_fn
     assert 'inSetup ? null : "environment"' in growbox_fn
-    assert 'id="setup-modal-help"' in html
-    assert "SETUP_TAB_HELP" in form_js
+    assert 'id="modal-help"' in html
+    assert 'help: "environment"' in modal_js
+    assert 'help: "safety"' in modal_js
+
+
+def test_panel_action_buttons_share_ghost_style_tokens():
+    html = INDEX_HTML.read_text(encoding="utf-8")
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
+    main_js = (PANEL_STATIC / "js" / "main.js").read_text(encoding="utf-8")
+    assert 'class="panel-actions btn-row live-panel-actions"' in html
+    assert "setup-actions" not in html
+    assert "json-actions" not in html
+    assert "toolbar-setup-row" not in html
+    assert 'data-panel-modal="growbox"' in html
+    assert 'data-panel-modal="safety"' in html
+    assert 'data-panel-modal="scenario"' in html
+    assert 'id="btn-json-scenario" class="ghost"' in html
+    assert "data-setup-open" not in html
+    assert "[data-panel-modal]" in main_js
+    assert html.index("btn-json-diagnostics") < html.index("btn-setup-growbox")
+    assert "--panel-action-pad:" in panel_css
+    assert "--panel-action-font:" in panel_css
+    assert "--panel-action-gap:" in panel_css
+    assert re.search(
+        r"\.panel-actions\s+button,\s*\n\.modal-tabs\s+button\s*\{[^}]*background:\s*transparent",
+        panel_css,
+    )
+    assert re.search(
+        r"\.panel-actions\s+button\.active,\s*\n\.modal-tabs\s+button\.active\s*\{[^}]*background:\s*var\(--accent\)",
+        panel_css,
+    )
 
 
 def test_toolbar_has_no_scenario_preset_selector():
@@ -528,10 +594,10 @@ def test_infrequent_settings_live_in_setup_modal_not_inline_form():
     form_js = FORM_JS.read_text(encoding="utf-8")
     render_fn = _extract_js_function(form_js, "renderForm")
     assert render_fn
-    assert 'id="setup-modal-backdrop"' in html
-    assert 'data-setup-open="growbox"' in html
-    assert 'data-setup-open="safety"' in html
-    assert 'data-setup-open="actuators"' not in html
+    assert 'id="setup-pane-growbox"' in html
+    assert 'data-panel-modal="growbox"' in html
+    assert 'data-panel-modal="safety"' in html
+    assert 'data-panel-modal="actuators"' not in html
     assert "renderGrowboxPanel()" not in render_fn
     assert "renderActuatorPanel()" in render_fn
     assert "renderSafetyBlock()" not in render_fn

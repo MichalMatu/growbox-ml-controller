@@ -17,8 +17,7 @@ function bindFormInputRoot(root) {
 
 function bindFormSync() {
   bindFormInputRoot(document.getElementById("form-sections"));
-  bindFormInputRoot(document.getElementById("setup-modal-body"));
-  bindFormInputRoot(document.getElementById("previous-section"));
+  bindFormInputRoot(document.getElementById("panel-modal-body"));
   const toolbar = document.getElementById("panel-toolbar");
   const onSeedChange = (event) => {
     if (event.target?.id === "seed") collectScenario();
@@ -213,15 +212,19 @@ document.getElementById("btn-export").onclick = () => {
   a.download = "scenario.json";
   a.click();
 };
-document.getElementById("btn-json-scenario").onclick = () => { collectScenario(); openModal("scenario"); };
-document.getElementById("btn-json-decision").onclick = () => openModal("decision");
-document.getElementById("btn-json-history").onclick = () => openModal("history");
-document.getElementById("btn-json-device").onclick = () => openModal("device");
-document.getElementById("btn-json-diagnostics").onclick = () => openDiagnosticsModal();
 document.getElementById("modal-refresh").onclick = () => refreshDiagnosticsView(true);
 document.getElementById("modal-close").onclick = closeModal;
 document.getElementById("modal-backdrop").onclick = (e) => { if (e.target.id === "modal-backdrop") closeModal(); };
-document.addEventListener("click", (e) => {
+document.addEventListener("click", async (e) => {
+  const panelBtn = e.target.closest("[data-panel-modal]");
+  if (panelBtn) {
+    e.preventDefault();
+    const view = panelBtn.dataset.panelModal;
+    if (view === "scenario") collectScenario();
+    if (view === "diagnostics") await refreshDiagnosticsView(true);
+    openModal(view);
+    return;
+  }
   const btn = e.target.closest("[data-help]");
   if (!btn) return;
   e.preventDefault();
@@ -232,22 +235,6 @@ document.getElementById("help-modal-close-2").onclick = closeHelp;
 document.getElementById("help-modal-backdrop").onclick = (e) => {
   if (e.target.id === "help-modal-backdrop") closeHelp();
 };
-document.getElementById("setup-modal-close").onclick = closeSetup;
-document.getElementById("setup-modal-backdrop").onclick = (e) => {
-  if (e.target.id === "setup-modal-backdrop") closeSetup();
-};
-document.getElementById("setup-modal-tabs")?.addEventListener("click", (e) => {
-  const btn = e.target.closest("[data-setup-tab]");
-  if (!btn) return;
-  e.preventDefault();
-  switchSetupTab(btn.dataset.setupTab);
-});
-document.addEventListener("click", (e) => {
-  const btn = e.target.closest("[data-setup-open]");
-  if (!btn) return;
-  e.preventDefault();
-  openSetup(btn.dataset.setupOpen);
-});
 
 document.getElementById("modal-copy").onclick = async () => {
   await navigator.clipboard.writeText(document.getElementById("modal-content").value);

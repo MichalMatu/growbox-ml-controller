@@ -107,7 +107,7 @@ const HELP_TOPICS = {
   live: {
     title: "Na żywo",
     html: `
-      <p>Podgląd decyzji po <strong>Krok</strong>: czujniki globalne + 10 wyjść ML. Badge kroku u góry. Edycja <strong>Poprzedni stan</strong> — osobna karta pod tą sekcją (prawa kolumna).</p>
+      <p>Podgląd decyzji po <strong>Krok</strong>: czujniki globalne + 10 wyjść ML. Badge kroku u góry. <strong>Poprzedni stan</strong> — osobna karta pod tą sekcją (prawa kolumna).</p>
       <p>Każdy aktuator ma <strong>dwa paski</strong>:</p>
       <ul>
         <li><strong>Model</strong> (niebieski) — co proponuje sieć neuronowa (0–100% mocy)</li>

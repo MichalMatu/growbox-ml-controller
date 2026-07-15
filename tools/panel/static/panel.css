@@ -13,6 +13,7 @@
  *   --cell-*        mini-cell (kafelki pól)
  *   --actuator-*    węższe pola w sekcji Aktuary
  *   --btn-*, --toolbar-*   przyciski i pasek sterowania
+ *   --panel-action-*       przyciski JSON / Konfig. / zakładki modala
  *   --modal-*       okna dialogowe
  *
  * Komponenty formularza: klasa .field-control na input/select (form.js).
@@ -97,6 +98,10 @@
   --btn-font: var(--text-md);
   --btn-pad: 0.22rem 0.48rem;
   --btn-pad-row: 0.28rem 0.5rem;
+  --panel-action-pad: var(--btn-pad-row);
+  --panel-action-font: var(--text-base);
+  --panel-action-gap: var(--cell-gap);
+  --live-actions-gap: var(--panel-action-gap);
   --btn-bg: var(--surface-elevated);
   --field-font: var(--text-base);
   --field-label-font: var(--text-sm);
@@ -153,6 +158,14 @@
   --modal-body-font: 0.7rem;
   --modal-help-font: var(--text-xl);
   --modal-foot-min-h: 2.15rem;
+  --modal-w: 720px;
+  --modal-w-wide: 58rem;
+  --modal-body-h: 320px;
+  --modal-body-min-h-wide: 420px;
+  --modal-body-max-h-wide: min(72vh, 640px);
+  --modal-head-title-w: 10.5rem;
+  --modal-tab-w: 5.05rem;
+  --modal-tab-w-wide: 5.75rem;
   --body-font: 13px;
 }
 * { box-sizing: border-box; }
@@ -451,14 +464,7 @@ main {
 }
 @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
 .panel-toolbar .compact-row { margin-top: 0; }
-.panel-toolbar .toolbar-setup-row { margin-top: 0.28rem; }
-.panel-toolbar .toolbar-setup-cell {
-  min-width: 0;
-  flex: 1 1 auto;
-}
-.panel-toolbar .toolbar-setup-cell .toolbar-btn-stack {
-  flex-wrap: wrap;
-}
+
 .panel-toolbar .mini-cell.toolbar-cell {
   width: auto;
   min-width: 8.1rem;
@@ -1246,6 +1252,8 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
 .live-sensors-split .live-data-table col.sensor-col { width: 30%; }
 .live-sensors-split .live-data-table col.reading-col { width: 35%; }
 .live-sensors-split .live-data-table col.target-col { width: 35%; }
+.previous-split .live-data-table col.sensor-col { width: 42%; }
+.previous-split .live-data-table col.reading-col { width: 58%; }
 .live-sensors-split .live-data-table th,
 .live-sensors-split .live-data-table td {
   padding: var(--live-pad-cell);
@@ -1518,7 +1526,33 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
   color: var(--safe);
   font-variant-numeric: tabular-nums;
 }
-.json-actions { display: flex; flex-wrap: wrap; gap: var(--cell-gap); margin-top: 0.35rem; }
+.panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--panel-action-gap);
+}
+.panel-actions button,
+.modal-tabs button {
+  padding: var(--panel-action-pad);
+  font-size: var(--panel-action-font);
+  background: transparent;
+  border-color: var(--border);
+  color: var(--muted);
+}
+.panel-actions button.active,
+.modal-tabs button.active {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent-border);
+}
+.live-panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--live-actions-gap);
+  margin-top: 0.35rem;
+}
+
 
 body.modal-open {
   overflow: hidden;
@@ -1540,7 +1574,6 @@ body.modal-open {
   touch-action: none;
 }
 .modal-backdrop.open { display: flex; }
-#setup-modal-backdrop.open { z-index: 101; }
 #help-modal-backdrop.open { z-index: 101; }
 #notice-modal-backdrop.open { z-index: 102; }
 #confirm-modal-backdrop.open { z-index: 103; }
@@ -1567,7 +1600,7 @@ body.modal-open {
   font-size: var(--text-xs);
 }
 .modal {
-  width: min(720px, 100%);
+  width: min(var(--modal-w), 100%);
   max-height: 85vh;
   background: var(--card);
   border: 1px solid var(--border);
@@ -1580,7 +1613,7 @@ body.modal-open {
 }
 .modal-head {
   display: grid;
-  grid-template-columns: 10.5rem 1fr;
+  grid-template-columns: var(--modal-head-title-w) 1fr;
   align-items: center;
   gap: 0.35rem 0.5rem;
   padding: var(--modal-pad);
@@ -1595,14 +1628,14 @@ body.modal-open {
 }
 .modal-tabs {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   gap: 0.2rem;
   flex-wrap: nowrap;
 }
 .modal-tabs button {
-  flex: 0 0 5.05rem;
-  min-width: 5.05rem;
-  max-width: 5.05rem;
+  flex: 0 0 var(--modal-tab-w);
+  min-width: var(--modal-tab-w);
+  max-width: var(--modal-tab-w);
   padding-left: 0.22rem;
   padding-right: 0.22rem;
   text-align: center;
@@ -1610,14 +1643,14 @@ body.modal-open {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.modal-tabs button.active { background: var(--accent); color: var(--on-accent); border-color: var(--accent-border); }
+
 .modal-body {
   padding: var(--modal-pad);
   overflow: auto;
-  flex: 0 0 320px;
-  height: 320px;
-  min-height: 320px;
-  max-height: 320px;
+  flex: 0 0 var(--modal-body-h);
+  height: var(--modal-body-h);
+  min-height: var(--modal-body-h);
+  max-height: var(--modal-body-h);
   box-sizing: border-box;
 }
 .modal-body textarea,
@@ -1654,55 +1687,44 @@ body.modal-open {
 .modal-foot button[hidden] {
   display: none !important;
 }
-.setup-modal {
-  width: min(58rem, 100%);
+.modal-foot .help-btn {
+  margin-right: auto;
 }
-.setup-modal-head {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem 0.6rem;
-  flex-wrap: wrap;
+.modal.modal--wide {
+  width: min(var(--modal-w-wide), 100%);
 }
-.setup-modal-head h3 {
+.modal.modal--wide .modal-tabs button {
   flex: 0 1 auto;
-  min-width: 6.5rem;
-  max-width: 11rem;
-}
-.setup-modal-tabs-wrap {
-  flex: 1 1 14rem;
-  min-width: 0;
-  display: flex;
-  justify-content: center;
-}
-.setup-modal .modal-tabs {
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 0.28rem;
-}
-.setup-modal .modal-tabs button {
-  flex: 0 1 auto;
-  min-width: 5.75rem;
+  min-width: var(--modal-tab-w-wide);
   max-width: none;
   padding-left: 0.65rem;
   padding-right: 0.65rem;
 }
-.setup-modal-head-actions {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  margin-left: auto;
-}
-.setup-modal .modal-body {
+.modal.modal--wide .modal-body {
   flex: 1 1 auto;
   height: auto;
-  min-height: min(420px, 58vh);
-  max-height: min(72vh, 640px);
+  min-height: min(var(--modal-body-min-h-wide), 58vh);
+  max-height: var(--modal-body-max-h-wide);
 }
-.setup-modal-body {
+.panel-modal-body {
   display: flex;
   flex-direction: column;
   gap: 0;
+}
+.panel-modal .modal-tabs {
+  flex-wrap: wrap;
+}
+.panel-modal-body > textarea:not([hidden]),
+.panel-modal-body > .diag-modal-body:not([hidden]),
+.panel-modal-body > .setup-pane.active {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+  overflow: auto;
+}
+.panel-modal-body > textarea:not([hidden]),
+.panel-modal-body > .diag-modal-body:not([hidden]) {
+  min-height: calc(min(var(--modal-body-min-h-wide), 58vh) - 1.1rem);
 }
 .setup-pane {
   display: none;
@@ -1813,19 +1835,6 @@ body.modal-open {
   --cell-w-wide: 6.95rem;
   --actuator-input-w: 3.75rem;
   --actuator-input-w-wide: 4.45rem;
-}
-@media (max-width: 640px) {
-  .setup-modal-head h3 {
-    flex: 1 1 100%;
-    max-width: none;
-  }
-  .setup-modal-tabs-wrap {
-    flex: 1 1 100%;
-    order: 3;
-  }
-  .setup-modal-head-actions {
-    margin-left: 0;
-  }
 }
 .help-modal-body {
   font-size: var(--modal-help-font);

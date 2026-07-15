@@ -1,12 +1,50 @@
 var modalRenderedKey = "";
 var modalRenderedContent = "";
 
-const modalViews = {
-  scenario: { tab: "Scenariusz", title: "Scenariusz (payload)", get: () => JSON.stringify(collectScenario(), null, 2) },
-  decision: { tab: "Ostatnia", title: "Ostatnia decyzja", get: () => lastDecision ? JSON.stringify(lastDecision, null, 2) : "Brak decyzji." },
-  history: { tab: "Historia", title: "Historia serial", get: () => formatHistory(lastState) },
-  device: { tab: "Startup", title: "Startup / status", get: () => formatDevice(lastState) },
-  diagnostics: { tab: "Zasoby", title: "Zasoby", html: true },
+const panelModalViews = {
+  scenario: {
+    tab: "Scenariusz",
+    title: "Scenariusz",
+    type: "json",
+    get: () => JSON.stringify(collectScenario(), null, 2),
+  },
+  decision: {
+    tab: "Decyzja",
+    title: "Decyzja",
+    type: "json",
+    get: () => (lastDecision ? JSON.stringify(lastDecision, null, 2) : "Brak decyzji."),
+  },
+  history: {
+    tab: "Historia",
+    title: "Historia",
+    type: "json",
+    get: () => formatHistory(lastState),
+  },
+  device: {
+    tab: "Startup / status",
+    title: "Startup / status",
+    type: "json",
+    get: () => formatDevice(lastState),
+  },
+  diagnostics: {
+    tab: "Zasoby",
+    title: "Zasoby",
+    type: "html",
+  },
+  growbox: {
+    tab: "Growbox",
+    title: "Parametry growboxa",
+    type: "setup",
+    help: "environment",
+    pane: "growbox",
+  },
+  safety: {
+    tab: "Safety",
+    title: "Limity safety",
+    type: "setup",
+    help: "safety",
+    pane: "safety",
+  },
 };
 
 function formatHistory(state) {
@@ -26,14 +64,15 @@ function formatDevice(state) {
 }
 
 function openModal(view) {
-  activeModal = view;
+  const key = panelModalViews[view] ? view : "scenario";
+  activeModal = key;
   const backdrop = document.getElementById("modal-backdrop");
   modalReturnFocus = document.activeElement;
   backdrop.classList.add("open");
   backdrop.removeAttribute("inert");
   backdrop.setAttribute("aria-hidden", "false");
   updateModalLock();
-  renderModalTabs();
+  renderPanelModalTabs();
   refreshModalContent({ force: true });
   document.getElementById("modal-close")?.focus();
 }
@@ -49,29 +88,62 @@ function closeModal() {
   updateModalLock();
 }
 
-function renderModalTabs() {
+function renderPanelModalTabs() {
   const tabs = document.getElementById("modal-tabs");
   if (!tabs.dataset.ready) {
-    tabs.innerHTML = Object.entries(modalViews).map(([key, meta]) =>
-      `<button type="button" data-tab="${key}">${meta.tab}</button>`
+    tabs.innerHTML = Object.entries(panelModalViews).map(([key, meta]) =>
+      `<button type="button" role="tab" data-tab="${key}">${meta.tab}</button>`
     ).join("");
     tabs.dataset.ready = "1";
     tabs.querySelectorAll("[data-tab]").forEach(btn => {
       btn.onclick = () => {
         activeModal = btn.dataset.tab;
-        renderModalTabs();
+        renderPanelModalTabs();
         refreshModalContent({ force: true });
       };
     });
   }
   tabs.querySelectorAll("[data-tab]").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.tab === activeModal);
+    const active = btn.dataset.tab === activeModal;
+    btn.classList.toggle("active", active);
+    btn.setAttribute("aria-selected", active ? "true" : "false");
   });
+}
+
+function updatePanelModalChrome(meta) {
+  const textarea = document.getElementById("modal-content");
+  const panel = document.getElementById("modal-content-panel");
+  const helpBtn = document.getElementById("modal-help");
+  const copyBtn = document.getElementById("modal-copy");
+  const refreshBtn = document.getElementById("modal-refresh");
+  const isSetup = meta.type === "setup";
+  const isHtml = meta.type === "html";
+  const isJson = meta.type === "json";
+
+  document.getElementById("modal-title").textContent = meta.title;
+  textarea.hidden = !isJson;
+  panel.hidden = !isHtml;
+  document.querySelectorAll(".setup-pane").forEach((pane) => {
+    const active = isSetup && pane.id === `setup-pane-${meta.pane}`;
+    pane.classList.toggle("active", active);
+    pane.hidden = !active;
+  });
+  if (helpBtn) {
+    helpBtn.hidden = !isSetup;
+    if (isSetup) {
+      helpBtn.dataset.help = meta.help;
+      helpBtn.setAttribute("aria-label", `Pomoc — ${meta.title}`);
+    }
+  }
+  if (copyBtn) copyBtn.hidden = !isJson;
+  if (refreshBtn) refreshBtn.hidden = !isHtml;
 }
 
 function modalHasActiveSelection() {
   const backdrop = document.getElementById("modal-backdrop");
   if (!backdrop?.classList.contains("open")) return false;
+  const meta = panelModalViews[activeModal];
+  if (meta?.type === "setup") return false;
   const textarea = document.getElementById("modal-content");
   if (textarea && !textarea.hidden && textarea.selectionEnd > textarea.selectionStart) {
     return true;
@@ -87,32 +159,36 @@ function modalHasActiveSelection() {
 
 function refreshModalContent({ force = false } = {}) {
   if (!force && modalHasActiveSelection()) return;
-  const meta = modalViews[activeModal];
-  const textarea = document.getElementById("modal-content");
-  const panel = document.getElementById("modal-content-panel");
-  const copyBtn = document.getElementById("modal-copy");
-  const refreshBtn = document.getElementById("modal-refresh");
-  document.getElementById("modal-title").textContent = meta.title;
-  const isHtml = Boolean(meta.html);
-  textarea.hidden = isHtml;
-  panel.hidden = !isHtml;
-  copyBtn.hidden = isHtml;
-  if (refreshBtn) refreshBtn.hidden = !isHtml;
-  const cacheKey = `${activeModal}:${isHtml ? "html" : "text"}`;
-  if (isHtml) {
-    const html = formatDiagnosticsHtml(diagnosticsSnapshot);
-    if (!force && cacheKey === modalRenderedKey && html === modalRenderedContent) return;
-    panel.tabIndex = -1;
-    panel.innerHTML = html;
-    modalRenderedKey = cacheKey;
-    modalRenderedContent = html;
-  } else {
-    const text = meta.get();
-    if (!force && cacheKey === modalRenderedKey && text === modalRenderedContent) return;
-    textarea.value = text;
-    modalRenderedKey = cacheKey;
-    modalRenderedContent = text;
+  const meta = panelModalViews[activeModal];
+  if (!meta) return;
+  updatePanelModalChrome(meta);
+  if (meta.type === "json") {
+    refreshJsonModalContent({ force });
+  } else if (meta.type === "html") {
+    refreshHtmlModalContent({ force });
   }
+}
+
+function refreshJsonModalContent({ force = false } = {}) {
+  const meta = panelModalViews[activeModal];
+  const textarea = document.getElementById("modal-content");
+  const cacheKey = `${activeModal}:text`;
+  const text = meta.get();
+  if (!force && cacheKey === modalRenderedKey && text === modalRenderedContent) return;
+  textarea.value = text;
+  modalRenderedKey = cacheKey;
+  modalRenderedContent = text;
+}
+
+function refreshHtmlModalContent({ force = false } = {}) {
+  const panel = document.getElementById("modal-content-panel");
+  const cacheKey = `${activeModal}:html`;
+  const html = formatDiagnosticsHtml(diagnosticsSnapshot);
+  if (!force && cacheKey === modalRenderedKey && html === modalRenderedContent) return;
+  panel.tabIndex = -1;
+  panel.innerHTML = html;
+  modalRenderedKey = cacheKey;
+  modalRenderedContent = html;
 }
 
 function isSelectAllShortcut(event) {
@@ -142,11 +218,11 @@ function handleModalSelectAll(event) {
   if (!isSelectAllShortcut(event)) return false;
   const helpBackdrop = document.getElementById("help-modal-backdrop");
   const noticeBackdrop = document.getElementById("notice-modal-backdrop");
-  const jsonBackdrop = document.getElementById("modal-backdrop");
+  const panelBackdrop = document.getElementById("modal-backdrop");
   const helpOpen = helpBackdrop?.classList.contains("open");
   const noticeOpen = noticeBackdrop?.classList.contains("open");
-  const jsonOpen = jsonBackdrop?.classList.contains("open");
-  if (!helpOpen && !noticeOpen && !jsonOpen) return false;
+  const panelOpen = panelBackdrop?.classList.contains("open");
+  if (!helpOpen && !noticeOpen && !panelOpen) return false;
 
   event.preventDefault();
   event.stopPropagation();
@@ -175,16 +251,12 @@ function handleModalKeydown(event) {
   if (handleModalSelectAll(event)) return;
   handleDialogKeydown(event);
   if (event.key !== "Escape") return;
-  const setupBackdrop = document.getElementById("setup-modal-backdrop");
   const helpBackdrop = document.getElementById("help-modal-backdrop");
-  const jsonBackdrop = document.getElementById("modal-backdrop");
-  if (setupBackdrop?.classList.contains("open")) {
-    event.preventDefault();
-    closeSetup();
-  } else if (helpBackdrop?.classList.contains("open")) {
+  const panelBackdrop = document.getElementById("modal-backdrop");
+  if (helpBackdrop?.classList.contains("open")) {
     event.preventDefault();
     closeHelp();
-  } else if (jsonBackdrop?.classList.contains("open")) {
+  } else if (panelBackdrop?.classList.contains("open")) {
     event.preventDefault();
     closeModal();
   }

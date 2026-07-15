@@ -204,8 +204,7 @@ function clearDeviceScenarioBaseline() {
 function scenarioFormRoots() {
   return [
     document.getElementById("form-sections"),
-    document.getElementById("setup-modal-body"),
-    document.getElementById("previous-section"),
+    document.getElementById("panel-modal-body"),
   ].filter(Boolean);
 }
 
