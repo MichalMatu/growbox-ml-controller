@@ -9,7 +9,7 @@ const HELP_TOPICS = {
       <h4>Sterowanie (lewa kolumna)</h4>
       <ul>
         <li><strong>Scenariusz</strong> — <strong>Wyślij</strong> (cały formularz na płytkę), <strong>Domyślne</strong> (reset formularza), <strong>Pobierz</strong> (JSON)</li>
-        <li><strong>OK / lokalne</strong> — badge przy Scenariuszu: zgodność formularza ze scenariuszem na płytce</li>
+        <li><strong>OK / wyślij zmiany</strong> — czy formularz = ostatni stan po <strong>Połącz</strong> lub <strong>Wyślij</strong> (wszystkie pola, w tym seed i poprzedni stan)</li>
         <li><strong>Praca</strong> — <strong>▶ / ■</strong>, <strong>Replay</strong> / <strong>Loop</strong>, <strong>Krok</strong></li>
         <li><strong>Diag.</strong> — <strong>Status</strong> (odśwież z płytki), <strong>Reset</strong> (symulacja krok 0)</li>
         <li><strong>Seed</strong> — ziarno symulatora; ta sama wartość + te same odczyty = powtarzalna symulacja (wysyłane przy <strong>Wyślij</strong>)</li>
@@ -57,10 +57,10 @@ const HELP_TOPICS = {
       <p>Co jest podłączone w growboxie i jakie ma limity. Checkbox przy nazwie = urządzenie jest w zestawie.</p>
       <ul>
         <li><strong>Klimat</strong> (6 kart) i <strong>Pompy</strong> (4 karty) — ten sam układ: nazwa, checkbox, parametry w poziomym rzędzie</li>
-        <li><strong>typ</strong> — <code>bin</code> / <code>pwm</code> na każdym aktuatorze klimatu i każdej pompie</li>
+        <li><strong>bin / pwm</strong> — klikalna etykieta w nagłówku karty aktuatora (przełącza typ sterowania)</li>
         <li><strong>Fan min</strong> — dolna granica PWM przy alarmie temperatury</li>
       </ul>
-      <p>Checkbox zmienia tylko <strong>formularz lokalny</strong> — na płytkę trafia dopiero po <strong>Wyślij</strong> (badge „lokalne”). Sekcja <strong>Na żywo</strong> pokazuje ostatni krok z płytki, nie podgląd formularza.</p>
+      <p>Checkbox zmienia tylko <strong>formularz lokalny</strong> — na płytkę trafia dopiero po <strong>Wyślij</strong> (badge „wyślij zmiany”). Sekcja <strong>Na żywo</strong> pokazuje ostatni krok z płytki, nie podgląd formularza.</p>
       <p>Brak urządzenia (checkbox off) po wysłaniu → model i safety wymuszają 0 na tym wyjściu.</p>
     `,
   },

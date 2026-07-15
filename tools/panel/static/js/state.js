@@ -4,6 +4,7 @@ var scenario = {};
 var lastDecision = null;
 var lastState = null;
 var deviceScenarioSynced = false;
+var deviceScenarioBaseline = null;
 var activeModal = "scenario";
 var modalReturnFocus = null;
 var helpReturnFocus = null;

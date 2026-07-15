@@ -1,5 +1,11 @@
 function bindFormInputRoot(root) {
   if (!root) return;
+  root.addEventListener("click", (event) => {
+    const toggle = event.target.closest(".control-type-toggle");
+    if (!toggle || !root.contains(toggle)) return;
+    event.preventDefault();
+    toggleControlType(toggle);
+  });
   root.addEventListener("change", (event) => {
     if (event.target?.id === "f-pseudo_lights_active") syncLightsActiveDisplay();
     collectScenario();
@@ -12,6 +18,7 @@ function bindFormInputRoot(root) {
 function bindFormSync() {
   bindFormInputRoot(document.getElementById("form-sections"));
   bindFormInputRoot(document.getElementById("setup-modal-body"));
+  bindFormInputRoot(document.getElementById("previous-section"));
   const toolbar = document.getElementById("panel-toolbar");
   const onSeedChange = (event) => {
     if (event.target?.id === "seed") collectScenario();
@@ -33,6 +40,10 @@ async function init() {
   }
   renderForm();
   bindFormSync();
+  if (lastState?.connected && deviceScenarioBaseline !== null) {
+    setDeviceScenarioBaseline();
+    updateScenarioSyncBadge();
+  }
   setInterval(() => refreshState(), 900);
   refreshState();
 }
@@ -70,6 +81,7 @@ function bindToolbar() {
       try {
         setConnectFailure(null);
         deviceScenarioSynced = false;
+        clearDeviceScenarioBaseline();
         lastRenderedDecisionStep = null;
         await runAction(() => api("/api/connect", {
           method: "POST",
@@ -106,6 +118,7 @@ function bindToolbar() {
         await runAction(() => api("/api/disconnect", { method: "POST", body: "{}" }), btn);
         lastRenderedDecisionStep = null;
         deviceScenarioSynced = false;
+        clearDeviceScenarioBaseline();
         await refreshState();
       } catch (_) { /* btn flash */ }
       return;
@@ -145,7 +158,9 @@ function bindToolbar() {
           clearScenarioDraft();
           saveScenarioDraft();
           deviceScenarioSynced = false;
+          clearDeviceScenarioBaseline();
           renderForm();
+          updateScenarioSyncBadge();
         }, btn);
       } catch (_) { /* btn flash */ }
       return;
@@ -164,6 +179,7 @@ function bindToolbar() {
           patchLocalScenarioStatus(payload);
           patchLocalTransportStatus({ command: "load_scenario" });
           deviceScenarioSynced = true;
+          setDeviceScenarioBaseline(payload);
           updateScenarioSyncBadge();
           updatePlayPauseBtn(true, Boolean(lastState?.connected));
         }, btn);

@@ -270,6 +270,7 @@ function tryApplyScenarioFromDevice(state, { force = false } = {}) {
   renderForm();
   saveScenarioDraft();
   deviceScenarioSynced = true;
+  setDeviceScenarioBaseline();
   updateScenarioSyncBadge();
   return true;
 }

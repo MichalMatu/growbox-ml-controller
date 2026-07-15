@@ -10,6 +10,13 @@ function isIndexSegment(segment) {
   return /^\d+$/.test(segment);
 }
 
+function normalizeControlType(value) {
+  if (value === "pwm" || value === 1 || value === 1.0) return "pwm";
+  if (value === "binary" || value === 0 || value === 0.0) return "binary";
+  if (typeof value === "string" && value.toLowerCase() === "pwm") return "pwm";
+  return "binary";
+}
+
 function coerceContainer(parent, key, nextKey) {
   const existing = parent[key];
   if (isIndexSegment(nextKey)) {

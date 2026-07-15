@@ -906,6 +906,40 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
   min-width: 0;
   gap: var(--cell-gap-inner);
 }
+.mini-cell.actuator-cell .head-row .name {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.actuator-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.28rem;
+  flex-shrink: 0;
+}
+.control-type-toggle {
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  padding: 0.05rem 0.32rem;
+  margin: 0;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--checkbox-border);
+  background: var(--checkbox-bg);
+  color: var(--muted);
+  cursor: pointer;
+  line-height: 1.35;
+  min-height: 0;
+}
+.control-type-toggle:hover {
+  color: var(--text);
+  border-color: var(--accent-border);
+  background: var(--surface-elevated);
+}
+.control-type-toggle:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 1px;
+}
 .actuators-split {
   display: flex;
   flex-direction: column;

@@ -94,7 +94,7 @@ function patchLocalScenarioStatus(scenarioDoc) {
   const status = lastState.last_status;
   const snap = {};
   for (const key of SCENARIO_SYNC_KEYS) {
-    if (scenarioDoc?.[key] !== undefined) snap[key] = scenarioDoc[key];
+    if (scenarioDoc?.[key] !== undefined) snap[key] = cloneScenarioDoc(scenarioDoc[key]);
   }
   if (Object.keys(snap).length > 0) status.scenario = snap;
   if (scenarioDoc?.seed !== undefined) status.seed = scenarioDoc.seed;
@@ -117,12 +117,16 @@ function updatePlayPauseBtn(paused, connected) {
   }
 }
 
-function scenarioSyncPayload(doc) {
+function scenarioPayloadForKeys(doc, keys) {
   const payload = { seed: doc?.seed ?? 101 };
-  for (const key of SCENARIO_SYNC_KEYS) {
+  for (const key of keys) {
     if (doc?.[key] !== undefined) payload[key] = doc[key];
   }
   return sanitizeScenarioNumeric(payload);
+}
+
+function scenarioSyncPayload(doc) {
+  return scenarioPayloadForKeys(doc, SCENARIO_SYNC_KEYS);
 }
 
 function stableStringify(value) {
@@ -140,49 +144,77 @@ function scenarioSyncFingerprint(doc) {
   return stableStringify(scenarioSyncPayload(doc));
 }
 
-function deviceScenarioFromState(state) {
-  const snap = state?.last_status?.scenario;
-  if (!state?.connected || !snap || typeof snap !== "object" || !panelSchema) return null;
-  return scenarioSyncPayload(deepMergeScenario(panelSchema.default_scenario, {
-    seed: state.last_status.seed ?? panelSchema.default_scenario.seed,
-    sensors: snap.sensors,
-    validity: snap.validity,
-    zones: snap.zones,
-    pseudo: snap.pseudo,
-    environment: snap.environment,
-    actuators: snap.actuators,
-    targets: snap.targets,
-    safety: snap.safety,
-    previous: snap.previous,
-  }));
+function cloneScenarioDoc(doc) {
+  return JSON.parse(JSON.stringify(doc));
+}
+
+function readScenarioFromForm(base = scenario) {
+  const next = sanitizeScenarioNumeric(cloneScenarioDoc(base));
+  const seedEl = document.getElementById("seed");
+  if (seedEl) next.seed = normalizeSeed(seedEl.value);
+  forEachScenarioField(el => {
+    const path = el.dataset.path;
+    if (!path) return;
+    if (el.classList?.contains("control-type-toggle")) {
+      setNested(next, path, normalizeControlType(el.dataset.value));
+      return;
+    }
+    let value;
+    if (el.type === "checkbox") value = el.checked;
+    else if (el.tagName === "SELECT") {
+      value = el.dataset.bool !== undefined ? el.value === "true" : el.value;
+    } else value = normalizeFieldNumber(Number(el.value), path);
+    setNested(next, path, value);
+  });
+  return next;
+}
+
+function setDeviceScenarioBaseline(doc) {
+  const source = doc ?? readScenarioFromForm(scenario);
+  deviceScenarioBaseline = scenarioSyncFingerprint(source);
+}
+
+function clearDeviceScenarioBaseline() {
+  deviceScenarioBaseline = null;
+}
+
+function scenarioFormRoots() {
+  return [
+    document.getElementById("form-sections"),
+    document.getElementById("setup-modal-body"),
+    document.getElementById("previous-section"),
+  ].filter(Boolean);
+}
+
+function forEachScenarioField(callback) {
+  const seen = new Set();
+  for (const root of scenarioFormRoots()) {
+    root.querySelectorAll("[data-path]").forEach(el => {
+      const path = el.dataset.path;
+      if (!path || seen.has(path)) return;
+      seen.add(path);
+      callback(el);
+    });
+  }
 }
 
 function updateScenarioSyncBadge() {
   const el = document.getElementById("scenario-sync-badge");
   if (!el) return;
-  if (!lastState?.connected) {
+  if (!lastState?.connected || deviceScenarioBaseline === null) {
     el.hidden = true;
     return;
   }
-  const deviceDoc = deviceScenarioFromState(lastState);
-  if (!deviceDoc) {
-    el.hidden = false;
-    el.className = "sync-badge unknown";
-    el.textContent = "?";
-    el.title = "Brak scenariusza z płytki — wyślij Status lub Wyślij";
-    return;
-  }
-  const localDoc = scenarioSyncPayload(scenario);
-  const synced = scenarioSyncFingerprint(localDoc) === scenarioSyncFingerprint(deviceDoc);
+  const synced = scenarioSyncFingerprint(readScenarioFromForm(scenario)) === deviceScenarioBaseline;
   el.hidden = false;
   if (synced) {
     el.className = "sync-badge synced";
     el.textContent = "OK";
-    el.title = "Formularz zgodny ze scenariuszem na płytce";
+    el.title = "Formularz zgodny z ostatnim Połącz / Wyślij";
   } else {
     el.className = "sync-badge local";
-    el.textContent = "lokalne";
-    el.title = "Masz niezapisane zmiany — kliknij Wyślij";
+    el.textContent = "wyślij zmiany";
+    el.title = "Formularz zmieniony — kliknij Wyślij";
   }
 }
 function normalizeSeed(value) {
@@ -191,19 +223,7 @@ function normalizeSeed(value) {
 }
 
 function collectScenario() {
-  const next = sanitizeScenarioNumeric(deepMergeScenario({}, scenario));
-  next.seed = normalizeSeed(document.getElementById("seed").value);
-  document.querySelectorAll("[data-path]").forEach(el => {
-    const path = el.dataset.path;
-    let value;
-    if (el.type === "checkbox") value = el.checked;
-    else if (el.tagName === "SELECT") {
-      value = el.dataset.bool !== undefined ? el.value === "true" : el.value;
-    }
-    else value = normalizeFieldNumber(Number(el.value), path);
-    setNested(next, path, value);
-  });
-  scenario = sanitizeScenarioNumeric(next);
+  scenario = readScenarioFromForm(scenario);
   saveScenarioDraft();
   updateScenarioSyncBadge();
   if (lastDecision) renderOutputs(lastDecision, { force: true });

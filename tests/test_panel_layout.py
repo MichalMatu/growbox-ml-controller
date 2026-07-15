@@ -13,6 +13,8 @@ from pathlib import Path
 
 PANEL_STATIC = Path(__file__).resolve().parents[1] / "tools" / "panel" / "static"
 FORM_JS = PANEL_STATIC / "js" / "form.js"
+SCENARIO_JS = PANEL_STATIC / "js" / "scenario.js"
+UTIL_JS = PANEL_STATIC / "js" / "util.js"
 PANEL_CSS = PANEL_STATIC / "panel.css"
 INDEX_HTML = PANEL_STATIC / "index.html"
 
@@ -116,6 +118,82 @@ def test_main_page_keeps_two_column_layout():
         r"main\s*\{[^}]*grid-template-columns:\s*minmax\(280px,\s*1\.15fr\)\s*minmax\(260px,\s*0\.85fr\)",
         panel_css,
     )
+
+
+def test_actuator_control_type_is_header_toggle_not_param_select():
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
+    cell_fn = _extract_js_function(form_js, "renderActuatorGroupCell")
+    toggle_fn = _extract_js_function(form_js, "renderControlTypeToggle")
+    assert cell_fn
+    assert toggle_fn
+    assert "control-type-toggle" in toggle_fn
+    assert 'data-value="${value}"' in toggle_fn
+    assert "normalizeControlType" in toggle_fn
+    assert "controlTypeName" in cell_fn
+    assert "renderControlTypeToggle" in cell_fn
+    assert ".control-type-toggle" in panel_css
+
+
+def test_collect_scenario_reads_control_type_from_toggle_buttons():
+    scenario_js = SCENARIO_JS.read_text(encoding="utf-8")
+    read_fn = _extract_js_function(scenario_js, "readScenarioFromForm")
+    collect_fn = _extract_js_function(scenario_js, "collectScenario")
+    badge_fn = _extract_js_function(scenario_js, "updateScenarioSyncBadge")
+    assert read_fn
+    assert collect_fn
+    assert badge_fn
+    assert "control-type-toggle" in read_fn
+    assert "normalizeControlType(el.dataset.value)" in read_fn
+    assert "readScenarioFromForm(scenario)" in collect_fn
+    assert "wyślij zmiany" in badge_fn
+    assert '"lokalne"' not in badge_fn
+
+
+def test_normalize_control_type_coerces_encoded_defaults():
+    util_js = UTIL_JS.read_text(encoding="utf-8")
+    fn = _extract_js_function(util_js, "normalizeControlType")
+    assert fn
+    assert 'return "pwm"' in fn
+    assert 'return "binary"' in fn
+
+
+def test_field_by_name_supports_section_scope_for_duplicate_names():
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    cell_fn = _extract_js_function(form_js, "renderActuatorGroupCell")
+    safety_fn = _extract_js_function(form_js, "renderSafetyFieldsSubCard")
+    by_name_fn = _extract_js_function(form_js, "fieldByName")
+    assert by_name_fn
+    assert "sectionId && section.id !== sectionId" in by_name_fn
+    assert 'fieldByName(availableName, "actuators")' in cell_fn
+    assert 'fieldByName(name, "safety")' in safety_fn
+
+
+def test_for_each_scenario_field_dedupes_duplicate_data_paths():
+    scenario_js = SCENARIO_JS.read_text(encoding="utf-8")
+    fn = _extract_js_function(scenario_js, "forEachScenarioField")
+    assert fn
+    assert "seen.has(path)" in fn
+    assert "seen.add(path)" in fn
+
+
+def test_scenario_sync_uses_baseline_fingerprint():
+    scenario_js = SCENARIO_JS.read_text(encoding="utf-8")
+    main_js = (PANEL_STATIC / "js" / "main.js").read_text(encoding="utf-8")
+    state_js = (PANEL_STATIC / "js" / "state.js").read_text(encoding="utf-8")
+    badge_fn = _extract_js_function(scenario_js, "updateScenarioSyncBadge")
+    read_fn = _extract_js_function(scenario_js, "readScenarioFromForm")
+    assert badge_fn
+    assert read_fn
+    assert "deviceScenarioFromState" not in scenario_js
+    assert "scenarioSyncFingerprint(readScenarioFromForm(scenario))" in badge_fn
+    assert "deviceScenarioBaseline" in state_js
+    assert "setDeviceScenarioBaseline" in scenario_js
+    assert "deviceScenarioBaseline === null" in badge_fn
+    assert 'bindFormInputRoot(document.getElementById("previous-section"))' in main_js
+    assert "cloneScenarioDoc(base)" in read_fn
+    assert "forEachScenarioField" in read_fn
+    assert 'document.querySelectorAll("[data-path]")' not in read_fn
 
 
 def test_actuators_main_page_use_compact_climate_and_pump_rows():

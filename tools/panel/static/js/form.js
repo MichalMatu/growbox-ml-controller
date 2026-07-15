@@ -61,8 +61,9 @@ function fieldControlClassAttr() {
   return ` class="${FIELD_CONTROL_CLASS}"`;
 }
 
-function fieldByName(name) {
+function fieldByName(name, sectionId = null) {
   for (const section of panelSchema.sections) {
+    if (sectionId && section.id !== sectionId) continue;
     const hit = section.fields.find(f => f.name === name);
     if (hit) return hit;
   }
@@ -537,6 +538,28 @@ function renderZoneCultivationCard(fields, index) {
   return `<div class="pot-card cultivation-pot-card"><div class="head-row"><span class="name">Donica ${index + 1}</span></div><div class="compact-row">${cells}</div></div>`;
 }
 
+function renderControlTypeToggle(field) {
+  if (!field || field.type !== "enum") return "";
+  const value = normalizeControlType(getNested(scenario, field.path) ?? field.default);
+  const label = formatEnumOptionLabel(value);
+  const hint = fieldHint(field.name);
+  const hintAttr = hint ? ` title="${hint}"` : ' title="Kliknij: bin ↔ pwm"';
+  return `<button type="button" class="control-type-toggle" data-path="${field.path}"
+    data-value="${value}"${hintAttr} aria-label="Typ sterowania: ${label}">${label}</button>`;
+}
+
+function toggleControlType(button) {
+  const path = button.dataset.path;
+  if (!path) return;
+  const current = normalizeControlType(button.dataset.value);
+  const next = current === "pwm" ? "binary" : "pwm";
+  button.dataset.value = next;
+  const label = formatEnumOptionLabel(next);
+  button.textContent = label;
+  button.setAttribute("aria-label", `Typ sterowania: ${label}`);
+  collectScenario();
+}
+
 function renderActuatorParamField(field) {
   const id = `f-${field.path.replaceAll(".", "_")}`;
   const value = getNested(scenario, field.path);
@@ -560,8 +583,13 @@ function renderActuatorParamField(field) {
 
 function renderActuatorGroupCell(title, names) {
   const availableName = names.find(n => n.endsWith("_available"));
-  const availableField = availableName ? fieldByName(availableName) : null;
-  const paramFields = names.filter(n => n !== availableName).map(n => fieldByName(n)).filter(Boolean);
+  const controlTypeName = names.find(n => n.endsWith("_control_type"));
+  const availableField = availableName ? fieldByName(availableName, "actuators") : null;
+  const controlTypeField = controlTypeName ? fieldByName(controlTypeName, "actuators") : null;
+  const paramFields = names
+    .filter(n => n !== availableName && n !== controlTypeName)
+    .map(n => fieldByName(n, "actuators"))
+    .filter(Boolean);
   const wide = paramFields.some(isWideField) ? " wide" : "";
   const availId = availableField ? `f-${availableField.path.replaceAll(".", "_")}` : "";
   const availVal = availableField ? getNested(scenario, availableField.path) : false;
@@ -571,7 +599,10 @@ function renderActuatorGroupCell(title, names) {
   return `<div class="mini-cell actuator-cell${wide}">
     <div class="head-row">
       <span class="name">${title}</span>
-      ${availableField ? `<input type="checkbox" data-path="${availableField.path}" id="${availId}"${availHintAttr} ${availVal ? "checked" : ""} />` : ""}
+      <div class="actuator-head-actions">
+        ${controlTypeField ? renderControlTypeToggle(controlTypeField) : ""}
+        ${availableField ? `<input type="checkbox" data-path="${availableField.path}" id="${availId}"${availHintAttr} ${availVal ? "checked" : ""} />` : ""}
+      </div>
     </div>
     ${stack}
   </div>`;
@@ -595,7 +626,7 @@ function renderActuatorPanel() {
 }
 
 function renderSafetyParamCell(title, fieldNames) {
-  const paramFields = fieldNames.map(name => fieldByName(name)).filter(Boolean);
+  const paramFields = fieldNames.map(name => fieldByName(name, "safety")).filter(Boolean);
   const wide = paramFields.some(isWideField) ? " wide" : "";
   const stack = `<div class="field-stack">${paramFields.map(renderActuatorParamField).join("")}</div>`;
   return `<div class="mini-cell actuator-cell${wide}">
@@ -605,7 +636,7 @@ function renderSafetyParamCell(title, fieldNames) {
 }
 
 function renderSafetyFieldsSubCard(title, fieldNames) {
-  const cells = fieldNames.map(name => fieldByName(name)).filter(Boolean).map(renderMiniCell).join("");
+  const cells = fieldNames.map(name => fieldByName(name, "safety")).filter(Boolean).map(renderMiniCell).join("");
   if (!cells) return "";
   return `<div class="sub-card"><div class="card-head"><h3>${title}</h3></div><div class="compact-row">${cells}</div></div>`;
 }
