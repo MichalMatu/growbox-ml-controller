@@ -16,17 +16,7 @@ FORM_JS = PANEL_STATIC / "js" / "form.js"
 SCENARIO_JS = PANEL_STATIC / "js" / "scenario.js"
 UTIL_JS = PANEL_STATIC / "js" / "util.js"
 PANEL_CSS = PANEL_STATIC / "panel.css"
-PANEL_CSS_DIR = PANEL_STATIC / "css"
 INDEX_HTML = PANEL_STATIC / "index.html"
-
-
-def panel_css_bundle() -> str:
-    """panel.css + @import modules (source of truth for layout contracts)."""
-    main = PANEL_CSS.read_text(encoding="utf-8")
-    chunks = [main]
-    for path in sorted(PANEL_CSS_DIR.glob("*.css")):
-        chunks.append(path.read_text(encoding="utf-8"))
-    return "\n".join(chunks)
 
 
 def _extract_js_function(source: str, name: str) -> str:
@@ -55,7 +45,7 @@ def test_cultivation_pot_fields_are_horizontal_not_stacked():
 
 
 def test_cultivation_pot_css_uses_horizontal_grid_not_column_stack():
-    panel_css = panel_css_bundle()
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
     assert ".cultivation-pot-card .field-stack" not in panel_css
     assert not re.search(
         r"\.cultivation-pot-card[^{]*\{[^}]*flex-direction:\s*column",
@@ -72,7 +62,7 @@ def test_cultivation_pot_css_uses_horizontal_grid_not_column_stack():
 
 
 def test_cultivation_pots_match_sensor_pot_card_width():
-    panel_css = panel_css_bundle()
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
     assert re.search(
         r"\.pot-card\.cultivation-pot-card\s*\{[^}]*width:\s*var\(--pot-card-w\)",
         panel_css,
@@ -81,7 +71,7 @@ def test_cultivation_pots_match_sensor_pot_card_width():
 
 def test_sensor_pot_fields_use_horizontal_layout_reference():
     """Positive reference: czujniki donic keep Wilg. + Gleba T side by side."""
-    panel_css = panel_css_bundle()
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
     assert ".pot-card-sensors" in panel_css
     assert "grid-template-columns: 1fr 1fr" in panel_css
 
@@ -110,7 +100,7 @@ def test_safety_section_uses_sub_cards_and_polish_labels():
 def test_page_avoids_broken_multi_column_form_grids():
     """Cards of different heights must not sit in a 2-col page grid (empty gaps)."""
     html = INDEX_HTML.read_text(encoding="utf-8")
-    panel_css = panel_css_bundle()
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
     form_js = FORM_JS.read_text(encoding="utf-8")
     assert 'id="form-sections" class="card-stack"' in html
     assert "form-grid" not in html
@@ -120,7 +110,7 @@ def test_page_avoids_broken_multi_column_form_grids():
 
 
 def test_main_page_keeps_two_column_layout():
-    panel_css = panel_css_bundle()
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
     html = INDEX_HTML.read_text(encoding="utf-8")
     assert "left-panel" in html
     assert "right-panel" in html
@@ -130,37 +120,9 @@ def test_main_page_keeps_two_column_layout():
     )
 
 
-def test_field_width_tiers_group_by_unit_suffix():
-    form_js = FORM_JS.read_text(encoding="utf-8")
-    panel_css = panel_css_bundle()
-    tier_fn = _extract_js_function(form_js, "fieldInputWidthTier")
-    mini_fn = _extract_js_function(form_js, "renderMiniCell")
-    wrap_fn = _extract_js_function(form_js, "renderWrappedNumberInput")
-    assert tier_fn
-    assert "fieldUnitSuffix" in tier_fn
-    assert 'return "field-w-pct"' in tier_fn
-    assert 'return "field-w-compact"' in tier_fn
-    assert 'return "field-w-wide"' in tier_fn
-    assert "fieldInputWidthTier" in mini_fn
-    assert "fieldInputWidthTier" in wrap_fn
-    assert "--field-w-pct:" in panel_css
-    assert "--field-w-compact:" in panel_css
-    assert ".mini-cell.field-w-pct" in panel_css
-    assert ".sensors-panel .sub-card > .compact-row" in panel_css
-    assert "flex-wrap: nowrap" in panel_css
-    lights_fn = _extract_js_function(form_js, "renderLightsActiveCell")
-    assert lights_fn
-    assert "field-w-lights" in lights_fn
-    assert "pseudo-lights-display" in lights_fn
-    assert "<span " in lights_fn
-    assert 'type="text"' not in lights_fn
-    assert "--field-w-lights:" in panel_css
-    assert ".sensors-panel .mini-cell.pseudo-lights-cell" in panel_css
-
-
 def test_actuator_param_fields_use_in_input_unit_suffixes():
     form_js = FORM_JS.read_text(encoding="utf-8")
-    panel_css = panel_css_bundle()
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
     render_fn = _extract_js_function(form_js, "renderActuatorParamField")
     wrap_fn = _extract_js_function(form_js, "renderWrappedNumberInput")
     assert render_fn
@@ -173,13 +135,13 @@ def test_actuator_param_fields_use_in_input_unit_suffixes():
     assert ".actuator-input-suffix" in panel_css
     assert ".field-input-wrap" in panel_css
     assert ".field-input-suffix" in panel_css
-    assert "--field-w-standard:" in panel_css
+    assert "--climate-input-w:" in panel_css
 
 
 def test_inactive_zone_dependents_are_linked_to_zone_available():
     form_js = FORM_JS.read_text(encoding="utf-8")
     scenario_js = SCENARIO_JS.read_text(encoding="utf-8")
-    panel_css = panel_css_bundle()
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
     read_fn = _extract_js_function(scenario_js, "readScenarioFromForm")
     cell_fn = _extract_js_function(form_js, "renderActuatorGroupCell")
     assert "applyInactiveZonePolicy" in scenario_js
@@ -213,7 +175,7 @@ def test_mini_cell_number_fields_use_in_input_unit_suffixes_and_hints():
 
 def test_main_actuator_cells_have_no_control_type_toggle():
     form_js = FORM_JS.read_text(encoding="utf-8")
-    panel_css = panel_css_bundle()
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
     cell_fn = _extract_js_function(form_js, "renderActuatorGroupCell")
     assert cell_fn
     assert "control-type-toggle" not in cell_fn
@@ -293,7 +255,7 @@ def test_scenario_sync_uses_baseline_fingerprint():
 
 def test_actuators_main_page_use_compact_climate_and_pump_rows():
     form_js = FORM_JS.read_text(encoding="utf-8")
-    panel_css = panel_css_bundle()
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
     render_fn = _extract_js_function(form_js, "renderForm")
     block_fn = _extract_js_function(form_js, "renderActuatorBlock")
     assert render_fn
@@ -301,33 +263,33 @@ def test_actuators_main_page_use_compact_climate_and_pump_rows():
     assert "renderActuatorPanel()" in render_fn
     assert "actuators-climate-block" in block_fn
     assert "actuators-pumps-block" in block_fn
-    climate_row = re.search(
-        r"\.actuators-panel\s+\.actuators-climate-block\s+\.compact-row\s*\{[^}]+\}",
-        panel_css,
-    )
-    assert climate_row
-    assert "flex-wrap: wrap" in climate_row.group(0)
-    pumps_row = re.search(
+    actuator_rows = re.search(
+        r"\.actuators-panel\s+\.actuators-climate-block\s+\.compact-row,\s*"
         r"\.actuators-panel\s+\.actuators-pumps-block\s+\.compact-row\s*\{[^}]+\}",
         panel_css,
     )
-    assert pumps_row
-    assert re.search(
-        r"\.actuators-panel\s+\.actuators-pumps-block\s+\.compact-row[^{]*\{[^}]*overflow-x:\s*auto",
+    assert actuator_rows
+    rule = actuator_rows.group(0)
+    assert "flex-wrap: wrap" in rule
+    assert "flex-wrap: nowrap" not in rule
+    assert not re.search(
+        r"\.actuators-panel\s+\.actuators-(?:climate|pumps)-block[^{]*\{[^}]*overflow-x:\s*auto",
         panel_css,
     )
+    assert "--pump-input-w:" in panel_css
+    assert "--climate-input-w:" in panel_css
     assert re.search(
         r"\.actuators-panel\s+\.actuators-climate-block\s+\.mini-cell\.actuator-cell\s*\{[^}]*flex:\s*0\s+0\s+auto",
         panel_css,
     )
     assert re.search(
-        r"\.actuator-input-wrap\.field-w-standard\s*\{[^}]*width:\s*var\(--field-w-standard\)",
+        r"\.actuators-panel\s+\.actuators-climate-block\s+\.actuator-input-wrap\s*\{[^}]*width:\s*var\(--climate-input-w\)",
         panel_css,
     )
 
 
 def test_growbox_setup_cultivation_fields_use_compact_widths():
-    panel_css = panel_css_bundle()
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
     assert "--cultivation-input-w:" in panel_css
     assert "#setup-pane-growbox .cultivation-pot-card > .compact-row" in panel_css
     assert "display: flex" in panel_css
@@ -336,7 +298,7 @@ def test_growbox_setup_cultivation_fields_use_compact_widths():
 
 def test_growbox_setup_has_actuator_control_type_selects():
     form_js = FORM_JS.read_text(encoding="utf-8")
-    panel_css = panel_css_bundle()
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
     main_js = (PANEL_STATIC / "js" / "main.js").read_text(encoding="utf-8")
     growbox_fn = _extract_js_function(form_js, "renderGrowboxPanel")
     actuators_fn = _extract_js_function(form_js, "renderGrowboxActuatorsSubCard")

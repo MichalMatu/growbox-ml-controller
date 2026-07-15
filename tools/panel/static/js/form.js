@@ -142,35 +142,6 @@ function fieldSuffixSizeClass(suffix) {
   return " suffix-short";
 }
 
-function fieldInputWidthTier(field) {
-  if (isWideField(field)) return "field-w-wide";
-  const suffix = fieldUnitSuffix(field);
-  switch (suffix) {
-    case "%":
-    case "×":
-    case "η":
-      return "field-w-pct";
-    case "°C":
-    case "L":
-    case "min":
-    case "0–1":
-      return "field-w-compact";
-    case "ppm":
-    case "s":
-    case "W":
-    case "mL/s":
-      return "field-w-standard";
-    case "m³":
-    case "m³/h":
-    case "g/h":
-    case "J/K":
-    case "1/h":
-      return "field-w-wide";
-    default:
-      return "field-w-standard";
-  }
-}
-
 function renderWrappedNumberInput(field, opts = {}) {
   const id = opts.id || `f-${field.path.replaceAll(".", "_")}`;
   const disabled = Boolean(opts.disabled);
@@ -180,14 +151,13 @@ function renderWrappedNumberInput(field, opts = {}) {
     ?? formatFieldNumber(getNested(scenario, field.path) ?? field.default, field.path);
   const suffix = fieldUnitSuffix(field);
   const suffixClass = fieldSuffixSizeClass(suffix);
-  const widthTier = fieldInputWidthTier(field);
   const wrapClass = opts.wrapClass || "field-input-wrap";
   const suffixClassName = opts.suffixClass || "field-input-suffix";
   const disabledAttr = disabled ? " disabled" : "";
   const suffixMarkup = suffix
     ? `<span class="${suffixClassName}" aria-hidden="true">${escapeHtml(suffix)}</span>`
     : "";
-  return `<div class="${wrapClass}${suffixClass} ${widthTier}">
+  return `<div class="${wrapClass}${suffixClass}">
     <input type="number"${fieldControlClassAttr()} data-path="${field.path}" id="${id}"${hintAttr}${disabledAttr}
       aria-label="${ariaLabel}" min="${field.minimum}" max="${field.maximum}" step="${fieldStep(field)}"
       value="${displayValue}" />
@@ -441,7 +411,7 @@ function syncLightsActiveDisplay() {
   const checkbox = document.getElementById("f-pseudo_lights_active");
   const display = document.getElementById("f-pseudo_lights_active_display");
   if (!checkbox || !display) return;
-  display.textContent = checkbox.checked ? "ON" : "OFF";
+  display.value = checkbox.checked ? "ON" : "OFF";
 }
 
 function renderLightsActiveCell() {
@@ -451,13 +421,14 @@ function renderLightsActiveCell() {
   const value = getNested(scenario, field.path);
   const hint = "Harmonogram / readback przekaźnika — wpływa na termikę symulatora (wejście ML, nie czujnik)";
   const displayValue = value ? "ON" : "OFF";
-  return `<div class="mini-cell pseudo-lights-cell field-w-lights">
+  return `<div class="mini-cell pseudo-lights-cell">
     <div class="head-row">
       <span class="name" title="${hint}">${shortLabel(field.name)}</span>
       <input type="checkbox" data-path="${field.path}" id="${id}" title="${hint}" ${value ? "checked" : ""} />
     </div>
-    <span class="field-control pseudo-lights-display" id="f-pseudo_lights_active_display"
-      aria-hidden="true" title="Podgląd stanu — edycja checkboxem">${displayValue}</span>
+    <input type="text" class="field-control pseudo-lights-display" id="f-pseudo_lights_active_display" disabled
+      value="${displayValue}" aria-hidden="true" tabindex="-1"
+      title="Podgląd stanu — edycja checkboxem" />
   </div>`;
 }
 
@@ -568,7 +539,7 @@ function renderMiniCellInput(field) {
 }
 
 function renderMiniCell(field) {
-  const widthClass = field.type === "boolean" ? "" : ` ${fieldInputWidthTier(field)}`;
+  const wide = isWideField(field) ? " wide" : "";
 
   if (field.type === "boolean") {
     const id = `f-${field.path.replaceAll(".", "_")}`;
@@ -576,21 +547,21 @@ function renderMiniCell(field) {
     if (isAvailabilityField(field.name)) {
       const hint = fieldHint(field.name);
       const hintAttr = hint ? ` title="${hint}"` : "";
-      return `<div class="mini-cell bool-only${widthClass}">
+      return `<div class="mini-cell bool-only${wide}">
         <div class="head-row tick-only">
           <input type="checkbox" data-path="${field.path}" id="${id}"${hintAttr} ${value ? "checked" : ""} />
         </div>
       </div>`;
     }
     const hintAttr = fieldHintAttr(field.name);
-    return `<div class="mini-cell bool-only${widthClass}">
+    return `<div class="mini-cell bool-only${wide}">
       <div class="head-row">
         <span class="name"${hintAttr}>${shortLabel(field.name)}</span>
         <input type="checkbox" data-path="${field.path}" id="${id}"${hintAttr} ${value ? "checked" : ""} />
       </div>
     </div>`;
   }
-  return `<div class="mini-cell${widthClass}">${renderMiniCellInput(field)}</div>`;
+  return `<div class="mini-cell${wide}">${renderMiniCellInput(field)}</div>`;
 }
 
 function renderCompactBlock(title, fields, helpTopic) {
@@ -833,8 +804,8 @@ function renderActuatorParamField(field, { disabled = false } = {}) {
       suffixClass: "actuator-input-suffix",
     });
   }
-  const widthTier = field.type === "enum" ? "" : ` ${fieldInputWidthTier(field)}`;
-  return `<div class="actuator-param${widthTier}">${control}</div>`;
+  const wideClass = isWideField(field) ? " wide-param" : "";
+  return `<div class="actuator-param${wideClass}">${control}</div>`;
 }
 
 function renderActuatorGroupCell(title, names, sectionId) {
@@ -847,6 +818,7 @@ function renderActuatorGroupCell(title, names, sectionId) {
     .filter(Boolean);
   const zoneIndex = zoneIndexFromPumpGroup(names);
   const zonePumpInactive = zoneIndex !== null && !isZoneActive(zoneIndex);
+  const wide = paramFields.some(isWideField) ? " wide" : "";
   const availId = availableField ? `f-${availableField.path.replaceAll(".", "_")}` : "";
   const availVal = zonePumpInactive
     ? false
@@ -860,7 +832,7 @@ function renderActuatorGroupCell(title, names, sectionId) {
   const stack = `<div class="field-stack">${paramFields
     .map(f => renderActuatorParamField(f, { disabled: zonePumpInactive }))
     .join("")}</div>`;
-  return `<div class="mini-cell actuator-cell${inactiveClass}">
+  return `<div class="mini-cell actuator-cell${wide}${inactiveClass}">
     <div class="head-row">
       <span class="name"${titleHintAttr}>${title}</span>
       <div class="actuator-head-actions">
