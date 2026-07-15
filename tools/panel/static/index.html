@@ -27,21 +27,97 @@
       font-size: 13px;
       line-height: 1.35;
     }
-    header {
-      padding: 0.5rem 0.75rem;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      align-items: center;
-      justify-content: space-between;
-      background: #121a24;
+    h1 { margin: 0; font-size: 0.85rem; font-weight: 600; }
+    .sub { color: var(--muted); font-size: 0.72rem; }
+    .top-bar {
+      padding: 0.45rem 0.6rem 0;
       position: sticky;
       top: 0;
       z-index: 20;
+      background: var(--bg);
     }
-    h1 { margin: 0; font-size: 0.95rem; font-weight: 600; }
-    .sub { color: var(--muted); font-size: 0.72rem; }
+    .top-card {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.35rem 0.5rem;
+      padding: 0.38rem 0.5rem;
+      margin-bottom: 0;
+    }
+    .top-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      flex-shrink: 0;
+    }
+    .top-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.22rem;
+      align-items: center;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.12rem 0.42rem;
+      border-radius: 999px;
+      font-size: 0.65rem;
+      background: rgba(15, 20, 25, 0.55);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .badge.mono { font-family: ui-monospace, monospace; font-size: 0.62rem; }
+    .top-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 0.28rem;
+      flex: 1 1 320px;
+      min-width: 0;
+    }
+    .top-connect {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.28rem;
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+    .badge-btn {
+      padding: 0.22rem 0.48rem;
+      font-size: 0.68rem;
+      border-radius: 999px;
+      line-height: 1.2;
+    }
+    .badge-btn.primary { background: var(--accent); color: #fff; border-color: #2f6fd1; }
+    .badge-btn.danger {
+      padding: 0.22rem 0.55rem;
+      background: #4a2024;
+      border-color: var(--danger);
+      color: #ffd8da;
+    }
+    .seed-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.28rem;
+      padding: 0.1rem 0.38rem 0.1rem 0.48rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(15, 20, 25, 0.55);
+      font-size: 0.65rem;
+      color: var(--muted);
+      flex-direction: row;
+    }
+    .seed-badge input {
+      width: 3.2rem;
+      padding: 0.14rem 0.28rem;
+      font-size: 0.68rem;
+      border-radius: 999px;
+      text-align: center;
+    }
+    #port-select { min-width: 140px; max-width: 180px; font-size: 0.68rem; padding: 0.22rem 0.35rem; }
     main {
       display: grid;
       grid-template-columns: minmax(280px, 1.15fr) minmax(260px, 0.85fr);
@@ -309,38 +385,36 @@
   </style>
 </head>
 <body>
-  <header>
-    <div>
-      <h1>Growbox ML panel</h1>
-      <div class="sub" id="schema-meta">Ładowanie…</div>
-    </div>
-    <div class="row">
-      <span class="status-dot" id="conn-dot"></span>
-      <select id="port-select" style="min-width: 180px; max-width: 220px;"></select>
-      <button id="btn-refresh-ports" class="ghost">↻</button>
-      <button class="primary" id="btn-connect">Połącz</button>
-      <button class="danger" id="btn-disconnect">×</button>
+  <header class="top-bar">
+    <div class="card top-card">
+      <div class="top-brand">
+        <h1>Growbox ML</h1>
+        <div class="top-badges" id="schema-meta"><span class="badge">Ładowanie…</span></div>
+      </div>
+      <div class="top-controls">
+        <button class="badge-btn" data-cmd='{"command":"pause"}'>Pauza</button>
+        <button class="badge-btn" data-cmd='{"command":"resume"}'>Wznów</button>
+        <button class="badge-btn" data-cmd='{"command":"reset"}'>Reset</button>
+        <button class="badge-btn" data-cmd='{"command":"mode","value":"replay"}'>Replay</button>
+        <button class="badge-btn" data-cmd='{"command":"mode","value":"closed_loop"}'>Loop</button>
+        <button class="badge-btn" data-cmd='{"command":"status"}'>Status</button>
+        <label class="seed-badge">Seed<input type="number" id="seed" value="101" step="1" /></label>
+        <button class="badge-btn primary" id="btn-load">Wczytaj</button>
+        <button class="badge-btn primary" id="btn-step">Krok</button>
+        <button class="badge-btn" id="btn-defaults">Domyślne</button>
+      </div>
+      <div class="top-connect">
+        <span class="status-dot" id="conn-dot"></span>
+        <select id="port-select"></select>
+        <button id="btn-refresh-ports" class="badge-btn ghost">↻</button>
+        <button class="badge-btn primary" id="btn-connect">Połącz</button>
+        <button class="badge-btn danger" id="btn-disconnect">×</button>
+      </div>
     </div>
   </header>
 
   <main>
     <section class="left-panel">
-      <div class="card">
-        <div class="row btn-row">
-          <button data-cmd='{"command":"pause"}'>Pauza</button>
-          <button data-cmd='{"command":"resume"}'>Wznów</button>
-          <button data-cmd='{"command":"reset"}'>Reset</button>
-          <button data-cmd='{"command":"mode","value":"replay"}'>Replay</button>
-          <button data-cmd='{"command":"mode","value":"closed_loop"}'>Loop</button>
-          <button data-cmd='{"command":"status"}'>Status</button>
-        </div>
-        <div class="row btn-row" style="margin-top:0.4rem">
-          <label style="flex:0 0 72px">Seed<input type="number" id="seed" value="101" step="1" /></label>
-          <button class="primary" id="btn-load">Wczytaj</button>
-          <button class="primary" id="btn-step">Krok</button>
-          <button id="btn-defaults">Domyślne</button>
-        </div>
-      </div>
       <div id="form-sections"></div>
     </section>
 
@@ -793,12 +867,18 @@
       }
     }
 
+    function renderSchemaBadges(schema) {
+      document.getElementById("schema-meta").innerHTML =
+        `<span class="badge">v${schema.schema_version}</span>` +
+        `<span class="badge">${schema.feature_count}→${schema.outputs.length}</span>` +
+        `<span class="badge mono">${schema.schema_hash}</span>`;
+    }
+
     async function init() {
       panelSchema = await api("/api/schema");
       scenario = panelSchema.default_scenario;
       document.getElementById("seed").value = scenario.seed || 101;
-      document.getElementById("schema-meta").textContent =
-        `v${panelSchema.schema_version} · ${panelSchema.feature_count}→${panelSchema.outputs.length} · ${panelSchema.schema_hash}`;
+      renderSchemaBadges(panelSchema);
       document.getElementById("safety-note").textContent = panelSchema.safety_note || "";
       renderForm();
       await refreshPorts();
@@ -860,7 +940,8 @@
     };
 
     init().catch(err => {
-      document.getElementById("schema-meta").textContent = "Błąd: " + err.message;
+      document.getElementById("schema-meta").innerHTML =
+        `<span class="badge" style="color:var(--danger)">Błąd: ${err.message}</span>`;
     });
   </script>
 </body>
