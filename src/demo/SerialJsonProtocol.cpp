@@ -191,7 +191,7 @@ void SerialJsonProtocol::processLine(DummyEnvironmentSimulator& simulator,
   if (std::strcmp(command, "step") == 0) {
     control::SensorState sensors = simulator.input().sensors;
     control::SensorValidity validity = simulator.input().validity;
-    control::ActuatorCapabilities actuators{};
+    control::GlobalActuatorCapabilities actuators{};
     bool has_sensors = false;
     bool has_validity = false;
     bool has_actuators = false;

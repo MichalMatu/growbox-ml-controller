@@ -140,10 +140,11 @@ def test_default_scenario_has_nominal_actuators():
     scenario = default_scenario(seed=101)
     assert scenario["seed"] == 101
     assert scenario["actuators"]["heater"]["available"] is True
-    assert scenario["actuators"]["heater"]["control_type"] == "binary"
-    assert scenario["actuators"]["fan"]["control_type"] == "pwm"
-    assert scenario["actuators"]["humidifier"]["control_type"] == "binary"
-    assert scenario["actuators"]["irrigation"]["control_type"] == "binary"
+    assert scenario["actuators"]["fan"]["available"] is True
+    assert scenario["zones"][0]["available"] is True
+    assert scenario["zones"][0]["irrigation"]["control_type"] == "binary"
+    assert scenario["zones"][0]["irrigation"]["available"] is True
+    assert scenario["pseudo"]["lights_active"] is False
     assert scenario["sensors"]["air_temperature_c"] == 22.0
     assert scenario["sensors"]["outside_co2_ppm"] == 420.0
     assert scenario["validity"]["outside_co2_ppm"] is True
@@ -153,13 +154,26 @@ def test_default_scenario_has_nominal_actuators():
 
 def test_panel_schema_matches_contract_feature_count():
     schema = build_panel_schema()
-    assert schema["feature_count"] == 43
-    assert schema["outputs"] == ["heater", "fan", "humidifier", "irrigation"]
-    assert len(schema["sections"]) >= 6
+    assert schema["feature_count"] == 103
+    assert schema["outputs"] == [
+        "heater",
+        "fan",
+        "humidifier",
+        "dehumidifier",
+        "cooler",
+        "co2_doser",
+        "irrigation_zone_1",
+        "irrigation_zone_2",
+        "irrigation_zone_3",
+        "irrigation_zone_4",
+    ]
+    assert len(schema["sections"]) >= 8
     actuators = next(section for section in schema["sections"] if section["id"] == "actuators")
     assert actuators["title"] == "Aktuary"
+    zones = next(section for section in schema["sections"] if section["id"] == "zones")
+    assert zones["title"] == "Strefy uprawy"
     safety = next(section for section in schema["sections"] if section["id"] == "safety")
-    assert len(safety["fields"]) == 8
+    assert len(safety["fields"]) == 15
 
 
 def test_bridge_snapshot_serializes_history_deque():
@@ -418,7 +432,7 @@ def test_http_load_scenario_flattens_payload(panel_http_server):
     assert sent["command"] == "load_scenario"
     assert sent["seed"] == 303
     assert sent["sensors"]["air_temperature_c"] == scenario["sensors"]["air_temperature_c"]
-    assert sent["actuators"]["fan"]["control_type"] == "pwm"
+    assert sent["zones"][0]["irrigation"]["control_type"] == "binary"
 
 
 def test_http_step_sends_step_command(panel_http_server):

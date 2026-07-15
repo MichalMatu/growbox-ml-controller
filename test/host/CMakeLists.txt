@@ -9,6 +9,7 @@ add_executable(
   environment_control_tests
   "${PROJECT_ROOT}/test/test_environment_controller/test_main.cpp"
   "${PROJECT_ROOT}/lib/environment_control/src/EnvironmentController.cpp"
+  "${PROJECT_ROOT}/lib/environment_control/src/EnvironmentTypes.cpp"
   "${PROJECT_ROOT}/lib/environment_control/src/FeatureEncoder.cpp"
   "${PROJECT_ROOT}/lib/environment_control/src/ModelRuntime.cpp"
   "${PROJECT_ROOT}/lib/environment_control/src/SafetySupervisor.cpp"
@@ -19,6 +20,7 @@ target_include_directories(
   PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}"
     "${PROJECT_ROOT}/lib/environment_control/src"
+    "${PROJECT_ROOT}/tests/fixtures"
     "${PROJECT_ROOT}/components/emlearn_runtime/include"
 )
 

@@ -1,17 +1,38 @@
-"""Build panel form metadata and default scenario payloads from contract v1."""
+"""Build panel form metadata and default scenario payloads from contract v2."""
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
-from tools.ml.contract import Contract, load_contract
+from tools.ml.contract import V2_CONTRACT_PATH, Contract, load_contract
+
+INACTIVE_ZONE_PRESET: dict[str, Any] = {
+    "available": False,
+    "sensors": {"soil_moisture_pct": 50.0, "soil_temperature_c": 20.0},
+    "validity": {"soil_moisture_pct": False, "soil_temperature_c": False},
+    "cultivation": {
+        "pot_volume_l": 10.0,
+        "substrate_water_capacity_ml": 3000.0,
+        "transpiration_factor": 1.0,
+    },
+    "targets": {"soil_moisture_pct": 50.0},
+    "irrigation": {
+        "available": False,
+        "flow_ml_s": 0.0,
+        "maximum_pulse_s": 0.0,
+        "minimum_interval_s": 0.0,
+        "control_type": "binary",
+    },
+    "previous": {"irrigation": 0.0},
+}
 
 NOMINAL_PRESET: dict[str, Any] = {
     "sensors": {
         "air_temperature_c": 22.0,
         "air_humidity_pct": 58.0,
         "co2_ppm": 920.0,
-        "soil_moisture_pct": 44.0,
+        "nutrient_solution_temperature_c": 20.0,
         "outside_temperature_c": 18.0,
         "outside_humidity_pct": 52.0,
         "outside_co2_ppm": 420.0,
@@ -20,55 +41,84 @@ NOMINAL_PRESET: dict[str, Any] = {
         "air_temperature_c": True,
         "air_humidity_pct": True,
         "co2_ppm": True,
-        "soil_moisture_pct": True,
+        "nutrient_solution_temperature_c": True,
         "outside_temperature_c": True,
         "outside_humidity_pct": True,
         "outside_co2_ppm": True,
     },
+    "zones": [
+        {
+            "available": True,
+            "sensors": {"soil_moisture_pct": 44.0, "soil_temperature_c": 20.0},
+            "validity": {"soil_moisture_pct": True, "soil_temperature_c": True},
+            "cultivation": {
+                "pot_volume_l": 12.0,
+                "substrate_water_capacity_ml": 3600.0,
+                "transpiration_factor": 1.0,
+            },
+            "targets": {"soil_moisture_pct": 50.0},
+            "irrigation": {
+                "available": True,
+                "flow_ml_s": 22.0,
+                "maximum_pulse_s": 4.0,
+                "minimum_interval_s": 600.0,
+                "control_type": "binary",
+            },
+            "previous": {"irrigation": 0.0},
+        },
+        dict(INACTIVE_ZONE_PRESET),
+        dict(INACTIVE_ZONE_PRESET),
+        dict(INACTIVE_ZONE_PRESET),
+    ],
+    "pseudo": {"lights_active": False},
     "environment": {
         "growbox_volume_m3": 1.2,
         "thermal_mass_j_per_k": 48000.0,
         "heat_loss_w_per_k": 7.0,
         "air_leak_rate_ach": 0.25,
     },
-    "cultivation": {
-        "pot_volume_l": 12.0,
-        "substrate_water_capacity_ml": 3600.0,
-        "transpiration_factor": 1.0,
-    },
     "actuators": {
         "heater": {
             "available": True,
             "max_power_w": 180.0,
             "efficiency": 0.9,
-            "control_type": "binary",
         },
         "fan": {
             "available": True,
             "max_airflow_m3_h": 120.0,
             "minimum_command": 0.2,
-            "control_type": "pwm",
         },
         "humidifier": {
             "available": True,
             "max_output_g_h": 180.0,
-            "control_type": "binary",
         },
-        "irrigation": {
-            "available": True,
-            "flow_ml_s": 22.0,
-            "maximum_pulse_s": 4.0,
-            "minimum_interval_s": 600.0,
-            "control_type": "binary",
+        "dehumidifier": {
+            "available": False,
+            "max_removal_g_h": 80.0,
+        },
+        "cooler": {
+            "available": False,
+            "max_cooling_w": 200.0,
+        },
+        "co2_doser": {
+            "available": False,
+            "dose_ppm_per_full_pulse": 120.0,
+            "maximum_pulse_s": 3.0,
         },
     },
     "targets": {
         "air_temperature_c": 25.0,
         "air_humidity_pct": 65.0,
         "co2_ppm": 850.0,
-        "soil_moisture_pct": 50.0,
     },
-    "previous": {"heater": 0.0, "fan": 0.0, "humidifier": 0.0, "irrigation": 0.0},
+    "previous": {
+        "heater": 0.0,
+        "fan": 0.0,
+        "humidifier": 0.0,
+        "dehumidifier": 0.0,
+        "cooler": 0.0,
+        "co2_doser": 0.0,
+    },
 }
 
 SAFETY_FIELD_ORDER = (
@@ -80,6 +130,13 @@ SAFETY_FIELD_ORDER = (
     "heater_minimum_off_s",
     "humidifier_minimum_on_s",
     "humidifier_minimum_off_s",
+    "dehumidifier_minimum_on_s",
+    "dehumidifier_minimum_off_s",
+    "cooler_minimum_on_s",
+    "cooler_minimum_off_s",
+    "co2_doser_minimum_interval_s",
+    "co2_doser_maximum_pulse_s",
+    "fan_venting_co2_threshold",
 )
 
 SAFETY_FIELD_BOUNDS: dict[str, tuple[float, float]] = {
@@ -91,14 +148,22 @@ SAFETY_FIELD_BOUNDS: dict[str, tuple[float, float]] = {
     "heater_minimum_off_s": (0.0, 86400.0),
     "humidifier_minimum_on_s": (0.0, 86400.0),
     "humidifier_minimum_off_s": (0.0, 86400.0),
+    "dehumidifier_minimum_on_s": (0.0, 86400.0),
+    "dehumidifier_minimum_off_s": (0.0, 86400.0),
+    "cooler_minimum_on_s": (0.0, 86400.0),
+    "cooler_minimum_off_s": (0.0, 86400.0),
+    "co2_doser_minimum_interval_s": (0.0, 86400.0),
+    "co2_doser_maximum_pulse_s": (0.0, 60.0),
+    "fan_venting_co2_threshold": (0.0, 1.0),
 }
 
 SECTION_ORDER = (
     "connection",
     "sensors",
     "validity",
+    "zones",
+    "pseudo",
     "environment",
-    "cultivation",
     "actuators",
     "targets",
     "safety",
@@ -109,8 +174,9 @@ SECTION_TITLES = {
     "connection": "Połączenie i runtime",
     "sensors": "Czujniki",
     "validity": "Ważność czujników",
+    "zones": "Strefy uprawy",
+    "pseudo": "Wejścia pseudo",
     "environment": "Parametry growboxa",
-    "cultivation": "Uprawa / doniczka",
     "actuators": "Aktuary",
     "targets": "Cele",
     "safety": "Limity safety",
@@ -154,7 +220,9 @@ def _set_nested(document: dict[str, Any], path: str, value: Any) -> None:
 def _deep_merge(base: dict[str, Any], overlay: dict[str, Any]) -> dict[str, Any]:
     merged = dict(base)
     for key, value in overlay.items():
-        if isinstance(value, dict) and isinstance(merged.get(key), dict):
+        if key == "zones" and isinstance(value, list):
+            merged[key] = [dict(zone) for zone in value]
+        elif isinstance(value, dict) and isinstance(merged.get(key), dict):
             merged[key] = _deep_merge(merged[key], value)
         else:
             merged[key] = value
@@ -162,7 +230,7 @@ def _deep_merge(base: dict[str, Any], overlay: dict[str, Any]) -> dict[str, Any]
 
 
 def default_scenario(*, seed: int = 101, preset: str = "nominal") -> dict[str, Any]:
-    contract = load_contract()
+    contract = load_contract(V2_CONTRACT_PATH)
     scenario: dict[str, Any] = {"seed": seed}
     for feature in contract.features:
         path = feature.path
@@ -196,14 +264,16 @@ def _field_type(feature_path: str, encoding: dict[str, float] | None) -> str:
 
 
 def _section_for_path(path: str) -> str:
+    if path.startswith("pseudo."):
+        return "pseudo"
+    if re.match(r"zones\.\d+", path):
+        return "zones"
     if path.startswith("sensors."):
         return "sensors"
     if path.startswith("validity."):
         return "validity"
     if path.startswith("environment."):
         return "environment"
-    if path.startswith("cultivation."):
-        return "cultivation"
     if path.startswith("actuators."):
         return "actuators"
     if path.startswith("targets."):
@@ -214,7 +284,7 @@ def _section_for_path(path: str) -> str:
 
 
 def build_panel_schema(contract: Contract | None = None) -> dict[str, Any]:
-    contract = contract or load_contract()
+    contract = contract or load_contract(V2_CONTRACT_PATH)
     sections: dict[str, list[dict[str, Any]]] = {key: [] for key in SECTION_ORDER}
     sections["other"] = []
 

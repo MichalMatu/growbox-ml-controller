@@ -31,11 +31,15 @@ private:
     std::uint64_t last_pulse_start_ms = 0U;
   };
 
-  BinaryRuntime heater_{};
-  BinaryRuntime fan_{};
-  BinaryRuntime humidifier_{};
-  BinaryRuntime irrigation_{};
-  PumpRuntime pump_{};
+  struct PulseRuntime {
+    bool initialized = false;
+    bool has_pulse = false;
+    std::uint64_t last_pulse_start_ms = 0U;
+  };
+
+  std::array<BinaryRuntime, kMaxZones> irrigation_binary_{};
+  std::array<PumpRuntime, kMaxZones> zone_pumps_{};
+  PulseRuntime co2_doser_{};
 };
 
 } // namespace control

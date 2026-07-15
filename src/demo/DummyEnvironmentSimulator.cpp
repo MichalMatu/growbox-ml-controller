@@ -4,10 +4,36 @@
 
 namespace growbox {
 namespace demo {
-
 namespace {
+
 constexpr float kSecondsPerHour = 3600.0f;
+
+control::ZoneConfig makeInactiveZone() noexcept {
+  control::ZoneConfig zone{};
+  zone.available = false;
+  return zone;
 }
+
+control::ZoneConfig makeActiveZone() noexcept {
+  control::ZoneConfig zone{};
+  zone.available = true;
+  zone.sensors.soil_moisture_pct = 44.0f;
+  zone.sensors.soil_temperature_c = 20.0f;
+  zone.validity.soil_moisture = true;
+  zone.validity.soil_temperature = true;
+  zone.cultivation.pot_volume_l = 12.0f;
+  zone.cultivation.substrate_water_capacity_ml = 3600.0f;
+  zone.cultivation.transpiration_factor = 1.0f;
+  zone.target_soil_moisture_pct = 50.0f;
+  zone.irrigation.available = true;
+  zone.irrigation.flow_ml_s = 22.0f;
+  zone.irrigation.maximum_pulse_s = 4.0f;
+  zone.irrigation.minimum_interval_s = 600.0f;
+  zone.irrigation.control_type = control::ActuatorControlType::Binary;
+  return zone;
+}
+
+} // namespace
 
 DummyEnvironmentSimulator::DummyEnvironmentSimulator() noexcept {
   reset();
@@ -18,52 +44,59 @@ void DummyEnvironmentSimulator::reset(std::uint32_t seed) noexcept {
   input_.sensors.air_temperature_c = 22.0f;
   input_.sensors.air_humidity_pct = 58.0f;
   input_.sensors.co2_ppm = 920.0f;
-  input_.sensors.soil_moisture_pct = 44.0f;
+  input_.sensors.nutrient_solution_temperature_c = 20.0f;
   input_.sensors.outside_temperature_c = 18.0f;
   input_.sensors.outside_humidity_pct = 52.0f;
   input_.sensors.outside_co2_ppm = 420.0f;
   input_.validity.air_temperature = true;
   input_.validity.air_humidity = true;
   input_.validity.co2 = true;
-  input_.validity.soil_moisture = true;
+  input_.validity.nutrient_solution_temperature = true;
   input_.validity.outside_temperature = true;
   input_.validity.outside_humidity = true;
   input_.validity.outside_co2 = true;
+
+  input_.zones = {{
+      makeActiveZone(),
+      makeInactiveZone(),
+      makeInactiveZone(),
+      makeInactiveZone(),
+  }};
+  input_.lights_active = false;
 
   input_.environment.growbox_volume_m3 = 1.2f;
   input_.environment.thermal_mass_j_per_k = 48000.0f;
   input_.environment.heat_loss_w_per_k = 7.0f;
   input_.environment.air_leak_rate_ach = 0.25f;
-  input_.cultivation.pot_volume_l = 12.0f;
-  input_.cultivation.substrate_water_capacity_ml = 3600.0f;
-  input_.cultivation.transpiration_factor = 1.0f;
 
   input_.actuators.heater.available = true;
   input_.actuators.heater.max_power_w = 180.0f;
   input_.actuators.heater.efficiency = 0.9f;
-  input_.actuators.heater.control_type = control::ActuatorControlType::Binary;
   input_.actuators.fan.available = true;
   input_.actuators.fan.max_airflow_m3_h = 120.0f;
   input_.actuators.fan.minimum_command = 0.2f;
-  input_.actuators.fan.control_type = control::ActuatorControlType::Pwm;
   input_.actuators.humidifier.available = true;
   input_.actuators.humidifier.max_output_g_h = 180.0f;
-  input_.actuators.humidifier.control_type = control::ActuatorControlType::Binary;
-  input_.actuators.irrigation_pump.available = true;
-  input_.actuators.irrigation_pump.flow_ml_s = 22.0f;
-  input_.actuators.irrigation_pump.maximum_pulse_s = 4.0f;
-  input_.actuators.irrigation_pump.minimum_interval_s = 600.0f;
-  input_.actuators.irrigation_pump.control_type = control::ActuatorControlType::Binary;
+  input_.actuators.dehumidifier.available = false;
+  input_.actuators.dehumidifier.max_removal_g_h = 80.0f;
+  input_.actuators.cooler.available = false;
+  input_.actuators.cooler.max_cooling_w = 200.0f;
+  input_.actuators.co2_doser.available = false;
+  input_.actuators.co2_doser.dose_ppm_per_full_pulse = 120.0f;
+  input_.actuators.co2_doser.maximum_pulse_s = 3.0f;
 
   input_.targets.air_temperature_c = 25.0f;
   input_.targets.air_humidity_pct = 65.0f;
   input_.targets.co2_ppm = 850.0f;
-  input_.targets.soil_moisture_pct = 50.0f;
   input_.monotonic_time_ms = 0U;
   setSeed(seed);
+  elapsed_s_ = 0.0f;
+  last_irrigation_s_.fill(-1.0e30f);
   effective_heater_ = 0.0f;
   effective_fan_ = 0.0f;
   effective_humidifier_ = 0.0f;
+  effective_dehumidifier_ = 0.0f;
+  effective_cooler_ = 0.0f;
 }
 
 void DummyEnvironmentSimulator::load(const control::ControllerInput& scenario,
@@ -71,9 +104,13 @@ void DummyEnvironmentSimulator::load(const control::ControllerInput& scenario,
   input_ = scenario;
   input_.monotonic_time_ms = 0U;
   setSeed(seed);
+  elapsed_s_ = 0.0f;
+  last_irrigation_s_.fill(-1.0e30f);
   effective_heater_ = clamp(input_.previous.heater, 0.0f, 1.0f);
   effective_fan_ = clamp(input_.previous.fan, 0.0f, 1.0f);
   effective_humidifier_ = clamp(input_.previous.humidifier, 0.0f, 1.0f);
+  effective_dehumidifier_ = clamp(input_.previous.dehumidifier, 0.0f, 1.0f);
+  effective_cooler_ = clamp(input_.previous.cooler, 0.0f, 1.0f);
 }
 
 void DummyEnvironmentSimulator::setSeed(std::uint32_t seed) noexcept {
@@ -92,7 +129,7 @@ void DummyEnvironmentSimulator::setTargets(const control::ControlTargets& target
 }
 
 void DummyEnvironmentSimulator::setActuators(
-    const control::ActuatorCapabilities& actuators) noexcept {
+    const control::GlobalActuatorCapabilities& actuators) noexcept {
   input_.actuators = actuators;
 }
 
@@ -107,72 +144,211 @@ float DummyEnvironmentSimulator::clamp(float value, float lower, float upper) no
   return value < lower ? lower : (value > upper ? upper : value);
 }
 
+float DummyEnvironmentSimulator::lag(float previous, float requested, float dt,
+                                     float time_constant) noexcept {
+  if (time_constant <= 0.0f) {
+    return requested;
+  }
+  const float alpha = 1.0f - std::exp(-dt / time_constant);
+  return previous + alpha * (requested - previous);
+}
+
+bool DummyEnvironmentSimulator::irrigationReady(std::size_t zone_index) const noexcept {
+  if (zone_index >= control::kMaxZones) {
+    return false;
+  }
+  const auto& zone = input_.zones[zone_index];
+  return elapsed_s_ - last_irrigation_s_[zone_index] >= zone.irrigation.minimum_interval_s;
+}
+
+float DummyEnvironmentSimulator::irrigationCommand(
+    std::size_t zone_index, const control::SafeControlDecision& decision) const noexcept {
+  switch (zone_index) {
+  case 0U:
+    return decision.irrigation_zone_1;
+  case 1U:
+    return decision.irrigation_zone_2;
+  case 2U:
+    return decision.irrigation_zone_3;
+  default:
+    return decision.irrigation_zone_4;
+  }
+}
+
+float DummyEnvironmentSimulator::zoneEvaporationPctPerSecond(
+    std::size_t zone_index, float vapor_deficit, float air_temperature_c) const noexcept {
+  if (zone_index >= control::kMaxZones) {
+    return 0.0f;
+  }
+  const auto& zone = input_.zones[zone_index];
+  if (!zone.available || !zone.validity.soil_moisture) {
+    return 0.0f;
+  }
+
+  const float soil_factor = clamp(zone.sensors.soil_moisture_pct / 55.0f, 0.05f, 1.2f);
+  float soil_temp_factor = 1.0f;
+  if (zone.validity.soil_temperature) {
+    soil_temp_factor = clamp((zone.sensors.soil_temperature_c - 5.0f) / 18.0f, 0.2f, 1.8f);
+  }
+  const float air_temp_factor = clamp((air_temperature_c - 5.0f) / 20.0f, 0.2f, 1.8f);
+  const float volume = clamp(input_.environment.growbox_volume_m3, 0.05f, 100.0f);
+  const float air_moisture_capacity_g = volume * 20.0f < 1.0f ? 1.0f : volume * 20.0f;
+  const float transpiration_ml_s =
+      0.00030f *
+      (zone.cultivation.transpiration_factor < 0.0f ? 0.0f
+                                                    : zone.cultivation.transpiration_factor) *
+      (zone.cultivation.pot_volume_l < 0.5f ? 0.5f : zone.cultivation.pot_volume_l) *
+      vapor_deficit * air_temp_factor * soil_factor * soil_temp_factor;
+  return transpiration_ml_s * 100.0f / air_moisture_capacity_g;
+}
+
 void DummyEnvironmentSimulator::advance(const control::SafeControlDecision& decision,
                                         float step_seconds) noexcept {
   if (!std::isfinite(step_seconds) || step_seconds <= 0.0f) {
     return;
   }
 
-  // First-order actuator response prevents instantaneous state changes.
-  const float response = clamp(step_seconds / 30.0f, 0.0f, 1.0f);
-  effective_heater_ += response * (clamp(decision.heater, 0.0f, 1.0f) - effective_heater_);
-  effective_fan_ += response * (clamp(decision.fan, 0.0f, 1.0f) - effective_fan_);
-  effective_humidifier_ +=
-      response * (clamp(decision.humidifier, 0.0f, 1.0f) - effective_humidifier_);
+  const float command_heater = clamp(decision.heater, 0.0f, 1.0f);
+  const float command_fan = clamp(decision.fan, 0.0f, 1.0f);
+  const float command_humidifier = clamp(decision.humidifier, 0.0f, 1.0f);
+  const float command_dehumidifier = clamp(decision.dehumidifier, 0.0f, 1.0f);
+  const float command_cooler = clamp(decision.cooler, 0.0f, 1.0f);
+  const float command_co2_doser = clamp(decision.co2_doser, 0.0f, 1.0f);
+
+  effective_heater_ = lag(effective_heater_, command_heater, step_seconds, kHeaterLagS);
+  effective_fan_ = lag(effective_fan_, command_fan, step_seconds, kFanLagS);
+  effective_humidifier_ =
+      lag(effective_humidifier_, command_humidifier, step_seconds, kHumidifierLagS);
+  effective_dehumidifier_ =
+      lag(effective_dehumidifier_, command_dehumidifier, step_seconds, kDehumidifierLagS);
+  effective_cooler_ = lag(effective_cooler_, command_cooler, step_seconds, kCoolerLagS);
 
   const float volume = clamp(input_.environment.growbox_volume_m3, 0.05f, 100.0f);
-  const float thermal_mass = clamp(input_.environment.thermal_mass_j_per_k, 1000.0f, 10000000.0f);
-  const float air_changes_per_hour =
-      clamp(input_.environment.air_leak_rate_ach, 0.0f, 20.0f) +
-      effective_fan_ * clamp(input_.actuators.fan.max_airflow_m3_h, 0.0f, 10000.0f) / volume;
-  const float exchange_fraction =
-      clamp(air_changes_per_hour * step_seconds / kSecondsPerHour, 0.0f, 0.85f);
+  const float thermal_mass = clamp(input_.environment.thermal_mass_j_per_k, 500.0f, 10000000.0f);
+  const float fan_airflow =
+      effective_fan_ * clamp(input_.actuators.fan.max_airflow_m3_h, 0.0f, 10000.0f);
+  const float exchange_ach =
+      clamp(input_.environment.air_leak_rate_ach, 0.0f, 20.0f) + fan_airflow / volume;
+  const float exchange_rate_s = exchange_ach / kSecondsPerHour;
 
   const float heater_w = effective_heater_ * input_.actuators.heater.max_power_w *
                          clamp(input_.actuators.heater.efficiency, 0.0f, 1.0f);
-  const float heat_loss_w =
+  const float cooler_w = effective_cooler_ * input_.actuators.cooler.max_cooling_w;
+  const float lights_w = input_.lights_active ? kDefaultLightsHeatW : 0.0f;
+  const float passive_heat_w =
       input_.environment.heat_loss_w_per_k *
-      (input_.sensors.air_temperature_c - input_.sensors.outside_temperature_c);
-  input_.sensors.air_temperature_c += (heater_w - heat_loss_w) * step_seconds / thermal_mass;
-  input_.sensors.air_temperature_c +=
-      exchange_fraction * (input_.sensors.outside_temperature_c - input_.sensors.air_temperature_c);
+      (input_.sensors.outside_temperature_c - input_.sensors.air_temperature_c);
+  const float air_heat_capacity_j_k = volume * 1.225f * 1005.0f;
+  const float exchange_heat_w =
+      air_heat_capacity_j_k * exchange_rate_s *
+      (input_.sensors.outside_temperature_c - input_.sensors.air_temperature_c);
+  const float temperature_delta =
+      (heater_w + lights_w - cooler_w + passive_heat_w + exchange_heat_w) * step_seconds /
+      thermal_mass;
 
-  const float humidifier_gain = effective_humidifier_ * input_.actuators.humidifier.max_output_g_h *
-                                step_seconds / kSecondsPerHour / volume * 0.55f;
-  const float transpiration_gain = input_.cultivation.transpiration_factor * step_seconds / 300.0f;
-  input_.sensors.air_humidity_pct += humidifier_gain + transpiration_gain;
-  input_.sensors.air_humidity_pct +=
-      exchange_fraction * (input_.sensors.outside_humidity_pct - input_.sensors.air_humidity_pct);
+  const float air_moisture_capacity_g = volume * 20.0f < 1.0f ? 1.0f : volume * 20.0f;
+  const float humidity_exchange_pp_s =
+      exchange_rate_s * (input_.sensors.outside_humidity_pct - input_.sensors.air_humidity_pct);
+  const float humidifier_pp_s = effective_humidifier_ * input_.actuators.humidifier.max_output_g_h /
+                                kSecondsPerHour * 100.0f / air_moisture_capacity_g;
+  const float dehumidifier_pp_s = -effective_dehumidifier_ *
+                                  input_.actuators.dehumidifier.max_removal_g_h / kSecondsPerHour *
+                                  100.0f / air_moisture_capacity_g;
 
-  input_.sensors.co2_ppm += 0.4f * input_.cultivation.transpiration_factor * step_seconds;
+  const float vapor_deficit = clamp((100.0f - input_.sensors.air_humidity_pct) / 60.0f, 0.1f, 1.5f);
+  float evap_pp_s = 0.0f;
+  for (std::size_t zone_index = 0U; zone_index < control::kMaxZones; ++zone_index) {
+    evap_pp_s +=
+        zoneEvaporationPctPerSecond(zone_index, vapor_deficit, input_.sensors.air_temperature_c);
+  }
+
+  float irrigation_humidity_boost_pp = 0.0f;
+  for (std::size_t zone_index = 0U; zone_index < control::kMaxZones; ++zone_index) {
+    auto& zone = input_.zones[zone_index];
+    if (!zone.available || !zone.irrigation.available) {
+      continue;
+    }
+    const float irrigation_command = irrigationCommand(zone_index, decision);
+    if (irrigation_command <= 0.0f || !irrigationReady(zone_index)) {
+      continue;
+    }
+
+    const float pulse_s =
+        clamp(decision.irrigation_pulse_s[zone_index], 0.0f, zone.irrigation.maximum_pulse_s);
+    const float irrigation_ml = zone.irrigation.flow_ml_s * pulse_s;
+    last_irrigation_s_[zone_index] = elapsed_s_;
+    const float water_capacity = zone.cultivation.substrate_water_capacity_ml < 1.0f
+                                     ? 1.0f
+                                     : zone.cultivation.substrate_water_capacity_ml;
+    zone.sensors.soil_moisture_pct = clamp(
+        zone.sensors.soil_moisture_pct + irrigation_ml * 100.0f / water_capacity, 0.0f, 100.0f);
+    irrigation_humidity_boost_pp += irrigation_ml * 0.04f * 100.0f / air_moisture_capacity_g;
+  }
+
+  const float humidity_delta =
+      (humidity_exchange_pp_s + humidifier_pp_s + dehumidifier_pp_s + evap_pp_s) * step_seconds +
+      irrigation_humidity_boost_pp;
+
   const float outdoor_co2_ppm =
       input_.validity.outside_co2 ? input_.sensors.outside_co2_ppm : 420.0f;
-  input_.sensors.co2_ppm += exchange_fraction * (outdoor_co2_ppm - input_.sensors.co2_ppm);
+  const float co2_exchange_ppm_s = exchange_rate_s * (outdoor_co2_ppm - input_.sensors.co2_ppm);
+  float co2_dose_ppm = 0.0f;
+  if (command_co2_doser > 0.0f && input_.actuators.co2_doser.available) {
+    co2_dose_ppm = command_co2_doser * input_.actuators.co2_doser.dose_ppm_per_full_pulse;
+  }
+  const float biological_co2_ppm_s = 0.0020f * (850.0f - input_.sensors.co2_ppm);
 
-  const float capacity = clamp(input_.cultivation.substrate_water_capacity_ml, 10.0f, 100000.0f);
-  const float pulse_seconds =
-      clamp(decision.irrigation_pulse_s, 0.0f, input_.actuators.irrigation_pump.maximum_pulse_s);
-  const float irrigation_ml = input_.actuators.irrigation_pump.flow_ml_s * pulse_seconds;
-  const float soil_gain_pct = irrigation_ml / capacity * 100.0f;
-  const float drying_pct =
-      (0.004f + 0.003f * effective_fan_) * input_.cultivation.transpiration_factor * step_seconds;
-  input_.sensors.soil_moisture_pct += soil_gain_pct - drying_pct;
+  for (std::size_t zone_index = 0U; zone_index < control::kMaxZones; ++zone_index) {
+    auto& zone = input_.zones[zone_index];
+    if (!zone.available || !zone.validity.soil_moisture) {
+      continue;
+    }
+    const float water_capacity = zone.cultivation.substrate_water_capacity_ml < 1.0f
+                                     ? 1.0f
+                                     : zone.cultivation.substrate_water_capacity_ml;
+    const float drying_ml_s =
+        0.00010f * (zone.cultivation.pot_volume_l < 0.5f ? 0.5f : zone.cultivation.pot_volume_l) *
+        (zone.cultivation.transpiration_factor < 0.0f ? 0.0f
+                                                      : zone.cultivation.transpiration_factor) *
+        vapor_deficit;
+    const float soil_loss_pp = drying_ml_s * step_seconds * 100.0f / water_capacity;
+    zone.sensors.soil_moisture_pct =
+        clamp(zone.sensors.soil_moisture_pct - soil_loss_pp, 0.0f, 100.0f);
+  }
 
-  // Small deterministic sensor noise; the Python simulator is the training source of truth.
+  input_.sensors.air_temperature_c += temperature_delta;
+  input_.sensors.air_humidity_pct += humidity_delta;
+  input_.sensors.co2_ppm +=
+      (co2_exchange_ppm_s + biological_co2_ppm_s) * step_seconds + co2_dose_ppm;
+
   input_.sensors.air_temperature_c += uniformSigned() * 0.015f;
   input_.sensors.air_humidity_pct += uniformSigned() * 0.04f;
   input_.sensors.co2_ppm += uniformSigned() * 1.5f;
-  input_.sensors.soil_moisture_pct += uniformSigned() * 0.015f;
+  for (std::size_t zone_index = 0U; zone_index < control::kMaxZones; ++zone_index) {
+    if (input_.zones[zone_index].validity.soil_moisture) {
+      input_.zones[zone_index].sensors.soil_moisture_pct += uniformSigned() * 0.015f;
+    }
+  }
 
-  input_.sensors.air_temperature_c = clamp(input_.sensors.air_temperature_c, -20.0f, 60.0f);
+  input_.sensors.air_temperature_c = clamp(input_.sensors.air_temperature_c, -30.0f, 70.0f);
   input_.sensors.air_humidity_pct = clamp(input_.sensors.air_humidity_pct, 0.0f, 100.0f);
-  input_.sensors.co2_ppm = clamp(input_.sensors.co2_ppm, 0.0f, 5000.0f);
-  input_.sensors.soil_moisture_pct = clamp(input_.sensors.soil_moisture_pct, 0.0f, 100.0f);
+  input_.sensors.co2_ppm = clamp(input_.sensors.co2_ppm, 250.0f, 5000.0f);
+  for (std::size_t zone_index = 0U; zone_index < control::kMaxZones; ++zone_index) {
+    input_.zones[zone_index].sensors.soil_moisture_pct =
+        clamp(input_.zones[zone_index].sensors.soil_moisture_pct, 0.0f, 100.0f);
+  }
 
-  input_.previous.heater = clamp(decision.heater, 0.0f, 1.0f);
-  input_.previous.fan = clamp(decision.fan, 0.0f, 1.0f);
-  input_.previous.humidifier = clamp(decision.humidifier, 0.0f, 1.0f);
-  input_.previous.irrigation = clamp(decision.irrigation, 0.0f, 1.0f);
+  input_.previous.heater = command_heater;
+  input_.previous.fan = command_fan;
+  input_.previous.humidifier = command_humidifier;
+  input_.previous.dehumidifier = command_dehumidifier;
+  input_.previous.cooler = command_cooler;
+  input_.previous.co2_doser = command_co2_doser;
+  for (std::size_t zone_index = 0U; zone_index < control::kMaxZones; ++zone_index) {
+    input_.zones[zone_index].previous_irrigation = irrigationCommand(zone_index, decision);
+  }
+
+  elapsed_s_ += step_seconds;
   input_.monotonic_time_ms += static_cast<std::uint64_t>(step_seconds * 1000.0f);
 }
 

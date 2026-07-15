@@ -18,8 +18,9 @@ bool parseLoadScenario(const cJSON* root, control::ControllerInput& scenario,
                        std::uint32_t& seed) noexcept;
 
 bool parseStepOverrides(const cJSON* root, control::SensorState& sensors,
-                        control::SensorValidity& validity, control::ActuatorCapabilities& actuators,
-                        bool& has_sensors, bool& has_validity, bool& has_actuators) noexcept;
+                        control::SensorValidity& validity,
+                        control::GlobalActuatorCapabilities& actuators, bool& has_sensors,
+                        bool& has_validity, bool& has_actuators) noexcept;
 
 bool parseTargetPatch(const cJSON* root, control::ControlTargets& targets) noexcept;
 

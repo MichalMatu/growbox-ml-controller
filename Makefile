@@ -53,6 +53,12 @@ train-quick:
 train-full:
 	$(VENV)/bin/python -m tools.ml.pipeline --full
 
+train-quick-v2:
+	$(VENV)/bin/python -m tools.ml.pipeline_v2 --quick
+
+train-full-v2:
+	$(VENV)/bin/python -m tools.ml.pipeline_v2 --full
+
 test: test-python test-host
 
 test-python:

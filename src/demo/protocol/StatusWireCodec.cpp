@@ -1,6 +1,6 @@
 #include "StatusWireCodec.h"
 
-#include "EnvironmentSchema.h"
+#include "EnvironmentSchemaV2.h"
 #include "JsonLineWriter.h"
 #include "ScenarioWireCodec.h"
 

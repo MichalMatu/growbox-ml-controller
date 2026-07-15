@@ -1,6 +1,7 @@
 idf_component_register(
   SRCS
     "src/EnvironmentController.cpp"
+    "src/EnvironmentTypes.cpp"
     "src/FeatureEncoder.cpp"
     "src/ModelRuntime.cpp"
     "src/SafetySupervisor.cpp"

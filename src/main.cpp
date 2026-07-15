@@ -8,7 +8,7 @@
 #include <freertos/task.h>
 
 #include "EnvironmentController.h"
-#include "EnvironmentSchema.h"
+#include "EnvironmentTypes.h"
 #include "ModelRuntime.h"
 #include "demo/DummyEnvironmentSimulator.h"
 #include "demo/SerialJsonProtocol.h"
@@ -16,6 +16,7 @@
 #include "demo/protocol/HeapDiagnostics.h"
 #include "demo/protocol/JsonLineWriter.h"
 
+#include <array>
 #include <cstdint>
 #include <cstring>
 
@@ -29,6 +30,7 @@ using growbox::control::ControllerOutput;
 using growbox::control::ControllerStatus;
 using growbox::control::EnvironmentController;
 using growbox::control::ModelRuntime;
+using growbox::control::schema::OutputIndex;
 using growbox::demo::DemoMode;
 using growbox::demo::DemoRuntimeState;
 using growbox::demo::DummyEnvironmentSimulator;
@@ -76,6 +78,26 @@ void emitStartup() noexcept {
   growbox::demo::wire::emitJsonDocument(document);
 }
 
+void syncPreviousState(growbox::control::ControllerInput& input,
+                       const growbox::control::SafeControlDecision& safe) noexcept {
+  input.previous.heater = safe.heater;
+  input.previous.fan = safe.fan;
+  input.previous.humidifier = safe.humidifier;
+  input.previous.dehumidifier = safe.dehumidifier;
+  input.previous.cooler = safe.cooler;
+  input.previous.co2_doser = safe.co2_doser;
+  constexpr std::array<OutputIndex, growbox::control::kMaxZones> kZoneIrrigationOutputs{{
+      OutputIndex::IrrigationZone1,
+      OutputIndex::IrrigationZone2,
+      OutputIndex::IrrigationZone3,
+      OutputIndex::IrrigationZone4,
+  }};
+  for (std::size_t zone_index = 0U; zone_index < growbox::control::kMaxZones; ++zone_index) {
+    input.zones[zone_index].previous_irrigation =
+        growbox::control::safeOutputValue(safe, kZoneIrrigationOutputs[zone_index]);
+  }
+}
+
 void runControllerStep() noexcept {
   ControllerOutput output{};
   const std::int64_t started_us = esp_timer_get_time();
@@ -90,10 +112,7 @@ void runControllerStep() noexcept {
     simulator.advance(output.safe, kSimulationStepSeconds);
   } else {
     auto& input = simulator.input();
-    input.previous.heater = output.safe.heater;
-    input.previous.fan = output.safe.fan;
-    input.previous.humidifier = output.safe.humidifier;
-    input.previous.irrigation = output.safe.irrigation;
+    syncPreviousState(input, output.safe);
     input.monotonic_time_ms += static_cast<std::uint64_t>(kSimulationStepSeconds * 1000.0f);
   }
   ++runtime.step;
