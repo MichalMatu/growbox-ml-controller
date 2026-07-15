@@ -16,6 +16,9 @@ class SerialBridgeError(RuntimeError):
     """Raised when the panel cannot talk to the demo firmware."""
 
 
+# Must match growbox::demo::SerialJsonProtocol::kMaximumLineBytes (SerialJsonProtocol.h).
+SERIAL_MAX_LINE_BYTES = 4096
+
 _SCENARIO_SNAPSHOT_KEYS = (
     "sensors",
     "validity",
@@ -336,6 +339,12 @@ class SerialBridge:
         if "command" not in command:
             raise SerialBridgeError("payload must include command")
         encoded = json.dumps(command, separators=(",", ":")).encode("utf-8") + b"\n"
+        line_len = len(encoded) - 1
+        if line_len > SERIAL_MAX_LINE_BYTES:
+            raise SerialBridgeError(
+                "command line exceeds UART limit "
+                f"({SERIAL_MAX_LINE_BYTES} bytes, got {line_len} bytes)"
+            )
         with self._lock:
             if self._serial is None:
                 raise SerialBridgeError("serial port is not connected")

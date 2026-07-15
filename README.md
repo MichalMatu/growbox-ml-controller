@@ -202,7 +202,7 @@ Commands are one JSON object per line. Supported operations remain:
 - `load_scenario`
 - `mode` with `closed_loop` or `replay`
 
-The ESP-IDF UART adapter uses a bounded 1536-byte line buffer and returns structured errors for
+The ESP-IDF UART adapter uses a bounded 4096-byte line buffer and returns structured errors for
 oversized, malformed, or unsupported input.
 
 Replay a committed scenario and save the bidirectional session:

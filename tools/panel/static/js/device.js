@@ -91,14 +91,19 @@ function renderTopBarMessages(state = lastState) {
   const fwErr = state?.last_firmware_error;
   if (state?.connected && fwErr && typeof fwErr === "object") {
     const code = fwErr.code || "?";
-    const message = fwErr.message || "nieznany błąd";
+    let message = fwErr.message || "nieznany błąd";
+    let instructions = "<ul><li>Sprawdź log serial i spróbuj zresetować płytkę</li></ul>";
+    if (code === "line_too_long") {
+      message = "Scenariusz v2 jest za duży dla bufora UART na płytce (stare firmware: 1536 B, aktualne: 4096 B).";
+      instructions = "<ul><li>Wgraj najnowsze firmware (<code>make flash</code>)</li><li>Odłącz i połącz ponownie, potem <strong>Wyślij</strong></li></ul>";
+    }
     items.push({
       level: "danger",
       short: `Błąd ${code}`,
       detail: {
         title: "Błąd płytki",
         body: message,
-        instructions: "<ul><li>Sprawdź log serial i spróbuj zresetować płytkę</li></ul>",
+        instructions,
       },
     });
   }

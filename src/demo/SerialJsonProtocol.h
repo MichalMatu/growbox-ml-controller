@@ -27,7 +27,8 @@ struct DemoRuntimeState {
 
 class SerialJsonProtocol {
 public:
-  static constexpr std::size_t kMaximumLineBytes = 1536U;
+  // Full v2 load_scenario JSON is ~3.6 KiB; keep headroom for future fields.
+  static constexpr std::size_t kMaximumLineBytes = 4096U;
 
   SerialJsonProtocol() noexcept = default;
   ~SerialJsonProtocol() noexcept;

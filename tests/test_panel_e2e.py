@@ -10,6 +10,7 @@ import pytest
 from tests.test_panel import _http_json
 
 from tools.ml.contract import V2_CONTRACT_PATH, load_contract
+from tools.panel.bridge import SERIAL_MAX_LINE_BYTES
 from tools.panel.form_schema import SCENARIO_PRESETS, build_panel_schema, default_scenario
 from tools.panel.server import PanelHandler
 
@@ -73,6 +74,17 @@ def test_e2e_load_scenario_all_presets(panel_http_server):
         sent = fake.commands[-1]
         assert sent["command"] == "load_scenario"
         assert len(sent["zones"]) == 4
+
+
+def test_v2_scenario_presets_fit_serial_line_limit():
+    import json
+
+    for preset_id in SCENARIO_PRESETS:
+        scenario = default_scenario(seed=101, preset=preset_id)
+        body = {key: scenario[key] for key in scenario if key != "seed"}
+        command = {"command": "load_scenario", "seed": scenario["seed"], **body}
+        line_len = len(json.dumps(command, separators=(",", ":")).encode("utf-8"))
+        assert line_len <= SERIAL_MAX_LINE_BYTES, preset_id
 
 
 def test_default_scenario_has_all_v2_sections():
