@@ -57,7 +57,7 @@ function openNotice({ title, body, instructions, html }) {
   backdrop.removeAttribute("inert");
   backdrop.setAttribute("aria-hidden", "false");
   updateModalLock();
-  document.getElementById("notice-modal-close-2")?.focus();
+  document.getElementById("notice-modal-close")?.focus({ preventScroll: true });
 }
 
 function closeNotice() {
@@ -91,7 +91,6 @@ function initPanelDialogs() {
     if (event.target.id === "confirm-modal-backdrop") finishConfirm(false);
   });
   document.getElementById("notice-modal-close")?.addEventListener("click", closeNotice);
-  document.getElementById("notice-modal-close-2")?.addEventListener("click", closeNotice);
   document.getElementById("notice-modal-backdrop")?.addEventListener("click", (event) => {
     if (event.target.id === "notice-modal-backdrop") closeNotice();
   });

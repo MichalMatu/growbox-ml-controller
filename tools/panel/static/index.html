@@ -128,34 +128,29 @@
 
   <div class="modal-backdrop" id="notice-modal-backdrop" aria-hidden="true" inert>
     <div class="modal notice-modal" role="dialog" aria-modal="true" aria-labelledby="notice-modal-title">
-      <div class="modal-head">
+      <div class="modal-head modal-chrome-head">
         <h3 id="notice-modal-title">Informacja</h3>
-        <button class="ghost" id="notice-modal-close" type="button">Zamknij</button>
+        <button type="button" class="ghost modal-head-close" id="notice-modal-close">Zamknij</button>
       </div>
       <div class="modal-body notice-modal-body" id="notice-modal-content"></div>
-      <div class="modal-foot">
-        <button class="primary" id="notice-modal-close-2" type="button">OK</button>
-      </div>
     </div>
   </div>
 
   <div class="modal-backdrop" id="help-modal-backdrop" aria-hidden="true" inert>
     <div class="modal help-modal" role="dialog" aria-modal="true" aria-labelledby="help-modal-title">
-      <div class="modal-head">
+      <div class="modal-head modal-chrome-head">
         <h3 id="help-modal-title">Pomoc</h3>
+        <button type="button" class="ghost modal-head-close" id="help-modal-close">Zamknij</button>
       </div>
       <div class="modal-body help-modal-body" id="help-modal-content"></div>
-      <div class="modal-foot">
-        <button class="primary" id="help-modal-close" type="button">OK</button>
-      </div>
     </div>
   </div>
 
   <div class="modal-backdrop" id="modal-backdrop" aria-hidden="true" inert>
     <div class="modal modal--wide panel-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <div class="modal-head panel-modal-head">
+      <div class="modal-head modal-chrome-head">
         <h3 id="modal-title" tabindex="-1">Scenariusz</h3>
-        <button type="button" class="ghost panel-modal-close" id="modal-close">Zamknij</button>
+        <button type="button" class="ghost modal-head-close" id="modal-close">Zamknij</button>
       </div>
       <div class="modal-body panel-modal-body" id="panel-modal-body">
         <textarea id="modal-content" readonly></textarea>

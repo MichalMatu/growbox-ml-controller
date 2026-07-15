@@ -566,6 +566,17 @@ def test_live_section_includes_pots_lights_and_zone_readings():
     assert ".live-sensor-col-climate" in panel_css
 
 
+def test_info_modals_use_header_zamknij_without_footer_ok():
+    html = INDEX_HTML.read_text(encoding="utf-8")
+    for backdrop_id in ("help-modal-backdrop", "notice-modal-backdrop"):
+        block = html.split(f'id="{backdrop_id}"', 1)[1].split("</div>\n\n  <div", 1)[0]
+        assert "modal-chrome-head" in block
+        assert "modal-head-close" in block
+        assert ">Zamknij</button>" in block
+        assert "modal-foot" not in block
+        assert ">OK</button>" not in block
+
+
 def test_modal_windows_support_drag_resize_without_glass_overlay():
     html = INDEX_HTML.read_text(encoding="utf-8")
     panel_css = PANEL_CSS.read_text(encoding="utf-8")
@@ -593,15 +604,16 @@ def test_panel_modal_unifies_all_entry_points_in_one_wide_shell():
     assert 'id="modal-tabs"' not in modal_block
     assert "modal-foot" not in modal_block
     assert 'id="modal-close"' in modal_block
-    assert "panel-modal-head" in modal_block
-    assert "panel-modal-close" in modal_block
+    assert "modal-chrome-head" in modal_block
+    assert "modal-head-close" in modal_block
     assert "panelModalViews" in modal_js
     assert "syncPanelModalActions" in modal_js
     assert "renderPanelModalTabs" not in modal_js
     for key in ("scenario", "decision", "history", "device", "diagnostics", "growbox", "safety"):
         assert f"{key}:" in modal_js
     assert "--modal-w-wide:" in panel_css
-    assert ".panel-modal-head" in panel_css
+    assert ".modal-chrome-head" in panel_css
+    assert ".modal-head-close" in panel_css
     assert ".panel-modal-body" in panel_css
     assert ".panel-modal-body > textarea:not([hidden])" in panel_css
     assert "min-height: calc(min(var(--modal-body-min-h-wide), 58vh)" in panel_css

@@ -295,7 +295,7 @@ function openHelp(topic) {
   backdrop.removeAttribute("inert");
   backdrop.setAttribute("aria-hidden", "false");
   updateModalLock();
-  document.getElementById("help-modal-close").focus();
+  document.getElementById("help-modal-close")?.focus({ preventScroll: true });
 }
 
 function closeHelp() {
