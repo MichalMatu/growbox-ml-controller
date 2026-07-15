@@ -937,3 +937,105 @@ body.modal-open {
   font-size: 0.72rem;
   color: var(--ok);
 }
+
+.resources-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.2rem 0 0.35rem;
+  padding: 0.28rem 0.38rem;
+  border-radius: 0.35rem;
+  border: 1px solid var(--border);
+  background: rgba(15, 20, 25, 0.45);
+  font-size: 0.68rem;
+}
+.resources-strip .res-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  padding: 0.1rem 0.38rem;
+  border-radius: 999px;
+  background: rgba(61, 139, 253, 0.12);
+  border: 1px solid rgba(61, 139, 253, 0.25);
+}
+.resources-strip .res-chip.psram {
+  background: rgba(61, 214, 140, 0.12);
+  border-color: rgba(61, 214, 140, 0.28);
+}
+.resources-strip .res-label {
+  color: var(--muted);
+  text-transform: uppercase;
+  font-size: 0.58rem;
+  letter-spacing: 0.03em;
+}
+.resources-strip .res-muted { color: var(--muted); }
+
+.diag-modal-body {
+  min-height: 320px;
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+.diag-panel {
+  display: grid;
+  gap: 0.55rem;
+}
+.diag-section h4 {
+  margin: 0 0 0.28rem;
+  font-size: 0.64rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.diag-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.18rem 0;
+  border-bottom: 1px solid rgba(45, 58, 79, 0.45);
+}
+.diag-row:last-child { border-bottom: none; }
+.diag-row.warn .diag-row-value { color: var(--warn); }
+.diag-row-label { color: var(--muted); }
+.diag-row-value { color: var(--text); text-align: right; }
+.diag-row.mono .diag-row-value {
+  font-family: ui-monospace, monospace;
+  font-size: 0.7rem;
+}
+.diag-note {
+  margin: 0.2rem 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+.diag-note.diag-error { color: #ffb4b6; }
+.diag-meter { margin: 0.28rem 0 0.38rem; }
+.diag-meter-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.18rem;
+  font-size: 0.7rem;
+}
+.diag-meter-label { color: var(--muted); }
+.diag-meter-value {
+  font-family: ui-monospace, monospace;
+  font-size: 0.65rem;
+  color: var(--text);
+}
+.diag-meter-track {
+  height: 0.42rem;
+  border-radius: 999px;
+  background: rgba(15, 20, 25, 0.65);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.diag-meter-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+  transition: width 0.25s ease;
+}
+.diag-meter-fill.ok { background: var(--ok); }
+.diag-meter-fill.warn { background: var(--warn); }
+.diag-meter-fill.accent { background: var(--accent); }

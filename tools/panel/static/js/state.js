@@ -8,4 +8,3 @@ var activeModal = "scenario";
 var modalReturnFocus = null;
 var helpReturnFocus = null;
 var lastRenderedDecisionStep = null;
-var diagnosticsModalText = "Ładowanie…";

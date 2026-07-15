@@ -26,7 +26,16 @@ async function refreshState(options = {}) {
     document.getElementById("decision-summary").textContent = "Błąd API: " + err.message;
     return;
   }
-  updateToolbarState(lastState);
+      updateToolbarState(lastState);
+  if (lastState?.connected && lastState.last_diagnostics) {
+    diagnosticsSnapshot = {
+      connected: lastState.connected,
+      port: lastState.port,
+      device: lastState.last_diagnostics,
+      startup: lastState.last_startup,
+    };
+    updateResourcesStrip();
+  }
   if (lastState.last_error) {
     const errBtn = lastState.connected ? toolbarBtn("disconnect") : toolbarBtn("connect");
     if (errBtn) {

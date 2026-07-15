@@ -3,19 +3,9 @@ const modalViews = {
   decision: { title: "Ostatnia decyzja", get: () => lastDecision ? JSON.stringify(lastDecision, null, 2) : "Brak decyzji." },
   history: { title: "Historia serial", get: () => formatHistory(lastState) },
   device: { title: "Startup / status", get: () => formatDevice(lastState) },
-  diagnostics: { title: "Zasoby (heap / PSRAM)", get: () => diagnosticsModalText },
+  diagnostics: { title: "Zasoby (heap / PSRAM)", html: true },
 };
 
-async function refreshDiagnosticsModalText(refreshDevice = true) {
-  const query = refreshDevice && lastState?.connected ? "?refresh=1" : "";
-  try {
-    const data = await api(`/api/diagnostics${query}`);
-    diagnosticsModalText = JSON.stringify(data, null, 2);
-  } catch (err) {
-    diagnosticsModalText = `Błąd: ${friendlyError(err.message)}`;
-  }
-  if (activeModal === "diagnostics") refreshModalContent();
-}
 function formatHistory(state) {
   if (!state?.history?.length) return "Brak historii.";
   return state.history.slice(0, 20).map(h =>
@@ -73,6 +63,19 @@ function renderModalTabs() {
 
 function refreshModalContent() {
   const meta = modalViews[activeModal];
+  const textarea = document.getElementById("modal-content");
+  const panel = document.getElementById("modal-content-panel");
+  const copyBtn = document.getElementById("modal-copy");
+  const refreshBtn = document.getElementById("modal-refresh");
   document.getElementById("modal-title").textContent = meta.title;
-  document.getElementById("modal-content").value = meta.get();
+  const isHtml = Boolean(meta.html);
+  textarea.hidden = isHtml;
+  panel.hidden = !isHtml;
+  copyBtn.hidden = isHtml;
+  if (refreshBtn) refreshBtn.hidden = !isHtml;
+  if (isHtml) {
+    panel.innerHTML = formatDiagnosticsHtml(diagnosticsSnapshot);
+  } else {
+    textarea.value = meta.get();
+  }
 }

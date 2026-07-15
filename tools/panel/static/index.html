@@ -61,7 +61,7 @@
             <div class="head-row"><span class="name">Diag.</span></div>
             <div class="toolbar-btn-stack">
               <button type="button" class="badge-btn" data-ui="status" data-cmd='{"command":"status"}'>Status</button>
-              <button type="button" class="badge-btn" data-ui="diagnostics" data-cmd='{"command":"diagnostics"}'>Zasoby</button>
+              <button type="button" class="badge-btn" data-ui="diagnostics" id="btn-diagnostics-toolbar">Zasoby</button>
               <button type="button" class="badge-btn" data-ui="reset" data-cmd='{"command":"reset"}'>Reset</button>
             </div>
           </div>
@@ -85,6 +85,7 @@
           </div>
         </div>
         <div id="decision-summary" class="live-summary note flush">Połącz → Wyślij → ▶ → Krok</div>
+        <div id="resources-strip" class="resources-strip" hidden aria-live="polite"></div>
         <div class="outputs-legend" aria-label="Legenda pasków">
           <div class="legend-items">
             <span class="legend-item"><span class="legend-dot raw" aria-hidden="true"></span> Model — propozycja sieci</span>
@@ -133,8 +134,10 @@
       </div>
       <div class="modal-body">
         <textarea id="modal-content" readonly></textarea>
+        <div id="modal-content-panel" class="diag-modal-body" hidden></div>
       </div>
       <div class="modal-foot">
+        <button id="modal-refresh" type="button" class="ghost" hidden>Odśwież</button>
         <button id="modal-copy" type="button">Kopiuj</button>
         <button class="primary" id="modal-close-2" type="button">OK</button>
       </div>
@@ -149,6 +152,7 @@
   <script src="/js/form.js"></script>
   <script src="/js/live.js"></script>
   <script src="/js/toolbar.js"></script>
+  <script src="/js/diagnostics.js"></script>
   <script src="/js/modal.js"></script>
   <script src="/js/device.js"></script>
   <script src="/js/main.js"></script>
