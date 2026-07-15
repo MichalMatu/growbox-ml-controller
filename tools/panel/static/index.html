@@ -474,19 +474,70 @@
       margin-top: 0.15rem;
       opacity: 0.85;
     }
-    .live-step {
+    .live-head-actions {
       display: flex;
-      flex-wrap: wrap;
-      gap: 0.28rem 0.55rem;
       align-items: center;
-      font-size: 0.72rem;
+      gap: 0.28rem;
+      flex-shrink: 0;
     }
-    .live-step .step-pill {
+    .live-step-badge {
       font-size: 0.65rem;
       font-weight: 600;
       letter-spacing: 0.02em;
+      white-space: nowrap;
     }
-    .live-metric strong { color: var(--text); }
+    .live-summary {
+      margin: 0;
+      font-size: 0.72rem;
+    }
+    .live-idle { margin: 0; }
+    .live-data-table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: rgba(15, 20, 25, 0.35);
+    }
+    .live-data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.68rem;
+    }
+    .live-data-table th,
+    .live-data-table td {
+      padding: 0.3rem 0.42rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .live-data-table tbody tr:last-child th,
+    .live-data-table tbody tr:last-child td { border-bottom: none; }
+    .live-data-table thead th {
+      font-size: 0.58rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      background: rgba(15, 20, 25, 0.55);
+    }
+    .live-data-table tbody th {
+      font-weight: 600;
+      color: var(--muted);
+      text-align: left;
+      white-space: nowrap;
+    }
+    .live-data-table td.num {
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+      color: var(--text);
+    }
+    .live-data-table td.num strong { font-weight: 600; }
+    .live-data-table tr.invalid th,
+    .live-data-table tr.invalid td { opacity: 0.55; }
+    .live-data-table tr.env-row th { font-style: normal; }
+    .live-invalid {
+      font-size: 0.62rem;
+      color: var(--warn);
+      margin-left: 0.12rem;
+    }
     .outputs-legend {
       display: flex;
       flex-wrap: wrap;
@@ -808,11 +859,14 @@
 
     <section class="right-panel card-stack">
       <div class="card live-box">
-        <div class="card-head">
+        <div class="card-head live-head">
           <h2>Na żywo</h2>
-          <button type="button" class="help-btn" data-help="live" aria-label="Pomoc — na żywo">?</button>
+          <div class="live-head-actions">
+            <span id="live-step-badge" class="pill step-pill live-step-badge" hidden aria-live="polite">Krok 0</span>
+            <button type="button" class="help-btn" data-help="live" aria-label="Pomoc — na żywo">?</button>
+          </div>
         </div>
-        <div id="decision-summary" class="live-step note flush">Połącz → Wyślij → ▶ → Krok</div>
+        <div id="decision-summary" class="live-summary note flush">Połącz → Wyślij → ▶ → Krok</div>
         <div class="outputs-legend" aria-label="Legenda pasków">
           <span class="legend-item"><span class="legend-dot raw" aria-hidden="true"></span> Model — propozycja sieci</span>
           <span class="legend-item"><span class="legend-dot safe" aria-hidden="true"></span> Safety — wysyłane na płytkę</span>
@@ -1025,7 +1079,7 @@
       live: {
         title: "Na żywo",
         html: `
-          <p>Podgląd ostatniej decyzji z firmware po <strong>Krok</strong>. Poniżej pasków: <strong>Poprzedni stan</strong> — wyjścia Safety z ostatniego kroku.</p>
+          <p>Podgląd ostatniej decyzji z firmware po <strong>Krok</strong>: tabelka z 6 czujnikami (odczyt + cel). Numer kroku — badge u góry po prawej. Poniżej pasków: <strong>Poprzedni stan</strong> — wyjścia Safety z ostatniego kroku.</p>
           <p>Każdy aktuator ma <strong>dwa paski</strong>:</p>
           <ul>
             <li><strong>Model</strong> (niebieski) — co proponuje sieć neuronowa (0–100% mocy)</li>
@@ -1294,6 +1348,70 @@
       ["outside_temperature_c", "outside_temperature_c"],
       ["outside_humidity_pct", "outside_humidity_pct"],
     ];
+
+    const LIVE_SENSOR_METRICS = [
+      { key: "air_temperature_c", label: "Temp.", targetKey: "air_temperature_c", decimals: 1, unit: "°C" },
+      { key: "air_humidity_pct", label: "Wilg.", targetKey: "air_humidity_pct", decimals: 0, unit: "%" },
+      { key: "co2_ppm", label: "CO₂", targetKey: "co2_ppm", decimals: 0, unit: " ppm" },
+      { key: "soil_moisture_pct", label: "Gleba", targetKey: "soil_moisture_pct", decimals: 0, unit: "%" },
+      { key: "outside_temperature_c", label: "T zewn.", targetKey: null, decimals: 1, unit: "°C" },
+      { key: "outside_humidity_pct", label: "Wilg. zewn.", targetKey: null, decimals: 0, unit: "%" },
+    ];
+
+    function formatLiveSensorValue(value, decimals) {
+      if (typeof value !== "number" || !Number.isFinite(value)) return "—";
+      return decimals > 0 ? value.toFixed(decimals) : String(Math.round(value));
+    }
+
+    function formatLiveTargetValue(value, decimals, unit) {
+      if (typeof value !== "number" || !Number.isFinite(value)) return "—";
+      const formatted = decimals > 0 ? value.toFixed(decimals) : String(Math.round(value));
+      return `${formatted}${unit}`;
+    }
+
+    function setLiveStepBadge(step) {
+      const el = document.getElementById("live-step-badge");
+      if (!el) return;
+      if (step === null || step === undefined) {
+        el.hidden = true;
+        return;
+      }
+      el.hidden = false;
+      el.textContent = `Krok ${step}`;
+    }
+
+    function renderLiveMetricsTable(decision) {
+      const sensors = decision?.sensors || {};
+      const targets = decision?.targets || {};
+      const validity = decision?.validity || {};
+      const rows = LIVE_SENSOR_METRICS.map(metric => {
+        const valueText = formatLiveSensorValue(sensors[metric.key], metric.decimals);
+        const valid = validity[metric.key] !== false;
+        const targetText = metric.targetKey
+          ? formatLiveTargetValue(targets[metric.targetKey], metric.decimals, metric.unit)
+          : "—";
+        const invalidMark = valid ? "" : '<span class="live-invalid" title="Czujnik nieważny">⊘</span>';
+        const envClass = metric.targetKey ? "" : " env-row";
+        const invalidClass = valid ? "" : " invalid";
+        return `<tr class="${envClass}${invalidClass}">
+          <th scope="row">${metric.label}${invalidMark}</th>
+          <td class="num"><strong>${valueText}${metric.unit}</strong></td>
+          <td class="num">${targetText}</td>
+        </tr>`;
+      }).join("");
+      return `<div class="live-data-table-wrap">
+        <table class="live-data-table" aria-label="Czujniki i cele">
+          <thead>
+            <tr>
+              <th scope="col">Czujnik</th>
+              <th scope="col">Odczyt</th>
+              <th scope="col">Cel</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+    }
 
     const ACTUATOR_GROUPS = [
       ["Grzałka", ["heater_available", "heater_max_power_w", "heater_efficiency", "heater_control_type"]],
@@ -1655,9 +1773,9 @@
       lastRenderedDecisionStep = null;
       lastDecision = null;
       clearPreviousActuators();
+      setLiveStepBadge(step);
       document.getElementById("decision-summary").innerHTML =
-        `<span class="pill step-pill">Krok ${step}</span>` +
-        `<span class="live-metric note">Symulacja zresetowana — uruchom <strong>Krok</strong> lub <strong>▶</strong></span>`;
+        `<p class="live-idle note flush">Symulacja zresetowana — uruchom <strong>Krok</strong> lub <strong>▶</strong></p>`;
       const outputsEl = document.getElementById("outputs-bars");
       outputsEl.className = "outputs-empty";
       outputsEl.innerHTML = "Uruchom <strong>Krok</strong>, aby zobaczyć wyjścia aktuatorów.";
@@ -1681,16 +1799,8 @@
         renderActuatorCard(labels[name], raw[name], safe[name])
       ).join("");
 
-      const sensors = decision.sensors || {};
-      const targets = decision.targets || {};
-      const temp = sensors.air_temperature_c;
-      const hum = sensors.air_humidity_pct;
-      const fmtTemp = typeof temp === "number" ? temp.toFixed(1) : (temp ?? "—");
-      const fmtHum = typeof hum === "number" ? hum.toFixed(0) : (hum ?? "—");
-      document.getElementById("decision-summary").innerHTML =
-        `<span class="pill step-pill">Krok ${decision.step ?? "?"}</span>` +
-        `<span class="live-metric">Temp. <strong>${fmtTemp}°C</strong> → cel ${targets.air_temperature_c ?? "—"}°C</span>` +
-        `<span class="live-metric">Wilg. <strong>${fmtHum}%</strong> → cel ${targets.air_humidity_pct ?? "—"}%</span>`;
+      setLiveStepBadge(decision.step ?? "?");
+      document.getElementById("decision-summary").innerHTML = renderLiveMetricsTable(decision);
 
       const diag = decision.diagnostics || {};
       const reason = diag.safety_reason || "none";
@@ -1795,6 +1905,7 @@
       try {
         lastState = await api("/api/state");
       } catch (err) {
+        setLiveStepBadge(null);
         document.getElementById("decision-summary").textContent = "Błąd API: " + err.message;
         return;
       }
@@ -2031,6 +2142,7 @@
     };
 
     if (location.protocol === "file:") {
+      setLiveStepBadge(null);
       document.getElementById("decision-summary").textContent =
         "Otwórz panel przez serwer: http://127.0.0.1:8765 (make panel)";
     }
@@ -2038,6 +2150,7 @@
     updateToolbarState({ connected: false });
 
     init().catch(err => {
+      setLiveStepBadge(null);
       document.getElementById("decision-summary").textContent =
         "Błąd API: " + friendlyError(err.message);
     });
