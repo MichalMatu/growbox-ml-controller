@@ -9,7 +9,11 @@ function bindFormInputRoot(root) {
     collectScenario();
   });
   root.addEventListener("input", (event) => {
-    if (event.target?.type === "number" && event.target.dataset.path) {
+    const el = event.target;
+    if (el?.type === "number" && el.dataset.path) {
+      if (isTranspirationFactorPath(el.dataset.path)) {
+        enforceMaxDecimalPlaces(el, maxDecimalPlacesForPath(el.dataset.path));
+      }
       collectScenario({ formatNumbers: false });
     }
   });

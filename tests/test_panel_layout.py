@@ -52,6 +52,7 @@ def test_cultivation_pot_css_uses_tokenized_grid_like_sensors():
     assert "--pot-cult-vol-w: var(--cell-w-pct)" in panel_css
     assert "--pot-cult-water-w: var(--cell-w-ppm)" in panel_css
     assert "--pot-cult-factor-w: var(--cell-w-factor)" in panel_css
+    assert "calc(6ch + var(--field-suffix-pad-1))" in panel_css
     assert "minmax(0, var(--pot-cult-vol-w))" in panel_css
     assert "minmax(0, var(--pot-cult-water-w))" in panel_css
     assert "minmax(0, var(--pot-cult-factor-w))" in panel_css
@@ -358,6 +359,23 @@ def test_humidity_fields_use_integer_precision_and_clamp():
     assert clamp_fn
     assert "formatScenarioNumberInput" in form_js
     assert "parseScenarioNumberInput" in read_fn
+
+
+def test_transpiration_factor_uses_two_decimal_precision_and_input_guard():
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    main_js = (PANEL_STATIC / "js" / "main.js").read_text(encoding="utf-8")
+    step_fn = _extract_js_function(form_js, "fieldStep")
+    step_path_fn = _extract_js_function(form_js, "fieldStepForPath")
+    transpiration_fn = _extract_js_function(form_js, "isTranspirationFactorPath")
+    enforce_fn = _extract_js_function(form_js, "enforceMaxDecimalPlaces")
+    assert transpiration_fn
+    assert "transpiration_factor" in transpiration_fn
+    assert "isTranspirationFactorPath" in step_fn
+    assert "isTranspirationFactorPath(path)" in step_path_fn
+    assert 'return "0.01"' in step_fn
+    assert enforce_fn
+    assert "enforceMaxDecimalPlaces" in main_js
+    assert "isTranspirationFactorPath" in main_js
 
 
 def test_mini_cell_number_fields_use_in_input_unit_suffixes_and_hints():

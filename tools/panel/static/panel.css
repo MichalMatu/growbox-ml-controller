@@ -121,7 +121,7 @@
   --cell-w-wide: 6.35rem;
   --cell-w-ppm: calc(var(--cell-w) - 1ch);
   --cell-w-pct: calc(var(--cell-w) - 3ch);
-  --cell-w-factor: calc(4ch + var(--field-suffix-pad-1));
+  --cell-w-factor: calc(6ch + var(--field-suffix-pad-1));
   --pot-sensor-w: var(--cell-w-pct);
   --pot-sensor-w-temp: var(--cell-w-temp);
   --pot-cult-vol-w: var(--cell-w-pct);

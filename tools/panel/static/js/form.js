@@ -476,10 +476,15 @@ function isPreviousRatioPath(path) {
   return path.startsWith("previous.") || path.includes(".previous.");
 }
 
+function isTranspirationFactorPath(path) {
+  return path.includes("transpiration_factor");
+}
+
 function fieldStep(field) {
   if (isHumidityPctPath(field.path)) return "1";
   if (isCo2PpmPath(field.path)) return "1";
   if (isTemperatureCPath(field.path)) return "1";
+  if (isTranspirationFactorPath(field.path)) return "0.01";
   if (field.path.includes("pct") || field.path.includes("ratio")) return "0.1";
   if (field.path.endsWith("_s")) return "1";
   return "0.01";
@@ -499,7 +504,8 @@ function fieldStepForPath(path) {
   }
   if (path.includes("zones.") && path.includes(".targets.")) return "0.1";
   if (path.startsWith("previous.")) return "0.001";
-  if (path.includes("pct") || path.includes("ratio") || path.includes("efficiency") || path.includes("minimum_command") || path.includes("transpiration")) {
+  if (isTranspirationFactorPath(path)) return "0.01";
+  if (path.includes("pct") || path.includes("ratio") || path.includes("efficiency") || path.includes("minimum_command")) {
     return "0.01";
   }
   if (path.endsWith("_s") || path.includes("thermal_mass") || path.includes("substrate_water") || path.includes("minimum_interval")) {
@@ -536,6 +542,22 @@ function isIncompleteNumberInput(raw) {
   const text = String(raw).trim();
   if (text === "" || text === "-" || text === "." || text === "-." || text === "+") return true;
   return /[.,]$/.test(text);
+}
+
+function maxDecimalPlacesForPath(path) {
+  return decimalPlacesFromStep(fieldStepForPath(path));
+}
+
+function enforceMaxDecimalPlaces(el, maxDecimals) {
+  if (!el || el.type !== "number" || maxDecimals < 0) return;
+  const raw = String(el.value);
+  if (raw === "" || raw === "-" || raw === "." || raw === "-." || raw === "+") return;
+  const normalized = raw.replace(",", ".");
+  const dot = normalized.indexOf(".");
+  if (dot < 0) return;
+  const fraction = normalized.slice(dot + 1);
+  if (fraction.length <= maxDecimals) return;
+  el.value = normalized.slice(0, dot + 1 + maxDecimals);
 }
 
 function parseScenarioNumberInput(el) {
