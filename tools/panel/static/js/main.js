@@ -229,9 +229,6 @@ document.addEventListener("click", async (e) => {
   openHelp(btn.dataset.help);
 });
 document.getElementById("help-modal-close").onclick = closeHelp;
-document.getElementById("help-modal-backdrop").onclick = (e) => {
-  if (e.target.id === "help-modal-backdrop") closeHelp();
-};
 
 if (location.protocol === "file:") {
   setLiveStepBadge(null);

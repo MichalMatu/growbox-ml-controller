@@ -2,9 +2,71 @@ const MODAL_WINDOW_MARGIN = 12;
 const MODAL_WINDOW_MIN_W = 300;
 const MODAL_WINDOW_MIN_H = 200;
 const MODAL_WINDOW_STORAGE_PREFIX = "growbox-modal-window:";
+const MODAL_WINDOW_CASCADE_STEP = 28;
+const MODAL_STACK_BASE_Z = 100;
 
 let modalWindowDrag = null;
 let modalWindowResize = null;
+let modalStackSeq = MODAL_STACK_BASE_Z;
+
+function openModalBackdrops() {
+  return [...document.querySelectorAll(".modal-backdrop.open")];
+}
+
+function backdropStackZ(backdrop) {
+  return Number(backdrop?.style.zIndex || backdrop?.dataset.stackOrder || MODAL_STACK_BASE_Z);
+}
+
+function raiseModalBackdrop(backdrop) {
+  if (!backdrop?.classList.contains("open")) return;
+  modalStackSeq += 1;
+  backdrop.style.zIndex = String(modalStackSeq);
+  backdrop.dataset.stackOrder = String(modalStackSeq);
+  syncModalFocusRing();
+}
+
+function topmostOpenModalBackdrop() {
+  const open = openModalBackdrops();
+  if (!open.length) return null;
+  return open.reduce((top, backdrop) => (
+    backdropStackZ(backdrop) >= backdropStackZ(top) ? backdrop : top
+  ));
+}
+
+function syncModalFocusRing() {
+  document.querySelectorAll(".modal.modal--focused").forEach((modal) => {
+    modal.classList.remove("modal--focused");
+  });
+  const top = topmostOpenModalBackdrop();
+  top?.querySelector(".modal")?.classList.add("modal--focused");
+}
+
+function modalCascadeOffset(backdrop) {
+  const open = openModalBackdrops();
+  const index = open.indexOf(backdrop);
+  return Math.max(0, index) * MODAL_WINDOW_CASCADE_STEP;
+}
+
+function closeTopmostModal() {
+  const top = topmostOpenModalBackdrop();
+  if (!top) return false;
+  switch (top.id) {
+    case "help-modal-backdrop":
+      closeHelp();
+      return true;
+    case "modal-backdrop":
+      closeModal();
+      return true;
+    case "notice-modal-backdrop":
+      closeNotice();
+      return true;
+    case "confirm-modal-backdrop":
+      finishConfirm(false);
+      return true;
+    default:
+      return false;
+  }
+}
 
 function modalWindowStorageKey(backdrop) {
   return MODAL_WINDOW_STORAGE_PREFIX + backdrop.id;
@@ -54,7 +116,7 @@ function cssLengthPx(value) {
   return px;
 }
 
-function defaultModalWindowGeometry(modal) {
+function defaultModalWindowGeometry(modal, backdrop) {
   const styles = getComputedStyle(document.documentElement);
   const isWide = modal.classList.contains("modal--wide");
   const maxW = Math.max(MODAL_WINDOW_MIN_W, window.innerWidth - MODAL_WINDOW_MARGIN * 2);
@@ -68,9 +130,10 @@ function defaultModalWindowGeometry(modal) {
     maxH - 96,
   );
   const height = Math.min(bodyH + 96, maxH);
+  const cascade = backdrop ? modalCascadeOffset(backdrop) : 0;
   return clampModalWindowGeometry({
-    left: Math.round((window.innerWidth - width) / 2),
-    top: Math.round((window.innerHeight - height) / 2),
+    left: Math.round((window.innerWidth - width) / 2) + cascade,
+    top: Math.round((window.innerHeight - height) / 2) + cascade,
     width: Math.round(width),
     height: Math.round(height),
   });
@@ -123,7 +186,7 @@ function resetModalWindowGeometry(backdrop) {
   modal.style.height = "";
   requestAnimationFrame(() => {
     if (!backdrop.classList.contains("open")) return;
-    applyModalWindowGeometry(modal, defaultModalWindowGeometry(modal));
+    applyModalWindowGeometry(modal, defaultModalWindowGeometry(modal, backdrop));
     writeModalWindowGeometry(backdrop, geometryFromModal(modal));
   });
 }
@@ -132,8 +195,9 @@ function prepareModalWindow(backdrop) {
   const modal = backdrop.querySelector(".modal");
   if (!modal) return;
   const stored = readModalWindowGeometry(backdrop);
-  applyModalWindowGeometry(modal, stored || defaultModalWindowGeometry(modal));
+  applyModalWindowGeometry(modal, stored || defaultModalWindowGeometry(modal, backdrop));
   if (!stored) writeModalWindowGeometry(backdrop, geometryFromModal(modal));
+  raiseModalBackdrop(backdrop);
 }
 
 function modalWindowDragBlocked(target) {
@@ -149,6 +213,7 @@ function onModalWindowHeadPointerDown(event) {
   const modal = head.closest(".modal");
   const backdrop = modal?.parentElement;
   if (!backdrop?.classList.contains("modal-backdrop") || !backdrop.classList.contains("open")) return;
+  raiseModalBackdrop(backdrop);
   const geometry = geometryFromModal(modal);
   modalWindowDrag = {
     modal,
@@ -240,10 +305,22 @@ function ensureModalResizeHandle(modal) {
   modal.appendChild(handle);
 }
 
+function onModalWindowSurfacePointerDown(event) {
+  if (event.button !== 0) return;
+  const modal = event.currentTarget;
+  const backdrop = modal?.parentElement;
+  if (!backdrop?.classList.contains("modal-backdrop") || !backdrop.classList.contains("open")) return;
+  raiseModalBackdrop(backdrop);
+}
+
 function initModalWindow(backdrop) {
   const modal = backdrop.querySelector(".modal");
   if (!modal) return;
   ensureModalResizeHandle(modal);
+  if (modal.dataset.modalWindowBound !== "1") {
+    modal.dataset.modalWindowBound = "1";
+    modal.addEventListener("pointerdown", onModalWindowSurfacePointerDown);
+  }
   const head = modal.querySelector(".modal-head");
   if (!head || head.dataset.modalWindowBound === "1") return;
   head.dataset.modalWindowBound = "1";
@@ -274,7 +351,8 @@ function initModalWindows() {
         requestAnimationFrame(() => prepareModalWindow(backdrop));
       } else {
         const modal = backdrop.querySelector(".modal");
-        modal?.classList.remove("modal--dragging", "modal--resizing");
+        modal?.classList.remove("modal--dragging", "modal--resizing", "modal--focused");
+        syncModalFocusRing();
       }
     });
   });

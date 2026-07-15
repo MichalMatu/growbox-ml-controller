@@ -193,49 +193,43 @@ function selectWithinElement(root) {
 
 function handleModalSelectAll(event) {
   if (!isSelectAllShortcut(event)) return false;
-  const helpBackdrop = document.getElementById("help-modal-backdrop");
-  const noticeBackdrop = document.getElementById("notice-modal-backdrop");
-  const panelBackdrop = document.getElementById("modal-backdrop");
-  const helpOpen = helpBackdrop?.classList.contains("open");
-  const noticeOpen = noticeBackdrop?.classList.contains("open");
-  const panelOpen = panelBackdrop?.classList.contains("open");
-  if (!helpOpen && !noticeOpen && !panelOpen) return false;
+  const top = topmostOpenModalBackdrop?.();
+  if (!top) return false;
 
   event.preventDefault();
   event.stopPropagation();
   event.stopImmediatePropagation();
 
-  if (helpOpen) {
-    selectWithinElement(document.getElementById("help-modal-content"));
-    return true;
+  switch (top.id) {
+    case "help-modal-backdrop":
+      selectWithinElement(document.getElementById("help-modal-content"));
+      return true;
+    case "notice-modal-backdrop":
+      selectWithinElement(document.getElementById("notice-modal-content"));
+      return true;
+    case "confirm-modal-backdrop":
+      selectWithinElement(document.getElementById("confirm-modal-content"));
+      return true;
+    case "modal-backdrop": {
+      const panel = document.getElementById("modal-content-panel");
+      const textarea = document.getElementById("modal-content");
+      if (panel && !panel.hidden) {
+        selectWithinElement(panel);
+      } else {
+        selectWithinElement(textarea);
+      }
+      return true;
+    }
+    default:
+      return false;
   }
-  if (noticeOpen) {
-    selectWithinElement(document.getElementById("notice-modal-content"));
-    return true;
-  }
-
-  const panel = document.getElementById("modal-content-panel");
-  const textarea = document.getElementById("modal-content");
-  if (panel && !panel.hidden) {
-    selectWithinElement(panel);
-  } else {
-    selectWithinElement(textarea);
-  }
-  return true;
 }
 
 function handleModalKeydown(event) {
   if (handleModalSelectAll(event)) return;
-  handleDialogKeydown(event);
   if (event.key !== "Escape") return;
-  const helpBackdrop = document.getElementById("help-modal-backdrop");
-  const panelBackdrop = document.getElementById("modal-backdrop");
-  if (helpBackdrop?.classList.contains("open")) {
+  if (closeTopmostModal?.()) {
     event.preventDefault();
-    closeHelp();
-  } else if (panelBackdrop?.classList.contains("open")) {
-    event.preventDefault();
-    closeModal();
   }
 }
 

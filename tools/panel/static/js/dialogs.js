@@ -71,19 +71,6 @@ function closeNotice() {
   updateModalLock();
 }
 
-function handleDialogKeydown(event) {
-  const confirmBackdrop = document.getElementById("confirm-modal-backdrop");
-  const noticeBackdrop = document.getElementById("notice-modal-backdrop");
-  if (event.key !== "Escape") return;
-  if (confirmBackdrop?.classList.contains("open")) {
-    event.preventDefault();
-    finishConfirm(false);
-  } else if (noticeBackdrop?.classList.contains("open")) {
-    event.preventDefault();
-    closeNotice();
-  }
-}
-
 function initPanelDialogs() {
   document.getElementById("confirm-modal-cancel")?.addEventListener("click", () => finishConfirm(false));
   document.getElementById("confirm-modal-ok")?.addEventListener("click", () => finishConfirm(true));

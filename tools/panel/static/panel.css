@@ -35,7 +35,7 @@
   --accent-border: #2f6fd1;
   --surface-elevated: #243044;
   --surface-overlay: rgba(8, 12, 18, 0.82);
-  --surface-overlay-window: rgba(8, 12, 18, 0.22);
+  --surface-overlay-window: transparent;
   --surface-subtle: rgba(15, 20, 25, 0.35);
   --surface-muted: rgba(15, 20, 25, 0.45);
   --surface-strong: rgba(15, 20, 25, 0.55);
@@ -1538,7 +1538,7 @@ body.modal-open {
   display: none;
   position: fixed;
   inset: 0;
-  background: var(--surface-overlay-window);
+  background: transparent;
   z-index: 100;
   padding: 0;
   overflow: visible;
@@ -1548,9 +1548,6 @@ body.modal-open {
 .modal-backdrop.open > .modal {
   pointer-events: auto;
 }
-#help-modal-backdrop.open { z-index: 101; }
-#notice-modal-backdrop.open { z-index: 102; }
-#confirm-modal-backdrop.open { z-index: 103; }
 .confirm-modal-body,
 .notice-modal-body {
   font-size: var(--modal-help-font);
@@ -1584,6 +1581,11 @@ body.modal-open {
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.42);
   touch-action: auto;
   overflow: hidden;
+}
+.modal.modal--focused {
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.48),
+    0 0 0 1px var(--accent-border, #4a7fd0);
 }
 .modal.modal--windowed {
   position: fixed;

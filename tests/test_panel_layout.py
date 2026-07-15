@@ -581,13 +581,20 @@ def test_modal_windows_support_drag_resize_without_glass_overlay():
     html = INDEX_HTML.read_text(encoding="utf-8")
     panel_css = PANEL_CSS.read_text(encoding="utf-8")
     modal_window_js = (PANEL_STATIC / "js" / "modal-window.js").read_text(encoding="utf-8")
+    modal_js = (PANEL_STATIC / "js" / "modal.js").read_text(encoding="utf-8")
     assert "modal-window.js" in html
     assert "backdrop-filter" not in panel_css
-    assert "--surface-overlay-window:" in panel_css
+    assert "background: transparent" in panel_css
+    assert "--surface-overlay-window: transparent" in panel_css
     assert ".modal--windowed" in panel_css
+    assert ".modal--focused" in panel_css
     assert ".modal-resize-handle" in panel_css
     assert "pointer-events: none" in panel_css
+    assert "#help-modal-backdrop.open { z-index:" not in panel_css
     assert "initModalWindows" in modal_window_js
+    assert "raiseModalBackdrop" in modal_window_js
+    assert "closeTopmostModal" in modal_window_js
+    assert "topmostOpenModalBackdrop" in modal_js
     assert "modal--dragging" in modal_window_js
 
 
