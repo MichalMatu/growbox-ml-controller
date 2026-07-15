@@ -147,6 +147,35 @@ body {
 h1 { margin: 0; font-size: var(--text-title); font-weight: 600; }
 .top-bar h1 { font-size: var(--text-title-bar); }
 .sub { color: var(--muted); font-size: var(--text-base); }
+.panel-alerts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-sm);
+  padding: 0 var(--panel-pad) var(--gap-sm);
+}
+.panel-alerts[hidden] { display: none !important; }
+.panel-alert {
+  padding: var(--gap-md) var(--card-pad-x);
+  border-radius: var(--cell-radius);
+  border: 1px solid var(--border);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+}
+.panel-alert-warn {
+  background: var(--warn-bg-subtle);
+  border-color: var(--warn-border);
+  color: var(--warn);
+}
+.panel-alert-danger {
+  background: rgba(242, 85, 90, 0.12);
+  border-color: var(--danger);
+  color: var(--danger-text-soft);
+}
+.panel-alert-code {
+  opacity: 0.9;
+  font-family: ui-monospace, monospace;
+  font-size: var(--text-xs);
+}
 .top-bar {
   padding: var(--panel-pad) var(--panel-pad) 0;
   position: sticky;

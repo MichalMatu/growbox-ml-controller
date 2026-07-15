@@ -106,6 +106,8 @@ class SerialBridge:
         self._state["last_decision"] = None
         self._state["last_ack"] = None
         self._state["last_startup"] = None
+        self._state["last_firmware_error"] = None
+        self._state["last_diagnostics"] = None
         self._last_transport_tx_at = 0.0
         self._last_status_tx_at = 0.0
         self._pending_mode_value = None

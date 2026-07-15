@@ -2,13 +2,117 @@
 
 import json
 import threading
+import urllib.error
 import urllib.request
 from collections import deque
 from http.server import ThreadingHTTPServer
+from typing import Any
 
-from tools.panel.bridge import SerialBridge
+import pytest
+
+from tools.panel import server as panel_server
+from tools.panel.bridge import SerialBridge, SerialBridgeError
 from tools.panel.form_schema import build_panel_schema, default_scenario
 from tools.panel.server import PanelHandler
+
+
+class FakeBridge:
+    """In-memory bridge for HTTP handler tests (no serial hardware)."""
+
+    def __init__(self) -> None:
+        self.commands: list[dict[str, Any]] = []
+        self._state: dict[str, Any] = {
+            "connected": False,
+            "port": None,
+            "baud": 115200,
+            "last_error": None,
+            "last_startup": None,
+            "last_decision": None,
+            "last_status": None,
+            "last_ack": None,
+            "last_firmware_error": None,
+            "last_diagnostics": None,
+            "history": [],
+        }
+
+    def list_ports(self) -> list[dict[str, str]]:
+        return [{"device": "/dev/fake", "description": "fake", "hwid": "FAKE"}]
+
+    def snapshot(self) -> dict[str, Any]:
+        return dict(self._state)
+
+    def diagnostics_snapshot(self) -> dict[str, Any]:
+        return {
+            "connected": self._state["connected"],
+            "port": self._state["port"],
+            "host": {"python": "test", "platform": "test"},
+            "device": self._state.get("last_diagnostics"),
+            "startup": self._state.get("last_startup"),
+        }
+
+    def connect(self, port: str, *, baud: int = 115200) -> None:
+        port = port.strip()
+        if not port:
+            raise SerialBridgeError("port must not be empty")
+        self.disconnect()
+        self._state["connected"] = True
+        self._state["port"] = port
+        self._state["baud"] = baud
+        self._state["last_error"] = None
+
+    def disconnect(self) -> None:
+        self._state["connected"] = False
+        self._state["port"] = None
+
+    def send_command(self, command: dict[str, Any]) -> None:
+        if "command" not in command:
+            raise SerialBridgeError("payload must include command")
+        if not self._state["connected"]:
+            raise SerialBridgeError("serial port is not connected")
+        self.commands.append(dict(command))
+        SerialBridge._patch_status_from_command(self._state, command)
+
+    def load_scenario(self, scenario: dict[str, Any], *, seed: int | None = None) -> None:
+        payload = dict(scenario)
+        if seed is not None:
+            payload["seed"] = seed
+        if "seed" not in payload:
+            raise SerialBridgeError("scenario requires seed")
+        payload["command"] = "load_scenario"
+        self.send_command(payload)
+
+
+def _http_json(
+    method: str, base: str, path: str, body: dict[str, Any] | None = None
+) -> tuple[int, dict[str, Any]]:
+    data = json.dumps(body or {}).encode("utf-8")
+    req = urllib.request.Request(
+        f"{base}{path}",
+        data=data,
+        method=method,
+        headers={"Content-Type": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(req) as response:
+            return response.status, json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        payload = exc.read().decode("utf-8")
+        return exc.code, json.loads(payload) if payload else {"error": exc.reason}
+
+
+@pytest.fixture
+def panel_http_server(monkeypatch):
+    fake = FakeBridge()
+    monkeypatch.setattr(panel_server, "BRIDGE", fake)
+    httpd = ThreadingHTTPServer(("127.0.0.1", 0), PanelHandler)
+    thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+    thread.start()
+    base = f"http://127.0.0.1:{httpd.server_address[1]}"
+    try:
+        yield fake, base
+    finally:
+        httpd.shutdown()
+        thread.join(timeout=2.0)
 
 
 def test_default_scenario_has_nominal_actuators():
@@ -73,10 +177,12 @@ def test_bridge_connect_clears_stale_device_state():
     bridge = SerialBridge()
     bridge._state["last_status"] = {"mode": "closed_loop", "paused": True, "step": 9}
     bridge._state["last_decision"] = {"type": "decision", "step": 9}
+    bridge._state["last_firmware_error"] = {"type": "error", "code": "stale"}
     bridge._last_transport_tx_at = 99.0
     bridge._reset_session_state()
     assert bridge._state["last_status"] is None
     assert bridge._state["last_decision"] is None
+    assert bridge._state["last_firmware_error"] is None
     assert bridge._last_transport_tx_at == 0.0
 
 
@@ -182,6 +288,83 @@ def test_bridge_stores_diagnostics_message():
     assert bridge._state["last_diagnostics"]["heap"]["psram_enabled"] is True
     snapshot = bridge.diagnostics_snapshot()
     assert snapshot["device"]["heap"]["free_psram"] == 7000000
+
+
+def test_http_connect_and_disconnect(panel_http_server):
+    fake, base = panel_http_server
+    status, payload = _http_json("POST", base, "/api/connect", {"port": "/dev/fake"})
+    assert status == 200
+    assert payload["connected"] is True
+    assert payload["port"] == "/dev/fake"
+
+    status, payload = _http_json("POST", base, "/api/disconnect", {})
+    assert status == 200
+    assert payload["connected"] is False
+
+
+def test_http_connect_rejects_empty_port(panel_http_server):
+    _fake, base = panel_http_server
+    status, payload = _http_json("POST", base, "/api/connect", {"port": "  "})
+    assert status == 400
+    assert "port" in payload["error"]
+
+
+def test_http_command_requires_connection(panel_http_server):
+    _fake, base = panel_http_server
+    status, payload = _http_json("POST", base, "/api/command", {"command": "status"})
+    assert status == 400
+    assert "not connected" in payload["error"]
+
+
+def test_http_command_forwards_payload(panel_http_server):
+    fake, base = panel_http_server
+    _http_json("POST", base, "/api/connect", {"port": "/dev/fake"})
+    status, payload = _http_json("POST", base, "/api/command", {"command": "pause"})
+    assert status == 200
+    assert payload == {"ok": True}
+    assert fake.commands[-1] == {"command": "pause"}
+
+
+def test_http_load_scenario_flattens_payload(panel_http_server):
+    fake, base = panel_http_server
+    _http_json("POST", base, "/api/connect", {"port": "/dev/fake"})
+    scenario = default_scenario(seed=303)
+    body = {key: scenario[key] for key in scenario if key != "seed"}
+    status, payload = _http_json(
+        "POST",
+        base,
+        "/api/load_scenario",
+        {"seed": 303, "scenario": body},
+    )
+    assert status == 200
+    assert payload == {"ok": True}
+    sent = fake.commands[-1]
+    assert sent["command"] == "load_scenario"
+    assert sent["seed"] == 303
+    assert sent["sensors"]["air_temperature_c"] == scenario["sensors"]["air_temperature_c"]
+    assert sent["actuators"]["fan"]["control_type"] == "pwm"
+
+
+def test_http_step_sends_step_command(panel_http_server):
+    fake, base = panel_http_server
+    _http_json("POST", base, "/api/connect", {"port": "/dev/fake"})
+    status, payload = _http_json("POST", base, "/api/step", {})
+    assert status == 200
+    assert payload == {"ok": True}
+    assert fake.commands[-1] == {"command": "step"}
+
+
+def test_http_step_forwards_overrides(panel_http_server):
+    fake, base = panel_http_server
+    _http_json("POST", base, "/api/connect", {"port": "/dev/fake"})
+    sensors = {"air_temperature_c": 19.5}
+    validity = {"air_temperature_c": True}
+    _http_json("POST", base, "/api/step", {"sensors": sensors, "validity": validity})
+    assert fake.commands[-1] == {
+        "command": "step",
+        "sensors": sensors,
+        "validity": validity,
+    }
 
 
 def test_panel_serves_static_assets():

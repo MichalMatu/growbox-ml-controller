@@ -59,8 +59,10 @@ function bindToolbar() {
           }),
         }), btn);
         await refreshState();
+        await waitForDeviceStartup();
         await requestDeviceScenario();
         updateToolbarState(lastState);
+        updatePanelAlerts(lastState);
       } catch (_) { /* btn flash */ }
       return;
     }
