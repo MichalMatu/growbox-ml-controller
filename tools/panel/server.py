@@ -17,11 +17,19 @@ STATIC_DIR = Path(__file__).resolve().parent / "static"
 BRIDGE = SerialBridge()
 
 
+PANEL_PERMISSIONS_POLICY = "unload=(self)"
+
+
+def _panel_headers(handler: BaseHTTPRequestHandler) -> None:
+    handler.send_header("Permissions-Policy", PANEL_PERMISSIONS_POLICY)
+
+
 def _json_response(handler: BaseHTTPRequestHandler, status: int, payload: Any) -> None:
     body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
     handler.send_response(status)
     handler.send_header("Content-Type", "application/json; charset=utf-8")
     handler.send_header("Content-Length", str(len(body)))
+    _panel_headers(handler)
     handler.end_headers()
     handler.wfile.write(body)
 
@@ -54,6 +62,8 @@ class PanelHandler(BaseHTTPRequestHandler):
                 _json_response(self, HTTPStatus.OK, BRIDGE.snapshot())
             elif path == "/api/ports":
                 _json_response(self, HTTPStatus.OK, {"ports": BRIDGE.list_ports()})
+            elif path in {"/favicon.ico", "/favicon.svg"}:
+                self._serve_favicon()
             else:
                 _json_response(self, HTTPStatus.NOT_FOUND, {"error": "not_found"})
         except Exception as exc:  # noqa: BLE001 - surface to UI
@@ -105,6 +115,17 @@ class PanelHandler(BaseHTTPRequestHandler):
         self.send_response(HTTPStatus.OK)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
+        _panel_headers(self)
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _serve_favicon(self) -> None:
+        body = (STATIC_DIR / "favicon.svg").read_bytes()
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-Type", "image/svg+xml")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "public, max-age=86400")
+        _panel_headers(self)
         self.end_headers()
         self.wfile.write(body)
 
