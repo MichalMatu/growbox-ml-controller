@@ -82,6 +82,7 @@ cJSON* buildDiagnosticsDocument(const DummyEnvironmentSimulator& simulator,
 
   cJSON* task_object = cJSON_CreateObject();
   if (task_object != nullptr) {
+    cJSON_AddNumberToObject(task_object, "main_stack_size_bytes", task.main_stack_size_bytes);
     cJSON_AddNumberToObject(task_object, "main_stack_free_bytes", task.main_stack_free_bytes);
     cJSON_AddItemToObject(document, "task", task_object);
   }

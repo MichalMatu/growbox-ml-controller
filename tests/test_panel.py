@@ -301,7 +301,7 @@ def test_bridge_stores_diagnostics_message():
                 "free_internal": 120000,
                 "free_psram": 7000000,
             },
-            "task": {"main_stack_free_bytes": 4096},
+            "task": {"main_stack_size_bytes": 16384, "main_stack_free_bytes": 4096},
         }
     )
     assert bridge._state["last_diagnostics"]["heap"]["psram_enabled"] is True

@@ -1,6 +1,7 @@
 #include "HeapDiagnostics.h"
 
 #include <esp_heap_caps.h>
+#include <sdkconfig.h>
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -31,6 +32,7 @@ HeapSnapshot captureHeapSnapshot() noexcept {
 
 TaskSnapshot captureTaskSnapshot() noexcept {
   TaskSnapshot snapshot{};
+  snapshot.main_stack_size_bytes = static_cast<std::uint32_t>(CONFIG_ESP_MAIN_TASK_STACK_SIZE);
   const UBaseType_t words = uxTaskGetStackHighWaterMark(nullptr);
   snapshot.main_stack_free_bytes =
       static_cast<std::uint32_t>(words) * static_cast<std::uint32_t>(sizeof(StackType_t));

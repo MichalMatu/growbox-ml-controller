@@ -73,7 +73,7 @@ function formatDiagnosticsHtml(snapshot) {
   const minInternal = Number(heap.min_free_internal) || 0;
   const largestInternal = Number(heap.largest_free_internal) || 0;
   const stackFree = Number(task.main_stack_free_bytes) || 0;
-  const stackTotal = 8192;
+  const stackTotal = Number(task.main_stack_size_bytes) || 16384;
   const stackUsed = stackFree > 0 ? Math.max(0, stackTotal - stackFree) : 0;
   const connected = Boolean(snapshot.connected);
   const port = (snapshot.port || "—").replace("/dev/cu.", "");

@@ -22,6 +22,7 @@ struct HeapSnapshot {
 };
 
 struct TaskSnapshot {
+  std::uint32_t main_stack_size_bytes = 0U;
   std::uint32_t main_stack_free_bytes = 0U;
 };
 
