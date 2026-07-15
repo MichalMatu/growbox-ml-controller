@@ -26,12 +26,15 @@ ControllerInput nominalInput() {
   input.actuators.fan.available = true;
   input.actuators.fan.max_airflow_m3_h = 120.0f;
   input.actuators.fan.minimum_command = 0.15f;
+  input.actuators.fan.control_type = ActuatorControlType::Pwm;
   input.actuators.humidifier.available = true;
   input.actuators.humidifier.max_output_g_h = 250.0f;
+  input.actuators.humidifier.control_type = ActuatorControlType::Binary;
   input.actuators.irrigation_pump.available = true;
   input.actuators.irrigation_pump.flow_ml_s = 20.0f;
   input.actuators.irrigation_pump.maximum_pulse_s = 15.0f;
   input.actuators.irrigation_pump.minimum_interval_s = 3600.0f;
+  input.actuators.irrigation_pump.control_type = ActuatorControlType::Binary;
   input.monotonic_time_ms = 100000U;
   return input;
 }
@@ -53,18 +56,20 @@ void assertDecisionInRange(const SafeControlDecision& decision) {
 
 void test_schema_feature_count_and_order() {
   TEST_ASSERT_EQUAL_UINT32(1U, schema::kSchemaVersion);
-  TEST_ASSERT_EQUAL_UINT32(40U, schema::kFeatureCount);
+  TEST_ASSERT_EQUAL_UINT32(43U, schema::kFeatureCount);
   TEST_ASSERT_EQUAL_UINT32(4U, schema::kOutputCount);
   TEST_ASSERT_EQUAL_STRING("air_temperature_c", schema::kFeatureNames[0]);
   TEST_ASSERT_EQUAL_STRING("air_temperature_valid", schema::kFeatureNames[6]);
   TEST_ASSERT_EQUAL_STRING("heater_available", schema::kFeatureNames[19]);
-  TEST_ASSERT_EQUAL_STRING("target_air_temperature_c", schema::kFeatureNames[32]);
-  TEST_ASSERT_EQUAL_STRING("previous_irrigation", schema::kFeatureNames[39]);
+  TEST_ASSERT_EQUAL_STRING("fan_control_type", schema::kFeatureNames[26]);
+  TEST_ASSERT_EQUAL_STRING("target_air_temperature_c", schema::kFeatureNames[35]);
+  TEST_ASSERT_EQUAL_STRING("previous_irrigation", schema::kFeatureNames[42]);
   TEST_ASSERT_EQUAL_STRING("sensors.air_temperature_c", schema::kFeaturePaths[0]);
   TEST_ASSERT_EQUAL_STRING("validity.air_temperature_c", schema::kFeaturePaths[6]);
   TEST_ASSERT_EQUAL_STRING("actuators.heater.available", schema::kFeaturePaths[19]);
-  TEST_ASSERT_EQUAL_STRING("targets.air_temperature_c", schema::kFeaturePaths[32]);
-  TEST_ASSERT_EQUAL_STRING("previous.irrigation", schema::kFeaturePaths[39]);
+  TEST_ASSERT_EQUAL_STRING("actuators.fan.control_type", schema::kFeaturePaths[26]);
+  TEST_ASSERT_EQUAL_STRING("targets.air_temperature_c", schema::kFeaturePaths[35]);
+  TEST_ASSERT_EQUAL_STRING("previous.irrigation", schema::kFeaturePaths[42]);
   TEST_ASSERT_EQUAL_STRING("available", schema::wireKey(schema::FeatureIndex::HeaterAvailable));
   TEST_ASSERT_EQUAL_STRING("control_type",
                            schema::wireKey(schema::FeatureIndex::HeaterControlType));

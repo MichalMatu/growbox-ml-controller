@@ -8,16 +8,16 @@
 namespace generated_manifest {
 
 inline constexpr std::uint32_t kSchemaVersion = 1U;
-inline constexpr char kSchemaHash[] = "843401551234";
-inline constexpr char kModelVersion[] = "environment-mlp-v1-quick-d9e7790d6b99";
-inline constexpr char kWeightHash[] = "d9e7790d6b99c4910e9f7e30dae39aaabe6a88981dbd1af1cfba5a0a365205ec";
+inline constexpr char kSchemaHash[] = "e12b0cc20edf";
+inline constexpr char kModelVersion[] = "environment-mlp-v1-quick-fabd3736e51d";
+inline constexpr char kWeightHash[] = "fabd3736e51d57cff56dd4bb95c5a9e57419fd3ff6482ba21bd2ac30bbd17dd2";
 inline constexpr char kModelFormat[] = "emlearn-net-float32-loadable";
 inline constexpr char kTrainingMode[] = "quick";
 inline constexpr std::uint32_t kTrainingSeed = 1847U;
 inline constexpr std::size_t kDatasetSize = 240U;
-inline constexpr std::size_t kParameterCount = 2500U;
+inline constexpr std::size_t kParameterCount = 2596U;
 inline constexpr std::uint32_t kExportWeightDecimalPlaces = 5U;
-inline constexpr std::size_t kInputCount = 40U;
+inline constexpr std::size_t kInputCount = 43U;
 inline constexpr std::size_t kOutputCount = 4U;
 
 inline constexpr std::array<const char*, kInputCount> kFeatureOrder{{
@@ -47,12 +47,15 @@ inline constexpr std::array<const char*, kInputCount> kFeatureOrder{{
         "fan_available",
         "fan_max_airflow_m3_h",
         "fan_minimum_command",
+        "fan_control_type",
         "humidifier_available",
         "humidifier_max_output_g_h",
+        "humidifier_control_type",
         "irrigation_available",
         "irrigation_flow_ml_s",
         "irrigation_maximum_pulse_s",
         "irrigation_minimum_interval_s",
+        "irrigation_control_type",
         "target_air_temperature_c",
         "target_air_humidity_pct",
         "target_co2_ppm",
@@ -89,6 +92,9 @@ inline constexpr std::array<float, kInputCount> kNormalizationMinimums{{
         0.0f,
         0.1f,
         10.0f,
+        0.0f,
+        0.0f,
+        0.0f,
         0.0f,
         0.0f,
         0.0f,
@@ -141,11 +147,14 @@ inline constexpr std::array<float, kInputCount> kNormalizationMaximums{{
         10000.0f,
         1.0f,
         1.0f,
+        1.0f,
         10000.0f,
+        1.0f,
         1.0f,
         1000.0f,
         600.0f,
         86400.0f,
+        1.0f,
         60.0f,
         100.0f,
         5000.0f,
@@ -183,6 +192,9 @@ inline constexpr std::array<float, kInputCount> kNormalizationDefaults{{
         0.0f,
         0.0f,
         0.0f,
+        1.0f,
+        0.0f,
+        0.0f,
         0.0f,
         0.0f,
         0.0f,
@@ -199,20 +211,20 @@ inline constexpr std::array<float, kInputCount> kNormalizationDefaults{{
         0.0f
 }};
 
-inline constexpr float kTestMae = 0.2962805f;
-inline constexpr float kTestRmse = 0.3726849f;
-inline constexpr float kTestMaxAbsError = 0.8937735f;
+inline constexpr float kTestMae = 0.2443761f;
+inline constexpr float kTestRmse = 0.3108107f;
+inline constexpr float kTestMaxAbsError = 0.9042647f;
 inline constexpr std::array<float, kOutputCount> kTestOutputMae{{
-        0.4875203f,
-        0.1902574f,
-        0.3761904f,
-        0.1311541f
+        0.130658f,
+        0.2010984f,
+        0.4998801f,
+        0.145868f
 }};
 inline constexpr std::array<float, kOutputCount> kTestOutputRmse{{
-        0.5630867f,
-        0.2540094f,
-        0.3764848f,
-        0.1795771f
+        0.1319343f,
+        0.2838775f,
+        0.5018672f,
+        0.1911792f
 }};
 
 }  // namespace generated_manifest

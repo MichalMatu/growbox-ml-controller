@@ -42,12 +42,15 @@ void DummyEnvironmentSimulator::reset(std::uint32_t seed) noexcept {
   input_.actuators.fan.available = true;
   input_.actuators.fan.max_airflow_m3_h = 120.0f;
   input_.actuators.fan.minimum_command = 0.2f;
+  input_.actuators.fan.control_type = control::ActuatorControlType::Pwm;
   input_.actuators.humidifier.available = true;
   input_.actuators.humidifier.max_output_g_h = 180.0f;
+  input_.actuators.humidifier.control_type = control::ActuatorControlType::Binary;
   input_.actuators.irrigation_pump.available = true;
   input_.actuators.irrigation_pump.flow_ml_s = 22.0f;
   input_.actuators.irrigation_pump.maximum_pulse_s = 4.0f;
   input_.actuators.irrigation_pump.minimum_interval_s = 600.0f;
+  input_.actuators.irrigation_pump.control_type = control::ActuatorControlType::Binary;
 
   input_.targets.air_temperature_c = 25.0f;
   input_.targets.air_humidity_pct = 65.0f;

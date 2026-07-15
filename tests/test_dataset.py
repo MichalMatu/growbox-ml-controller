@@ -30,7 +30,7 @@ def test_generated_rows_keep_each_scenario_in_one_split():
         DatasetConfig(scenario_count=6, steps_per_scenario=4, seed=91),
         teacher=RolloutTeacher(horizon_steps=1),
     )
-    assert dataset.features.shape == (24, 40)
+    assert dataset.features.shape == (24, 43)
     assert dataset.labels.shape == (24, 4)
     assert np.all((0.0 <= dataset.features) & (dataset.features <= 1.0))
     assert np.all((0.0 <= dataset.labels) & (dataset.labels <= 1.0))

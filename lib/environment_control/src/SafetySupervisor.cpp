@@ -178,7 +178,9 @@ void applyEmergencyFan(const ControllerInput& input, const RawModelDecision& raw
 
 void SafetySupervisor::reset() noexcept {
   heater_ = BinaryRuntime{};
+  fan_ = BinaryRuntime{};
   humidifier_ = BinaryRuntime{};
+  irrigation_ = BinaryRuntime{};
   pump_ = PumpRuntime{};
 }
 
@@ -197,7 +199,9 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
     forceSafeState(raw, upstream_failure, safe, report);
     applyEmergencyFan(input, raw, safe, report);
     syncBinaryState(heater_, false, input.monotonic_time_ms);
+    syncBinaryState(fan_, false, input.monotonic_time_ms);
     syncBinaryState(humidifier_, false, input.monotonic_time_ms);
+    syncBinaryState(irrigation_, false, input.monotonic_time_ms);
     return;
   }
 
@@ -205,7 +209,9 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
     forceSafeState(raw, SafetyReason::NonFiniteInput, safe, report);
     applyEmergencyFan(input, raw, safe, report);
     syncBinaryState(heater_, false, input.monotonic_time_ms);
+    syncBinaryState(fan_, false, input.monotonic_time_ms);
     syncBinaryState(humidifier_, false, input.monotonic_time_ms);
+    syncBinaryState(irrigation_, false, input.monotonic_time_ms);
     return;
   }
 
@@ -214,7 +220,9 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
     forceSafeState(raw, SafetyReason::NonFiniteModelOutput, safe, report);
     applyEmergencyFan(input, raw, safe, report);
     syncBinaryState(heater_, false, input.monotonic_time_ms);
+    syncBinaryState(fan_, false, input.monotonic_time_ms);
     syncBinaryState(humidifier_, false, input.monotonic_time_ms);
+    syncBinaryState(irrigation_, false, input.monotonic_time_ms);
     return;
   }
 
@@ -245,10 +253,21 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
                                 input.safety.heater_minimum_on_s, input.safety.heater_minimum_off_s,
                                 input.monotonic_time_ms, heater_, report, heaterIndex);
   }
-  safe.humidifier =
-      enforceBinary(safe.humidifier, input.previous.humidifier, threshold,
-                    input.safety.humidifier_minimum_on_s, input.safety.humidifier_minimum_off_s,
-                    input.monotonic_time_ms, humidifier_, report, humidifierIndex);
+  if (input.actuators.fan.control_type == ActuatorControlType::Binary) {
+    safe.fan = enforceBinary(safe.fan, input.previous.fan, threshold, 0.0f, 0.0f,
+                             input.monotonic_time_ms, fan_, report, fanIndex);
+  }
+  if (input.actuators.humidifier.control_type == ActuatorControlType::Binary) {
+    safe.humidifier =
+        enforceBinary(safe.humidifier, input.previous.humidifier, threshold,
+                      input.safety.humidifier_minimum_on_s, input.safety.humidifier_minimum_off_s,
+                      input.monotonic_time_ms, humidifier_, report, humidifierIndex);
+  }
+  if (input.actuators.irrigation_pump.control_type == ActuatorControlType::Binary) {
+    safe.irrigation = enforceBinary(safe.irrigation, input.previous.irrigation, threshold, 0.0f,
+                                    0.0f, input.monotonic_time_ms, irrigation_, report,
+                                    irrigationIndex);
+  }
 
   const bool heater_control_type_valid =
       input.actuators.heater.control_type == ActuatorControlType::Binary ||
@@ -272,7 +291,11 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
     safe.heater = 0.0f;
   }
 
-  const bool fan_capability_valid = input.actuators.fan.max_airflow_m3_h > 0.0f;
+  const bool fan_control_type_valid =
+      input.actuators.fan.control_type == ActuatorControlType::Binary ||
+      input.actuators.fan.control_type == ActuatorControlType::Pwm;
+  const bool fan_capability_valid =
+      input.actuators.fan.max_airflow_m3_h > 0.0f && fan_control_type_valid;
   if (!input.actuators.fan.available || !fan_capability_valid) {
     if (safe.fan != 0.0f || raw.fan != 0.0f) {
       addReason(report, fanIndex,
@@ -290,7 +313,11 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
     }
   }
 
-  const bool humidifier_capability_valid = input.actuators.humidifier.max_output_g_h > 0.0f;
+  const bool humidifier_control_type_valid =
+      input.actuators.humidifier.control_type == ActuatorControlType::Binary ||
+      input.actuators.humidifier.control_type == ActuatorControlType::Pwm;
+  const bool humidifier_capability_valid = input.actuators.humidifier.max_output_g_h > 0.0f &&
+                                           humidifier_control_type_valid;
   if (!input.actuators.humidifier.available || !humidifier_capability_valid) {
     if (safe.humidifier != 0.0f || raw.humidifier != 0.0f) {
       addReason(report, humidifierIndex,
@@ -300,8 +327,12 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
     safe.humidifier = 0.0f;
   }
 
+  const bool irrigation_control_type_valid =
+      input.actuators.irrigation_pump.control_type == ActuatorControlType::Binary ||
+      input.actuators.irrigation_pump.control_type == ActuatorControlType::Pwm;
   const bool pump_capability_valid = input.actuators.irrigation_pump.flow_ml_s > 0.0f &&
-                                     input.actuators.irrigation_pump.maximum_pulse_s > 0.0f;
+                                     input.actuators.irrigation_pump.maximum_pulse_s > 0.0f &&
+                                     irrigation_control_type_valid;
   if (!input.actuators.irrigation_pump.available || !pump_capability_valid) {
     if (safe.irrigation != 0.0f || raw.irrigation != 0.0f) {
       addReason(report, irrigationIndex,
@@ -336,7 +367,15 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
   }
 
   syncBinaryState(heater_, safe.heater >= threshold, input.monotonic_time_ms);
-  syncBinaryState(humidifier_, safe.humidifier >= threshold, input.monotonic_time_ms);
+  if (input.actuators.fan.control_type == ActuatorControlType::Binary) {
+    syncBinaryState(fan_, safe.fan >= threshold, input.monotonic_time_ms);
+  }
+  if (input.actuators.humidifier.control_type == ActuatorControlType::Binary) {
+    syncBinaryState(humidifier_, safe.humidifier >= threshold, input.monotonic_time_ms);
+  }
+  if (input.actuators.irrigation_pump.control_type == ActuatorControlType::Binary) {
+    syncBinaryState(irrigation_, safe.irrigation >= threshold, input.monotonic_time_ms);
+  }
 
   report.modified = report.modified || different(raw.heater, safe.heater) ||
                     different(raw.fan, safe.fan) || different(raw.humidifier, safe.humidifier) ||

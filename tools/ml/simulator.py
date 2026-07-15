@@ -57,12 +57,14 @@ class FanCapabilities:
     available: bool = True
     max_airflow_m3_h: float = 90.0
     minimum_command: float = 0.2
+    control_type: str = "pwm"
 
 
 @dataclass(frozen=True)
 class HumidifierCapabilities:
     available: bool = True
     max_output_g_h: float = 110.0
+    control_type: str = "binary"
 
 
 @dataclass(frozen=True)
@@ -71,6 +73,7 @@ class PumpCapabilities:
     flow_ml_s: float = 18.0
     maximum_pulse_s: float = 4.0
     minimum_interval_s: float = 300.0
+    control_type: str = "binary"
 
 
 @dataclass(frozen=True)

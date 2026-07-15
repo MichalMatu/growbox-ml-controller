@@ -19,7 +19,7 @@ def test_default_scenario_has_nominal_actuators():
 
 def test_panel_schema_matches_contract_feature_count():
     schema = build_panel_schema()
-    assert schema["feature_count"] == 40
+    assert schema["feature_count"] == 43
     assert schema["outputs"] == ["heater", "fan", "humidifier", "irrigation"]
     assert len(schema["sections"]) >= 6
 

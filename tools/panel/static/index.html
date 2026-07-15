@@ -424,6 +424,7 @@
       flex-direction: column;
       gap: 0.22rem;
     }
+
     .growbox-split {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -844,9 +845,8 @@
         html: `
           <p>Co jest podłączone w growboxie i jakie ma limity. Checkbox przy nazwie = urządzenie jest w zestawie.</p>
           <ul>
-            <li><strong>Grzałka</strong> — moc, sprawność, typ sterowania (binary/pwm)</li>
-            <li><strong>Fan</strong> — przepływ, minimalne PWM</li>
-            <li><strong>Nawilżacz</strong> — max wydajność g/h</li>
+            <li><strong>typ</strong> — <code>binary</code> (wł/wył, próg 50%) lub <code>pwm</code> (0–100%). Typowo: grzałka binary, fan pwm.</li>
+            <li><strong>Fan min</strong> — dolna granica PWM przy alarmie temperatury</li>
             <li><strong>Pompa</strong> — przepływ mL/s, <strong>Impuls s</strong> (krótki, np. 4), <strong>Przerwa s</strong> (długi, np. 600 między podlaniami)</li>
           </ul>
           <p>Brak urządzenia (checkbox off) → model i safety wymuszają 0 na tym wyjściu.</p>
@@ -1104,7 +1104,10 @@
       heater_control_type: "typ",
       fan_max_airflow_m3_h: "m³/h",
       fan_minimum_command: "min",
+      fan_control_type: "typ",
       humidifier_max_output_g_h: "g/h",
+      humidifier_control_type: "typ",
+      irrigation_control_type: "typ",
       irrigation_flow_ml_s: "mL/s",
       irrigation_maximum_pulse_s: "Impuls s",
       irrigation_minimum_interval_s: "Przerwa s",
@@ -1129,9 +1132,9 @@
 
     const ACTUATOR_GROUPS = [
       ["Grzałka", ["heater_available", "heater_max_power_w", "heater_efficiency", "heater_control_type"]],
-      ["Fan", ["fan_available", "fan_max_airflow_m3_h", "fan_minimum_command"]],
-      ["Nawilżacz", ["humidifier_available", "humidifier_max_output_g_h"]],
-      ["Pompa", ["irrigation_available", "irrigation_flow_ml_s", "irrigation_maximum_pulse_s", "irrigation_minimum_interval_s"]],
+      ["Fan", ["fan_available", "fan_max_airflow_m3_h", "fan_minimum_command", "fan_control_type"]],
+      ["Nawilżacz", ["humidifier_available", "humidifier_max_output_g_h", "humidifier_control_type"]],
+      ["Pompa", ["irrigation_available", "irrigation_flow_ml_s", "irrigation_maximum_pulse_s", "irrigation_minimum_interval_s", "irrigation_control_type"]],
     ];
 
     function isAvailabilityField(name) {
@@ -1141,8 +1144,11 @@
     const FIELD_HINTS = {
       irrigation_maximum_pulse_s: "Maks. czas jednego impulsu podlewania (sekundy)",
       irrigation_minimum_interval_s: "Min. przerwa między kolejnymi podlaniami (sekundy)",
-      fan_minimum_command: "Minimalne PWM wentylatora, gdy jest włączony",
-      heater_control_type: "binary = wł/wył, pwm = modulacja",
+      fan_minimum_command: "Min. PWM przy alarmie temperatury (nie przy normalnej pracy)",
+      heater_control_type: "binary = przekaźnik, pwm = modulacja mocy",
+      fan_control_type: "Typowo pwm (regulacja obrotów). binary = wł/wył",
+      humidifier_control_type: "Typowo binary (wł/wył). pwm = modulacja",
+      irrigation_control_type: "Typowo binary (impuls ON/OFF). pwm = długość impulsu z modelu",
     };
 
     function shortLabel(name) {

@@ -75,11 +75,15 @@ struct FanCapabilities {
   bool available = detail::schemaDefaultBool(schema::FeatureIndex::FanAvailable);
   float max_airflow_m3_h = detail::schemaDefault(schema::FeatureIndex::FanMaxAirflowM3H);
   float minimum_command = detail::schemaDefault(schema::FeatureIndex::FanMinimumCommand);
+  ActuatorControlType control_type = static_cast<ActuatorControlType>(
+      static_cast<std::uint8_t>(detail::schemaDefault(schema::FeatureIndex::FanControlType)));
 };
 
 struct HumidifierCapabilities {
   bool available = detail::schemaDefaultBool(schema::FeatureIndex::HumidifierAvailable);
   float max_output_g_h = detail::schemaDefault(schema::FeatureIndex::HumidifierMaxOutputGH);
+  ActuatorControlType control_type = static_cast<ActuatorControlType>(static_cast<std::uint8_t>(
+      detail::schemaDefault(schema::FeatureIndex::HumidifierControlType)));
 };
 
 struct IrrigationPumpCapabilities {
@@ -88,6 +92,8 @@ struct IrrigationPumpCapabilities {
   float maximum_pulse_s = detail::schemaDefault(schema::FeatureIndex::IrrigationMaximumPulseS);
   float minimum_interval_s =
       detail::schemaDefault(schema::FeatureIndex::IrrigationMinimumIntervalS);
+  ActuatorControlType control_type = static_cast<ActuatorControlType>(static_cast<std::uint8_t>(
+      detail::schemaDefault(schema::FeatureIndex::IrrigationControlType)));
 };
 
 struct ActuatorCapabilities {

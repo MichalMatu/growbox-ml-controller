@@ -178,16 +178,19 @@ def random_scenario(index: int, seed: int) -> Scenario:
             available=fan_available,
             max_airflow_m3_h=fan_airflow,
             minimum_command=float(rng.uniform(0.1, 0.35)),
+            control_type="pwm" if rng.random() < 0.8 else "binary",
         ),
         humidifier=HumidifierCapabilities(
             available=humidifier_available,
             max_output_g_h=humidifier_output,
+            control_type="binary" if rng.random() < 0.85 else "pwm",
         ),
         irrigation_pump=PumpCapabilities(
             available=pump_available,
             flow_ml_s=pump_flow,
             maximum_pulse_s=pulse,
             minimum_interval_s=float(rng.uniform(120.0, 1800.0)),
+            control_type="binary" if rng.random() < 0.9 else "pwm",
         ),
     )
     targets = ControlTargets(
@@ -253,15 +256,18 @@ def controller_input_record(
                 "available": fan.available,
                 "max_airflow_m3_h": fan.max_airflow_m3_h,
                 "minimum_command": fan.minimum_command,
+                "control_type": fan.control_type,
             },
             "humidifier": {
                 "available": humidifier.available,
                 "max_output_g_h": humidifier.max_output_g_h,
+                "control_type": humidifier.control_type,
             },
             "irrigation": {
                 "available": pump.available,
                 "flow_ml_s": pump.flow_ml_s,
                 "maximum_pulse_s": pump.maximum_pulse_s,
+                "control_type": pump.control_type,
                 "minimum_interval_s": pump.minimum_interval_s,
             },
         },

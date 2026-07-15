@@ -45,17 +45,20 @@
     "actuators.fan": [
       "fan_available",
       "fan_max_airflow_m3_h",
-      "fan_minimum_command"
+      "fan_minimum_command",
+      "fan_control_type"
     ],
     "actuators.humidifier": [
       "humidifier_available",
-      "humidifier_max_output_g_h"
+      "humidifier_max_output_g_h",
+      "humidifier_control_type"
     ],
     "actuators.irrigation": [
       "irrigation_available",
       "irrigation_flow_ml_s",
       "irrigation_maximum_pulse_s",
-      "irrigation_minimum_interval_s"
+      "irrigation_minimum_interval_s",
+      "irrigation_control_type"
     ],
     "targets": [
       "target_air_temperature_c",
@@ -104,14 +107,17 @@
       {"name": "fan_available", "path": "actuators.fan.available", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
       {"name": "fan_max_airflow_m3_h", "path": "actuators.fan.max_airflow_m3_h", "type": "number", "unit": "m3/h", "minimum": 0.0, "maximum": 10000.0, "default": 0.0},
       {"name": "fan_minimum_command", "path": "actuators.fan.minimum_command", "type": "number", "unit": "ratio", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
+      {"name": "fan_control_type", "path": "actuators.fan.control_type", "type": "enum", "unit": "enum", "minimum": 0.0, "maximum": 1.0, "default": 1.0, "encoding": {"binary": 0.0, "pwm": 1.0}},
 
       {"name": "humidifier_available", "path": "actuators.humidifier.available", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
       {"name": "humidifier_max_output_g_h", "path": "actuators.humidifier.max_output_g_h", "type": "number", "unit": "g/h", "minimum": 0.0, "maximum": 10000.0, "default": 0.0},
+      {"name": "humidifier_control_type", "path": "actuators.humidifier.control_type", "type": "enum", "unit": "enum", "minimum": 0.0, "maximum": 1.0, "default": 0.0, "encoding": {"binary": 0.0, "pwm": 1.0}},
 
       {"name": "irrigation_available", "path": "actuators.irrigation.available", "type": "boolean", "unit": "mask", "minimum": 0.0, "maximum": 1.0, "default": 0.0},
       {"name": "irrigation_flow_ml_s", "path": "actuators.irrigation.flow_ml_s", "type": "number", "unit": "mL/s", "minimum": 0.0, "maximum": 1000.0, "default": 0.0},
       {"name": "irrigation_maximum_pulse_s", "path": "actuators.irrigation.maximum_pulse_s", "type": "number", "unit": "s", "minimum": 0.0, "maximum": 600.0, "default": 0.0},
       {"name": "irrigation_minimum_interval_s", "path": "actuators.irrigation.minimum_interval_s", "type": "number", "unit": "s", "minimum": 0.0, "maximum": 86400.0, "default": 0.0},
+      {"name": "irrigation_control_type", "path": "actuators.irrigation.control_type", "type": "enum", "unit": "enum", "minimum": 0.0, "maximum": 1.0, "default": 0.0, "encoding": {"binary": 0.0, "pwm": 1.0}},
 
       {"name": "target_air_temperature_c", "path": "targets.air_temperature_c", "type": "number", "unit": "degC", "minimum": -20.0, "maximum": 60.0, "default": 25.0},
       {"name": "target_air_humidity_pct", "path": "targets.air_humidity_pct", "type": "number", "unit": "percent", "minimum": 0.0, "maximum": 100.0, "default": 65.0},

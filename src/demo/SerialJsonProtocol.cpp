@@ -152,6 +152,19 @@ bool parsePrevious(const cJSON* object, control::PreviousControlState& previous)
                          previous.irrigation);
 }
 
+bool parseControlType(const char* control_type,
+                      control::ActuatorControlType& destination) noexcept {
+  if (control_type != nullptr && std::strcmp(control_type, "binary") == 0) {
+    destination = control::ActuatorControlType::Binary;
+    return true;
+  }
+  if (control_type != nullptr && std::strcmp(control_type, "pwm") == 0) {
+    destination = control::ActuatorControlType::Pwm;
+    return true;
+  }
+  return false;
+}
+
 bool parseActuators(const cJSON* object, control::ActuatorCapabilities& actuators) noexcept {
   if (object == nullptr) {
     return false;
@@ -165,13 +178,16 @@ bool parseActuators(const cJSON* object, control::ActuatorCapabilities& actuator
     return false;
   }
 
-  const char* control_type =
-      readString(heater, control::schema::wireKey(FeatureIndex::HeaterControlType));
-  if (control_type != nullptr && std::strcmp(control_type, "binary") == 0) {
-    actuators.heater.control_type = control::ActuatorControlType::Binary;
-  } else if (control_type != nullptr && std::strcmp(control_type, "pwm") == 0) {
-    actuators.heater.control_type = control::ActuatorControlType::Pwm;
-  } else {
+  if (!parseControlType(readString(heater, control::schema::wireKey(FeatureIndex::HeaterControlType)),
+                       actuators.heater.control_type) ||
+      !parseControlType(readString(fan, control::schema::wireKey(FeatureIndex::FanControlType)),
+                        actuators.fan.control_type) ||
+      !parseControlType(
+          readString(humidifier, control::schema::wireKey(FeatureIndex::HumidifierControlType)),
+          actuators.humidifier.control_type) ||
+      !parseControlType(
+          readString(irrigation, control::schema::wireKey(FeatureIndex::IrrigationControlType)),
+          actuators.irrigation_pump.control_type)) {
     return false;
   }
 

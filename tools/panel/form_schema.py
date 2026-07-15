@@ -41,13 +41,19 @@ NOMINAL_PRESET: dict[str, Any] = {
             "efficiency": 0.9,
             "control_type": "binary",
         },
-        "fan": {"available": True, "max_airflow_m3_h": 120.0, "minimum_command": 0.2},
-        "humidifier": {"available": True, "max_output_g_h": 180.0},
+        "fan": {
+            "available": True,
+            "max_airflow_m3_h": 120.0,
+            "minimum_command": 0.2,
+            "control_type": "pwm",
+        },
+        "humidifier": {"available": True, "max_output_g_h": 180.0, "control_type": "binary"},
         "irrigation": {
             "available": True,
             "flow_ml_s": 22.0,
             "maximum_pulse_s": 4.0,
             "minimum_interval_s": 600.0,
+            "control_type": "binary",
         },
     },
     "targets": {

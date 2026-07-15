@@ -43,7 +43,7 @@ def test_contract_count_order_and_hash_match_generated_cpp(scenario):
     cpp_hash = re.search(r'kSchemaHash\[\] = "([0-9a-f]+)"', header)
     assert cpp_hash is not None
     assert contract.short_hash == cpp_hash.group(1)
-    assert len(contract.features) == 40
+    assert len(contract.features) == 43
     assert contract.outputs == ("heater", "fan", "humidifier", "irrigation")
     assert contract.feature_names[:3] == (
         "air_temperature_c",
@@ -123,6 +123,24 @@ def test_controller_input_record_uses_canonical_wire_shape(scenario):
         "efficiency",
         "control_type",
     }
+    assert set(record["actuators"]["fan"]) == {
+        "available",
+        "max_airflow_m3_h",
+        "minimum_command",
+        "control_type",
+    }
+    assert set(record["actuators"]["humidifier"]) == {
+        "available",
+        "max_output_g_h",
+        "control_type",
+    }
+    assert set(record["actuators"]["irrigation"]) == {
+        "available",
+        "flow_ml_s",
+        "maximum_pulse_s",
+        "minimum_interval_s",
+        "control_type",
+    }
     contract = load_contract()
     for feature in contract.features:
         _resolve_path(record, feature.path)
@@ -167,7 +185,7 @@ def test_encoder_clamps_ranges_and_applies_validity_masks(scenario):
         temperature.default - temperature.minimum
     ) / (temperature.maximum - temperature.minimum)
     assert encoded.dtype == np.float32
-    assert encoded.shape == (40,)
+    assert encoded.shape == (43,)
     assert math.isclose(float(encoded[0]), expected_default, abs_tol=1e-7)
     assert encoded[1] == 1.0
     assert encoded[3] == 0.0

@@ -133,8 +133,10 @@ EncoderStatus FeatureEncoder::encode(const ControllerInput& input, FeatureVector
     markSubstitutionIfNeeded(input.actuators.fan.max_airflow_m3_h, fan_airflow,
                              FeatureIndex::FanMaxAirflowM3H, report);
   }
+  const float fan_control = static_cast<float>(input.actuators.fan.control_type);
   finite &= encodeFinite(fan_airflow, FeatureIndex::FanMaxAirflowM3H, output, report);
   finite &= encodeFinite(fan_minimum, FeatureIndex::FanMinimumCommand, output, report);
+  finite &= encodeFinite(fan_control, FeatureIndex::FanControlType, output, report);
 
   output.values[schema::index(FeatureIndex::HumidifierAvailable)] =
       input.actuators.humidifier.available ? 1.0f : 0.0f;
@@ -144,7 +146,9 @@ EncoderStatus FeatureEncoder::encode(const ControllerInput& input, FeatureVector
     markSubstitutionIfNeeded(input.actuators.humidifier.max_output_g_h, humidifier_output,
                              FeatureIndex::HumidifierMaxOutputGH, report);
   }
+  const float humidifier_control = static_cast<float>(input.actuators.humidifier.control_type);
   finite &= encodeFinite(humidifier_output, FeatureIndex::HumidifierMaxOutputGH, output, report);
+  finite &= encodeFinite(humidifier_control, FeatureIndex::HumidifierControlType, output, report);
 
   output.values[schema::index(FeatureIndex::IrrigationAvailable)] =
       input.actuators.irrigation_pump.available ? 1.0f : 0.0f;
@@ -162,7 +166,9 @@ EncoderStatus FeatureEncoder::encode(const ControllerInput& input, FeatureVector
   }
   finite &= encodeFinite(pump_flow, FeatureIndex::IrrigationFlowMlS, output, report);
   finite &= encodeFinite(pump_pulse, FeatureIndex::IrrigationMaximumPulseS, output, report);
+  const float pump_control = static_cast<float>(input.actuators.irrigation_pump.control_type);
   finite &= encodeFinite(pump_interval, FeatureIndex::IrrigationMinimumIntervalS, output, report);
+  finite &= encodeFinite(pump_control, FeatureIndex::IrrigationControlType, output, report);
 
   finite &= encodeFinite(input.targets.air_temperature_c, FeatureIndex::TargetAirTemperatureC,
                          output, report);

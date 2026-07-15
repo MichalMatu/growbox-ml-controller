@@ -32,7 +32,9 @@ private:
   };
 
   BinaryRuntime heater_{};
+  BinaryRuntime fan_{};
   BinaryRuntime humidifier_{};
+  BinaryRuntime irrigation_{};
   PumpRuntime pump_{};
 };
 
