@@ -150,7 +150,7 @@
     }
     .mini-cell .label-row {
       display: flex;
-      justify-content: flex-end;
+      justify-content: flex-start;
       min-width: 0;
     }
     .mini-cell .name {
@@ -160,9 +160,9 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      text-align: right;
+      text-align: left;
     }
-    .mini-cell .head-row .name { text-align: left; flex: 1 1 auto; }
+    .mini-cell .head-row .name { flex: 1 1 auto; }
     .mini-cell .head-row.tick-only { justify-content: flex-end; }
     .mini-cell .head-row input[type="checkbox"] {
       margin: 0;
@@ -650,7 +650,7 @@
         card.innerHTML = `<h2>${section.title}</h2>`;
         if (section.id === "actuators") {
           root.innerHTML += `<div class="card"><h2>${section.title}</h2>${renderActuatorBlock(section)}</div>`;
-        } else if (section.id === "targets") {
+        } else if (section.id === "targets" || section.id === "previous") {
           root.innerHTML += renderCompactBlock(section.title, section.fields);
         } else {
           const grid = document.createElement("div");
