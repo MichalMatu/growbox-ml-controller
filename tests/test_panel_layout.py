@@ -73,7 +73,9 @@ def test_sensor_pot_fields_use_horizontal_layout_reference():
     """Positive reference: czujniki donic keep Wilg. + Gleba T side by side."""
     panel_css = PANEL_CSS.read_text(encoding="utf-8")
     assert ".pot-card-sensors" in panel_css
-    assert "grid-template-columns: 1fr 1fr" in panel_css
+    assert "grid-template-columns: var(--pot-sensor-w) var(--pot-sensor-w-temp)" in panel_css
+    assert "--pot-sensor-w: var(--cell-w-pct)" in panel_css
+    assert "--pot-card-w: calc(var(--pot-sensor-w) + var(--pot-sensor-w-temp)" in panel_css
 
 
 def test_zone_soil_target_labels_use_donica_names():
@@ -176,12 +178,160 @@ def test_inactive_zone_dependents_are_linked_to_zone_available():
     assert "applyInactiveZonePolicy(next)" in read_fn
     assert "zone.irrigation.available = false" in scenario_js
     assert "renderSoilTargetMiniCell" in form_js
+    soil_fn = _extract_js_function(form_js, "renderSoilTargetMiniCell")
+    assert "fieldMiniCellWidthClass(field)" in soil_fn
     assert "syncInactiveZoneDependentInputs" in form_js
     assert "syncInactiveZonePumpInputs" in form_js
     assert "zoneIndexFromPumpGroup" in form_js
     assert "inactive-zone-pump" in cell_fn
     assert "inactive-zone-target" in panel_css
     assert "inactive-zone-pump" in panel_css
+
+
+def test_ppm_cells_use_one_ch_narrower_width():
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
+    width_fn = _extract_js_function(form_js, "fieldSuffixWidthClass")
+    cell_fn = _extract_js_function(form_js, "fieldMiniCellWidthClass")
+    assert width_fn
+    assert cell_fn
+    assert '"ppm"' in width_fn
+    assert '" suffix-w-ppm"' in width_fn
+    assert '" mini-cell-ppm"' in cell_fn
+    assert "--cell-w-ppm:" in panel_css
+    assert "--actuator-input-w-ppm:" in panel_css
+    assert "calc(var(--cell-w) - 1ch)" in panel_css
+    assert ".mini-cell.mini-cell-ppm" in panel_css
+    assert ".actuator-input-wrap.suffix-w-ppm" in panel_css
+
+
+def test_humidity_pct_cells_use_three_ch_narrower_width():
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
+    width_fn = _extract_js_function(form_js, "fieldSuffixWidthClass")
+    cell_fn = _extract_js_function(form_js, "fieldMiniCellWidthClass")
+    assert width_fn
+    assert cell_fn
+    assert '"%"' in width_fn
+    assert '" suffix-w-pct"' in width_fn
+    assert '" mini-cell-pct"' in cell_fn
+    assert "--cell-w-pct:" in panel_css
+    assert "calc(var(--cell-w) - 3ch)" in panel_css
+    assert ".mini-cell.mini-cell-pct" in panel_css
+
+
+def test_temperature_sensor_cells_render_wrapped_with_narrower_mini_cell():
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
+    sensor_fn = _extract_js_function(form_js, "renderPathSensorMiniCell")
+    width_fn = _extract_js_function(form_js, "fieldSuffixWidthClass")
+    cell_fn = _extract_js_function(form_js, "fieldMiniCellWidthClass")
+    wrap_fn = _extract_js_function(form_js, "renderWrappedNumberInput")
+    assert sensor_fn
+    assert cell_fn
+    assert width_fn
+    assert "fieldMiniCellWidthClass(wrappedSensor)" in sensor_fn
+    assert '"°C"' in width_fn
+    assert '" suffix-w-temp"' in width_fn
+    assert '" mini-cell-temp"' in cell_fn
+    assert "renderWrappedNumberInput" in sensor_fn
+    assert "field-input-wrap" in wrap_fn
+    assert "field-input-suffix" in wrap_fn
+    assert "--cell-w-temp:" in panel_css
+    assert ".mini-cell.mini-cell-temp" in panel_css
+    assert "calc(var(--cell-w) - 2ch)" in panel_css
+
+
+def test_previous_ratio_cells_use_three_ch_narrower_width():
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
+    cell_fn = _extract_js_function(form_js, "fieldMiniCellWidthClass")
+    prev_fn = _extract_js_function(form_js, "isPreviousRatioPath")
+    prev_block = _extract_js_function(form_js, "renderPreviousBlock")
+    assert prev_fn
+    assert cell_fn
+    assert prev_block
+    assert "previous." in prev_fn
+    assert '" mini-cell-prev"' in cell_fn
+    assert "renderMiniCell" in prev_block
+    assert "--cell-w-prev:" in panel_css
+    assert "calc(var(--cell-w) - 3ch)" in panel_css
+    assert ".mini-cell.mini-cell-prev" in panel_css
+
+
+def test_lights_cell_is_two_ch_narrower_without_separate_display_width():
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
+    lights_fn = _extract_js_function(form_js, "renderLightsActiveCell")
+    sync_fn = _extract_js_function(form_js, "syncLightsActiveDisplay")
+    assert lights_fn
+    assert sync_fn
+    assert "pseudo-lights-cell" in lights_fn
+    assert 'type="text"' in lights_fn
+    assert "display.value" in sync_fn
+    assert "--cell-w-lights:" in panel_css
+    assert "calc(var(--cell-w) - 2ch)" in panel_css
+    assert ".sensors-panel .mini-cell.pseudo-lights-cell" in panel_css
+    assert "--lights-display-w:" not in panel_css
+    assert ".pseudo-lights-display" not in panel_css
+
+
+def test_temperature_fields_use_integer_precision():
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    step_fn = _extract_js_function(form_js, "fieldStep")
+    step_path_fn = _extract_js_function(form_js, "fieldStepForPath")
+    temp_fn = _extract_js_function(form_js, "isTemperatureCPath")
+    assert temp_fn
+    assert "temperature_c" in temp_fn
+    assert "isTemperatureCPath" in step_fn
+    assert "isTemperatureCPath(path)" in step_path_fn
+    assert step_fn.index("isTemperatureCPath") < step_fn.index('return "0.1"')
+
+
+def test_co2_ppm_fields_use_integer_precision():
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    step_fn = _extract_js_function(form_js, "fieldStep")
+    step_path_fn = _extract_js_function(form_js, "fieldStepForPath")
+    co2_fn = _extract_js_function(form_js, "isCo2PpmPath")
+    assert co2_fn
+    assert "co2_ppm" in co2_fn
+    assert "dose_ppm_per_full_pulse" in co2_fn
+    assert "isCo2PpmPath" in step_fn
+    assert "isCo2PpmPath(path)" in step_path_fn
+    assert step_fn.index("isCo2PpmPath") < step_fn.index('return "0.1"')
+
+
+def test_number_input_does_not_coerce_incomplete_typing_to_zero():
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    scenario_js = SCENARIO_JS.read_text(encoding="utf-8")
+    parse_fn = _extract_js_function(form_js, "parseScenarioNumberInput")
+    read_fn = _extract_js_function(scenario_js, "readScenarioFromForm")
+    main_js = (PANEL_STATIC / "js" / "main.js").read_text(encoding="utf-8")
+    assert parse_fn
+    assert "isIncompleteNumberInput" in form_js
+    assert "return null" in parse_fn
+    assert "formatNumbers = true" in read_fn
+    assert "parsed === null" in read_fn
+    assert "formatNumbers: false" in main_js
+
+
+def test_humidity_fields_use_integer_precision_and_clamp():
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    scenario_js = SCENARIO_JS.read_text(encoding="utf-8")
+    step_fn = _extract_js_function(form_js, "fieldStep")
+    step_path_fn = _extract_js_function(form_js, "fieldStepForPath")
+    humidity_fn = _extract_js_function(form_js, "isHumidityPctPath")
+    clamp_fn = _extract_js_function(form_js, "clampFieldNumber")
+    read_fn = _extract_js_function(scenario_js, "readScenarioFromForm")
+    assert humidity_fn
+    assert "humidity_pct" in humidity_fn
+    assert "soil_moisture_pct" in humidity_fn
+    assert "isHumidityPctPath" in step_fn
+    assert 'return "1"' in step_fn
+    assert "isHumidityPctPath(path)" in step_path_fn
+    assert clamp_fn
+    assert "formatScenarioNumberInput" in form_js
+    assert "parseScenarioNumberInput" in read_fn
 
 
 def test_mini_cell_number_fields_use_in_input_unit_suffixes_and_hints():
@@ -227,7 +377,7 @@ def test_collect_scenario_reads_control_type_from_setup_selects():
     assert "control-type-toggle" not in read_fn
     assert 'el.tagName === "SELECT"' in read_fn
     assert "setup-control-type-select" in select_fn
-    assert "readScenarioFromForm(scenario)" in collect_fn
+    assert "readScenarioFromForm(scenario, opts)" in collect_fn
     assert "wyślij zmiany" in badge_fn
     assert '"lokalne"' not in badge_fn
 

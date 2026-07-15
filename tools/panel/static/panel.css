@@ -112,8 +112,11 @@
   --control-radius: var(--field-radius);
   --cell-w: 5.25rem;
   --cell-w-wide: 6.35rem;
-  --pot-sensor-w: var(--cell-w);
-  --pot-card-w: calc(2 * var(--pot-sensor-w) + var(--cell-gap) + 0.75rem);
+  --cell-w-ppm: calc(var(--cell-w) - 1ch);
+  --cell-w-pct: calc(var(--cell-w) - 3ch);
+  --pot-sensor-w: var(--cell-w-pct);
+  --pot-sensor-w-temp: var(--cell-w-temp);
+  --pot-card-w: calc(var(--pot-sensor-w) + var(--pot-sensor-w-temp) + var(--cell-gap) + 0.75rem);
   --cell-pad: 0.26rem 0.3rem 0.3rem;
   --cell-gap-inner: var(--gap-sm);
   --cell-radius: 6px;
@@ -127,6 +130,10 @@
   --field-suffix-pad-long: 2.4rem;
   --field-suffix-pad-s: var(--field-suffix-pad-1);
   --actuator-input-w-s: calc(4ch + var(--field-suffix-pad-s));
+  --actuator-input-w-ppm: calc(var(--actuator-input-w) - 1ch);
+  --cell-w-temp: calc(var(--cell-w) - 2ch);
+  --cell-w-lights: calc(var(--cell-w) - 2ch);
+  --cell-w-prev: calc(var(--cell-w) - 3ch);
   --actuator-select-w: 2.35rem;
   --actuator-stack-gap: 0.22rem 0.28rem;
   --live-pad-cell: 0.2rem 0.24rem;
@@ -748,7 +755,7 @@ button.danger { background: var(--danger-bg); border-color: var(--danger); color
 .pot-card-avail input[type="checkbox"] { margin: 0; flex-shrink: 0; }
 .pot-card-sensors {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: var(--pot-sensor-w) var(--pot-sensor-w-temp);
   gap: var(--cell-gap);
   width: 100%;
   align-items: start;
@@ -856,6 +863,31 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
   background: var(--cell-bg);
 }
 .mini-cell.wide { width: var(--cell-w-wide); }
+.mini-cell.mini-cell-ppm {
+  width: var(--cell-w-ppm);
+  max-width: var(--cell-w-ppm);
+  flex: 0 0 var(--cell-w-ppm);
+}
+.mini-cell.mini-cell-prev {
+  width: var(--cell-w-prev);
+  max-width: var(--cell-w-prev);
+  flex: 0 0 var(--cell-w-prev);
+}
+.mini-cell.mini-cell-pct {
+  width: var(--cell-w-pct);
+  max-width: var(--cell-w-pct);
+  flex: 0 0 var(--cell-w-pct);
+}
+.mini-cell.mini-cell-temp {
+  width: var(--cell-w-temp);
+  max-width: var(--cell-w-temp);
+  flex: 0 0 var(--cell-w-temp);
+}
+.sensors-panel .mini-cell.pseudo-lights-cell {
+  width: var(--cell-w-lights);
+  max-width: var(--cell-w-lights);
+  flex: 0 0 var(--cell-w-lights);
+}
 .mini-cell .head-row {
   display: flex;
   align-items: center;
@@ -1126,6 +1158,12 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
 .actuators-panel .actuators-pumps-block .actuator-param.wide-param .actuator-input-wrap.suffix-w-s {
   width: var(--actuator-input-w-s);
   max-width: var(--actuator-input-w-s);
+}
+.actuators-panel .actuator-input-wrap.suffix-w-ppm,
+.actuators-panel .actuators-climate-block .actuator-input-wrap.suffix-w-ppm,
+.actuators-panel .actuators-pumps-block .actuator-input-wrap.suffix-w-ppm {
+  width: var(--actuator-input-w-ppm);
+  max-width: var(--actuator-input-w-ppm);
 }
 .actuator-param select.field-control {
   width: var(--actuator-select-w);

@@ -144,9 +144,23 @@ function fieldSuffixSizeClass(suffix) {
   return " suffix-pad-1";
 }
 
-/** Czas (s) — węższe pole aktuatora; padding jak suffix-pad-1. */
+/** Węższe wrapy: s (aktuary), ppm (−1ch), % (−3ch), °C (−2ch). */
 function fieldSuffixWidthClass(suffix) {
-  return suffix === "s" ? " suffix-w-s" : "";
+  if (suffix === "s") return " suffix-w-s";
+  if (suffix === "ppm") return " suffix-w-ppm";
+  if (suffix === "%") return " suffix-w-pct";
+  if (suffix === "°C") return " suffix-w-temp";
+  return "";
+}
+
+function fieldMiniCellWidthClass(field) {
+  if (isWideField(field)) return " wide";
+  if (isPreviousRatioPath(field.path)) return " mini-cell-prev";
+  const suffix = fieldUnitSuffix(field);
+  if (suffix === "%") return " mini-cell-pct";
+  if (suffix === "°C") return " mini-cell-temp";
+  if (suffix === "ppm") return " mini-cell-ppm";
+  return "";
 }
 
 function renderWrappedNumberInput(field, opts = {}) {
@@ -357,7 +371,8 @@ function renderPathSensorMiniCell(sensorField, validityField, displayLabel) {
     maximum: sensorField.maximum,
     default: sensorField.default,
   };
-  return `<div class="mini-cell">
+  const widthClass = fieldMiniCellWidthClass(wrappedSensor);
+  return `<div class="mini-cell${widthClass}">
     <div class="head-row">
       <span class="name"${hintAttr}>${displayLabel || shortLabel(sensorField.name)}</span>
       ${validityControl}
@@ -464,28 +479,51 @@ function isWideField(field) {
   return field.path.includes("thermal_mass") || field.path.includes("substrate_water");
 }
 
+function isHumidityPctPath(path) {
+  return path.includes("humidity_pct") || path.includes("soil_moisture_pct");
+}
+
+function isCo2PpmPath(path) {
+  return path.endsWith("co2_ppm") || path.includes("dose_ppm_per_full_pulse");
+}
+
+function isTemperatureCPath(path) {
+  return path.includes("temperature_c");
+}
+
+function isPreviousRatioPath(path) {
+  return path.startsWith("previous.") || path.includes(".previous.");
+}
+
 function fieldStep(field) {
+  if (isHumidityPctPath(field.path)) return "1";
+  if (isCo2PpmPath(field.path)) return "1";
+  if (isTemperatureCPath(field.path)) return "1";
   if (field.path.includes("pct") || field.path.includes("ratio")) return "0.1";
-  if (field.path.includes("co2")) return "1";
+  if (field.path.endsWith("_s")) return "1";
   return "0.01";
 }
 
 function fieldStepForPath(path) {
+  if (isHumidityPctPath(path)) return "1";
+  if (isCo2PpmPath(path)) return "1";
+  if (isTemperatureCPath(path)) return "1";
   if (path.startsWith("safety.")) {
     if (path.endsWith("_s")) return "1";
     if (path.includes("threshold") || path.includes("minimum_fan")) return "0.01";
     return "0.1";
   }
   if (path.startsWith("sensors.") || (path.includes("zones.") && path.includes(".sensors."))) {
-    return path.includes("co2") ? "1" : "0.1";
+    return isCo2PpmPath(path) ? "1" : "0.1";
   }
   if (path.includes("zones.") && path.includes(".targets.")) return "0.1";
   if (path.startsWith("previous.")) return "0.001";
   if (path.includes("pct") || path.includes("ratio") || path.includes("efficiency") || path.includes("minimum_command") || path.includes("transpiration")) {
     return "0.01";
   }
-  if (path.includes("co2")) return "1";
-  if (path.includes("thermal_mass") || path.includes("substrate_water") || path.includes("minimum_interval")) return "1";
+  if (path.endsWith("_s") || path.includes("thermal_mass") || path.includes("substrate_water") || path.includes("minimum_interval")) {
+    return "1";
+  }
   return "0.01";
 }
 
@@ -501,6 +539,38 @@ function normalizeFieldNumber(value, path) {
   const decimals = decimalPlacesFromStep(fieldStepForPath(path));
   const factor = 10 ** decimals;
   return Math.round(value * factor) / factor;
+}
+
+function clampFieldNumber(value, path, el) {
+  let normalized = normalizeFieldNumber(value, path);
+  if (typeof normalized !== "number" || !Number.isFinite(normalized)) return normalized;
+  const min = el?.min !== "" && el?.min != null ? Number(el.min) : NaN;
+  const max = el?.max !== "" && el?.max != null ? Number(el.max) : NaN;
+  if (Number.isFinite(min)) normalized = Math.max(min, normalized);
+  if (Number.isFinite(max)) normalized = Math.min(max, normalized);
+  return normalizeFieldNumber(normalized, path);
+}
+
+function isIncompleteNumberInput(raw) {
+  const text = String(raw).trim();
+  if (text === "" || text === "-" || text === "." || text === "-." || text === "+") return true;
+  return /[.,]$/.test(text);
+}
+
+function parseScenarioNumberInput(el) {
+  if (!el || el.type !== "number" || !el.dataset.path) return undefined;
+  const raw = String(el.value).trim();
+  if (isIncompleteNumberInput(raw)) return null;
+  const num = Number(raw);
+  if (!Number.isFinite(num)) return null;
+  return clampFieldNumber(num, el.dataset.path, el);
+}
+
+function formatScenarioNumberInput(el) {
+  if (!el || el.type !== "number" || !el.dataset.path) return;
+  const value = parseScenarioNumberInput(el);
+  if (value === null || value === undefined || !Number.isFinite(value)) return;
+  el.value = formatFieldNumber(value, el.dataset.path);
 }
 
 function formatFieldNumber(value, path) {
@@ -545,7 +615,9 @@ function renderMiniCellInput(field) {
 }
 
 function renderMiniCell(field) {
-  const wide = isWideField(field) ? " wide" : "";
+  const widthClass = field.type === "boolean"
+    ? (isWideField(field) ? " wide" : "")
+    : fieldMiniCellWidthClass(field);
 
   if (field.type === "boolean") {
     const id = `f-${field.path.replaceAll(".", "_")}`;
@@ -553,21 +625,21 @@ function renderMiniCell(field) {
     if (isAvailabilityField(field.name)) {
       const hint = fieldHint(field.name);
       const hintAttr = hint ? ` title="${hint}"` : "";
-      return `<div class="mini-cell bool-only${wide}">
+      return `<div class="mini-cell bool-only${widthClass}">
         <div class="head-row tick-only">
           <input type="checkbox" data-path="${field.path}" id="${id}"${hintAttr} ${value ? "checked" : ""} />
         </div>
       </div>`;
     }
     const hintAttr = fieldHintAttr(field.name);
-    return `<div class="mini-cell bool-only${wide}">
+    return `<div class="mini-cell bool-only${widthClass}">
       <div class="head-row">
         <span class="name"${hintAttr}>${shortLabel(field.name)}</span>
         <input type="checkbox" data-path="${field.path}" id="${id}"${hintAttr} ${value ? "checked" : ""} />
       </div>
     </div>`;
   }
-  return `<div class="mini-cell${wide}">${renderMiniCellInput(field)}</div>`;
+  return `<div class="mini-cell${widthClass}">${renderMiniCellInput(field)}</div>`;
 }
 
 function renderCompactBlock(title, fields, helpTopic) {
@@ -675,7 +747,8 @@ function renderSoilTargetMiniCell(field) {
     const value = getNested(scenario, field.path);
     const displayValue = formatFieldNumber(value ?? field.default, field.path);
     const label = `<div class="label-row"><span class="name"${inactiveHint}>${shortLabel(field.name)}</span></div>`;
-    return `<div class="mini-cell inactive-zone-target">
+    const widthClass = fieldMiniCellWidthClass(field);
+    return `<div class="mini-cell inactive-zone-target${widthClass}">
       ${label}
       ${renderWrappedNumberInput(field, { id, displayValue, disabled: true })}
     </div>`;

@@ -170,7 +170,7 @@ function applyInactiveZonePolicy(doc) {
   return doc;
 }
 
-function readScenarioFromForm(base = scenario) {
+function readScenarioFromForm(base = scenario, { formatNumbers = true } = {}) {
   const next = sanitizeScenarioNumeric(cloneScenarioDoc(base));
   const seedEl = document.getElementById("seed");
   if (seedEl) next.seed = normalizeSeed(seedEl.value);
@@ -181,7 +181,12 @@ function readScenarioFromForm(base = scenario) {
     if (el.type === "checkbox") value = el.checked;
     else if (el.tagName === "SELECT") {
       value = el.dataset.bool !== undefined ? el.value === "true" : el.value;
-    } else value = normalizeFieldNumber(Number(el.value), path);
+    } else {
+      const parsed = parseScenarioNumberInput(el);
+      if (parsed === null) return;
+      value = parsed;
+      if (formatNumbers) formatScenarioNumberInput(el);
+    }
     setNested(next, path, value);
   });
   return applyInactiveZonePolicy(next);
@@ -240,8 +245,8 @@ function normalizeSeed(value) {
   return Math.min(4294967295, Math.max(0, parsed));
 }
 
-function collectScenario() {
-  scenario = readScenarioFromForm(scenario);
+function collectScenario(opts = {}) {
+  scenario = readScenarioFromForm(scenario, opts);
   syncInactiveZoneDependentInputs();
   saveScenarioDraft();
   updateScenarioSyncBadge();

@@ -9,7 +9,9 @@ function bindFormInputRoot(root) {
     collectScenario();
   });
   root.addEventListener("input", (event) => {
-    if (event.target && event.target.type === "number") collectScenario();
+    if (event.target?.type === "number" && event.target.dataset.path) {
+      collectScenario({ formatNumbers: false });
+    }
   });
 }
 
