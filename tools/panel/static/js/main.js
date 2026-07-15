@@ -86,6 +86,8 @@ function bindToolbar() {
         deviceScenarioSynced = false;
         clearDeviceScenarioBaseline();
         lastRenderedDecisionStep = null;
+        lastRenderedPreviousStep = null;
+        previousDisplaySnapshot = null;
         await runAction(() => api("/api/connect", {
           method: "POST",
           body: JSON.stringify({
@@ -120,6 +122,8 @@ function bindToolbar() {
         setConnectFailure(null);
         await runAction(() => api("/api/disconnect", { method: "POST", body: "{}" }), btn);
         lastRenderedDecisionStep = null;
+        lastRenderedPreviousStep = null;
+        previousDisplaySnapshot = null;
         deviceScenarioSynced = false;
         clearDeviceScenarioBaseline();
         await refreshState();

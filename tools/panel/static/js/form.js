@@ -18,7 +18,8 @@ function shortLabel(name) {
 }
 
 function formatPreviousDisplayValue(path) {
-  const value = getNested(scenario, path);
+  const source = previousDisplaySnapshot || scenario;
+  const value = getNested(source, path);
   const pct = typeof formatOutputPct === "function"
     ? formatOutputPct(value)
     : Math.min(100, Math.max(0, Math.round((Number(value) || 0) * 100)));

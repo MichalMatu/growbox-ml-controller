@@ -776,16 +776,25 @@ def test_panel_action_buttons_share_ghost_style_tokens():
     assert ".panel-action-btn.active" in panel_css
 
 
-def test_previous_modal_shows_step_badge_synced_with_live():
+def test_previous_modal_shows_step_badge_one_before_live():
     html = INDEX_HTML.read_text(encoding="utf-8")
     live_js = (PANEL_STATIC / "js" / "live.js").read_text(encoding="utf-8")
     modal_js = (PANEL_STATIC / "js" / "modal.js").read_text(encoding="utf-8")
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    constants_js = (PANEL_STATIC / "js" / "constants.js").read_text(encoding="utf-8")
     panel_css = PANEL_CSS.read_text(encoding="utf-8")
+    render_fn = _extract_js_function(live_js, "renderOutputs")
     assert 'id="modal-step-badge"' in html
     assert "modal-head-title-wrap" in html
     assert "refreshModalStepBadge" in modal_js
-    assert 'activeModal === "previous"' in modal_js
-    assert "refreshModalStepBadge(step)" in live_js
+    assert "previousStepForDisplay" in modal_js
+    assert "previousStepForDisplay" in live_js
+    assert "capturePreviousDisplay(decision)" in render_fn
+    assert "capturePreviousDisplay(decision);" in render_fn.split("syncPreviousActuators", 1)[0]
+    assert "lastRenderedPreviousStep = Math.max(0, step - 1)" in live_js
+    assert "previousDisplaySnapshot" in live_js
+    assert "previousDisplaySnapshot || scenario" in form_js
+    assert "Krok N−1" in constants_js
     assert ".modal-step-badge" in panel_css
     assert ".pill[hidden]" in panel_css
     assert "display: none !important" in panel_css.split(".pill[hidden]", 1)[1]

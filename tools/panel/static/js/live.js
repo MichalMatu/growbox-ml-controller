@@ -13,7 +13,7 @@ function setLiveStepBadge(step) {
   const el = document.getElementById("live-step-badge");
   if (step === null || step === undefined) {
     if (el) el.hidden = true;
-    if (typeof refreshModalStepBadge === "function") refreshModalStepBadge(null);
+    if (typeof refreshModalStepBadge === "function") refreshModalStepBadge();
     return;
   }
   const label = `Krok ${step}`;
@@ -21,7 +21,36 @@ function setLiveStepBadge(step) {
     el.hidden = false;
     el.textContent = label;
   }
-  if (typeof refreshModalStepBadge === "function") refreshModalStepBadge(step);
+  if (typeof refreshModalStepBadge === "function") refreshModalStepBadge();
+}
+
+function previousStepForDisplay() {
+  if (typeof lastRenderedPreviousStep === "number" && Number.isFinite(lastRenderedPreviousStep)) {
+    return lastRenderedPreviousStep;
+  }
+  return null;
+}
+
+function snapshotPreviousActuators() {
+  const zones = Array.isArray(scenario.zones) ? scenario.zones : [];
+  return {
+    previous: { ...(scenario.previous || {}) },
+    zones: zones.map((zone) => ({
+      ...(zone || {}),
+      previous: { ...(zone?.previous || { irrigation: 0 }) },
+    })),
+  };
+}
+
+function capturePreviousDisplay(decision) {
+  const step = decision?.step;
+  if (typeof step !== "number" || !Number.isFinite(step)) {
+    lastRenderedPreviousStep = null;
+    previousDisplaySnapshot = null;
+    return;
+  }
+  previousDisplaySnapshot = snapshotPreviousActuators();
+  lastRenderedPreviousStep = Math.max(0, step - 1);
 }
 
 function setLiveInferenceMeta(decision) {
@@ -320,6 +349,8 @@ function clearPreviousActuators() {
 
 function clearLivePreview(step = 0) {
   lastRenderedDecisionStep = null;
+  lastRenderedPreviousStep = null;
+  previousDisplaySnapshot = null;
   lastDecision = null;
   clearPreviousActuators();
   setLiveStepBadge(step);
@@ -334,6 +365,7 @@ function clearLivePreview(step = 0) {
 function renderOutputs(decision, { force = false } = {}) {
   const step = decision?.step;
   if (!force && step !== undefined && step === lastRenderedDecisionStep) return;
+  capturePreviousDisplay(decision);
   lastRenderedDecisionStep = step;
   lastDecision = decision;
   const names = panelOutputNames();

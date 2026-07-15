@@ -100,7 +100,7 @@ const HELP_TOPICS = {
         <li>10 wyjść ML (6 globalnych + 4 pompy strefowe)</li>
         <li>Model używa tego jako kontekstu (histereza, płynność sterowania)</li>
       </ul>
-      <p>Przycisk <strong>Poprzedni</strong> pod <strong>Na żywo</strong> (panel modal). Badge <strong>Krok N</strong> w nagłówku modala = ten sam krok co pod <strong>Na żywo</strong>. Tabela tylko do odczytu. Po <strong>Krok</strong> wartości uzupełniają się z ostatnich wyjść <strong>Safety</strong> (kontekst modelu na następny krok).</p>
+      <p>Przycisk <strong>Poprzedni</strong> pod <strong>Na żywo</strong> (panel modal). Badge <strong>Krok N−1</strong> — wyjścia z kroku poprzedniego (kontekst wejściowy bieżącej decyzji). Tabela tylko do odczytu; po <strong>Krok</strong> pokazuje <strong>Safety</strong> sprzed aktualizacji, nie bieżące paski.</p>
     `,
   },
 

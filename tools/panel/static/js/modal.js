@@ -92,7 +92,7 @@ function closeModal() {
   backdrop.classList.remove("open");
   backdrop.setAttribute("inert", "");
   backdrop.setAttribute("aria-hidden", "true");
-  refreshModalStepBadge(null);
+  refreshModalStepBadge();
   updateModalLock();
   syncPanelModalActions();
 }
@@ -107,10 +107,11 @@ function syncPanelModalActions() {
   });
 }
 
-function refreshModalStepBadge(step) {
+function refreshModalStepBadge() {
   const el = document.getElementById("modal-step-badge");
   const backdrop = document.getElementById("modal-backdrop");
   if (!el) return;
+  const step = typeof previousStepForDisplay === "function" ? previousStepForDisplay() : null;
   const show = Boolean(
     step !== null
     && step !== undefined
@@ -129,11 +130,7 @@ function updatePanelModalChrome(meta) {
   const isJson = meta.type === "json";
 
   document.getElementById("modal-title").textContent = meta.title;
-  if (meta.pane === "previous") {
-    refreshModalStepBadge(lastRenderedDecisionStep);
-  } else {
-    refreshModalStepBadge(null);
-  }
+  refreshModalStepBadge();
   textarea.hidden = !isJson;
   panel.hidden = !isHtml;
   document.querySelectorAll(".setup-pane").forEach((pane) => {
