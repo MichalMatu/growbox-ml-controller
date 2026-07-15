@@ -13,6 +13,7 @@
  *   --cell-*        mini-cell (kafelki pól)
  *   --actuator-*    węższe pola w sekcji Aktuary
  *   --btn-*, --toolbar-*   przyciski i pasek sterowania
+ *   --chip-*        pill/badge (.badge, .sync-badge, .pill) i przyciski pill (.badge-btn)
  *   --panel-action-*       przyciski wejścia + zakładki panel-modal (.panel-action-btn)
  *   --modal-*       okna dialogowe (--modal-w: help/confirm; --modal-w-wide: panel-modal)
  *
@@ -99,6 +100,21 @@
   --btn-font: var(--text-md);
   --btn-pad: 0.22rem 0.48rem;
   --btn-pad-row: 0.28rem 0.5rem;
+  --chip-pad: 0.1rem 0.4rem;
+  --chip-font: var(--text-badge);
+  --chip-font-compact: var(--text-2xs);
+  --chip-font-toolbar: var(--text-xs);
+  --chip-font-mono: var(--text-sm);
+  --chip-radius: var(--radius-pill);
+  --chip-border: 1px solid var(--border);
+  --chip-bg: var(--surface-strong);
+  --chip-bg-muted: var(--btn-bg);
+  --chip-color: var(--muted);
+  --chip-weight: 600;
+  --chip-btn-pad: var(--btn-pad);
+  --chip-btn-font: var(--btn-font);
+  --chip-btn-radius: var(--radius-pill);
+  --chip-btn-line: 1;
   --panel-action-pad: var(--btn-pad-row);
   --panel-action-font: var(--text-base);
   --panel-action-gap: var(--cell-gap);
@@ -255,24 +271,29 @@ h1 { margin: 0; font-size: var(--text-title); font-weight: 600; }
   flex-shrink: 0;
 }
 
-.badge {
+.badge,
+.sync-badge,
+.pill {
   display: inline-flex;
   align-items: center;
-  padding: 0.12rem 0.42rem;
-  border-radius: var(--radius-pill);
-  font-size: var(--text-badge);
-  background: var(--surface-strong);
-  border: 1px solid var(--border);
-  color: var(--muted);
+  padding: var(--chip-pad);
+  border-radius: var(--chip-radius);
+  font-size: var(--chip-font);
+  border: var(--chip-border);
   white-space: nowrap;
+  line-height: var(--chip-btn-line);
+}
+.badge {
+  background: var(--chip-bg);
+  color: var(--chip-color);
 }
 .top-bar .badge {
   height: var(--toolbar-h);
   padding: 0 var(--toolbar-pad-x);
   font-size: var(--toolbar-font);
 }
-.badge.mono { font-family: ui-monospace, monospace; font-size: var(--text-sm); }
-.top-bar .badge.mono { font-size: var(--text-xs); }
+.badge.mono { font-family: ui-monospace, monospace; font-size: var(--chip-font-mono); }
+.top-bar .badge.mono { font-size: var(--chip-font-toolbar); }
 .top-connect {
   display: flex;
   flex-wrap: wrap;
@@ -282,10 +303,10 @@ h1 { margin: 0; font-size: var(--text-title); font-weight: 600; }
   margin-left: auto;
 }
 .badge-btn {
-  padding: var(--btn-pad);
-  font-size: var(--btn-font);
-  border-radius: var(--radius-pill);
-  line-height: 1;
+  padding: var(--chip-btn-pad);
+  font-size: var(--chip-btn-font);
+  border-radius: var(--chip-btn-radius);
+  line-height: var(--chip-btn-line);
 }
 .top-bar .badge-btn {
   height: var(--toolbar-h);
@@ -353,8 +374,8 @@ h1 { margin: 0; font-size: var(--text-title); font-weight: 600; }
   align-items: center;
   gap: 0.08rem;
   padding: var(--gap-xs);
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--border);
+  border-radius: var(--chip-radius);
+  border: var(--chip-border);
   background: var(--surface-muted);
 }
 .toggle-group .badge-btn { margin: 0; }
@@ -509,12 +530,8 @@ main {
   }
 }
 .sync-badge {
-  font-size: var(--text-2xs);
-  font-weight: 600;
-  padding: 0.06rem 0.34rem;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--border);
-  white-space: nowrap;
+  font-size: var(--chip-font-compact);
+  font-weight: var(--chip-weight);
   flex-shrink: 0;
 }
 .sync-badge.synced {
@@ -532,8 +549,8 @@ main {
   opacity: 0.85;
 }
 .top-status-badge {
-  font-size: var(--text-xs);
-  color: var(--muted);
+  font-size: var(--chip-font-toolbar);
+  color: var(--chip-color);
 }
 .top-status-badge.disconnected {
   opacity: 0.8;
@@ -569,8 +586,8 @@ main {
   height: var(--toolbar-btn-h);
   min-height: var(--toolbar-btn-h);
   box-sizing: border-box;
-  font-size: var(--btn-font);
-  line-height: 1;
+  font-size: var(--chip-btn-font);
+  line-height: var(--chip-btn-line);
   padding: 0 var(--gap-md);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -582,7 +599,7 @@ main {
   min-width: var(--toolbar-btn-h);
   max-width: var(--toolbar-btn-h);
   padding: 0;
-  border-radius: var(--radius-pill);
+  border-radius: var(--chip-btn-radius);
 }
 .toolbar-btn-stack .playpause-icon {
   display: flex;
@@ -600,8 +617,8 @@ main {
   box-sizing: border-box;
   gap: var(--gap-2xs);
   padding: 0.05rem;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--border);
+  border-radius: var(--chip-radius);
+  border: var(--chip-border);
   background: var(--surface-muted);
 }
 .toolbar-btn-stack .toggle-group .badge-btn {
@@ -612,7 +629,7 @@ main {
   align-self: stretch;
   padding: 0 0.14rem;
   font-size: var(--text-sm);
-  border-radius: var(--radius-pill);
+  border-radius: var(--chip-btn-radius);
 }
 .card-stack {
   display: flex;
@@ -1302,10 +1319,8 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
   flex-shrink: 0;
 }
 .live-step-badge {
-  font-size: var(--text-badge);
-  font-weight: 600;
+  font-weight: var(--chip-weight);
   letter-spacing: 0.02em;
-  white-space: nowrap;
 }
 .live-summary {
   margin: 0;
@@ -1557,12 +1572,8 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
 }
 
 .pill {
-  display: inline-block;
-  padding: 0.1rem 0.4rem;
-  border-radius: var(--radius-pill);
-  font-size: var(--text-md);
-  background: var(--btn-bg);
-  border: 1px solid var(--border);
+  background: var(--chip-bg-muted);
+  color: var(--text);
 }
 .pill.warn { color: var(--warn); }
 .note { color: var(--muted); font-size: var(--text-base); margin: 0.3rem 0 0; }
