@@ -16,7 +16,7 @@ const HELP_TOPICS = {
         <li><strong>Połącz / ×</strong> — górny pasek, port USB; badge obok tytułu pokazuje krok, tryb i stan po połączeniu</li>
         <li><strong>Aktuary</strong> — na stronie głównej (lewa kolumna); typ sterowania bin/pwm w modalu <strong>Growbox</strong></li>
         <li><strong>Na żywo</strong> — prawa kolumna: tabele czujników, paski aktuatorów, przyciski <strong>Scenariusz…Safety</strong> (jeden panel modal)</li>
-        <li><strong>Poprzedni stan</strong> — pod Na żywo; tylko odczyt, uzupełniany po <strong>Krok</strong> z wyjść Safety</li>
+        <li><strong>Poprzedni</strong> — modal: ostatnie wyjścia aktuatorów (tylko odczyt), uzupełniane po <strong>Krok</strong> z Safety</li>
       </ul>
     `,
   },
@@ -100,7 +100,7 @@ const HELP_TOPICS = {
         <li>10 wyjść ML (6 globalnych + 4 pompy strefowe)</li>
         <li>Model używa tego jako kontekstu (histereza, płynność sterowania)</li>
       </ul>
-      <p>Prawa kolumna, pod <strong>Na żywo</strong>. Tabela tylko do odczytu (jak czujniki na żywo). Po <strong>Krok</strong> wartości uzupełniają się z ostatnich wyjść <strong>Safety</strong> (kontekst modelu na następny krok).</p>
+      <p>Przycisk <strong>Poprzedni</strong> pod <strong>Na żywo</strong> (panel modal). Tabela tylko do odczytu. Po <strong>Krok</strong> wartości uzupełniają się z ostatnich wyjść <strong>Safety</strong> (kontekst modelu na następny krok).</p>
     `,
   },
 
@@ -124,7 +124,7 @@ const HELP_TOPICS = {
       </ul>
       <p>Kod safety i czas inferencji — w legendzie pasków. Szczegóły w panelu modal → <strong>Decyzja</strong>.</p>
       <h4>Przyciski pod paskami</h4>
-      <p><strong>Scenariusz</strong>, <strong>Decyzja</strong>, <strong>Historia</strong>, <strong>Startup / status</strong>, <strong>Zasoby</strong>, <strong>Growbox</strong>, <strong>Safety</strong> — jeden przesuwalny modal; przełącz widok przyciskami pod <strong>Na żywo</strong> (aktywny podświetlony). Zamknij: <strong>Zamknij</strong> w nagłówku lub <strong>Esc</strong>.</p>
+      <p><strong>Scenariusz</strong>, <strong>Decyzja</strong>, <strong>Historia</strong>, <strong>Status</strong>, <strong>Poprzedni</strong>, <strong>Zasoby</strong>, <strong>Growbox</strong>, <strong>Safety</strong> — jeden przesuwalny modal; przełącz widok przyciskami pod <strong>Na żywo</strong> (aktywny podświetlony). Zamknij: <strong>Zamknij</strong> w nagłówku lub <strong>Esc</strong>.</p>
     `,
   },
 };

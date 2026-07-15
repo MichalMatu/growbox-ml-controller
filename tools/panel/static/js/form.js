@@ -26,7 +26,7 @@ function formatPreviousDisplayValue(path) {
 }
 
 function syncPreviousDisplay() {
-  document.querySelectorAll("#previous-section [data-previous-path]").forEach((el) => {
+  document.querySelectorAll("#setup-pane-previous [data-previous-path]").forEach((el) => {
     const path = el.dataset.previousPath;
     if (!path) return;
     el.innerHTML = `<strong>${formatPreviousDisplayValue(path)}</strong>`;
@@ -321,11 +321,13 @@ function closeHelp() {
 function renderSetupPanes() {
   const growbox = document.getElementById("setup-pane-growbox");
   const safety = document.getElementById("setup-pane-safety");
+  const previous = document.getElementById("setup-pane-previous");
   if (growbox) growbox.innerHTML = renderGrowboxPanel(true);
   if (safety) {
     const safetySection = sectionById("safety");
     safety.innerHTML = safetySection ? renderSafetyBlock(true) : "";
   }
+  if (previous) previous.innerHTML = renderPreviousBlock(true);
 }
 
 function renderPathSensorMiniCell(sensorField, validityField, displayLabel) {
@@ -837,13 +839,14 @@ function renderTargetsBlock() {
     </div></div>`;
 }
 
-function renderPreviousBlock() {
+function renderPreviousBlock(inSetup = false) {
   const globalFields = PREVIOUS_GLOBAL_FIELDS.map(name => fieldByName(name)).filter(Boolean);
   const pumpFields = PREVIOUS_PUMP_FIELDS.map(name => fieldByName(name)).filter(Boolean);
   const climate = renderPreviousGroupTable("Klimat", globalFields);
   const pumps = renderPreviousGroupTable("Pompy", pumpFields);
-  return `<div class="card previous-panel">${renderSectionHead("Poprzedni stan aktuatorów", "previous")}
-    <div class="live-sensors-split previous-split" aria-label="Poprzedni stan aktuatorów">${climate}${pumps}</div></div>`;
+  const body = `<div class="live-sensors-split previous-split" aria-label="Poprzedni stan aktuatorów">${climate}${pumps}</div>`;
+  if (inSetup) return body;
+  return `<div class="card previous-panel">${renderSectionHead("Poprzedni stan aktuatorów", "previous")}${body}</div>`;
 }
 
 function renderZoneCultivationCard(fields, index) {
@@ -980,10 +983,6 @@ function renderForm() {
   root.innerHTML += renderTargetsBlock();
   root.innerHTML += renderActuatorPanel();
   renderSetupPanes();
-  const previousRoot = document.getElementById("previous-section");
-  if (previousRoot) {
-    previousRoot.innerHTML = renderPreviousBlock();
-  }
   syncLightsActiveDisplay();
   syncInactiveZoneDependentInputs();
 }

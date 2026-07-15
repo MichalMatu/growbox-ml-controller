@@ -21,10 +21,17 @@ const panelModalViews = {
     get: () => formatHistory(lastState),
   },
   device: {
-    tab: "Startup / status",
+    tab: "Status",
     title: "Startup / status",
     type: "json",
     get: () => formatDevice(lastState),
+  },
+  previous: {
+    tab: "Poprzedni",
+    title: "Poprzedni stan aktuatorów",
+    type: "setup",
+    help: "previous",
+    pane: "previous",
   },
   diagnostics: {
     tab: "Zasoby",

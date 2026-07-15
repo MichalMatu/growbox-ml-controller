@@ -290,7 +290,9 @@ def test_previous_actuators_use_readonly_live_style_two_column_tables():
     assert "data-previous-path" in prev_row
     assert "renderMiniCell" not in prev_block
     assert "targets-split" not in prev_block
-    assert "[data-previous-path]" in sync_fn
+    assert "#setup-pane-previous [data-previous-path]" in sync_fn
+    assert "renderPreviousBlock(true)" in form_js
+    assert 'id="previous-section"' not in INDEX_HTML.read_text(encoding="utf-8")
     assert 'bindFormInputRoot(document.getElementById("previous-section"))' not in main_js
     assert 'document.getElementById("previous-section")' not in scenario_js
     assert ".previous-split .live-data-table col.sensor-col" in panel_css
@@ -695,10 +697,13 @@ def test_growbox_setup_modal_has_single_help_entry_point():
     assert growbox_fn
     assert setup_fn
     assert "renderGrowboxPanel(true)" in setup_fn
+    assert "renderPreviousBlock(true)" in setup_fn
     assert 'inSetup ? null : "environment"' in growbox_fn
     assert 'id="modal-help"' not in html
     assert 'help: "environment"' in modal_js
     assert 'help: "safety"' in modal_js
+    assert 'help: "previous"' in modal_js
+    assert 'pane: "previous"' in modal_js
 
 
 def test_panel_action_btn_tokens_and_live_zone_filter():
@@ -750,7 +755,10 @@ def test_panel_action_buttons_share_ghost_style_tokens():
     assert "toolbar-setup-row" not in html
     assert 'data-panel-modal="growbox"' in html
     assert 'data-panel-modal="safety"' in html
+    assert 'data-panel-modal="previous"' in html
     assert 'data-panel-modal="scenario"' in html
+    assert 'data-panel-modal="device">Status</button>' in html
+    assert "Startup / status" not in html
     assert 'class="ghost panel-action-btn"' in html
     assert "data-setup-open" not in html
     assert "[data-panel-modal]" in main_js
@@ -775,8 +783,10 @@ def test_infrequent_settings_live_in_setup_modal_not_inline_form():
     render_fn = _extract_js_function(form_js, "renderForm")
     assert render_fn
     assert 'id="setup-pane-growbox"' in html
+    assert 'id="setup-pane-previous"' in html
     assert 'data-panel-modal="growbox"' in html
     assert 'data-panel-modal="safety"' in html
+    assert 'data-panel-modal="previous"' in html
     assert 'data-panel-modal="actuators"' not in html
     assert "renderGrowboxPanel()" not in render_fn
     assert "renderActuatorPanel()" in render_fn
