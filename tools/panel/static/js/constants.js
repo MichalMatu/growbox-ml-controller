@@ -121,13 +121,13 @@ const TOOLBAR_STATE_CLASSES = [
   "state-off", "state-disabled", "state-error",
 ];
 const LABEL_MAP = {
-  air_temperature_c: "T wewn.",
+  air_temperature_c: "Temp",
   air_humidity_pct: "Wilg.",
   co2_ppm: "CO₂",
   soil_moisture_pct: "Gleba",
-  outside_temperature_c: "T zewn.",
-  outside_humidity_pct: "Wilg. zewn.",
-  outside_co2_ppm: "CO₂ zewn.",
+  outside_temperature_c: "Temp",
+  outside_humidity_pct: "Wilg.",
+  outside_co2_ppm: "CO₂",
   growbox_volume_m3: "Obj. m³",
   thermal_mass_j_per_k: "Ciepło J/K",
   heat_loss_w_per_k: "Strata W/K",
