@@ -48,6 +48,7 @@ class SerialBridge:
             "last_status": None,
             "last_ack": None,
             "last_firmware_error": None,
+            "last_diagnostics": None,
             "history": [],
         }
 
@@ -70,6 +71,35 @@ class SerialBridge:
             if isinstance(history, deque):
                 state["history"] = list(history)
             return state
+
+    def diagnostics_snapshot(self) -> dict[str, Any]:
+        import platform
+        import sys
+
+        with self._lock:
+            return {
+                "connected": self._state["connected"],
+                "port": self._state["port"],
+                "host": {
+                    "python": sys.version.split()[0],
+                    "platform": platform.system(),
+                },
+                "device": self._state.get("last_diagnostics"),
+                "startup": self._state.get("last_startup"),
+            }
+
+    def request_diagnostics(self, *, timeout_s: float = 1.5) -> dict[str, Any] | None:
+        self.send_command({"command": "diagnostics"})
+        deadline = time.monotonic() + timeout_s
+        while time.monotonic() < deadline:
+            with self._lock:
+                diagnostics = self._state.get("last_diagnostics")
+            if isinstance(diagnostics, dict):
+                return diagnostics
+            time.sleep(0.05)
+        with self._lock:
+            diagnostics = self._state.get("last_diagnostics")
+        return diagnostics if isinstance(diagnostics, dict) else None
 
     def _reset_session_state(self) -> None:
         self._state["last_status"] = None
@@ -289,6 +319,8 @@ class SerialBridge:
                 self._apply_status_message(message)
             elif message_type == "scenario":
                 self._apply_scenario_message(message)
+            elif message_type == "diagnostics":
+                self._state["last_diagnostics"] = message
             elif message_type == "ack":
                 self._state["last_ack"] = message
                 self._apply_ack_message(message)

@@ -3,9 +3,11 @@ IDF_PY ?= idf.py
 VENV ?= .venv
 IDF_BUILD_DIR ?= build/idf
 HOST_BUILD_DIR ?= build/host-tests
+N8_BUILD_DIR ?= build/idf-n8
 N32R16V_BUILD_DIR ?= build/idf-n32r16v
+SDKCONFIG_DEFAULTS ?= sdkconfig.defaults;sdkconfig.defaults.n16r8
 
-.PHONY: setup train-quick train-full test test-python test-host panel build build-n32r16v \
+.PHONY: setup train-quick train-full test test-python test-host panel build build-n8 build-n32r16v \
         flash monitor flash-monitor menuconfig clean
 
 setup:
@@ -33,7 +35,14 @@ panel:
 	$(VENV)/bin/python -m tools.panel --host 127.0.0.1 --port 8765
 
 build:
-	$(IDF_PY) -B $(IDF_BUILD_DIR) -D GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n8 build
+	$(IDF_PY) -B $(IDF_BUILD_DIR) \
+		-D "SDKCONFIG_DEFAULTS=$(SDKCONFIG_DEFAULTS)" \
+		-D GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n16r8 build
+
+build-n8:
+	$(IDF_PY) -B $(N8_BUILD_DIR) \
+		-D "SDKCONFIG_DEFAULTS=sdkconfig.defaults" \
+		-D GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n8 build
 
 build-n32r16v:
 	$(IDF_PY) -B $(N32R16V_BUILD_DIR) \

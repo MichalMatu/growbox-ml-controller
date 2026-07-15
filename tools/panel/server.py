@@ -8,7 +8,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 from tools.panel.bridge import SerialBridge, SerialBridgeError
 from tools.panel.form_schema import build_panel_schema, default_scenario
@@ -66,6 +66,12 @@ class PanelHandler(BaseHTTPRequestHandler):
                 _json_response(self, HTTPStatus.OK, build_panel_schema())
             elif path == "/api/state":
                 _json_response(self, HTTPStatus.OK, BRIDGE.snapshot())
+            elif path == "/api/diagnostics":
+                query = parse_qs(urlparse(self.path).query)
+                refresh = query.get("refresh", ["0"])[0].lower() in {"1", "true", "yes"}
+                if refresh and BRIDGE.snapshot().get("connected"):
+                    BRIDGE.request_diagnostics()
+                _json_response(self, HTTPStatus.OK, BRIDGE.diagnostics_snapshot())
             elif path == "/api/ports":
                 _json_response(self, HTTPStatus.OK, {"ports": BRIDGE.list_ports()})
             elif path in {"/favicon.ico", "/favicon.svg"}:

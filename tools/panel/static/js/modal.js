@@ -3,7 +3,19 @@ const modalViews = {
   decision: { title: "Ostatnia decyzja", get: () => lastDecision ? JSON.stringify(lastDecision, null, 2) : "Brak decyzji." },
   history: { title: "Historia serial", get: () => formatHistory(lastState) },
   device: { title: "Startup / status", get: () => formatDevice(lastState) },
+  diagnostics: { title: "Zasoby (heap / PSRAM)", get: () => diagnosticsModalText },
 };
+
+async function refreshDiagnosticsModalText(refreshDevice = true) {
+  const query = refreshDevice && lastState?.connected ? "?refresh=1" : "";
+  try {
+    const data = await api(`/api/diagnostics${query}`);
+    diagnosticsModalText = JSON.stringify(data, null, 2);
+  } catch (err) {
+    diagnosticsModalText = `Błąd: ${friendlyError(err.message)}`;
+  }
+  if (activeModal === "diagnostics") refreshModalContent();
+}
 function formatHistory(state) {
   if (!state?.history?.length) return "Brak historii.";
   return state.history.slice(0, 20).map(h =>

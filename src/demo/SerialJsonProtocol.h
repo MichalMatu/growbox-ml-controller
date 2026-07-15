@@ -30,6 +30,10 @@ class SerialJsonProtocol {
   static constexpr std::size_t kMaximumLineBytes = 1536U;
 
   SerialJsonProtocol() noexcept = default;
+  ~SerialJsonProtocol() noexcept;
+
+  SerialJsonProtocol(const SerialJsonProtocol&) = delete;
+  SerialJsonProtocol& operator=(const SerialJsonProtocol&) = delete;
 
   esp_err_t begin() noexcept;
   void poll(DummyEnvironmentSimulator& simulator, DemoRuntimeState& runtime) noexcept;
@@ -42,7 +46,7 @@ class SerialJsonProtocol {
                   const DemoRuntimeState& runtime) const noexcept;
   void writeJson(cJSON* document) const noexcept;
 
-  char line_[kMaximumLineBytes + 1U]{};
+  char* line_ = nullptr;
   std::size_t length_ = 0U;
   bool discarding_ = false;
 };

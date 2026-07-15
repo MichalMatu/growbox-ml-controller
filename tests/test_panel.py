@@ -1,6 +1,7 @@
 """Tests for the growbox control panel helpers."""
 
 from collections import deque
+import json
 import threading
 from http.server import ThreadingHTTPServer
 import urllib.request
@@ -155,6 +156,20 @@ def test_bridge_confirms_transport_on_ack():
     assert bridge._state["last_status"]["paused"] is False
 
 
+def test_bridge_stores_diagnostics_message():
+    bridge = SerialBridge()
+    bridge._handle_message(
+        {
+            "type": "diagnostics",
+            "heap": {"psram_enabled": True, "free_internal": 120000, "free_psram": 7000000},
+            "task": {"main_stack_free_bytes": 4096},
+        }
+    )
+    assert bridge._state["last_diagnostics"]["heap"]["psram_enabled"] is True
+    snapshot = bridge.diagnostics_snapshot()
+    assert snapshot["device"]["heap"]["free_psram"] == 7000000
+
+
 def test_panel_serves_static_assets():
     server = ThreadingHTTPServer(("127.0.0.1", 0), PanelHandler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -178,5 +193,10 @@ def test_panel_serves_static_assets():
                 elif kind == "javascript":
                     assert "javascript" in response.headers["Content-Type"]
     finally:
+        with urllib.request.urlopen(f"{base}/api/diagnostics") as response:
+            payload = json.loads(response.read().decode("utf-8"))
+            assert response.status == 200
+            assert "host" in payload
+            assert payload["connected"] is False
         server.shutdown()
         thread.join(timeout=2.0)

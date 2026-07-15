@@ -209,7 +209,7 @@ const LIVE_SENSOR_GROUPS = [
   },
 ];
 
-const SCENARIO_SYNC_KEYS = [
+var SCENARIO_SYNC_KEYS = [
   "sensors", "validity", "environment", "cultivation", "actuators", "targets", "safety",
 ];
 const ACTUATOR_GROUPS = [

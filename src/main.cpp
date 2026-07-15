@@ -1,7 +1,7 @@
 #include <cJSON.h>
 #include <driver/usb_serial_jtag.h>
 #include <esp_err.h>
-#include <esp_heap_caps.h>
+
 #include <esp_idf_version.h>
 #include <esp_timer.h>
 #include <freertos/FreeRTOS.h>
@@ -13,13 +13,14 @@
 #include "demo/DummyEnvironmentSimulator.h"
 #include "demo/SerialJsonProtocol.h"
 #include "demo/protocol/DecisionWireCodec.h"
+#include "demo/protocol/HeapDiagnostics.h"
 #include "demo/protocol/JsonLineWriter.h"
 
 #include <cstdint>
 #include <cstring>
 
 #ifndef GROWBOX_BOARD_PROFILE
-#define GROWBOX_BOARD_PROFILE "esp32s3-devkitc1-n8"
+#define GROWBOX_BOARD_PROFILE "esp32s3-devkitc1-n16r8"
 #endif
 
 namespace {
@@ -67,8 +68,11 @@ void emitStartup() noexcept {
   cJSON_AddNumberToObject(document, "real_step_interval_ms", kRealStepIntervalMs);
   cJSON_AddNumberToObject(document, "simulation_step_s", kSimulationStepSeconds);
   cJSON_AddNumberToObject(document, "seed", simulator.seed());
-  cJSON_AddNumberToObject(document, "free_heap", heap_caps_get_free_size(MALLOC_CAP_8BIT));
-  cJSON_AddNumberToObject(document, "free_psram", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+  const auto heap = growbox::demo::wire::captureHeapSnapshot();
+  cJSON_AddNumberToObject(document, "free_heap", heap.free_internal + heap.free_psram);
+  cJSON_AddNumberToObject(document, "free_internal", heap.free_internal);
+  cJSON_AddNumberToObject(document, "free_psram", heap.free_psram);
+  cJSON_AddBoolToObject(document, "psram_enabled", heap.psram_enabled);
   growbox::demo::wire::emitJsonDocument(document);
 }
 

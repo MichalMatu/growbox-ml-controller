@@ -1,12 +1,14 @@
 #include "SerialJsonProtocol.h"
 
 #include "protocol/DecisionWireCodec.h"
+#include "protocol/DiagnosticsWireCodec.h"
 #include "protocol/JsonLineWriter.h"
 #include "protocol/ScenarioWireCodec.h"
 #include "protocol/StatusWireCodec.h"
 
 #include <cJSON.h>
 #include <driver/usb_serial_jtag.h>
+#include <esp_heap_caps.h>
 
 #include <cstring>
 
@@ -22,7 +24,25 @@ const char* readString(const cJSON* object, const char* key) noexcept {
 
 }  // namespace
 
+SerialJsonProtocol::~SerialJsonProtocol() noexcept {
+  if (line_ != nullptr) {
+    heap_caps_free(line_);
+    line_ = nullptr;
+  }
+}
+
 esp_err_t SerialJsonProtocol::begin() noexcept {
+  if (line_ == nullptr) {
+    constexpr std::size_t kLineCapacity = kMaximumLineBytes + 1U;
+    line_ = static_cast<char*>(heap_caps_malloc(
+        kLineCapacity, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
+    if (line_ == nullptr) {
+      line_ = static_cast<char*>(heap_caps_malloc(kLineCapacity, MALLOC_CAP_8BIT));
+    }
+    if (line_ == nullptr) {
+      return ESP_ERR_NO_MEM;
+    }
+  }
   if (!usb_serial_jtag_is_driver_installed()) {
     usb_serial_jtag_driver_config_t config = USB_SERIAL_JTAG_DRIVER_CONFIG_DEFAULT();
     config.tx_buffer_size = 4096U;
@@ -98,6 +118,11 @@ void SerialJsonProtocol::processLine(DummyEnvironmentSimulator& simulator,
   }
   if (std::strcmp(command, "get_scenario") == 0) {
     wire::emitScenarioSnapshot(simulator);
+    cJSON_Delete(root);
+    return;
+  }
+  if (std::strcmp(command, "diagnostics") == 0) {
+    wire::emitDiagnostics(simulator, runtime);
     cJSON_Delete(root);
     return;
   }

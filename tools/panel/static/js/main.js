@@ -159,6 +159,10 @@ document.getElementById("btn-json-scenario").onclick = () => { collectScenario()
 document.getElementById("btn-json-decision").onclick = () => openModal("decision");
 document.getElementById("btn-json-history").onclick = () => openModal("history");
 document.getElementById("btn-json-device").onclick = () => openModal("device");
+document.getElementById("btn-json-diagnostics").onclick = async () => {
+  await refreshDiagnosticsModalText(true);
+  openModal("diagnostics");
+};
 document.getElementById("modal-close").onclick = closeModal;
 document.getElementById("modal-close-2").onclick = closeModal;
 document.getElementById("modal-backdrop").onclick = (e) => { if (e.target.id === "modal-backdrop") closeModal(); };
