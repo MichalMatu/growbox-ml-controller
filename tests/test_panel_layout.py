@@ -511,6 +511,20 @@ def test_growbox_setup_has_actuator_control_type_selects():
     assert "syncControlTypeField" in main_js
 
 
+def test_panel_docs_and_help_match_current_ui():
+    agents_md = (Path(__file__).resolve().parents[1] / "AGENTS.md").read_text(encoding="utf-8")
+    constants_js = (PANEL_STATIC / "js" / "constants.js").read_text(encoding="utf-8")
+    assert "setup-modal-backdrop" not in agents_md
+    assert "#modal-backdrop" in agents_md
+    assert "panel-modal" in agents_md
+    assert "Konfig." not in agents_md.split("Układ strony", 1)[1].split("Antywzorzec", 1)[0]
+    assert "JSON decyzji" not in constants_js
+    assert "<strong>Decyzja</strong>" in constants_js
+    assert "jeden szeroki modal" in constants_js
+    assert "tylko odczyt" in constants_js
+    assert "btn-panel-scenario" in INDEX_HTML.read_text(encoding="utf-8")
+
+
 def test_panel_legacy_cleanup_removes_dead_code_and_renames_helpers():
     html = INDEX_HTML.read_text(encoding="utf-8")
     panel_css = PANEL_CSS.read_text(encoding="utf-8")

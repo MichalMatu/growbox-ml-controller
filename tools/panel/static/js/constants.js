@@ -14,8 +14,9 @@ const HELP_TOPICS = {
         <li><strong>Diag.</strong> — <strong>Status</strong> (odśwież z płytki), <strong>Reset</strong> (symulacja krok 0)</li>
         <li><strong>Seed</strong> — ziarno symulatora; ta sama wartość + te same odczyty = powtarzalna symulacja (wysyłane przy <strong>Wyślij</strong>)</li>
         <li><strong>Połącz / ×</strong> — górny pasek, port USB; badge obok tytułu pokazuje krok, tryb i stan po połączeniu</li>
-        <li><strong>Konfig.</strong> — Growbox i Safety w modalu; <strong>Aktuary</strong> na stronie głównej</li>
-        <li><strong>Na żywo</strong> — prawa kolumna: podgląd decyzji + poprzedni stan aktuatorów</li>
+        <li><strong>Aktuary</strong> — na stronie głównej (lewa kolumna); typ sterowania bin/pwm w modalu <strong>Growbox</strong></li>
+        <li><strong>Na żywo</strong> — prawa kolumna: tabele czujników, paski aktuatorów, przyciski <strong>Scenariusz…Safety</strong> (jeden panel modal)</li>
+        <li><strong>Poprzedni stan</strong> — pod Na żywo; tylko odczyt, uzupełniany po <strong>Krok</strong> z wyjść Safety</li>
       </ul>
     `,
   },
@@ -88,7 +89,7 @@ const HELP_TOPICS = {
         <li><strong>Anty-flapping</strong> — min. czas ON/OFF dla grzałki, nawilżacza, osuszacza i chłodzenia</li>
         <li><strong>ΔT max</strong> + <strong>Min. roztwór</strong> — blokada podlewania</li>
       </ul>
-      <p>Prawa kolumna, pod <strong>Poprzedni stan</strong>. Po zmianie kliknij <strong>Wyślij</strong>. W JSON decyzji: <code>diagnostics.safety_reason</code>.</p>
+      <p>Otwórz z przycisku <strong>Safety</strong> (Na żywo) lub zakładki w panelu modal. Po zmianie kliknij <strong>Wyślij</strong>. Kod reguły w zakładce <strong>Decyzja</strong>: <code>diagnostics.safety_reason</code>.</p>
     `,
   },
   previous: {
@@ -99,7 +100,7 @@ const HELP_TOPICS = {
         <li>10 wyjść ML (6 globalnych + 4 pompy strefowe)</li>
         <li>Model używa tego jako kontekstu (histereza, płynność sterowania)</li>
       </ul>
-      <p>Prawa kolumna, pod <strong>Na żywo</strong>. Po <strong>Krok</strong> wartości uzupełniają się z ostatnich wyjść <strong>Safety</strong> (kontekst modelu na następny krok).</p>
+      <p>Prawa kolumna, pod <strong>Na żywo</strong>. Tabela tylko do odczytu (jak czujniki na żywo). Po <strong>Krok</strong> wartości uzupełniają się z ostatnich wyjść <strong>Safety</strong> (kontekst modelu na następny krok).</p>
     `,
   },
 
@@ -107,15 +108,22 @@ const HELP_TOPICS = {
   live: {
     title: "Na żywo",
     html: `
-      <p>Podgląd decyzji po <strong>Krok</strong>: czujniki globalne + 10 wyjść ML. Badge kroku u góry. <strong>Poprzedni stan</strong> — osobna karta pod tą sekcją (prawa kolumna).</p>
-      <p>Każdy aktuator ma <strong>dwa paski</strong>:</p>
+      <p>Podgląd ostatniej decyzji z płytki po <strong>Krok</strong> / <strong>▶</strong>. Badge kroku u góry.</p>
+      <h4>Tabele czujników (2 kolumny)</h4>
       <ul>
-        <li><strong>Model</strong> (niebieski) — co proponuje sieć neuronowa (0–100% mocy)</li>
-        <li><strong>Safety</strong> (zielony) — co faktycznie idzie na płytkę po regułach bezpieczeństwa</li>
+        <li><strong>Lewa</strong> — <strong>Wewnętrzne</strong> (T, wilg., CO₂, roztwór, <strong>Lampa</strong> ON/OFF), pod spodem <strong>Zewnętrzne</strong></li>
+        <li><strong>Prawa</strong> — <strong>Donice</strong>: wilgotność i temp. gleby (numery 1–4); cel wilgotności z formularza <strong>Cele</strong></li>
+        <li>⊘ przy wierszu — czujnik nieważny (checkbox w <strong>Czujniki</strong>)</li>
       </ul>
-      <p>Pomarańczowa ramka i znak <strong>≠</strong> — tylko tam, gdzie safety <em>tego aktuatora</em> zmieniło wyjście modelu.</p>
-      <p>Jeśli oba paski są takie same (np. fan 14% / 14%), karta ma etykietę <strong>bez zmian</strong> — safety przepuściło propozycję modelu.</p>
-      <p>Kod safety i czas inferencji — po prawej w legendzie pasków. Pełna diagnostyka w <strong>JSON decyzji</strong>.</p>
+      <h4>Paski aktuatorów</h4>
+      <ul>
+        <li><strong>Model</strong> (niebieski) — propozycja sieci (0–100%)</li>
+        <li><strong>Safety</strong> (zielony) — wysyłane na płytkę</li>
+        <li><strong>≠</strong> / pomarańczowa ramka — safety zmieniło wyjście tego aktuatora; <strong>bez zmian</strong> — zgodność modelu i safety</li>
+      </ul>
+      <p>Kod safety i czas inferencji — w legendzie pasków. Szczegóły w panelu modal → <strong>Decyzja</strong>.</p>
+      <h4>Przyciski pod paskami</h4>
+      <p><strong>Scenariusz</strong>, <strong>Decyzja</strong>, <strong>Historia</strong>, <strong>Startup / status</strong>, <strong>Zasoby</strong>, <strong>Growbox</strong>, <strong>Safety</strong> — jeden szeroki modal; w nagłówku widać wszystkie zakładki.</p>
     `,
   },
 };
