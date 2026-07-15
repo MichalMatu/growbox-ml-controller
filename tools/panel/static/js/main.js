@@ -11,7 +11,7 @@ function bindFormInputRoot(root) {
 
 function bindFormSync() {
   bindFormInputRoot(document.getElementById("form-sections"));
-  bindFormInputRoot(document.getElementById("safety-section"));
+  bindFormInputRoot(document.getElementById("setup-modal-body"));
   const toolbar = document.getElementById("panel-toolbar");
   const onSeedChange = (event) => {
     if (event.target?.id === "seed") collectScenario();
@@ -227,6 +227,22 @@ document.getElementById("help-modal-close-2").onclick = closeHelp;
 document.getElementById("help-modal-backdrop").onclick = (e) => {
   if (e.target.id === "help-modal-backdrop") closeHelp();
 };
+document.getElementById("setup-modal-close").onclick = closeSetup;
+document.getElementById("setup-modal-backdrop").onclick = (e) => {
+  if (e.target.id === "setup-modal-backdrop") closeSetup();
+};
+document.getElementById("setup-modal-tabs")?.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-setup-tab]");
+  if (!btn) return;
+  e.preventDefault();
+  switchSetupTab(btn.dataset.setupTab);
+});
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-setup-open]");
+  if (!btn) return;
+  e.preventDefault();
+  openSetup(btn.dataset.setupOpen);
+});
 
 document.getElementById("modal-copy").onclick = async () => {
   await navigator.clipboard.writeText(document.getElementById("modal-content").value);

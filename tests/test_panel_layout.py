@@ -105,3 +105,61 @@ def test_page_avoids_broken_multi_column_form_grids():
     assert ".form-grid" not in panel_css
     assert "growbox-params-split" not in form_js
     assert ".growbox-params-split" not in panel_css
+
+
+def test_main_page_keeps_two_column_layout():
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
+    html = INDEX_HTML.read_text(encoding="utf-8")
+    assert "left-panel" in html
+    assert "right-panel" in html
+    assert re.search(
+        r"main\s*\{[^}]*grid-template-columns:\s*minmax\(280px,\s*1\.15fr\)\s*minmax\(260px,\s*0\.85fr\)",
+        panel_css,
+    )
+
+
+def test_actuators_setup_pumps_use_compact_row_layout():
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
+    block_fn = _extract_js_function(form_js, "renderActuatorBlock")
+    assert block_fn
+    assert "actuators-pumps-block" in block_fn
+    assert "#setup-pane-actuators .actuators-pumps-block .compact-row" in panel_css
+    assert "--pump-input-w:" in panel_css
+
+
+def test_growbox_setup_cultivation_fields_use_compact_widths():
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
+    assert "--cultivation-input-w:" in panel_css
+    assert "#setup-pane-growbox .cultivation-pot-card > .compact-row" in panel_css
+    assert "display: flex" in panel_css
+    assert "#setup-pane-growbox .pots-row" in panel_css
+
+
+def test_growbox_setup_modal_has_single_help_entry_point():
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    growbox_fn = _extract_js_function(form_js, "renderGrowboxPanel")
+    setup_fn = _extract_js_function(form_js, "renderSetupPanes")
+    html = INDEX_HTML.read_text(encoding="utf-8")
+    assert growbox_fn
+    assert setup_fn
+    assert "renderGrowboxPanel(true)" in setup_fn
+    assert 'inSetup ? null : "environment"' in growbox_fn
+    assert 'id="setup-modal-help"' in html
+    assert "SETUP_TAB_HELP" in form_js
+
+
+def test_infrequent_settings_live_in_setup_modal_not_inline_form():
+    html = INDEX_HTML.read_text(encoding="utf-8")
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    render_fn = _extract_js_function(form_js, "renderForm")
+    assert render_fn
+    assert 'id="setup-modal-backdrop"' in html
+    assert 'data-setup-open="growbox"' in html
+    assert 'data-setup-open="actuators"' in html
+    assert 'data-setup-open="safety"' in html
+    assert "renderGrowboxPanel()" not in render_fn
+    assert "renderActuatorBlock()" not in render_fn
+    assert "renderSafetyBlock()" not in render_fn
+    assert "renderSetupPanes()" in render_fn
+    assert 'id="safety-section"' not in html

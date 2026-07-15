@@ -159,6 +159,80 @@ function closeHelp() {
   updateModalLock();
 }
 
+let setupReturnFocus = null;
+
+const SETUP_TAB_LABELS = {
+  growbox: "Parametry growboxa",
+  actuators: "Aktuary",
+  safety: "Limity safety",
+};
+
+const SETUP_TAB_HELP = {
+  growbox: "environment",
+  actuators: "actuators",
+  safety: "safety",
+};
+
+function switchSetupTab(tabId) {
+  const tab = SETUP_TAB_LABELS[tabId] ? tabId : "growbox";
+  document.querySelectorAll("#setup-modal-tabs [data-setup-tab]").forEach((btn) => {
+    const active = btn.dataset.setupTab === tab;
+    btn.classList.toggle("active", active);
+    btn.setAttribute("aria-selected", active ? "true" : "false");
+  });
+  document.querySelectorAll(".setup-pane").forEach((pane) => {
+    const active = pane.id === `setup-pane-${tab}`;
+    pane.classList.toggle("active", active);
+    pane.hidden = !active;
+  });
+  document.getElementById("setup-modal-title").textContent = SETUP_TAB_LABELS[tab];
+  const helpBtn = document.getElementById("setup-modal-help");
+  if (helpBtn) {
+    const topic = SETUP_TAB_HELP[tab];
+    helpBtn.dataset.help = topic;
+    helpBtn.setAttribute("aria-label", `Pomoc — ${SETUP_TAB_LABELS[tab]}`);
+  }
+}
+
+function openSetup(tabId = "growbox") {
+  const backdrop = document.getElementById("setup-modal-backdrop");
+  if (!backdrop) return;
+  if (!backdrop.classList.contains("open")) {
+    setupReturnFocus = document.activeElement;
+    backdrop.classList.add("open");
+    backdrop.removeAttribute("inert");
+    backdrop.setAttribute("aria-hidden", "false");
+    updateModalLock();
+  }
+  const tab = SETUP_TAB_LABELS[tabId] ? tabId : "growbox";
+  switchSetupTab(tab);
+  document.getElementById(`setup-tab-${tab}`)?.focus();
+}
+
+function closeSetup() {
+  const backdrop = document.getElementById("setup-modal-backdrop");
+  if (!backdrop?.classList.contains("open")) return;
+  const returnTo = setupReturnFocus;
+  setupReturnFocus = null;
+  restoreFocusFromDialog(backdrop, returnTo, "#btn-setup-growbox");
+  backdrop.classList.remove("open");
+  backdrop.setAttribute("inert", "");
+  backdrop.setAttribute("aria-hidden", "true");
+  updateModalLock();
+}
+
+function renderSetupPanes() {
+  const growbox = document.getElementById("setup-pane-growbox");
+  const actuators = document.getElementById("setup-pane-actuators");
+  const safety = document.getElementById("setup-pane-safety");
+  if (growbox) growbox.innerHTML = renderGrowboxPanel(true);
+  if (actuators) actuators.innerHTML = renderActuatorPanel(true);
+  if (safety) {
+    const safetySection = sectionById("safety");
+    safety.innerHTML = safetySection ? renderSafetyBlock(true) : "";
+  }
+}
+
 function renderPathSensorMiniCell(sensorField, validityField, displayLabel) {
   if (!sensorField) return "";
   const sensorPath = sensorField.path;
@@ -408,7 +482,10 @@ function renderFieldsSubCard(section, helpTopic) {
 
 function renderSubCard(title, fields, helpTopic) {
   const cells = fields.map(renderMiniCell).join("");
-  return `<div class="sub-card">${renderSectionHead(title, helpTopic, "h3")}<div class="compact-row">${cells}</div></div>`;
+  const head = helpTopic
+    ? renderSectionHead(title, helpTopic, "h3")
+    : `<div class="card-head"><h3>${title}</h3></div>`;
+  return `<div class="sub-card">${head}<div class="compact-row">${cells}</div></div>`;
 }
 
 function renderGrowboxCultivationSubCard(section) {
@@ -422,12 +499,15 @@ function renderGrowboxCultivationSubCard(section) {
   return `<div class="sub-card pots-block"><div class="card-head"><h3>Donice</h3></div><div class="compact-row pots-row">${cards}</div></div>`;
 }
 
-function renderGrowboxPanel() {
+function renderGrowboxPanel(inSetup = false) {
   const env = panelSchema.sections.find(s => s.id === "environment");
   const zonesSection = sectionById("zones");
   if (!env && !zonesSection) return "";
-  const obudowa = env ? renderSubCard("Obudowa", env.fields, "environment") : "";
+  const obudowa = env ? renderSubCard("Obudowa", env.fields, inSetup ? null : "environment") : "";
   const donice = zonesSection ? renderGrowboxCultivationSubCard(zonesSection) : "";
+  if (inSetup) {
+    return `<div class="setup-growbox-body">${obudowa}${donice}</div>`;
+  }
   return `<div class="card growbox-panel environment-panel">${renderSectionHead("Parametry growboxa", "environment")}${obudowa}${donice}</div>`;
 }
 
@@ -505,13 +585,19 @@ function renderActuatorRow(groups) {
   return groups.map(([title, names]) => renderActuatorGroupCell(title, names)).join("");
 }
 
-function renderActuatorBlock() {
+function renderActuatorBlock(inSetup = false) {
   const climate = renderActuatorRow(ACTUATOR_CLIMATE_GROUPS);
   const pumps = renderActuatorRow(ACTUATOR_PUMP_GROUPS);
+  const pumpsClass = inSetup ? "sub-card actuators-pumps-block" : "sub-card";
   return `<div class="actuators-split">
     <div class="sub-card"><div class="card-head"><h3>Klimat</h3></div><div class="compact-row">${climate}</div></div>
-    <div class="sub-card"><div class="card-head"><h3>Pompy</h3></div><div class="compact-row">${pumps}</div></div>
+    <div class="${pumpsClass}"><div class="card-head"><h3>Pompy</h3></div><div class="compact-row">${pumps}</div></div>
   </div>`;
+}
+
+function renderActuatorPanel(inSetup = false) {
+  const head = inSetup ? "" : renderSectionHead("Aktuary", "actuators");
+  return `<div class="card actuators-panel">${head}${renderActuatorBlock(inSetup)}</div>`;
 }
 
 function renderSafetyParamCell(title, fieldNames) {
@@ -530,7 +616,7 @@ function renderSafetyFieldsSubCard(title, fieldNames) {
   return `<div class="sub-card"><div class="card-head"><h3>${title}</h3></div><div class="compact-row">${cells}</div></div>`;
 }
 
-function renderSafetyBlock() {
+function renderSafetyBlock(inSetup = false) {
   const temperature = renderSafetyFieldsSubCard("Temperatura", SAFETY_TEMPERATURE_FIELDS);
   const rules = renderSafetyFieldsSubCard("Reguły", SAFETY_RULE_FIELDS);
   const co2 = renderSafetyFieldsSubCard("CO₂", SAFETY_CO2_FIELDS);
@@ -539,7 +625,8 @@ function renderSafetyBlock() {
     renderSafetyParamCell(title, names)
   ).join("");
   const antiflap = `<div class="sub-card"><div class="card-head"><h3>Anty-flapping</h3></div><div class="compact-row">${antiflapCells}</div></div>`;
-  return `<div class="card safety-panel">${renderSectionHead("Limity safety", "safety")}
+  const head = inSetup ? "" : renderSectionHead("Limity safety", "safety");
+  return `<div class="card safety-panel">${head}
     <div class="targets-split">${temperature}${rules}</div>
     <div class="targets-split">${co2}${irrigation}</div>
     ${antiflap}
@@ -551,20 +638,11 @@ function renderForm() {
   const root = document.getElementById("form-sections");
   root.innerHTML = renderSensorBlock();
   updateSeedInput();
-  root.innerHTML += renderGrowboxPanel();
   root.innerHTML += renderTargetsBlock();
-  root.innerHTML += `<div class="card actuators-panel">${renderSectionHead("Aktuary", "actuators")}${renderActuatorBlock()}</div>`;
+  renderSetupPanes();
   const previousRoot = document.getElementById("previous-section");
-  const safetyRoot = document.getElementById("safety-section");
   if (previousRoot) {
     previousRoot.innerHTML = renderPreviousBlock();
-  }
-  if (safetyRoot) {
-    safetyRoot.innerHTML = "";
-    const safetySection = sectionById("safety");
-    if (safetySection) {
-      safetyRoot.innerHTML = renderSafetyBlock();
-    }
   }
   syncLightsActiveDisplay();
 }

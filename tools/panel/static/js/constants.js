@@ -14,7 +14,8 @@ const HELP_TOPICS = {
         <li><strong>Diag.</strong> — <strong>Status</strong> (odśwież z płytki), <strong>Reset</strong> (symulacja krok 0)</li>
         <li><strong>Seed</strong> — ziarno symulatora; ta sama wartość + te same odczyty = powtarzalna symulacja (wysyłane przy <strong>Wyślij</strong>)</li>
         <li><strong>Połącz / ×</strong> — górny pasek, port USB; badge obok tytułu pokazuje krok, tryb i stan po połączeniu</li>
-        <li><strong>Na żywo</strong> — prawa kolumna: tylko podgląd decyzji</li>
+        <li><strong>Konfig.</strong> — Growbox, Aktuary, Safety w modalu (ustawienia „raz na start”)</li>
+        <li><strong>Na żywo</strong> — prawa kolumna: podgląd decyzji + poprzedni stan aktuatorów</li>
       </ul>
     `,
   },

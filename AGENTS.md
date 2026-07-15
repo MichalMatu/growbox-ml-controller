@@ -33,8 +33,9 @@ Testy są źródłem prawdy: `tests/test_panel_layout.py`.
 
 ### Układ strony
 
-- **Lewa kolumna** — `card-stack`: Sterowanie, potem karty formularza **jedna pod drugą** (`#form-sections.card-stack`)
-- **Prawa kolumna** — Na żywo, Poprzedni stan, Limity safety
+- **Lewa kolumna** — `card-stack`: Sterowanie (w tym **Konfig.** → modale), potem **Czujniki** i **Cele** (`#form-sections.card-stack`)
+- **Prawa kolumna** — Na żywo, Poprzedni stan
+- **Modale konfiguracji** (`#setup-modal-backdrop`) — Parametry growboxa, Aktuary, Limity safety (rzadko zmieniane)
 - Donice w parametrach: **ta sama szerokość** karty co w Czujnikach (`--pot-card-w`), 3 pola w poziomym gridzie
 
 **Antywzorzec układu strony (puste dziury):**

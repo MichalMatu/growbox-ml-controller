@@ -175,9 +175,13 @@ function handleModalKeydown(event) {
   if (handleModalSelectAll(event)) return;
   handleDialogKeydown(event);
   if (event.key !== "Escape") return;
+  const setupBackdrop = document.getElementById("setup-modal-backdrop");
   const helpBackdrop = document.getElementById("help-modal-backdrop");
   const jsonBackdrop = document.getElementById("modal-backdrop");
-  if (helpBackdrop?.classList.contains("open")) {
+  if (setupBackdrop?.classList.contains("open")) {
+    event.preventDefault();
+    closeSetup();
+  } else if (helpBackdrop?.classList.contains("open")) {
     event.preventDefault();
     closeHelp();
   } else if (jsonBackdrop?.classList.contains("open")) {
