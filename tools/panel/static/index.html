@@ -696,7 +696,7 @@
         </div>
         <button type="button" class="badge-btn" data-ui="status" data-cmd='{"command":"status"}'>Status</button>
         <label class="seed-badge">Seed<input type="number" id="seed" value="101" step="1" /></label>
-        <button type="button" class="badge-btn primary" data-ui="load" id="btn-load">Wczytaj</button>
+        <button type="button" class="badge-btn primary" data-ui="load" id="btn-load">Wyślij</button>
         <button type="button" class="badge-btn primary" data-ui="step" id="btn-step">Krok</button>
         <button type="button" class="badge-btn" data-ui="defaults" id="btn-defaults">Domyślne</button>
       </div>
@@ -721,7 +721,7 @@
           <h2>Na żywo</h2>
           <button type="button" class="help-btn" data-help="live" aria-label="Pomoc — na żywo">?</button>
         </div>
-        <div id="decision-summary" class="live-step note flush">Połącz → Wczytaj → ▶ → Krok</div>
+        <div id="decision-summary" class="live-step note flush">Połącz → Wyślij → ▶ → Krok</div>
         <div class="outputs-legend" aria-label="Legenda pasków">
           <span class="legend-item"><span class="legend-dot raw" aria-hidden="true"></span> Model — propozycja sieci</span>
           <span class="legend-item"><span class="legend-dot safe" aria-hidden="true"></span> Safety — wysyłane na płytkę</span>
@@ -774,6 +774,56 @@
     let scenario = {};
     let lastDecision = null;
     let lastState = null;
+    let deviceScenarioSynced = false;
+    const SCENARIO_DRAFT_VERSION = 1;
+
+    function scenarioStorageKey(schemaHash) {
+      return `growbox-panel-scenario:${schemaHash}`;
+    }
+
+    function deepMergeScenario(base, overlay) {
+      const merged = Array.isArray(base) ? [...base] : { ...base };
+      for (const [key, value] of Object.entries(overlay || {})) {
+        if (value !== null && typeof value === "object" && !Array.isArray(value)
+            && merged[key] !== null && typeof merged[key] === "object" && !Array.isArray(merged[key])) {
+          merged[key] = deepMergeScenario(merged[key], value);
+        } else {
+          merged[key] = value;
+        }
+      }
+      return merged;
+    }
+
+    function saveScenarioDraft() {
+      if (!panelSchema) return;
+      try {
+        localStorage.setItem(
+          scenarioStorageKey(panelSchema.schema_hash),
+          JSON.stringify({ v: SCENARIO_DRAFT_VERSION, scenario }),
+        );
+      } catch (_) { /* private mode / quota */ }
+    }
+
+    function loadScenarioDraft(schema) {
+      try {
+        const raw = localStorage.getItem(scenarioStorageKey(schema.schema_hash));
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || parsed.v !== SCENARIO_DRAFT_VERSION || typeof parsed.scenario !== "object") {
+          return null;
+        }
+        return deepMergeScenario(schema.default_scenario, parsed.scenario);
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function clearScenarioDraft() {
+      if (!panelSchema) return;
+      try {
+        localStorage.removeItem(scenarioStorageKey(panelSchema.schema_hash));
+      } catch (_) { /* ignore */ }
+    }
 
     const modalViews = {
       scenario: { title: "Scenariusz (payload)", get: () => JSON.stringify(collectScenario(), null, 2) },
@@ -791,7 +841,7 @@
         html: `
           <p>Panel wysyła scenariusz do firmware ESP32 i odczytuje decyzje modelu ML + warstwy safety.</p>
           <h4>Typowa ścieżka (Replay)</h4>
-          <p><code>Połącz → Wczytaj → ▶ → Krok</code></p>
+          <p><code>Połącz → Wyślij → ▶ → Krok</code></p>
           <h4>Przyciski</h4>
           <ul>
             <li><strong>▶ / ■</strong> — start / stop sterowania na płytce</li>
@@ -799,9 +849,12 @@
             <li><strong>Replay</strong> — krok ręczny; <strong>Loop</strong> — automatyczne kroki</li>
             <li><strong>Status</strong> — odświeża raport z firmware</li>
             <li><strong>Seed</strong> — ziarno generatora symulatora (powtarzalność)</li>
-            <li><strong>Wczytaj</strong> — wysyła formularz na płytkę</li>
+            <li><strong>Wyślij</strong> — wysyła cały formularz (scenariusz) na płytkę</li>
+            <li><strong>Krok</strong> — tylko jedna inferencja; <em>nie</em> wysyła zmian z formularza</li>
             <li><strong>Krok</strong> — jedna inferencja</li>
-            <li><strong>Domyślne</strong> — reset formularza (nie wysyła na płytkę)</li>
+            <li><strong>Połączony</strong> — formularz wczytuje scenariusz z płytki (komenda status)</li>
+            <li><strong>Rozłączony</strong> — ostatni formularz z pamięci przeglądarki (localStorage)</li>
+            <li><strong>Domyślne</strong> — fabryczne wartości (nie wysyła na płytkę; czyści zapis lokalny)</li>
             <li><strong>Połącz / ×</strong> — port USB serial</li>
           </ul>
         `,
@@ -845,7 +898,7 @@
         html: `
           <p>Co jest podłączone w growboxie i jakie ma limity. Checkbox przy nazwie = urządzenie jest w zestawie.</p>
           <ul>
-            <li><strong>typ</strong> — <code>binary</code> (wł/wył, próg 50%) lub <code>pwm</code> (0–100%). Typowo: grzałka binary, fan pwm.</li>
+            <li><strong>typ</strong> — <code>binary</code> (wł/wył, próg 50%) lub <code>pwm</code> (0–100%). Po zmianie kliknij <strong>Wyślij</strong>.</li>
             <li><strong>Fan min</strong> — dolna granica PWM przy alarmie temperatury</li>
             <li><strong>Pompa</strong> — przepływ mL/s, <strong>Impuls s</strong> (krótki, np. 4), <strong>Przerwa s</strong> (długi, np. 600 między podlaniami)</li>
           </ul>
@@ -1019,19 +1072,19 @@
 
         if (mode === "replay") {
           setToolbarBtn("mode-replay", "state-on-accent");
-          setBtnHint("mode-replay", "Tryb: REPLAY — ręcznie: Wczytaj → ▶ → Krok");
+          setBtnHint("mode-replay", "Tryb: REPLAY — ręcznie: Wyślij → ▶ → Krok");
           setBtnHint("mode-loop", "Przełącz na LOOP — automatyczne krokowanie");
         } else {
           setToolbarBtn("mode-loop", "state-on-accent");
-          setBtnHint("mode-loop", "Tryb: LOOP — automatyczne kroki po Wczytaj");
+          setBtnHint("mode-loop", "Tryb: LOOP — automatyczne kroki po Wyślij");
           setBtnHint("mode-replay", "Przełącz na REPLAY — krok po kroku ręcznie");
         }
 
         setBtnHint("reset", "Reset symulacji na urządzeniu");
-        setBtnHint("status", "Odśwież status z firmware");
-        setBtnHint("load", "Wyślij scenariusz z formularza do firmware");
-        setBtnHint("step", "Jeden krok inferencji (wymaga Wczytaj + ▶ w replay)");
-        setBtnHint("defaults", "Przywróć domyślny scenariusz w formularzu");
+        setBtnHint("status", "Odśwież status i scenariusz z płytki (nadpisuje formularz)");
+        setBtnHint("load", "Wyślij cały scenariusz z formularza na płytkę");
+        setBtnHint("step", "Jeden krok inferencji (najpierw Wyślij + ▶ w replay)");
+        setBtnHint("defaults", "Przywróć domyślny scenariusz (czyści zapis w przeglądarce)");
       } else {
         setToolbarBtn("connect", "state-on-accent");
         setToolbarBtn("disconnect", "state-off");
@@ -1408,6 +1461,7 @@
         setNested(next, path, value);
       });
       scenario = next;
+      saveScenarioDraft();
       return next;
     }
 
@@ -1594,13 +1648,59 @@
         `<span class="badge mono">${schema.schema_hash}</span>`;
     }
 
+    function tryApplyScenarioFromDevice(state, { force = false } = {}) {
+      const snap = state?.last_status?.scenario;
+      if (!state?.connected || !snap || typeof snap !== "object") return false;
+      if (!force && deviceScenarioSynced) return false;
+      scenario = deepMergeScenario(panelSchema.default_scenario, {
+        seed: state.last_status.seed ?? panelSchema.default_scenario.seed,
+        sensors: snap.sensors,
+        validity: snap.validity,
+        environment: snap.environment,
+        cultivation: snap.cultivation,
+        actuators: snap.actuators,
+        targets: snap.targets,
+        previous: snap.previous,
+      });
+      document.getElementById("seed").value = scenario.seed || 101;
+      renderForm();
+      saveScenarioDraft();
+      deviceScenarioSynced = true;
+      return true;
+    }
+
+    async function requestDeviceScenario() {
+      if (!lastState?.connected) return false;
+      await api("/api/command", { method: "POST", body: '{"command":"status"}' });
+      await new Promise(resolve => setTimeout(resolve, 180));
+      await refreshState();
+      return tryApplyScenarioFromDevice(lastState, { force: true });
+    }
+
+    function bindFormSync() {
+      const root = document.getElementById("form-sections");
+      root.addEventListener("change", () => { collectScenario(); });
+      root.addEventListener("input", (event) => {
+        if (event.target && event.target.type === "number") collectScenario();
+      });
+      document.getElementById("seed").addEventListener("change", () => { collectScenario(); });
+    }
+
     async function init() {
       panelSchema = await api("/api/schema");
-      scenario = panelSchema.default_scenario;
-      document.getElementById("seed").value = scenario.seed || 101;
       renderSchemaBadges(panelSchema);
-      renderForm();
       await refreshPorts();
+      await refreshState();
+      if (lastState?.connected) {
+        if (!await requestDeviceScenario()) {
+          scenario = loadScenarioDraft(panelSchema) || panelSchema.default_scenario;
+        }
+      } else {
+        scenario = loadScenarioDraft(panelSchema) || panelSchema.default_scenario;
+      }
+      document.getElementById("seed").value = scenario.seed || 101;
+      renderForm();
+      bindFormSync();
       setInterval(refreshState, 900);
       refreshState();
     }
@@ -1619,6 +1719,7 @@
         if (btn.id === "btn-connect") {
           event.preventDefault();
           try {
+            deviceScenarioSynced = false;
             await runAction(() => api("/api/connect", {
               method: "POST",
               body: JSON.stringify({
@@ -1627,6 +1728,7 @@
               }),
             }), btn);
             await refreshState();
+            await requestDeviceScenario();
           } catch (_) { /* btn flash */ }
           return;
         }
@@ -1636,6 +1738,7 @@
             await runAction(() => api("/api/disconnect", { method: "POST", body: "{}" }), btn);
             uiOverride.mode = null;
             transportPaused = true;
+            deviceScenarioSynced = false;
             await refreshState();
           } catch (_) { /* btn flash */ }
           return;
@@ -1650,7 +1753,13 @@
             }), btn);
             applyCommandOptimistic(btn.dataset.cmd);
             updateToolbarState(lastState);
-            setTimeout(refreshState, 350);
+            const cmdBody = btn.dataset.cmd;
+            setTimeout(async () => {
+              await refreshState();
+              if (cmdBody.includes('"status"')) {
+                tryApplyScenarioFromDevice(lastState, { force: true });
+              }
+            }, 350);
           } catch (_) { /* btn flash */ }
           return;
         }
@@ -1665,6 +1774,9 @@
               scenario = data.scenario;
               document.getElementById("seed").value = scenario.seed || 101;
               if (!panelSchema) throw new Error("Schemat panelu niezaładowany — odśwież stronę");
+              clearScenarioDraft();
+              saveScenarioDraft();
+              deviceScenarioSynced = false;
               renderForm();
             }, btn);
           } catch (_) { /* btn flash */ }

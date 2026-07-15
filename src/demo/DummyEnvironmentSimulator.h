@@ -19,6 +19,7 @@ class DummyEnvironmentSimulator {
   void setSensors(const control::SensorState& sensors,
                   const control::SensorValidity& validity) noexcept;
   void setTargets(const control::ControlTargets& targets) noexcept;
+  void setActuators(const control::ActuatorCapabilities& actuators) noexcept;
   void advance(const control::SafeControlDecision& decision,
                float step_seconds = kDefaultStepSeconds) noexcept;
 

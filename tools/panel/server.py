@@ -92,11 +92,14 @@ class PanelHandler(BaseHTTPRequestHandler):
             elif path == "/api/step":
                 sensors = body.get("sensors")
                 validity = body.get("validity")
+                actuators = body.get("actuators")
                 command: dict[str, Any] = {"command": "step"}
                 if isinstance(sensors, dict):
                     command["sensors"] = sensors
                 if isinstance(validity, dict):
                     command["validity"] = validity
+                if isinstance(actuators, dict):
+                    command["actuators"] = actuators
                 BRIDGE.send_command(command)
                 _json_response(self, HTTPStatus.OK, {"ok": True})
             elif path == "/api/defaults":
@@ -141,7 +144,7 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     server = ThreadingHTTPServer((args.host, args.port), PanelHandler)
     print(f"Growbox panel: http://{args.host}:{args.port}")
-    print("Połącz płytkę w panelu (port usbmodem), potem Wczytaj scenariusz → Krok.")
+    print("Połącz płytkę w panelu (port usbmodem), potem Wyślij scenariusz → Krok.")
     try:
         server.serve_forever()
     except KeyboardInterrupt:

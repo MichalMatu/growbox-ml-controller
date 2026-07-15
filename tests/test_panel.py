@@ -14,6 +14,10 @@ def test_default_scenario_has_nominal_actuators():
     scenario = default_scenario(seed=101)
     assert scenario["seed"] == 101
     assert scenario["actuators"]["heater"]["available"] is True
+    assert scenario["actuators"]["heater"]["control_type"] == "binary"
+    assert scenario["actuators"]["fan"]["control_type"] == "pwm"
+    assert scenario["actuators"]["humidifier"]["control_type"] == "binary"
+    assert scenario["actuators"]["irrigation"]["control_type"] == "binary"
     assert scenario["sensors"]["air_temperature_c"] == 22.0
 
 

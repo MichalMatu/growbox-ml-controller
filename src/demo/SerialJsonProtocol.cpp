@@ -152,6 +152,124 @@ bool parsePrevious(const cJSON* object, control::PreviousControlState& previous)
                          previous.irrigation);
 }
 
+const char* controlTypeName(control::ActuatorControlType type) noexcept {
+  return type == control::ActuatorControlType::Pwm ? "pwm" : "binary";
+}
+
+void addScenarioSnapshot(cJSON* document, const control::ControllerInput& input) noexcept {
+  if (document == nullptr) {
+    return;
+  }
+
+  cJSON* sensors = cJSON_AddObjectToObject(document, control::schema::kWireRootSensors);
+  cJSON_AddNumberToObject(sensors, control::schema::wireKey(FeatureIndex::AirTemperatureC),
+                          input.sensors.air_temperature_c);
+  cJSON_AddNumberToObject(sensors, control::schema::wireKey(FeatureIndex::AirHumidityPct),
+                          input.sensors.air_humidity_pct);
+  cJSON_AddNumberToObject(sensors, control::schema::wireKey(FeatureIndex::Co2Ppm),
+                          input.sensors.co2_ppm);
+  cJSON_AddNumberToObject(sensors, control::schema::wireKey(FeatureIndex::SoilMoisturePct),
+                          input.sensors.soil_moisture_pct);
+  cJSON_AddNumberToObject(sensors, control::schema::wireKey(FeatureIndex::OutsideTemperatureC),
+                          input.sensors.outside_temperature_c);
+  cJSON_AddNumberToObject(sensors, control::schema::wireKey(FeatureIndex::OutsideHumidityPct),
+                          input.sensors.outside_humidity_pct);
+
+  cJSON* validity = cJSON_AddObjectToObject(document, control::schema::kWireRootValidity);
+  cJSON_AddBoolToObject(validity, control::schema::wireKey(FeatureIndex::AirTemperatureValid),
+                        input.validity.air_temperature);
+  cJSON_AddBoolToObject(validity, control::schema::wireKey(FeatureIndex::AirHumidityValid),
+                        input.validity.air_humidity);
+  cJSON_AddBoolToObject(validity, control::schema::wireKey(FeatureIndex::Co2Valid), input.validity.co2);
+  cJSON_AddBoolToObject(validity, control::schema::wireKey(FeatureIndex::SoilMoistureValid),
+                        input.validity.soil_moisture);
+  cJSON_AddBoolToObject(validity, control::schema::wireKey(FeatureIndex::OutsideTemperatureValid),
+                        input.validity.outside_temperature);
+  cJSON_AddBoolToObject(validity, control::schema::wireKey(FeatureIndex::OutsideHumidityValid),
+                        input.validity.outside_humidity);
+
+  cJSON* environment = cJSON_AddObjectToObject(document, control::schema::kWireRootEnvironment);
+  cJSON_AddNumberToObject(environment, control::schema::wireKey(FeatureIndex::GrowboxVolumeM3),
+                          input.environment.growbox_volume_m3);
+  cJSON_AddNumberToObject(environment, control::schema::wireKey(FeatureIndex::ThermalMassJPerK),
+                          input.environment.thermal_mass_j_per_k);
+  cJSON_AddNumberToObject(environment, control::schema::wireKey(FeatureIndex::HeatLossWPerK),
+                          input.environment.heat_loss_w_per_k);
+  cJSON_AddNumberToObject(environment, control::schema::wireKey(FeatureIndex::AirLeakRateAch),
+                          input.environment.air_leak_rate_ach);
+
+  cJSON* cultivation = cJSON_AddObjectToObject(document, control::schema::kWireRootCultivation);
+  cJSON_AddNumberToObject(cultivation, control::schema::wireKey(FeatureIndex::PotVolumeL),
+                          input.cultivation.pot_volume_l);
+  cJSON_AddNumberToObject(cultivation,
+                          control::schema::wireKey(FeatureIndex::SubstrateWaterCapacityMl),
+                          input.cultivation.substrate_water_capacity_ml);
+  cJSON_AddNumberToObject(cultivation, control::schema::wireKey(FeatureIndex::TranspirationFactor),
+                          input.cultivation.transpiration_factor);
+
+  cJSON* actuators = cJSON_AddObjectToObject(document, control::schema::kWireRootActuators);
+  cJSON* heater = cJSON_AddObjectToObject(actuators, control::schema::kWireObjectHeater);
+  cJSON_AddBoolToObject(heater, control::schema::wireKey(FeatureIndex::HeaterAvailable),
+                        input.actuators.heater.available);
+  cJSON_AddNumberToObject(heater, control::schema::wireKey(FeatureIndex::HeaterMaxPowerW),
+                          input.actuators.heater.max_power_w);
+  cJSON_AddNumberToObject(heater, control::schema::wireKey(FeatureIndex::HeaterEfficiency),
+                          input.actuators.heater.efficiency);
+  cJSON_AddStringToObject(heater, control::schema::wireKey(FeatureIndex::HeaterControlType),
+                          controlTypeName(input.actuators.heater.control_type));
+
+  cJSON* fan = cJSON_AddObjectToObject(actuators, control::schema::kWireObjectFan);
+  cJSON_AddBoolToObject(fan, control::schema::wireKey(FeatureIndex::FanAvailable),
+                        input.actuators.fan.available);
+  cJSON_AddNumberToObject(fan, control::schema::wireKey(FeatureIndex::FanMaxAirflowM3H),
+                          input.actuators.fan.max_airflow_m3_h);
+  cJSON_AddNumberToObject(fan, control::schema::wireKey(FeatureIndex::FanMinimumCommand),
+                          input.actuators.fan.minimum_command);
+  cJSON_AddStringToObject(fan, control::schema::wireKey(FeatureIndex::FanControlType),
+                          controlTypeName(input.actuators.fan.control_type));
+
+  cJSON* humidifier = cJSON_AddObjectToObject(actuators, control::schema::kWireObjectHumidifier);
+  cJSON_AddBoolToObject(humidifier, control::schema::wireKey(FeatureIndex::HumidifierAvailable),
+                        input.actuators.humidifier.available);
+  cJSON_AddNumberToObject(humidifier, control::schema::wireKey(FeatureIndex::HumidifierMaxOutputGH),
+                          input.actuators.humidifier.max_output_g_h);
+  cJSON_AddStringToObject(humidifier, control::schema::wireKey(FeatureIndex::HumidifierControlType),
+                          controlTypeName(input.actuators.humidifier.control_type));
+
+  cJSON* irrigation = cJSON_AddObjectToObject(actuators, control::schema::kWireObjectIrrigation);
+  cJSON_AddBoolToObject(irrigation, control::schema::wireKey(FeatureIndex::IrrigationAvailable),
+                        input.actuators.irrigation_pump.available);
+  cJSON_AddNumberToObject(irrigation, control::schema::wireKey(FeatureIndex::IrrigationFlowMlS),
+                          input.actuators.irrigation_pump.flow_ml_s);
+  cJSON_AddNumberToObject(irrigation, control::schema::wireKey(FeatureIndex::IrrigationMaximumPulseS),
+                          input.actuators.irrigation_pump.maximum_pulse_s);
+  cJSON_AddNumberToObject(irrigation,
+                          control::schema::wireKey(FeatureIndex::IrrigationMinimumIntervalS),
+                          input.actuators.irrigation_pump.minimum_interval_s);
+  cJSON_AddStringToObject(irrigation, control::schema::wireKey(FeatureIndex::IrrigationControlType),
+                          controlTypeName(input.actuators.irrigation_pump.control_type));
+
+  cJSON* targets = cJSON_AddObjectToObject(document, control::schema::kWireRootTargets);
+  cJSON_AddNumberToObject(targets, control::schema::wireKey(FeatureIndex::TargetAirTemperatureC),
+                          input.targets.air_temperature_c);
+  cJSON_AddNumberToObject(targets, control::schema::wireKey(FeatureIndex::TargetAirHumidityPct),
+                          input.targets.air_humidity_pct);
+  cJSON_AddNumberToObject(targets, control::schema::wireKey(FeatureIndex::TargetCo2Ppm),
+                          input.targets.co2_ppm);
+  cJSON_AddNumberToObject(targets, control::schema::wireKey(FeatureIndex::TargetSoilMoisturePct),
+                          input.targets.soil_moisture_pct);
+
+  cJSON* previous = cJSON_AddObjectToObject(document, control::schema::kWireRootPrevious);
+  cJSON_AddNumberToObject(previous, control::schema::wireKey(FeatureIndex::PreviousHeater),
+                          input.previous.heater);
+  cJSON_AddNumberToObject(previous, control::schema::wireKey(FeatureIndex::PreviousFan),
+                          input.previous.fan);
+  cJSON_AddNumberToObject(previous, control::schema::wireKey(FeatureIndex::PreviousHumidifier),
+                          input.previous.humidifier);
+  cJSON_AddNumberToObject(previous, control::schema::wireKey(FeatureIndex::PreviousIrrigation),
+                          input.previous.irrigation);
+}
+
 bool parseControlType(const char* control_type,
                       control::ActuatorControlType& destination) noexcept {
   if (control_type != nullptr && std::strcmp(control_type, "binary") == 0) {
@@ -359,8 +477,10 @@ void SerialJsonProtocol::processLine(DummyEnvironmentSimulator& simulator,
   if (std::strcmp(command, "step") == 0) {
     const cJSON* sensors_json = item(root, control::schema::kWireRootSensors);
     const cJSON* validity_json = item(root, control::schema::kWireRootValidity);
+    const cJSON* actuators_json = objectItem(root, control::schema::kWireRootActuators);
     const bool has_sensors = sensors_json != nullptr && !cJSON_IsNull(sensors_json);
     const bool has_validity = validity_json != nullptr && !cJSON_IsNull(validity_json);
+    const bool has_actuators = actuators_json != nullptr && !cJSON_IsNull(actuators_json);
     if (has_sensors || has_validity) {
       control::SensorState sensors = simulator.input().sensors;
       control::SensorValidity validity = simulator.input().validity;
@@ -370,6 +490,16 @@ void SerialJsonProtocol::processLine(DummyEnvironmentSimulator& simulator,
         return;
       }
       simulator.setSensors(sensors, validity);
+    }
+    if (has_actuators) {
+      control::ActuatorCapabilities actuators{};
+      if (!parseActuators(actuators_json, actuators)) {
+        cJSON_Delete(root);
+        emitError("invalid_step", "actuators must be complete and finite");
+        return;
+      }
+      simulator.setActuators(actuators);
+      runtime.controller_reset_requested = true;
     }
     runtime.step_requested = true;
     cJSON_Delete(root);
@@ -452,6 +582,8 @@ void SerialJsonProtocol::emitStatus(const DummyEnvironmentSimulator& simulator,
   cJSON_AddNumberToObject(document, "seed", simulator.seed());
   cJSON_AddNumberToObject(document, "simulated_time_s",
                           simulator.input().monotonic_time_ms / 1000U);
+  cJSON* scenario = cJSON_AddObjectToObject(document, "scenario");
+  addScenarioSnapshot(scenario, simulator.input());
   writeJson(document);
 }
 

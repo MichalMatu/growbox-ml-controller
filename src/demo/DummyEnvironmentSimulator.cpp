@@ -88,6 +88,10 @@ void DummyEnvironmentSimulator::setTargets(const control::ControlTargets& target
   input_.targets = targets;
 }
 
+void DummyEnvironmentSimulator::setActuators(const control::ActuatorCapabilities& actuators) noexcept {
+  input_.actuators = actuators;
+}
+
 float DummyEnvironmentSimulator::uniformSigned() noexcept {
   rng_state_ = rng_state_ * 1664525U + 1013904223U;
   const float zero_to_one = static_cast<float>((rng_state_ >> 8U) & 0x00FFFFFFU) /
