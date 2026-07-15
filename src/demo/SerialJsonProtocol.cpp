@@ -122,7 +122,7 @@ void SerialJsonProtocol::processLine(DummyEnvironmentSimulator& simulator,
     return;
   }
   if (std::strcmp(command, "diagnostics") == 0) {
-    wire::emitDiagnostics(simulator, runtime);
+    wire::emitDiagnostics(simulator, runtime, line_);
     cJSON_Delete(root);
     return;
   }

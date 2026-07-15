@@ -2,11 +2,11 @@ var modalRenderedKey = "";
 var modalRenderedContent = "";
 
 const modalViews = {
-  scenario: { title: "Scenariusz (payload)", get: () => JSON.stringify(collectScenario(), null, 2) },
-  decision: { title: "Ostatnia decyzja", get: () => lastDecision ? JSON.stringify(lastDecision, null, 2) : "Brak decyzji." },
-  history: { title: "Historia serial", get: () => formatHistory(lastState) },
-  device: { title: "Startup / status", get: () => formatDevice(lastState) },
-  diagnostics: { title: "Zasoby (heap / PSRAM)", html: true },
+  scenario: { tab: "Scenariusz", title: "Scenariusz (payload)", get: () => JSON.stringify(collectScenario(), null, 2) },
+  decision: { tab: "Ostatnia", title: "Ostatnia decyzja", get: () => lastDecision ? JSON.stringify(lastDecision, null, 2) : "Brak decyzji." },
+  history: { tab: "Historia", title: "Historia serial", get: () => formatHistory(lastState) },
+  device: { tab: "Startup", title: "Startup / status", get: () => formatDevice(lastState) },
+  diagnostics: { tab: "Zasoby", title: "Zasoby", html: true },
 };
 
 function formatHistory(state) {
@@ -56,11 +56,21 @@ function closeModal() {
 
 function renderModalTabs() {
   const tabs = document.getElementById("modal-tabs");
-  tabs.innerHTML = Object.entries(modalViews).map(([key, meta]) =>
-    `<button type="button" data-tab="${key}" class="${key === activeModal ? "active" : ""}">${meta.title.split(" ")[0]}</button>`
-  ).join("");
+  if (!tabs.dataset.ready) {
+    tabs.innerHTML = Object.entries(modalViews).map(([key, meta]) =>
+      `<button type="button" data-tab="${key}">${meta.tab}</button>`
+    ).join("");
+    tabs.dataset.ready = "1";
+    tabs.querySelectorAll("[data-tab]").forEach(btn => {
+      btn.onclick = () => {
+        activeModal = btn.dataset.tab;
+        renderModalTabs();
+        refreshModalContent({ force: true });
+      };
+    });
+  }
   tabs.querySelectorAll("[data-tab]").forEach(btn => {
-    btn.onclick = () => { activeModal = btn.dataset.tab; renderModalTabs(); refreshModalContent({ force: true }); };
+    btn.classList.toggle("active", btn.dataset.tab === activeModal);
   });
 }
 
@@ -91,8 +101,12 @@ function refreshModalContent({ force = false } = {}) {
   const isHtml = Boolean(meta.html);
   textarea.hidden = isHtml;
   panel.hidden = !isHtml;
-  copyBtn.hidden = isHtml;
-  if (refreshBtn) refreshBtn.hidden = !isHtml;
+  copyBtn.classList.toggle("btn-slot-hidden", isHtml);
+  copyBtn.disabled = isHtml;
+  if (refreshBtn) {
+    refreshBtn.classList.toggle("btn-slot-hidden", !isHtml);
+    refreshBtn.disabled = !isHtml;
+  }
   const cacheKey = `${activeModal}:${isHtml ? "html" : "text"}`;
   if (isHtml) {
     const html = formatDiagnosticsHtml(diagnosticsSnapshot);

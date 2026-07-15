@@ -8,13 +8,16 @@ namespace demo {
 namespace wire {
 
 struct HeapSnapshot {
+  std::size_t total_internal = 0U;
   std::size_t free_internal = 0U;
-  std::size_t free_psram = 0U;
+  std::size_t used_internal = 0U;
   std::size_t min_free_internal = 0U;
-  std::size_t min_free_psram = 0U;
   std::size_t largest_free_internal = 0U;
-  std::size_t largest_free_psram = 0U;
   std::size_t total_psram = 0U;
+  std::size_t free_psram = 0U;
+  std::size_t used_psram = 0U;
+  std::size_t min_free_psram = 0U;
+  std::size_t largest_free_psram = 0U;
   bool psram_enabled = false;
 };
 

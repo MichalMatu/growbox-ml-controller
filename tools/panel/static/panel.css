@@ -884,30 +884,67 @@ body.modal-open {
   overflow: hidden;
 }
 .modal-head {
-  display: flex;
+  display: grid;
+  grid-template-columns: 10.5rem 1fr 4.2rem;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.35rem 0.5rem;
   padding: 0.55rem 0.65rem;
   border-bottom: 1px solid var(--border);
 }
-.modal-head h3 { margin: 0; font-size: 0.82rem; }
-.modal-tabs { display: flex; gap: 0.25rem; flex-wrap: wrap; }
+.modal-head h3 {
+  margin: 0;
+  font-size: 0.82rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.modal-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 0.2rem;
+  flex-wrap: nowrap;
+}
+.modal-tabs button {
+  flex: 0 0 5.05rem;
+  min-width: 5.05rem;
+  max-width: 5.05rem;
+  padding-left: 0.22rem;
+  padding-right: 0.22rem;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .modal-tabs button.active { background: var(--accent); color: #fff; border-color: #2f6fd1; }
+#modal-close { justify-self: end; }
 .modal-body {
   padding: 0.55rem 0.65rem;
   overflow: auto;
-  flex: 1;
-}
-.modal-body pre, .modal-body textarea {
-  width: 100%;
+  flex: 0 0 320px;
+  height: 320px;
   min-height: 320px;
+  max-height: 320px;
+  box-sizing: border-box;
+}
+.modal-body textarea,
+.modal-body .diag-modal-body {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
   margin: 0;
+  box-sizing: border-box;
+}
+.modal-body textarea {
   font-family: ui-monospace, monospace;
   font-size: 0.7rem;
   white-space: pre-wrap;
   word-break: break-word;
-  resize: vertical;
+  resize: none;
+}
+.modal-body textarea[hidden],
+.modal-body .diag-modal-body[hidden] {
+  display: none !important;
 }
 .modal-foot {
   padding: 0.45rem 0.65rem;
@@ -915,6 +952,11 @@ body.modal-open {
   display: flex;
   gap: 0.35rem;
   justify-content: flex-end;
+  flex: 0 0 auto;
+}
+.modal-foot .btn-slot-hidden {
+  visibility: hidden;
+  pointer-events: none;
 }
 .help-modal-body {
   font-size: 0.78rem;
@@ -971,27 +1013,48 @@ body.modal-open {
 .resources-strip .res-muted { color: var(--muted); }
 
 .diag-modal-body {
-  min-height: 320px;
-  font-size: 0.76rem;
-  line-height: 1.4;
+  min-height: 0;
+  font-size: 0.74rem;
+  line-height: 1.35;
 }
 .diag-panel {
   display: grid;
-  gap: 0.55rem;
+  gap: 0.45rem;
+}
+.diag-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem 0.65rem;
+}
+.diag-col {
+  display: grid;
+  gap: 0.45rem;
+  align-content: start;
+}
+.diag-inline-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 0.45rem;
 }
 .diag-section h4 {
-  margin: 0 0 0.28rem;
-  font-size: 0.64rem;
+  margin: 0 0 0.22rem;
+  font-size: 0.62rem;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
+}
+@media (max-width: 560px) {
+  .diag-columns,
+  .diag-inline-grid {
+    grid-template-columns: 1fr;
+  }
 }
 .diag-row {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 0.5rem;
-  padding: 0.18rem 0;
+  gap: 0.35rem;
+  padding: 0.14rem 0;
   border-bottom: 1px solid rgba(45, 58, 79, 0.45);
 }
 .diag-row:last-child { border-bottom: none; }
@@ -1008,7 +1071,7 @@ body.modal-open {
   font-size: 0.72rem;
 }
 .diag-note.diag-error { color: #ffb4b6; }
-.diag-meter { margin: 0.28rem 0 0.38rem; }
+.diag-meter { margin: 0.18rem 0 0.28rem; }
 .diag-meter-head {
   display: flex;
   justify-content: space-between;
@@ -1039,3 +1102,4 @@ body.modal-open {
 .diag-meter-fill.ok { background: var(--ok); }
 .diag-meter-fill.warn { background: var(--warn); }
 .diag-meter-fill.accent { background: var(--accent); }
+.diag-meter-fill.has-use { min-width: 3px; }

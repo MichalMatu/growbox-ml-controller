@@ -10,10 +10,12 @@ namespace demo {
 namespace wire {
 
 cJSON* buildDiagnosticsDocument(const DummyEnvironmentSimulator& simulator,
-                                const DemoRuntimeState& runtime) noexcept;
+                                const DemoRuntimeState& runtime,
+                                const char* serial_line_buffer = nullptr) noexcept;
 
 void emitDiagnostics(const DummyEnvironmentSimulator& simulator,
-                     const DemoRuntimeState& runtime) noexcept;
+                     const DemoRuntimeState& runtime,
+                     const char* serial_line_buffer = nullptr) noexcept;
 
 }  // namespace wire
 }  // namespace demo

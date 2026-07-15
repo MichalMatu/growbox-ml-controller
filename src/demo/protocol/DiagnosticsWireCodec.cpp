@@ -5,6 +5,9 @@
 #include "JsonLineWriter.h"
 
 #include <cJSON.h>
+#include <esp_memory_utils.h>
+
+#include <sdkconfig.h>
 
 #ifndef GROWBOX_BOARD_PROFILE
 #define GROWBOX_BOARD_PROFILE "esp32s3-devkitc1-n16r8"
@@ -21,20 +24,48 @@ void addHeapObject(cJSON* parent, const char* key, const HeapSnapshot& heap) noe
     return;
   }
   cJSON_AddBoolToObject(object, "psram_enabled", heap.psram_enabled);
+  cJSON_AddNumberToObject(object, "total_internal", heap.total_internal);
   cJSON_AddNumberToObject(object, "free_internal", heap.free_internal);
-  cJSON_AddNumberToObject(object, "free_psram", heap.free_psram);
+  cJSON_AddNumberToObject(object, "used_internal", heap.used_internal);
   cJSON_AddNumberToObject(object, "min_free_internal", heap.min_free_internal);
-  cJSON_AddNumberToObject(object, "min_free_psram", heap.min_free_psram);
   cJSON_AddNumberToObject(object, "largest_free_internal", heap.largest_free_internal);
-  cJSON_AddNumberToObject(object, "largest_free_psram", heap.largest_free_psram);
   cJSON_AddNumberToObject(object, "total_psram", heap.total_psram);
+  cJSON_AddNumberToObject(object, "free_psram", heap.free_psram);
+  cJSON_AddNumberToObject(object, "used_psram", heap.used_psram);
+  cJSON_AddNumberToObject(object, "min_free_psram", heap.min_free_psram);
+  cJSON_AddNumberToObject(object, "largest_free_psram", heap.largest_free_psram);
+  cJSON_AddItemToObject(parent, key, object);
+}
+
+void addMemoryObject(cJSON* parent, const char* key, const char* serial_line_buffer) noexcept {
+  cJSON* object = cJSON_CreateObject();
+  if (object == nullptr) {
+    return;
+  }
+  cJSON_AddNumberToObject(object, "serial_line_bytes",
+                          static_cast<double>(SerialJsonProtocol::kMaximumLineBytes + 1U));
+  if (serial_line_buffer != nullptr) {
+    cJSON_AddBoolToObject(object, "serial_line_in_psram",
+                          esp_ptr_external_ram(serial_line_buffer));
+  }
+#if CONFIG_SPIRAM_USE_CAPS_ALLOC
+  cJSON_AddBoolToObject(object, "spiram_caps_alloc", true);
+#else
+  cJSON_AddBoolToObject(object, "spiram_caps_alloc", false);
+#endif
+#if CONFIG_SPIRAM_USE_MALLOC
+  cJSON_AddBoolToObject(object, "spiram_malloc", true);
+#else
+  cJSON_AddBoolToObject(object, "spiram_malloc", false);
+#endif
   cJSON_AddItemToObject(parent, key, object);
 }
 
 }  // namespace
 
 cJSON* buildDiagnosticsDocument(const DummyEnvironmentSimulator& simulator,
-                                const DemoRuntimeState& runtime) noexcept {
+                                const DemoRuntimeState& runtime,
+                                const char* serial_line_buffer) noexcept {
   cJSON* document = cJSON_CreateObject();
   if (document == nullptr) {
     return nullptr;
@@ -48,6 +79,7 @@ cJSON* buildDiagnosticsDocument(const DummyEnvironmentSimulator& simulator,
   cJSON_AddStringToObject(document, "schema_hash", control::schema::kSchemaHash);
   cJSON_AddStringToObject(document, "board_profile", GROWBOX_BOARD_PROFILE);
   addHeapObject(document, "heap", heap);
+  addMemoryObject(document, "memory", serial_line_buffer);
 
   cJSON* task_object = cJSON_CreateObject();
   if (task_object != nullptr) {
@@ -69,8 +101,9 @@ cJSON* buildDiagnosticsDocument(const DummyEnvironmentSimulator& simulator,
 }
 
 void emitDiagnostics(const DummyEnvironmentSimulator& simulator,
-                     const DemoRuntimeState& runtime) noexcept {
-  emitJsonDocument(buildDiagnosticsDocument(simulator, runtime));
+                     const DemoRuntimeState& runtime,
+                     const char* serial_line_buffer) noexcept {
+  emitJsonDocument(buildDiagnosticsDocument(simulator, runtime, serial_line_buffer));
 }
 
 }  // namespace wire
