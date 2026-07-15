@@ -182,10 +182,19 @@ function fieldSuffixWidthClass(suffix) {
   if (suffix === "ppm") return " suffix-w-ppm";
   if (suffix === "%") return " suffix-w-pct";
   if (suffix === "°C") return " suffix-w-temp";
+  if (suffix === "L") return " suffix-w-pct";
+  if (suffix === "mL") return " suffix-w-ppm";
+  if (suffix === "×") return " suffix-w-s";
   return "";
 }
 
 function fieldMiniCellWidthClass(field) {
+  const zoneCult = field.name.match(/^zone_\d+_(pot_volume_l|substrate_water_capacity_ml|transpiration_factor)$/);
+  if (zoneCult) {
+    if (zoneCult[1] === "pot_volume_l") return " mini-cell-pct";
+    if (zoneCult[1] === "substrate_water_capacity_ml") return " mini-cell-ppm";
+    return " mini-cell-factor";
+  }
   if (isWideField(field)) return " wide";
   if (isPreviousRatioPath(field.path)) return " mini-cell-prev";
   const suffix = fieldUnitSuffix(field);
@@ -818,7 +827,7 @@ function renderPreviousBlock() {
 function renderZoneCultivationCard(fields, index) {
   if (!fields.length) return "";
   const cells = fields.map(renderMiniCell).join("");
-  return `<div class="pot-card cultivation-pot-card"><div class="head-row"><span class="name">Donica ${index + 1}</span></div><div class="compact-row">${cells}</div></div>`;
+  return `<div class="pot-card cultivation-pot-card"><div class="head-row"><span class="name">Donica ${index + 1}</span></div><div class="pot-card-cultivation">${cells}</div></div>`;
 }
 
 function syncControlTypeField(path, value) {

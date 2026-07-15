@@ -121,9 +121,20 @@
   --cell-w-wide: 6.35rem;
   --cell-w-ppm: calc(var(--cell-w) - 1ch);
   --cell-w-pct: calc(var(--cell-w) - 3ch);
+  --cell-w-factor: calc(4ch + var(--field-suffix-pad-1));
   --pot-sensor-w: var(--cell-w-pct);
   --pot-sensor-w-temp: var(--cell-w-temp);
-  --pot-card-w: calc(var(--pot-sensor-w) + var(--pot-sensor-w-temp) + var(--cell-gap) + 0.75rem);
+  --pot-cult-vol-w: var(--cell-w-pct);
+  --pot-cult-water-w: var(--cell-w-ppm);
+  --pot-cult-factor-w: var(--cell-w-factor);
+  --field-input-w-pct: var(--cell-w-pct);
+  --field-input-w-ppm: var(--cell-w-ppm);
+  --field-input-w-factor: var(--cell-w-factor);
+  --pot-card-inline-pad: 0.3rem;
+  --pot-card-w: calc(
+    var(--pot-cult-vol-w) + var(--pot-cult-water-w) + var(--pot-cult-factor-w)
+    + 2 * var(--cell-gap) + 2 * var(--pot-card-inline-pad)
+  );
   --cell-pad: 0.26rem 0.3rem 0.3rem;
   --cell-gap-inner: var(--gap-sm);
   --cell-radius: 6px;
@@ -773,29 +784,27 @@ button.danger { background: var(--danger-bg); border-color: var(--danger); color
   min-width: 0;
   padding: var(--cell-pad);
 }
+.pot-card .mini-cell .field-input-wrap {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  max-width: 100%;
+  vertical-align: bottom;
+}
 .pot-card .mini-cell .field-control {
   width: 100%;
   max-width: 100%;
 }
-/* Cultivation: same pot width as czujniki; 3 fields in horizontal grid (test_panel_layout.py). */
-.pot-card.cultivation-pot-card {
-  width: var(--pot-card-w);
-  min-width: var(--pot-card-w);
-}
-.cultivation-pot-card > .compact-row {
+.pot-card-cultivation {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--gap-xs);
-  width: 100%;
-}
-.cultivation-pot-card > .compact-row .mini-cell,
-.cultivation-pot-card > .compact-row .mini-cell.wide {
+  grid-template-columns:
+    minmax(0, var(--pot-cult-vol-w))
+    minmax(0, var(--pot-cult-water-w))
+    minmax(0, var(--pot-cult-factor-w));
+  gap: var(--cell-gap);
   width: 100%;
   min-width: 0;
-  padding: 0.18rem 0.12rem 0.2rem;
-}
-.cultivation-pot-card .name {
-  font-size: var(--text-2xs);
+  align-items: start;
 }
 .pots-block .sub-card {
   overflow-x: auto;
@@ -891,6 +900,22 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
   max-width: var(--cell-w-temp);
   flex: 0 0 var(--cell-w-temp);
 }
+.mini-cell.mini-cell-factor {
+  width: var(--cell-w-factor);
+  max-width: var(--cell-w-factor);
+  flex: 0 0 var(--cell-w-factor);
+}
+.pot-card .mini-cell.mini-cell-pct,
+.pot-card .mini-cell.mini-cell-ppm,
+.pot-card .mini-cell.mini-cell-factor,
+.pot-card .mini-cell.mini-cell-temp,
+.pot-card .mini-cell.mini-cell-prev,
+.pot-card .mini-cell.wide {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  flex: 1 1 auto;
+}
 .sensors-panel .mini-cell.pseudo-lights-cell {
   width: var(--cell-w-lights);
   max-width: var(--cell-w-lights);
@@ -944,6 +969,27 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
   min-width: 0;
 }
 .mini-cell .field-input-wrap {
+  width: 100%;
+  max-width: 100%;
+}
+.mini-cell .field-input-wrap.suffix-w-pct {
+  width: var(--field-input-w-pct);
+  max-width: 100%;
+}
+.mini-cell .field-input-wrap.suffix-w-ppm {
+  width: var(--field-input-w-ppm);
+  max-width: 100%;
+}
+.mini-cell .field-input-wrap.suffix-w-factor,
+.mini-cell .field-input-wrap.suffix-w-s {
+  width: var(--field-input-w-factor);
+  max-width: 100%;
+}
+.pot-card .mini-cell .field-input-wrap.suffix-w-pct,
+.pot-card .mini-cell .field-input-wrap.suffix-w-ppm,
+.pot-card .mini-cell .field-input-wrap.suffix-w-factor,
+.pot-card .mini-cell .field-input-wrap.suffix-w-s,
+.pot-card .mini-cell .field-input-wrap.suffix-w-temp {
   width: 100%;
   max-width: 100%;
 }
@@ -1152,10 +1198,23 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
   width: var(--actuator-input-w-wide);
   max-width: var(--actuator-input-w-wide);
 }
+.field-input-wrap.suffix-w-pct .field-control,
+.actuator-input-wrap.suffix-w-pct .field-control {
+  padding-right: var(--field-suffix-pad-1);
+}
+.field-input-wrap.suffix-w-ppm .field-control,
+.actuator-input-wrap.suffix-w-ppm .field-control {
+  padding-right: var(--field-suffix-pad-med);
+}
+.field-input-wrap.suffix-w-factor .field-control,
 .field-input-wrap.suffix-w-s .field-control,
+.actuator-input-wrap.suffix-w-factor .field-control,
 .actuator-input-wrap.suffix-w-s .field-control {
   padding-right: var(--field-suffix-pad-s);
 }
+.field-input-wrap.suffix-w-pct .field-input-suffix,
+.field-input-wrap.suffix-w-ppm .field-input-suffix,
+.field-input-wrap.suffix-w-factor .field-input-suffix,
 .field-input-wrap.suffix-w-s .field-input-suffix,
 .actuator-input-wrap.suffix-w-s .actuator-input-suffix {
   right: 0.14rem;
@@ -1743,6 +1802,9 @@ body.modal-open {
 }
 .setup-pane.active {
   display: block;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 .setup-pane .card {
   margin: 0;
@@ -1750,61 +1812,34 @@ body.modal-open {
   background: transparent;
   padding: 0;
 }
+.setup-growbox-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cell-gap);
+  min-width: 0;
+}
 .setup-growbox-body .sub-card:first-child {
   margin-top: 0;
 }
 #setup-pane-growbox {
-  --cell-w: 6rem;
-  --cell-w-wide: 7.1rem;
-  --cultivation-input-w: 3.2rem;
-  --cultivation-input-w-wide: 3.75rem;
+  container-type: inline-size;
+  container-name: setup-growbox;
+  --setup-obudowa-cell-w: 6rem;
+  --setup-obudowa-cell-w-wide: 7.1rem;
   --setup-control-type-select-w: 3.35rem;
 }
-#setup-pane-growbox .sub-card > .compact-row .mini-cell {
-  min-width: var(--cell-w);
+#setup-pane-growbox .sub-card {
+  min-width: 0;
 }
-#setup-pane-growbox .sub-card > .compact-row .mini-cell.wide {
-  min-width: var(--cell-w-wide);
+#setup-pane-growbox .sub-card:not(.pots-block):not(.setup-actuators-block) > .compact-row .mini-cell {
+  min-width: var(--setup-obudowa-cell-w);
+}
+#setup-pane-growbox .sub-card:not(.pots-block):not(.setup-actuators-block) > .compact-row .mini-cell.wide {
+  min-width: var(--setup-obudowa-cell-w-wide);
 }
 #setup-pane-growbox .pots-row {
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: var(--cell-gap);
-}
-#setup-pane-growbox .pot-card.cultivation-pot-card {
-  width: auto;
-  min-width: 0;
-  flex: 0 0 auto;
-  padding: 0.2rem 0.22rem 0.24rem;
-}
-#setup-pane-growbox .cultivation-pot-card > .compact-row {
-  display: flex;
-  flex-wrap: nowrap;
-  gap: var(--gap-xs);
-  width: max-content;
-  max-width: 100%;
-}
-#setup-pane-growbox .cultivation-pot-card > .compact-row .mini-cell,
-#setup-pane-growbox .cultivation-pot-card > .compact-row .mini-cell.wide {
-  width: auto;
-  min-width: 0;
-  flex: 0 0 auto;
-  padding: 0.12rem 0.08rem 0.14rem;
-  align-items: flex-start;
-}
-#setup-pane-growbox .cultivation-pot-card > .compact-row .mini-cell .name {
-  flex: 0 0 auto;
-  max-width: 100%;
-}
-#setup-pane-growbox .cultivation-pot-card > .compact-row .mini-cell .field-input-wrap {
-  width: var(--cultivation-input-w);
-  max-width: 100%;
-}
-#setup-pane-growbox .cultivation-pot-card > .compact-row .mini-cell.wide .field-input-wrap {
-  width: var(--cultivation-input-w-wide);
-}
-#setup-pane-growbox .cultivation-pot-card > .compact-row .mini-cell .field-input-wrap .field-control {
-  width: 100%;
-  padding-left: 0.14rem;
 }
 #setup-pane-growbox .setup-actuators-block {
   margin-top: 0.55rem;
@@ -1815,9 +1850,8 @@ body.modal-open {
   gap: var(--cell-gap);
 }
 #setup-pane-growbox .actuators-type-row {
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: var(--cell-gap);
-  overflow-x: auto;
 }
 #setup-pane-growbox .setup-actuator-type-card {
   width: auto;

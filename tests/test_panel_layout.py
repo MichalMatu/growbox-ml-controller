@@ -40,31 +40,49 @@ def test_cultivation_pot_fields_are_horizontal_not_stacked():
     form_js = FORM_JS.read_text(encoding="utf-8")
     render_fn = _extract_js_function(form_js, "renderZoneCultivationCard")
     assert render_fn, "renderZoneCultivationCard must exist"
-    assert "compact-row" in render_fn
+    assert "pot-card-cultivation" in render_fn
     assert "field-stack" not in render_fn
 
 
-def test_cultivation_pot_css_uses_horizontal_grid_not_column_stack():
+def test_cultivation_pot_css_uses_tokenized_grid_like_sensors():
     panel_css = PANEL_CSS.read_text(encoding="utf-8")
-    assert ".cultivation-pot-card .field-stack" not in panel_css
-    assert not re.search(
-        r"\.cultivation-pot-card[^{]*\{[^}]*flex-direction:\s*column",
-        panel_css,
-    )
-    grid_rule = re.search(
-        r"\.cultivation-pot-card\s*>\s*\.compact-row\s*\{[^}]+\}",
-        panel_css,
-    )
-    assert grid_rule, "cultivation compact-row rule required"
-    rule = grid_rule.group(0)
-    assert "grid-template-columns" in rule
-    assert "repeat(3" in rule
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    cell_fn = _extract_js_function(form_js, "fieldMiniCellWidthClass")
+    assert ".pot-card-cultivation" in panel_css
+    assert "--pot-cult-vol-w: var(--cell-w-pct)" in panel_css
+    assert "--pot-cult-water-w: var(--cell-w-ppm)" in panel_css
+    assert "--pot-cult-factor-w: var(--cell-w-factor)" in panel_css
+    assert "minmax(0, var(--pot-cult-vol-w))" in panel_css
+    assert "minmax(0, var(--pot-cult-water-w))" in panel_css
+    assert "minmax(0, var(--pot-cult-factor-w))" in panel_css
+    assert ".mini-cell.mini-cell-factor" in panel_css
+    assert cell_fn
+    assert '" mini-cell-pct"' in cell_fn
+    assert '" mini-cell-ppm"' in cell_fn
+    assert '" mini-cell-factor"' in cell_fn
+    assert "pot_volume_l" in cell_fn
+    assert "substrate_water_capacity_ml" in cell_fn
+    assert "transpiration_factor" in cell_fn
+    width_fn = _extract_js_function(form_js, "fieldSuffixWidthClass")
+    assert width_fn
+    assert '" suffix-w-pct"' in width_fn
+    assert '" suffix-w-ppm"' in width_fn
+    assert '" suffix-w-s"' in width_fn
+    assert '"×"' in width_fn
+    assert "--field-input-w-pct:" in panel_css
+    assert "--field-input-w-ppm:" in panel_css
+    assert "--field-input-w-factor:" in panel_css
+    assert ".pot-card .mini-cell.mini-cell-pct" in panel_css
 
 
 def test_cultivation_pots_match_sensor_pot_card_width():
     panel_css = PANEL_CSS.read_text(encoding="utf-8")
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    render_fn = _extract_js_function(form_js, "renderZoneCultivationCard")
+    assert render_fn
+    assert "pot-card cultivation-pot-card" in render_fn
     assert re.search(
-        r"\.pot-card\.cultivation-pot-card\s*\{[^}]*width:\s*var\(--pot-card-w\)",
+        r"\.pot-card\s*\{[^}]*width:\s*var\(--pot-card-w\)",
         panel_css,
     )
 
@@ -75,7 +93,8 @@ def test_sensor_pot_fields_use_horizontal_layout_reference():
     assert ".pot-card-sensors" in panel_css
     assert "grid-template-columns: var(--pot-sensor-w) var(--pot-sensor-w-temp)" in panel_css
     assert "--pot-sensor-w: var(--cell-w-pct)" in panel_css
-    assert "--pot-card-w: calc(var(--pot-sensor-w) + var(--pot-sensor-w-temp)" in panel_css
+    assert "--pot-card-w: calc(" in panel_css
+    assert "--pot-cult-vol-w:" in panel_css
 
 
 def test_zone_soil_target_labels_use_donica_names():
@@ -144,10 +163,8 @@ def test_suffix_padding_scales_with_unit_length():
     assert "padding-right: var(--field-suffix-pad-med)" in panel_css
     assert "suffix-short" not in panel_css
     assert "--actuator-input-w-s:" in panel_css
-    assert (
-        "#setup-pane-growbox .cultivation-pot-card > .compact-row .mini-cell .field-input-wrap"
-        in panel_css
-    )
+    assert ".pot-card .mini-cell .field-input-wrap" in panel_css
+    assert ".mini-cell .field-input-wrap" in panel_css
 
 
 def test_actuator_param_fields_use_in_input_unit_suffixes():
@@ -475,12 +492,26 @@ def test_actuators_main_page_use_compact_climate_and_pump_rows():
     )
 
 
-def test_growbox_setup_cultivation_fields_use_compact_widths():
+def test_growbox_setup_cultivation_fields_use_shared_pot_layout():
     panel_css = PANEL_CSS.read_text(encoding="utf-8")
-    assert "--cultivation-input-w:" in panel_css
-    assert "#setup-pane-growbox .cultivation-pot-card > .compact-row" in panel_css
-    assert "display: flex" in panel_css
-    assert "#setup-pane-growbox .pots-row" in panel_css
+    assert ".pot-card-cultivation" in panel_css
+    assert ".pot-card .mini-cell .field-input-wrap" in panel_css
+    assert "container-type: inline-size" in panel_css
+    assert ".setup-growbox-body" in panel_css
+    assert "--cultivation-input-w:" not in panel_css
+    assert "#setup-pane-growbox .cultivation-pot-card" not in panel_css
+    assert "--setup-obudowa-cell-w:" in panel_css
+    assert "#setup-pane-growbox .sub-card:not(.pots-block)" in panel_css
+    assert (
+        "--cell-w: 6rem"
+        not in panel_css.split("#setup-pane-growbox", 1)[1].split("#setup-pane-safety", 1)[0]
+    )
+    pots_rule = re.search(
+        r"#setup-pane-growbox\s+\.pots-row\s*\{[^}]+\}",
+        panel_css,
+    )
+    assert pots_rule
+    assert "flex-wrap: wrap" in pots_rule.group(0)
 
 
 def test_growbox_setup_has_actuator_control_type_selects():
