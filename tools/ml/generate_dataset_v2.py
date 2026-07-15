@@ -13,6 +13,7 @@ from .generate_dataset import Dataset, DatasetConfig, split_scenarios
 from .simulator_v2 import (
     MAX_ZONES,
     Co2DoserCapabilities,
+    ControlAction,
     ControlTargets,
     CoolerCapabilities,
     DehumidifierCapabilities,
@@ -241,6 +242,7 @@ def controller_input_record_v2(
     *,
     validity: Mapping[str, bool],
     zone_validity: Mapping[int, Mapping[str, bool]],
+    previous: ControlAction,
 ) -> dict[str, object]:
     sensors = {
         "air_temperature_c": state.air_temperature_c,
@@ -266,6 +268,8 @@ def controller_input_record_v2(
             zone_sensors["soil_moisture_pct"] = zone_state.soil_moisture_pct
         if zone_valid.get("soil_temperature_c", False):
             zone_sensors["soil_temperature_c"] = zone_state.soil_temperature_c
+        irrigation = zone.irrigation
+        output_name = f"irrigation_zone_{zone_index + 1}"
         zones_payload.append(
             {
                 "available": zone.available,
@@ -274,9 +278,24 @@ def controller_input_record_v2(
                     "soil_moisture_pct": bool(zone_valid.get("soil_moisture_pct", False)),
                     "soil_temperature_c": bool(zone_valid.get("soil_temperature_c", False)),
                 },
+                "cultivation": {
+                    "pot_volume_l": zone.cultivation.pot_volume_l,
+                    "substrate_water_capacity_ml": zone.cultivation.substrate_water_capacity_ml,
+                    "transpiration_factor": zone.cultivation.transpiration_factor,
+                },
+                "targets": {"soil_moisture_pct": zone.target_soil_moisture_pct},
+                "irrigation": {
+                    "available": irrigation.available,
+                    "flow_ml_s": irrigation.flow_ml_s,
+                    "maximum_pulse_s": irrigation.maximum_pulse_s,
+                    "minimum_interval_s": irrigation.minimum_interval_s,
+                    "control_type": "pwm",
+                },
+                "previous": {"irrigation": getattr(previous, output_name)},
             }
         )
 
+    caps = scenario.actuators
     return {
         "sensors": sensors,
         "validity": {
@@ -294,6 +313,54 @@ def controller_input_record_v2(
             "outside_co2_ppm": bool(
                 validity.get("outside_co2_ppm", scenario.validity.outside_co2_ppm)
             ),
+        },
+        "environment": {
+            "growbox_volume_m3": scenario.environment.growbox_volume_m3,
+            "thermal_mass_j_per_k": scenario.environment.thermal_mass_j_per_k,
+            "heat_loss_w_per_k": scenario.environment.heat_loss_w_per_k,
+            "air_leak_rate_ach": scenario.environment.air_leak_rate_ach,
+        },
+        "actuators": {
+            "heater": {
+                "available": caps.heater.available,
+                "max_power_w": caps.heater.max_power_w,
+                "efficiency": caps.heater.efficiency,
+            },
+            "fan": {
+                "available": caps.fan.available,
+                "max_airflow_m3_h": caps.fan.max_airflow_m3_h,
+                "minimum_command": caps.fan.minimum_command,
+            },
+            "humidifier": {
+                "available": caps.humidifier.available,
+                "max_output_g_h": caps.humidifier.max_output_g_h,
+            },
+            "dehumidifier": {
+                "available": caps.dehumidifier.available,
+                "max_removal_g_h": caps.dehumidifier.max_removal_g_h,
+            },
+            "cooler": {
+                "available": caps.cooler.available,
+                "max_cooling_w": caps.cooler.max_cooling_w,
+            },
+            "co2_doser": {
+                "available": caps.co2_doser.available,
+                "dose_ppm_per_full_pulse": caps.co2_doser.dose_ppm_per_full_pulse,
+                "maximum_pulse_s": caps.co2_doser.maximum_pulse_s,
+            },
+        },
+        "targets": {
+            "air_temperature_c": scenario.targets.target_air_temperature_c,
+            "air_humidity_pct": scenario.targets.target_air_humidity_pct,
+            "co2_ppm": scenario.targets.target_co2_ppm,
+        },
+        "previous": {
+            "heater": previous.heater,
+            "fan": previous.fan,
+            "humidifier": previous.humidifier,
+            "dehumidifier": previous.dehumidifier,
+            "cooler": previous.cooler,
+            "co2_doser": previous.co2_doser,
         },
         "zones": zones_payload,
         "pseudo": {"lights_active": state.lights_active},
@@ -379,6 +446,7 @@ def generate_dataset_v2(
                 observation,
                 validity=global_validity,
                 zone_validity=zone_validity,
+                previous=simulator.previous_command,
             )
             sensors = dict(record["sensors"])
             for name in GLOBAL_SENSOR_NAMES:

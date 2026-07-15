@@ -9,7 +9,7 @@ from tools.ml.generate_dataset_v2 import (
     generate_dataset_v2,
     random_scenario_v2,
 )
-from tools.ml.simulator_v2 import SequentialEnvironmentSimulatorV2
+from tools.ml.simulator_v2 import ControlAction, SequentialEnvironmentSimulatorV2
 from tools.ml.teacher_v2 import RolloutTeacherV2
 
 
@@ -36,6 +36,7 @@ def test_v2_controller_input_record_matches_contract_paths():
             }
             for index, zone in enumerate(scenario.zones)
         },
+        previous=ControlAction(),
     )
     contract = load_contract(V2_CONTRACT_PATH)
     encoded = contract.encode(record)
