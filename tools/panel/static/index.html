@@ -650,6 +650,8 @@
         card.innerHTML = `<h2>${section.title}</h2>`;
         if (section.id === "actuators") {
           root.innerHTML += `<div class="card"><h2>${section.title}</h2>${renderActuatorBlock(section)}</div>`;
+        } else if (section.id === "targets") {
+          root.innerHTML += renderCompactBlock(section.title, section.fields);
         } else {
           const grid = document.createElement("div");
           grid.className = "section-grid";
