@@ -120,6 +120,34 @@ def test_main_page_keeps_two_column_layout():
     )
 
 
+def test_suffix_padding_scales_with_unit_length():
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
+    wrap_fn = _extract_js_function(form_js, "renderWrappedNumberInput")
+    wide_fn = _extract_js_function(form_js, "isWideField")
+    size_fn = _extract_js_function(form_js, "fieldSuffixSizeClass")
+    width_fn = _extract_js_function(form_js, "fieldSuffixWidthClass")
+    assert size_fn
+    assert '" suffix-pad-1"' in size_fn
+    assert '" suffix-pad-2"' in size_fn
+    assert "suffix-short" not in size_fn
+    assert width_fn
+    assert '" suffix-w-s"' in width_fn
+    assert "fieldSuffixWidthClass(suffix)" in wrap_fn
+    assert "minimum_interval" not in wide_fn
+    assert "--field-suffix-pad-1:" in panel_css
+    assert "--field-suffix-pad-2:" in panel_css
+    assert "--field-suffix-pad-med:" in panel_css
+    assert ".suffix-pad-1 .field-control" in panel_css
+    assert "padding-right: var(--field-suffix-pad-med)" in panel_css
+    assert "suffix-short" not in panel_css
+    assert "--actuator-input-w-s:" in panel_css
+    assert (
+        "#setup-pane-growbox .cultivation-pot-card > .compact-row .mini-cell .field-input-wrap"
+        in panel_css
+    )
+
+
 def test_actuator_param_fields_use_in_input_unit_suffixes():
     form_js = FORM_JS.read_text(encoding="utf-8")
     panel_css = PANEL_CSS.read_text(encoding="utf-8")

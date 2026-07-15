@@ -137,9 +137,16 @@ function fieldUnitSuffix(field) {
 
 function fieldSuffixSizeClass(suffix) {
   if (!suffix) return "";
-  if (suffix.length >= 7) return " suffix-long";
-  if (suffix.length >= 3) return " suffix-med";
-  return " suffix-short";
+  const glyphs = [...suffix].length;
+  if (glyphs >= 7) return " suffix-long";
+  if (glyphs >= 3) return " suffix-med";
+  if (glyphs === 2) return " suffix-pad-2";
+  return " suffix-pad-1";
+}
+
+/** Czas (s) — węższe pole aktuatora; padding jak suffix-pad-1. */
+function fieldSuffixWidthClass(suffix) {
+  return suffix === "s" ? " suffix-w-s" : "";
 }
 
 function renderWrappedNumberInput(field, opts = {}) {
@@ -150,7 +157,7 @@ function renderWrappedNumberInput(field, opts = {}) {
   const displayValue = opts.displayValue
     ?? formatFieldNumber(getNested(scenario, field.path) ?? field.default, field.path);
   const suffix = fieldUnitSuffix(field);
-  const suffixClass = fieldSuffixSizeClass(suffix);
+  const suffixClass = fieldSuffixSizeClass(suffix) + fieldSuffixWidthClass(suffix);
   const wrapClass = opts.wrapClass || "field-input-wrap";
   const suffixClassName = opts.suffixClass || "field-input-suffix";
   const disabledAttr = disabled ? " disabled" : "";
@@ -454,8 +461,7 @@ function updateSeedInput() {
 }
 
 function isWideField(field) {
-  return field.path.includes("thermal_mass") || field.path.includes("substrate_water")
-    || field.path.includes("minimum_interval");
+  return field.path.includes("thermal_mass") || field.path.includes("substrate_water");
 }
 
 function fieldStep(field) {

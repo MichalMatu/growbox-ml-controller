@@ -121,6 +121,12 @@
   --sub-card-pad: 0.28rem 0.3rem;
   --actuator-input-w: 4rem;
   --actuator-input-w-wide: 4.65rem;
+  --field-suffix-pad-1: 0.68rem;
+  --field-suffix-pad-2: 0.92rem;
+  --field-suffix-pad-med: 1.4rem;
+  --field-suffix-pad-long: 2.4rem;
+  --field-suffix-pad-s: var(--field-suffix-pad-1);
+  --actuator-input-w-s: calc(4ch + var(--field-suffix-pad-s));
   --actuator-select-w: 2.35rem;
   --actuator-stack-gap: 0.22rem 0.28rem;
   --live-pad-cell: 0.2rem 0.24rem;
@@ -1062,17 +1068,27 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
   min-width: 0;
   box-sizing: border-box;
 }
-.field-input-wrap.suffix-short .field-control,
-.actuator-input-wrap.suffix-short .field-control {
-  padding-right: 1.35rem;
+.field-input-wrap.suffix-pad-1 .field-control,
+.actuator-input-wrap.suffix-pad-1 .field-control {
+  padding-right: var(--field-suffix-pad-1);
+}
+.field-input-wrap.suffix-pad-2 .field-control,
+.actuator-input-wrap.suffix-pad-2 .field-control {
+  padding-right: var(--field-suffix-pad-2);
 }
 .field-input-wrap.suffix-med .field-control,
 .actuator-input-wrap.suffix-med .field-control {
-  padding-right: 2rem;
+  padding-right: var(--field-suffix-pad-med);
 }
 .field-input-wrap.suffix-long .field-control,
 .actuator-input-wrap.suffix-long .field-control {
-  padding-right: 2.75rem;
+  padding-right: var(--field-suffix-pad-long);
+}
+.field-input-wrap.suffix-pad-1 .field-input-suffix,
+.actuator-input-wrap.suffix-pad-1 .actuator-input-suffix,
+.field-input-wrap.suffix-pad-2 .field-input-suffix,
+.actuator-input-wrap.suffix-pad-2 .actuator-input-suffix {
+  right: 0.14rem;
 }
 .field-input-suffix,
 .actuator-input-suffix {
@@ -1095,6 +1111,21 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
 .actuator-param.wide-param .actuator-input-wrap {
   width: var(--actuator-input-w-wide);
   max-width: var(--actuator-input-w-wide);
+}
+.field-input-wrap.suffix-w-s .field-control,
+.actuator-input-wrap.suffix-w-s .field-control {
+  padding-right: var(--field-suffix-pad-s);
+}
+.field-input-wrap.suffix-w-s .field-input-suffix,
+.actuator-input-wrap.suffix-w-s .actuator-input-suffix {
+  right: 0.14rem;
+}
+.actuators-panel .actuator-input-wrap.suffix-w-s,
+.actuators-panel .actuators-climate-block .actuator-input-wrap.suffix-w-s,
+.actuators-panel .actuators-pumps-block .actuator-input-wrap.suffix-w-s,
+.actuators-panel .actuators-pumps-block .actuator-param.wide-param .actuator-input-wrap.suffix-w-s {
+  width: var(--actuator-input-w-s);
+  max-width: var(--actuator-input-w-s);
 }
 .actuator-param select.field-control {
   width: var(--actuator-select-w);
@@ -1692,14 +1723,16 @@ body.modal-open {
   flex: 0 0 auto;
   max-width: 100%;
 }
-#setup-pane-growbox .cultivation-pot-card > .compact-row .mini-cell .field-control {
+#setup-pane-growbox .cultivation-pot-card > .compact-row .mini-cell .field-input-wrap {
   width: var(--cultivation-input-w);
   max-width: 100%;
-  padding-left: 0.14rem;
-  padding-right: 0.14rem;
 }
-#setup-pane-growbox .cultivation-pot-card > .compact-row .mini-cell.wide .field-control {
+#setup-pane-growbox .cultivation-pot-card > .compact-row .mini-cell.wide .field-input-wrap {
   width: var(--cultivation-input-w-wide);
+}
+#setup-pane-growbox .cultivation-pot-card > .compact-row .mini-cell .field-input-wrap .field-control {
+  width: 100%;
+  padding-left: 0.14rem;
 }
 #setup-pane-growbox .setup-actuators-block {
   margin-top: 0.55rem;
