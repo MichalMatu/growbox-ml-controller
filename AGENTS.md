@@ -31,7 +31,22 @@ Efekt: marnowanie wysokości, brak spójności z Czujnikami i Aktuatorami.
 
 Testy są źródłem prawdy: `tests/test_panel_layout.py`.
 
+### Układ strony
+
+- **Lewa kolumna** — `card-stack`: Sterowanie, potem karty formularza **jedna pod drugą** (`#form-sections.card-stack`)
+- **Prawa kolumna** — Na żywo, Poprzedni stan, Limity safety
+- Donice w parametrach: **ta sama szerokość** karty co w Czujnikach (`--pot-card-w`), 3 pola w poziomym gridzie
+
+**Antywzorzec układu strony (puste dziury):**
+
+- `.form-grid` z kartami o różnej wysokości obok siebie (np. Czujniki | Cele)
+- `.growbox-params-split` (Obudowa obok Donic) — zostawia pustą przestrzeń
+- siatka 2-kolumnowa na Aktuary (Klimat | Pompy), gdy jedna połowa jest niższa
+
+Nie „optymalizuj” na jeden ekran kosztem pustych pól — lepiej zwarty pionowy stos.
+
 ### Pliki panelu
 
 - Render: `tools/panel/static/js/form.js` (`renderZoneCultivationCard`, `renderPotCard`, `renderActuatorGroupCell`, …)
-- Style: `tools/panel/static/panel.css` (`.compact-row`, `.pot-card`, `.cultivation-pot-card`, `.pot-card-sensors`)
+- Style: `tools/panel/static/panel.css` (`.card-stack`, `.compact-row`, `.pot-card`, `.cultivation-pot-card`)
+- Szkielet: `tools/panel/static/index.html`

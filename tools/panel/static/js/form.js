@@ -1,5 +1,10 @@
 function shortLabel(name) {
   if (LABEL_MAP[name]) return LABEL_MAP[name];
+  if (typeof OUTPUT_LABELS !== "undefined" && OUTPUT_LABELS[name]) return OUTPUT_LABELS[name];
+  const zoneTarget = name.match(/^zone_(\d+)_target_soil_moisture_pct$/);
+  if (zoneTarget) return `Donica ${zoneTarget[1]}`;
+  const zoneAvail = name.match(/^zone_(\d+)_available$/);
+  if (zoneAvail) return `Donica ${zoneAvail[1]}`;
   const zonePrev = name.match(/^zone_(\d+)_previous_irrigation$/);
   if (zonePrev) return `Pompa ${zonePrev[1]}`;
   const zoneIrr = name.match(/^zone_\d+_irrigation_(.+)$/);
@@ -39,6 +44,9 @@ const FIELD_CONTROL_CLASS = "field-control";
 
 function fieldHint(name) {
   if (FIELD_HINTS[name]) return FIELD_HINTS[name];
+  if (/^zone_\d+_target_soil_moisture_pct$/.test(name)) {
+    return FIELD_HINTS.target_soil_moisture_pct || "";
+  }
   const zoneIrr = name.match(/^zone_\d+_irrigation_(.+)$/);
   if (zoneIrr) {
     const baseKey = `irrigation_${zoneIrr[1]}`;
@@ -495,16 +503,48 @@ function renderActuatorBlock() {
   </div>`;
 }
 
+function renderSafetyParamCell(title, fieldNames) {
+  const paramFields = fieldNames.map(name => fieldByName(name)).filter(Boolean);
+  const wide = paramFields.some(isWideField) ? " wide" : "";
+  const stack = `<div class="field-stack">${paramFields.map(renderActuatorParamField).join("")}</div>`;
+  return `<div class="mini-cell actuator-cell${wide}">
+    <div class="head-row"><span class="name">${title}</span></div>
+    ${stack}
+  </div>`;
+}
+
+function renderSafetyFieldsSubCard(title, fieldNames) {
+  const cells = fieldNames.map(name => fieldByName(name)).filter(Boolean).map(renderMiniCell).join("");
+  if (!cells) return "";
+  return `<div class="sub-card"><div class="card-head"><h3>${title}</h3></div><div class="compact-row">${cells}</div></div>`;
+}
+
+function renderSafetyBlock() {
+  const temperature = renderSafetyFieldsSubCard("Temperatura", SAFETY_TEMPERATURE_FIELDS);
+  const rules = renderSafetyFieldsSubCard("Reguły", SAFETY_RULE_FIELDS);
+  const co2 = renderSafetyFieldsSubCard("CO₂", SAFETY_CO2_FIELDS);
+  const irrigation = renderSafetyFieldsSubCard("Podlewanie", SAFETY_IRRIGATION_FIELDS);
+  const antiflapCells = SAFETY_ANTIFLAP_GROUPS.map(([title, names]) =>
+    renderSafetyParamCell(title, names)
+  ).join("");
+  const antiflap = `<div class="sub-card"><div class="card-head"><h3>Anty-flapping</h3></div><div class="compact-row">${antiflapCells}</div></div>`;
+  return `<div class="card safety-panel">${renderSectionHead("Limity safety", "safety")}
+    <div class="targets-split">${temperature}${rules}</div>
+    <div class="targets-split">${co2}${irrigation}</div>
+    ${antiflap}
+  </div>`;
+}
+
 function renderForm() {
   if (!panelSchema) return;
   const root = document.getElementById("form-sections");
-  const safetyRoot = document.getElementById("safety-section");
   root.innerHTML = renderSensorBlock();
   updateSeedInput();
   root.innerHTML += renderGrowboxPanel();
   root.innerHTML += renderTargetsBlock();
   root.innerHTML += `<div class="card actuators-panel">${renderSectionHead("Aktuary", "actuators")}${renderActuatorBlock()}</div>`;
   const previousRoot = document.getElementById("previous-section");
+  const safetyRoot = document.getElementById("safety-section");
   if (previousRoot) {
     previousRoot.innerHTML = renderPreviousBlock();
   }
@@ -512,7 +552,7 @@ function renderForm() {
     safetyRoot.innerHTML = "";
     const safetySection = sectionById("safety");
     if (safetySection) {
-      safetyRoot.innerHTML = renderFieldsSubCard(safetySection, "safety");
+      safetyRoot.innerHTML = renderSafetyBlock();
     }
   }
 }

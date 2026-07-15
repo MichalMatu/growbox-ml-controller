@@ -427,6 +427,10 @@ main {
   padding: var(--card-gap) var(--panel-pad) var(--panel-pad);
   align-items: start;
 }
+.left-panel,
+.right-panel {
+  min-width: 0;
+}
 @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
 .panel-toolbar .compact-row { margin-top: 0; }
 .panel-toolbar .mini-cell.toolbar-cell {
@@ -709,23 +713,25 @@ button.danger { background: var(--danger-bg); border-color: var(--danger); color
   width: 100%;
   max-width: 100%;
 }
-/* Cultivation params: horizontal row per donica (see tests/test_panel_layout.py). */
+/* Cultivation: same pot width as czujniki; 3 fields in horizontal grid (test_panel_layout.py). */
 .pot-card.cultivation-pot-card {
-  width: auto;
-  min-width: calc(3 * var(--cell-w-wide) + 2 * var(--cell-gap) + 0.75rem);
+  width: var(--pot-card-w);
+  min-width: var(--pot-card-w);
 }
 .cultivation-pot-card > .compact-row {
-  flex-wrap: nowrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--gap-xs);
   width: 100%;
 }
-.cultivation-pot-card > .compact-row .mini-cell {
-  width: var(--cell-w);
-  min-width: var(--cell-w);
-  flex-shrink: 0;
-}
+.cultivation-pot-card > .compact-row .mini-cell,
 .cultivation-pot-card > .compact-row .mini-cell.wide {
-  width: var(--cell-w-wide);
-  min-width: var(--cell-w-wide);
+  width: 100%;
+  min-width: 0;
+  padding: 0.18rem 0.12rem 0.2rem;
+}
+.cultivation-pot-card .name {
+  font-size: var(--text-2xs);
 }
 .pots-block .sub-card {
   overflow-x: auto;
@@ -906,6 +912,10 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
 .targets-panel .sub-card .compact-row,
 .safety-panel .sub-card .compact-row {
   justify-content: flex-start;
+}
+.safety-panel .targets-split + .targets-split,
+.safety-panel .targets-split + .sub-card {
+  margin-top: var(--cell-gap);
 }
 .live-no-target {
   color: var(--muted);

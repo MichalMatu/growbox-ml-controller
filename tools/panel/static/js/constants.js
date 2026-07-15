@@ -77,14 +77,15 @@ const HELP_TOPICS = {
     title: "Limity safety",
     html: `
       <p>Deterministyczne reguły <strong>SafetySupervisor</strong> — nie wchodzą do modelu ML, ale korygują <strong>safe_output</strong> (zielone paski).</p>
+      <p>Podkarty: <strong>Temperatura</strong>, <strong>Reguły</strong>, <strong>CO₂</strong>, <strong>Podlewanie</strong>, <strong>Anty-flapping</strong> (ON/OFF s per aktuator).</p>
       <ul>
         <li><strong>T max</strong> — powyżej tej temperatury grzałka jest blokowana</li>
         <li><strong>Alarm T</strong> + <strong>Fan min</strong> — przy alarmie wymuszany minimalny fan</li>
         <li><strong>Próg bin</strong> — próg ON/OFF dla aktuatorów typu bin (domyślnie 0.5)</li>
-        <li><strong>Grz./Naw. ON/OFF s</strong> — anty-flapping dla aktuatorów binarnych</li>
-        <li><strong>ΔT nawóz–gleba</strong> + <strong>min. temp. roztworu</strong> — blokada podlewania</li>
+        <li><strong>Anty-flapping</strong> — min. czas ON/OFF dla grzałki, nawilżacza, osuszacza i chłodzenia</li>
+        <li><strong>ΔT max</strong> + <strong>Min. roztwór</strong> — blokada podlewania</li>
       </ul>
-      <p>Po zmianie kliknij <strong>Wyślij</strong>. W JSON decyzji: <code>diagnostics.safety_reason</code>.</p>
+      <p>Prawa kolumna, pod <strong>Poprzedni stan</strong>. Po zmianie kliknij <strong>Wyślij</strong>. W JSON decyzji: <code>diagnostics.safety_reason</code>.</p>
     `,
   },
   previous: {
@@ -127,7 +128,14 @@ const LABEL_MAP = {
   nutrient_solution_temperature_c: "Roztwór",
   soil_moisture_pct: "Gleba",
   soil_temperature_c: "Gleba T",
-  zone_1_available: "Strefa 1",
+  zone_1_available: "Donica 1",
+  zone_2_available: "Donica 2",
+  zone_3_available: "Donica 3",
+  zone_4_available: "Donica 4",
+  zone_1_target_soil_moisture_pct: "Donica 1",
+  zone_2_target_soil_moisture_pct: "Donica 2",
+  zone_3_target_soil_moisture_pct: "Donica 3",
+  zone_4_target_soil_moisture_pct: "Donica 4",
   lights_active: "Lampa",
   outside_temperature_c: "Temp",
   outside_humidity_pct: "Wilg.",
@@ -162,10 +170,17 @@ const LABEL_MAP = {
   alarm_air_temperature_c: "Alarm T",
   alarm_minimum_fan: "Fan min",
   binary_threshold: "Próg bin",
-  heater_minimum_on_s: "Grz. ON s",
-  heater_minimum_off_s: "Grz. OFF s",
-  humidifier_minimum_on_s: "Naw. ON s",
-  humidifier_minimum_off_s: "Naw. OFF s",
+  heater_minimum_on_s: "ON s",
+  heater_minimum_off_s: "OFF s",
+  humidifier_minimum_on_s: "ON s",
+  humidifier_minimum_off_s: "OFF s",
+  dehumidifier_minimum_on_s: "ON s",
+  dehumidifier_minimum_off_s: "OFF s",
+  cooler_minimum_on_s: "ON s",
+  cooler_minimum_off_s: "OFF s",
+  co2_doser_minimum_interval_s: "Przerwa s",
+  co2_doser_maximum_pulse_s: "Impuls s",
+  fan_venting_co2_threshold: "Fan CO₂",
   previous_heater: "Grzałka",
   previous_fan: "Fan",
   previous_humidifier: "Nawilż.",
@@ -263,6 +278,34 @@ const PREVIOUS_GLOBAL_FIELDS = [
   "previous_dehumidifier",
   "previous_cooler",
   "previous_co2_doser",
+];
+
+const SAFETY_TEMPERATURE_FIELDS = [
+  "maximum_air_temperature_c",
+  "alarm_air_temperature_c",
+  "alarm_minimum_fan",
+];
+
+const SAFETY_RULE_FIELDS = [
+  "binary_threshold",
+  "fan_venting_co2_threshold",
+];
+
+const SAFETY_CO2_FIELDS = [
+  "co2_doser_minimum_interval_s",
+  "co2_doser_maximum_pulse_s",
+];
+
+const SAFETY_IRRIGATION_FIELDS = [
+  "maximum_nutrient_soil_delta_c",
+  "minimum_nutrient_solution_temperature_c",
+];
+
+const SAFETY_ANTIFLAP_GROUPS = [
+  ["Grzałka", ["heater_minimum_on_s", "heater_minimum_off_s"]],
+  ["Nawilżacz", ["humidifier_minimum_on_s", "humidifier_minimum_off_s"]],
+  ["Osuszacz", ["dehumidifier_minimum_on_s", "dehumidifier_minimum_off_s"]],
+  ["Chłodzenie", ["cooler_minimum_on_s", "cooler_minimum_off_s"]],
 ];
 
 const PREVIOUS_PUMP_FIELDS = [
@@ -378,6 +421,15 @@ const FIELD_HINTS = {
   heater_minimum_off_s: "Min. czas grzałki OFF zanim można włączyć",
   humidifier_minimum_on_s: "Min. czas nawilżacza ON",
   humidifier_minimum_off_s: "Min. czas nawilżacza OFF",
+  dehumidifier_minimum_on_s: "Min. czas osuszacza ON",
+  dehumidifier_minimum_off_s: "Min. czas osuszacza OFF",
+  cooler_minimum_on_s: "Min. czas chłodzenia ON",
+  cooler_minimum_off_s: "Min. czas chłodzenia OFF",
+  co2_doser_minimum_interval_s: "Min. przerwa między dozowaniami CO₂ (sekundy)",
+  co2_doser_maximum_pulse_s: "Maks. czas jednego impulsu dozownika CO₂ (sekundy)",
+  fan_venting_co2_threshold: "Próg wentylacji CO₂ — fan wietrzy przy wysokim CO₂",
+  maximum_nutrient_soil_delta_c: "Maks. różnica temp. roztworu vs gleby — blokada podlewania",
+  minimum_nutrient_solution_temperature_c: "Min. temp. roztworu nawozu — blokada podlewania",
 };
 
 function validityHint(sensorKey) {
