@@ -21,12 +21,12 @@ const HELP_TOPICS = {
   sensors: {
     title: "Czujniki",
     html: `
-      <p>v2: 7 globalnych czujników + 4× gleba per strefa (sekcja Strefy). Każdy ma checkbox ważności.</p>
+      <p>v2: powietrze + gleba w jednej karcie. Checkbox przy polu = czujnik ważny (encoder + safety).</p>
       <ul>
-        <li><strong>Wewnętrzne</strong> — T, wilgotność, CO₂, temp. roztworu nawozu</li>
-        <li><strong>Zewnętrzne</strong> — T, wilgotność, CO₂ (wpływ na symulację)</li>
-        <li><strong>Strefy</strong> — wilgotność i temp. gleby per donica (mix &amp; match)</li>
-        <li><strong>Checkbox</strong> — odznaczony = nieważny (encoder + safety)</li>
+        <li><strong>Wewnętrzne</strong> — T, wilgotność, CO₂, temp. roztworu nawozu + <strong>Lampa</strong> (pseudo: świeci tak/nie, nie odczyt PPFD)</li>
+        <li><strong>Zewnętrzne</strong> — T, wilgotność, CO₂ (symulacja, nie ML)</li>
+        <li><strong>Donice</strong> — wilgotność i temp. gleby per donica; tick przy polu = czujnik podłączony</li>
+        <li><strong>Donica aktywna</strong> — checkbox w nagłówku wiersza = strefa w profilu</li>
       </ul>
     `,
   },
@@ -58,10 +58,9 @@ const HELP_TOPICS = {
     html: `
       <p>Co jest podłączone w growboxie i jakie ma limity. Checkbox przy nazwie = urządzenie jest w zestawie.</p>
       <ul>
-        <li><strong>typ</strong> — <code>bin</code> (wł/wył, próg 50%) lub <code>pwm</code> (0–100%). Po zmianie kliknij <strong>Wyślij</strong>.</li>
+        <li><strong>Klimat</strong> (6 kart) i <strong>Pompy</strong> (4 karty) — ten sam układ: nazwa, checkbox, parametry w poziomym rzędzie</li>
+        <li><strong>typ</strong> — <code>bin</code> / <code>pwm</code> na każdym aktuatorze klimatu i każdej pompie</li>
         <li><strong>Fan min</strong> — dolna granica PWM przy alarmie temperatury</li>
-        <li><strong>6 globalnych</strong> — grzałka, fan, nawilżacz, osuszacz, chłodzenie, CO₂</li>
-        <li><strong>4 pompy</strong> — w sekcji Strefy (per donica)</li>
       </ul>
       <p>Checkbox zmienia tylko <strong>formularz lokalny</strong> — na płytkę trafia dopiero po <strong>Wyślij</strong> (badge „lokalne”). Sekcja <strong>Na żywo</strong> pokazuje ostatni krok z płytki, nie podgląd formularza.</p>
       <p>Brak urządzenia (checkbox off) po wysłaniu → model i safety wymuszają 0 na tym wyjściu.</p>
@@ -72,9 +71,8 @@ const HELP_TOPICS = {
     html: `
       <p>Wartości zadane — do czego model ma dążyć.</p>
       <ul>
-        <li>Temperatura i wilgotność powietrza</li>
-        <li>CO₂</li>
-        <li>Cele gleby — per strefa w sekcji Strefy</li>
+        <li><strong>Powietrze</strong> — temperatura, wilgotność, CO₂ (cały box)</li>
+        <li><strong>Donice</strong> — docelowa wilgotność gleby per donica</li>
       </ul>
     `,
   },
@@ -100,30 +98,26 @@ const HELP_TOPICS = {
         <li>10 wyjść ML (6 globalnych + 4 pompy strefowe)</li>
         <li>Model używa tego jako kontekstu (histereza, płynność sterowania)</li>
       </ul>
-      <p>W panelu <strong>Na żywo</strong>, pod paskami aktuatorów. Po <strong>Krok</strong> pokazuje procenty z ostatnich wyjść <strong>Safety</strong> (kontekst modelu na następny krok).</p>
+      <p>Prawa kolumna, pod <strong>Na żywo</strong>. Po <strong>Krok</strong> wartości uzupełniają się z ostatnich wyjść <strong>Safety</strong> (kontekst modelu na następny krok).</p>
     `,
   },
   zones: {
-    title: "Strefy uprawy",
+    title: "Uprawa donic",
     html: `
-      <p>Do 4 donic — mix &amp; match. Każda strefa ma własne czujniki gleby, uprawę, cel wilgotności i pompę.</p>
+      <p>Parametry fizyczne doniczki w symulacji (nie odczyty z czujników).</p>
       <ul>
-        <li><strong>Aktywna</strong> — wyłączona strefa nie trafia do symulatora</li>
-        <li><strong>Czujniki</strong> — wilgotność i temp. gleby (osobne validity)</li>
-        <li><strong>Pompa</strong> — przepływ, impuls, przerwa, typ bin/pwm</li>
+        <li><strong>Don. L</strong> — objętość</li>
+        <li><strong>Woda mL</strong> — pojemność wodna podłoża</li>
+        <li><strong>Transp.</strong> — mnożnik transpiracji</li>
+        <li>Czujniki, cele i pompy — w sekcjach Czujniki, Cele i Aktuary</li>
       </ul>
     `,
   },
-  pseudo: {
-    title: "Wejścia pseudo",
-    html: `
-      <p><strong>lights_active</strong> — czy lampa świeci (harmonogram / readback przekaźnika). Wpływa na termikę symulatora, nie jest wyjściem ML.</p>
-    `,
-  },
+
   live: {
     title: "Na żywo",
     html: `
-      <p>Podgląd decyzji po <strong>Krok</strong>: czujniki globalne + 10 wyjść ML. Badge kroku u góry. <strong>Poprzedni stan</strong> — kontekst modelu na następny krok.</p>
+      <p>Podgląd decyzji po <strong>Krok</strong>: czujniki globalne + 10 wyjść ML. Badge kroku u góry. Edycja <strong>Poprzedni stan</strong> — osobna karta pod tą sekcją (prawa kolumna).</p>
       <p>Każdy aktuator ma <strong>dwa paski</strong>:</p>
       <ul>
         <li><strong>Model</strong> (niebieski) — co proponuje sieć neuronowa (0–100% mocy)</li>
@@ -167,6 +161,9 @@ const LABEL_MAP = {
   fan_control_type: "typ",
   humidifier_max_output_g_h: "g/h",
   humidifier_control_type: "typ",
+  dehumidifier_control_type: "typ",
+  cooler_control_type: "typ",
+  co2_doser_control_type: "typ",
   irrigation_control_type: "typ",
   irrigation_flow_ml_s: "mL/s",
   irrigation_maximum_pulse_s: "Impuls s",
@@ -225,6 +222,70 @@ const SENSOR_GROUPS = [
   },
 ];
 
+const POT_SENSOR_ROWS = [
+  {
+    title: "Donica 1",
+    zoneAvailable: "zone_1_available",
+    moisture: "soil_moisture_zone_1_pct",
+    moistureValid: "soil_moisture_zone_1_valid",
+    temp: "soil_temperature_zone_1_c",
+    tempValid: "soil_temperature_zone_1_valid",
+  },
+  {
+    title: "Donica 2",
+    zoneAvailable: "zone_2_available",
+    moisture: "soil_moisture_zone_2_pct",
+    moistureValid: "soil_moisture_zone_2_valid",
+    temp: "soil_temperature_zone_2_c",
+    tempValid: "soil_temperature_zone_2_valid",
+  },
+  {
+    title: "Donica 3",
+    zoneAvailable: "zone_3_available",
+    moisture: "soil_moisture_zone_3_pct",
+    moistureValid: "soil_moisture_zone_3_valid",
+    temp: "soil_temperature_zone_3_c",
+    tempValid: "soil_temperature_zone_3_valid",
+  },
+  {
+    title: "Donica 4",
+    zoneAvailable: "zone_4_available",
+    moisture: "soil_moisture_zone_4_pct",
+    moistureValid: "soil_moisture_zone_4_valid",
+    temp: "soil_temperature_zone_4_c",
+    tempValid: "soil_temperature_zone_4_valid",
+  },
+];
+
+const TARGET_AIR_FIELDS = [
+  "target_air_temperature_c",
+  "target_air_humidity_pct",
+  "target_co2_ppm",
+];
+
+const TARGET_SOIL_FIELDS = [
+  "zone_1_target_soil_moisture_pct",
+  "zone_2_target_soil_moisture_pct",
+  "zone_3_target_soil_moisture_pct",
+  "zone_4_target_soil_moisture_pct",
+];
+
+const PREVIOUS_GLOBAL_FIELDS = [
+  "previous_heater",
+  "previous_fan",
+  "previous_humidifier",
+  "previous_dehumidifier",
+  "previous_cooler",
+  "previous_co2_doser",
+];
+
+const PREVIOUS_PUMP_FIELDS = [
+  "zone_1_previous_irrigation",
+  "zone_2_previous_irrigation",
+  "zone_3_previous_irrigation",
+  "zone_4_previous_irrigation",
+];
+
 const LIVE_SENSOR_GROUPS = [
   {
     title: "Wewnętrzne",
@@ -248,13 +309,20 @@ const LIVE_SENSOR_GROUPS = [
 var SCENARIO_SYNC_KEYS = [
   "sensors", "validity", "zones", "pseudo", "environment", "actuators", "targets", "safety", "previous",
 ];
-const ACTUATOR_GROUPS = [
-  ["Grzałka", ["heater_available", "heater_max_power_w", "heater_efficiency"]],
-  ["Fan", ["fan_available", "fan_max_airflow_m3_h", "fan_minimum_command"]],
-  ["Nawilżacz", ["humidifier_available", "humidifier_max_output_g_h"]],
-  ["Osuszacz", ["dehumidifier_available", "dehumidifier_max_removal_g_h"]],
-  ["Chłodzenie", ["cooler_available", "cooler_max_cooling_w"]],
-  ["CO₂", ["co2_doser_available", "co2_doser_dose_ppm_per_full_pulse", "co2_doser_maximum_pulse_s"]],
+const ACTUATOR_CLIMATE_GROUPS = [
+  ["Grzałka", ["heater_available", "heater_max_power_w", "heater_efficiency", "heater_control_type"]],
+  ["Fan", ["fan_available", "fan_max_airflow_m3_h", "fan_minimum_command", "fan_control_type"]],
+  ["Nawilżacz", ["humidifier_available", "humidifier_max_output_g_h", "humidifier_control_type"]],
+  ["Osuszacz", ["dehumidifier_available", "dehumidifier_max_removal_g_h", "dehumidifier_control_type"]],
+  ["Chłodzenie", ["cooler_available", "cooler_max_cooling_w", "cooler_control_type"]],
+  ["CO₂", ["co2_doser_available", "co2_doser_dose_ppm_per_full_pulse", "co2_doser_maximum_pulse_s", "co2_doser_control_type"]],
+];
+
+const ACTUATOR_PUMP_GROUPS = [
+  ["Pompa 1", ["zone_1_irrigation_available", "zone_1_irrigation_flow_ml_s", "zone_1_irrigation_maximum_pulse_s", "zone_1_irrigation_minimum_interval_s", "zone_1_irrigation_control_type"]],
+  ["Pompa 2", ["zone_2_irrigation_available", "zone_2_irrigation_flow_ml_s", "zone_2_irrigation_maximum_pulse_s", "zone_2_irrigation_minimum_interval_s", "zone_2_irrigation_control_type"]],
+  ["Pompa 3", ["zone_3_irrigation_available", "zone_3_irrigation_flow_ml_s", "zone_3_irrigation_maximum_pulse_s", "zone_3_irrigation_minimum_interval_s", "zone_3_irrigation_control_type"]],
+  ["Pompa 4", ["zone_4_irrigation_available", "zone_4_irrigation_flow_ml_s", "zone_4_irrigation_maximum_pulse_s", "zone_4_irrigation_minimum_interval_s", "zone_4_irrigation_control_type"]],
 ];
 
 const OUTPUT_LABELS = {
@@ -268,6 +336,10 @@ const OUTPUT_LABELS = {
   irrigation_zone_2: "Pompa 2",
   irrigation_zone_3: "Pompa 3",
   irrigation_zone_4: "Pompa 4",
+  zone_1_target_soil_moisture_pct: "Donica 1",
+  zone_2_target_soil_moisture_pct: "Donica 2",
+  zone_3_target_soil_moisture_pct: "Donica 3",
+  zone_4_target_soil_moisture_pct: "Donica 4",
 };
 
 function isAvailabilityField(name) {
@@ -304,6 +376,9 @@ const FIELD_HINTS = {
   heater_control_type: "bin = przekaźnik wł/wył, pwm = modulacja mocy",
   fan_control_type: "Typowo pwm (regulacja obrotów). bin = wł/wył",
   humidifier_control_type: "Typowo bin (wł/wył). pwm = modulacja",
+  dehumidifier_control_type: "Typowo bin (wł/wył). pwm = modulacja mocy",
+  cooler_control_type: "Typowo bin (wł/wył). pwm = modulacja mocy",
+  co2_doser_control_type: "Typowo bin (impuls ON/OFF). pwm = modulacja długości impulsu",
   irrigation_control_type: "Typowo bin (impuls ON/OFF). pwm = długość impulsu z modelu",
   target_air_temperature_c: "Docelowa temperatura powietrza w growboxie",
   target_air_humidity_pct: "Docelowa wilgotność powietrza",

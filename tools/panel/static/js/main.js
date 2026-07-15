@@ -38,7 +38,6 @@ async function init() {
     scenario = sanitizeScenarioNumeric(loadScenarioDraft(panelSchema) || panelSchema.default_scenario);
   }
   renderForm();
-  renderPreviousLive();
   bindFormSync();
   setInterval(() => refreshState(), 900);
   refreshState();
@@ -155,7 +154,6 @@ function bindToolbar() {
           saveScenarioDraft();
           deviceScenarioSynced = false;
           renderForm();
-          renderPreviousLive();
         }, btn);
       } catch (_) { /* btn flash */ }
       return;

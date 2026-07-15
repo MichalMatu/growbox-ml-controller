@@ -161,7 +161,9 @@ class PanelHandler(BaseHTTPRequestHandler):
         self.send_response(HTTPStatus.OK)
         self.send_header("Content-Type", mime)
         self.send_header("Content-Length", str(len(body)))
-        if file_path.suffix in {".css", ".js", ".svg", ".ico"}:
+        if file_path.suffix in {".css", ".js"}:
+            self.send_header("Cache-Control", "no-cache")
+        elif file_path.suffix in {".svg", ".ico"}:
             self.send_header("Cache-Control", "public, max-age=3600")
         _panel_headers(self)
         self.end_headers()

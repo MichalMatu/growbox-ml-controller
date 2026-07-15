@@ -103,13 +103,6 @@
           <span id="live-inference-meta" class="legend-meta" hidden></span>
         </div>
         <div id="outputs-bars" class="outputs-empty">Uruchom <strong>Krok</strong>, aby zobaczyć wyjścia aktuatorów.</div>
-        <div class="previous-live" id="previous-live-box">
-          <div class="previous-live-head">
-            <h3>Poprzedni stan aktuatorów</h3>
-            <button type="button" class="help-btn" data-help="previous" aria-label="Pomoc — poprzedni stan">?</button>
-          </div>
-          <div id="previous-live" class="previous-live-grid" aria-live="polite"></div>
-        </div>
         <div class="json-actions btn-row">
           <button id="btn-json-scenario" class="ghost">JSON scenariusza</button>
           <button id="btn-json-decision" class="ghost">JSON decyzji</button>
@@ -118,6 +111,7 @@
           <button id="btn-json-diagnostics" class="ghost">Zasoby</button>
         </div>
       </div>
+      <div id="previous-section" class="card-stack"></div>
       <div id="safety-section" class="card-stack"></div>
     </section>
   </main>

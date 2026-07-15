@@ -1,5 +1,32 @@
 function shortLabel(name) {
-  return LABEL_MAP[name] || name.replace(/_/g, " ");
+  if (LABEL_MAP[name]) return LABEL_MAP[name];
+  const zonePrev = name.match(/^zone_(\d+)_previous_irrigation$/);
+  if (zonePrev) return `Pompa ${zonePrev[1]}`;
+  const zoneIrr = name.match(/^zone_\d+_irrigation_(.+)$/);
+  if (zoneIrr) {
+    const baseKey = `irrigation_${zoneIrr[1]}`;
+    if (LABEL_MAP[baseKey]) return LABEL_MAP[baseKey];
+  }
+  const zoneCult = name.match(/^zone_\d+_(pot_volume_l|substrate_water_capacity_ml|transpiration_factor)$/);
+  if (zoneCult && LABEL_MAP[zoneCult[1]]) return LABEL_MAP[zoneCult[1]];
+  return name.replace(/_/g, " ");
+}
+
+function syncPreviousFormInputs() {
+  document.querySelectorAll("#previous-section [data-path]").forEach((el) => {
+    const path = el.dataset.path;
+    if (!path) return;
+    const value = getNested(scenario, path);
+    if (el.type === "checkbox") {
+      el.checked = Boolean(value);
+      return;
+    }
+    if (el.tagName === "SELECT") {
+      el.value = value ?? "";
+      return;
+    }
+    el.value = formatFieldNumber(value ?? 0, path);
+  });
 }
 
 function formatEnumOptionLabel(value) {
@@ -11,7 +38,15 @@ function formatEnumOptionLabel(value) {
 const FIELD_CONTROL_CLASS = "field-control";
 
 function fieldHint(name) {
-  return FIELD_HINTS[name] || "";
+  if (FIELD_HINTS[name]) return FIELD_HINTS[name];
+  const zoneIrr = name.match(/^zone_\d+_irrigation_(.+)$/);
+  if (zoneIrr) {
+    const baseKey = `irrigation_${zoneIrr[1]}`;
+    if (FIELD_HINTS[baseKey]) return FIELD_HINTS[baseKey];
+  }
+  const zoneCult = name.match(/^zone_\d+_(pot_volume_l|substrate_water_capacity_ml|transpiration_factor)$/);
+  if (zoneCult && FIELD_HINTS[zoneCult[1]]) return FIELD_HINTS[zoneCult[1]];
+  return "";
 }
 
 function fieldControlClassAttr() {
@@ -24,6 +59,10 @@ function fieldByName(name) {
     if (hit) return hit;
   }
   return null;
+}
+
+function sectionById(id) {
+  return panelSchema.sections.find(section => section.id === id) || null;
 }
 
 function renderNumberField(field, extraClass = "field-num") {
@@ -112,27 +151,28 @@ function closeHelp() {
   updateModalLock();
 }
 
-function renderSensorMiniCell(sensorKey, validityKey) {
-  const sensorField = sensorFieldMeta(sensorKey);
+function renderPathSensorMiniCell(sensorField, validityField, displayLabel) {
   if (!sensorField) return "";
-  const sId = `f-sensors_${sensorKey}`;
-  const sVal = getNested(scenario, `sensors.${sensorKey}`);
-  const sensorPath = `sensors.${sensorKey}`;
+  const sensorPath = sensorField.path;
+  const sId = `f-${sensorPath.replaceAll(".", "_")}`;
+  const sVal = getNested(scenario, sensorPath);
   const step = fieldStepForPath(sensorPath);
   const displayValue = formatFieldNumber(sVal ?? sensorField.default, sensorPath);
-  const hint = fieldHint(sensorKey);
+  const hint = fieldHint(sensorField.name);
   const hintAttr = hint ? ` title="${hint}"` : "";
-  const validityControl = validityKey
+  const validityControl = validityField
     ? (() => {
-        const vId = `f-validity_${validityKey}`;
-        const vVal = getNested(scenario, `validity.${validityKey}`);
-        const vHint = validityHint(validityKey);
-        return `<input type="checkbox" data-path="validity.${validityKey}" id="${vId}" title="${vHint}" ${vVal ? "checked" : ""} />`;
+        const vId = `f-${validityField.path.replaceAll(".", "_")}`;
+        const vVal = getNested(scenario, validityField.path);
+        const vHint = validityField.path.startsWith("validity.")
+          ? validityHint(validityField.path.slice("validity.".length))
+          : "Odznaczony = odczyt nieważny (ML i safety ignorują)";
+        return `<input type="checkbox" data-path="${validityField.path}" id="${vId}" title="${vHint}" ${vVal ? "checked" : ""} />`;
       })()
     : "";
   return `<div class="mini-cell">
     <div class="head-row">
-      <span class="name"${hintAttr}>${shortLabel(sensorKey)}</span>
+      <span class="name"${hintAttr}>${displayLabel || shortLabel(sensorField.name)}</span>
       ${validityControl}
     </div>
     <input type="number"${fieldControlClassAttr()} data-path="${sensorPath}" id="${sId}"${hintAttr}
@@ -140,17 +180,81 @@ function renderSensorMiniCell(sensorKey, validityKey) {
   </div>`;
 }
 
-function renderSensorSubCard(title, sensors) {
+function renderSensorMiniCell(sensorKey, validityKey) {
+  const sensorField = sensorFieldMeta(sensorKey);
+  if (!sensorField) return "";
+  const sensorPath = `sensors.${sensorKey}`;
+  const wrappedSensor = {
+    path: sensorPath,
+    name: sensorKey,
+    minimum: sensorField.minimum,
+    maximum: sensorField.maximum,
+    default: sensorField.default,
+  };
+  const wrappedValidity = validityKey ? { path: `validity.${validityKey}`, name: validityKey } : null;
+  return renderPathSensorMiniCell(wrappedSensor, wrappedValidity, shortLabel(sensorKey));
+}
+
+function renderZoneAvailableTick(featureName) {
+  const field = fieldByName(featureName);
+  if (!field) return "";
+  const id = `f-${field.path.replaceAll(".", "_")}`;
+  const value = getNested(scenario, field.path);
+  return `<input type="checkbox" data-path="${field.path}" id="${id}" title="Odznaczone = donica wyłączona w profilu" ${value ? "checked" : ""} />`;
+}
+
+function renderPotCard(row) {
+  const moisture = renderPathSensorMiniCell(
+    fieldByName(row.moisture),
+    fieldByName(row.moistureValid),
+    "Wilg."
+  );
+  const temp = renderPathSensorMiniCell(
+    fieldByName(row.temp),
+    fieldByName(row.tempValid),
+    "Gleba T"
+  );
+  return `<div class="pot-card">
+    <div class="head-row">
+      <span class="name">${row.title}</span>
+      <span class="pot-card-avail" title="Donica w profilu">${renderZoneAvailableTick(row.zoneAvailable)}</span>
+    </div>
+    <div class="pot-card-sensors">${moisture}${temp}</div>
+  </div>`;
+}
+
+function renderPotsSubCard() {
+  const cards = POT_SENSOR_ROWS.map(renderPotCard).join("");
+  return `<div class="sub-card pots-block"><div class="card-head"><h3>Donice</h3></div><div class="compact-row pots-row">${cards}</div></div>`;
+}
+
+function renderLightsActiveCell() {
+  const field = fieldByName("lights_active");
+  if (!field) return "";
+  const id = "f-pseudo_lights_active";
+  const value = getNested(scenario, field.path);
+  const hint = "Harmonogram / readback przekaźnika — wpływa na termikę symulatora (wejście ML, nie czujnik)";
+  return `<div class="mini-cell pseudo-lights-cell">
+    <div class="head-row">
+      <span class="name" title="${hint}">${shortLabel(field.name)}</span>
+      <input type="checkbox" data-path="${field.path}" id="${id}" title="${hint}" ${value ? "checked" : ""} />
+    </div>
+  </div>`;
+}
+
+function renderSensorSubCard(title, sensors, extraCells = "") {
   const cells = sensors.map(([sensorKey, validityKey]) =>
     renderSensorMiniCell(sensorKey, validityKey)
   ).join("");
-  return `<div class="sub-card"><div class="card-head"><h3>${title}</h3></div><div class="compact-row">${cells}</div></div>`;
+  return `<div class="sub-card"><div class="card-head"><h3>${title}</h3></div><div class="compact-row">${cells}${extraCells}</div></div>`;
 }
 
 function renderSensorBlock() {
-  const left = renderSensorSubCard(SENSOR_GROUPS[0].title, SENSOR_GROUPS[0].sensors);
+  const lights = renderLightsActiveCell();
+  const left = renderSensorSubCard(SENSOR_GROUPS[0].title, SENSOR_GROUPS[0].sensors, lights);
   const right = renderSensorSubCard(SENSOR_GROUPS[1].title, SENSOR_GROUPS[1].sensors);
-  return `<div class="card growbox-panel">${renderSectionHead("Czujniki", "sensors")}<div class="growbox-split">${left}${right}</div></div>`;
+  const pots = renderPotsSubCard();
+  return `<div class="card growbox-panel sensors-panel">${renderSectionHead("Czujniki", "sensors")}<div class="growbox-split">${left}${right}</div>${pots}</div>`;
 }
 
 function updateSeedInput() {
@@ -176,9 +280,10 @@ function fieldStepForPath(path) {
     if (path.includes("threshold") || path.includes("minimum_fan")) return "0.01";
     return "0.1";
   }
-  if (path.startsWith("sensors.")) {
+  if (path.startsWith("sensors.") || (path.includes("zones.") && path.includes(".sensors."))) {
     return path.includes("co2") ? "1" : "0.1";
   }
+  if (path.includes("zones.") && path.includes(".targets.")) return "0.1";
   if (path.startsWith("previous.")) return "0.001";
   if (path.includes("pct") || path.includes("ratio") || path.includes("efficiency") || path.includes("minimum_command") || path.includes("transpiration")) {
     return "0.01";
@@ -293,50 +398,44 @@ function renderGrowboxPanel() {
   return `<div class="card growbox-panel">${renderSubCard(env.title, env.fields, "environment")}</div>`;
 }
 
-const ZONE_FIELD_GROUPS = [
-  { title: "Aktywna", match: path => path.endsWith(".available") },
-  {
-    title: "Czujniki gleby",
-    match: path => path.includes(".sensors.") || path.includes(".validity."),
-  },
-  { title: "Uprawa", match: path => path.includes(".cultivation.") },
-  { title: "Cel gleby", match: path => path.includes(".targets.") },
-  {
-    title: "Pompa",
-    match: path => path.includes(".irrigation.") || path.includes(".previous."),
-  },
-];
-
-function groupZoneFields(fields) {
-  const groups = ZONE_FIELD_GROUPS.map(group => ({
-    title: group.title,
-    fields: fields.filter(field => group.match(field.path)),
-  })).filter(group => group.fields.length > 0);
-  const matched = new Set(groups.flatMap(group => group.fields));
-  const rest = fields.filter(field => !matched.has(field));
-  if (rest.length) groups.push({ title: "Inne", fields: rest });
-  return groups;
+function renderTargetsBlock() {
+  const airFields = TARGET_AIR_FIELDS.map(name => fieldByName(name)).filter(Boolean);
+  const soilFields = TARGET_SOIL_FIELDS.map(name => fieldByName(name)).filter(Boolean);
+  const airCells = airFields.map(renderMiniCell).join("");
+  const soilCells = soilFields.map(renderMiniCell).join("");
+  return `<div class="card targets-panel">${renderSectionHead("Cele", "targets")}
+    <div class="targets-split">
+      <div class="sub-card"><div class="card-head"><h3>Powietrze</h3></div><div class="compact-row">${airCells}</div></div>
+      <div class="sub-card"><div class="card-head"><h3>Donice</h3></div><div class="compact-row">${soilCells}</div></div>
+    </div></div>`;
 }
 
-function renderZoneCard(fields, index) {
+function renderPreviousBlock() {
+  const globalFields = PREVIOUS_GLOBAL_FIELDS.map(name => fieldByName(name)).filter(Boolean);
+  const pumpFields = PREVIOUS_PUMP_FIELDS.map(name => fieldByName(name)).filter(Boolean);
+  const globalCells = globalFields.map(renderMiniCell).join("");
+  const pumpCells = pumpFields.map(renderMiniCell).join("");
+  return `<div class="card previous-panel">${renderSectionHead("Poprzedni stan aktuatorów", "previous")}
+    <div class="targets-split">
+      <div class="sub-card"><div class="card-head"><h3>Klimat</h3></div><div class="compact-row">${globalCells}</div></div>
+      <div class="sub-card"><div class="card-head"><h3>Pompy</h3></div><div class="compact-row">${pumpCells}</div></div>
+    </div></div>`;
+}
+
+function renderZoneCultivationCard(fields, index) {
   if (!fields.length) return "";
-  const groups = groupZoneFields(fields)
-    .map(group => {
-      const cells = group.fields.map(renderMiniCell).join("");
-      return `<div class="zone-subgroup"><div class="zone-subgroup-head">${group.title}</div><div class="compact-row">${cells}</div></div>`;
-    })
-    .join("");
-  return `<div class="sub-card zone-card"><div class="card-head"><h3>Strefa ${index + 1}</h3></div>${groups}</div>`;
+  const cells = fields.map(renderMiniCell).join("");
+  return `<div class="sub-card zone-card zone-card-slim"><div class="card-head"><h3>Donica ${index + 1}</h3></div><div class="compact-row">${cells}</div></div>`;
 }
 
-function renderZonesBlock(section) {
+function renderZonesCultivationBlock(section) {
   const zones = [[], [], [], []];
   for (const field of section.fields) {
-    const match = field.path.match(/^zones\.(\d+)\./);
+    const match = field.path.match(/^zones\.(\d+)\.cultivation\./);
     if (match) zones[Number(match[1])].push(field);
   }
-  const cards = zones.map((fields, index) => renderZoneCard(fields, index)).join("");
-  return `<div class="card zones-panel">${renderSectionHead(section.title, "zones")}<div class="zones-grid">${cards}</div></div>`;
+  const cards = zones.map((fields, index) => renderZoneCultivationCard(fields, index)).join("");
+  return `<div class="card zones-panel zones-cultivation-panel">${renderSectionHead("Uprawa donic", "zones")}<div class="zones-grid">${cards}</div></div>`;
 }
 
 function renderActuatorParamField(field) {
@@ -360,18 +459,17 @@ function renderActuatorParamField(field) {
   return `<div class="actuator-param${wideClass}">${label}${control}</div>`;
 }
 
-function renderActuatorGroupCell(title, names, byName) {
+function renderActuatorGroupCell(title, names) {
   const availableName = names.find(n => n.endsWith("_available"));
-  const availableField = availableName ? byName[availableName] : null;
-  const paramFields = names.filter(n => n !== availableName).map(n => byName[n]).filter(Boolean);
-  const isIrrigation = title === "Pompa";
-  const wide = paramFields.some(isWideField) || isIrrigation ? " wide" : "";
+  const availableField = availableName ? fieldByName(availableName) : null;
+  const paramFields = names.filter(n => n !== availableName).map(n => fieldByName(n)).filter(Boolean);
+  const wide = paramFields.some(isWideField) ? " wide" : "";
   const availId = availableField ? `f-${availableField.path.replaceAll(".", "_")}` : "";
   const availVal = availableField ? getNested(scenario, availableField.path) : false;
   const availHint = availableField ? fieldHint(availableField.name) : "";
   const availHintAttr = availHint ? ` title="${availHint}"` : "";
   const stack = `<div class="field-stack">${paramFields.map(renderActuatorParamField).join("")}</div>`;
-  return `<div class="mini-cell actuator-cell${wide}${isIrrigation ? " actuator-cell-irrigation" : ""}">
+  return `<div class="mini-cell actuator-cell${wide}">
     <div class="head-row">
       <span class="name">${title}</span>
       ${availableField ? `<input type="checkbox" data-path="${availableField.path}" id="${availId}"${availHintAttr} ${availVal ? "checked" : ""} />` : ""}
@@ -380,10 +478,17 @@ function renderActuatorGroupCell(title, names, byName) {
   </div>`;
 }
 
-function renderActuatorBlock(section) {
-  const byName = Object.fromEntries(section.fields.map(f => [f.name, f]));
-  const cells = ACTUATOR_GROUPS.map(([title, names]) => renderActuatorGroupCell(title, names, byName)).join("");
-  return `<div class="compact-row">${cells}</div>`;
+function renderActuatorRow(groups) {
+  return groups.map(([title, names]) => renderActuatorGroupCell(title, names)).join("");
+}
+
+function renderActuatorBlock() {
+  const climate = renderActuatorRow(ACTUATOR_CLIMATE_GROUPS);
+  const pumps = renderActuatorRow(ACTUATOR_PUMP_GROUPS);
+  return `<div class="actuators-split">
+    <div class="sub-card"><div class="card-head"><h3>Klimat</h3></div><div class="compact-row">${climate}</div></div>
+    <div class="sub-card"><div class="card-head"><h3>Pompy</h3></div><div class="compact-row">${pumps}</div></div>
+  </div>`;
 }
 
 function renderForm() {
@@ -393,31 +498,21 @@ function renderForm() {
   root.innerHTML = renderSensorBlock();
   updateSeedInput();
   root.innerHTML += renderGrowboxPanel();
-  if (safetyRoot) safetyRoot.innerHTML = "";
-  for (const section of panelSchema.sections) {
-    if (section.id === "sensors" || section.id === "validity"
-        || section.id === "environment" || section.id === "cultivation") continue;
-    if (section.id === "zones") {
-      root.innerHTML += renderZonesBlock(section);
-      continue;
-    }
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerHTML = `<h2>${section.title}</h2>`;
-    if (section.id === "actuators") {
-      root.innerHTML += `<div class="card">${renderSectionHead(section.title, "actuators")}${renderActuatorBlock(section)}</div>`;
-    } else if (section.id === "safety") {
-      if (safetyRoot) {
-        safetyRoot.innerHTML = renderFieldsSubCard(section, section.id);
-      }
-    } else if (section.id === "targets" || section.id === "previous" || section.id === "pseudo") {
-      root.innerHTML += renderFieldsSubCard(section, section.id);
-    } else {
-      const grid = document.createElement("div");
-      grid.className = "section-grid";
-      grid.innerHTML = section.fields.map(renderField).join("");
-      card.appendChild(grid);
-      root.appendChild(card);
+  root.innerHTML += renderTargetsBlock();
+  root.innerHTML += `<div class="card actuators-panel">${renderSectionHead("Aktuary", "actuators")}${renderActuatorBlock()}</div>`;
+  const zonesSection = sectionById("zones");
+  if (zonesSection) {
+    root.innerHTML += renderZonesCultivationBlock(zonesSection);
+  }
+  const previousRoot = document.getElementById("previous-section");
+  if (previousRoot) {
+    previousRoot.innerHTML = renderPreviousBlock();
+  }
+  if (safetyRoot) {
+    safetyRoot.innerHTML = "";
+    const safetySection = sectionById("safety");
+    if (safetySection) {
+      safetyRoot.innerHTML = renderFieldsSubCard(safetySection, "safety");
     }
   }
 }

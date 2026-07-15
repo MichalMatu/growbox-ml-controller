@@ -179,33 +179,25 @@ function outputLabel(name) {
   return OUTPUT_LABELS[name] || name.replace(/_/g, " ");
 }
 
-function renderPreviousLive(decision = lastDecision) {
-  const el = document.getElementById("previous-live");
-  if (!el) return;
-  const prev = scenario.previous || {};
-  const visible = panelOutputNames().filter(name => resolveActuatorAvailability(name, decision));
-  if (!visible.length) {
-    el.innerHTML = '<span class="previous-live-empty">Brak aktywnych aktuatorów w scenariuszu</span>';
-    return;
-  }
-  el.innerHTML = visible.map(name => {
-    const pct = formatOutputPct(prev[name]);
-    return `<div class="previous-live-item">
-      <span class="previous-live-label">${outputLabel(name)}</span>
-      <span class="previous-live-pct">${pct}%</span>
-    </div>`;
-  }).join("");
-}
-
 function syncPreviousActuators(safe, decision = lastDecision) {
   if (!safe || typeof safe !== "object") return;
   if (!scenario.previous) scenario.previous = {};
+  if (!Array.isArray(scenario.zones)) scenario.zones = [];
   for (const name of panelOutputNames()) {
-    scenario.previous[name] = resolveActuatorAvailability(name, decision)
-      ? (Number(safe[name]) || 0)
-      : 0;
+    const value = resolveActuatorAvailability(name, decision) ? (Number(safe[name]) || 0) : 0;
+    const zoneMatch = name.match(/^irrigation_zone_(\d+)$/);
+    if (zoneMatch) {
+      const zoneIndex = Number(zoneMatch[1]) - 1;
+      if (!scenario.zones[zoneIndex]) scenario.zones[zoneIndex] = {};
+      if (!scenario.zones[zoneIndex].previous) scenario.zones[zoneIndex].previous = {};
+      scenario.zones[zoneIndex].previous.irrigation = value;
+      continue;
+    }
+    scenario.previous[name] = value;
   }
-  renderPreviousLive(decision);
+  if (typeof syncPreviousFormInputs === "function") {
+    syncPreviousFormInputs();
+  }
   saveScenarioDraft();
 }
 

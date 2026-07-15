@@ -263,7 +263,6 @@ function tryApplyScenarioFromDevice(state, { force = false } = {}) {
     previous: snap.previous,
   }));
   renderForm();
-  renderPreviousLive();
   saveScenarioDraft();
   deviceScenarioSynced = true;
   updateScenarioSyncBadge();

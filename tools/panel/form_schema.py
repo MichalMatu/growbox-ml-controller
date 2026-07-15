@@ -82,28 +82,34 @@ NOMINAL_PRESET: dict[str, Any] = {
             "available": True,
             "max_power_w": 180.0,
             "efficiency": 0.9,
+            "control_type": "binary",
         },
         "fan": {
             "available": True,
             "max_airflow_m3_h": 120.0,
             "minimum_command": 0.2,
+            "control_type": "pwm",
         },
         "humidifier": {
             "available": True,
             "max_output_g_h": 180.0,
+            "control_type": "binary",
         },
         "dehumidifier": {
             "available": False,
             "max_removal_g_h": 80.0,
+            "control_type": "binary",
         },
         "cooler": {
             "available": False,
             "max_cooling_w": 200.0,
+            "control_type": "binary",
         },
         "co2_doser": {
             "available": False,
             "dose_ppm_per_full_pulse": 120.0,
             "maximum_pulse_s": 3.0,
+            "control_type": "binary",
         },
     },
     "targets": {
@@ -383,6 +389,8 @@ def default_scenario(*, seed: int = 101, preset: str = "nominal") -> dict[str, A
     safety_defaults = contract.document.get("safety_defaults", {})
     if safety_defaults:
         scenario = _deep_merge(scenario, {"safety": dict(safety_defaults)})
+    for _, path, default_name in PANEL_ACTUATOR_CONTROL_FIELDS:
+        _set_nested(scenario, path, default_name)
     _normalize_zones(scenario)
     scenario["seed"] = seed
     return scenario
@@ -405,6 +413,41 @@ def _field_type(feature_path: str, encoding: dict[str, float] | None) -> str:
     if feature_path.endswith(".available") or feature_path.startswith("validity."):
         return "boolean"
     return "number"
+
+
+_BINARY_PWM_ENCODING: dict[str, float] = {"binary": 0.0, "pwm": 1.0}
+
+PANEL_ACTUATOR_CONTROL_FIELDS: tuple[tuple[str, str, str], ...] = (
+    ("heater_control_type", "actuators.heater.control_type", "binary"),
+    ("fan_control_type", "actuators.fan.control_type", "pwm"),
+    ("humidifier_control_type", "actuators.humidifier.control_type", "binary"),
+    ("dehumidifier_control_type", "actuators.dehumidifier.control_type", "binary"),
+    ("cooler_control_type", "actuators.cooler.control_type", "binary"),
+    ("co2_doser_control_type", "actuators.co2_doser.control_type", "binary"),
+)
+
+
+def _panel_actuator_control_fields() -> list[dict[str, Any]]:
+    fields: list[dict[str, Any]] = []
+    for name, path, default_name in PANEL_ACTUATOR_CONTROL_FIELDS:
+        default_encoded = _BINARY_PWM_ENCODING[default_name]
+        fields.append(
+            {
+                "feature_index": -1,
+                "name": name,
+                "path": path,
+                "label": name,
+                "type": "enum",
+                "minimum": 0.0,
+                "maximum": 1.0,
+                "default": default_encoded,
+                "options": [
+                    {"value": option, "encoded": encoded}
+                    for option, encoded in _BINARY_PWM_ENCODING.items()
+                ],
+            }
+        )
+    return fields
 
 
 def _section_for_path(path: str) -> str:
@@ -449,6 +492,8 @@ def build_panel_schema(contract: Contract | None = None) -> dict[str, Any]:
                 {"value": name, "encoded": encoded} for name, encoded in feature.encoding.items()
             ]
         sections.setdefault(section, []).append(field)
+
+    sections["actuators"].extend(_panel_actuator_control_fields())
 
     ordered_sections = []
     for section_id in SECTION_ORDER:

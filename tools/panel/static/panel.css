@@ -82,13 +82,13 @@
   --gap-sm: 0.2rem;
   --gap-md: 0.28rem;
   --gap-lg: 0.35rem;
-  --panel-pad: 0.5rem;
-  --card-gap: 0.4rem;
-  --card-pad-y: 0.42rem;
-  --card-pad-x: 0.52rem;
+  --panel-pad: 0.42rem;
+  --card-gap: 0.32rem;
+  --card-pad-y: 0.34rem;
+  --card-pad-x: 0.42rem;
   --card-title-font: var(--text-md);
   --card-subtitle-font: var(--text-sm);
-  --cell-gap: 0.3rem;
+  --cell-gap: 0.22rem;
   --toolbar-h: 1.46rem;
   --toolbar-font: var(--text-sm);
   --toolbar-pad-x: 0.38rem;
@@ -100,8 +100,8 @@
   --btn-bg: var(--surface-elevated);
   --field-font: var(--text-base);
   --field-label-font: var(--text-sm);
-  --field-pad-y: 0.22rem;
-  --field-pad-x: 0.3rem;
+  --field-pad-y: 0.18rem;
+  --field-pad-x: 0.22rem;
   --field-pad-x-select: 0.1rem;
   --field-pad-x-select-left: 0.16rem;
   --field-border: #3a4d68;
@@ -110,16 +110,18 @@
   --control-font: var(--text-lg);
   --control-pad: 0.28rem 0.4rem;
   --control-radius: var(--field-radius);
-  --cell-w: 5.4rem;
-  --cell-w-wide: 6.6rem;
-  --cell-pad: 0.35rem 0.4rem 0.4rem;
-  --cell-gap-inner: var(--gap-md);
+  --cell-w: 4.35rem;
+  --cell-w-wide: 5.25rem;
+  --pot-sensor-w: var(--cell-w);
+  --pot-card-w: calc(2 * var(--pot-sensor-w) + var(--cell-gap) + 0.75rem);
+  --cell-pad: 0.26rem 0.3rem 0.3rem;
+  --cell-gap-inner: var(--gap-sm);
   --cell-radius: 6px;
   --cell-bg: var(--surface-subtle);
-  --sub-card-pad: 0.35rem 0.4rem;
-  --actuator-input-w: 3.1rem;
-  --actuator-input-w-wide: 3.8rem;
-  --actuator-select-w: 2.8rem;
+  --sub-card-pad: 0.28rem 0.3rem;
+  --actuator-input-w: 2.55rem;
+  --actuator-input-w-wide: 3.15rem;
+  --actuator-select-w: 2.35rem;
   --actuator-stack-gap: 0.22rem 0.28rem;
   --live-pad-cell: 0.2rem 0.24rem;
   --live-pad-table: 0.3rem 0.42rem;
@@ -584,7 +586,7 @@ main {
   align-items: center;
   justify-content: space-between;
   gap: 0.35rem;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.26rem;
 }
 .card-head h2, .card-head h3 {
   margin: 0;
@@ -656,6 +658,71 @@ button.primary { background: var(--accent); color: var(--on-accent); border-colo
 button.ghost { background: transparent; border-color: var(--border); color: var(--muted); }
 button.danger { background: var(--danger-bg); border-color: var(--danger); color: var(--danger-text); }
 
+.pots-block {
+  margin-top: 0.55rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid var(--border);
+}
+.pots-row {
+  align-items: flex-start;
+  flex-wrap: nowrap;
+}
+.pot-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cell-gap-inner);
+  flex: 0 0 auto;
+  width: var(--pot-card-w);
+  min-width: var(--pot-card-w);
+  padding: var(--cell-pad);
+  border: 1px solid var(--border);
+  border-radius: var(--cell-radius);
+  background: var(--cell-bg);
+}
+.pot-card > .head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  min-width: 0;
+}
+.pot-card > .head-row .name {
+  font-size: var(--field-label-font);
+  color: var(--muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.pot-card-avail input[type="checkbox"] { margin: 0; flex-shrink: 0; }
+.pot-card-sensors {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--cell-gap);
+  width: 100%;
+  align-items: start;
+}
+.pot-card .mini-cell {
+  width: 100%;
+  min-width: 0;
+  padding: var(--cell-pad);
+}
+.pot-card .mini-cell .field-control {
+  width: 100%;
+  max-width: 100%;
+}
+.pots-block .sub-card {
+  overflow-x: auto;
+}
+@media (max-width: 520px) {
+  .pots-row { flex-wrap: wrap; }
+}
+.targets-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--cell-gap);
+}
+@media (max-width: 700px) {
+  .targets-split { grid-template-columns: 1fr; }
+}
 .zones-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -698,7 +765,7 @@ button.danger { background: var(--danger-bg); border-color: var(--danger); color
 }
 @media (max-width: 1100px) { .section-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 700px) { .section-grid { grid-template-columns: repeat(2, 1fr); } }
-label.field-num input, label.field-num select { width: 100%; max-width: 4.8rem; }
+label.field-num input, label.field-num select { width: 100%; max-width: var(--cell-w); }
 label.field-wide input, label.field-wide select { max-width: 100%; }
 label.field-bool {
   flex-direction: row;
@@ -771,6 +838,11 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
 }
 .mini-cell .field-control {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+.field-control[type="number"] {
+  font-variant-numeric: tabular-nums;
 }
 .mini-cell.bool-only { justify-content: center; }
 .mini-cell.actuator-cell {
@@ -778,8 +850,13 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
   min-width: 0;
   gap: var(--cell-gap-inner);
 }
-.mini-cell.actuator-cell.actuator-cell-irrigation .field-stack {
-  flex-wrap: nowrap;
+.actuators-split {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cell-gap);
+}
+.actuators-split > .sub-card {
+  min-width: 0;
 }
 .mini-cell.actuator-cell .field-stack {
   display: flex;
