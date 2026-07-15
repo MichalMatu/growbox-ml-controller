@@ -2,7 +2,6 @@
 
 #include "DummyEnvironmentSimulator.h"
 
-#include <driver/uart.h>
 #include <esp_err.h>
 
 #include <cstddef>
@@ -30,9 +29,9 @@ class SerialJsonProtocol {
  public:
   static constexpr std::size_t kMaximumLineBytes = 1536U;
 
-  explicit SerialJsonProtocol(uart_port_t port = UART_NUM_0) noexcept : port_(port) {}
+  SerialJsonProtocol() noexcept = default;
 
-  esp_err_t begin(int baud_rate = 115200) noexcept;
+  esp_err_t begin() noexcept;
   void poll(DummyEnvironmentSimulator& simulator, DemoRuntimeState& runtime) noexcept;
 
  private:
@@ -43,7 +42,6 @@ class SerialJsonProtocol {
                   const DemoRuntimeState& runtime) const noexcept;
   void writeJson(cJSON* document) const noexcept;
 
-  uart_port_t port_;
   char line_[kMaximumLineBytes + 1U]{};
   std::size_t length_ = 0U;
   bool discarding_ = false;

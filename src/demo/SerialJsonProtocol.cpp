@@ -3,6 +3,7 @@
 #include "EnvironmentSchema.h"
 
 #include <cJSON.h>
+#include <driver/usb_serial_jtag.h>
 
 #include <cmath>
 #include <cstring>
@@ -204,41 +205,27 @@ bool parseActuators(const cJSON* object, control::ActuatorCapabilities& actuator
 
 }  // namespace
 
-esp_err_t SerialJsonProtocol::begin(int baud_rate) noexcept {
-  if (baud_rate <= 0) {
-    return ESP_ERR_INVALID_ARG;
-  }
-
-  uart_config_t config{};
-  config.baud_rate = baud_rate;
-  config.data_bits = UART_DATA_8_BITS;
-  config.parity = UART_PARITY_DISABLE;
-  config.stop_bits = UART_STOP_BITS_1;
-  config.flow_ctrl = UART_HW_FLOWCTRL_DISABLE;
-  config.source_clk = UART_SCLK_DEFAULT;
-
-  esp_err_t error = uart_param_config(port_, &config);
-  if (error != ESP_OK) {
-    return error;
-  }
-  error = uart_set_pin(port_, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE,
-                       UART_PIN_NO_CHANGE);
-  if (error != ESP_OK) {
-    return error;
-  }
-  if (!uart_is_driver_installed(port_)) {
-    error = uart_driver_install(port_, 4096, 0, 0, nullptr, 0);
+esp_err_t SerialJsonProtocol::begin() noexcept {
+  if (!usb_serial_jtag_is_driver_installed()) {
+    usb_serial_jtag_driver_config_t config = USB_SERIAL_JTAG_DRIVER_CONFIG_DEFAULT();
+    config.tx_buffer_size = 4096U;
+    config.rx_buffer_size = 4096U;
+    const esp_err_t error = usb_serial_jtag_driver_install(&config);
     if (error != ESP_OK) {
       return error;
     }
   }
-  return uart_flush_input(port_);
+
+  std::uint8_t discard[128]{};
+  while (usb_serial_jtag_read_bytes(discard, sizeof(discard), 0) > 0) {
+  }
+  return ESP_OK;
 }
 
 void SerialJsonProtocol::poll(DummyEnvironmentSimulator& simulator,
                               DemoRuntimeState& runtime) noexcept {
   std::uint8_t buffer[128]{};
-  const int received = uart_read_bytes(port_, buffer, sizeof(buffer), 0);
+  const int received = usb_serial_jtag_read_bytes(buffer, sizeof(buffer), 0);
   if (received <= 0) {
     return;
   }
@@ -458,8 +445,8 @@ void SerialJsonProtocol::writeJson(cJSON* document) const noexcept {
   }
   char* encoded = cJSON_PrintUnformatted(document);
   if (encoded != nullptr) {
-    uart_write_bytes(port_, encoded, std::strlen(encoded));
-    uart_write_bytes(port_, "\n", 1U);
+    usb_serial_jtag_write_bytes(encoded, std::strlen(encoded), 0);
+    usb_serial_jtag_write_bytes("\n", 1U, 0);
     cJSON_free(encoded);
   }
   cJSON_Delete(document);

@@ -1,5 +1,5 @@
 #include <cJSON.h>
-#include <driver/uart.h>
+#include <driver/usb_serial_jtag.h>
 #include <esp_err.h>
 #include <esp_heap_caps.h>
 #include <esp_idf_version.h>
@@ -36,14 +36,13 @@ using growbox::demo::DemoRuntimeState;
 using growbox::demo::DummyEnvironmentSimulator;
 using growbox::demo::SerialJsonProtocol;
 
-constexpr uart_port_t kSerialPort = UART_NUM_0;
-constexpr int kSerialBaud = 115200;
+
 constexpr std::uint64_t kRealStepIntervalMs = 1000U;
 constexpr float kSimulationStepSeconds = 10.0f;
 
 DummyEnvironmentSimulator simulator;
 EnvironmentController controller;
-SerialJsonProtocol protocol{kSerialPort};
+SerialJsonProtocol protocol;
 DemoRuntimeState runtime;
 std::uint64_t last_real_step_ms = 0U;
 
@@ -113,8 +112,8 @@ void writeLine(cJSON* document) noexcept {
   }
   char* encoded = cJSON_PrintUnformatted(document);
   if (encoded != nullptr) {
-    uart_write_bytes(kSerialPort, encoded, std::strlen(encoded));
-    uart_write_bytes(kSerialPort, "\n", 1U);
+    usb_serial_jtag_write_bytes(encoded, std::strlen(encoded), 0);
+    usb_serial_jtag_write_bytes("\n", 1U, 0);
     cJSON_free(encoded);
   }
   cJSON_Delete(document);
@@ -244,7 +243,7 @@ void runControllerStep() noexcept {
 }  // namespace
 
 extern "C" void app_main() {
-  ESP_ERROR_CHECK(protocol.begin(kSerialBaud));
+  ESP_ERROR_CHECK(protocol.begin());
   vTaskDelay(pdMS_TO_TICKS(250));
   emitStartup();
   last_real_step_ms = monotonicMilliseconds();
