@@ -144,7 +144,8 @@ function fieldSuffixSizeClass(suffix) {
 
 function renderWrappedNumberInput(field, opts = {}) {
   const id = opts.id || `f-${field.path.replaceAll(".", "_")}`;
-  const hintAttr = opts.hintAttr ?? fieldHintAttr(field.name);
+  const disabled = Boolean(opts.disabled);
+  const hintAttr = opts.hintAttr ?? (disabled ? inactiveZoneDependentHintAttr() : fieldHintAttr(field.name));
   const ariaLabel = opts.ariaLabel ?? escapeHtml(shortLabel(field.name));
   const displayValue = opts.displayValue
     ?? formatFieldNumber(getNested(scenario, field.path) ?? field.default, field.path);
@@ -152,15 +153,25 @@ function renderWrappedNumberInput(field, opts = {}) {
   const suffixClass = fieldSuffixSizeClass(suffix);
   const wrapClass = opts.wrapClass || "field-input-wrap";
   const suffixClassName = opts.suffixClass || "field-input-suffix";
+  const disabledAttr = disabled ? " disabled" : "";
   const suffixMarkup = suffix
     ? `<span class="${suffixClassName}" aria-hidden="true">${escapeHtml(suffix)}</span>`
     : "";
   return `<div class="${wrapClass}${suffixClass}">
-    <input type="number"${fieldControlClassAttr()} data-path="${field.path}" id="${id}"${hintAttr}
+    <input type="number"${fieldControlClassAttr()} data-path="${field.path}" id="${id}"${hintAttr}${disabledAttr}
       aria-label="${ariaLabel}" min="${field.minimum}" max="${field.maximum}" step="${fieldStep(field)}"
       value="${displayValue}" />
     ${suffixMarkup}
   </div>`;
+}
+
+function isZoneActive(zoneIndex) {
+  return Boolean(getNested(scenario, `zones.${zoneIndex}.available`));
+}
+
+function inactiveZoneDependentHintAttr() {
+  const hint = typeof INACTIVE_ZONE_DEPENDENT_HINT === "string" ? INACTIVE_ZONE_DEPENDENT_HINT : "";
+  return hint ? ` title="${hint}"` : "";
 }
 
 function renderNumberField(field, extraClass = "field-num") {
@@ -595,11 +606,89 @@ function renderGrowboxPanel(inSetup = false) {
   return `<div class="card growbox-panel environment-panel">${renderSectionHead("Parametry growboxa", "environment")}${obudowa}${donice}</div>`;
 }
 
+function isZoneSoilTargetActive(field) {
+  const match = field.name.match(/^zone_(\d+)_target_soil_moisture_pct$/);
+  if (!match) return true;
+  return isZoneActive(Number(match[1]) - 1);
+}
+
+function renderSoilTargetMiniCell(field) {
+  const active = isZoneSoilTargetActive(field);
+  const inactiveHint = inactiveZoneDependentHintAttr();
+  if (!active) {
+    const id = `f-${field.path.replaceAll(".", "_")}`;
+    const value = getNested(scenario, field.path);
+    const displayValue = formatFieldNumber(value ?? field.default, field.path);
+    const label = `<div class="label-row"><span class="name"${inactiveHint}>${shortLabel(field.name)}</span></div>`;
+    return `<div class="mini-cell inactive-zone-target">
+      ${label}
+      ${renderWrappedNumberInput(field, { id, displayValue, disabled: true })}
+    </div>`;
+  }
+  return renderMiniCell(field);
+}
+
+function syncInactiveZoneTargetInputs() {
+  for (let index = 0; index < 4; index += 1) {
+    const field = fieldByName(zoneTargetFieldName(index));
+    if (!field) continue;
+    const active = isZoneActive(index);
+    const el = document.getElementById(`f-${field.path.replaceAll(".", "_")}`);
+    if (!el || el.type !== "number") continue;
+    const cell = el.closest(".mini-cell");
+    if (cell) cell.classList.toggle("inactive-zone-target", !active);
+    el.disabled = !active;
+    el.title = active ? (fieldHint(field.name) || "") : INACTIVE_ZONE_DEPENDENT_HINT;
+    const nameEl = cell?.querySelector(".name");
+    if (nameEl) {
+      if (!active) nameEl.setAttribute("title", INACTIVE_ZONE_DEPENDENT_HINT);
+      else nameEl.removeAttribute("title");
+    }
+  }
+}
+
+function zoneIndexFromPumpGroup(names) {
+  const availableName = names.find(name => /^zone_\d+_irrigation_available$/.test(name));
+  if (!availableName) return null;
+  const match = availableName.match(/^zone_(\d+)_irrigation_available$/);
+  return match ? Number(match[1]) - 1 : null;
+}
+
+function syncInactiveZonePumpInputs() {
+  for (let index = 0; index < 4; index += 1) {
+    const field = fieldByName(`zone_${index + 1}_irrigation_available`, "zones");
+    if (!field) continue;
+    const active = isZoneActive(index);
+    const availEl = document.getElementById(`f-${field.path.replaceAll(".", "_")}`);
+    const cell = availEl?.closest(".mini-cell.actuator-cell");
+    if (cell) cell.classList.toggle("inactive-zone-pump", !active);
+    if (availEl) {
+      availEl.disabled = !active;
+      if (!active) availEl.checked = false;
+      availEl.title = active ? (fieldHint(field.name) || "") : INACTIVE_ZONE_DEPENDENT_HINT;
+    }
+    if (!cell) continue;
+    cell.querySelectorAll("input.field-control, select.field-control, .control-type-toggle").forEach(el => {
+      el.disabled = !active;
+    });
+    const titleEl = cell.querySelector(".head-row .name");
+    if (titleEl) {
+      if (!active) titleEl.setAttribute("title", INACTIVE_ZONE_DEPENDENT_HINT);
+      else titleEl.removeAttribute("title");
+    }
+  }
+}
+
+function syncInactiveZoneDependentInputs() {
+  syncInactiveZoneTargetInputs();
+  syncInactiveZonePumpInputs();
+}
+
 function renderTargetsBlock() {
   const airFields = TARGET_AIR_FIELDS.map(name => fieldByName(name)).filter(Boolean);
   const soilFields = TARGET_SOIL_FIELDS.map(name => fieldByName(name)).filter(Boolean);
   const airCells = airFields.map(renderMiniCell).join("");
-  const soilCells = soilFields.map(renderMiniCell).join("");
+  const soilCells = soilFields.map(renderSoilTargetMiniCell).join("");
   return `<div class="card targets-panel">${renderSectionHead("Cele", "targets")}
     <div class="targets-split">
       <div class="sub-card"><div class="card-head"><h3>Powietrze</h3></div><div class="compact-row">${airCells}</div></div>
@@ -625,13 +714,16 @@ function renderZoneCultivationCard(fields, index) {
   return `<div class="pot-card cultivation-pot-card"><div class="head-row"><span class="name">Donica ${index + 1}</span></div><div class="compact-row">${cells}</div></div>`;
 }
 
-function renderControlTypeToggle(field) {
+function renderControlTypeToggle(field, { disabled = false } = {}) {
   if (!field || field.type !== "enum") return "";
   const value = normalizeControlType(getNested(scenario, field.path) ?? field.default);
   const label = formatEnumOptionLabel(value);
-  const hintAttr = fieldHintAttr(field.name) || ' title="Kliknij: bin ↔ pwm"';
+  const hintAttr = disabled
+    ? inactiveZoneDependentHintAttr()
+    : (fieldHintAttr(field.name) || ' title="Kliknij: bin ↔ pwm"');
+  const disabledAttr = disabled ? " disabled" : "";
   return `<button type="button" class="control-type-toggle" data-path="${field.path}"
-    data-value="${value}"${hintAttr} aria-label="Typ sterowania: ${label}">${label}</button>`;
+    data-value="${value}"${hintAttr}${disabledAttr} aria-label="Typ sterowania: ${label}">${label}</button>`;
 }
 
 function toggleControlType(button) {
@@ -646,23 +738,25 @@ function toggleControlType(button) {
   collectScenario();
 }
 
-function renderActuatorParamField(field) {
+function renderActuatorParamField(field, { disabled = false } = {}) {
   const id = `f-${field.path.replaceAll(".", "_")}`;
   const value = getNested(scenario, field.path);
-  const hintAttr = fieldHintAttr(field.name);
+  const hintAttr = disabled ? inactiveZoneDependentHintAttr() : fieldHintAttr(field.name);
   const ariaLabel = escapeHtml(shortLabel(field.name));
+  const disabledAttr = disabled ? " disabled" : "";
   let control;
   if (field.type === "enum") {
     const opts = (field.options || []).map(o =>
       `<option value="${o.value}" ${value === o.value ? "selected" : ""}>${formatEnumOptionLabel(o.value)}</option>`
     ).join("");
-    control = `<select${fieldControlClassAttr()} data-path="${field.path}" id="${id}"${hintAttr}
+    control = `<select${fieldControlClassAttr()} data-path="${field.path}" id="${id}"${hintAttr}${disabledAttr}
       aria-label="${ariaLabel}">${opts}</select>`;
   } else {
     control = renderWrappedNumberInput(field, {
       id,
       hintAttr,
       ariaLabel,
+      disabled,
       wrapClass: "actuator-input-wrap",
       suffixClass: "actuator-input-suffix",
     });
@@ -681,17 +775,28 @@ function renderActuatorGroupCell(title, names, sectionId) {
     .filter(n => n !== availableName && n !== controlTypeName)
     .map(n => field(n))
     .filter(Boolean);
+  const zoneIndex = zoneIndexFromPumpGroup(names);
+  const zonePumpInactive = zoneIndex !== null && !isZoneActive(zoneIndex);
   const wide = paramFields.some(isWideField) ? " wide" : "";
   const availId = availableField ? `f-${availableField.path.replaceAll(".", "_")}` : "";
-  const availVal = availableField ? getNested(scenario, availableField.path) : false;
-  const availHintAttr = availableField ? fieldHintAttr(availableField.name) : "";
-  const stack = `<div class="field-stack">${paramFields.map(renderActuatorParamField).join("")}</div>`;
-  return `<div class="mini-cell actuator-cell${wide}">
+  const availVal = zonePumpInactive
+    ? false
+    : (availableField ? getNested(scenario, availableField.path) : false);
+  const availHintAttr = zonePumpInactive
+    ? inactiveZoneDependentHintAttr()
+    : (availableField ? fieldHintAttr(availableField.name) : "");
+  const disabledAttr = zonePumpInactive ? " disabled" : "";
+  const inactiveClass = zonePumpInactive ? " inactive-zone-pump" : "";
+  const titleHintAttr = zonePumpInactive ? inactiveZoneDependentHintAttr() : "";
+  const stack = `<div class="field-stack">${paramFields
+    .map(f => renderActuatorParamField(f, { disabled: zonePumpInactive }))
+    .join("")}</div>`;
+  return `<div class="mini-cell actuator-cell${wide}${inactiveClass}">
     <div class="head-row">
-      <span class="name">${title}</span>
+      <span class="name"${titleHintAttr}>${title}</span>
       <div class="actuator-head-actions">
-        ${controlTypeField ? renderControlTypeToggle(controlTypeField) : ""}
-        ${availableField ? `<input type="checkbox" data-path="${availableField.path}" id="${availId}"${availHintAttr} ${availVal ? "checked" : ""} />` : ""}
+        ${controlTypeField ? renderControlTypeToggle(controlTypeField, { disabled: zonePumpInactive }) : ""}
+        ${availableField ? `<input type="checkbox" data-path="${availableField.path}" id="${availId}"${availHintAttr}${disabledAttr} ${availVal ? "checked" : ""} />` : ""}
       </div>
     </div>
     ${stack}
@@ -761,4 +866,5 @@ function renderForm() {
     previousRoot.innerHTML = renderPreviousBlock();
   }
   syncLightsActiveDisplay();
+  syncInactiveZoneDependentInputs();
 }

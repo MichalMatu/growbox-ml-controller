@@ -134,7 +134,14 @@ bool encodeZone(const ZoneConfig& zone, const ZoneFeatureMap& features, FeatureV
                          output, report);
   finite &=
       encodeFinite(zone.cultivation.transpiration_factor, features.transpiration, output, report);
-  finite &= encodeFinite(zone.target_soil_moisture_pct, features.target_soil, output, report);
+  const float target_soil = zone.available
+                                ? zone.target_soil_moisture_pct
+                                : schema::kFeatureDefaults[schema::index(features.target_soil)];
+  if (!zone.available) {
+    markSubstitutionIfNeeded(zone.target_soil_moisture_pct, target_soil, features.target_soil,
+                             report);
+  }
+  finite &= encodeFinite(target_soil, features.target_soil, output, report);
 
   output.values[schema::index(features.irrigation_available)] =
       zone.irrigation.available ? 1.0f : 0.0f;

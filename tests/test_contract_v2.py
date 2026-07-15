@@ -30,6 +30,21 @@ def test_v2_contract_hash_matches_generated_cpp():
     assert "kOutputCount = 10U" in header
 
 
+def test_v2_inactive_zone_target_uses_schema_default():
+    contract = load_contract(V2_CONTRACT_PATH)
+    controller_input = {
+        "zones": [
+            {"available": True, "targets": {"soil_moisture_pct": 61.0}},
+            {"available": False, "targets": {"soil_moisture_pct": 72.0}},
+        ]
+    }
+    encoded = contract.encode(controller_input)
+    active_index = contract.feature_names.index("zone_1_target_soil_moisture_pct")
+    inactive_index = contract.feature_names.index("zone_2_target_soil_moisture_pct")
+    assert encoded[active_index] == contract.features[active_index].normalize(61.0)
+    assert encoded[inactive_index] == contract.features[inactive_index].normalize(50.0)
+
+
 def test_v2_zone_sensor_validity_masking():
     contract = load_contract(V2_CONTRACT_PATH)
     controller_input = {

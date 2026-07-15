@@ -119,6 +119,25 @@ void test_cpp_defaults_match_schema_defaults() {
   }
 }
 
+void test_unavailable_zone_target_is_canonicalized_to_schema_default() {
+  ControllerInput input = nominalInput();
+  input.zones[1].available = false;
+  input.zones[1].target_soil_moisture_pct = 72.0f;
+  FeatureVector features{};
+  EncoderReport report{};
+
+  TEST_ASSERT_EQUAL_UINT8(
+      static_cast<std::uint8_t>(EncoderStatus::Ok),
+      static_cast<std::uint8_t>(FeatureEncoder::encode(input, features, report)));
+  const std::size_t target_index = schema::index(schema::FeatureIndex::Zone2TargetSoilMoisturePct);
+  const float expected =
+      (schema::kFeatureDefaults[target_index] - schema::kFeatureMinimums[target_index]) /
+      (schema::kFeatureMaximums[target_index] - schema::kFeatureMinimums[target_index]);
+  TEST_ASSERT_FLOAT_WITHIN(1.0e-6f, expected, features.values[target_index]);
+  TEST_ASSERT_TRUE(
+      maskHas(report.substituted_feature_mask, schema::FeatureIndex::Zone2TargetSoilMoisturePct));
+}
+
 void test_unavailable_actuator_capabilities_are_canonicalized_to_zero() {
   ControllerInput input = nominalInput();
   input.actuators.heater.available = false;
@@ -400,6 +419,7 @@ int main(int, char**) {
   RUN_TEST(test_schema_feature_count_and_order);
   RUN_TEST(test_feature_encoder_uses_generated_indices_and_normalization);
   RUN_TEST(test_cpp_defaults_match_schema_defaults);
+  RUN_TEST(test_unavailable_zone_target_is_canonicalized_to_schema_default);
   RUN_TEST(test_unavailable_actuator_capabilities_are_canonicalized_to_zero);
   RUN_TEST(test_encoder_clamps_contract_ranges);
   RUN_TEST(test_encoder_rejects_non_finite_input_and_imputes_finite_masked_sensor);

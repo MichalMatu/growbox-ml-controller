@@ -99,6 +99,13 @@ class Contract:
                 )
                 if not bool(valid):
                     normalized = feature.normalize(feature.default)
+            zone_available_path = _zone_available_path_for_target_feature(feature.path)
+            if zone_available_path is not None:
+                available = bool(
+                    _resolve_path_or_default(controller_input, zone_available_path, False)
+                )
+                if not available:
+                    normalized = feature.normalize(feature.default)
             encoded.append(normalized)
         return np.asarray(encoded, dtype=np.float32)
 
@@ -204,12 +211,38 @@ def _validity_path_for_sensor_feature(feature_path: str) -> str | None:
     return None
 
 
+def _zone_available_path_for_target_feature(feature_path: str) -> str | None:
+    if not feature_path.startswith("zones."):
+        return None
+    parts = feature_path.split(".")
+    if len(parts) < 4 or parts[2] != "targets":
+        return None
+    zone_index = parts[1]
+    if not zone_index.isdigit():
+        return None
+    return f"zones.{zone_index}.available"
+
+
 def _resolve_path(document: Mapping[str, Any], path: str) -> Any:
     current: Any = document
     for part in path.split("."):
-        if not isinstance(current, Mapping) or part not in current:
-            raise KeyError(f"contract feature path {path!r} is absent from controller input")
-        current = current[part]
+        if isinstance(current, Mapping):
+            if part not in current:
+                raise KeyError(f"contract feature path {path!r} is absent from controller input")
+            current = current[part]
+            continue
+        if isinstance(current, Sequence) and not isinstance(current, str | bytes):
+            try:
+                index = int(part)
+            except ValueError as exc:
+                raise KeyError(
+                    f"contract feature path {path!r} is absent from controller input"
+                ) from exc
+            if index < 0 or index >= len(current):
+                raise KeyError(f"contract feature path {path!r} is absent from controller input")
+            current = current[index]
+            continue
+        raise KeyError(f"contract feature path {path!r} is absent from controller input")
     return current
 
 

@@ -910,6 +910,16 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
 .field-control[type="number"] {
   font-variant-numeric: tabular-nums;
 }
+.mini-cell.inactive-zone-target,
+.mini-cell.inactive-zone-pump {
+  opacity: 0.62;
+}
+.mini-cell.inactive-zone-target .field-control:disabled,
+.mini-cell.inactive-zone-pump .field-control:disabled,
+.mini-cell.inactive-zone-pump .control-type-toggle:disabled {
+  cursor: not-allowed;
+  color: var(--muted);
+}
 .mini-cell.bool-only { justify-content: center; }
 .mini-cell.actuator-cell {
   width: auto;

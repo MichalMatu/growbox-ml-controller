@@ -138,6 +138,24 @@ def test_actuator_param_fields_use_in_input_unit_suffixes():
     assert "--climate-input-w:" in panel_css
 
 
+def test_inactive_zone_dependents_are_linked_to_zone_available():
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    scenario_js = SCENARIO_JS.read_text(encoding="utf-8")
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
+    read_fn = _extract_js_function(scenario_js, "readScenarioFromForm")
+    cell_fn = _extract_js_function(form_js, "renderActuatorGroupCell")
+    assert "applyInactiveZonePolicy" in scenario_js
+    assert "applyInactiveZonePolicy(next)" in read_fn
+    assert "zone.irrigation.available = false" in scenario_js
+    assert "renderSoilTargetMiniCell" in form_js
+    assert "syncInactiveZoneDependentInputs" in form_js
+    assert "syncInactiveZonePumpInputs" in form_js
+    assert "zoneIndexFromPumpGroup" in form_js
+    assert "inactive-zone-pump" in cell_fn
+    assert "inactive-zone-target" in panel_css
+    assert "inactive-zone-pump" in panel_css
+
+
 def test_mini_cell_number_fields_use_in_input_unit_suffixes_and_hints():
     form_js = FORM_JS.read_text(encoding="utf-8")
     mini_fn = _extract_js_function(form_js, "renderMiniCellInput")

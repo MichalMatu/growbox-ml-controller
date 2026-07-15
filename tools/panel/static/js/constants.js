@@ -57,6 +57,7 @@ const HELP_TOPICS = {
       <p>Co jest podłączone w growboxie i jakie ma limity. Checkbox przy nazwie = urządzenie jest w zestawie.</p>
       <ul>
         <li><strong>Klimat</strong> (6 kart) i <strong>Pompy</strong> (4 karty) — ten sam układ: nazwa, checkbox, parametry w poziomym rzędzie</li>
+        <li><strong>Pompa N</strong> — edytowalna tylko gdy <strong>Donica N</strong> jest zaznaczona w <strong>Czujniki</strong></li>
         <li><strong>bin / pwm</strong> — klikalna etykieta w nagłówku karty aktuatora (przełącza typ sterowania)</li>
         <li><strong>Fan min</strong> — dolna granica PWM przy alarmie temperatury</li>
       </ul>
@@ -70,7 +71,8 @@ const HELP_TOPICS = {
       <p>Wartości zadane — do czego model ma dążyć.</p>
       <ul>
         <li><strong>Powietrze</strong> — temperatura, wilgotność, CO₂ (cały box)</li>
-        <li><strong>Donice</strong> — docelowa wilgotność gleby per donica</li>
+        <li><strong>Donice</strong> — docelowa wilgotność gleby per donica (tylko gdy donica jest zaznaczona w <strong>Czujniki</strong>)</li>
+        <li>Wyłączona donica — cel i pompa w <strong>Aktuary</strong> są zablokowane</li>
       </ul>
     `,
   },

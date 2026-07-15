@@ -148,6 +148,28 @@ function cloneScenarioDoc(doc) {
   return JSON.parse(JSON.stringify(doc));
 }
 
+function zoneTargetFieldName(zoneIndex) {
+  return `zone_${zoneIndex + 1}_target_soil_moisture_pct`;
+}
+
+const INACTIVE_ZONE_DEPENDENT_HINT =
+  "Donica wyłączona w Czujnikach — ustawienie ignorowane przez model i safety";
+
+function applyInactiveZonePolicy(doc) {
+  if (!doc?.zones || !Array.isArray(doc.zones)) return doc;
+  for (let index = 0; index < doc.zones.length; index += 1) {
+    const zone = doc.zones[index];
+    if (!zone || zone.available) continue;
+    const targetField = fieldByName(zoneTargetFieldName(index));
+    const fallback = targetField?.default ?? 50;
+    if (!zone.targets || typeof zone.targets !== "object") zone.targets = {};
+    zone.targets.soil_moisture_pct = fallback;
+    if (!zone.irrigation || typeof zone.irrigation !== "object") zone.irrigation = {};
+    zone.irrigation.available = false;
+  }
+  return doc;
+}
+
 function readScenarioFromForm(base = scenario) {
   const next = sanitizeScenarioNumeric(cloneScenarioDoc(base));
   const seedEl = document.getElementById("seed");
@@ -166,7 +188,7 @@ function readScenarioFromForm(base = scenario) {
     } else value = normalizeFieldNumber(Number(el.value), path);
     setNested(next, path, value);
   });
-  return next;
+  return applyInactiveZonePolicy(next);
 }
 
 function setDeviceScenarioBaseline(doc) {
@@ -224,6 +246,7 @@ function normalizeSeed(value) {
 
 function collectScenario() {
   scenario = readScenarioFromForm(scenario);
+  syncInactiveZoneDependentInputs();
   saveScenarioDraft();
   updateScenarioSyncBadge();
   if (lastDecision) renderOutputs(lastDecision, { force: true });
