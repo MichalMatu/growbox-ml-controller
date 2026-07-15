@@ -112,7 +112,8 @@ const HELP_TOPICS = {
       <h4>Tabele czujników (2 kolumny)</h4>
       <ul>
         <li><strong>Lewa</strong> — <strong>Wewnętrzne</strong> (T, wilg., CO₂, roztwór, <strong>Lampa</strong> ON/OFF), pod spodem <strong>Zewnętrzne</strong></li>
-        <li><strong>Prawa</strong> — <strong>Donice</strong>: wilgotność i temp. gleby (numery 1–4); cel wilgotności z formularza <strong>Cele</strong></li>
+        <li><strong>Prawa</strong> — <strong>Donice</strong>: wilgotność i temp. gleby; wiersze tylko dla aktywnych stref (<strong>Czujniki</strong> ☑)</li>
+        <li>Cel wilgotności gleby — z decyzji płytki po <strong>Wyślij</strong>; bez targetu w payloadzie — z formularza <strong>Cele</strong> (tooltip)</li>
         <li>⊘ przy wierszu — czujnik nieważny (checkbox w <strong>Czujniki</strong>)</li>
       </ul>
       <h4>Paski aktuatorów</h4>

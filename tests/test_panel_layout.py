@@ -617,6 +617,7 @@ def test_panel_action_btn_tokens_and_live_zone_filter():
         Path(__file__).resolve().parents[1] / "tests" / "fixtures" / "panel_decision.json"
     ).read_text(encoding="utf-8")
     pots_fn = _extract_js_function(live_js, "renderLivePotGroupTable")
+    target_fn = _extract_js_function(live_js, "liveZoneSoilTarget")
     assert "ghost panel-action-btn" in html
     assert "live-panel-actions" not in html
     assert ".live-box > .panel-actions" in panel_css
@@ -627,6 +628,22 @@ def test_panel_action_btn_tokens_and_live_zone_filter():
     assert "isLiveZoneActive" in pots_fn
     assert '"available": false' in fixture
     assert "Brak aktywnych donic" in pots_fn
+    assert target_fn
+    assert "targets?.soil_moisture_pct" in target_fn
+    assert "LIVE_SOIL_TARGET_HINT" in target_fn
+    assert "Cel z formularza" in live_js
+    assert '"targets": { "soil_moisture_pct":' in fixture
+
+
+def test_decision_wire_includes_zone_soil_targets():
+    codec = (
+        Path(__file__).resolve().parents[1] / "src" / "demo" / "protocol" / "ScenarioWireCodec.cpp"
+    ).read_text(encoding="utf-8")
+    start = codec.index("void addDecisionContext")
+    end = codec.index("bool parseLoadScenario", start)
+    fn = codec[start:end]
+    assert "zone_targets" in fn
+    assert "target_soil_moisture_pct" in fn
 
 
 def test_panel_action_buttons_share_ghost_style_tokens():

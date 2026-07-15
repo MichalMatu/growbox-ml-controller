@@ -822,6 +822,8 @@ void addDecisionContext(cJSON* document, const control::ControllerInput& input) 
     cJSON* zone_validity = cJSON_AddObjectToObject(zone_json, "validity");
     cJSON_AddBoolToObject(zone_validity, "soil_moisture_pct", zone.validity.soil_moisture);
     cJSON_AddBoolToObject(zone_validity, "soil_temperature_c", zone.validity.soil_temperature);
+    cJSON* zone_targets = cJSON_AddObjectToObject(zone_json, "targets");
+    cJSON_AddNumberToObject(zone_targets, "soil_moisture_pct", zone.target_soil_moisture_pct);
     cJSON_AddItemToArray(zones, zone_json);
   }
 
