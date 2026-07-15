@@ -566,6 +566,20 @@ def test_live_section_includes_pots_lights_and_zone_readings():
     assert ".live-sensor-col-climate" in panel_css
 
 
+def test_modal_windows_support_drag_resize_without_glass_overlay():
+    html = INDEX_HTML.read_text(encoding="utf-8")
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
+    modal_window_js = (PANEL_STATIC / "js" / "modal-window.js").read_text(encoding="utf-8")
+    assert "modal-window.js" in html
+    assert "backdrop-filter" not in panel_css
+    assert "--surface-overlay-window:" in panel_css
+    assert ".modal--windowed" in panel_css
+    assert ".modal-resize-handle" in panel_css
+    assert "pointer-events: none" in panel_css
+    assert "initModalWindows" in modal_window_js
+    assert "modal--dragging" in modal_window_js
+
+
 def test_panel_modal_unifies_all_entry_points_in_one_wide_shell():
     html = INDEX_HTML.read_text(encoding="utf-8")
     panel_css = PANEL_CSS.read_text(encoding="utf-8")

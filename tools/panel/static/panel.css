@@ -35,6 +35,7 @@
   --accent-border: #2f6fd1;
   --surface-elevated: #243044;
   --surface-overlay: rgba(8, 12, 18, 0.82);
+  --surface-overlay-window: rgba(8, 12, 18, 0.22);
   --surface-subtle: rgba(15, 20, 25, 0.35);
   --surface-muted: rgba(15, 20, 25, 0.45);
   --surface-strong: rgba(15, 20, 25, 0.55);
@@ -1525,25 +1526,22 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
 
 
 body.modal-open {
-  overflow: hidden;
-  overscroll-behavior: none;
+  /* Okna modalne są przesuwalne — panel pod spodem pozostaje dostępny. */
 }
 .modal-backdrop {
   display: none;
   position: fixed;
   inset: 0;
-  background: var(--surface-overlay);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+  background: var(--surface-overlay-window);
   z-index: 100;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  overflow: hidden;
-  overscroll-behavior: contain;
-  touch-action: none;
+  padding: 0;
+  overflow: visible;
+  pointer-events: none;
 }
-.modal-backdrop.open { display: flex; }
+.modal-backdrop.open { display: block; }
+.modal-backdrop.open > .modal {
+  pointer-events: auto;
+}
 #help-modal-backdrop.open { z-index: 101; }
 #notice-modal-backdrop.open { z-index: 102; }
 #confirm-modal-backdrop.open { z-index: 103; }
@@ -1577,9 +1575,34 @@ body.modal-open {
   border-radius: var(--radius-modal);
   display: flex;
   flex-direction: column;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.42);
   touch-action: auto;
   overflow: hidden;
+}
+.modal.modal--windowed {
+  position: fixed;
+  margin: 0;
+  max-height: none;
+  min-width: 0;
+  min-height: 0;
+}
+.modal.modal--windowed .modal-body {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+}
+.modal.modal--windowed.modal--wide .modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+}
+.modal.modal--dragging,
+.modal.modal--resizing {
+  user-select: none;
+}
+.modal.modal--dragging .modal-head {
+  cursor: grabbing;
 }
 .modal-head {
   display: grid;
@@ -1588,6 +1611,15 @@ body.modal-open {
   gap: 0.35rem 0.5rem;
   padding: var(--modal-pad);
   border-bottom: 1px solid var(--border);
+  cursor: grab;
+}
+.modal-head button,
+.modal-head .modal-tabs,
+.modal-head a,
+.modal-head input,
+.modal-head select,
+.modal-head textarea {
+  cursor: auto;
 }
 .modal-head h3 {
   margin: 0;
@@ -1595,6 +1627,27 @@ body.modal-open {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.modal-resize-handle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+  touch-action: none;
+  z-index: 2;
+}
+.modal-resize-handle::after {
+  content: "";
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--border);
+  border-bottom: 2px solid var(--border);
+  opacity: 0.85;
 }
 .modal-tabs {
   display: flex;
