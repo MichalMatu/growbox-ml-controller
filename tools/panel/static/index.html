@@ -260,6 +260,48 @@
       letter-spacing: 0.05em;
       color: var(--muted);
     }
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.35rem;
+      margin-bottom: 0.35rem;
+    }
+    .card-head h2, .card-head h3 {
+      margin: 0;
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    .sub-card .card-head h3 {
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .help-btn {
+      width: 1.15rem;
+      height: 1.15rem;
+      min-width: 1.15rem;
+      padding: 0;
+      border-radius: 50%;
+      font-size: 0.62rem;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--muted);
+      background: rgba(15, 20, 25, 0.55);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .help-btn:hover { color: var(--text); border-color: #3a4d68; }
+    .top-bar .help-btn-top {
+      width: var(--toolbar-h);
+      min-width: var(--toolbar-h);
+      height: var(--toolbar-h);
+      border-radius: 50%;
+      font-size: 0.68rem;
+    }
     .row { display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; }
     .btn-row button { padding: 0.28rem 0.5rem; font-size: 0.72rem; }
     label {
@@ -396,14 +438,6 @@
       background: rgba(15, 20, 25, 0.35);
       min-width: 0;
     }
-    .sub-card h3 {
-      margin: 0 0 0.35rem;
-      font-size: 0.62rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--muted);
-      font-weight: 600;
-    }
     .subhead {
       font-size: 0.62rem;
       color: var(--muted);
@@ -443,17 +477,27 @@
     .live-box { min-height: 120px; }
     .json-actions { display: flex; flex-wrap: wrap; gap: var(--cell-gap); margin-top: 0.35rem; }
 
+    body.modal-open {
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
     .modal-backdrop {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.55);
-      z-index: 50;
+      background: rgba(8, 12, 18, 0.82);
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+      z-index: 100;
       align-items: center;
       justify-content: center;
       padding: 1rem;
+      overflow: hidden;
+      overscroll-behavior: contain;
+      touch-action: none;
     }
     .modal-backdrop.open { display: flex; }
+    #help-modal-backdrop.open { z-index: 101; }
     .modal {
       width: min(720px, 100%);
       max-height: 85vh;
@@ -462,7 +506,9 @@
       border-radius: 10px;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+      touch-action: auto;
+      overflow: hidden;
     }
     .modal-head {
       display: flex;
@@ -497,6 +543,27 @@
       gap: 0.35rem;
       justify-content: flex-end;
     }
+    .help-modal-body {
+      font-size: 0.78rem;
+      line-height: 1.45;
+      color: var(--text);
+    }
+    .help-modal-body h4 {
+      margin: 0.55rem 0 0.2rem;
+      font-size: 0.68rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .help-modal-body h4:first-child { margin-top: 0; }
+    .help-modal-body p { margin: 0.3rem 0; }
+    .help-modal-body ul { margin: 0.2rem 0 0.45rem; padding-left: 1.1rem; }
+    .help-modal-body li { margin: 0.15rem 0; }
+    .help-modal-body code {
+      font-family: ui-monospace, monospace;
+      font-size: 0.72rem;
+      color: var(--ok);
+    }
   </style>
 </head>
 <body>
@@ -526,6 +593,7 @@
         <button type="button" id="btn-refresh-ports" class="badge-btn ghost" data-ui="refresh">↻</button>
         <button type="button" class="badge-btn primary" data-ui="connect" id="btn-connect">Połącz</button>
         <button type="button" class="badge-btn danger" data-ui="disconnect" id="btn-disconnect">×</button>
+        <button type="button" class="badge-btn ghost help-btn help-btn-top" data-help="app" aria-label="Pomoc — panel">?</button>
       </div>
     </div>
   </header>
@@ -537,7 +605,10 @@
 
     <section class="right-panel card-stack">
       <div class="card live-box">
-        <h2>Na żywo</h2>
+        <div class="card-head">
+          <h2>Na żywo</h2>
+          <button type="button" class="help-btn" data-help="live" aria-label="Pomoc — na żywo">?</button>
+        </div>
         <div id="decision-summary" class="note flush">Połącz → Wczytaj → ▶ → Krok</div>
         <div class="outputs" id="outputs-bars"></div>
         <p class="note" id="safety-reason"></p>
@@ -551,6 +622,19 @@
       </div>
     </section>
   </main>
+
+  <div class="modal-backdrop" id="help-modal-backdrop" aria-hidden="true" inert>
+    <div class="modal help-modal" role="dialog" aria-modal="true" aria-labelledby="help-modal-title">
+      <div class="modal-head">
+        <h3 id="help-modal-title">Pomoc</h3>
+        <button class="ghost" id="help-modal-close" type="button">Zamknij</button>
+      </div>
+      <div class="modal-body help-modal-body" id="help-modal-content"></div>
+      <div class="modal-foot">
+        <button class="primary" id="help-modal-close-2" type="button">OK</button>
+      </div>
+    </div>
+  </div>
 
   <div class="modal-backdrop" id="modal-backdrop" aria-hidden="true" inert>
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
@@ -583,6 +667,112 @@
     };
     let activeModal = "scenario";
     let modalReturnFocus = null;
+    let helpReturnFocus = null;
+
+    const HELP_TOPICS = {
+      app: {
+        title: "Panel — sterowanie",
+        html: `
+          <p>Panel wysyła scenariusz do firmware ESP32 i odczytuje decyzje modelu ML + warstwy safety.</p>
+          <h4>Typowa ścieżka (Replay)</h4>
+          <p><code>Połącz → Wczytaj → ▶ → Krok</code></p>
+          <h4>Przyciski</h4>
+          <ul>
+            <li><strong>▶ / ■</strong> — start / stop sterowania na płytce</li>
+            <li><strong>Reset</strong> — reset symulacji (krok 0), bez zmiany formularza</li>
+            <li><strong>Replay</strong> — krok ręczny; <strong>Loop</strong> — automatyczne kroki</li>
+            <li><strong>Status</strong> — odświeża raport z firmware</li>
+            <li><strong>Seed</strong> — ziarno generatora symulatora (powtarzalność)</li>
+            <li><strong>Wczytaj</strong> — wysyła formularz na płytkę</li>
+            <li><strong>Krok</strong> — jedna inferencja</li>
+            <li><strong>Domyślne</strong> — reset formularza (nie wysyła na płytkę)</li>
+            <li><strong>Połącz / ×</strong> — port USB serial</li>
+          </ul>
+        `,
+      },
+      sensors: {
+        title: "Czujniki",
+        html: `
+          <p>Sześć wejść pomiarowych modelu v1. Wartości trafiają do <code>load_scenario</code> i kolejnych kroków.</p>
+          <ul>
+            <li><strong>T wewn., wilgotność, CO₂, gleba</strong> — stan w growboxie</li>
+            <li><strong>T zewn., wilg. zewn.</strong> — warunki na zewnątrz (wpływ na symulację)</li>
+            <li><strong>Checkbox</strong> — ważność odczytu; odznaczony = czujnik nieważny (safety może wymusić tryb awaryjny)</li>
+          </ul>
+        `,
+      },
+      environment: {
+        title: "Parametry growboxa",
+        html: `
+          <p>Parametry fizyczne obudowy — wpływają na to, jak symulator reaguje na grzałkę, fan i wyciek ciepła.</p>
+          <ul>
+            <li><strong>Objętość</strong> — kubatura powietrza w m³</li>
+            <li><strong>Ciepło J/K</strong> — bezwładność termiczna</li>
+            <li><strong>Strata W/K</strong> — utrata ciepła do otoczenia</li>
+            <li><strong>Wyciek 1/h</strong> — wymiana powietrza (ACH)</li>
+          </ul>
+        `,
+      },
+      cultivation: {
+        title: "Uprawa / doniczka",
+        html: `
+          <p>Parametry rośliny i podłoża w symulacji.</p>
+          <ul>
+            <li><strong>Don. L</strong> — objętość doniczki</li>
+            <li><strong>Woda mL</strong> — pojemność wodna podłoża</li>
+            <li><strong>Transp.</strong> — mnożnik transpiracji (wyżej = szybsze suszenie / pobór wody)</li>
+          </ul>
+        `,
+      },
+      actuators: {
+        title: "Aktuary (możliwości)",
+        html: `
+          <p>Co jest podłączone w growboxie i jakie ma limity. Checkbox przy nazwie = urządzenie jest w zestawie.</p>
+          <ul>
+            <li><strong>Grzałka</strong> — moc, sprawność, typ sterowania (binary/pwm)</li>
+            <li><strong>Fan</strong> — przepływ, minimalne PWM</li>
+            <li><strong>Nawilżacz</strong> — max wydajność g/h</li>
+            <li><strong>Pompa</strong> — przepływ, max impuls, min przerwa między podlewami</li>
+          </ul>
+          <p>Brak urządzenia (checkbox off) → model i safety wymuszają 0 na tym wyjściu.</p>
+        `,
+      },
+      targets: {
+        title: "Cele",
+        html: `
+          <p>Wartości zadane — do czego model ma dążyć.</p>
+          <ul>
+            <li>Temperatura i wilgotność powietrza</li>
+            <li>CO₂</li>
+            <li>Wilgotność gleby</li>
+          </ul>
+          <p>To nie są limity safety (np. alarm temperatury) — te są na razie stałe w firmware.</p>
+        `,
+      },
+      previous: {
+        title: "Poprzedni stan aktuatorów",
+        html: `
+          <p>Ostatnie wyjścia sterownika w skali 0–1 z poprzedniego kroku.</p>
+          <ul>
+            <li>Grzałka, fan, nawilżacz, pompa</li>
+            <li>Model używa tego jako kontekstu (histereza, płynność sterowania)</li>
+          </ul>
+          <p>Przy pierwszym kroku zwykle same zera.</p>
+        `,
+      },
+      live: {
+        title: "Na żywo",
+        html: `
+          <p>Podgląd ostatniej decyzji z firmware po <strong>Krok</strong>.</p>
+          <ul>
+            <li><strong>Raw</strong> (niebieski) — surowe wyjście sieci</li>
+            <li><strong>Safe</strong> (zielony) — po warstwie safety</li>
+            <li><strong>safety_reason</strong> — dlaczego safety zmieniło wyjście (np. <code>over_temperature</code>)</li>
+          </ul>
+          <p>Przyciski JSON — surowe dane do debugowania i eksportu scenariusza.</p>
+        `,
+      },
+    };
 
     function setNested(obj, path, value) {
       const parts = path.split(".");
@@ -867,6 +1057,51 @@
       return renderNumberField(field);
     }
 
+    function renderHelpBtn(topic) {
+      const meta = HELP_TOPICS[topic];
+      const label = meta ? meta.title : "Pomoc";
+      return `<button type="button" class="help-btn" data-help="${topic}" aria-label="Pomoc — ${label}">?</button>`;
+    }
+
+    function renderSectionHead(title, helpTopic, tag = "h2") {
+      return `<div class="card-head"><${tag}>${title}</${tag}>${renderHelpBtn(helpTopic)}</div>`;
+    }
+
+    function updateModalLock() {
+      const locked = document.querySelector(".modal-backdrop.open") !== null;
+      document.body.classList.toggle("modal-open", locked);
+    }
+
+    function openHelp(topic) {
+      const meta = HELP_TOPICS[topic];
+      if (!meta) return;
+      const backdrop = document.getElementById("help-modal-backdrop");
+      helpReturnFocus = document.activeElement;
+      document.getElementById("help-modal-title").textContent = meta.title;
+      document.getElementById("help-modal-content").innerHTML = meta.html;
+      backdrop.classList.add("open");
+      backdrop.removeAttribute("inert");
+      backdrop.setAttribute("aria-hidden", "false");
+      updateModalLock();
+      document.getElementById("help-modal-close").focus();
+    }
+
+    function closeHelp() {
+      const backdrop = document.getElementById("help-modal-backdrop");
+      const returnTo = helpReturnFocus;
+      helpReturnFocus = null;
+      const focused = document.activeElement;
+      if (returnTo && typeof returnTo.focus === "function") {
+        returnTo.focus();
+      } else if (focused && backdrop.contains(focused) && typeof focused.blur === "function") {
+        focused.blur();
+      }
+      backdrop.classList.remove("open");
+      backdrop.setAttribute("inert", "");
+      backdrop.setAttribute("aria-hidden", "true");
+      updateModalLock();
+    }
+
     function renderSensorBlock() {
       const rows = SENSOR_VALIDITY.map(([sensorKey, validityKey]) => {
         const sensorField = fieldByName(sensorKey);
@@ -884,7 +1119,7 @@
             min="${sensorField.minimum}" max="${sensorField.maximum}" step="${step}" value="${sVal ?? sensorField.default}" />
         </div>`;
       }).join("");
-      return `<div class="card"><h2>Czujniki</h2><div class="compact-row sensor-grid">${rows}</div></div>`;
+      return `<div class="card">${renderSectionHead("Czujniki", "sensors")}<div class="compact-row sensor-grid">${rows}</div></div>`;
     }
 
     function isWideField(field) {
@@ -936,22 +1171,22 @@
       return `<div class="mini-cell${wide}">${renderMiniCellInput(field)}</div>`;
     }
 
-    function renderCompactBlock(title, fields) {
+    function renderCompactBlock(title, fields, helpTopic) {
       const cells = fields.map(renderMiniCell).join("");
-      return `<div class="card"><h2>${title}</h2><div class="compact-row">${cells}</div></div>`;
+      return `<div class="card">${renderSectionHead(title, helpTopic)}<div class="compact-row">${cells}</div></div>`;
     }
 
-    function renderSubCard(title, fields) {
+    function renderSubCard(title, fields, helpTopic) {
       const cells = fields.map(renderMiniCell).join("");
-      return `<div class="sub-card"><h3>${title}</h3><div class="compact-row">${cells}</div></div>`;
+      return `<div class="sub-card">${renderSectionHead(title, helpTopic, "h3")}<div class="compact-row">${cells}</div></div>`;
     }
 
     function renderGrowboxPanel() {
       const env = panelSchema.sections.find(s => s.id === "environment");
       const cult = panelSchema.sections.find(s => s.id === "cultivation");
       if (!env && !cult) return "";
-      const left = env ? renderSubCard(env.title, env.fields) : "";
-      const right = cult ? renderSubCard(cult.title, cult.fields) : "";
+      const left = env ? renderSubCard(env.title, env.fields, "environment") : "";
+      const right = cult ? renderSubCard(cult.title, cult.fields, "cultivation") : "";
       return `<div class="card growbox-panel"><div class="growbox-split">${left}${right}</div></div>`;
     }
 
@@ -990,9 +1225,11 @@
         card.className = "card";
         card.innerHTML = `<h2>${section.title}</h2>`;
         if (section.id === "actuators") {
-          root.innerHTML += `<div class="card"><h2>${section.title}</h2>${renderActuatorBlock(section)}</div>`;
-        } else if (section.id === "targets" || section.id === "previous") {
-          root.innerHTML += renderCompactBlock(section.title, section.fields);
+          root.innerHTML += `<div class="card">${renderSectionHead(section.title, "actuators")}${renderActuatorBlock(section)}</div>`;
+        } else if (section.id === "targets") {
+          root.innerHTML += renderCompactBlock(section.title, section.fields, "targets");
+        } else if (section.id === "previous") {
+          root.innerHTML += renderCompactBlock(section.title, section.fields, "previous");
         } else {
           const grid = document.createElement("div");
           grid.className = "section-grid";
@@ -1072,6 +1309,7 @@
       backdrop.classList.add("open");
       backdrop.removeAttribute("inert");
       backdrop.setAttribute("aria-hidden", "false");
+      updateModalLock();
       renderModalTabs();
       refreshModalContent();
       document.getElementById("modal-close").focus();
@@ -1090,6 +1328,7 @@
       backdrop.classList.remove("open");
       backdrop.setAttribute("inert", "");
       backdrop.setAttribute("aria-hidden", "true");
+      updateModalLock();
     }
 
     function renderModalTabs() {
@@ -1281,10 +1520,21 @@
     document.getElementById("modal-close").onclick = closeModal;
     document.getElementById("modal-close-2").onclick = closeModal;
     document.getElementById("modal-backdrop").onclick = (e) => { if (e.target.id === "modal-backdrop") closeModal(); };
+    document.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-help]");
+      if (!btn) return;
+      e.preventDefault();
+      openHelp(btn.dataset.help);
+    });
+    document.getElementById("help-modal-close").onclick = closeHelp;
+    document.getElementById("help-modal-close-2").onclick = closeHelp;
+    document.getElementById("help-modal-backdrop").onclick = (e) => {
+      if (e.target.id === "help-modal-backdrop") closeHelp();
+    };
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && document.getElementById("modal-backdrop").classList.contains("open")) {
-        closeModal();
-      }
+      if (e.key !== "Escape") return;
+      if (document.getElementById("help-modal-backdrop").classList.contains("open")) closeHelp();
+      else if (document.getElementById("modal-backdrop").classList.contains("open")) closeModal();
     });
     document.getElementById("modal-copy").onclick = async () => {
       await navigator.clipboard.writeText(document.getElementById("modal-content").value);
