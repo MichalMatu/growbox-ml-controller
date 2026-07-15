@@ -19,8 +19,9 @@ class SerialBridgeError(RuntimeError):
 _SCENARIO_SNAPSHOT_KEYS = (
     "sensors",
     "validity",
+    "zones",
+    "pseudo",
     "environment",
-    "cultivation",
     "actuators",
     "targets",
     "safety",

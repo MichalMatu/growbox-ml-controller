@@ -289,11 +289,22 @@ function renderSubCard(title, fields, helpTopic) {
 
 function renderGrowboxPanel() {
   const env = panelSchema.sections.find(s => s.id === "environment");
-  const cult = panelSchema.sections.find(s => s.id === "cultivation");
-  if (!env && !cult) return "";
-  const left = env ? renderSubCard(env.title, env.fields, "environment") : "";
-  const right = cult ? renderSubCard(cult.title, cult.fields, "cultivation") : "";
-  return `<div class="card growbox-panel"><div class="growbox-split">${left}${right}</div></div>`;
+  if (!env) return "";
+  return `<div class="card growbox-panel">${renderSubCard(env.title, env.fields, "environment")}</div>`;
+}
+
+function renderZonesBlock(section) {
+  const zones = [[], [], [], []];
+  for (const field of section.fields) {
+    const match = field.path.match(/^zones\.(\d+)\./);
+    if (match) zones[Number(match[1])].push(field);
+  }
+  const cards = zones.map((fields, index) => {
+    if (!fields.length) return "";
+    const cells = fields.map(renderMiniCell).join("");
+    return `<div class="sub-card zone-card"><div class="card-head"><h3>Strefa ${index + 1}</h3></div><div class="compact-row">${cells}</div></div>`;
+  }).join("");
+  return `<div class="card zones-panel">${renderSectionHead(section.title, "zones")}<div class="zones-grid">${cards}</div></div>`;
 }
 
 function renderActuatorParamField(field) {
@@ -355,6 +366,10 @@ function renderForm() {
     if (section.id === "sensors" || section.id === "validity"
         || section.id === "environment" || section.id === "cultivation"
         || section.id === "previous") continue;
+    if (section.id === "zones") {
+      root.innerHTML += renderZonesBlock(section);
+      continue;
+    }
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `<h2>${section.title}</h2>`;

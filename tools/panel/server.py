@@ -11,7 +11,7 @@ from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 from tools.panel.bridge import SerialBridge, SerialBridgeError
-from tools.panel.form_schema import build_panel_schema, default_scenario
+from tools.panel.form_schema import build_panel_schema, default_scenario, list_scenario_presets
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 STATIC_MIME = {
@@ -74,6 +74,8 @@ class PanelHandler(BaseHTTPRequestHandler):
                 _json_response(self, HTTPStatus.OK, BRIDGE.diagnostics_snapshot())
             elif path == "/api/ports":
                 _json_response(self, HTTPStatus.OK, {"ports": BRIDGE.list_ports()})
+            elif path == "/api/presets":
+                _json_response(self, HTTPStatus.OK, {"presets": list_scenario_presets()})
             elif path in {"/favicon.ico", "/favicon.svg"}:
                 self._serve_favicon()
             elif path == "/panel.css":
@@ -124,7 +126,12 @@ class PanelHandler(BaseHTTPRequestHandler):
                 _json_response(self, HTTPStatus.OK, {"ok": True})
             elif path == "/api/defaults":
                 seed = int(body.get("seed", 101))
-                _json_response(self, HTTPStatus.OK, {"scenario": default_scenario(seed=seed)})
+                preset = str(body.get("preset", "nominal"))
+                _json_response(
+                    self,
+                    HTTPStatus.OK,
+                    {"scenario": default_scenario(seed=seed, preset=preset), "preset": preset},
+                )
             else:
                 _json_response(self, HTTPStatus.NOT_FOUND, {"error": "not_found"})
         except (ValueError, SerialBridgeError) as exc:

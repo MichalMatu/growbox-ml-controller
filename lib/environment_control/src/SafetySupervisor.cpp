@@ -94,7 +94,9 @@ bool safetyInputsFinite(const ControllerInput& input) noexcept {
                              std::isfinite(safety.alarm_minimum_fan) &&
                              std::isfinite(safety.binary_threshold) &&
                              std::isfinite(safety.co2_doser_minimum_interval_s) &&
-                             std::isfinite(safety.fan_venting_co2_threshold);
+                             std::isfinite(safety.fan_venting_co2_threshold) &&
+                             std::isfinite(safety.maximum_nutrient_soil_delta_c) &&
+                             std::isfinite(safety.minimum_nutrient_solution_temperature_c);
   const auto& environment = input.environment;
   const bool environment_finite = std::isfinite(environment.growbox_volume_m3) &&
                                   std::isfinite(environment.thermal_mass_j_per_k) &&
@@ -213,9 +215,131 @@ void applyBinaryActuatorSafety(bool available, float capability, float& safe_val
   }
 }
 
+template <typename BinaryRuntime>
+void syncBinaryState(BinaryRuntime& runtime, bool on, std::uint64_t now) noexcept {
+  if (!runtime.initialized) {
+    runtime.initialized = true;
+    runtime.on = on;
+    runtime.has_transition = true;
+    runtime.last_transition_ms = now;
+    return;
+  }
+  if (runtime.on != on) {
+    runtime.on = on;
+    runtime.has_transition = true;
+    runtime.last_transition_ms = now;
+  }
+}
+
+template <typename BinaryRuntime>
+float enforceBinary(float desired, float previous, float threshold, float minimum_on_s,
+                    float minimum_off_s, std::uint64_t now, BinaryRuntime& runtime,
+                    SafetyReport& report, std::size_t output_index) noexcept {
+  const bool requested_on = desired >= threshold;
+  const float thresholded = requested_on ? 1.0f : 0.0f;
+  if (desired != thresholded) {
+    addReason(report, output_index, SafetyReason::BinaryThreshold);
+  }
+
+  if (!runtime.initialized) {
+    runtime.initialized = true;
+    runtime.has_transition = true;
+    runtime.on = previous >= threshold;
+    runtime.last_transition_ms = now;
+  }
+
+  if (runtime.on == requested_on) {
+    return runtime.on ? 1.0f : 0.0f;
+  }
+
+  if (runtime.has_transition) {
+    const std::uint64_t required = durationMs(runtime.on ? minimum_on_s : minimum_off_s);
+    if (elapsedMs(now, runtime.last_transition_ms) < required) {
+      addReason(report, output_index,
+                runtime.on ? SafetyReason::BinaryMinimumOn : SafetyReason::BinaryMinimumOff);
+      return runtime.on ? 1.0f : 0.0f;
+    }
+  }
+
+  runtime.on = requested_on;
+  runtime.has_transition = true;
+  runtime.last_transition_ms = now;
+  return requested_on ? 1.0f : 0.0f;
+}
+
+void applyHumidityDependentSafety(const ControllerInput& input, SafeControlDecision& safe,
+                                  SafetyReport& report) noexcept {
+  if (input.validity.air_humidity) {
+    return;
+  }
+  if (safe.humidifier != 0.0f) {
+    addReason(report, humidifierIndex, SafetyReason::HumidityUnavailable);
+    safe.humidifier = 0.0f;
+  }
+  if (safe.dehumidifier != 0.0f) {
+    addReason(report, dehumidifierIndex, SafetyReason::HumidityUnavailable);
+    safe.dehumidifier = 0.0f;
+  }
+}
+
+void applyHeaterCoolerExclusion(const ControllerInput& input, const RawModelDecision& raw,
+                                SafeControlDecision& safe, SafetyReport& report) noexcept {
+  const float threshold = clamp01(input.safety.binary_threshold);
+  if (safe.heater >= threshold && safe.cooler > 0.0f) {
+    addReason(report, coolerIndex, SafetyReason::ActuatorConflict);
+    safe.cooler = 0.0f;
+    report.modified = report.modified || different(raw.cooler, safe.cooler);
+  }
+  if (safe.cooler >= threshold && safe.heater > 0.0f) {
+    addReason(report, heaterIndex, SafetyReason::ActuatorConflict);
+    safe.heater = 0.0f;
+    report.modified = report.modified || different(raw.heater, safe.heater);
+  }
+}
+
+void applyHumidityControlExclusion(const ControllerInput& input, const RawModelDecision& raw,
+                                   SafeControlDecision& safe, SafetyReport& report) noexcept {
+  const float threshold = clamp01(input.safety.binary_threshold);
+  if (safe.humidifier >= threshold && safe.dehumidifier > 0.0f) {
+    addReason(report, dehumidifierIndex, SafetyReason::ActuatorConflict);
+    safe.dehumidifier = 0.0f;
+    report.modified = report.modified || different(raw.dehumidifier, safe.dehumidifier);
+  }
+  if (safe.dehumidifier >= threshold && safe.humidifier > 0.0f) {
+    addReason(report, humidifierIndex, SafetyReason::ActuatorConflict);
+    safe.humidifier = 0.0f;
+    report.modified = report.modified || different(raw.humidifier, safe.humidifier);
+  }
+}
+
+bool nutrientSolutionTooCold(const ControllerInput& input) noexcept {
+  return input.validity.nutrient_solution_temperature &&
+         std::isfinite(input.sensors.nutrient_solution_temperature_c) &&
+         input.sensors.nutrient_solution_temperature_c <
+             input.safety.minimum_nutrient_solution_temperature_c;
+}
+
+bool nutrientSoilDeltaExceeded(const ControllerInput& input, const ZoneConfig& zone) noexcept {
+  if (!input.validity.nutrient_solution_temperature || !zone.validity.soil_temperature) {
+    return false;
+  }
+  if (!std::isfinite(input.sensors.nutrient_solution_temperature_c) ||
+      !std::isfinite(zone.sensors.soil_temperature_c)) {
+    return false;
+  }
+  const float delta =
+      input.sensors.nutrient_solution_temperature_c - zone.sensors.soil_temperature_c;
+  return delta < -input.safety.maximum_nutrient_soil_delta_c ||
+         delta > input.safety.maximum_nutrient_soil_delta_c;
+}
+
 } // namespace
 
 void SafetySupervisor::reset() noexcept {
+  heater_ = {};
+  humidifier_ = {};
+  dehumidifier_ = {};
+  cooler_ = {};
   irrigation_binary_ = {};
   zone_pumps_ = {};
   co2_doser_ = {};
@@ -263,12 +387,43 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
                             raw.dehumidifier, dehumidifierIndex, report);
   applyBinaryActuatorSafety(input.actuators.cooler.available, input.actuators.cooler.max_cooling_w,
                             safe.cooler, raw.cooler, coolerIndex, report);
+  applyHumidityDependentSafety(input, safe, report);
+
+  const float threshold = clamp01(input.safety.binary_threshold);
+  safe.heater = enforceBinary(safe.heater, input.previous.heater, threshold,
+                              input.safety.heater_minimum_on_s, input.safety.heater_minimum_off_s,
+                              input.monotonic_time_ms, heater_, report, heaterIndex);
+  safe.humidifier =
+      enforceBinary(safe.humidifier, input.previous.humidifier, threshold,
+                    input.safety.humidifier_minimum_on_s, input.safety.humidifier_minimum_off_s,
+                    input.monotonic_time_ms, humidifier_, report, humidifierIndex);
+  safe.dehumidifier =
+      enforceBinary(safe.dehumidifier, input.previous.dehumidifier, threshold,
+                    input.safety.dehumidifier_minimum_on_s, input.safety.dehumidifier_minimum_off_s,
+                    input.monotonic_time_ms, dehumidifier_, report, dehumidifierIndex);
+  safe.cooler = enforceBinary(safe.cooler, input.previous.cooler, threshold,
+                              input.safety.cooler_minimum_on_s, input.safety.cooler_minimum_off_s,
+                              input.monotonic_time_ms, cooler_, report, coolerIndex);
+
+  applyHeaterCoolerExclusion(input, raw, safe, report);
+  applyHumidityControlExclusion(input, raw, safe, report);
 
   if (!input.actuators.co2_doser.available ||
       input.actuators.co2_doser.dose_ppm_per_full_pulse <= 0.0f) {
     applyBinaryActuatorSafety(input.actuators.co2_doser.available,
                               input.actuators.co2_doser.dose_ppm_per_full_pulse, safe.co2_doser,
                               raw.co2_doser, co2Index, report);
+  } else if (!input.validity.co2) {
+    if (safe.co2_doser > 0.0f || raw.co2_doser > 0.0f) {
+      addReason(report, co2Index, SafetyReason::Co2SensorUnavailable);
+    }
+    safe.co2_doser = 0.0f;
+  } else if (std::isfinite(input.sensors.co2_ppm) && std::isfinite(input.targets.co2_ppm) &&
+             input.sensors.co2_ppm >= input.targets.co2_ppm) {
+    if (safe.co2_doser > 0.0f || raw.co2_doser > 0.0f) {
+      addReason(report, co2Index, SafetyReason::Co2TargetReached);
+    }
+    safe.co2_doser = 0.0f;
   } else if (safe.fan > clamp01(input.safety.fan_venting_co2_threshold)) {
     if (safe.co2_doser > 0.0f || raw.co2_doser > 0.0f) {
       addReason(report, co2Index, SafetyReason::Co2VentingFan);
@@ -287,7 +442,7 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
     }
   }
 
-  const float threshold = clamp01(input.safety.binary_threshold);
+  const bool nutrient_cold = nutrientSolutionTooCold(input);
   for (std::size_t zone_index = 0; zone_index < kMaxZones; ++zone_index) {
     const ZoneConfig& zone = input.zones[zone_index];
     const schema::OutputIndex output = kIrrigationOutputs[zone_index];
@@ -301,6 +456,44 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
         addReason(report, output_index, SafetyReason::ActuatorUnavailable);
       } else if (irrigation != 0.0f || rawOutputValue(raw, output) != 0.0f) {
         addReason(report, output_index, SafetyReason::InvalidCapability);
+      }
+      irrigation = 0.0f;
+      safe.irrigation_pulse_s[zone_index] = 0.0f;
+      continue;
+    }
+
+    if (!zone.validity.soil_moisture) {
+      if (irrigation > 0.0f || rawOutputValue(raw, output) > 0.0f) {
+        addReason(report, output_index, SafetyReason::SoilMoistureUnavailable);
+      }
+      irrigation = 0.0f;
+      safe.irrigation_pulse_s[zone_index] = 0.0f;
+      continue;
+    }
+
+    if (zone.validity.soil_moisture && std::isfinite(zone.sensors.soil_moisture_pct) &&
+        std::isfinite(zone.target_soil_moisture_pct) &&
+        zone.sensors.soil_moisture_pct >= zone.target_soil_moisture_pct) {
+      if (irrigation > 0.0f || rawOutputValue(raw, output) > 0.0f) {
+        addReason(report, output_index, SafetyReason::SoilMoistureSatisfied);
+      }
+      irrigation = 0.0f;
+      safe.irrigation_pulse_s[zone_index] = 0.0f;
+      continue;
+    }
+
+    if (nutrient_cold) {
+      if (irrigation > 0.0f || rawOutputValue(raw, output) > 0.0f) {
+        addReason(report, output_index, SafetyReason::NutrientSolutionTooCold);
+      }
+      irrigation = 0.0f;
+      safe.irrigation_pulse_s[zone_index] = 0.0f;
+      continue;
+    }
+
+    if (nutrientSoilDeltaExceeded(input, zone)) {
+      if (irrigation > 0.0f || rawOutputValue(raw, output) > 0.0f) {
+        addReason(report, output_index, SafetyReason::NutrientSoilDeltaExceeded);
       }
       irrigation = 0.0f;
       safe.irrigation_pulse_s[zone_index] = 0.0f;
@@ -398,6 +591,22 @@ const char* SafetySupervisor::reasonCode(SafetyReason reason) noexcept {
     return "invalid_capability";
   case SafetyReason::Co2VentingFan:
     return "co2_venting_fan";
+  case SafetyReason::SoilMoistureSatisfied:
+    return "soil_moisture_satisfied";
+  case SafetyReason::SoilMoistureUnavailable:
+    return "soil_moisture_unavailable";
+  case SafetyReason::NutrientSoilDeltaExceeded:
+    return "nutrient_soil_delta_exceeded";
+  case SafetyReason::NutrientSolutionTooCold:
+    return "nutrient_solution_too_cold";
+  case SafetyReason::Co2TargetReached:
+    return "co2_target_reached";
+  case SafetyReason::Co2SensorUnavailable:
+    return "co2_sensor_unavailable";
+  case SafetyReason::HumidityUnavailable:
+    return "humidity_unavailable";
+  case SafetyReason::ActuatorConflict:
+    return "actuator_conflict";
   }
   return "unknown";
 }

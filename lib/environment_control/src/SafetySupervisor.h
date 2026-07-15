@@ -37,6 +37,10 @@ private:
     std::uint64_t last_pulse_start_ms = 0U;
   };
 
+  BinaryRuntime heater_{};
+  BinaryRuntime humidifier_{};
+  BinaryRuntime dehumidifier_{};
+  BinaryRuntime cooler_{};
   std::array<BinaryRuntime, kMaxZones> irrigation_binary_{};
   std::array<PumpRuntime, kMaxZones> zone_pumps_{};
   PulseRuntime co2_doser_{};

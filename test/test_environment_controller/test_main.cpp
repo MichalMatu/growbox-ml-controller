@@ -238,6 +238,130 @@ void test_zone_pump_pulse_and_minimum_interval() {
   TEST_ASSERT_FLOAT_WITHIN(0.0f, 1.0f, safe.irrigation_zone_1);
 }
 
+void test_soil_moisture_at_target_blocks_irrigation() {
+  ControllerInput input = nominalInput();
+  input.zones[0].sensors.soil_moisture_pct = 55.0f;
+  input.zones[0].target_soil_moisture_pct = 50.0f;
+  RawModelDecision raw{};
+  raw.irrigation_zone_1 = 1.0f;
+  SafeControlDecision safe{};
+  SafetyReport report{};
+  SafetySupervisor supervisor{};
+
+  supervisor.apply(input, raw, SafetyReason::None, safe, report);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.irrigation_zone_1);
+  TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::SoilMoistureSatisfied));
+}
+
+void test_invalid_soil_moisture_blocks_irrigation() {
+  ControllerInput input = nominalInput();
+  input.zones[0].validity.soil_moisture = false;
+  RawModelDecision raw{};
+  raw.irrigation_zone_1 = 1.0f;
+  SafeControlDecision safe{};
+  SafetyReport report{};
+  SafetySupervisor supervisor{};
+
+  supervisor.apply(input, raw, SafetyReason::None, safe, report);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.irrigation_zone_1);
+  TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::SoilMoistureUnavailable));
+}
+
+void test_cold_nutrient_solution_blocks_irrigation() {
+  ControllerInput input = nominalInput();
+  input.zones[0].sensors.soil_moisture_pct = 30.0f;
+  input.sensors.nutrient_solution_temperature_c = 10.0f;
+  input.validity.nutrient_solution_temperature = true;
+  input.safety.minimum_nutrient_solution_temperature_c = 15.0f;
+  RawModelDecision raw{};
+  raw.irrigation_zone_1 = 1.0f;
+  SafeControlDecision safe{};
+  SafetyReport report{};
+  SafetySupervisor supervisor{};
+
+  supervisor.apply(input, raw, SafetyReason::None, safe, report);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.irrigation_zone_1);
+  TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::NutrientSolutionTooCold));
+}
+
+void test_nutrient_soil_delta_blocks_irrigation() {
+  ControllerInput input = nominalInput();
+  input.zones[0].sensors.soil_moisture_pct = 30.0f;
+  input.zones[0].sensors.soil_temperature_c = 30.0f;
+  input.zones[0].validity.soil_temperature = true;
+  input.sensors.nutrient_solution_temperature_c = 20.0f;
+  input.validity.nutrient_solution_temperature = true;
+  input.safety.maximum_nutrient_soil_delta_c = 8.0f;
+  input.safety.minimum_nutrient_solution_temperature_c = 15.0f;
+  RawModelDecision raw{};
+  raw.irrigation_zone_1 = 1.0f;
+  SafeControlDecision safe{};
+  SafetyReport report{};
+  SafetySupervisor supervisor{};
+
+  supervisor.apply(input, raw, SafetyReason::None, safe, report);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.irrigation_zone_1);
+  TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::NutrientSoilDeltaExceeded));
+}
+
+void test_co2_target_reached_blocks_doser() {
+  ControllerInput input = nominalInput();
+  input.actuators.co2_doser.available = true;
+  input.actuators.co2_doser.dose_ppm_per_full_pulse = 100.0f;
+  input.validity.co2 = true;
+  input.sensors.co2_ppm = 1100.0f;
+  input.targets.co2_ppm = 900.0f;
+  RawModelDecision raw{};
+  raw.co2_doser = 1.0f;
+  SafeControlDecision safe{};
+  SafetyReport report{};
+  SafetySupervisor supervisor{};
+
+  supervisor.apply(input, raw, SafetyReason::None, safe, report);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.co2_doser);
+  TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::Co2TargetReached));
+}
+
+void test_heater_and_cooler_are_mutually_exclusive() {
+  ControllerInput input = nominalInput();
+  input.actuators.cooler.available = true;
+  input.actuators.cooler.max_cooling_w = 200.0f;
+  input.previous.heater = 1.0f;
+  input.safety.heater_minimum_off_s = 0.0f;
+  input.safety.heater_minimum_on_s = 0.0f;
+  input.safety.cooler_minimum_on_s = 0.0f;
+  input.safety.cooler_minimum_off_s = 0.0f;
+  input.monotonic_time_ms = 1'000'000U;
+  RawModelDecision raw{};
+  raw.heater = 1.0f;
+  raw.cooler = 1.0f;
+  SafeControlDecision safe{};
+  SafetyReport report{};
+  SafetySupervisor supervisor{};
+
+  supervisor.apply(input, raw, SafetyReason::None, safe, report);
+  TEST_ASSERT_TRUE(safe.heater > 0.0f || safe.cooler == 0.0f);
+  TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::ActuatorConflict));
+}
+
+void test_humidity_unavailable_blocks_humidifier_and_dehumidifier() {
+  ControllerInput input = nominalInput();
+  input.actuators.dehumidifier.available = true;
+  input.actuators.dehumidifier.max_removal_g_h = 80.0f;
+  input.validity.air_humidity = false;
+  RawModelDecision raw{};
+  raw.humidifier = 1.0f;
+  raw.dehumidifier = 1.0f;
+  SafeControlDecision safe{};
+  SafetyReport report{};
+  SafetySupervisor supervisor{};
+
+  supervisor.apply(input, raw, SafetyReason::None, safe, report);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.humidifier);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.dehumidifier);
+  TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::HumidityUnavailable));
+}
+
 void test_model_schema_hash_compatibility() {
   TEST_ASSERT_EQUAL_STRING(schema::kSchemaHash, model_golden_vectors::kSchemaHash);
   TEST_ASSERT_EQUAL_STRING(schema::kSchemaHash, generated_manifest::kSchemaHash);
@@ -282,6 +406,13 @@ int main(int, char**) {
   RUN_TEST(test_safety_masks_unavailable_outputs_and_missing_temperature);
   RUN_TEST(test_alarm_temperature_forces_heater_off_and_fan_minimum);
   RUN_TEST(test_zone_pump_pulse_and_minimum_interval);
+  RUN_TEST(test_soil_moisture_at_target_blocks_irrigation);
+  RUN_TEST(test_invalid_soil_moisture_blocks_irrigation);
+  RUN_TEST(test_cold_nutrient_solution_blocks_irrigation);
+  RUN_TEST(test_nutrient_soil_delta_blocks_irrigation);
+  RUN_TEST(test_co2_target_reached_blocks_doser);
+  RUN_TEST(test_heater_and_cooler_are_mutually_exclusive);
+  RUN_TEST(test_humidity_unavailable_blocks_humidifier_and_dehumidifier);
   RUN_TEST(test_model_schema_hash_compatibility);
   RUN_TEST(test_golden_model_inference_and_output_bounds);
   return UNITY_END();

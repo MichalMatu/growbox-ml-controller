@@ -11,7 +11,7 @@ namespace schema {
 
 inline constexpr std::uint32_t kSchemaVersion = 2U;
 inline constexpr char kSchemaId[] = "environment-controller-v2";
-inline constexpr char kSchemaHash[] = "160a87b17bef";
+inline constexpr char kSchemaHash[] = "69fc6c5e7cf4";
 inline constexpr std::size_t kFeatureCount = 103U;
 inline constexpr std::size_t kOutputCount = 10U;
 inline constexpr std::size_t kFeatureDiagnosticsMaskBits = 128U;
@@ -589,6 +589,8 @@ inline constexpr float kDefaultCoolerMinimumOffS = 30.0f;
 inline constexpr float kDefaultCo2DoserMinimumIntervalS = 60.0f;
 inline constexpr float kDefaultCo2DoserMaximumPulseS = 5.0f;
 inline constexpr float kDefaultFanVentingCo2Threshold = 0.05f;
+inline constexpr float kDefaultMaximumNutrientSoilDeltaC = 8.0f;
+inline constexpr float kDefaultMinimumNutrientSolutionTemperatureC = 15.0f;
 
 constexpr std::size_t index(FeatureIndex value) noexcept {
   return static_cast<std::size_t>(value);

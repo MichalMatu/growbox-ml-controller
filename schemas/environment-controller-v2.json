@@ -1297,7 +1297,9 @@
     "cooler_minimum_off_s": 30.0,
     "co2_doser_minimum_interval_s": 60.0,
     "co2_doser_maximum_pulse_s": 5.0,
-    "fan_venting_co2_threshold": 0.05
+    "fan_venting_co2_threshold": 0.05,
+    "maximum_nutrient_soil_delta_c": 8.0,
+    "minimum_nutrient_solution_temperature_c": 15.0
   },
   "group_sections": [
     {

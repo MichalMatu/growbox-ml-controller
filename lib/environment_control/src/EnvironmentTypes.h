@@ -170,6 +170,9 @@ struct SafetyConfig {
   float cooler_minimum_off_s = schema::kDefaultCoolerMinimumOffS;
   float co2_doser_minimum_interval_s = schema::kDefaultCo2DoserMinimumIntervalS;
   float fan_venting_co2_threshold = schema::kDefaultFanVentingCo2Threshold;
+  float maximum_nutrient_soil_delta_c = schema::kDefaultMaximumNutrientSoilDeltaC;
+  float minimum_nutrient_solution_temperature_c =
+      schema::kDefaultMinimumNutrientSolutionTemperatureC;
 };
 
 struct ControllerInput {
@@ -269,6 +272,14 @@ enum class SafetyReason : std::uint32_t {
   BinaryMinimumOff = 1U << 13U,
   InvalidCapability = 1U << 14U,
   Co2VentingFan = 1U << 15U,
+  SoilMoistureSatisfied = 1U << 16U,
+  SoilMoistureUnavailable = 1U << 17U,
+  NutrientSoilDeltaExceeded = 1U << 18U,
+  NutrientSolutionTooCold = 1U << 19U,
+  Co2TargetReached = 1U << 20U,
+  Co2SensorUnavailable = 1U << 21U,
+  HumidityUnavailable = 1U << 22U,
+  ActuatorConflict = 1U << 23U,
 };
 
 constexpr std::uint32_t reasonBit(SafetyReason reason) noexcept {

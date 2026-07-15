@@ -55,7 +55,7 @@ const char* modelStatusCode(ModelStatus status) noexcept {
 }
 
 const char* primarySafetyReason(std::uint32_t mask) noexcept {
-  constexpr std::array<SafetyReason, 16> reasons{{
+  constexpr std::array<SafetyReason, 24> reasons{{
       SafetyReason::NonFiniteInput,
       SafetyReason::ModelFailure,
       SafetyReason::SchemaMismatch,
@@ -72,6 +72,14 @@ const char* primarySafetyReason(std::uint32_t mask) noexcept {
       SafetyReason::BinaryMinimumOff,
       SafetyReason::InvalidCapability,
       SafetyReason::Co2VentingFan,
+      SafetyReason::SoilMoistureSatisfied,
+      SafetyReason::SoilMoistureUnavailable,
+      SafetyReason::NutrientSoilDeltaExceeded,
+      SafetyReason::NutrientSolutionTooCold,
+      SafetyReason::Co2TargetReached,
+      SafetyReason::Co2SensorUnavailable,
+      SafetyReason::HumidityUnavailable,
+      SafetyReason::ActuatorConflict,
   }};
   for (const SafetyReason reason : reasons) {
     if ((mask & control::reasonBit(reason)) != 0U) {

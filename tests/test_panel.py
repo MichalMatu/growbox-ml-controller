@@ -8,9 +8,6 @@ from collections import deque
 from http.server import ThreadingHTTPServer
 from typing import Any
 
-import pytest
-
-from tools.panel import server as panel_server
 from tools.panel.bridge import SerialBridge, SerialBridgeError
 from tools.panel.form_schema import build_panel_schema, default_scenario
 from tools.panel.server import PanelHandler
@@ -70,7 +67,7 @@ class FakeBridge:
         if verify:
             self._state["last_status"] = {
                 "type": "status",
-                "schema_hash": "e12b0cc20edf",
+                "schema_hash": "160a87b17bef",
                 "mode": "replay",
                 "paused": True,
                 "step": 0,
@@ -78,7 +75,7 @@ class FakeBridge:
             self._state["last_startup"] = {
                 "type": "startup",
                 "framework": "esp-idf",
-                "schema_hash": "e12b0cc20edf",
+                "schema_hash": "160a87b17bef",
             }
 
     def disconnect(self) -> None:
@@ -121,21 +118,6 @@ def _http_json(
         return exc.code, json.loads(payload) if payload else {"error": exc.reason}
 
 
-@pytest.fixture
-def panel_http_server(monkeypatch):
-    fake = FakeBridge()
-    monkeypatch.setattr(panel_server, "BRIDGE", fake)
-    httpd = ThreadingHTTPServer(("127.0.0.1", 0), PanelHandler)
-    thread = threading.Thread(target=httpd.serve_forever, daemon=True)
-    thread.start()
-    base = f"http://127.0.0.1:{httpd.server_address[1]}"
-    try:
-        yield fake, base
-    finally:
-        httpd.shutdown()
-        thread.join(timeout=2.0)
-
-
 def test_default_scenario_has_nominal_actuators():
     scenario = default_scenario(seed=101)
     assert scenario["seed"] == 101
@@ -173,7 +155,9 @@ def test_panel_schema_matches_contract_feature_count():
     zones = next(section for section in schema["sections"] if section["id"] == "zones")
     assert zones["title"] == "Strefy uprawy"
     safety = next(section for section in schema["sections"] if section["id"] == "safety")
-    assert len(safety["fields"]) == 15
+    assert len(safety["fields"]) == 17
+    assert "presets" in schema
+    assert len(schema["presets"]) >= 5
 
 
 def test_bridge_snapshot_serializes_history_deque():
@@ -360,7 +344,7 @@ def test_is_growbox_handshake_accepts_status_and_startup():
         {
             "last_status": {
                 "type": "status",
-                "schema_hash": "e12b0cc20edf",
+                "schema_hash": "160a87b17bef",
                 "mode": "replay",
             }
         }
@@ -370,7 +354,7 @@ def test_is_growbox_handshake_accepts_status_and_startup():
             "last_startup": {
                 "type": "startup",
                 "framework": "esp-idf",
-                "schema_hash": "e12b0cc20edf",
+                "schema_hash": "160a87b17bef",
             }
         }
     )

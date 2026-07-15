@@ -8,13 +8,13 @@
 namespace generated_manifest {
 
 inline constexpr std::uint32_t kSchemaVersion = 2U;
-inline constexpr char kSchemaHash[] = "160a87b17bef";
-inline constexpr char kModelVersion[] = "environment-mlp-v1-v2-full-e74f14b74c07";
-inline constexpr char kWeightHash[] = "e74f14b74c077a594e2096910cfba67179b13001823c91e79b296ebff3f50c23";
+inline constexpr char kSchemaHash[] = "69fc6c5e7cf4";
+inline constexpr char kModelVersion[] = "environment-mlp-v1-v2-quick-0a36720ddecb";
+inline constexpr char kWeightHash[] = "0a36720ddecb1738dabaf71b69118ba233c5be887c88ac08e574b277cbe34381";
 inline constexpr char kModelFormat[] = "emlearn-net-float32-loadable";
-inline constexpr char kTrainingMode[] = "v2-full";
+inline constexpr char kTrainingMode[] = "v2-quick";
 inline constexpr std::uint32_t kTrainingSeed = 1847U;
-inline constexpr std::size_t kDatasetSize = 8640U;
+inline constexpr std::size_t kDatasetSize = 240U;
 inline constexpr std::size_t kParameterCount = 4714U;
 inline constexpr std::uint32_t kExportWeightDecimalPlaces = 5U;
 inline constexpr std::size_t kInputCount = 103U;
@@ -457,32 +457,32 @@ inline constexpr std::array<float, kInputCount> kNormalizationDefaults{{
         0.0f
 }};
 
-inline constexpr float kTestMae = 0.0996774f;
-inline constexpr float kTestRmse = 0.1827608f;
-inline constexpr float kTestMaxAbsError = 0.9857948f;
+inline constexpr float kTestMae = 0.33814f;
+inline constexpr float kTestRmse = 0.3521592f;
+inline constexpr float kTestMaxAbsError = 0.7577085f;
 inline constexpr std::array<float, kOutputCount> kTestOutputMae{{
-        0.2828013f,
-        0.1084912f,
-        0.0297513f,
-        0.2585697f,
-        0.0365753f,
-        0.1891283f,
-        0.0209622f,
-        0.0273825f,
-        0.0210215f,
-        0.0220904f
+        0.2630606f,
+        0.2807618f,
+        0.223135f,
+        0.4779708f,
+        0.4434185f,
+        0.3535222f,
+        0.2467856f,
+        0.4932996f,
+        0.3087539f,
+        0.2906924f
 }};
 inline constexpr std::array<float, kOutputCount> kTestOutputRmse{{
-        0.3497428f,
-        0.1561047f,
-        0.1192494f,
-        0.3102971f,
-        0.0375211f,
-        0.2692155f,
-        0.0342998f,
-        0.0281792f,
-        0.0214299f,
-        0.0225165f
+        0.2632425f,
+        0.2809898f,
+        0.2232103f,
+        0.4781535f,
+        0.4434641f,
+        0.3542119f,
+        0.2604684f,
+        0.4934773f,
+        0.3088107f,
+        0.2908626f
 }};
 
 }  // namespace generated_manifest

@@ -196,6 +196,8 @@ def _safety_constant_lines(safety: dict[str, Any]) -> str:
         ("co2_doser_minimum_interval_s", "Co2DoserMinimumIntervalS"),
         ("co2_doser_maximum_pulse_s", "Co2DoserMaximumPulseS"),
         ("fan_venting_co2_threshold", "FanVentingCo2Threshold"),
+        ("maximum_nutrient_soil_delta_c", "MaximumNutrientSoilDeltaC"),
+        ("minimum_nutrient_solution_temperature_c", "MinimumNutrientSolutionTemperatureC"),
     )
     for key, suffix in optional:
         if key in safety:

@@ -21,11 +21,12 @@ const HELP_TOPICS = {
   sensors: {
     title: "Czujniki",
     html: `
-      <p>Siedem odczytów w scenariuszu: sześć wejść modelu v1 + CO₂ zewnętrzne (tylko symulacja).</p>
+      <p>v2: 7 globalnych czujników + 4× gleba per strefa (sekcja Strefy). Każdy ma checkbox ważności.</p>
       <ul>
-        <li><strong>Wewnętrzne</strong> — T, wilgotność, CO₂, gleba (stan w growboxie, wejścia ML)</li>
-        <li><strong>Zewnętrzne</strong> — T, wilgotność i CO₂ na zewnątrz (wpływ na symulację; CO₂ zewn. nie trafia do modelu)</li>
-        <li><strong>Checkbox</strong> — ważność odczytu; odznaczony = nieważny (ML: safety; CO₂ zewn.: symulator używa 420 ppm)</li>
+        <li><strong>Wewnętrzne</strong> — T, wilgotność, CO₂, temp. roztworu nawozu</li>
+        <li><strong>Zewnętrzne</strong> — T, wilgotność, CO₂ (wpływ na symulację)</li>
+        <li><strong>Strefy</strong> — wilgotność i temp. gleby per donica (mix &amp; match)</li>
+        <li><strong>Checkbox</strong> — odznaczony = nieważny (encoder + safety)</li>
       </ul>
     `,
   },
@@ -59,7 +60,8 @@ const HELP_TOPICS = {
       <ul>
         <li><strong>typ</strong> — <code>bin</code> (wł/wył, próg 50%) lub <code>pwm</code> (0–100%). Po zmianie kliknij <strong>Wyślij</strong>.</li>
         <li><strong>Fan min</strong> — dolna granica PWM przy alarmie temperatury</li>
-        <li><strong>Pompa</strong> — przepływ mL/s, <strong>Impuls s</strong> (krótki, np. 4), <strong>Przerwa s</strong> (długi, np. 600 między podlaniami)</li>
+        <li><strong>6 globalnych</strong> — grzałka, fan, nawilżacz, osuszacz, chłodzenie, CO₂</li>
+        <li><strong>4 pompy</strong> — w sekcji Strefy (per donica)</li>
       </ul>
       <p>Checkbox zmienia tylko <strong>formularz lokalny</strong> — na płytkę trafia dopiero po <strong>Wyślij</strong> (badge „lokalne”). Sekcja <strong>Na żywo</strong> pokazuje ostatni krok z płytki, nie podgląd formularza.</p>
       <p>Brak urządzenia (checkbox off) po wysłaniu → model i safety wymuszają 0 na tym wyjściu.</p>
@@ -72,7 +74,7 @@ const HELP_TOPICS = {
       <ul>
         <li>Temperatura i wilgotność powietrza</li>
         <li>CO₂</li>
-        <li>Wilgotność gleby</li>
+        <li>Cele gleby — per strefa w sekcji Strefy</li>
       </ul>
     `,
   },
@@ -84,7 +86,8 @@ const HELP_TOPICS = {
         <li><strong>T max</strong> — powyżej tej temperatury grzałka jest blokowana</li>
         <li><strong>Alarm T</strong> + <strong>Fan min</strong> — przy alarmie wymuszany minimalny fan</li>
         <li><strong>Próg bin</strong> — próg ON/OFF dla aktuatorów typu bin (domyślnie 0.5)</li>
-        <li><strong>Grz./Naw. ON/OFF s</strong> — minimalny czas włączenia/wyłączenia (anty-flapping)</li>
+        <li><strong>Grz./Naw. ON/OFF s</strong> — anty-flapping dla aktuatorów binarnych</li>
+        <li><strong>ΔT nawóz–gleba</strong> + <strong>min. temp. roztworu</strong> — blokada podlewania</li>
       </ul>
       <p>Po zmianie kliknij <strong>Wyślij</strong>. W JSON decyzji: <code>diagnostics.safety_reason</code>.</p>
     `,
@@ -94,7 +97,7 @@ const HELP_TOPICS = {
     html: `
       <p>Ostatnie wyjścia sterownika w skali 0–1 z poprzedniego kroku.</p>
       <ul>
-        <li>Grzałka, fan, nawilżacz, pompa</li>
+        <li>10 wyjść ML (6 globalnych + 4 pompy strefowe)</li>
         <li>Model używa tego jako kontekstu (histereza, płynność sterowania)</li>
       </ul>
       <p>W panelu <strong>Na żywo</strong>, pod paskami aktuatorów. Po <strong>Krok</strong> pokazuje procenty z ostatnich wyjść <strong>Safety</strong> (kontekst modelu na następny krok).</p>
@@ -103,7 +106,7 @@ const HELP_TOPICS = {
   live: {
     title: "Na żywo",
     html: `
-      <p>Podgląd ostatniej decyzji z firmware po <strong>Krok</strong>: tabelka z 6 czujnikami (odczyt + cel). Numer kroku — badge u góry po prawej. Poniżej pasków: <strong>Poprzedni stan</strong> — wyjścia Safety z ostatniego kroku.</p>
+      <p>Podgląd decyzji po <strong>Krok</strong>: czujniki globalne + 10 wyjść ML. Badge kroku u góry. <strong>Poprzedni stan</strong> — kontekst modelu na następny krok.</p>
       <p>Każdy aktuator ma <strong>dwa paski</strong>:</p>
       <ul>
         <li><strong>Model</strong> (niebieski) — co proponuje sieć neuronowa (0–100% mocy)</li>
@@ -124,7 +127,11 @@ const LABEL_MAP = {
   air_temperature_c: "Temp",
   air_humidity_pct: "Wilg.",
   co2_ppm: "CO₂",
+  nutrient_solution_temperature_c: "Roztwór",
   soil_moisture_pct: "Gleba",
+  soil_temperature_c: "Gleba T",
+  zone_1_available: "Strefa 1",
+  lights_active: "Lampa",
   outside_temperature_c: "Temp",
   outside_humidity_pct: "Wilg.",
   outside_co2_ppm: "CO₂",
@@ -163,6 +170,18 @@ const LABEL_MAP = {
   previous_fan: "Fan",
   previous_humidifier: "Nawilż.",
   previous_irrigation: "Pompa",
+  previous_dehumidifier: "Osusz.",
+  previous_cooler: "Chłodz.",
+  previous_co2_doser: "CO₂",
+  dehumidifier_available: "Osuszacz",
+  dehumidifier_max_removal_g_h: "g/h",
+  cooler_available: "Chłodzenie",
+  cooler_max_cooling_w: "W",
+  co2_doser_available: "CO₂",
+  co2_doser_dose_ppm_per_full_pulse: "ppm/puls",
+  co2_doser_maximum_pulse_s: "Impuls s",
+  maximum_nutrient_soil_delta_c: "ΔT max",
+  minimum_nutrient_solution_temperature_c: "Min. roztwór",
 };
 
 const SIMULATION_SENSOR_FIELDS = {
@@ -176,7 +195,7 @@ const SENSOR_GROUPS = [
       ["air_temperature_c", "air_temperature_c"],
       ["air_humidity_pct", "air_humidity_pct"],
       ["co2_ppm", "co2_ppm"],
-      ["soil_moisture_pct", "soil_moisture_pct"],
+      ["nutrient_solution_temperature_c", "nutrient_solution_temperature_c"],
     ],
   },
   {
@@ -196,7 +215,7 @@ const LIVE_SENSOR_GROUPS = [
       { key: "air_temperature_c", targetKey: "air_temperature_c", decimals: 1, unit: "°C" },
       { key: "air_humidity_pct", targetKey: "air_humidity_pct", decimals: 0, unit: "%" },
       { key: "co2_ppm", targetKey: "co2_ppm", decimals: 0, unit: " ppm" },
-      { key: "soil_moisture_pct", targetKey: "soil_moisture_pct", decimals: 0, unit: "%" },
+      { key: "nutrient_solution_temperature_c", targetKey: null, decimals: 1, unit: "°C" },
     ],
   },
   {
@@ -210,14 +229,29 @@ const LIVE_SENSOR_GROUPS = [
 ];
 
 var SCENARIO_SYNC_KEYS = [
-  "sensors", "validity", "environment", "cultivation", "actuators", "targets", "safety",
+  "sensors", "validity", "zones", "pseudo", "environment", "actuators", "targets", "safety", "previous",
 ];
 const ACTUATOR_GROUPS = [
-  ["Grzałka", ["heater_available", "heater_max_power_w", "heater_efficiency", "heater_control_type"]],
-  ["Fan", ["fan_available", "fan_max_airflow_m3_h", "fan_minimum_command", "fan_control_type"]],
-  ["Nawilżacz", ["humidifier_available", "humidifier_max_output_g_h", "humidifier_control_type"]],
-  ["Pompa", ["irrigation_available", "irrigation_flow_ml_s", "irrigation_maximum_pulse_s", "irrigation_minimum_interval_s", "irrigation_control_type"]],
+  ["Grzałka", ["heater_available", "heater_max_power_w", "heater_efficiency"]],
+  ["Fan", ["fan_available", "fan_max_airflow_m3_h", "fan_minimum_command"]],
+  ["Nawilżacz", ["humidifier_available", "humidifier_max_output_g_h"]],
+  ["Osuszacz", ["dehumidifier_available", "dehumidifier_max_removal_g_h"]],
+  ["Chłodzenie", ["cooler_available", "cooler_max_cooling_w"]],
+  ["CO₂", ["co2_doser_available", "co2_doser_dose_ppm_per_full_pulse", "co2_doser_maximum_pulse_s"]],
 ];
+
+const OUTPUT_LABELS = {
+  heater: "Grzałka",
+  fan: "Fan",
+  humidifier: "Nawilżacz",
+  dehumidifier: "Osuszacz",
+  cooler: "Chłodzenie",
+  co2_doser: "CO₂",
+  irrigation_zone_1: "Pompa 1",
+  irrigation_zone_2: "Pompa 2",
+  irrigation_zone_3: "Pompa 3",
+  irrigation_zone_4: "Pompa 4",
+};
 
 function isAvailabilityField(name) {
   return name.endsWith("_available");
@@ -278,6 +312,12 @@ const ACTUATOR_AVAILABILITY_PATHS = {
   heater: "actuators.heater.available",
   fan: "actuators.fan.available",
   humidifier: "actuators.humidifier.available",
-  irrigation: "actuators.irrigation.available",
+  dehumidifier: "actuators.dehumidifier.available",
+  cooler: "actuators.cooler.available",
+  co2_doser: "actuators.co2_doser.available",
+  irrigation_zone_1: "zones.0.irrigation.available",
+  irrigation_zone_2: "zones.1.irrigation.available",
+  irrigation_zone_3: "zones.2.irrigation.available",
+  irrigation_zone_4: "zones.3.irrigation.available",
 };
 const SAFETY_REASON_ACTUATOR_UNAVAILABLE = 64;

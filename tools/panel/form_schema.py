@@ -137,6 +137,8 @@ SAFETY_FIELD_ORDER = (
     "co2_doser_minimum_interval_s",
     "co2_doser_maximum_pulse_s",
     "fan_venting_co2_threshold",
+    "maximum_nutrient_soil_delta_c",
+    "minimum_nutrient_solution_temperature_c",
 )
 
 SAFETY_FIELD_BOUNDS: dict[str, tuple[float, float]] = {
@@ -155,6 +157,120 @@ SAFETY_FIELD_BOUNDS: dict[str, tuple[float, float]] = {
     "co2_doser_minimum_interval_s": (0.0, 86400.0),
     "co2_doser_maximum_pulse_s": (0.0, 60.0),
     "fan_venting_co2_threshold": (0.0, 1.0),
+    "maximum_nutrient_soil_delta_c": (0.0, 30.0),
+    "minimum_nutrient_solution_temperature_c": (-10.0, 50.0),
+}
+
+ACTIVE_ZONE_PRESET: dict[str, Any] = {
+    "available": True,
+    "sensors": {"soil_moisture_pct": 44.0, "soil_temperature_c": 22.0},
+    "validity": {"soil_moisture_pct": True, "soil_temperature_c": True},
+    "cultivation": {
+        "pot_volume_l": 12.0,
+        "substrate_water_capacity_ml": 3600.0,
+        "transpiration_factor": 1.0,
+    },
+    "targets": {"soil_moisture_pct": 50.0},
+    "irrigation": {
+        "available": True,
+        "flow_ml_s": 22.0,
+        "maximum_pulse_s": 4.0,
+        "minimum_interval_s": 600.0,
+        "control_type": "binary",
+    },
+    "previous": {"irrigation": 0.0},
+}
+
+SCENARIO_PRESETS: dict[str, dict[str, Any]] = {
+    "nominal": {
+        "title": "Nominalny (1 strefa)",
+        "description": "Domyślny profil: strefa 0 aktywna, grzałka/fan/nawilżacz włączone.",
+        "overlay": NOMINAL_PRESET,
+    },
+    "all_zones": {
+        "title": "4 strefy aktywne",
+        "description": "Wszystkie donice i pompy włączone — test mix & match 0–4.",
+        "overlay": {
+            "zones": [dict(ACTIVE_ZONE_PRESET) for _ in range(4)],
+        },
+    },
+    "disabled_actuators": {
+        "title": "Wyłączone aktuary",
+        "description": "Tylko fan dostępny — safety wymusza 0 na pozostałych wyjściach.",
+        "overlay": {
+            "actuators": {
+                "heater": {"available": False, "max_power_w": 0.0, "efficiency": 0.0},
+                "fan": {"available": True, "max_airflow_m3_h": 120.0, "minimum_command": 0.2},
+                "humidifier": {"available": False, "max_output_g_h": 0.0},
+                "dehumidifier": {"available": False, "max_removal_g_h": 0.0},
+                "cooler": {"available": False, "max_cooling_w": 0.0},
+                "co2_doser": {
+                    "available": False,
+                    "dose_ppm_per_full_pulse": 0.0,
+                    "maximum_pulse_s": 0.0,
+                },
+            },
+            "zones": [
+                {
+                    **ACTIVE_ZONE_PRESET,
+                    "irrigation": {**ACTIVE_ZONE_PRESET["irrigation"], "available": False},
+                },
+                dict(INACTIVE_ZONE_PRESET),
+                dict(INACTIVE_ZONE_PRESET),
+                dict(INACTIVE_ZONE_PRESET),
+            ],
+        },
+    },
+    "saturated_soil": {
+        "title": "Gleba nasączona",
+        "description": "Wilgotność gleby ≥ cel — safety blokuje podlewanie strefy 0.",
+        "overlay": {
+            "zones": [
+                {
+                    **ACTIVE_ZONE_PRESET,
+                    "sensors": {"soil_moisture_pct": 58.0, "soil_temperature_c": 24.0},
+                    "targets": {"soil_moisture_pct": 50.0},
+                },
+                dict(INACTIVE_ZONE_PRESET),
+                dict(INACTIVE_ZONE_PRESET),
+                dict(INACTIVE_ZONE_PRESET),
+            ],
+            "sensors": {"nutrient_solution_temperature_c": 10.0},
+            "validity": {"nutrient_solution_temperature_c": True},
+        },
+    },
+    "minimal_sensors": {
+        "title": "Minimalne czujniki",
+        "description": "Tylko T/RH powietrza valid — CO₂, gleba i zewnętrzne wyłączone.",
+        "overlay": {
+            "validity": {
+                "air_temperature_c": True,
+                "air_humidity_pct": True,
+                "co2_ppm": False,
+                "nutrient_solution_temperature_c": False,
+                "outside_temperature_c": False,
+                "outside_humidity_pct": False,
+                "outside_co2_ppm": False,
+            },
+            "zones": [dict(INACTIVE_ZONE_PRESET) for _ in range(4)],
+        },
+    },
+    "co2_high": {
+        "title": "CO₂ ≥ cel",
+        "description": "Stężenie CO₂ powyżej celu — safety blokuje dozowanie.",
+        "overlay": {
+            "sensors": {"co2_ppm": 1200.0},
+            "validity": {"co2_ppm": True},
+            "actuators": {
+                "co2_doser": {
+                    "available": True,
+                    "dose_ppm_per_full_pulse": 120.0,
+                    "maximum_pulse_s": 3.0,
+                },
+            },
+            "targets": {"co2_ppm": 900.0},
+        },
+    },
 }
 
 SECTION_ORDER = (
@@ -229,6 +345,19 @@ def _deep_merge(base: dict[str, Any], overlay: dict[str, Any]) -> dict[str, Any]
     return merged
 
 
+def _normalize_zones(scenario: dict[str, Any]) -> None:
+    zones = scenario.get("zones")
+    if isinstance(zones, dict):
+        scenario["zones"] = [
+            dict(zones.get(str(index), INACTIVE_ZONE_PRESET)) for index in range(4)
+        ]
+    elif isinstance(zones, list):
+        normalized = [dict(zone) for zone in zones]
+        while len(normalized) < 4:
+            normalized.append(dict(INACTIVE_ZONE_PRESET))
+        scenario["zones"] = normalized[:4]
+
+
 def default_scenario(*, seed: int = 101, preset: str = "nominal") -> dict[str, Any]:
     contract = load_contract(V2_CONTRACT_PATH)
     scenario: dict[str, Any] = {"seed": seed}
@@ -246,13 +375,28 @@ def default_scenario(*, seed: int = 101, preset: str = "nominal") -> dict[str, A
             _set_nested(scenario, path, feature.default >= 0.5)
         else:
             _set_nested(scenario, path, feature.default)
-    if preset == "nominal":
+    preset_overlay = SCENARIO_PRESETS.get(preset, {}).get("overlay")
+    if preset_overlay is not None:
+        scenario = _deep_merge(scenario, preset_overlay)
+    elif preset == "nominal":
         scenario = _deep_merge(scenario, NOMINAL_PRESET)
     safety_defaults = contract.document.get("safety_defaults", {})
     if safety_defaults:
         scenario = _deep_merge(scenario, {"safety": dict(safety_defaults)})
+    _normalize_zones(scenario)
     scenario["seed"] = seed
     return scenario
+
+
+def list_scenario_presets() -> list[dict[str, str]]:
+    return [
+        {
+            "id": preset_id,
+            "title": str(meta["title"]),
+            "description": str(meta["description"]),
+        }
+        for preset_id, meta in SCENARIO_PRESETS.items()
+    ]
 
 
 def _field_type(feature_path: str, encoding: dict[str, float] | None) -> str:
@@ -338,4 +482,5 @@ def build_panel_schema(contract: Contract | None = None) -> dict[str, Any]:
         "safety_defaults": safety,
         "sections": ordered_sections,
         "default_scenario": default_scenario(),
+        "presets": list_scenario_presets(),
     }

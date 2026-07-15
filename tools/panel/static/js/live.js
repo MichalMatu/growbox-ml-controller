@@ -171,19 +171,19 @@ function renderActuatorCard(label, rawVal, safeVal, { available = true } = {}) {
   </article>`;
 }
 
-const ACTUATOR_NAMES = ["heater", "fan", "humidifier", "irrigation"];
-const PREVIOUS_LABELS = {
-  heater: "Grzałka",
-  fan: "Fan",
-  humidifier: "Nawilż.",
-  irrigation: "Pompa",
-};
+function panelOutputNames() {
+  return panelSchema?.outputs || Object.keys(OUTPUT_LABELS);
+}
+
+function outputLabel(name) {
+  return OUTPUT_LABELS[name] || name.replace(/_/g, " ");
+}
 
 function renderPreviousLive(decision = lastDecision) {
   const el = document.getElementById("previous-live");
   if (!el) return;
-  const prev = scenario.previous || { heater: 0, fan: 0, humidifier: 0, irrigation: 0 };
-  const visible = ACTUATOR_NAMES.filter(name => resolveActuatorAvailability(name, decision));
+  const prev = scenario.previous || {};
+  const visible = panelOutputNames().filter(name => resolveActuatorAvailability(name, decision));
   if (!visible.length) {
     el.innerHTML = '<span class="previous-live-empty">Brak aktywnych aktuatorów w scenariuszu</span>';
     return;
@@ -191,7 +191,7 @@ function renderPreviousLive(decision = lastDecision) {
   el.innerHTML = visible.map(name => {
     const pct = formatOutputPct(prev[name]);
     return `<div class="previous-live-item">
-      <span class="previous-live-label">${PREVIOUS_LABELS[name]}</span>
+      <span class="previous-live-label">${outputLabel(name)}</span>
       <span class="previous-live-pct">${pct}%</span>
     </div>`;
   }).join("");
@@ -200,7 +200,7 @@ function renderPreviousLive(decision = lastDecision) {
 function syncPreviousActuators(safe, decision = lastDecision) {
   if (!safe || typeof safe !== "object") return;
   if (!scenario.previous) scenario.previous = {};
-  for (const name of ACTUATOR_NAMES) {
+  for (const name of panelOutputNames()) {
     scenario.previous[name] = resolveActuatorAvailability(name, decision)
       ? (Number(safe[name]) || 0)
       : 0;
@@ -210,7 +210,8 @@ function syncPreviousActuators(safe, decision = lastDecision) {
 }
 
 function clearPreviousActuators() {
-  syncPreviousActuators({ heater: 0, fan: 0, humidifier: 0, irrigation: 0 });
+  const zero = Object.fromEntries(panelOutputNames().map(name => [name, 0]));
+  syncPreviousActuators(zero);
 }
 
 function clearLivePreview(step = 0) {
@@ -231,8 +232,7 @@ function renderOutputs(decision, { force = false } = {}) {
   if (!force && step !== undefined && step === lastRenderedDecisionStep) return;
   lastRenderedDecisionStep = step;
   lastDecision = decision;
-  const names = ["heater", "fan", "humidifier", "irrigation"];
-  const labels = { heater: "Grzałka", fan: "Fan", humidifier: "Nawilżacz", irrigation: "Pompa" };
+  const names = panelOutputNames();
   const raw = decision.raw_output || {};
   const safe = decision.safe_output || {};
   const outputsEl = document.getElementById("outputs-bars");
@@ -243,7 +243,7 @@ function renderOutputs(decision, { force = false } = {}) {
   } else {
     outputsEl.className = "actuator-grid";
     outputsEl.innerHTML = visible.map(name =>
-      renderActuatorCard(labels[name], raw[name], safe[name], { available: true })
+      renderActuatorCard(outputLabel(name), raw[name], safe[name], { available: true })
     ).join("");
   }
 

@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta http-equiv="Permissions-Policy" content="unload=(self)" />
-  <title>Growbox ML — panel v1</title>
+  <title>Growbox ML — panel v2</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="stylesheet" href="/panel.css" />
@@ -46,6 +46,10 @@
               <span id="scenario-sync-badge" class="sync-badge unknown" hidden></span>
             </div>
             <div class="toolbar-btn-stack">
+              <label class="preset-picker">
+                <span class="name">Preset</span>
+                <select id="scenario-preset" class="field-control" title="Scenariusz testowy v2"></select>
+              </label>
               <button type="button" class="badge-btn primary" data-ui="load" id="btn-load">Wyślij</button>
               <button type="button" class="badge-btn" data-ui="defaults" id="btn-defaults">Domyślne</button>
               <button type="button" class="badge-btn export-btn" id="btn-export" title="Pobierz scenariusz jako JSON">Pobierz</button>

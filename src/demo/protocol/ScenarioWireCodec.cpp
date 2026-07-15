@@ -494,7 +494,11 @@ bool parseSafety(const cJSON* object, control::SafetyConfig& safety) noexcept {
          readOptionalFiniteFloat(object, "co2_doser_minimum_interval_s",
                                  safety.co2_doser_minimum_interval_s) &&
          readOptionalFiniteFloat(object, "fan_venting_co2_threshold",
-                                 safety.fan_venting_co2_threshold);
+                                 safety.fan_venting_co2_threshold) &&
+         readOptionalFiniteFloat(object, "maximum_nutrient_soil_delta_c",
+                                 safety.maximum_nutrient_soil_delta_c) &&
+         readOptionalFiniteFloat(object, "minimum_nutrient_solution_temperature_c",
+                                 safety.minimum_nutrient_solution_temperature_c);
 }
 
 bool parseActuators(const cJSON* object, control::GlobalActuatorCapabilities& actuators) noexcept {
@@ -776,6 +780,10 @@ void addScenarioSnapshot(cJSON* document, const control::ControllerInput& input)
                           input.safety.co2_doser_minimum_interval_s);
   cJSON_AddNumberToObject(safety, "fan_venting_co2_threshold",
                           input.safety.fan_venting_co2_threshold);
+  cJSON_AddNumberToObject(safety, "maximum_nutrient_soil_delta_c",
+                          input.safety.maximum_nutrient_soil_delta_c);
+  cJSON_AddNumberToObject(safety, "minimum_nutrient_solution_temperature_c",
+                          input.safety.minimum_nutrient_solution_temperature_c);
 }
 
 void addDecisionContext(cJSON* document, const control::ControllerInput& input) noexcept {
