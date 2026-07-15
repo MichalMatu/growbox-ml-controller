@@ -1158,7 +1158,7 @@
           <ul>
             <li><strong>Wewnętrzne</strong> — T, wilgotność, CO₂, gleba (stan w growboxie, wejścia ML)</li>
             <li><strong>Zewnętrzne</strong> — T, wilgotność i CO₂ na zewnątrz (wpływ na symulację; CO₂ zewn. nie trafia do modelu)</li>
-            <li><strong>Checkbox</strong> — ważność odczytu ML; odznaczony = czujnik nieważny (safety może wymusić tryb awaryjny)</li>
+            <li><strong>Checkbox</strong> — ważność odczytu; odznaczony = nieważny (ML: safety; CO₂ zewn.: symulator używa 420 ppm)</li>
           </ul>
         `,
       },
@@ -1606,7 +1606,7 @@
         sensors: [
           ["outside_temperature_c", "outside_temperature_c"],
           ["outside_humidity_pct", "outside_humidity_pct"],
-          ["outside_co2_ppm", null],
+          ["outside_co2_ppm", "outside_co2_ppm"],
         ],
       },
     ];
@@ -1694,7 +1694,7 @@
 
     function renderLiveMetricRow(metric, sensors, targets, validity) {
       const valueText = formatLiveSensorValue(sensors[metric.key], metric.decimals);
-      const valid = metric.simulationOnly || validity[metric.key] !== false;
+      const valid = validity[metric.key] !== false;
       const targetText = metric.targetKey
         ? formatLiveTargetValue(targets[metric.targetKey], metric.decimals, metric.unit)
         : `<span class="live-no-target" title="${liveNoTargetHint(metric)}">—</span>`;

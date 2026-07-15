@@ -174,6 +174,7 @@ void emitDecision(const ControllerOutput& output, ControllerStatus status) noexc
   cJSON_AddBoolToObject(validity, "soil_moisture_pct", input.validity.soil_moisture);
   cJSON_AddBoolToObject(validity, "outside_temperature_c", input.validity.outside_temperature);
   cJSON_AddBoolToObject(validity, "outside_humidity_pct", input.validity.outside_humidity);
+  cJSON_AddBoolToObject(validity, "outside_co2_ppm", input.validity.outside_co2);
 
   cJSON* targets = cJSON_AddObjectToObject(document, "targets");
   cJSON_AddNumberToObject(targets, "air_temperature_c", input.targets.air_temperature_c);

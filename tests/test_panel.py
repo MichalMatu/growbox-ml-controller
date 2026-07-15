@@ -20,6 +20,7 @@ def test_default_scenario_has_nominal_actuators():
     assert scenario["actuators"]["irrigation"]["control_type"] == "binary"
     assert scenario["sensors"]["air_temperature_c"] == 22.0
     assert scenario["sensors"]["outside_co2_ppm"] == 420.0
+    assert scenario["validity"]["outside_co2_ppm"] is True
     assert scenario["safety"]["maximum_air_temperature_c"] == 35.0
     assert scenario["safety"]["binary_threshold"] == 0.5
 

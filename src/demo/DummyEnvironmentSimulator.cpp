@@ -26,6 +26,7 @@ void DummyEnvironmentSimulator::reset(std::uint32_t seed) noexcept {
   input_.validity.soil_moisture = true;
   input_.validity.outside_temperature = true;
   input_.validity.outside_humidity = true;
+  input_.validity.outside_co2 = true;
 
   input_.environment.growbox_volume_m3 = 1.2f;
   input_.environment.thermal_mass_j_per_k = 48000.0f;
@@ -144,8 +145,9 @@ void DummyEnvironmentSimulator::advance(const control::SafeControlDecision& deci
       exchange_fraction * (input_.sensors.outside_humidity_pct - input_.sensors.air_humidity_pct);
 
   input_.sensors.co2_ppm += 0.4f * input_.cultivation.transpiration_factor * step_seconds;
-  input_.sensors.co2_ppm +=
-      exchange_fraction * (input_.sensors.outside_co2_ppm - input_.sensors.co2_ppm);
+  const float outdoor_co2_ppm =
+      input_.validity.outside_co2 ? input_.sensors.outside_co2_ppm : 420.0f;
+  input_.sensors.co2_ppm += exchange_fraction * (outdoor_co2_ppm - input_.sensors.co2_ppm);
 
   const float capacity =
       clamp(input_.cultivation.substrate_water_capacity_ml, 10.0f, 100000.0f);

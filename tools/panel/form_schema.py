@@ -23,6 +23,7 @@ NOMINAL_PRESET: dict[str, Any] = {
         "soil_moisture_pct": True,
         "outside_temperature_c": True,
         "outside_humidity_pct": True,
+        "outside_co2_ppm": True,
     },
     "environment": {
         "growbox_volume_m3": 1.2,

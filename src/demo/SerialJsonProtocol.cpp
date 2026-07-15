@@ -55,6 +55,14 @@ bool readBool(const cJSON* object, const char* key, bool& destination) noexcept 
   return true;
 }
 
+bool readOptionalBool(const cJSON* object, const char* key, bool& destination) noexcept {
+  const cJSON* value = item(object, key);
+  if (value == nullptr || cJSON_IsNull(value)) {
+    return true;
+  }
+  return readBool(object, key, destination);
+}
+
 bool readUnsigned(const cJSON* object, const char* key, std::uint32_t& destination) noexcept {
   const cJSON* value = item(object, key);
   if (!cJSON_IsNumber(value) || !std::isfinite(value->valuedouble) || value->valuedouble < 0.0 ||
@@ -99,7 +107,8 @@ bool parseValidity(const cJSON* object, control::SensorValidity& validity) noexc
          readBool(object, control::schema::wireKey(FeatureIndex::OutsideTemperatureValid),
                   validity.outside_temperature) &&
          readBool(object, control::schema::wireKey(FeatureIndex::OutsideHumidityValid),
-                  validity.outside_humidity);
+                  validity.outside_humidity) &&
+         readOptionalBool(object, "outside_co2_ppm", validity.outside_co2);
 }
 
 bool parseEnvironment(const cJSON* object, control::EnvironmentConfig& config) noexcept {
@@ -215,6 +224,7 @@ void addScenarioSnapshot(cJSON* document, const control::ControllerInput& input)
                         input.validity.outside_temperature);
   cJSON_AddBoolToObject(validity, control::schema::wireKey(FeatureIndex::OutsideHumidityValid),
                         input.validity.outside_humidity);
+  cJSON_AddBoolToObject(validity, "outside_co2_ppm", input.validity.outside_co2);
 
   cJSON* environment = cJSON_AddObjectToObject(document, control::schema::kWireRootEnvironment);
   cJSON_AddNumberToObject(environment, control::schema::wireKey(FeatureIndex::GrowboxVolumeM3),

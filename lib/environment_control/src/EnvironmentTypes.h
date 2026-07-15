@@ -49,6 +49,8 @@ struct SensorValidity {
   bool outside_temperature =
       detail::schemaDefaultBool(schema::FeatureIndex::OutsideTemperatureValid);
   bool outside_humidity = detail::schemaDefaultBool(schema::FeatureIndex::OutsideHumidityValid);
+  // Simulation-only; when false, symulator używa domyślnego CO₂ zewnętrznego (420 ppm).
+  bool outside_co2 = true;
 };
 
 struct EnvironmentConfig {
