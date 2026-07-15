@@ -769,6 +769,19 @@ def test_panel_action_buttons_share_ghost_style_tokens():
     assert ".panel-action-btn.active" in panel_css
 
 
+def test_previous_modal_shows_step_badge_synced_with_live():
+    html = INDEX_HTML.read_text(encoding="utf-8")
+    live_js = (PANEL_STATIC / "js" / "live.js").read_text(encoding="utf-8")
+    modal_js = (PANEL_STATIC / "js" / "modal.js").read_text(encoding="utf-8")
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
+    assert 'id="modal-step-badge"' in html
+    assert "modal-head-title-wrap" in html
+    assert "refreshModalStepBadge" in modal_js
+    assert 'activeModal === "previous"' in modal_js
+    assert "refreshModalStepBadge(step)" in live_js
+    assert ".modal-step-badge" in panel_css
+
+
 def test_toolbar_has_no_scenario_preset_selector():
     html = INDEX_HTML.read_text(encoding="utf-8")
     form_js = (PANEL_STATIC / "js" / "main.js").read_text(encoding="utf-8")

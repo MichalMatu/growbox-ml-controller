@@ -106,6 +106,20 @@ function syncPanelModalActions() {
   });
 }
 
+function refreshModalStepBadge(step) {
+  const el = document.getElementById("modal-step-badge");
+  const backdrop = document.getElementById("modal-backdrop");
+  if (!el) return;
+  const show = Boolean(
+    step !== null
+    && step !== undefined
+    && backdrop?.classList.contains("open")
+    && activeModal === "previous"
+  );
+  el.hidden = !show;
+  if (show) el.textContent = `Krok ${step}`;
+}
+
 function updatePanelModalChrome(meta) {
   const textarea = document.getElementById("modal-content");
   const panel = document.getElementById("modal-content-panel");
@@ -114,6 +128,11 @@ function updatePanelModalChrome(meta) {
   const isJson = meta.type === "json";
 
   document.getElementById("modal-title").textContent = meta.title;
+  if (activeModal === "previous" && typeof lastRenderedDecisionStep !== "undefined") {
+    refreshModalStepBadge(lastRenderedDecisionStep);
+  } else {
+    refreshModalStepBadge(null);
+  }
   textarea.hidden = !isJson;
   panel.hidden = !isHtml;
   document.querySelectorAll(".setup-pane").forEach((pane) => {

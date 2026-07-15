@@ -1624,9 +1624,19 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
   grid-template-columns: 1fr auto;
   align-items: center;
 }
-.modal-chrome-head h3 {
-  grid-column: 1;
+.modal-head-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.28rem;
   min-width: 0;
+  grid-column: 1;
+}
+.modal-head-title-wrap h3 {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.modal-step-badge {
+  flex-shrink: 0;
 }
 .modal-head-close {
   grid-column: 2;

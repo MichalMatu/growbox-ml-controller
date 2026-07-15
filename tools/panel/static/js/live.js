@@ -11,13 +11,17 @@ function formatLiveTargetValue(value, decimals, unit) {
 
 function setLiveStepBadge(step) {
   const el = document.getElementById("live-step-badge");
-  if (!el) return;
   if (step === null || step === undefined) {
-    el.hidden = true;
+    if (el) el.hidden = true;
+    if (typeof refreshModalStepBadge === "function") refreshModalStepBadge(null);
     return;
   }
-  el.hidden = false;
-  el.textContent = `Krok ${step}`;
+  const label = `Krok ${step}`;
+  if (el) {
+    el.hidden = false;
+    el.textContent = label;
+  }
+  if (typeof refreshModalStepBadge === "function") refreshModalStepBadge(step);
 }
 
 function setLiveInferenceMeta(decision) {
