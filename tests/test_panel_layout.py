@@ -559,8 +559,9 @@ def test_live_section_includes_pots_lights_and_zone_readings():
     assert "Donica" not in pots_fn.split("live-sensor-col-head", 1)[1]
     assert 'kind: "pseudo"' in constants_js
     assert 'label: "Lampa"' in constants_js
-    assert "decision?.zones?.[index]" in pots_fn
+    assert "isLiveZoneActive(decision, index)" in pots_fn
     assert "liveZoneSoilTarget" in live_js
+    assert "LIVE_SOIL_TARGET_HINT" in live_js
     assert re.search(r"\.live-sensors-split\s*\{[^}]*grid-template-columns:\s*1fr\s+1fr", panel_css)
     assert ".live-sensor-col-climate" in panel_css
 
@@ -607,32 +608,46 @@ def test_growbox_setup_modal_has_single_help_entry_point():
     assert 'help: "safety"' in modal_js
 
 
+def test_panel_action_btn_tokens_and_live_zone_filter():
+    html = INDEX_HTML.read_text(encoding="utf-8")
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
+    live_js = (PANEL_STATIC / "js" / "live.js").read_text(encoding="utf-8")
+    modal_js = (PANEL_STATIC / "js" / "modal.js").read_text(encoding="utf-8")
+    fixture = (
+        Path(__file__).resolve().parents[1] / "tests" / "fixtures" / "panel_decision.json"
+    ).read_text(encoding="utf-8")
+    pots_fn = _extract_js_function(live_js, "renderLivePotGroupTable")
+    assert "ghost panel-action-btn" in html
+    assert "live-panel-actions" not in html
+    assert ".live-box > .panel-actions" in panel_css
+    assert ".panel-action-btn" in panel_css
+    assert "--panel-action-inset-top:" in panel_css
+    assert "--panel-action-tab-min-w:" in panel_css
+    assert 'class="panel-action-btn"' in modal_js
+    assert "isLiveZoneActive" in pots_fn
+    assert '"available": false' in fixture
+    assert "Brak aktywnych donic" in pots_fn
+
+
 def test_panel_action_buttons_share_ghost_style_tokens():
     html = INDEX_HTML.read_text(encoding="utf-8")
     panel_css = PANEL_CSS.read_text(encoding="utf-8")
     main_js = (PANEL_STATIC / "js" / "main.js").read_text(encoding="utf-8")
-    assert 'class="panel-actions btn-row live-panel-actions"' in html
+    assert 'class="panel-actions btn-row"' in html
     assert "setup-actions" not in html
     assert "json-actions" not in html
     assert "toolbar-setup-row" not in html
     assert 'data-panel-modal="growbox"' in html
     assert 'data-panel-modal="safety"' in html
     assert 'data-panel-modal="scenario"' in html
-    assert 'id="btn-panel-scenario" class="ghost"' in html
+    assert 'class="ghost panel-action-btn"' in html
     assert "data-setup-open" not in html
     assert "[data-panel-modal]" in main_js
     assert html.index("btn-panel-diagnostics") < html.index("btn-setup-growbox")
     assert "--panel-action-pad:" in panel_css
     assert "--panel-action-font:" in panel_css
     assert "--panel-action-gap:" in panel_css
-    assert re.search(
-        r"\.panel-actions\s+button,\s*\n\.modal-tabs\s+button\s*\{[^}]*background:\s*transparent",
-        panel_css,
-    )
-    assert re.search(
-        r"\.panel-actions\s+button\.active,\s*\n\.modal-tabs\s+button\.active\s*\{[^}]*background:\s*var\(--accent\)",
-        panel_css,
-    )
+    assert ".panel-action-btn.active" in panel_css
 
 
 def test_toolbar_has_no_scenario_preset_selector():

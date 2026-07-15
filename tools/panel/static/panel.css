@@ -13,8 +13,8 @@
  *   --cell-*        mini-cell (kafelki pól)
  *   --actuator-*    węższe pola w sekcji Aktuary
  *   --btn-*, --toolbar-*   przyciski i pasek sterowania
- *   --panel-action-*       przyciski JSON / Konfig. / zakładki modala
- *   --modal-*       okna dialogowe
+ *   --panel-action-*       przyciski wejścia + zakładki panel-modal (.panel-action-btn)
+ *   --modal-*       okna dialogowe (--modal-w: help/confirm; --modal-w-wide: panel-modal)
  *
  * Komponenty formularza: klasa .field-control na input/select (form.js).
  * Szerokość: mini-cell → 100%; aktuary → --actuator-input-w / --actuator-select-w.
@@ -101,7 +101,8 @@
   --panel-action-pad: var(--btn-pad-row);
   --panel-action-font: var(--text-base);
   --panel-action-gap: var(--cell-gap);
-  --live-actions-gap: var(--panel-action-gap);
+  --panel-action-inset-top: 0.35rem;
+  --panel-action-tab-min-w: var(--modal-tab-w-wide);
   --btn-bg: var(--surface-elevated);
   --field-font: var(--text-base);
   --field-label-font: var(--text-sm);
@@ -1184,6 +1185,12 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
 .safety-panel .targets-split + .sub-card {
   margin-top: var(--cell-gap);
 }
+.live-empty {
+  text-align: center;
+  color: var(--muted);
+  font-size: var(--text-base);
+  padding: var(--live-pad-cell);
+}
 .live-no-target {
   color: var(--muted);
   opacity: 0.55;
@@ -1486,28 +1493,34 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
 .panel-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: var(--panel-action-gap);
 }
-.panel-actions button,
-.modal-tabs button {
+.live-box > .panel-actions {
+  margin-top: var(--panel-action-inset-top);
+}
+.panel-action-btn {
   padding: var(--panel-action-pad);
   font-size: var(--panel-action-font);
   background: transparent;
   border-color: var(--border);
   color: var(--muted);
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.panel-actions button.active,
-.modal-tabs button.active {
+.panel-action-btn.active {
   background: var(--accent);
   color: var(--on-accent);
   border-color: var(--accent-border);
 }
-.live-panel-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--live-actions-gap);
-  margin-top: 0.35rem;
+.panel-modal .modal-tabs .panel-action-btn {
+  flex: 0 1 auto;
+  min-width: var(--panel-action-tab-min-w);
+  max-width: none;
+  padding-left: 0.65rem;
+  padding-right: 0.65rem;
 }
 
 
@@ -1586,19 +1599,10 @@ body.modal-open {
 .modal-tabs {
   display: flex;
   justify-content: flex-end;
-  gap: 0.2rem;
-  flex-wrap: nowrap;
+  gap: var(--panel-action-gap);
 }
-.modal-tabs button {
-  flex: 0 0 var(--modal-tab-w);
-  min-width: var(--modal-tab-w);
-  max-width: var(--modal-tab-w);
-  padding-left: 0.22rem;
-  padding-right: 0.22rem;
-  text-align: center;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.panel-modal .modal-tabs {
+  flex-wrap: wrap;
 }
 
 .modal-body {
@@ -1650,13 +1654,6 @@ body.modal-open {
 .modal.modal--wide {
   width: min(var(--modal-w-wide), 100%);
 }
-.modal.modal--wide .modal-tabs button {
-  flex: 0 1 auto;
-  min-width: var(--modal-tab-w-wide);
-  max-width: none;
-  padding-left: 0.65rem;
-  padding-right: 0.65rem;
-}
 .modal.modal--wide .modal-body {
   flex: 1 1 auto;
   height: auto;
@@ -1667,9 +1664,6 @@ body.modal-open {
   display: flex;
   flex-direction: column;
   gap: 0;
-}
-.panel-modal .modal-tabs {
-  flex-wrap: wrap;
 }
 .panel-modal-body > textarea:not([hidden]),
 .panel-modal-body > .diag-modal-body:not([hidden]),

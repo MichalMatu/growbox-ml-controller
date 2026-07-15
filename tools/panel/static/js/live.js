@@ -84,28 +84,40 @@ function renderLiveMetricRow(metric, decision) {
   </tr>`;
 }
 
+const LIVE_SOIL_TARGET_HINT = "Cel z formularza — na płytce po Wyślij";
+
+function isLiveZoneActive(decision, zoneIndex) {
+  const fromDecision = decision?.zones?.[zoneIndex]?.available;
+  if (typeof fromDecision === "boolean") return fromDecision;
+  return isZoneActive(zoneIndex);
+}
+
 function liveZoneSoilTarget(zoneIndex) {
   const field = fieldByName(`zone_${zoneIndex + 1}_target_soil_moisture_pct`);
   if (field) return getNested(scenario, field.path);
   return getNested(scenario, `zones.${zoneIndex}.targets.soil_moisture_pct`);
 }
 
-function renderLivePotMetricRow(label, value, decimals, unit, targetValue, targetDecimals, targetUnit, valid) {
+function renderLivePotMetricRow(label, value, decimals, unit, targetValue, targetDecimals, targetUnit, valid, {
+  targetHint = "",
+} = {}) {
   const valueText = formatLiveSensorValue(value, decimals);
   const targetText = typeof targetValue === "number" && Number.isFinite(targetValue)
     ? formatLiveTargetValue(targetValue, targetDecimals, targetUnit)
     : `<span class="live-no-target" title="Brak celu — temperatura gleby bez targetu">—</span>`;
   const invalidMark = valid ? "" : '<span class="live-invalid" title="Czujnik nieważny">⊘</span>';
   const invalidClass = valid ? "" : " invalid";
+  const targetAttr = targetHint ? ` title="${escapeHtml(targetHint)}"` : "";
   return `<tr class="${invalidClass}">
     <th scope="row">${label}${invalidMark}</th>
     <td class="num"><strong>${valueText}${unit}</strong></td>
-    <td class="num">${targetText}</td>
+    <td class="num"${targetAttr}>${targetText}</td>
   </tr>`;
 }
 
 function renderLivePotGroupTable(decision) {
-  const rows = POT_SENSOR_ROWS.flatMap((_pot, index) => {
+  const rowParts = POT_SENSOR_ROWS.flatMap((_pot, index) => {
+    if (!isLiveZoneActive(decision, index)) return [];
     const zone = decision?.zones?.[index] || {};
     const sensors = zone.sensors || {};
     const validity = zone.validity || {};
@@ -121,6 +133,7 @@ function renderLivePotGroupTable(decision) {
         0,
         "%",
         validity.soil_moisture_pct !== false,
+        { targetHint: LIVE_SOIL_TARGET_HINT },
       ),
       renderLivePotMetricRow(
         `${potNo} Gleba T`,
@@ -133,7 +146,10 @@ function renderLivePotGroupTable(decision) {
         validity.soil_temperature_c !== false,
       ),
     ];
-  }).join("");
+  });
+  const rows = rowParts.length
+    ? rowParts.join("")
+    : `<tr><td colspan="3" class="live-empty">Brak aktywnych donic w profilu.</td></tr>`;
   return `<div class="live-sensor-col live-sensor-col-pots">
     <div class="live-sensor-col-head">Donice</div>
     <div class="live-data-table-wrap">

@@ -92,7 +92,7 @@ function renderPanelModalTabs() {
   const tabs = document.getElementById("modal-tabs");
   if (!tabs.dataset.ready) {
     tabs.innerHTML = Object.entries(panelModalViews).map(([key, meta]) =>
-      `<button type="button" role="tab" data-tab="${key}">${meta.tab}</button>`
+      `<button type="button" class="panel-action-btn" role="tab" data-tab="${key}">${meta.tab}</button>`
     ).join("");
     tabs.dataset.ready = "1";
     tabs.querySelectorAll("[data-tab]").forEach(btn => {
