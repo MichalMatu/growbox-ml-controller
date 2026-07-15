@@ -276,10 +276,10 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
                                        input.actuators.heater.efficiency > 0.0f &&
                                        heater_control_type_valid;
   if (!input.actuators.heater.available || !heater_capability_valid) {
-    if (safe.heater != 0.0f || raw.heater != 0.0f) {
-      addReason(report, heaterIndex,
-                input.actuators.heater.available ? SafetyReason::InvalidCapability
-                                                 : SafetyReason::ActuatorUnavailable);
+    if (!input.actuators.heater.available) {
+      addReason(report, heaterIndex, SafetyReason::ActuatorUnavailable);
+    } else if (safe.heater != 0.0f || raw.heater != 0.0f) {
+      addReason(report, heaterIndex, SafetyReason::InvalidCapability);
     }
     safe.heater = 0.0f;
   }
@@ -297,10 +297,10 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
   const bool fan_capability_valid =
       input.actuators.fan.max_airflow_m3_h > 0.0f && fan_control_type_valid;
   if (!input.actuators.fan.available || !fan_capability_valid) {
-    if (safe.fan != 0.0f || raw.fan != 0.0f) {
-      addReason(report, fanIndex,
-                input.actuators.fan.available ? SafetyReason::InvalidCapability
-                                              : SafetyReason::ActuatorUnavailable);
+    if (!input.actuators.fan.available) {
+      addReason(report, fanIndex, SafetyReason::ActuatorUnavailable);
+    } else if (safe.fan != 0.0f || raw.fan != 0.0f) {
+      addReason(report, fanIndex, SafetyReason::InvalidCapability);
     }
     safe.fan = 0.0f;
   } else if (input.validity.air_temperature &&
@@ -319,10 +319,10 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
   const bool humidifier_capability_valid = input.actuators.humidifier.max_output_g_h > 0.0f &&
                                            humidifier_control_type_valid;
   if (!input.actuators.humidifier.available || !humidifier_capability_valid) {
-    if (safe.humidifier != 0.0f || raw.humidifier != 0.0f) {
-      addReason(report, humidifierIndex,
-                input.actuators.humidifier.available ? SafetyReason::InvalidCapability
-                                                     : SafetyReason::ActuatorUnavailable);
+    if (!input.actuators.humidifier.available) {
+      addReason(report, humidifierIndex, SafetyReason::ActuatorUnavailable);
+    } else if (safe.humidifier != 0.0f || raw.humidifier != 0.0f) {
+      addReason(report, humidifierIndex, SafetyReason::InvalidCapability);
     }
     safe.humidifier = 0.0f;
   }
@@ -334,12 +334,13 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
                                      input.actuators.irrigation_pump.maximum_pulse_s > 0.0f &&
                                      irrigation_control_type_valid;
   if (!input.actuators.irrigation_pump.available || !pump_capability_valid) {
-    if (safe.irrigation != 0.0f || raw.irrigation != 0.0f) {
-      addReason(report, irrigationIndex,
-                input.actuators.irrigation_pump.available ? SafetyReason::InvalidCapability
-                                                          : SafetyReason::ActuatorUnavailable);
+    if (!input.actuators.irrigation_pump.available) {
+      addReason(report, irrigationIndex, SafetyReason::ActuatorUnavailable);
+    } else if (safe.irrigation != 0.0f || raw.irrigation != 0.0f) {
+      addReason(report, irrigationIndex, SafetyReason::InvalidCapability);
     }
     safe.irrigation = 0.0f;
+    safe.irrigation_pulse_s = 0.0f;
   } else if (safe.irrigation > 0.0f) {
     const float schema_maximum_pulse =
         schema::kFeatureMaximums[schema::index(schema::FeatureIndex::IrrigationMaximumPulseS)];

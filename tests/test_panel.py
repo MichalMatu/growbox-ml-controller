@@ -86,6 +86,28 @@ def test_bridge_reset_clears_decision_and_step():
     assert bridge._state["last_decision"] is None
 
 
+def test_bridge_patches_scenario_on_load_scenario():
+    bridge = SerialBridge()
+    bridge._state["last_status"] = {"mode": "closed_loop", "paused": False, "step": 3}
+    SerialBridge._patch_status_from_command(
+        bridge._state,
+        {
+            "command": "load_scenario",
+            "seed": 202,
+            "sensors": {"air_temperature_c": 21.0, "outside_co2_ppm": 500.0},
+            "validity": {"outside_co2_ppm": False},
+            "targets": {"co2_ppm": 800.0},
+        },
+    )
+    status = bridge._state["last_status"]
+    assert status["step"] == 0
+    assert status["paused"] is True
+    assert status["seed"] == 202
+    assert status["scenario"]["sensors"]["outside_co2_ppm"] == 500.0
+    assert status["scenario"]["validity"]["outside_co2_ppm"] is False
+    assert status["scenario"]["targets"]["co2_ppm"] == 800.0
+
+
 def test_bridge_confirms_transport_on_ack():
     bridge = SerialBridge()
     bridge._state["last_status"] = {"mode": "closed_loop", "paused": True, "step": 0}

@@ -724,6 +724,15 @@
       border-color: rgba(245, 165, 36, 0.5);
       box-shadow: inset 0 0 0 1px rgba(245, 165, 36, 0.12);
     }
+    .actuator-card.unavailable {
+      opacity: 0.72;
+      border-style: dashed;
+    }
+    .actuator-off {
+      font-size: 0.58rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
     .actuator-head {
       display: flex;
       align-items: center;
@@ -837,6 +846,10 @@
       font-size: 0.58rem;
       color: var(--muted);
       margin-bottom: 0.1rem;
+    }
+    .previous-live-empty {
+      font-size: 0.72rem;
+      color: var(--muted);
     }
     .previous-live-pct {
       display: block;
@@ -1194,7 +1207,8 @@
             <li><strong>Fan min</strong> — dolna granica PWM przy alarmie temperatury</li>
             <li><strong>Pompa</strong> — przepływ mL/s, <strong>Impuls s</strong> (krótki, np. 4), <strong>Przerwa s</strong> (długi, np. 600 między podlaniami)</li>
           </ul>
-          <p>Brak urządzenia (checkbox off) → model i safety wymuszają 0 na tym wyjściu.</p>
+          <p>Checkbox zmienia tylko <strong>formularz lokalny</strong> — na płytkę trafia dopiero po <strong>Wyślij</strong> (badge „lokalne”). Sekcja <strong>Na żywo</strong> pokazuje ostatni krok z płytki, nie podgląd formularza.</p>
+          <p>Brak urządzenia (checkbox off) po wysłaniu → model i safety wymuszają 0 na tym wyjściu.</p>
         `,
       },
       targets: {
@@ -1341,10 +1355,25 @@
         status.paused = true;
       } else if (cmd.command === "load_scenario") {
         status.step = 0;
+        status.paused = true;
       } else if (cmd.command === "mode") {
         status.mode = cmd.value;
         if (cmd.value === "replay") status.paused = true;
       }
+    }
+
+    function patchLocalScenarioStatus(scenarioDoc) {
+      if (!lastState) lastState = {};
+      if (!lastState.last_status || typeof lastState.last_status !== "object") {
+        lastState.last_status = {};
+      }
+      const status = lastState.last_status;
+      const snap = {};
+      for (const key of SCENARIO_SYNC_KEYS) {
+        if (scenarioDoc?.[key] !== undefined) snap[key] = scenarioDoc[key];
+      }
+      if (Object.keys(snap).length > 0) status.scenario = snap;
+      if (scenarioDoc?.seed !== undefined) status.seed = scenarioDoc.seed;
     }
 
     function updatePlayPauseBtn(paused, connected) {
@@ -2147,6 +2176,7 @@
       scenario = sanitizeScenarioNumeric(next);
       saveScenarioDraft();
       updateScenarioSyncBadge();
+      if (lastDecision) renderOutputs(lastDecision, { force: true });
       return scenario;
     }
 
@@ -2155,16 +2185,63 @@
       return Math.min(100, Math.max(0, Math.round(n * 100)));
     }
 
-    function renderActuatorCard(label, rawVal, safeVal, extraHtml = "") {
-      const rPct = formatOutputPct(rawVal);
-      const sPct = formatOutputPct(safeVal);
-      const differs = Math.abs((Number(rawVal) || 0) - (Number(safeVal) || 0)) > 0.005;
-      return `<article class="actuator-card${differs ? " differs" : ""}">
+    const ACTUATOR_AVAILABILITY_PATHS = {
+      heater: "actuators.heater.available",
+      fan: "actuators.fan.available",
+      humidifier: "actuators.humidifier.available",
+      irrigation: "actuators.irrigation.available",
+    };
+
+    function isActuatorAvailable(name) {
+      const path = ACTUATOR_AVAILABILITY_PATHS[name];
+      return path ? Boolean(getNested(scenario, path)) : true;
+    }
+
+    const SAFETY_REASON_ACTUATOR_UNAVAILABLE = 64;
+
+    function actuatorAvailabilityFromSnapshot(actuators, name) {
+      const entry = actuators?.[name];
+      if (entry && typeof entry.available === "boolean") return entry.available;
+      return undefined;
+    }
+
+    function isUnavailableFromDecisionReason(decision, name) {
+      const mask = decision?.diagnostics?.output_reason_masks?.[name];
+      if (typeof mask !== "number") return undefined;
+      return (mask & SAFETY_REASON_ACTUATOR_UNAVAILABLE) !== 0;
+    }
+
+    /** Wyjścia Na żywo — stan z płytki (decyzja / status), nie lokalny formularz. */
+    function resolveActuatorAvailability(name, decision) {
+      const fromDecision = actuatorAvailabilityFromSnapshot(decision?.actuators, name);
+      if (fromDecision !== undefined) return fromDecision;
+      const fromReason = isUnavailableFromDecisionReason(decision, name);
+      if (fromReason === true) return false;
+      const fromDevice = actuatorAvailabilityFromSnapshot(
+        lastState?.last_status?.scenario?.actuators,
+        name,
+      );
+      if (fromDevice !== undefined) return fromDevice;
+      if (lastState?.connected) return true;
+      return isActuatorAvailable(name);
+    }
+
+    function renderActuatorCard(label, rawVal, safeVal, extraHtml = "", { available = true } = {}) {
+      const displayRaw = available ? rawVal : 0;
+      const displaySafe = available ? safeVal : 0;
+      const rPct = formatOutputPct(displayRaw);
+      const sPct = formatOutputPct(displaySafe);
+      const differs = available
+        && Math.abs((Number(rawVal) || 0) - (Number(safeVal) || 0)) > 0.005;
+      const statusBadge = available
+        ? (differs
+          ? '<span class="actuator-diff" title="Safety zmieniło wyjście tego aktuatora">≠</span>'
+          : '<span class="actuator-same" title="Model i safety zgodne — bez korekty">bez zmian</span>')
+        : '<span class="actuator-off" title="Aktuator wyłączony w scenariuszu">poza systemem</span>';
+      return `<article class="actuator-card${differs ? " differs" : ""}${available ? "" : " unavailable"}">
         <div class="actuator-head">
           <span class="actuator-name">${label}</span>
-          ${differs
-            ? '<span class="actuator-diff" title="Safety zmieniło wyjście tego aktuatora">≠</span>'
-            : '<span class="actuator-same" title="Model i safety zgodne — bez korekty">bez zmian</span>'}
+          ${statusBadge}
         </div>
         <div class="output-line model">
           <span class="lane-label">Model</span>
@@ -2188,11 +2265,16 @@
       irrigation: "Pompa",
     };
 
-    function renderPreviousLive() {
+    function renderPreviousLive(decision = lastDecision) {
       const el = document.getElementById("previous-live");
       if (!el) return;
       const prev = scenario.previous || { heater: 0, fan: 0, humidifier: 0, irrigation: 0 };
-      el.innerHTML = ACTUATOR_NAMES.map(name => {
+      const visible = ACTUATOR_NAMES.filter(name => resolveActuatorAvailability(name, decision));
+      if (!visible.length) {
+        el.innerHTML = '<span class="previous-live-empty">Brak aktywnych aktuatorów w scenariuszu</span>';
+        return;
+      }
+      el.innerHTML = visible.map(name => {
         const pct = formatOutputPct(prev[name]);
         return `<div class="previous-live-item">
           <span class="previous-live-label">${PREVIOUS_LABELS[name]}</span>
@@ -2201,13 +2283,15 @@
       }).join("");
     }
 
-    function syncPreviousActuators(safe) {
+    function syncPreviousActuators(safe, decision = lastDecision) {
       if (!safe || typeof safe !== "object") return;
       if (!scenario.previous) scenario.previous = {};
       for (const name of ACTUATOR_NAMES) {
-        scenario.previous[name] = Number(safe[name]) || 0;
+        scenario.previous[name] = resolveActuatorAvailability(name, decision)
+          ? (Number(safe[name]) || 0)
+          : 0;
       }
-      renderPreviousLive();
+      renderPreviousLive(decision);
       saveScenarioDraft();
     }
 
@@ -2228,9 +2312,9 @@
       setLiveInferenceMeta(null);
     }
 
-    function renderOutputs(decision) {
+    function renderOutputs(decision, { force = false } = {}) {
       const step = decision?.step;
-      if (step !== undefined && step === lastRenderedDecisionStep) return;
+      if (!force && step !== undefined && step === lastRenderedDecisionStep) return;
       lastRenderedDecisionStep = step;
       lastDecision = decision;
       const names = ["heater", "fan", "humidifier", "irrigation"];
@@ -2238,22 +2322,28 @@
       const raw = decision.raw_output || {};
       const safe = decision.safe_output || {};
       const outputsEl = document.getElementById("outputs-bars");
-      outputsEl.className = "actuator-grid";
+      const visible = names.filter(name => resolveActuatorAvailability(name, decision));
       const pulseS = Number(safe.irrigation_pulse_s);
-      outputsEl.innerHTML = names.map(name => {
-        let extra = "";
-        if (name === "irrigation" && Number.isFinite(pulseS) && pulseS > 0.005) {
-          const pulseText = pulseS >= 10 ? pulseS.toFixed(0) : pulseS.toFixed(1);
-          extra = `<div class="actuator-extra">impuls ${pulseText} s</div>`;
-        }
-        return renderActuatorCard(labels[name], raw[name], safe[name], extra);
-      }).join("");
+      if (!visible.length) {
+        outputsEl.className = "outputs-empty";
+        outputsEl.innerHTML = "Wszystkie aktuary wyłączone w scenariuszu na płytce.";
+      } else {
+        outputsEl.className = "actuator-grid";
+        outputsEl.innerHTML = visible.map(name => {
+          let extra = "";
+          if (name === "irrigation" && Number.isFinite(pulseS) && pulseS > 0.005) {
+            const pulseText = pulseS >= 10 ? pulseS.toFixed(0) : pulseS.toFixed(1);
+            extra = `<div class="actuator-extra">impuls ${pulseText} s</div>`;
+          }
+          return renderActuatorCard(labels[name], raw[name], safe[name], extra, { available: true });
+        }).join("");
+      }
 
       setLiveStepBadge(decision.step ?? "?");
       if (lastState) updateTopStatusBadge(lastState);
       document.getElementById("decision-summary").innerHTML = renderLiveMetricsTable(decision);
       setLiveInferenceMeta(decision);
-      syncPreviousActuators(safe);
+      syncPreviousActuators(safe, decision);
     }
 
     function formatHistory(state) {
@@ -2527,13 +2617,18 @@
                 method: "POST",
                 body: JSON.stringify({ seed, scenario: body }),
               });
+              patchLocalScenarioStatus(payload);
+              patchLocalTransportStatus({ command: "load_scenario" });
               deviceScenarioSynced = true;
+              updateScenarioSyncBadge();
+              updatePlayPauseBtn(true, Boolean(lastState?.connected));
             }, btn);
             clearLivePreview(0);
             setTimeout(async () => {
               await refreshState();
               updateScenarioSyncBadge();
-            }, 300);
+              updateToolbarState(lastState);
+            }, 280);
           } catch (_) { /* btn flash */ }
           return;
         }

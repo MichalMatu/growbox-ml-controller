@@ -581,6 +581,7 @@ void SerialJsonProtocol::processLine(DummyEnvironmentSimulator& simulator,
     simulator.load(scenario, seed);
     runtime.step = 0U;
     runtime.step_requested = false;
+    runtime.paused = true;
     runtime.controller_reset_requested = true;
     emitAck(command);
     cJSON_Delete(root);

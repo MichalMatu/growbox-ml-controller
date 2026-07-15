@@ -182,11 +182,27 @@ void emitDecision(const ControllerOutput& output, ControllerStatus status) noexc
   cJSON_AddNumberToObject(targets, "co2_ppm", input.targets.co2_ppm);
   cJSON_AddNumberToObject(targets, "soil_moisture_pct", input.targets.soil_moisture_pct);
 
+  const auto& actuators = input.actuators;
+  cJSON* actuators_json = cJSON_AddObjectToObject(document, "actuators");
+  cJSON* heater_json = cJSON_AddObjectToObject(actuators_json, "heater");
+  cJSON_AddBoolToObject(heater_json, "available", actuators.heater.available);
+  cJSON* fan_json = cJSON_AddObjectToObject(actuators_json, "fan");
+  cJSON_AddBoolToObject(fan_json, "available", actuators.fan.available);
+  cJSON* humidifier_json = cJSON_AddObjectToObject(actuators_json, "humidifier");
+  cJSON_AddBoolToObject(humidifier_json, "available", actuators.humidifier.available);
+  cJSON* irrigation_json = cJSON_AddObjectToObject(actuators_json, "irrigation");
+  cJSON_AddBoolToObject(irrigation_json, "available", actuators.irrigation_pump.available);
+  const float raw_heater = actuators.heater.available ? output.raw.heater : 0.0f;
+  const float raw_fan = actuators.fan.available ? output.raw.fan : 0.0f;
+  const float raw_humidifier = actuators.humidifier.available ? output.raw.humidifier : 0.0f;
+  const float raw_irrigation =
+      actuators.irrigation_pump.available ? output.raw.irrigation : 0.0f;
+
   cJSON* raw = cJSON_AddObjectToObject(document, "raw_output");
-  cJSON_AddNumberToObject(raw, "heater", output.raw.heater);
-  cJSON_AddNumberToObject(raw, "fan", output.raw.fan);
-  cJSON_AddNumberToObject(raw, "humidifier", output.raw.humidifier);
-  cJSON_AddNumberToObject(raw, "irrigation", output.raw.irrigation);
+  cJSON_AddNumberToObject(raw, "heater", raw_heater);
+  cJSON_AddNumberToObject(raw, "fan", raw_fan);
+  cJSON_AddNumberToObject(raw, "humidifier", raw_humidifier);
+  cJSON_AddNumberToObject(raw, "irrigation", raw_irrigation);
 
   cJSON* safe = cJSON_AddObjectToObject(document, "safe_output");
   cJSON_AddNumberToObject(safe, "heater", output.safe.heater);

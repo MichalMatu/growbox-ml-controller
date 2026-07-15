@@ -16,6 +16,18 @@ class SerialBridgeError(RuntimeError):
     """Raised when the panel cannot talk to the demo firmware."""
 
 
+_SCENARIO_SNAPSHOT_KEYS = (
+    "sensors",
+    "validity",
+    "environment",
+    "cultivation",
+    "actuators",
+    "targets",
+    "safety",
+    "previous",
+)
+
+
 class SerialBridge:
     def __init__(self, *, history_limit: int = 50) -> None:
         self._lock = threading.RLock()
@@ -123,8 +135,17 @@ class SerialBridge:
             status["paused"] = False
         elif cmd in {"reset", "load_scenario"}:
             status["step"] = 0
-            if cmd == "reset":
-                status["paused"] = True
+            status["paused"] = True
+            if cmd == "load_scenario":
+                scenario = {
+                    key: command[key]
+                    for key in _SCENARIO_SNAPSHOT_KEYS
+                    if key in command and isinstance(command[key], dict)
+                }
+                if scenario:
+                    status["scenario"] = scenario
+                if "seed" in command:
+                    status["seed"] = command["seed"]
         elif cmd == "mode":
             value = command.get("value")
             if value in {"replay", "closed_loop"}:
