@@ -520,7 +520,7 @@ def test_panel_docs_and_help_match_current_ui():
     assert "Konfig." not in agents_md.split("Układ strony", 1)[1].split("Antywzorzec", 1)[0]
     assert "JSON decyzji" not in constants_js
     assert "<strong>Decyzja</strong>" in constants_js
-    assert "jeden szeroki modal" in constants_js
+    assert "jeden przesuwalny modal" in constants_js
     assert "tylko odczyt" in constants_js
     assert "btn-panel-scenario" in INDEX_HTML.read_text(encoding="utf-8")
 
@@ -584,27 +584,26 @@ def test_panel_modal_unifies_all_entry_points_in_one_wide_shell():
     html = INDEX_HTML.read_text(encoding="utf-8")
     panel_css = PANEL_CSS.read_text(encoding="utf-8")
     modal_js = (PANEL_STATIC / "js" / "modal.js").read_text(encoding="utf-8")
-    modal_block = html.split('id="modal-backdrop"', 1)[1].split("help-modal-backdrop", 1)[0]
+    modal_block = html.split('id="modal-backdrop"', 1)[1].split("</div>\n\n  <script", 1)[0]
     assert 'class="modal modal--wide panel-modal"' in html
     assert "setup-modal-backdrop" not in html
     assert 'id="panel-modal-body"' in modal_block
     assert 'id="setup-pane-growbox"' in modal_block
     assert 'id="setup-pane-safety"' in modal_block
-    assert 'id="modal-help"' in modal_block
-    assert 'id="modal-close"' in modal_block
+    assert 'id="modal-tabs"' not in modal_block
+    assert "modal-foot" not in modal_block
+    assert "panel-modal-head" in modal_block
     assert "panelModalViews" in modal_js
+    assert "syncPanelModalActions" in modal_js
+    assert "renderPanelModalTabs" not in modal_js
     for key in ("scenario", "decision", "history", "device", "diagnostics", "growbox", "safety"):
         assert f"{key}:" in modal_js
-    assert 'tab: "Scenariusz"' in modal_js
-    assert 'tab: "Decyzja"' in modal_js
-    assert 'tab: "Startup / status"' in modal_js
-    assert 'tab: "Growbox"' in modal_js
     assert "--modal-w-wide:" in panel_css
-    assert ".panel-modal .modal-tabs" in panel_css
+    assert ".panel-modal-head" in panel_css
     assert ".panel-modal-body" in panel_css
     assert ".panel-modal-body > textarea:not([hidden])" in panel_css
     assert "min-height: calc(min(var(--modal-body-min-h-wide), 58vh)" in panel_css
-    assert re.search(r"\.modal-tabs\s*\{[^}]*justify-content:\s*flex-end", panel_css)
+    assert 'data-panel-modal="scenario"' in html
 
 
 def test_growbox_setup_modal_has_single_help_entry_point():
@@ -617,7 +616,7 @@ def test_growbox_setup_modal_has_single_help_entry_point():
     assert setup_fn
     assert "renderGrowboxPanel(true)" in setup_fn
     assert 'inSetup ? null : "environment"' in growbox_fn
-    assert 'id="modal-help"' in html
+    assert 'id="modal-help"' not in html
     assert 'help: "environment"' in modal_js
     assert 'help: "safety"' in modal_js
 
@@ -638,7 +637,8 @@ def test_panel_action_btn_tokens_and_live_zone_filter():
     assert ".panel-action-btn" in panel_css
     assert "--panel-action-inset-top:" in panel_css
     assert "--panel-action-tab-min-w:" in panel_css
-    assert 'class="panel-action-btn"' in modal_js
+    assert "syncPanelModalActions" in modal_js
+    assert "panel-action-btn" in html
     assert "isLiveZoneActive" in pots_fn
     assert '"available": false' in fixture
     assert "Brak aktywnych donic" in pots_fn

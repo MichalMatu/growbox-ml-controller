@@ -72,9 +72,9 @@ function openModal(view) {
   backdrop.removeAttribute("inert");
   backdrop.setAttribute("aria-hidden", "false");
   updateModalLock();
-  renderPanelModalTabs();
+  syncPanelModalActions();
   refreshModalContent({ force: true });
-  document.getElementById("modal-close")?.focus();
+  document.getElementById("modal-title")?.focus({ preventScroll: true });
 }
 
 function closeModal() {
@@ -86,36 +86,22 @@ function closeModal() {
   backdrop.setAttribute("inert", "");
   backdrop.setAttribute("aria-hidden", "true");
   updateModalLock();
+  syncPanelModalActions();
 }
 
-function renderPanelModalTabs() {
-  const tabs = document.getElementById("modal-tabs");
-  if (!tabs.dataset.ready) {
-    tabs.innerHTML = Object.entries(panelModalViews).map(([key, meta]) =>
-      `<button type="button" class="panel-action-btn" role="tab" data-tab="${key}">${meta.tab}</button>`
-    ).join("");
-    tabs.dataset.ready = "1";
-    tabs.querySelectorAll("[data-tab]").forEach(btn => {
-      btn.onclick = () => {
-        activeModal = btn.dataset.tab;
-        renderPanelModalTabs();
-        refreshModalContent({ force: true });
-      };
-    });
-  }
-  tabs.querySelectorAll("[data-tab]").forEach(btn => {
-    const active = btn.dataset.tab === activeModal;
+function syncPanelModalActions() {
+  const backdrop = document.getElementById("modal-backdrop");
+  const open = backdrop?.classList.contains("open");
+  document.querySelectorAll("[data-panel-modal]").forEach((btn) => {
+    const active = open && btn.dataset.panelModal === activeModal;
     btn.classList.toggle("active", active);
-    btn.setAttribute("aria-selected", active ? "true" : "false");
+    btn.setAttribute("aria-pressed", active ? "true" : "false");
   });
 }
 
 function updatePanelModalChrome(meta) {
   const textarea = document.getElementById("modal-content");
   const panel = document.getElementById("modal-content-panel");
-  const helpBtn = document.getElementById("modal-help");
-  const copyBtn = document.getElementById("modal-copy");
-  const refreshBtn = document.getElementById("modal-refresh");
   const isSetup = meta.type === "setup";
   const isHtml = meta.type === "html";
   const isJson = meta.type === "json";
@@ -128,15 +114,6 @@ function updatePanelModalChrome(meta) {
     pane.classList.toggle("active", active);
     pane.hidden = !active;
   });
-  if (helpBtn) {
-    helpBtn.hidden = !isSetup;
-    if (isSetup) {
-      helpBtn.dataset.help = meta.help;
-      helpBtn.setAttribute("aria-label", `Pomoc — ${meta.title}`);
-    }
-  }
-  if (copyBtn) copyBtn.hidden = !isJson;
-  if (refreshBtn) refreshBtn.hidden = !isHtml;
 }
 
 function modalHasActiveSelection() {

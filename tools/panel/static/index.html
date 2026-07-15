@@ -153,21 +153,14 @@
 
   <div class="modal-backdrop" id="modal-backdrop" aria-hidden="true" inert>
     <div class="modal modal--wide panel-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <div class="modal-head">
-        <h3 id="modal-title">Scenariusz</h3>
-        <div class="modal-tabs btn-row" id="modal-tabs" role="tablist" aria-label="Podgląd i konfiguracja"></div>
+      <div class="modal-head panel-modal-head">
+        <h3 id="modal-title" tabindex="-1">Scenariusz</h3>
       </div>
       <div class="modal-body panel-modal-body" id="panel-modal-body">
         <textarea id="modal-content" readonly></textarea>
         <div id="modal-content-panel" class="diag-modal-body" hidden></div>
         <div id="setup-pane-growbox" class="setup-pane" role="tabpanel" hidden></div>
         <div id="setup-pane-safety" class="setup-pane" role="tabpanel" hidden></div>
-      </div>
-      <div class="modal-foot">
-        <button type="button" class="help-btn" id="modal-help" data-help="environment" aria-label="Pomoc" hidden>?</button>
-        <button id="modal-refresh" type="button" class="ghost" hidden>Odśwież</button>
-        <button id="modal-copy" type="button" hidden>Kopiuj</button>
-        <button class="primary" id="modal-close" type="button">Zamknij</button>
       </div>
     </div>
   </div>

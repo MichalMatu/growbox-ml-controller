@@ -1516,12 +1516,11 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
   color: var(--on-accent);
   border-color: var(--accent-border);
 }
-.panel-modal .modal-tabs .panel-action-btn {
-  flex: 0 1 auto;
-  min-width: var(--panel-action-tab-min-w);
-  max-width: none;
-  padding-left: 0.65rem;
-  padding-right: 0.65rem;
+.panel-modal-head {
+  grid-template-columns: 1fr;
+}
+.panel-modal-head h3 {
+  grid-column: 1 / -1;
 }
 
 

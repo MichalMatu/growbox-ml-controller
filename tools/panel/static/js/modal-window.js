@@ -138,7 +138,7 @@ function prepareModalWindow(backdrop) {
 
 function modalWindowDragBlocked(target) {
   return Boolean(target.closest(
-    "button, a, input, select, textarea, label, .modal-tabs, .modal-resize-handle",
+    "button, a, input, select, textarea, label, .modal-resize-handle",
   ));
 }
 

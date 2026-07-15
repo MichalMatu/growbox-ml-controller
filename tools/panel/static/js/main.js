@@ -212,9 +212,6 @@ document.getElementById("btn-export").onclick = () => {
   a.download = "scenario.json";
   a.click();
 };
-document.getElementById("modal-refresh").onclick = () => refreshDiagnosticsView(true);
-document.getElementById("modal-close").onclick = closeModal;
-document.getElementById("modal-backdrop").onclick = (e) => { if (e.target.id === "modal-backdrop") closeModal(); };
 document.addEventListener("click", async (e) => {
   const panelBtn = e.target.closest("[data-panel-modal]");
   if (panelBtn) {
@@ -233,10 +230,6 @@ document.addEventListener("click", async (e) => {
 document.getElementById("help-modal-close").onclick = closeHelp;
 document.getElementById("help-modal-backdrop").onclick = (e) => {
   if (e.target.id === "help-modal-backdrop") closeHelp();
-};
-
-document.getElementById("modal-copy").onclick = async () => {
-  await navigator.clipboard.writeText(document.getElementById("modal-content").value);
 };
 
 if (location.protocol === "file:") {
