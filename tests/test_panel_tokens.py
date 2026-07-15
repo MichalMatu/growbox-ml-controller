@@ -134,3 +134,35 @@ def test_panel_css_avoids_banned_raw_font_sizes_outside_root():
     )
     for pattern in banned:
         assert pattern not in outside, pattern
+
+
+def test_inset_and_surface_pad_tokens_declared_in_root():
+    css = PANEL_CSS.read_text(encoding="utf-8")
+    root = _root_block(css)
+    assert root
+    for token in (
+        "--inset-pad-compact:",
+        "--inset-pad-actuator:",
+        "--inset-pad-setup-actuator:",
+        "--top-card-pad:",
+        "--surface-pad-zone:",
+        "--surface-pad-actuator-card:",
+        "--surface-pad-empty:",
+        "--modal-foot-pad:",
+        "--live-row-pad-y:",
+    ):
+        assert token in root, token
+
+
+def test_pot_card_mini_cells_use_inset_pad_token():
+    css = PANEL_CSS.read_text(encoding="utf-8")
+    rule = _extract_css_rule(css, ".pot-card .mini-cell")
+    assert rule
+    assert "padding: var(--inset-pad-compact)" in rule
+
+
+def test_panel_css_avoids_banned_raw_padding_outside_root():
+    css = PANEL_CSS.read_text(encoding="utf-8")
+    outside = _css_outside_root(css)
+    matches = re.findall(r"padding:\s*0\.[0-9]+rem", outside)
+    assert not matches, f"raw padding outside :root: {matches}"

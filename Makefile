@@ -20,7 +20,7 @@ endif
 .PHONY: help setup setup-dev install-hooks ensure-venv ensure-idf \
         check check-fast check-push fmt lint clang-tidy-host schema schema-check \
         train-quick train-full train-quick-v2 train-full-v2 \
-        test test-python test-host test-panel test-layout \
+        test test-python test-host test-panel test-layout test-visual panel-screenshots \
         panel ports idf-gate-build build build-n8 build-n32r16v rebuild clean-idf \
         flash monitor flash-monitor menuconfig clean
 
@@ -41,6 +41,8 @@ help: ## Lista komend make (domyślny cel)
 	@printf '    make test           — pytest + testy host C++\n'
 	@printf '    make test-panel     — testy panelu (API + E2E)\n'
 	@printf '    make test-layout    — regresja układu UI panelu\n'
+	@printf '    make test-visual    — screenshot diff panelu (wymaga setup-dev)\n'
+	@printf '    make panel-screenshots — odśwież baseline zrzutów panelu\n'
 	@printf '    make check-fast     — lint/format + schema check\n'
 	@printf '    make check-push     — pełny quality gate (jak pre-push)\n\n'
 	@printf '  Python / ML:\n'
@@ -131,7 +133,13 @@ test-panel: ensure-venv
 	$(PY) -m pytest tests/test_panel.py tests/test_panel_e2e.py tests/test_panel_fixtures.py -q
 
 test-layout: ensure-venv
-	$(PY) -m pytest tests/test_panel_layout.py -q
+	$(PY) -m pytest tests/test_panel_layout.py tests/test_panel_tokens.py -q
+
+test-visual: ensure-venv
+	$(PY) -m pytest tests/test_panel_visual.py -q
+
+panel-screenshots: ensure-venv
+	UPDATE_PANEL_SCREENSHOTS=1 $(PY) -m pytest tests/test_panel_visual.py -q
 
 panel: ensure-venv
 	$(PY) -m tools.panel --host 127.0.0.1 --port 8765
