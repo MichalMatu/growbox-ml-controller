@@ -62,12 +62,7 @@
       gap: 0.35rem;
       flex-shrink: 0;
     }
-    .top-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.22rem;
-      align-items: center;
-    }
+
     .badge {
       display: inline-flex;
       align-items: center;
@@ -193,37 +188,6 @@
       border-color: var(--danger);
       color: #ffb4b6;
       box-shadow: 0 0 0 1px rgba(242, 85, 90, 0.35);
-    }
-    .seed-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.28rem;
-      padding: 0.1rem 0.38rem 0.1rem 0.48rem;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: rgba(15, 20, 25, 0.55);
-      font-size: 0.65rem;
-      color: var(--muted);
-      flex-direction: row;
-    }
-    .top-bar .seed-badge {
-      height: var(--toolbar-h);
-      gap: 0.18rem;
-      padding: 0 0.28rem 0 0.34rem;
-      font-size: var(--toolbar-font);
-    }
-    .seed-badge input {
-      width: 3.2rem;
-      padding: 0.14rem 0.28rem;
-      font-size: 0.68rem;
-      border-radius: 999px;
-      text-align: center;
-    }
-    .top-bar .seed-badge input {
-      width: 2.45rem;
-      height: calc(var(--toolbar-h) - 0.2rem);
-      padding: 0 0.18rem;
-      font-size: var(--toolbar-font);
     }
     .top-bar #port-select {
       height: var(--toolbar-h);
@@ -587,6 +551,51 @@
     .note { color: var(--muted); font-size: 0.72rem; margin: 0.3rem 0 0; }
     .note.flush { margin: 0; }
     .live-box { min-height: 120px; }
+    .previous-live {
+      margin-top: 0.42rem;
+      padding-top: 0.38rem;
+      border-top: 1px solid var(--border);
+    }
+    .previous-live-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.35rem;
+      margin-bottom: 0.22rem;
+    }
+    .previous-live-head h3 {
+      margin: 0;
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .previous-live-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.28rem;
+    }
+    .previous-live-item {
+      padding: 0.28rem 0.34rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: rgba(15, 20, 25, 0.45);
+      text-align: center;
+    }
+    .previous-live-label {
+      display: block;
+      font-size: 0.58rem;
+      color: var(--muted);
+      margin-bottom: 0.1rem;
+    }
+    .previous-live-pct {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--safe);
+      font-variant-numeric: tabular-nums;
+    }
     .json-actions { display: flex; flex-wrap: wrap; gap: var(--cell-gap); margin-top: 0.35rem; }
 
     body.modal-open {
@@ -683,7 +692,6 @@
     <div class="card top-card">
       <div class="top-brand">
         <h1>Growbox ML</h1>
-        <div class="top-badges" id="schema-meta"><span class="badge">Ładowanie…</span></div>
       </div>
       <div class="top-controls">
         <button type="button" class="badge-btn playpause-btn" data-ui="playpause" id="btn-playpause" data-cmd='{"command":"resume"}' aria-label="Start">
@@ -695,7 +703,6 @@
           <button type="button" class="badge-btn" data-ui="mode-loop" data-cmd='{"command":"mode","value":"closed_loop"}'>Loop</button>
         </div>
         <button type="button" class="badge-btn" data-ui="status" data-cmd='{"command":"status"}'>Status</button>
-        <label class="seed-badge">Seed<input type="number" id="seed" value="101" step="1" /></label>
         <button type="button" class="badge-btn primary" data-ui="load" id="btn-load">Wyślij</button>
         <button type="button" class="badge-btn primary" data-ui="step" id="btn-step">Krok</button>
         <button type="button" class="badge-btn" data-ui="defaults" id="btn-defaults">Domyślne</button>
@@ -728,6 +735,14 @@
         </div>
         <div id="outputs-bars" class="outputs-empty">Uruchom <strong>Krok</strong>, aby zobaczyć wyjścia aktuatorów.</div>
         <div class="safety-footer note flush" id="safety-reason" hidden></div>
+        <div class="previous-live" id="previous-live-box">
+          <div class="previous-live-head">
+            <h3>Poprzedni stan aktuatorów</h3>
+            <button type="button" class="help-btn" data-help="previous" aria-label="Pomoc — poprzedni stan">?</button>
+          </div>
+          <p class="note flush">Ostatnie wyjścia Safety — kontekst modelu przy następnym kroku.</p>
+          <div id="previous-live" class="previous-live-grid" aria-live="polite"></div>
+        </div>
         <div class="json-actions btn-row">
           <button id="btn-json-scenario" class="ghost">JSON scenariusza</button>
           <button id="btn-json-decision" class="ghost">JSON decyzji</button>
@@ -848,8 +863,8 @@
             <li><strong>Reset</strong> — reset symulacji (krok 0), bez zmiany formularza</li>
             <li><strong>Replay</strong> — krok ręczny; <strong>Loop</strong> — automatyczne kroki</li>
             <li><strong>Status</strong> — odświeża raport z firmware</li>
-            <li><strong>Seed</strong> — ziarno generatora symulatora (powtarzalność)</li>
             <li><strong>Wyślij</strong> — wysyła cały formularz (scenariusz) na płytkę</li>
+            <li><strong>Seed</strong> — w sekcji Czujniki (ziarno symulatora, wysyłane przy Wyślij)</li>
             <li><strong>Krok</strong> — tylko jedna inferencja; <em>nie</em> wysyła zmian z formularza</li>
             <li><strong>Krok</strong> — jedna inferencja</li>
             <li><strong>Połączony</strong> — formularz wczytuje scenariusz z płytki (komenda status)</li>
@@ -867,6 +882,7 @@
             <li><strong>T wewn., wilgotność, CO₂, gleba</strong> — stan w growboxie</li>
             <li><strong>T zewn., wilg. zewn.</strong> — warunki na zewnątrz (wpływ na symulację)</li>
             <li><strong>Checkbox</strong> — ważność odczytu; odznaczony = czujnik nieważny (safety może wymusić tryb awaryjny)</li>
+            <li><strong>Seed</strong> — ziarno generatora symulatora; ta sama wartość + te same odczyty = powtarzalna symulacja (wysyłane przy <strong>Wyślij</strong>)</li>
           </ul>
         `,
       },
@@ -925,13 +941,13 @@
             <li>Grzałka, fan, nawilżacz, pompa</li>
             <li>Model używa tego jako kontekstu (histereza, płynność sterowania)</li>
           </ul>
-          <p>Przy pierwszym kroku zwykle same zera.</p>
+          <p>W panelu <strong>Na żywo</strong>, pod paskami aktuatorów. Po <strong>Krok</strong> pokazuje procenty z ostatnich wyjść <strong>Safety</strong> (kontekst modelu na następny krok).</p>
         `,
       },
       live: {
         title: "Na żywo",
         html: `
-          <p>Podgląd ostatniej decyzji z firmware po <strong>Krok</strong>.</p>
+          <p>Podgląd ostatniej decyzji z firmware po <strong>Krok</strong>. Poniżej pasków: <strong>Poprzedni stan</strong> — wyjścia Safety z ostatniego kroku.</p>
           <p>Każdy aktuator ma <strong>dwa paski</strong>:</p>
           <ul>
             <li><strong>Model</strong> (niebieski) — co proponuje sieć neuronowa (0–100% mocy)</li>
@@ -1345,7 +1361,15 @@
             min="${sensorField.minimum}" max="${sensorField.maximum}" step="${step}" value="${sVal ?? sensorField.default}" />
         </div>`;
       }).join("");
-      return `<div class="card">${renderSectionHead("Czujniki", "sensors")}<div class="compact-row sensor-grid">${rows}</div></div>`;
+      const seedVal = scenario.seed ?? 101;
+      const seedCell = `<div class="mini-cell">
+          <div class="head-row">
+            <span class="name">Seed</span>
+          </div>
+          <input type="number" id="seed" min="0" step="1" value="${seedVal}"
+            title="Ziarno symulatora — wysyłane przy Wyślij" />
+        </div>`;
+      return `<div class="card">${renderSectionHead("Czujniki", "sensors")}<div class="compact-row sensor-grid">${rows}${seedCell}</div></div>`;
     }
 
     function isWideField(field) {
@@ -1448,7 +1472,8 @@
       root.innerHTML += renderGrowboxPanel();
       for (const section of panelSchema.sections) {
         if (section.id === "sensors" || section.id === "validity"
-            || section.id === "environment" || section.id === "cultivation") continue;
+            || section.id === "environment" || section.id === "cultivation"
+            || section.id === "previous") continue;
         const card = document.createElement("div");
         card.className = "card";
         card.innerHTML = `<h2>${section.title}</h2>`;
@@ -1456,8 +1481,6 @@
           root.innerHTML += `<div class="card">${renderSectionHead(section.title, "actuators")}${renderActuatorBlock(section)}</div>`;
         } else if (section.id === "targets") {
           root.innerHTML += renderCompactBlock(section.title, section.fields, "targets");
-        } else if (section.id === "previous") {
-          root.innerHTML += renderCompactBlock(section.title, section.fields, "previous");
         } else {
           const grid = document.createElement("div");
           grid.className = "section-grid";
@@ -1469,7 +1492,10 @@
     }
 
     function collectScenario() {
-      const next = { seed: Number(document.getElementById("seed").value || 101) };
+      const next = {
+        seed: Number(document.getElementById("seed").value || 101),
+        previous: { ...(scenario.previous || { heater: 0, fan: 0, humidifier: 0, irrigation: 0 }) },
+      };
       document.querySelectorAll("[data-path]").forEach(el => {
         const path = el.dataset.path;
         let value;
@@ -1512,9 +1538,45 @@
       </article>`;
     }
 
+    const ACTUATOR_NAMES = ["heater", "fan", "humidifier", "irrigation"];
+    const PREVIOUS_LABELS = {
+      heater: "Grzałka",
+      fan: "Fan",
+      humidifier: "Nawilż.",
+      irrigation: "Pompa",
+    };
+
+    function renderPreviousLive() {
+      const el = document.getElementById("previous-live");
+      if (!el) return;
+      const prev = scenario.previous || { heater: 0, fan: 0, humidifier: 0, irrigation: 0 };
+      el.innerHTML = ACTUATOR_NAMES.map(name => {
+        const pct = formatOutputPct(prev[name]);
+        return `<div class="previous-live-item">
+          <span class="previous-live-label">${PREVIOUS_LABELS[name]}</span>
+          <span class="previous-live-pct">${pct}%</span>
+        </div>`;
+      }).join("");
+    }
+
+    function syncPreviousActuators(safe) {
+      if (!safe || typeof safe !== "object") return;
+      if (!scenario.previous) scenario.previous = {};
+      for (const name of ACTUATOR_NAMES) {
+        scenario.previous[name] = Number(safe[name]) || 0;
+      }
+      renderPreviousLive();
+      saveScenarioDraft();
+    }
+
+    function clearPreviousActuators() {
+      syncPreviousActuators({ heater: 0, fan: 0, humidifier: 0, irrigation: 0 });
+    }
+
     function clearLivePreview(step = 0) {
       lastRenderedDecisionStep = null;
       lastDecision = null;
+      clearPreviousActuators();
       document.getElementById("decision-summary").innerHTML =
         `<span class="pill step-pill">Krok ${step}</span>` +
         `<span class="live-metric note">Symulacja zresetowana — uruchom <strong>Krok</strong> lub <strong>▶</strong></span>`;
@@ -1567,6 +1629,7 @@
       safetyEl.innerHTML =
         `${statusPill} ${reasonText}` +
         `<span class="safety-code">Kod: <code>${reason}</code> · inferencja ${diag.inference_us ?? "?"} µs</span>`;
+      syncPreviousActuators(safe);
     }
 
     function formatHistory(state) {
@@ -1679,13 +1742,6 @@
       }
     }
 
-    function renderSchemaBadges(schema) {
-      document.getElementById("schema-meta").innerHTML =
-        `<span class="badge">v${schema.schema_version}</span>` +
-        `<span class="badge">${schema.feature_count}→${schema.outputs.length}</span>` +
-        `<span class="badge mono">${schema.schema_hash}</span>`;
-    }
-
     function tryApplyScenarioFromDevice(state, { force = false } = {}) {
       const snap = state?.last_status?.scenario;
       if (!state?.connected || !snap || typeof snap !== "object") return false;
@@ -1700,8 +1756,8 @@
         targets: snap.targets,
         previous: snap.previous,
       });
-      document.getElementById("seed").value = scenario.seed || 101;
       renderForm();
+      renderPreviousLive();
       saveScenarioDraft();
       deviceScenarioSynced = true;
       return true;
@@ -1732,12 +1788,10 @@
       root.addEventListener("input", (event) => {
         if (event.target && event.target.type === "number") collectScenario();
       });
-      document.getElementById("seed").addEventListener("change", () => { collectScenario(); });
     }
 
     async function init() {
       panelSchema = await api("/api/schema");
-      renderSchemaBadges(panelSchema);
       await refreshPorts();
       await refreshState();
       if (lastState?.connected) {
@@ -1747,8 +1801,8 @@
       } else {
         scenario = loadScenarioDraft(panelSchema) || panelSchema.default_scenario;
       }
-      document.getElementById("seed").value = scenario.seed || 101;
       renderForm();
+      renderPreviousLive();
       bindFormSync();
       setInterval(() => refreshState(), 900);
       refreshState();
@@ -1822,12 +1876,12 @@
                 body: JSON.stringify({ seed: Number(document.getElementById("seed").value || 101) }),
               });
               scenario = data.scenario;
-              document.getElementById("seed").value = scenario.seed || 101;
               if (!panelSchema) throw new Error("Schemat panelu niezaładowany — odśwież stronę");
               clearScenarioDraft();
               saveScenarioDraft();
               deviceScenarioSynced = false;
               renderForm();
+              renderPreviousLive();
             }, btn);
           } catch (_) { /* btn flash */ }
           return;
@@ -1898,15 +1952,15 @@
     };
 
     if (location.protocol === "file:") {
-      document.getElementById("schema-meta").innerHTML =
-        `<span class="badge" style="color:var(--danger)">Otwórz http://127.0.0.1:8765</span>`;
+      document.getElementById("decision-summary").textContent =
+        "Otwórz panel przez serwer: http://127.0.0.1:8765 (make panel)";
     }
 
     updateToolbarState({ connected: false });
 
     init().catch(err => {
-      document.getElementById("schema-meta").innerHTML =
-        `<span class="badge" style="color:var(--danger)">Błąd: ${friendlyError(err.message)}</span>`;
+      document.getElementById("decision-summary").textContent =
+        "Błąd API: " + friendlyError(err.message);
     });
   </script>
 </body>
