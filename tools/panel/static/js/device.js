@@ -34,7 +34,6 @@ async function refreshState(options = {}) {
       device: lastState.last_diagnostics,
       startup: lastState.last_startup,
     };
-    updateResourcesStrip();
   }
   if (lastState.last_error) {
     const errBtn = lastState.connected ? toolbarBtn("disconnect") : toolbarBtn("connect");

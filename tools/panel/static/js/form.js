@@ -99,12 +99,7 @@ function closeHelp() {
   const backdrop = document.getElementById("help-modal-backdrop");
   const returnTo = helpReturnFocus;
   helpReturnFocus = null;
-  const focused = document.activeElement;
-  if (returnTo && typeof returnTo.focus === "function") {
-    returnTo.focus();
-  } else if (focused && backdrop.contains(focused) && typeof focused.blur === "function") {
-    focused.blur();
-  }
+  restoreFocusFromDialog(backdrop, returnTo, "#btn-connect");
   backdrop.classList.remove("open");
   backdrop.setAttribute("inert", "");
   backdrop.setAttribute("aria-hidden", "true");

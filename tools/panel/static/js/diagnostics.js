@@ -141,31 +141,6 @@ function formatDiagnosticsHtml(snapshot) {
   </div>`;
 }
 
-function updateResourcesStrip() {
-  const el = document.getElementById("resources-strip");
-  if (!el) return;
-  if (!lastState?.connected || !diagnosticsSnapshot?.device?.heap) {
-    el.hidden = true;
-    el.innerHTML = "";
-    return;
-  }
-  const heap = diagnosticsSnapshot.device.heap;
-  const psramOn = Boolean(heap.psram_enabled);
-  const totalPsram = Number(heap.total_psram) || 0;
-  const usedPsram = Number(heap.used_psram) || (totalPsram > 0 ? Math.max(0, totalPsram - Number(heap.free_psram)) : 0);
-  const totalInternal = Number(heap.total_internal) || 0;
-  const usedInternal = Number(heap.used_internal) || (totalInternal > 0 ? Math.max(0, totalInternal - Number(heap.free_internal)) : 0);
-  const freeInternal = Number(heap.free_internal) || 0;
-  const parts = [
-    `<span class="res-chip"><span class="res-label">DRAM</span> ${formatBytes(freeInternal)} wolne <span class="res-muted">(${formatUsagePct(usedInternal, totalInternal || usedInternal + freeInternal)} zajęte)</span></span>`,
-  ];
-  if (psramOn && totalPsram > 0) {
-    parts.push(`<span class="res-chip psram"><span class="res-label">PSRAM</span> ${formatUsageDetail(usedPsram, totalPsram)}</span>`);
-  }
-  el.hidden = false;
-  el.innerHTML = parts.join("");
-}
-
 async function refreshDiagnosticsView(refreshDevice = true) {
   const query = refreshDevice && lastState?.connected ? "?refresh=1" : "";
   try {
@@ -173,7 +148,6 @@ async function refreshDiagnosticsView(refreshDevice = true) {
   } catch (err) {
     diagnosticsSnapshot = `Błąd: ${friendlyError(err.message)}`;
   }
-  updateResourcesStrip();
   if (activeModal === "diagnostics") refreshModalContent({ force: refreshDevice });
 }
 

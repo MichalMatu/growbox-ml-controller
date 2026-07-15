@@ -160,9 +160,7 @@ document.getElementById("btn-json-decision").onclick = () => openModal("decision
 document.getElementById("btn-json-history").onclick = () => openModal("history");
 document.getElementById("btn-json-device").onclick = () => openModal("device");
 document.getElementById("btn-json-diagnostics").onclick = () => openDiagnosticsModal();
-document.getElementById("btn-diagnostics-toolbar").onclick = () => openDiagnosticsModal();
 document.getElementById("modal-refresh").onclick = () => refreshDiagnosticsView(true);
-document.getElementById("resources-strip").onclick = () => openDiagnosticsModal();
 document.getElementById("modal-close").onclick = closeModal;
 document.getElementById("modal-backdrop").onclick = (e) => { if (e.target.id === "modal-backdrop") closeModal(); };
 document.addEventListener("click", (e) => {
