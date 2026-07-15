@@ -177,11 +177,7 @@ document.getElementById("help-modal-close-2").onclick = closeHelp;
 document.getElementById("help-modal-backdrop").onclick = (e) => {
   if (e.target.id === "help-modal-backdrop") closeHelp();
 };
-document.addEventListener("keydown", (e) => {
-  if (e.key !== "Escape") return;
-  if (document.getElementById("help-modal-backdrop").classList.contains("open")) closeHelp();
-  else if (document.getElementById("modal-backdrop").classList.contains("open")) closeModal();
-});
+
 document.getElementById("modal-copy").onclick = async () => {
   await navigator.clipboard.writeText(document.getElementById("modal-content").value);
 };

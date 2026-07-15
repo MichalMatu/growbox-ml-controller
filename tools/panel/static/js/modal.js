@@ -1,3 +1,6 @@
+var modalRenderedKey = "";
+var modalRenderedContent = "";
+
 const modalViews = {
   scenario: { title: "Scenariusz (payload)", get: () => JSON.stringify(collectScenario(), null, 2) },
   decision: { title: "Ostatnia decyzja", get: () => lastDecision ? JSON.stringify(lastDecision, null, 2) : "Brak decyzji." },
@@ -31,7 +34,7 @@ function openModal(view) {
   backdrop.setAttribute("aria-hidden", "false");
   updateModalLock();
   renderModalTabs();
-  refreshModalContent();
+  refreshModalContent({ force: true });
   document.getElementById("modal-close").focus();
 }
 
@@ -57,11 +60,28 @@ function renderModalTabs() {
     `<button type="button" data-tab="${key}" class="${key === activeModal ? "active" : ""}">${meta.title.split(" ")[0]}</button>`
   ).join("");
   tabs.querySelectorAll("[data-tab]").forEach(btn => {
-    btn.onclick = () => { activeModal = btn.dataset.tab; renderModalTabs(); refreshModalContent(); };
+    btn.onclick = () => { activeModal = btn.dataset.tab; renderModalTabs(); refreshModalContent({ force: true }); };
   });
 }
 
-function refreshModalContent() {
+function modalHasActiveSelection() {
+  const backdrop = document.getElementById("modal-backdrop");
+  if (!backdrop?.classList.contains("open")) return false;
+  const textarea = document.getElementById("modal-content");
+  if (textarea && !textarea.hidden && textarea.selectionEnd > textarea.selectionStart) {
+    return true;
+  }
+  const panel = document.getElementById("modal-content-panel");
+  const selection = window.getSelection?.();
+  if (selection && !selection.isCollapsed && panel && !panel.hidden) {
+    const node = selection.anchorNode;
+    if (node && panel.contains(node)) return true;
+  }
+  return false;
+}
+
+function refreshModalContent({ force = false } = {}) {
+  if (!force && modalHasActiveSelection()) return;
   const meta = modalViews[activeModal];
   const textarea = document.getElementById("modal-content");
   const panel = document.getElementById("modal-content-panel");
@@ -73,9 +93,85 @@ function refreshModalContent() {
   panel.hidden = !isHtml;
   copyBtn.hidden = isHtml;
   if (refreshBtn) refreshBtn.hidden = !isHtml;
+  const cacheKey = `${activeModal}:${isHtml ? "html" : "text"}`;
   if (isHtml) {
-    panel.innerHTML = formatDiagnosticsHtml(diagnosticsSnapshot);
+    const html = formatDiagnosticsHtml(diagnosticsSnapshot);
+    if (!force && cacheKey === modalRenderedKey && html === modalRenderedContent) return;
+    panel.tabIndex = -1;
+    panel.innerHTML = html;
+    modalRenderedKey = cacheKey;
+    modalRenderedContent = html;
   } else {
-    textarea.value = meta.get();
+    const text = meta.get();
+    if (!force && cacheKey === modalRenderedKey && text === modalRenderedContent) return;
+    textarea.value = text;
+    modalRenderedKey = cacheKey;
+    modalRenderedContent = text;
   }
 }
+
+function isSelectAllShortcut(event) {
+  if (!event.metaKey && !event.ctrlKey) return false;
+  const key = event.key?.toLowerCase();
+  return key === "a" || event.code === "KeyA";
+}
+
+function selectWithinElement(root) {
+  if (!root) return false;
+  if (root.tagName === "TEXTAREA" || (root.tagName === "INPUT" && root.type !== "checkbox")) {
+    root.focus({ preventScroll: true });
+    root.select();
+    return true;
+  }
+  root.focus?.({ preventScroll: true });
+  const selection = window.getSelection?.();
+  if (!selection) return false;
+  const range = document.createRange();
+  range.selectNodeContents(root);
+  selection.removeAllRanges();
+  selection.addRange(range);
+  return true;
+}
+
+function handleModalSelectAll(event) {
+  if (!isSelectAllShortcut(event)) return false;
+  const helpBackdrop = document.getElementById("help-modal-backdrop");
+  const jsonBackdrop = document.getElementById("modal-backdrop");
+  const helpOpen = helpBackdrop?.classList.contains("open");
+  const jsonOpen = jsonBackdrop?.classList.contains("open");
+  if (!helpOpen && !jsonOpen) return false;
+
+  event.preventDefault();
+  event.stopPropagation();
+  event.stopImmediatePropagation();
+
+  if (helpOpen) {
+    selectWithinElement(document.getElementById("help-modal-content"));
+    return true;
+  }
+
+  const panel = document.getElementById("modal-content-panel");
+  const textarea = document.getElementById("modal-content");
+  if (panel && !panel.hidden) {
+    selectWithinElement(panel);
+  } else {
+    selectWithinElement(textarea);
+  }
+  return true;
+}
+
+function handleModalKeydown(event) {
+  if (handleModalSelectAll(event)) return;
+  if (event.key !== "Escape") return;
+  const helpBackdrop = document.getElementById("help-modal-backdrop");
+  const jsonBackdrop = document.getElementById("modal-backdrop");
+  if (helpBackdrop?.classList.contains("open")) {
+    event.preventDefault();
+    closeHelp();
+  } else if (jsonBackdrop?.classList.contains("open")) {
+    event.preventDefault();
+    closeModal();
+  }
+}
+
+document.addEventListener("keydown", handleModalKeydown, true);

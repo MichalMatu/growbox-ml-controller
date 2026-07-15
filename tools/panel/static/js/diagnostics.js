@@ -142,7 +142,7 @@ async function refreshDiagnosticsView(refreshDevice = true) {
     diagnosticsSnapshot = `Błąd: ${friendlyError(err.message)}`;
   }
   updateResourcesStrip();
-  if (activeModal === "diagnostics") refreshModalContent();
+  if (activeModal === "diagnostics") refreshModalContent({ force: refreshDevice });
 }
 
 async function openDiagnosticsModal() {
