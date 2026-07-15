@@ -14,6 +14,12 @@ from tools.panel.bridge import SerialBridge, SerialBridgeError
 from tools.panel.form_schema import build_panel_schema, default_scenario
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
+STATIC_MIME = {
+    ".css": "text/css; charset=utf-8",
+    ".js": "application/javascript; charset=utf-8",
+    ".svg": "image/svg+xml",
+    ".ico": "image/x-icon",
+}
 BRIDGE = SerialBridge()
 
 
@@ -64,6 +70,14 @@ class PanelHandler(BaseHTTPRequestHandler):
                 _json_response(self, HTTPStatus.OK, {"ports": BRIDGE.list_ports()})
             elif path in {"/favicon.ico", "/favicon.svg"}:
                 self._serve_favicon()
+            elif path == "/panel.css":
+                self._serve_static_file(STATIC_DIR / "panel.css")
+            elif path.startswith("/js/"):
+                rel = path.removeprefix("/js/")
+                if ".." in rel or rel.startswith("/"):
+                    _json_response(self, HTTPStatus.NOT_FOUND, {"error": "not_found"})
+                else:
+                    self._serve_static_file(STATIC_DIR / "js" / rel)
             else:
                 _json_response(self, HTTPStatus.NOT_FOUND, {"error": "not_found"})
         except Exception as exc:  # noqa: BLE001 - surface to UI
@@ -123,11 +137,19 @@ class PanelHandler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def _serve_favicon(self) -> None:
-        body = (STATIC_DIR / "favicon.svg").read_bytes()
+        self._serve_static_file(STATIC_DIR / "favicon.svg")
+
+    def _serve_static_file(self, file_path: Path) -> None:
+        if not file_path.is_file():
+            _json_response(self, HTTPStatus.NOT_FOUND, {"error": "not_found"})
+            return
+        body = file_path.read_bytes()
+        mime = STATIC_MIME.get(file_path.suffix, "application/octet-stream")
         self.send_response(HTTPStatus.OK)
-        self.send_header("Content-Type", "image/svg+xml")
+        self.send_header("Content-Type", mime)
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Cache-Control", "public, max-age=86400")
+        if file_path.suffix in {".css", ".js", ".svg", ".ico"}:
+            self.send_header("Cache-Control", "public, max-age=3600")
         _panel_headers(self)
         self.end_headers()
         self.wfile.write(body)

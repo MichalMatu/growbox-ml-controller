@@ -155,17 +155,28 @@ def test_bridge_confirms_transport_on_ack():
     assert bridge._state["last_status"]["paused"] is False
 
 
-def test_panel_serves_favicon_assets():
+def test_panel_serves_static_assets():
     server = ThreadingHTTPServer(("127.0.0.1", 0), PanelHandler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     try:
         base = f"http://127.0.0.1:{server.server_address[1]}"
-        for path in ("/favicon.ico", "/favicon.svg"):
+        cases = {
+            "/favicon.ico": (b"<svg", "image"),
+            "/favicon.svg": (b"<svg", "image"),
+            "/panel.css": (b":root", "text/css"),
+            "/js/state.js": (b"let panelSchema", "javascript"),
+            "/js/main.js": (b"async function init", "javascript"),
+        }
+        for path, (needle, kind) in cases.items():
             with urllib.request.urlopen(f"{base}{path}") as response:
                 body = response.read()
                 assert response.status == 200
-                assert b"<svg" in body
+                assert needle in body
+                if kind == "text/css":
+                    assert "text/css" in response.headers["Content-Type"]
+                elif kind == "javascript":
+                    assert "javascript" in response.headers["Content-Type"]
     finally:
         server.shutdown()
         thread.join(timeout=2.0)
