@@ -607,9 +607,11 @@ def test_live_section_includes_pots_lights_and_zone_readings():
     panel_css = PANEL_CSS.read_text(encoding="utf-8")
     metrics_fn = _extract_js_function(live_js, "renderLiveMetricsTable")
     climate_fn = _extract_js_function(live_js, "renderLiveClimateColumn")
+    group_fn = _extract_js_function(live_js, "renderLiveSensorGroupBlock")
     pots_fn = _extract_js_function(live_js, "renderLivePotGroupTable")
     assert metrics_fn
     assert climate_fn
+    assert group_fn
     assert pots_fn
     assert "renderLiveClimateColumn(decision)" in metrics_fn
     assert "renderLivePotGroupTable(decision)" in metrics_fn
@@ -617,7 +619,12 @@ def test_live_section_includes_pots_lights_and_zone_readings():
     assert "LIVE_SENSOR_GROUPS.map" in climate_fn
     assert "POT_SENSOR_ROWS" in pots_fn
     assert "${potNo} Wilg." in pots_fn
-    assert "Donica" not in pots_fn.split("live-sensor-col-head", 1)[1]
+    assert "live-sensor-col-head" not in group_fn
+    assert "live-sensor-col-head" not in pots_fn
+    assert 'live-table-group-head">${group.title}</th>' in group_fn
+    assert 'live-table-group-head">Donice</th>' in pots_fn
+    assert "Donica" not in pots_fn
+    assert ".live-table-group-head" in panel_css
     assert 'kind: "pseudo"' in constants_js
     assert 'label: "Lampa"' in constants_js
     assert "isLiveZoneActive(decision, index)" in pots_fn

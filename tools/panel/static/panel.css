@@ -1386,6 +1386,9 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
 .live-sensors-split .live-data-table thead th.num {
   text-align: right;
 }
+.live-sensors-split .live-data-table thead th.live-table-group-head {
+  text-align: left;
+}
 .live-sensors-split .live-data-table tbody th {
   font-size: var(--live-text-row);
   overflow: hidden;

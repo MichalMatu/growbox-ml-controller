@@ -161,7 +161,6 @@ function renderLivePotGroupTable(decision) {
     ? rowParts.join("")
     : `<tr><td colspan="3" class="live-empty">Brak aktywnych donic w profilu.</td></tr>`;
   return `<div class="live-sensor-col live-sensor-col-pots">
-    <div class="live-sensor-col-head">Donice</div>
     <div class="live-data-table-wrap">
       <table class="live-data-table" aria-label="Donice">
         <colgroup>
@@ -171,7 +170,7 @@ function renderLivePotGroupTable(decision) {
         </colgroup>
         <thead>
           <tr>
-            <th scope="col" class="sensor-col"></th>
+            <th scope="col" class="sensor-col live-table-group-head">Donice</th>
             <th scope="col" class="num">Odczyt</th>
             <th scope="col" class="num">Cel</th>
           </tr>
@@ -187,7 +186,6 @@ function renderLiveSensorGroupBlock(group, decision) {
     renderLiveMetricRow(metric, decision)
   ).join("");
   return `<div class="live-sensor-block">
-    <div class="live-sensor-col-head">${group.title}</div>
     <div class="live-data-table-wrap">
       <table class="live-data-table" aria-label="${group.title}">
         <colgroup>
@@ -197,7 +195,7 @@ function renderLiveSensorGroupBlock(group, decision) {
         </colgroup>
         <thead>
           <tr>
-            <th scope="col" class="sensor-col"></th>
+            <th scope="col" class="sensor-col live-table-group-head">${group.title}</th>
             <th scope="col" class="num">Odczyt</th>
             <th scope="col" class="num">Cel</th>
           </tr>
