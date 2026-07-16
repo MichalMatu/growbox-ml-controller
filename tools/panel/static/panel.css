@@ -1961,6 +1961,88 @@ body.modal-open {
   font-size: var(--text-title-bar);
   line-height: 1.35;
 }
+.history-modal-body {
+  padding: 0.15rem 0.05rem 0.25rem;
+}
+.history-panel {
+  display: grid;
+  gap: 0.55rem;
+}
+.history-summary {
+  margin: 0 0 0.1rem;
+  color: var(--muted);
+  font-size: var(--text-base);
+}
+.history-empty {
+  margin: 0.2rem 0;
+  color: var(--muted);
+}
+.history-entry {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface-subtle);
+  overflow: hidden;
+}
+.history-entry--tx {
+  border-color: rgba(61, 139, 253, 0.42);
+  background: rgba(61, 139, 253, 0.06);
+}
+.history-entry--rx {
+  border-color: var(--ok-border);
+  background: var(--ok-bg-subtle);
+}
+.history-entry--invalid {
+  border-color: var(--danger-border-strong);
+  background: rgba(242, 85, 90, 0.08);
+}
+.history-entry-head {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  padding: 0.32rem 0.5rem;
+  border-bottom: 1px solid rgba(45, 58, 79, 0.55);
+  font-size: var(--text-badge);
+}
+.history-index {
+  font-family: ui-monospace, monospace;
+  color: var(--muted);
+  min-width: 1.6rem;
+}
+.history-dir {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.history-entry--tx .history-dir { color: var(--accent); }
+.history-entry--rx .history-dir { color: var(--ok); }
+.history-entry--invalid .history-dir { color: var(--danger-text-soft); }
+.history-time {
+  margin-left: auto;
+  font-family: ui-monospace, monospace;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+.history-json,
+.history-raw {
+  margin: 0;
+  padding: 0.45rem 0.55rem 0.5rem;
+  overflow: auto;
+  font-family: ui-monospace, monospace;
+  font-size: var(--modal-body-font);
+  line-height: 1.45;
+  white-space: pre;
+  tab-size: 2;
+}
+.history-json code,
+.history-raw code {
+  display: block;
+}
+.history-json .json-key { color: #9ec5ff; }
+.history-json .json-str { color: #9fe8c8; }
+.history-json .json-num { color: #ffd89a; }
+.history-json .json-lit { color: #d8a8ff; }
+.history-raw code { color: var(--danger-text-soft); }
 .diag-panel {
   display: grid;
   gap: 0.45rem;

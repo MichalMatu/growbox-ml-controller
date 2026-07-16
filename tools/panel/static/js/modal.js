@@ -17,8 +17,9 @@ const panelModalViews = {
   history: {
     tab: "Historia",
     title: "Historia",
-    type: "json",
-    get: () => formatHistory(lastState),
+    type: "html",
+    panelClass: "diag-modal-body history-modal-body",
+    getHtml: () => formatHistoryHtml(lastState),
   },
   device: {
     tab: "Status",
@@ -54,11 +55,88 @@ const panelModalViews = {
   },
 };
 
-function formatHistory(state) {
-  if (!state?.history?.length) return "Brak historii.";
-  return state.history.slice(0, 20).map(h =>
-    `${h.direction}: ${JSON.stringify(h.payload)}`
-  ).join("\n\n");
+const HISTORY_DIRECTION_META = {
+  tx: { label: "Wysłano", className: "tx" },
+  rx: { label: "Odebrano", className: "rx" },
+  rx_invalid: { label: "Niepoprawny JSON", className: "invalid" },
+};
+
+function formatHistoryTimestamp(timestamp) {
+  if (!Number.isFinite(timestamp)) return "";
+  return new Date(timestamp * 1000).toLocaleString("pl-PL", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
+
+function formatHistoryPayload(payload) {
+  if (payload === null || payload === undefined) return "";
+  if (typeof payload === "string") return payload;
+  try {
+    return JSON.stringify(payload, null, 2);
+  } catch (_) {
+    return String(payload);
+  }
+}
+
+function highlightJson(source) {
+  const text = String(source ?? "");
+  const tokenRe = /("(\\u[\dA-Fa-f]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g;
+  let html = "";
+  let last = 0;
+  let match;
+  while ((match = tokenRe.exec(text)) !== null) {
+    html += escapeHtml(text.slice(last, match.index));
+    const token = match[0];
+    let cls = "json-num";
+    if (/^"/.test(token)) cls = /:$/.test(token) ? "json-key" : "json-str";
+    else if (/^(true|false|null)$/.test(token)) cls = "json-lit";
+    html += `<span class="${cls}">${escapeHtml(token)}</span>`;
+    last = tokenRe.lastIndex;
+  }
+  html += escapeHtml(text.slice(last));
+  return html;
+}
+
+function renderHistoryEntry(entry, index) {
+  const direction = entry?.direction || "rx";
+  const meta = HISTORY_DIRECTION_META[direction] || {
+    label: direction,
+    className: "unknown",
+  };
+  const payloadText = formatHistoryPayload(entry?.payload);
+  const body = direction === "rx_invalid"
+    ? `<pre class="history-raw"><code>${escapeHtml(payloadText)}</code></pre>`
+    : `<pre class="history-json"><code>${highlightJson(payloadText)}</code></pre>`;
+  const time = formatHistoryTimestamp(entry?.timestamp);
+  const timeMarkup = time
+    ? `<time class="history-time" datetime="${new Date((entry.timestamp || 0) * 1000).toISOString()}">${escapeHtml(time)}</time>`
+    : "";
+  return `<article class="history-entry history-entry--${meta.className}">
+    <header class="history-entry-head">
+      <span class="history-index">#${index + 1}</span>
+      <span class="history-dir">${escapeHtml(meta.label)}</span>
+      ${timeMarkup}
+    </header>
+    ${body}
+  </article>`;
+}
+
+function formatHistoryHtml(state) {
+  const items = state?.history;
+  if (!items?.length) {
+    return '<p class="history-empty">Brak historii komunikacji z płytką.</p>';
+  }
+  const visible = items.slice(0, 20);
+  const entries = visible.map((entry, index) => renderHistoryEntry(entry, index)).join("");
+  return `<div class="history-panel">
+    <p class="history-summary">Ostatnie <strong>${visible.length}</strong> wpisów (najnowsze u góry)</p>
+    ${entries}
+  </div>`;
 }
 
 function formatDevice(state) {
@@ -133,6 +211,7 @@ function updatePanelModalChrome(meta) {
   refreshModalStepBadge();
   textarea.hidden = !isJson;
   panel.hidden = !isHtml;
+  panel.className = meta.panelClass || "diag-modal-body";
   document.querySelectorAll(".setup-pane").forEach((pane) => {
     const active = isSetup && pane.id === `setup-pane-${meta.pane}`;
     pane.classList.toggle("active", active);
@@ -182,9 +261,12 @@ function refreshJsonModalContent({ force = false } = {}) {
 }
 
 function refreshHtmlModalContent({ force = false } = {}) {
+  const meta = panelModalViews[activeModal];
   const panel = document.getElementById("modal-content-panel");
   const cacheKey = `${activeModal}:html`;
-  const html = formatDiagnosticsHtml(diagnosticsSnapshot);
+  const html = meta?.getHtml
+    ? meta.getHtml()
+    : formatDiagnosticsHtml(diagnosticsSnapshot);
   if (!force && cacheKey === modalRenderedKey && html === modalRenderedContent) return;
   panel.tabIndex = -1;
   panel.innerHTML = html;
