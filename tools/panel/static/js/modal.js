@@ -18,7 +18,7 @@ const panelModalViews = {
     tab: "Historia",
     title: "Historia",
     type: "html",
-    panelClass: "diag-modal-body history-modal-body",
+    panelClass: "diag-modal-body",
     getHtml: () => formatHistoryHtml(lastState),
   },
   device: {

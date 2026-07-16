@@ -2,11 +2,29 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 PANEL_STATIC = Path(__file__).resolve().parents[1] / "tools" / "panel" / "static"
 MODAL_JS = PANEL_STATIC / "js" / "modal.js"
 PANEL_CSS = PANEL_STATIC / "panel.css"
+
+
+def _extract_css_rule(source: str, selector: str) -> str:
+    match = re.search(rf"{re.escape(selector)}\s*\{{", source)
+    if not match:
+        return ""
+    start = match.end() - 1
+    depth = 0
+    for index in range(start, len(source)):
+        char = source[index]
+        if char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth == 0:
+                return source[match.start() : index + 1]
+    return ""
 
 
 def _extract_js_function(source: str, name: str) -> str:
@@ -52,4 +70,5 @@ def test_history_html_has_syntax_highlight_and_entry_chrome():
     assert 'className: "tx"' in modal_js
     assert 'className: "rx"' in modal_js
     assert ".history-json .json-key" in panel_css
-    assert ".history-entry--tx" in panel_css
+    assert "overflow: visible" in panel_css.split(".history-json,", 1)[1].split(".diag-panel", 1)[0]
+    assert "ok-bg-subtle" not in panel_css.split(".history-entry", 1)[-1].split(".diag-panel", 1)[0]
