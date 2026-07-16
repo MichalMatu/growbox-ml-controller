@@ -190,6 +190,152 @@ function applyInactiveZonePolicy(doc) {
   return doc;
 }
 
+function scenarioFieldElement(path) {
+  if (!path) return null;
+  if (path === "seed") return document.getElementById("seed");
+  for (const root of scenarioFormRoots()) {
+    const el = root.querySelector(`[data-path="${path}"]`);
+    if (el) return el;
+  }
+  return document.querySelector(`[data-path="${path}"]`);
+}
+
+function isScenarioNumberInputEligible(el) {
+  return Boolean(
+    el
+    && el.type === "number"
+    && (el.dataset.path || el.id === "seed")
+    && !el.disabled
+    && !el.readOnly,
+  );
+}
+
+function clearScenarioFieldInvalid(el) {
+  if (!isScenarioNumberInputEligible(el)) return;
+  if (!validateScenarioNumberInput(el)) {
+    el.classList.remove("field-invalid");
+    el.setAttribute("aria-invalid", "false");
+  }
+}
+
+function validateScenarioNumberInput(el) {
+  if (!el || el.type !== "number") return null;
+  const raw = String(el.value).trim();
+  if (raw === "") return "Pole puste — wpisz liczbę";
+  if (isIncompleteNumberInput(raw)) return "Niepełna liczba — dokończ wpisywanie";
+  const num = Number(raw.replace(",", "."));
+  if (!Number.isFinite(num)) return "Nieprawidłowa liczba";
+  const min = el.min !== "" && el.min != null ? Number(el.min) : NaN;
+  const max = el.max !== "" && el.max != null ? Number(el.max) : NaN;
+  if (Number.isFinite(min) && num < min) return `Poniżej minimum (${min})`;
+  if (Number.isFinite(max) && num > max) return `Powyżej maksimum (${max})`;
+  return null;
+}
+
+function validateScenarioLogicalRules(doc) {
+  const errors = [];
+  const safety = doc?.safety;
+  if (safety && typeof safety === "object") {
+    const tMax = safety.maximum_air_temperature_c;
+    const tAlarm = safety.alarm_air_temperature_c;
+    if (Number.isFinite(tMax) && Number.isFinite(tAlarm) && tAlarm > tMax) {
+      const path = "safety.alarm_air_temperature_c";
+      errors.push({
+        path,
+        label: scenarioFieldLabel(path),
+        message: "Alarm T nie może być wyższy niż T max (grzałka)",
+        el: scenarioFieldElement(path),
+      });
+    }
+    const fanMin = safety.alarm_minimum_fan;
+    if (Number.isFinite(fanMin) && (fanMin < 0 || fanMin > 1)) {
+      const path = "safety.alarm_minimum_fan";
+      errors.push({
+        path,
+        label: scenarioFieldLabel(path),
+        message: "Fan min musi być w zakresie 0–1",
+        el: scenarioFieldElement(path),
+      });
+    }
+  }
+  return errors;
+}
+
+function validateScenarioForm() {
+  const errors = [];
+  let editableCount = 0;
+  const seedEl = document.getElementById("seed");
+  if (seedEl && !seedEl.disabled && !seedEl.readOnly) {
+    editableCount += 1;
+    const seedErr = validateScenarioNumberInput(seedEl);
+    if (seedErr) {
+      errors.push({ path: "seed", label: "Seed", message: seedErr, el: seedEl });
+    }
+  }
+  forEachScenarioField(el => {
+    if (!isScenarioNumberInputEligible(el)) return;
+    editableCount += 1;
+    const message = validateScenarioNumberInput(el);
+    if (message) {
+      errors.push({
+        path: el.dataset.path,
+        label: scenarioFieldLabel(el.dataset.path),
+        message,
+        el,
+      });
+    }
+  });
+  if (editableCount === 0) {
+    return {
+      ok: false,
+      errors: [{ path: "", label: "Formularz", message: "Brak pól do wysłania", el: null }],
+    };
+  }
+  if (errors.length === 0) {
+    const draft = readScenarioFromForm(scenario, { formatNumbers: false });
+    errors.push(...validateScenarioLogicalRules(draft));
+  }
+  return { ok: errors.length === 0, errors };
+}
+
+function syncScenarioFieldValidityMarks(validation = null) {
+  const errorByPath = new Map();
+  for (const item of validation?.errors || []) {
+    if (item.path) errorByPath.set(item.path, item.message);
+  }
+  const seedEl = document.getElementById("seed");
+  if (seedEl) {
+    const seedErr = errorByPath.get("seed") || (isScenarioNumberInputEligible(seedEl)
+      ? validateScenarioNumberInput(seedEl)
+      : null);
+    seedEl.classList.toggle("field-invalid", Boolean(seedErr));
+    seedEl.setAttribute("aria-invalid", seedErr ? "true" : "false");
+  }
+  forEachScenarioField(el => {
+    if (!isScenarioNumberInputEligible(el)) {
+      el.classList.remove("field-invalid");
+      el.removeAttribute("aria-invalid");
+      return;
+    }
+    const err = errorByPath.get(el.dataset.path) || validateScenarioNumberInput(el);
+    el.classList.toggle("field-invalid", Boolean(err));
+    el.setAttribute("aria-invalid", err ? "true" : "false");
+  });
+}
+
+function showScenarioValidationErrors(validation, { actionLabel = "wysłania" } = {}) {
+  syncScenarioFieldValidityMarks(validation);
+  const items = validation.errors
+    .map(item => `<li><strong>${escapeHtml(item.label)}</strong> — ${escapeHtml(item.message)}</li>`)
+    .join("");
+  openNotice({
+    title: "Formularz ma błędy",
+    html: `<p>Popraw pola przed <strong>${escapeHtml(actionLabel)}</strong>:</p><ul>${items}</ul>`,
+  });
+  const focusTarget = validation.errors.find(item => item.el)?.el;
+  focusTarget?.focus({ preventScroll: true });
+}
+
 function readScenarioFromForm(base = scenario, { formatNumbers = true } = {}) {
   const next = sanitizeScenarioNumeric(cloneScenarioDoc(base));
   const seedEl = document.getElementById("seed");

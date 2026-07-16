@@ -13,10 +13,11 @@ function bindFormInputRoot(root) {
   });
   root.addEventListener("input", (event) => {
     const el = event.target;
-    if (el?.type === "number" && el.dataset.path) {
-      if (isTranspirationFactorPath(el.dataset.path)) {
+    if (el?.id === "seed" || (el?.type === "number" && el.dataset.path)) {
+      if (el.dataset.path && isTranspirationFactorPath(el.dataset.path)) {
         enforceMaxDecimalPlaces(el, maxDecimalPlacesForPath(el.dataset.path));
       }
+      clearScenarioFieldInvalid(el);
       collectScenario({ formatNumbers: false });
     }
   });
@@ -27,7 +28,9 @@ function bindFormSync() {
   bindFormInputRoot(document.getElementById("panel-modal-body"));
   const toolbar = document.getElementById("panel-toolbar");
   const onSeedChange = (event) => {
-    if (event.target?.id === "seed") collectScenario();
+    if (event.target?.id !== "seed") return;
+    clearScenarioFieldInvalid(event.target);
+    collectScenario();
   };
   toolbar?.addEventListener("change", onSeedChange);
   toolbar?.addEventListener("input", onSeedChange);
@@ -181,6 +184,12 @@ function bindToolbar() {
     if (btn.id === "btn-load") {
       event.preventDefault();
       if (btn.classList.contains("state-disabled")) return;
+      const validation = validateScenarioForm();
+      if (!validation.ok) {
+        showScenarioValidationErrors(validation, { actionLabel: "Wyślij" });
+        return;
+      }
+      syncScenarioFieldValidityMarks(validation);
       try {
         await runAction(async () => {
           const payload = collectScenario();
@@ -209,6 +218,12 @@ function bindToolbar() {
     if (btn.id === "btn-step") {
       event.preventDefault();
       if (btn.classList.contains("state-disabled")) return;
+      const validation = validateScenarioForm();
+      if (!validation.ok) {
+        showScenarioValidationErrors(validation, { actionLabel: "Krok" });
+        return;
+      }
+      syncScenarioFieldValidityMarks(validation);
       try {
         await runAction(async () => {
           collectScenario();

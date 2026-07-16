@@ -132,6 +132,21 @@ function fieldByName(name, sectionId = null) {
   return null;
 }
 
+function fieldByPath(path) {
+  if (!panelSchema?.sections || !path) return null;
+  for (const section of panelSchema.sections) {
+    const hit = section.fields.find(f => f.path === path);
+    if (hit) return hit;
+  }
+  return null;
+}
+
+function scenarioFieldLabel(path) {
+  if (path === "seed") return "Seed";
+  const field = fieldByPath(path);
+  return field ? shortLabel(field.name) : path;
+}
+
 function sectionById(id) {
   return panelSchema.sections.find(section => section.id === id) || null;
 }
@@ -144,7 +159,6 @@ function fieldUnitSuffix(field) {
     nutrient_heater_efficiency: "η",
     heat_mat_max_power_w: "W",
     fan_max_airflow_m3_h: "m³/h",
-    fan_minimum_command: "min",
     humidifier_max_output_g_h: "g/h",
     dehumidifier_max_removal_g_h: "g/h",
     cooler_max_cooling_w: "W",
@@ -161,8 +175,9 @@ function fieldUnitSuffix(field) {
     irrigation_maximum_pulse_s: "s",
     irrigation_minimum_interval_s: "s",
     binary_threshold: "0–1",
-    alarm_minimum_fan: "min",
-    fan_venting_co2_threshold: "ppm",
+    alarm_minimum_fan: "0–1",
+    fan_minimum_command: "0–1",
+    fan_venting_co2_threshold: "0–1",
   };
   if (suffixByName[field.name]) return suffixByName[field.name];
   const zoneIrr = field.name.match(/^zone_\d+_irrigation_(flow_ml_s|maximum_pulse_s|minimum_interval_s)$/);
@@ -594,7 +609,7 @@ function parseScenarioNumberInput(el) {
   if (!el || el.type !== "number" || !el.dataset.path) return undefined;
   const raw = String(el.value).trim();
   if (isIncompleteNumberInput(raw)) return null;
-  const num = Number(raw);
+  const num = Number(raw.replace(",", "."));
   if (!Number.isFinite(num)) return null;
   return clampFieldNumber(num, el.dataset.path, el);
 }
