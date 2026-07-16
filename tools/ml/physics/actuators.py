@@ -78,13 +78,18 @@ def build_chamber_forcing(
     # Radiation proxy: modest daylight when lights on (S03 d0).
     radiation = 80.0 if lights_active else 15.0
 
+    # Effective vapor delivery to bulk air is less than nameplate (wall losses, mixing).
+    vapor_delivery = 0.55
     return ChamberForcing(
         u_co2=u_co2,
         u_vent=u_vent,
         u_heat=u_heat,
         radiation=radiation,
-        humidifier_g_s=humidifier * max(0.0, humidifier_max_output_g_h) / 3600.0,
-        dehumidifier_g_s=dehumidifier * max(0.0, dehumidifier_max_removal_g_h) / 3600.0,
+        humidifier_g_s=humidifier * max(0.0, humidifier_max_output_g_h) / 3600.0 * vapor_delivery,
+        dehumidifier_g_s=dehumidifier
+        * max(0.0, dehumidifier_max_removal_g_h)
+        / 3600.0
+        * vapor_delivery,
         cooler_w=cooler_w,
         lights_w=lights_w,
     )

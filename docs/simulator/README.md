@@ -39,9 +39,12 @@ You should **not** yet treat `make train-full` as product training.
 2. Extract formulas + map   → FORMULAS.md + SLOT_MAP.md     ✓
 3. Tier A chamber physics   → tools/ml/physics/van_henten.py ✓
 4. Tier B pot substrate     → tools/ml/physics/pots_substrate.py ✓
-5. Teacher cost on new dyn. → tools/ml/teacher.py           next
-6. train-quick / train-full → after teacher + scale checks
+5. Open-loop probe / human validation → `python -m tools.ml.probe_simulator` ✓
+6. Teacher cost on new dyn. → tools/ml/teacher.py           next
+7. train-quick / train-full → after teacher + scale checks
 ```
+
+Validation notes: [VALIDATION.md](VALIDATION.md).
 
 ## Related docs
 

@@ -426,7 +426,8 @@ class SequentialEnvironmentSimulator:
         nutrient_temp_delta = (nutrient_heater_w + nutrient_loss_w) * dt / nutrient_thermal_mass_j_k
 
         # --- Tier B: pots first (irrigation + evaporate + soil T) ---
-        total_water_to_air_ml = 0.0
+        free_water_ml = 0.0
+        evaporated_ml = 0.0
         air_t_for_pots = state.air_temperature_c
         air_rh_for_pots = state.air_humidity_pct
         for index in range(MAX_POTS):
@@ -452,11 +453,13 @@ class SequentialEnvironmentSimulator:
                 self.last_irrigation_s[index] = self.elapsed_s
             pot_state.soil_moisture_pct = result.soil_moisture_pct
             pot_state.soil_temperature_c = result.soil_temperature_c
-            total_water_to_air_ml += result.water_to_air_ml
+            free_water_ml += result.irrigation_free_water_ml
+            evaporated_ml += max(0.0, result.water_to_air_ml - result.irrigation_free_water_ml)
 
+        # Splash/surface water only partially becomes bulk vapor in one step.
         pot_humidity_pp = water_ml_to_humidity_pp(
-            total_water_to_air_ml, growbox_volume_m3=volume, fraction_to_vapor=1.0
-        )
+            free_water_ml, growbox_volume_m3=volume, fraction_to_vapor=0.20
+        ) + water_ml_to_humidity_pp(evaporated_ml, growbox_volume_m3=volume, fraction_to_vapor=1.0)
 
         # --- Chamber air (Tier A: Van Henten backbone or legacy balances) ---
         if self.scenario.chamber_model == "van_henten":

@@ -20,7 +20,7 @@ endif
 
 .PHONY: help setup setup-dev install-hooks ensure-venv ensure-idf \
         check check-fast check-push fmt lint clang-tidy-host schema schema-check \
-        train-quick train-full \
+        train-quick train-full probe-sim \
         test-board board-e2e \
         test test-python test-host test-panel test-layout test-visual panel-screenshots \
         panel ports idf-gate-build build build-n8 build-n32r16v rebuild clean-idf \
@@ -52,6 +52,7 @@ help: ## Lista komend make (domyślny cel)
 	@printf '    make setup-dev      — setup + dev deps + pre-commit\n'
 	@printf '    make train-quick    — smoke treningu (CI; nie produkcja)\n'
 	@printf '    make train-full     — pełny trening (po symulatorze)\n'
+	@printf '    make probe-sim      — open-loop walidacja fizyki (przed ML)\n'
 	@printf '    make schema-check   — zgodność schema z EnvironmentSchema.h\n'
 	@printf '    make test-board     — test E2E na płytce (GROWBOX_BOARD_PORT)\n\n'
 	@printf '  Inne profile firmware:\n'
@@ -115,6 +116,9 @@ train-quick: ensure-venv
 
 train-full: ensure-venv
 	$(PY) -m tools.ml.pipeline --full
+
+probe-sim: ensure-venv
+	$(PY) -m tools.ml.probe_simulator --save-series --out-dir build/sim-probe
 
 test-board: ensure-venv
 	$(PY) -m pytest tests/test_board_e2e.py -q

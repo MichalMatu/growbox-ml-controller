@@ -75,8 +75,9 @@ def apply_irrigation_pulse(
         return pot, 0.0, 0.0
 
     capacity = max(1.0, config.substrate_water_capacity_ml)
-    # Fraction that stays in substrate vs immediately humidifies chamber (splash/surface).
-    retained = 0.92
+    # Most water enters the substrate; a small surface/splash fraction humidifies air.
+    # ~2% free vapor keeps small growboxes from saturating on a single pulse.
+    retained = 0.98
     free_water_ml = applied_ml * (1.0 - retained)
     into_substrate_ml = applied_ml * retained
 
@@ -119,8 +120,8 @@ def evaporation_ml_s(
         soil_temp_factor = _clamp((pot.soil_temperature_c - 4.0) / 20.0, 0.15, 2.0)
     air_temp_factor = _clamp((air_temperature_c - 4.0) / 22.0, 0.15, 2.0)
 
-    # Base rate ~0.3–3 ml/h for a 12 L pot at mid moisture — scaled to growbox.
-    base_ml_s = 0.00045 * max(0.4, config.pot_volume_l)
+    # Base evaporation ~1–4 ml/h for a 12 L pot at mid moisture (growbox scale).
+    base_ml_s = 0.00028 * max(0.4, config.pot_volume_l)
     return (
         base_ml_s
         * max(0.0, config.transpiration_factor)
