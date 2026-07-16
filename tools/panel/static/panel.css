@@ -195,7 +195,7 @@
   --cell-w-temp: calc(var(--cell-w) - 2ch);
   --cell-w-lights: calc(var(--cell-w) - 2ch);
   --cell-w-prev: calc(var(--cell-w) - 3ch);
-  --actuator-select-w: 2.35rem;
+  --actuator-select-w: calc(2.35rem + 3ch);
   --actuator-stack-gap: 0.22rem 0.28rem;
   --live-pad-cell: 0.2rem 0.24rem;
   --live-pad-table: 0.3rem 0.42rem;

@@ -615,6 +615,7 @@ def test_growbox_setup_has_actuator_control_type_selects():
     assert "actuators-type-row" in actuators_fn
     assert "#setup-pane-growbox .setup-actuator-type-card" in panel_css
     assert "#setup-pane-growbox .actuators-type-row" in panel_css
+    assert "--actuator-select-w: calc(2.35rem + 3ch)" in panel_css
     assert "select.setup-control-type-select[data-path]" in main_js
     assert "syncControlTypeField" in main_js
 
