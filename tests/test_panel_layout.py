@@ -125,7 +125,9 @@ def test_diagnostics_modal_uses_live_data_tables_like_previous():
     assert "live-sensors-split diag-split" in diagnostics_js
     assert 'live-table-group-head">${escapeHtml(title)}</th>' in diagnostics_js
     assert "diag-row" not in diagnostics_js
-    assert ".diag-split .live-data-table col.sensor-col" in panel_css
+    assert ".diag-split .live-data-table col.sensor-col { width: 42%; }" in panel_css
+    assert "overflow: visible" in panel_css.split(".diag-split .live-data-table tbody th")[1]
+    assert 'label: "malloc→PSRAM"' in diagnostics_js
     assert "diag-meter-head--solo" in diagnostics_js
     assert "showLabel: false" in diagnostics_js
     assert "return `${formatBytes(used)} / ${formatBytes(total)}`;" in diagnostics_js

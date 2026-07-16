@@ -1967,12 +1967,11 @@ body.modal-open {
 @media (max-width: 720px) {
   .diag-split { grid-template-columns: 1fr; }
 }
-.diag-split .live-data-table col.sensor-col { width: 32%; }
-.diag-split .live-data-table col.reading-col { width: 68%; }
+.diag-split .live-data-table col.sensor-col { width: 42%; }
+.diag-split .live-data-table col.reading-col { width: 58%; }
 .diag-split .live-data-table tbody th {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
+  text-overflow: clip;
 }
 .diag-split .live-data-table td.num {
   white-space: nowrap;
