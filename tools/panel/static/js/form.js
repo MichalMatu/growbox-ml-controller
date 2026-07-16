@@ -177,6 +177,7 @@ function fieldUnitSuffix(field) {
     alarm_minimum_fan: "0–1",
     fan_minimum_command: "0–1",
     fan_venting_co2_threshold: "0–1",
+    maximum_nutrient_soil_delta_c: "°C",
   };
   if (suffixByName[field.name]) return suffixByName[field.name];
   const zoneIrr = field.name.match(/^zone_\d+_irrigation_(flow_ml_s|maximum_pulse_s|minimum_interval_s)$/);

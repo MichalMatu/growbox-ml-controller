@@ -118,6 +118,12 @@ def test_zone_soil_target_labels_use_donica_names():
     assert "zone_(\\d+)_target_soil_moisture_pct" in form_js
 
 
+def test_nutrient_soil_delta_field_has_celsius_suffix():
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    suffix_fn = _extract_js_function(form_js, "fieldUnitSuffix")
+    assert 'maximum_nutrient_soil_delta_c: "°C"' in suffix_fn
+
+
 def test_safety_section_uses_sub_cards_and_polish_labels():
     constants_js = (PANEL_STATIC / "js" / "constants.js").read_text(encoding="utf-8")
     form_js = FORM_JS.read_text(encoding="utf-8")
