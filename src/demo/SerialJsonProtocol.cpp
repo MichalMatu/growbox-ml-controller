@@ -45,8 +45,8 @@ esp_err_t SerialJsonProtocol::begin() noexcept {
   }
   if (!usb_serial_jtag_is_driver_installed()) {
     usb_serial_jtag_driver_config_t config = USB_SERIAL_JTAG_DRIVER_CONFIG_DEFAULT();
-    config.tx_buffer_size = 4096U;
-    config.rx_buffer_size = 4096U;
+    config.tx_buffer_size = 8192U;
+    config.rx_buffer_size = 8192U;
     const esp_err_t error = usb_serial_jtag_driver_install(&config);
     if (error != ESP_OK) {
       return error;

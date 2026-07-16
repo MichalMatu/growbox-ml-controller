@@ -1,4 +1,4 @@
-"""Deterministic rollout teacher for simulator v2 (15 ML outputs; heating stubbed at 0)."""
+"""Deterministic rollout teacher for simulator v2 (15 ML outputs incl. heating)."""
 
 from __future__ import annotations
 
@@ -26,6 +26,8 @@ class CostConfig:
     humidity_error: float = 2.2
     co2_error: float = 0.8
     soil_moisture_error: float = 2.8
+    nutrient_temperature_error: float = 3.2
+    soil_temperature_error: float = 2.6
     energy: float = 0.12
     water: float = 0.18
     switching: float = 0.10
@@ -39,6 +41,30 @@ class TeacherResult:
     action: ControlAction
     cost: float
     candidate_index: int
+
+
+def nutrient_heater_levels(simulator: SequentialEnvironmentSimulatorV2) -> tuple[float, ...]:
+    caps = simulator.scenario.actuators.nutrient_heater
+    if not caps.available or not simulator.scenario.validity.nutrient_solution_temperature_c:
+        return (0.0,)
+    target = simulator.scenario.targets.target_nutrient_solution_temperature_c
+    current = simulator.state.nutrient_solution_temperature_c
+    if current < target - 0.5:
+        return BINARY_LEVELS
+    return (0.0,)
+
+
+def heat_mat_levels_for_zone(
+    simulator: SequentialEnvironmentSimulatorV2,
+    zone_index: int,
+) -> tuple[float, ...]:
+    zone = simulator.scenario.zones[zone_index]
+    if not zone.available or not zone.heat_mat.available or not zone.soil_temperature_valid:
+        return (0.0,)
+    current = simulator.state.zones[zone_index].soil_temperature_c
+    if current < zone.target_soil_temperature_c - 0.5:
+        return BINARY_LEVELS
+    return (0.0,)
 
 
 def irrigation_levels_for_zone(
@@ -67,6 +93,13 @@ def build_candidates(simulator: SequentialEnvironmentSimulatorV2) -> tuple[Contr
     else:
         irrigation_products = ((),)
 
+    nutrient_levels = nutrient_heater_levels(simulator)
+    heat_mat_products = tuple(
+        itertools.product(
+            *(heat_mat_levels_for_zone(simulator, zone_index) for zone_index in range(MAX_ZONES))
+        )
+    )
+
     candidates: list[ControlAction] = []
     for heater, fan, humidifier, dehumidifier, cooler, co2_doser in itertools.product(
         HEATER_LEVELS,
@@ -77,25 +110,27 @@ def build_candidates(simulator: SequentialEnvironmentSimulatorV2) -> tuple[Contr
         BINARY_LEVELS,
     ):
         for irrigation_combo in irrigation_products:
-            values = {
-                "heater": heater,
-                "fan": fan,
-                "humidifier": humidifier,
-                "dehumidifier": dehumidifier,
-                "cooler": cooler,
-                "co2_doser": co2_doser,
-            }
-            for output_index, zone_index in enumerate(range(MAX_ZONES)):
-                name = OUTPUT_NAMES[6 + output_index]
-                if zone_index in active:
-                    combo_index = active.index(zone_index)
-                    values[name] = irrigation_combo[combo_index]
-                else:
-                    values[name] = 0.0
-            values["nutrient_heater"] = 0.0
-            for heat_name in OUTPUT_NAMES[11:]:
-                values[heat_name] = 0.0
-            candidates.append(ControlAction.from_mapping(values))
+            for nutrient_heater in nutrient_levels:
+                for heat_mat_combo in heat_mat_products:
+                    values = {
+                        "heater": heater,
+                        "fan": fan,
+                        "humidifier": humidifier,
+                        "dehumidifier": dehumidifier,
+                        "cooler": cooler,
+                        "co2_doser": co2_doser,
+                        "nutrient_heater": nutrient_heater,
+                    }
+                    for output_index, zone_index in enumerate(range(MAX_ZONES)):
+                        name = OUTPUT_NAMES[6 + output_index]
+                        if zone_index in active:
+                            combo_index = active.index(zone_index)
+                            values[name] = irrigation_combo[combo_index]
+                        else:
+                            values[name] = 0.0
+                    for zone_index, heat_name in enumerate(OUTPUT_NAMES[11:]):
+                        values[heat_name] = heat_mat_combo[zone_index]
+                    candidates.append(ControlAction.from_mapping(values))
     return tuple(candidates)
 
 
@@ -147,6 +182,7 @@ class RolloutTeacherV2:
             humidity = (state.air_humidity_pct - targets.target_air_humidity_pct) / 35.0
             co2 = (state.co2_ppm - targets.target_co2_ppm) / 1200.0
             soil_terms = 0.0
+            soil_temperature_terms = 0.0
             for zone_index, zone in enumerate(rollout.scenario.zones):
                 if not zone.available or not zone.soil_moisture_valid:
                     continue
@@ -154,11 +190,24 @@ class RolloutTeacherV2:
                     state.zones[zone_index].soil_moisture_pct - zone.target_soil_moisture_pct
                 ) / 50.0
                 soil_terms += soil * soil
+                if zone.soil_temperature_valid:
+                    soil_temperature = (
+                        state.zones[zone_index].soil_temperature_c - zone.target_soil_temperature_c
+                    ) / 12.0
+                    soil_temperature_terms += soil_temperature * soil_temperature
+            nutrient_temperature = 0.0
+            if rollout.scenario.validity.nutrient_solution_temperature_c:
+                nutrient_temperature = (
+                    state.nutrient_solution_temperature_c
+                    - targets.target_nutrient_solution_temperature_c
+                ) / 12.0
             total += terminal_scale * (
                 weights.temperature_error * temperature * temperature
                 + weights.humidity_error * humidity * humidity
                 + weights.co2_error * co2 * co2
                 + weights.soil_moisture_error * soil_terms
+                + weights.nutrient_temperature_error * nutrient_temperature * nutrient_temperature
+                + weights.soil_temperature_error * soil_temperature_terms
             )
         return float(total)
 
@@ -178,7 +227,16 @@ class RolloutTeacherV2:
             + candidate.humidifier * caps.humidifier.max_output_g_h / 500.0
             + candidate.dehumidifier * caps.dehumidifier.max_removal_g_h / 500.0
             + candidate.cooler * caps.cooler.max_cooling_w / 1000.0
+            + candidate.nutrient_heater
+            * caps.nutrient_heater.max_power_w
+            * caps.nutrient_heater.efficiency
+            / 1000.0
         )
+        for zone_index, zone in enumerate(simulator.scenario.zones):
+            if not zone.available or not zone.heat_mat.available:
+                continue
+            heat_name = f"heat_mat_zone_{zone_index + 1}"
+            energy_proxy += getattr(candidate, heat_name) * zone.heat_mat.max_power_w / 1000.0
 
         water_fraction = 0.0
         for zone_index, zone in enumerate(simulator.scenario.zones):
@@ -211,6 +269,16 @@ class RolloutTeacherV2:
             violation += 1.0 + candidate.cooler
         if candidate.co2_doser > 0.0 and not caps.co2_doser.available:
             violation += 1.0 + candidate.co2_doser
+        if candidate.nutrient_heater > 0.0 and not caps.nutrient_heater.available:
+            violation += 1.0 + candidate.nutrient_heater
+
+        for zone_index, zone in enumerate(simulator.scenario.zones):
+            heat_name = f"heat_mat_zone_{zone_index + 1}"
+            heat_mat = getattr(candidate, heat_name)
+            if heat_mat <= 0.0:
+                continue
+            if not zone.available or not zone.heat_mat.available:
+                violation += 1.0 + heat_mat
 
         for zone_index, zone in enumerate(simulator.scenario.zones):
             if not zone.available or not zone.irrigation.available:
@@ -240,6 +308,23 @@ class RolloutTeacherV2:
                 unreachable += (
                     zone.target_soil_moisture_pct - state.zones[zone_index].soil_moisture_pct
                 ) / 50.0
+        if (
+            not caps.nutrient_heater.available
+            and simulator.scenario.validity.nutrient_solution_temperature_c
+            and state.nutrient_solution_temperature_c
+            < targets.target_nutrient_solution_temperature_c
+        ):
+            unreachable += (
+                targets.target_nutrient_solution_temperature_c
+                - state.nutrient_solution_temperature_c
+            ) / 12.0
+        for zone_index, zone in enumerate(simulator.scenario.zones):
+            if not zone.available or not zone.heat_mat.available or not zone.soil_temperature_valid:
+                continue
+            if state.zones[zone_index].soil_temperature_c < zone.target_soil_temperature_c:
+                unreachable += (
+                    zone.target_soil_temperature_c - state.zones[zone_index].soil_temperature_c
+                ) / 12.0
 
         return float(
             weights.energy * energy_proxy

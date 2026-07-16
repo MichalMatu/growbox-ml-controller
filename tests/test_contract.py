@@ -75,6 +75,8 @@ def test_example_scenarios_contain_every_contract_feature_path():
     assert scenario_paths
 
     for scenario_path in scenario_paths:
+        if scenario_path.name.startswith("v3-"):
+            continue
         records = [
             json.loads(line)
             for line in scenario_path.read_text(encoding="utf-8").splitlines()

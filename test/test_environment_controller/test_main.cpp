@@ -383,15 +383,7 @@ void test_humidity_unavailable_blocks_humidifier_and_dehumidifier() {
   TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::HumidityUnavailable));
 }
 
-bool manifestMatchesSchema() noexcept {
-  return generated_manifest::kInputCount == schema::kFeatureCount &&
-         generated_manifest::kOutputCount == schema::kOutputCount;
-}
-
 void test_model_schema_hash_compatibility() {
-  if (!manifestMatchesSchema()) {
-    return;
-  }
   TEST_ASSERT_EQUAL_STRING(schema::kSchemaHash, model_golden_vectors::kSchemaHash);
   TEST_ASSERT_EQUAL_STRING(schema::kSchemaHash, generated_manifest::kSchemaHash);
   TEST_ASSERT_EQUAL_STRING(ModelRuntime::modelVersion(), generated_manifest::kModelVersion);
@@ -402,9 +394,6 @@ void test_model_schema_hash_compatibility() {
 }
 
 void test_golden_model_inference_and_output_bounds() {
-  if (!manifestMatchesSchema()) {
-    return;
-  }
   ModelRuntime model{};
   for (std::size_t row = 0; row < model_golden_vectors::kVectorCount; ++row) {
     FeatureVector features{};

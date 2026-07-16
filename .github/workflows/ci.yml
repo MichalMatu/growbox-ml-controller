@@ -43,11 +43,11 @@ jobs:
         run: python -m pytest
 
       - name: Check generated schema header
-        run: python tools/schema/generate_environment_schema.py --check
+        run: bash scripts/check_schema_v3.sh
 
       - name: Run quick ML pipeline and check generated artifacts
         run: |
-          python -m tools.ml.pipeline --quick --check-generated
+          python -m tools.ml.pipeline_v3 --quick --check-generated
           git diff --exit-code
 
       - name: Configure portable C++ tests

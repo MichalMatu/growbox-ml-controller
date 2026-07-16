@@ -8,6 +8,8 @@ from tools.ml.generate_dataset_v2 import random_scenario_v2
 from tools.ml.simulator_v2 import (
     ControlAction,
     HeaterCapabilities,
+    HeatMatCapabilities,
+    NutrientHeaterCapabilities,
     PumpCapabilities,
     SequentialEnvironmentSimulatorV2,
     ZoneConfig,
@@ -17,7 +19,9 @@ from tools.ml.teacher_v2 import (
     CostConfig,
     RolloutTeacherV2,
     build_candidates,
+    heat_mat_levels_for_zone,
     irrigation_levels_for_zone,
+    nutrient_heater_levels,
 )
 
 
@@ -114,6 +118,69 @@ def test_irrigation_interval_violation_has_explicit_cost(scenario_v2):
     irrigation = teacher.evaluate(simulator, ControlAction(irrigation_zone_1=1.0))
     idle = teacher.evaluate(simulator, ControlAction())
     assert irrigation > idle
+
+
+def test_heating_levels_only_when_below_target(scenario_v2):
+    simulator = SequentialEnvironmentSimulatorV2(scenario_v2)
+    assert nutrient_heater_levels(simulator) == (0.0,)
+    assert heat_mat_levels_for_zone(simulator, 0) == (0.0,)
+
+    cold_nutrient = replace(
+        scenario_v2,
+        validity=replace(scenario_v2.validity, nutrient_solution_temperature_c=True),
+        actuators=replace(
+            scenario_v2.actuators,
+            nutrient_heater=NutrientHeaterCapabilities(available=True, max_power_w=120.0),
+        ),
+    )
+    cold_sim = SequentialEnvironmentSimulatorV2(cold_nutrient)
+    cold_sim.state.nutrient_solution_temperature_c = 16.0
+    assert nutrient_heater_levels(cold_sim) == (0.0, 1.0)
+
+    heated_zone = replace(
+        scenario_v2.zones[0],
+        soil_temperature_valid=True,
+        heat_mat=HeatMatCapabilities(available=True, max_power_w=30.0),
+        target_soil_temperature_c=24.0,
+    )
+    soil_sim = SequentialEnvironmentSimulatorV2(
+        replace(scenario_v2, zones=(heated_zone,) + scenario_v2.zones[1:])
+    )
+    soil_sim.state.zones[0].soil_temperature_c = 18.0
+    assert heat_mat_levels_for_zone(soil_sim, 0) == (0.0, 1.0)
+
+
+def test_teacher_can_select_nutrient_heater_when_solution_is_cold(scenario_v2):
+    cold = replace(
+        scenario_v2,
+        validity=replace(scenario_v2.validity, nutrient_solution_temperature_c=True),
+        actuators=replace(
+            scenario_v2.actuators,
+            humidifier=replace(scenario_v2.actuators.humidifier, available=False),
+            nutrient_heater=NutrientHeaterCapabilities(available=True, max_power_w=150.0),
+        ),
+    )
+    simulator = SequentialEnvironmentSimulatorV2(cold)
+    simulator.state.nutrient_solution_temperature_c = 16.0
+    zone = simulator.scenario.zones[0]
+    simulator.state.zones[0].soil_moisture_pct = zone.target_soil_moisture_pct
+    nutrient_focus = CostConfig(
+        temperature_error=0.0,
+        humidity_error=0.0,
+        co2_error=0.0,
+        soil_moisture_error=0.0,
+        nutrient_temperature_error=12.0,
+        soil_temperature_error=0.0,
+        energy=0.0,
+        water=0.0,
+        switching=0.0,
+        constraint_violation=100.0,
+        unreachable_target=0.0,
+        terminal_multiplier=2.0,
+    )
+    result = RolloutTeacherV2(cost=nutrient_focus, horizon_steps=2).choose(simulator)
+    assert result.action.nutrient_heater == 1.0
+    assert result.action.irrigation_zone_1 == 0.0
 
 
 def test_random_scenario_supports_zero_to_four_active_zones():

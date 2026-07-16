@@ -45,3 +45,6 @@ known-first-party = ["tools"]
 addopts = "-ra"
 testpaths = ["tests"]
 pythonpath = ["."]
+markers = [
+  "hardware: requires a flashed ESP32 board on serial (GROWBOX_BOARD_PORT)",
+]

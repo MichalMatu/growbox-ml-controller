@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 
 import numpy as np
@@ -67,6 +68,21 @@ def test_v3_nutrient_heater_features_encode():
     }
     encoded = contract.encode(controller_input)
     assert np.all((0.0 <= encoded) & (encoded <= 1.0))
+
+
+def test_v3_example_scenarios_encode():
+    contract = load_contract(V3_CONTRACT_PATH)
+    scenario_dir = contract.path.parent.parent / "examples" / "scenarios"
+    for scenario_path in sorted(scenario_dir.glob("v3-*.jsonl")):
+        records = [
+            json.loads(line)
+            for line in scenario_path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        scenario = next(record for record in records if record.get("command") == "load_scenario")
+        encoded = contract.encode(scenario)
+        assert encoded.shape == (128,)
+        assert np.all((0.0 <= encoded) & (encoded <= 1.0))
 
 
 def test_v3_full_controller_input_record_encodes():
