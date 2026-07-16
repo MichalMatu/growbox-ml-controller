@@ -44,7 +44,15 @@ python -m tools.ml.probe_simulator || echo "probe failed"
 | Production climate controller from this sim alone | **No** — needs real-box coefficient fit |
 | Unit / regression probe in CI | **Yes** (`probe_simulator` exit code) |
 
+## Tradeoff example (fan vs CO₂ vs heat)
+
+Physics: high fan cools toward cold outside **and** dilutes CO₂.
+Safety (on device): fan above `fan_venting_co2_threshold` forces `co2_doser = 0`.
+Soft priority: teacher weights decide whether T error dominates CO₂ error (cool-then-dose).
+Do **not** encode every combo as a new if-rule — see [DEPENDENCIES.md](DEPENDENCIES.md).
+
 ## Related
 
 - Physics: `tools/ml/physics/{van_henten,pots_substrate,actuators}.py`
 - Formulas: [FORMULAS.md](FORMULAS.md), [SLOT_MAP.md](SLOT_MAP.md)
+- Dependencies catalog: [DEPENDENCIES.md](DEPENDENCIES.md)

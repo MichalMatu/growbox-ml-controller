@@ -54,6 +54,7 @@ Validation notes: [VALIDATION.md](VALIDATION.md).
 | [SLOT_MAP.md](SLOT_MAP.md) | External model symbols → our 15 outputs / sensors |
 | [IO_INVENTORY.md](IO_INVENTORY.md) | Full ML I/O map from live contract |
 | [SOURCES.md](SOURCES.md) | Research index and licenses |
+| [DEPENDENCIES.md](DEPENDENCIES.md) | Living catalog: physics / weights / safety priorities |
 | [../DATA_CONTRACT.md](../DATA_CONTRACT.md) | Contract rules |
 | [../IO_MAP.md](../IO_MAP.md) | Hardware mapping worksheet |
 | [../MODEL_PIPELINE.md](../MODEL_PIPELINE.md) | Dataset → train → export |
