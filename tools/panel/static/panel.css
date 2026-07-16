@@ -2005,24 +2005,6 @@ body.modal-open {
   text-overflow: clip;
   white-space: normal;
 }
-.live-data-table td.diag-meter-cell .diag-meter-value--split {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  align-items: baseline;
-  gap: 0.1rem 0.32rem;
-  line-height: 1.3;
-}
-.live-data-table td.diag-meter-cell .diag-meter-pct {
-  flex: 0 0 auto;
-  font-weight: 600;
-  color: var(--text);
-}
-.live-data-table td.diag-meter-cell .diag-meter-bytes {
-  flex: 1 1 auto;
-  min-width: 0;
-  text-align: right;
-}
 .live-data-table td.diag-meter-cell .diag-meter-track {
   width: 100%;
 }

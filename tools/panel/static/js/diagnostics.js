@@ -8,43 +8,21 @@ function formatBytes(value) {
   return `${Math.round(n)} B`;
 }
 
-function formatUsagePct(used, total) {
-  if (!Number.isFinite(used) || !Number.isFinite(total) || total <= 0) return "0%";
-  const pct = (used / total) * 100;
-  if (pct > 0 && pct < 1) return `${pct.toFixed(2)}%`;
-  return `${Math.round(pct)}%`;
-}
-
 function formatDiagPercent(used, total) {
   if (!Number.isFinite(used) || !Number.isFinite(total) || total <= 0) return 0;
   return Math.min(100, Math.max(0, (used / total) * 100));
 }
 
 function formatUsageDetail(used, total) {
-  return `${formatBytes(used)} / ${formatBytes(total)} · ${formatUsagePct(used, total)}`;
+  return `${formatBytes(used)} / ${formatBytes(total)}`;
 }
 
-function formatUsageDetailParts(used, total) {
-  return {
-    bytes: `${formatBytes(used)} / ${formatBytes(total)}`,
-    pct: formatUsagePct(used, total),
-  };
+function renderDiagMeterValue(used, total, { detail = "" } = {}) {
+  const text = detail || formatUsageDetail(used, total);
+  return `<span class="diag-meter-value">${escapeHtml(text)}</span>`;
 }
 
-function renderDiagMeterValue(used, total, { detail = "", compact = false } = {}) {
-  const fullText = detail || formatUsageDetail(used, total);
-  const titleAttr = ` title="${escapeHtml(fullText)}"`;
-  if (compact && !detail) {
-    const parts = formatUsageDetailParts(used, total);
-    return `<span class="diag-meter-value diag-meter-value--split"${titleAttr}>
-      <span class="diag-meter-bytes">${escapeHtml(parts.bytes)}</span>
-      <span class="diag-meter-pct">${escapeHtml(parts.pct)}</span>
-    </span>`;
-  }
-  return `<span class="diag-meter-value"${titleAttr}>${escapeHtml(fullText)}</span>`;
-}
-
-function renderDiagMeter(label, used, total, { tone = "accent", detail = "", showLabel = true, compact = false } = {}) {
+function renderDiagMeter(label, used, total, { tone = "accent", detail = "", showLabel = true } = {}) {
   const pct = formatDiagPercent(used, total);
   const barPct = used > 0 && pct < 1 ? Math.max(pct, 0.8) : pct;
   const fillCls = ["diag-meter-fill", tone, used > 0 ? "has-use" : ""].filter(Boolean).join(" ");
@@ -55,7 +33,7 @@ function renderDiagMeter(label, used, total, { tone = "accent", detail = "", sho
   return `<div class="diag-meter">
     <div class="${headClass}">
       ${labelMarkup}
-      ${renderDiagMeterValue(used, total, { detail, compact })}
+      ${renderDiagMeterValue(used, total, { detail })}
     </div>
     <div class="diag-meter-track" aria-hidden="true">
       <span class="${fillCls}" style="width:${barPct}%"></span>
@@ -69,7 +47,6 @@ function renderDiagTableRow(row) {
       tone: row.tone,
       detail: row.detail,
       showLabel: false,
-      compact: !row.detail,
     });
     return `<tr><th scope="row">${escapeHtml(row.label)}</th><td class="num diag-meter-cell">${meter}</td></tr>`;
   }
@@ -154,7 +131,6 @@ function formatDiagnosticsHtml(snapshot) {
           used: usedPsram,
           total: totalPsram,
           tone: usedPsram / totalPsram > 0.85 ? "warn" : "ok",
-          detail: formatUsageDetail(usedPsram, totalPsram),
         },
         { label: "Wolne", value: formatBytes(freePsram), mono: true },
         { label: "Max blok", value: formatBytes(heap.largest_free_psram), mono: true },
@@ -178,7 +154,6 @@ function formatDiagnosticsHtml(snapshot) {
       used: usedInternal,
       total: totalInternal,
       tone: usedInternal / totalInternal > 0.85 ? "warn" : "accent",
-      detail: formatUsageDetail(usedInternal, totalInternal),
     });
   }
   dramRows.push(
