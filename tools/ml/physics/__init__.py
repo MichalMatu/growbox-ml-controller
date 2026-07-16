@@ -6,6 +6,13 @@ See docs/simulator/FORMULAS.md and SLOT_MAP.md.
 """
 
 from .actuators import ChamberForcing, build_chamber_forcing
+from .pots_substrate import (
+    PotPhysicsConfig,
+    PotPhysicsState,
+    PotStepResult,
+    step_pot,
+    water_ml_to_humidity_pp,
+)
 from .van_henten import (
     VanHentenParams,
     humidity_state_from_rh,
@@ -15,9 +22,14 @@ from .van_henten import (
 
 __all__ = [
     "ChamberForcing",
+    "PotPhysicsConfig",
+    "PotPhysicsState",
+    "PotStepResult",
     "VanHentenParams",
     "build_chamber_forcing",
     "humidity_state_from_rh",
     "rh_from_humidity_state",
     "step_chamber_van_henten",
+    "step_pot",
+    "water_ml_to_humidity_pp",
 ]

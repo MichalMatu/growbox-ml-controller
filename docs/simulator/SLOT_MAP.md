@@ -134,9 +134,11 @@ tools/ml/
   physics/
     van_henten.py           # S03-derived ODEs (cite Mallick / Van Henten)  ✓ Tier A
     actuators.py            # 0–1 → S03 u + SI moisture extras             ✓ Tier A
-    pots_substrate.py       # ours                                         (Tier B)
+    pots_substrate.py       # water mass, evap→RH, heat mat, irrigation   ✓ Tier B
 ```
 
 No import from `third_party/` at runtime — equations live in `tools/ml/physics/` with citations.
 
 Default: `Scenario.chamber_model="van_henten"`. Fallback: `"legacy"`.
+
+**Step order in simulator:** pots (irrigation + evaporate + soil T) → chamber air (Van Henten + pot humidity).

@@ -19,6 +19,12 @@ from typing import ClassVar, Literal
 import numpy as np
 
 from .physics.actuators import build_chamber_forcing
+from .physics.pots_substrate import (
+    PotPhysicsConfig,
+    PotPhysicsState,
+    step_pot,
+    water_ml_to_humidity_pp,
+)
 from .physics.van_henten import step_chamber_van_henten
 
 MAX_POTS = 4
@@ -380,35 +386,21 @@ class SequentialEnvironmentSimulator:
             heat_mat_pot_4=command.heat_mat_pot_4,
         )
 
-    def _pot_evaporation_pp_s(
-        self,
-        pot_index: int,
-        *,
-        vapor_deficit: float,
-        air_temperature_c: float,
-    ) -> float:
+    def _pot_physics_config(self, pot_index: int) -> PotPhysicsConfig:
         pot_cfg = self.scenario.pots[pot_index]
-        if not pot_cfg.available or not pot_cfg.soil_moisture_valid:
-            return 0.0
-        pot_state = self.state.pots[pot_index]
-        soil_factor = _clamp(pot_state.soil_moisture_pct / 55.0, 0.05, 1.2)
-        soil_temp_factor = 1.0
-        if pot_cfg.soil_temperature_valid:
-            soil_temp_factor = _clamp((pot_state.soil_temperature_c - 5.0) / 18.0, 0.2, 1.8)
-        air_temp_factor = _clamp((air_temperature_c - 5.0) / 20.0, 0.2, 1.8)
-        crop = pot_cfg.cultivation
-        transpiration_ml_s = (
-            0.00030
-            * max(0.0, crop.transpiration_factor)
-            * max(0.5, crop.pot_volume_l)
-            * vapor_deficit
-            * air_temp_factor
-            * soil_factor
-            * soil_temp_factor
+        return PotPhysicsConfig(
+            available=pot_cfg.available,
+            soil_moisture_valid=pot_cfg.soil_moisture_valid,
+            soil_temperature_valid=pot_cfg.soil_temperature_valid,
+            pot_volume_l=pot_cfg.cultivation.pot_volume_l,
+            substrate_water_capacity_ml=pot_cfg.cultivation.substrate_water_capacity_ml,
+            transpiration_factor=pot_cfg.cultivation.transpiration_factor,
+            irrigation_available=pot_cfg.irrigation.available,
+            irrigation_flow_ml_s=pot_cfg.irrigation.flow_ml_s,
+            irrigation_maximum_pulse_s=pot_cfg.irrigation.maximum_pulse_s,
+            heat_mat_available=pot_cfg.heat_mat.available,
+            heat_mat_max_power_w=pot_cfg.heat_mat.max_power_w,
         )
-        volume = max(0.05, self.scenario.environment.growbox_volume_m3)
-        air_moisture_capacity_g = max(1.0, volume * 20.0)
-        return transpiration_ml_s * 100.0 / air_moisture_capacity_g
 
     def _advance_physics(self, command: ControlAction, dt: float) -> None:
         env = self.scenario.environment
@@ -418,14 +410,6 @@ class SequentialEnvironmentSimulator:
 
         volume = max(0.05, env.growbox_volume_m3)
         air_moisture_capacity_g = max(1.0, volume * 20.0)
-
-        vapor_deficit = _clamp((100.0 - state.air_humidity_pct) / 60.0, 0.1, 1.5)
-        evap_pp_s = sum(
-            self._pot_evaporation_pp_s(
-                index, vapor_deficit=vapor_deficit, air_temperature_c=state.air_temperature_c
-            )
-            for index in range(MAX_POTS)
-        )
 
         nutrient_heater_w = (
             effective.nutrient_heater
@@ -441,29 +425,38 @@ class SequentialEnvironmentSimulator:
         )
         nutrient_temp_delta = (nutrient_heater_w + nutrient_loss_w) * dt / nutrient_thermal_mass_j_k
 
-        irrigation_humidity_boost_pp = 0.0
-        for index, pot_cfg in enumerate(self.scenario.pots):
-            if not pot_cfg.available or not pot_cfg.irrigation.available:
-                continue
-            output_name = self.irrigation_output_names[index]
-            if getattr(command, output_name) <= 0.0 or not self.irrigation_ready(index):
-                continue
-            pulse_s = getattr(command, output_name) * pot_cfg.irrigation.maximum_pulse_s
-            irrigation_ml = pot_cfg.irrigation.flow_ml_s * pulse_s
-            self.last_irrigation_s[index] = self.elapsed_s
-            water_capacity = max(1.0, pot_cfg.cultivation.substrate_water_capacity_ml)
+        # --- Tier B: pots first (irrigation + evaporate + soil T) ---
+        total_water_to_air_ml = 0.0
+        air_t_for_pots = state.air_temperature_c
+        air_rh_for_pots = state.air_humidity_pct
+        for index in range(MAX_POTS):
             pot_state = state.pots[index]
-            pot_state.soil_moisture_pct = _clamp(
-                pot_state.soil_moisture_pct + irrigation_ml * 100.0 / water_capacity,
-                0.0,
-                100.0,
+            irr_name = self.irrigation_output_names[index]
+            heat_name = self.heat_mat_output_names[index]
+            ready = self.irrigation_ready(index)
+            result = step_pot(
+                PotPhysicsState(
+                    soil_moisture_pct=pot_state.soil_moisture_pct,
+                    soil_temperature_c=pot_state.soil_temperature_c,
+                ),
+                self._pot_physics_config(index),
+                air_temperature_c=air_t_for_pots,
+                air_humidity_pct=air_rh_for_pots,
+                heat_mat_command_0_1=getattr(effective, heat_name),
+                dt_s=dt,
+                irrigation_command_0_1=getattr(command, irr_name),
+                nutrient_solution_temperature_c=state.nutrient_solution_temperature_c,
+                irrigation_ready=ready,
             )
-            if pot_cfg.soil_temperature_valid and irrigation_ml > 0.0:
-                mix_fraction = _clamp(irrigation_ml / max(1.0, water_capacity), 0.0, 0.35)
-                pot_state.soil_temperature_c += (
-                    state.nutrient_solution_temperature_c - pot_state.soil_temperature_c
-                ) * mix_fraction
-            irrigation_humidity_boost_pp += irrigation_ml * 0.04 * 100.0 / air_moisture_capacity_g
+            if result.applied_irrigation_ml > 0.0:
+                self.last_irrigation_s[index] = self.elapsed_s
+            pot_state.soil_moisture_pct = result.soil_moisture_pct
+            pot_state.soil_temperature_c = result.soil_temperature_c
+            total_water_to_air_ml += result.water_to_air_ml
+
+        pot_humidity_pp = water_ml_to_humidity_pp(
+            total_water_to_air_ml, growbox_volume_m3=volume, fraction_to_vapor=1.0
+        )
 
         # --- Chamber air (Tier A: Van Henten backbone or legacy balances) ---
         if self.scenario.chamber_model == "van_henten":
@@ -486,7 +479,6 @@ class SequentialEnvironmentSimulator:
                 lights_max_heat_w=caps.lights.max_heat_w,
                 lights_integrated=caps.lights.integrated,
             )
-            # Fold leak ACH into vent channel (S03 base leak is small p10).
             leak_boost = max(0.0, env.air_leak_rate_ach) * 0.15
             u_vent = forcing.u_vent + leak_boost
             new_t, new_rh, new_co2, self._crop_dry_weight = step_chamber_van_henten(
@@ -504,15 +496,13 @@ class SequentialEnvironmentSimulator:
                 crop_dry_weight=self._crop_dry_weight,
                 evolve_crop=False,
             )
-            # Extra moisture actuators + pot evaporation (not in classic Van Henten u).
             hum_pp = forcing.humidifier_g_s * 100.0 / air_moisture_capacity_g
             dehum_pp = -forcing.dehumidifier_g_s * 100.0 / air_moisture_capacity_g
             new_rh = _clamp(
-                new_rh + (hum_pp + dehum_pp + evap_pp_s) * dt + irrigation_humidity_boost_pp,
+                new_rh + (hum_pp + dehum_pp) * dt + pot_humidity_pp,
                 0.0,
                 100.0,
             )
-            # Discrete CO2 pulse on top of continuous supply (contract dose semantics).
             if command.co2_doser > 0.0 and caps.co2_doser.available:
                 new_co2 = _clamp(
                     new_co2 + command.co2_doser * caps.co2_doser.dose_ppm_per_full_pulse,
@@ -564,8 +554,8 @@ class SequentialEnvironmentSimulator:
                 / air_moisture_capacity_g
             )
             humidity_delta = (
-                humidity_exchange_pp_s + humidifier_pp_s + dehumidifier_pp_s + evap_pp_s
-            ) * dt + irrigation_humidity_boost_pp
+                humidity_exchange_pp_s + humidifier_pp_s + dehumidifier_pp_s
+            ) * dt + pot_humidity_pp
             co2_exchange_ppm_s = exchange_rate_s * (state.outside_co2_ppm - state.co2_ppm)
             co2_dose_ppm = 0.0
             if command.co2_doser > 0.0 and caps.co2_doser.available:
@@ -579,41 +569,6 @@ class SequentialEnvironmentSimulator:
                 state.co2_ppm + (co2_exchange_ppm_s + biological_co2_ppm_s) * dt + co2_dose_ppm,
                 250.0,
                 5000.0,
-            )
-
-        for index, pot_cfg in enumerate(self.scenario.pots):
-            if not pot_cfg.available or not pot_cfg.soil_moisture_valid:
-                continue
-            crop = pot_cfg.cultivation
-            pot_state = state.pots[index]
-            water_capacity = max(1.0, crop.substrate_water_capacity_ml)
-            drying_ml_s = (
-                0.00010
-                * max(0.5, crop.pot_volume_l)
-                * max(0.0, crop.transpiration_factor)
-                * vapor_deficit
-            )
-            soil_loss_pp = drying_ml_s * dt * 100.0 / water_capacity
-            pot_state.soil_moisture_pct = _clamp(
-                pot_state.soil_moisture_pct - soil_loss_pp, 0.0, 100.0
-            )
-
-        for index, pot_cfg in enumerate(self.scenario.pots):
-            if not pot_cfg.available or not pot_cfg.soil_temperature_valid:
-                continue
-            pot_state = state.pots[index]
-            crop = pot_cfg.cultivation
-            soil_thermal_mass_j_k = max(2_000.0, crop.pot_volume_l * 1_800.0)
-            heat_mat_name = self.heat_mat_output_names[index]
-            heat_mat_w = (
-                getattr(effective, heat_mat_name) * pot_cfg.heat_mat.max_power_w
-                if pot_cfg.heat_mat.available
-                else 0.0
-            )
-            air_coupling_w = 0.35 * (state.air_temperature_c - pot_state.soil_temperature_c)
-            soil_temp_delta = (heat_mat_w + air_coupling_w) * dt / soil_thermal_mass_j_k
-            pot_state.soil_temperature_c = _clamp(
-                pot_state.soil_temperature_c + soil_temp_delta, -10.0, 50.0
             )
 
         state.nutrient_solution_temperature_c = _clamp(
