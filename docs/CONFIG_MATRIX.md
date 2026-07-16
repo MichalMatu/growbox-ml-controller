@@ -71,6 +71,7 @@ CONFIG_MATRIX (59 wierszy) pokrywa **dyskretną konfigurację I/O** (availabilit
 | **2a — wartości ciągłe** | ten sam harness (`check_continuous_sweeps`) | Host | T/RH/CO2/capabilities w siatce 3-punktowej dla każdego aktywnego pola |
 | **2b — ML raw/safe + polityka** | `python -m tools.ml.panel_endpoint_audit` | Płytka (po `make flash`) | Sweepy T/RH/CO₂/gleby, heurystyki zimno→heat, overtemperature, `extreme_multi_need` |
 | **2c — CONFIG_MATRIX na ESP** | `python -m tools.ml.board_engine_audit --matrix-only` | Płytka | Te same 59 profili: `load_scenario` → `step` → `expected_safe_zero_outputs` + reguły safety |
+| **2d — pełna macierz validity** | `python -m tools.ml.validity_matrix_audit` | Płytka | **32 768** masek (2¹⁵): tylko checkboxy validity; stałe odczyty off-target + wszystkie aktuary ON |
 
 **CO₂ w Warstwie 1:** gdy `avail_co2_doser` i `valid_co2_ppm` są true, harness ustawia `sensors.co2_ppm = 500` (poniżej celu 850), żeby testować **dostępność** dosera, a nie regułę „target reached” przy nominalnym 920 ppm.
 
@@ -92,7 +93,21 @@ GROWBOX_BOARD_PORT=/dev/cu.usbmodem1101 \
 # Warstwa 2b — sweepy behawioralne (szersza macierz, ~57 case)
 python -m tools.panel &   # :8765
 python -m tools.ml.panel_endpoint_audit --port /dev/cu.usbmodem1101
+
+# Warstwa 2d — wszystkie kombinacje validity (32 768; checkpoint, wznowienie)
+make test-board-validity-matrix
+# lub: python -m tools.ml.validity_matrix_audit --port /dev/cu.usbmodem1101
+# raport: build/audit/validity_matrix_audit.json
+# checkpoint: build/audit/validity_matrix_checkpoint.jsonl
 ```
+
+### Warstwa 2d — jak czytać wynik validity (32 768)
+
+- **ERRORS** (gate): inference OK, wyjścia w [0,1], safety przy invalid sensor (heater=0 bez T, doser=0 bez CO₂, …), wzajemne wykluczenia.
+- **WARNS** (ML policy): tylko gdy czujnik **valid** — przy stałych odczytach zimno/sucho/niski CO₂/sucha gleba model powinien włączyć odpowiedni aktuator (`cold_no_heat`, `dry_no_humidify`, `dry_soil_no_irrigation`).
+- **PASS audytu** = `error_count == 0` w raporcie JSON. Warns = lista masek do ręcznej inspekcji / retreningu, nie blokują flashu.
+- **Wznowienie**: ponowne uruchomienie pomija maski ze statusem `ok`/`fail` w checkpoint.
+- **Smoke na płytce**: `--max-cases 50` (debug); pełny przebieg ~3–5 h @0,35 s/krok.
 
 Stress cases (`board_engine_audit` bez `--matrix-only`) i `panel_endpoint_audit` pozostają **osobną** macierzą behawioralną — uzupełniają CONFIG_MATRIX, nie zastępują.
 

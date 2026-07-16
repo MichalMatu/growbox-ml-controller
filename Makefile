@@ -21,7 +21,7 @@ endif
 .PHONY: help setup setup-dev install-hooks ensure-venv ensure-idf \
         check check-fast check-push fmt lint clang-tidy-host schema schema-check \
         train-quick train-full probe-sim \
-        test-board board-e2e \
+        test-board test-board-exhaustive test-board-validity-matrix board-e2e \
         test test-python test-host test-panel test-layout test-visual panel-screenshots \
         panel ports idf-gate-build build build-n8 build-n32r16v rebuild clean-idf \
         flash monitor flash-monitor menuconfig clean
@@ -54,7 +54,8 @@ help: ## Lista komend make (domyślny cel)
 	@printf '    make train-full     — pełny trening (po symulatorze)\n'
 	@printf '    make probe-sim      — open-loop walidacja fizyki (przed ML)\n'
 	@printf '    make schema-check   — zgodność schema z EnvironmentSchema.h\n'
-	@printf '    make test-board     — test E2E na płytce (GROWBOX_BOARD_PORT)\n\n'
+	@printf '    make test-board     — test E2E na płytce (GROWBOX_BOARD_PORT)\n'
+	@printf '    make test-board-validity-matrix — 2^15 masek validity na płytce (~3–5 h)\n\n'
 	@printf '  Inne profile firmware:\n'
 	@printf '    make build-n8       — build bez PSRAM (DevKitC N8)\n'
 	@printf '    make build-n32r16v  — moduł N32R16V (32 MB flash + PSRAM)\n'
@@ -122,6 +123,16 @@ probe-sim: ensure-venv
 
 test-board: ensure-venv
 	$(PY) -m pytest tests/test_board_e2e.py -q
+
+test-board-exhaustive: ensure-venv
+	@curl -sf -X POST http://127.0.0.1:8765/api/disconnect -H 'Content-Type: application/json' -d '{}' >/dev/null 2>&1 || true
+	@sleep 0.5
+	$(PY) -m tools.ml.exhaustive_board_audit --port $(or $(GROWBOX_BOARD_PORT),$(PORT),/dev/cu.usbmodem1101)
+
+test-board-validity-matrix: ensure-venv
+	@curl -sf -X POST http://127.0.0.1:8765/api/disconnect -H 'Content-Type: application/json' -d '{}' >/dev/null 2>&1 || true
+	@sleep 0.5
+	$(PY) -m tools.ml.validity_matrix_audit --port $(or $(GROWBOX_BOARD_PORT),$(PORT),/dev/cu.usbmodem1101)
 
 board-e2e: flash test-board
 
