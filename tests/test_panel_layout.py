@@ -61,6 +61,7 @@ def test_cultivation_pot_css_uses_tokenized_grid_like_sensors():
     assert '" mini-cell-pct"' in cell_fn
     assert '" mini-cell-ppm"' in cell_fn
     assert '" mini-cell-factor"' in cell_fn
+    assert '" mini-cell-s"' in cell_fn
     assert "pot_volume_l" in cell_fn
     assert "substrate_water_capacity_ml" in cell_fn
     assert "transpiration_factor" in cell_fn
@@ -69,6 +70,8 @@ def test_cultivation_pot_css_uses_tokenized_grid_like_sensors():
     assert '" suffix-w-pct"' in width_fn
     assert '" suffix-w-ppm"' in width_fn
     assert '" suffix-w-s"' in width_fn
+    assert '" suffix-w-factor"' in width_fn
+    assert width_fn.count('" suffix-w-s"') == 1
     assert '"×"' in width_fn
     assert "--field-input-w-pct:" in panel_css
     assert "--field-input-w-ppm:" in panel_css
@@ -83,14 +86,13 @@ def test_cultivation_pots_match_sensor_pot_card_width():
     assert render_fn
     assert "pot-card cultivation-pot-card" in render_fn
     assert "--pot-sensor-card-w: calc(" in panel_css
-    assert re.search(
-        r"\.pot-card\s*\{[^}]*width:\s*var\(--pot-sensor-card-w\)",
-        panel_css,
-    )
-    assert re.search(
-        r"\.pot-card\.cultivation-pot-card\s*\{[^}]*width:\s*var\(--pot-card-w\)",
-        panel_css,
-    )
+    assert "--pot-card-w: calc(" in panel_css
+    pot_rule = re.search(r"\.pot-card\s*\{[^}]+\}", panel_css)
+    assert pot_rule
+    assert "min-width: 0" in pot_rule.group(0)
+    assert "width: auto" in pot_rule.group(0)
+    assert "flex: 0 1 auto" in pot_rule.group(0)
+    assert "width: var(--pot-sensor-card-w)" not in pot_rule.group(0)
 
 
 def test_sensor_pot_fields_use_horizontal_layout_reference():
@@ -193,7 +195,26 @@ def test_actuator_param_fields_use_in_input_unit_suffixes():
     assert ".actuator-input-suffix" in panel_css
     assert ".field-input-wrap" in panel_css
     assert ".field-input-suffix" in panel_css
-    assert "--climate-input-w:" in panel_css
+    assert "--actuator-input-w: var(--cell-w-pct)" in panel_css
+
+
+def test_watt_fields_use_one_ch_narrower_width_than_pct():
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
+    width_fn = _extract_js_function(form_js, "fieldSuffixWidthClass")
+    assert '"W"' in width_fn
+    assert '" suffix-w-w"' in width_fn
+    assert "--cell-w-w: calc(var(--cell-w-pct) - 1ch)" in panel_css
+    assert "--actuator-input-w-w: var(--cell-w-w)" in panel_css
+    assert ".actuator-input-wrap.suffix-w-w" in panel_css
+
+
+def test_zone_heat_mat_max_power_uses_in_input_w_suffix():
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    suffix_fn = _extract_js_function(form_js, "fieldUnitSuffix")
+    assert "zone_\\d+_heat_mat_" in suffix_fn
+    assert "heat_mat_${zoneHeatMat[1]}" in suffix_fn or "heat_mat_" in suffix_fn
+    assert 'heat_mat_max_power_w: "W"' in suffix_fn
 
 
 def test_inactive_zone_dependents_are_linked_to_zone_available():
@@ -227,8 +248,8 @@ def test_ppm_cells_use_one_ch_narrower_width():
     assert '" suffix-w-ppm"' in width_fn
     assert '" mini-cell-ppm"' in cell_fn
     assert "--cell-w-ppm:" in panel_css
-    assert "--actuator-input-w-ppm:" in panel_css
-    assert "calc(var(--cell-w) - 1ch)" in panel_css
+    assert "--actuator-input-w-ppm: var(--cell-w-ppm)" in panel_css
+    assert "--cell-w-ppm: calc(var(--cell-w) - 2ch)" in panel_css
     assert ".mini-cell.mini-cell-ppm" in panel_css
     assert ".actuator-input-wrap.suffix-w-ppm" in panel_css
 
@@ -527,14 +548,15 @@ def test_actuators_main_page_use_compact_climate_and_pump_rows():
         r"\.actuators-panel\s+\.actuators-(?:climate|pumps)-block[^{]*\{[^}]*overflow-x:\s*auto",
         panel_css,
     )
-    assert "--pump-input-w:" in panel_css
-    assert "--climate-input-w:" in panel_css
+    assert "--pump-input-w:" not in panel_css
+    assert "--climate-input-w:" not in panel_css
+    assert "--actuator-input-w: var(--cell-w-pct)" in panel_css
     assert re.search(
-        r"\.actuators-panel\s+\.actuators-climate-block\s+\.mini-cell\.actuator-cell\s*\{[^}]*flex:\s*0\s+0\s+auto",
+        r"\.actuators-panel\s+\.actuators-(?:climate|pumps|heat-mats)-block\s+\.mini-cell\.actuator-cell\s*\{[^}]*flex:\s*0\s+1\s+auto",
         panel_css,
     )
     assert re.search(
-        r"\.actuators-panel\s+\.actuators-climate-block\s+\.actuator-input-wrap\s*\{[^}]*width:\s*var\(--climate-input-w\)",
+        r"\.actuator-param\s+\.actuator-input-wrap\s*\{[^}]*width:\s*var\(--actuator-input-w\)",
         panel_css,
     )
 
@@ -547,12 +569,10 @@ def test_growbox_setup_cultivation_fields_use_shared_pot_layout():
     assert ".setup-growbox-body" in panel_css
     assert "--cultivation-input-w:" not in panel_css
     assert "#setup-pane-growbox .cultivation-pot-card" not in panel_css
-    assert "--setup-obudowa-cell-w:" in panel_css
-    assert "#setup-pane-growbox .sub-card:not(.pots-block)" in panel_css
-    assert (
-        "--cell-w: 6rem"
-        not in panel_css.split("#setup-pane-growbox", 1)[1].split("#setup-pane-safety", 1)[0]
-    )
+    assert "--setup-obudowa-cell-w:" not in panel_css
+    assert "#setup-pane-growbox .sub-card:not(.pots-block)" not in panel_css
+    safety_tail = panel_css.split("#setup-pane-safety", 1)[-1].split(".help-modal-body", 1)[0]
+    assert "--cell-w:" not in safety_tail
     pots_rule = re.search(
         r"#setup-pane-growbox\s+\.pots-row\s*\{[^}]+\}",
         panel_css,
@@ -853,7 +873,7 @@ def test_v3_soil_temperature_targets_use_two_pot_rows():
     assert "targets-pots-grid" in targets_fn
     assert "targets-pots-row" in targets_fn
     assert "field-stack" not in targets_fn
-    assert "--targets-pot-cell-w:" in panel_css
+    assert "--targets-pot-cell-w: var(--cell-w-pct)" in panel_css
     assert ".targets-pots-row .mini-cell.mini-cell-pct" in panel_css
     assert ".targets-pots-row .mini-cell.mini-cell-temp" in panel_css
 
@@ -893,3 +913,44 @@ def test_infrequent_settings_live_in_setup_modal_not_inline_form():
     assert "renderSetupPanes()" in render_fn
     assert 'id="safety-section"' not in html
     assert 'data-setup-tab="actuators"' not in html
+
+
+def test_second_fields_use_narrow_cell_s_token_not_factor():
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
+    suffix_fn = _extract_js_function(form_js, "fieldUnitSuffix")
+    cell_fn = _extract_js_function(form_js, "fieldMiniCellWidthClass")
+    assert '"s"' in suffix_fn
+    assert 'endsWith("_s")' in suffix_fn
+    assert '" mini-cell-s"' in cell_fn
+    assert ".mini-cell.mini-cell-s" in panel_css
+    assert "--cell-w-s: calc(4ch + var(--field-suffix-pad-s))" in panel_css
+    assert ".mini-cell .field-input-wrap.suffix-w-s" in panel_css
+    assert "width: var(--field-input-w-s)" in panel_css
+    factor_pos = panel_css.index("--cell-w-factor:")
+    s_pos = panel_css.index("--cell-w-s:")
+    assert s_pos < factor_pos or panel_css.find("4ch", s_pos) >= 0
+
+
+def test_co2_interval_seconds_suffix_is_s_not_ppm():
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    suffix_fn = _extract_js_function(form_js, "fieldUnitSuffix")
+    generic = suffix_fn.split("const name = field.name", 1)[-1]
+    assert 'endsWith("_s")' in generic
+    assert generic.index('endsWith("_s")') < generic.index('name.includes("co2")')
+
+
+def test_panel_width_tokens_are_unified_without_modal_overrides():
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
+    assert "--actuator-input-w: var(--cell-w-pct)" in panel_css
+    assert "--actuator-input-w-wide: var(--cell-w-ppm)" in panel_css
+    assert "--cell-w-s:" in panel_css
+    assert "--field-input-w-s: var(--cell-w-s)" in panel_css
+    assert "--actuator-input-w-s: var(--cell-w-s)" in panel_css
+    assert "--targets-pot-cell-w: var(--cell-w-pct)" in panel_css
+    assert "--setup-obudowa-cell-w:" not in panel_css
+    assert "--climate-input-w:" not in panel_css
+    assert "--pump-input-w:" not in panel_css
+    safety_tail = panel_css.split("#setup-pane-safety", 1)[-1].split(".help-modal-body", 1)[0]
+    assert "--cell-w:" not in safety_tail
+    assert re.search(r"\.card\s*\{[^}]*min-width:\s*0", panel_css)

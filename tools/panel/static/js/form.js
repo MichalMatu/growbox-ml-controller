@@ -170,6 +170,11 @@ function fieldUnitSuffix(field) {
     if (zoneIrr[1] === "flow_ml_s") return "mL/s";
     return "s";
   }
+  const zoneHeatMat = field.name.match(/^zone_\d+_heat_mat_(.+)$/);
+  if (zoneHeatMat) {
+    const baseKey = `heat_mat_${zoneHeatMat[1]}`;
+    if (suffixByName[baseKey]) return suffixByName[baseKey];
+  }
   const zoneCult = field.name.match(/^zone_\d+_(pot_volume_l|substrate_water_capacity_ml|transpiration_factor)$/);
   if (zoneCult) {
     if (zoneCult[1] === "pot_volume_l") return "L";
@@ -180,8 +185,10 @@ function fieldUnitSuffix(field) {
   const path = field.path || "";
   if (name.endsWith("_temperature_c") || path.includes("temperature_c")) return "°C";
   if (name.endsWith("_pct") || path.includes("_pct")) return "%";
-  if (name.includes("co2") && (name.includes("ppm") || path.includes("co2"))) return "ppm";
   if (name.endsWith("_s") || path.endsWith("_s")) return "s";
+  if (name.includes("co2") && (name.includes("ppm") || path.endsWith("_ppm") || path.endsWith("co2_ppm"))) {
+    return "ppm";
+  }
   if (name.startsWith("previous_") || name.includes("previous_irrigation")) return "0–1";
   return "";
 }
@@ -195,15 +202,16 @@ function fieldSuffixSizeClass(suffix) {
   return " suffix-pad-1";
 }
 
-/** Węższe wrapy: s (aktuary), ppm (−1ch), % (−3ch), °C (−2ch). */
+/** Węższe wrapy: W (−1ch vs pct), s, ppm (−2ch), % (−3ch), °C (−2ch). */
 function fieldSuffixWidthClass(suffix) {
+  if (suffix === "W") return " suffix-w-w";
   if (suffix === "s") return " suffix-w-s";
   if (suffix === "ppm") return " suffix-w-ppm";
   if (suffix === "%") return " suffix-w-pct";
   if (suffix === "°C") return " suffix-w-temp";
   if (suffix === "L") return " suffix-w-pct";
   if (suffix === "mL") return " suffix-w-ppm";
-  if (suffix === "×") return " suffix-w-s";
+  if (suffix === "×") return " suffix-w-factor";
   return "";
 }
 
@@ -220,6 +228,7 @@ function fieldMiniCellWidthClass(field) {
   if (suffix === "%") return " mini-cell-pct";
   if (suffix === "°C") return " mini-cell-temp";
   if (suffix === "ppm") return " mini-cell-ppm";
+  if (suffix === "s") return " mini-cell-s";
   return "";
 }
 
