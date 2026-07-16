@@ -17,9 +17,8 @@ const panelModalViews = {
   history: {
     tab: "Historia",
     title: "Historia",
-    type: "html",
-    panelClass: "diag-modal-body",
-    getHtml: () => formatHistoryHtml(lastState),
+    type: "json",
+    get: () => formatHistory(lastState),
   },
   device: {
     tab: "Status",
@@ -56,9 +55,9 @@ const panelModalViews = {
 };
 
 const HISTORY_DIRECTION_META = {
-  tx: { label: "Wysłano", className: "tx" },
-  rx: { label: "Odebrano", className: "rx" },
-  rx_invalid: { label: "Niepoprawny JSON", className: "invalid" },
+  tx: { label: "wysłano" },
+  rx: { label: "odebrano" },
+  rx_invalid: { label: "niepoprawny json" },
 };
 
 function formatHistoryTimestamp(timestamp) {
@@ -83,60 +82,17 @@ function formatHistoryPayload(payload) {
   }
 }
 
-function highlightJson(source) {
-  const text = String(source ?? "");
-  const tokenRe = /("(\\u[\dA-Fa-f]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g;
-  let html = "";
-  let last = 0;
-  let match;
-  while ((match = tokenRe.exec(text)) !== null) {
-    html += escapeHtml(text.slice(last, match.index));
-    const token = match[0];
-    let cls = "json-num";
-    if (/^"/.test(token)) cls = /:$/.test(token) ? "json-key" : "json-str";
-    else if (/^(true|false|null)$/.test(token)) cls = "json-lit";
-    html += `<span class="${cls}">${escapeHtml(token)}</span>`;
-    last = tokenRe.lastIndex;
-  }
-  html += escapeHtml(text.slice(last));
-  return html;
-}
-
-function renderHistoryEntry(entry, index) {
-  const direction = entry?.direction || "rx";
-  const meta = HISTORY_DIRECTION_META[direction] || {
-    label: direction,
-    className: "unknown",
-  };
-  const payloadText = formatHistoryPayload(entry?.payload);
-  const body = direction === "rx_invalid"
-    ? `<pre class="history-raw"><code>${escapeHtml(payloadText)}</code></pre>`
-    : `<pre class="history-json"><code>${highlightJson(payloadText)}</code></pre>`;
-  const time = formatHistoryTimestamp(entry?.timestamp);
-  const timeMarkup = time
-    ? `<time class="history-time" datetime="${new Date((entry.timestamp || 0) * 1000).toISOString()}">${escapeHtml(time)}</time>`
-    : "";
-  return `<article class="history-entry history-entry--${meta.className}">
-    <header class="history-entry-head">
-      <span class="history-index">#${index + 1}</span>
-      <span class="history-dir">${escapeHtml(meta.label)}</span>
-      ${timeMarkup}
-    </header>
-    ${body}
-  </article>`;
-}
-
-function formatHistoryHtml(state) {
-  const items = state?.history;
-  if (!items?.length) {
-    return '<p class="history-empty">Brak historii komunikacji z płytką.</p>';
-  }
-  const visible = items.slice(0, 20);
-  const entries = visible.map((entry, index) => renderHistoryEntry(entry, index)).join("");
-  return `<div class="history-panel">
-    <p class="history-summary">Ostatnie <strong>${visible.length}</strong> wpisów (najnowsze u góry)</p>
-    ${entries}
-  </div>`;
+function formatHistory(state) {
+  if (!state?.history?.length) return "Brak historii.";
+  return state.history.slice(0, 20).map((entry, index) => {
+    const direction = entry?.direction || "rx";
+    const meta = HISTORY_DIRECTION_META[direction] || { label: direction };
+    const time = formatHistoryTimestamp(entry?.timestamp);
+    const header = time
+      ? `=== #${index + 1} ${meta.label} (${time}) ===`
+      : `=== #${index + 1} ${meta.label} ===`;
+    return `${header}\n${formatHistoryPayload(entry?.payload)}`;
+  }).join("\n\n");
 }
 
 function formatDevice(state) {
