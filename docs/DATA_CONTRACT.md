@@ -29,4 +29,5 @@ python tools/schema/generate_environment_schema.py
 python tools/schema/generate_environment_schema.py --check   # CI
 ```
 
-I/O worksheet: [IO_MAP.md](IO_MAP.md). Pipeline: [MODEL_PIPELINE.md](MODEL_PIPELINE.md).
+I/O worksheet: [IO_MAP.md](IO_MAP.md). Full ML inventory: [simulator/IO_INVENTORY.md](simulator/IO_INVENTORY.md).
+Pipeline: [MODEL_PIPELINE.md](MODEL_PIPELINE.md). Simulator research: [simulator/README.md](simulator/README.md).

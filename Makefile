@@ -8,7 +8,8 @@ IDF_GATE_BUILD_DIR ?= build/idf-gate
 HOST_BUILD_DIR ?= build/host-tests
 N8_BUILD_DIR ?= build/idf-n8
 N32R16V_BUILD_DIR ?= build/idf-n32r16v
-SDKCONFIG_DEFAULTS ?= sdkconfig.defaults;sdkconfig.defaults.n16r8
+# ESP-IDF defaults live under config/idf/ (local sdkconfig stays at repo root).
+SDKCONFIG_DEFAULTS ?= config/idf/sdkconfig.defaults;config/idf/sdkconfig.defaults.n16r8
 IDF_BUILD_ARGS := -D "SDKCONFIG_DEFAULTS=$(SDKCONFIG_DEFAULTS)" -D GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n16r8
 
 ifdef PORT
@@ -153,12 +154,12 @@ build: ensure-idf
 
 build-n8: ensure-idf
 	$(RUN_IDF) -B $(N8_BUILD_DIR) \
-		-D "SDKCONFIG_DEFAULTS=sdkconfig.defaults" \
+		-D "SDKCONFIG_DEFAULTS=config/idf/sdkconfig.defaults" \
 		-D GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n8 build
 
 build-n32r16v: ensure-idf
 	$(RUN_IDF) -B $(N32R16V_BUILD_DIR) \
-		-D "SDKCONFIG_DEFAULTS=sdkconfig.defaults.n32r16v" \
+		-D "SDKCONFIG_DEFAULTS=config/idf/sdkconfig.defaults.n32r16v" \
 		-D GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n32r16v build
 
 rebuild: clean-idf build

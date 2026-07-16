@@ -138,7 +138,7 @@ Only for a module explicitly marked `ESP32-S3-WROOM-2-N32R16V`:
 
 ```bash
 idf.py -B build/idf-n32r16v \
-  -D "SDKCONFIG_DEFAULTS=sdkconfig.defaults.n32r16v" \
+  -D "SDKCONFIG_DEFAULTS=config/idf/sdkconfig.defaults.n32r16v" \
   -D GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n32r16v \
   build
 ```
@@ -149,17 +149,21 @@ PSRAM configuration.
 ## Project layout
 
 ```text
-components/emlearn_runtime/       minimal pinned inference runtime
-lib/environment_control/          portable controller ESP-IDF component and package
-src/                              ESP-IDF application component
-src/demo/                         simulator and bounded UART/JSON adapter
-schemas/                          versioned model/controller contract
-tools/ml/                         simulation, training, export, parity checks
-tools/serial/                     capture and replay tools
-test/host/                        CMake/CTest harness
-test/test_environment_controller/ portable controller test cases
-tests/                            Python tests and golden fixtures
+config/idf/                       board sdkconfig.defaults profiles
+schemas/                          active ML/wire contract (v4 pots)
+docs/                             documentation (+ docs/simulator research)
+tools/ml/                         simulation, training, export
+tools/panel/                      host control panel
+tools/serial/                     capture and replay
+lib/environment_control/          portable controller library
+components/emlearn_runtime/       pinned inference runtime
+src/                              ESP-IDF application (demo + UART)
+test/host/                        CMake/CTest (portable C++)
+tests/                            pytest
+scripts/                          CI and IDF helpers
 ```
+
+Full map: [docs/PROJECT_LAYOUT.md](docs/PROJECT_LAYOUT.md).
 
 The root `CMakeLists.txt` registers `src/` and `lib/environment_control` as ESP-IDF components.
 `library.json` remains in the portable library because LiteGraph is still expected to consume an
@@ -167,12 +171,12 @@ immutable release of that library through its PlatformIO build.
 
 ## Training and export
 
-The quick profile is for CI and smoke tests only. Production training waits for contract v2 — see
-[plan.md](docs/plan.md).
+The quick profile is for CI and smoke tests only. Full training waits for the high-fidelity
+growbox simulator — see [docs/simulator/](docs/simulator/).
 
 ```bash
-make train-quick   # CI / smoke
-make train-full    # after v2 contract is complete
+make train-quick   # CI / smoke (not production weights)
+make train-full    # after simulator fidelity work
 ```
 
 See [Model pipeline](docs/MODEL_PIPELINE.md).
@@ -265,7 +269,8 @@ and an ESP-IDF 5.5.1 ESP32-S3 firmware build. No physical board is required for 
 
 ## Demo limitations
 
-- The v1 simulator uses simplified physics; **v2** targets training-grade coupled growbox thermodynamics ([plan.md](docs/plan.md) → *Symulator — termodynamika growboxa*).
+- The training simulator is still **placeholder-grade** physics; high-fidelity work is tracked under
+  [docs/simulator/](docs/simulator/). Committed model weights may be `untrained-placeholder`.
 - Synthetic training cannot establish real-world performance or safety.
 - The v1 teacher is a short-horizon deterministic search, not model-predictive control or RL.
 - The exported float model favors a transparent demonstration over aggressive quantization.

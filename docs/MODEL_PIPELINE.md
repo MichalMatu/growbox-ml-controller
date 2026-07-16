@@ -25,3 +25,4 @@ python -m tools.ml.pipeline --check-generated
 Teacher is explicit cost search on simulator rollouts, not RL.
 
 Details: `tools/ml/pipeline.py`, `teacher.py`, `simulator.py`, `controller_input.py`.
+Physics redesign notes: [simulator/README.md](simulator/README.md).

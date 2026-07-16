@@ -47,6 +47,9 @@ captures/
 # PlatformIO build artifacts
 .pio/
 
+# Accidental npm tree (panel visual tests use pip playwright, not package.json)
+node_modules/
+
 # Secrets and local configuration
 .env
 .env.*

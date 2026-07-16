@@ -1,13 +1,17 @@
 # Mapowanie I/O
 
-**Schema v1 (produkcja):** [`schemas/environment-controller.json`](../schemas/environment-controller.json)
-**Schema v2:** [`schemas/environment-controller.json`](../schemas/environment-controller.json) — **I/O definitywne** (kod jeszcze v1).
+**Aktywny kontrakt (v4, pots):** [`schemas/environment-controller.json`](../schemas/environment-controller.json)
+**Pełna lista cech ML:** [simulator/IO_INVENTORY.md](simulator/IO_INVENTORY.md)
+**Research fizyki symulatora:** [simulator/README.md](simulator/README.md)
+
+> Ten plik historycznie mówił o „v2 / strefach”. **Kod i schema używają `pots` (donice).**
+> Gdzie poniżej zostaje słowo „strefa” w starych tabelach, czytaj **donica / pot**.
 
 Kontekst produktowy: [plan.md](plan.md) → *Wizja produktu*.
 
-## Sensing v2 — ZAMKNIĘTE
+## Sensing — ZAMKNIĘTE (v4)
 
-**Temat czujników domknięty 2026-07.** W v2 **nie dodajemy** kolejnych pomiarów — tylko implementacja w kodzie (Faza 2). Każdy slot: **mix & match** (`validity` lub brak integracji przy pseudo-wejściu).
+**Temat czujników domknięty.** Nie dodajemy kolejnych pomiarów bez nowej wersji kontraktu. Każdy slot: **mix & match** (`validity` lub brak integracji przy pseudo-wejściu).
 
 | Grupa | Sloty (15 + 1 pseudo) | W kontrakcie |
 |-------|------------------------|--------------|
@@ -223,33 +227,32 @@ Mix & match dotyczy **które donice i sprzęt** masz w profilu — nie osobnych 
 
 Przykład: tylko wilgotność — `validity.soil_temperature_c: false` (brak DS18B20). Temp. i wilgotność **nie muszą** pochodzić z jednego modułu.
 
-## v2 — wyjścia ML (zamknięte, 10 slotów)
+## Wyjścia ML (v4, 15 slotów)
 
 Wartości ciągłe `[0, 1]`. Safety może wymusić 0, skwantować binarnie (`co2_doser`) lub ograniczyć impuls pompy. **Światło nie jest wyjściem ML** — patrz *Poza wyjściami ML*.
 
-### Globalne (6)
-
-| # | Slot | Fizycznie | Mix & match | v1 | Uwagi |
-|---|------|-----------|-------------|----|--------|
-| 1 | `heater` | grzałka powietrza | ☑/☐ | tak | dwell on/off |
-| 2 | `fan` | wentylacja (intake/exhaust) | ☑/☐ | tak | **blokada CO₂** gdy fan &gt; próg |
-| 3 | `humidifier` | nawilżacz | ☑/☐ | tak | |
-| 4 | `dehumidifier` | osuszacz | ☑/☐ | nie | osobne od `cooler` |
-| 5 | `cooler` | klimatyzator / chłodzenie | ☑/☐ | nie | osobne od grzałki i osuszacza |
-| 6 | `co2_doser` | elektrozawór butli CO₂ | ☑/☐ | nie | impulsy; sens gdy `co2_ppm` ☑ |
-
-### Strefowe — pompy wody (4)
+### Globalne (7)
 
 | # | Slot | Fizycznie | Mix & match | Uwagi |
 |---|------|-----------|-------------|--------|
-| 7 | `irrigation_pot_1` | pompa strefy 1 | ☑/☐ | `pots[0].irrigation.available`; impuls per strefa |
-| 8 | `irrigation_pot_2` | pompa strefy 2 | ☑/☐ | niezależnie od innych stref |
-| 9 | `irrigation_pot_3` | pompa strefy 3 | ☑/☐ | |
-| 10 | `irrigation_pot_4` | pompa strefy 4 | ☑/☐ | |
+| 1 | `heater` | grzałka powietrza | ☑/☐ | dwell on/off |
+| 2 | `fan` | wentylacja (intake/exhaust) | ☑/☐ | **blokada CO₂** gdy fan &gt; próg |
+| 3 | `humidifier` | nawilżacz | ☑/☐ | |
+| 4 | `dehumidifier` | osuszacz | ☑/☐ | osobne od `cooler` |
+| 5 | `cooler` | klimatyzator / chłodzenie | ☑/☐ | osobne od grzałki i osuszacza |
+| 6 | `co2_doser` | elektrozawór butli CO₂ | ☑/☐ | impulsy; sens gdy `co2_ppm` ☑ |
+| 7 | `nutrient_heater` | grzałka zbiornika odżywki | ☑/☐ | osobne od temp. gleby |
+
+### Donice — pompy i maty (8)
+
+| # | Slot | Fizycznie | Mix & match | Uwagi |
+|---|------|-----------|-------------|--------|
+| 8–11 | `irrigation_pot_1…4` | pompa donicy N | ☑/☐ | `pots[N-1].irrigation.available` |
+| 12–15 | `heat_mat_pot_1…4` | mata pod donicą N | ☑/☐ | `pots[N-1].heat_mat.available` |
 
 ```text
-ML (10):     heater, fan, humidifier, dehumidifier, cooler, co2_doser
-             + irrigation_pot_1 … irrigation_pot_4
+ML (15):     heater, fan, humidifier, dehumidifier, cooler, co2_doser, nutrient_heater
+             + irrigation_pot_1…4 + heat_mat_pot_1…4
 Poza ML:     lights (harmonogram → lights_active jako wejście)
 Mostek:      1× fan → N relay; światło → przekaźnik LED
 ```
@@ -260,8 +263,7 @@ Mostek:      1× fan → N relay; światło → przekaźnik LED
 |---------|--------|
 | **Światło LED** | Nodeflow / harmonogram + readback → `lights_active` |
 | **Drugi wentylator** | mostek pod jednym `fan` |
-| **Mata grzewcza / donica** | poza v2 |
-| **Perystaltyka nawozu** | v2.1 hydro |
+| **Perystaltyka nawozu / EC-pH** | roadmap hydro |
 
 Szkic kontraktu: [`environment-controller.json`](../schemas/environment-controller.json) → `model.outputs`.
 
