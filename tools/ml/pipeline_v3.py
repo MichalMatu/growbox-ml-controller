@@ -8,7 +8,7 @@ import tempfile
 from dataclasses import asdict
 from pathlib import Path
 
-from .contract import V3_CONTRACT_PATH, load_contract
+from .contract import ACTIVE_CONTRACT_PATH, load_contract
 from .export_model import (
     DEFAULT_GENERATED_DIR,
     DEFAULT_GOLDEN_HEADER,
@@ -33,7 +33,7 @@ def run_pipeline_v3(
 ) -> PipelineResult:
     if mode not in ("quick", "full"):
         raise ValueError("mode must be quick or full")
-    contract = load_contract(V3_CONTRACT_PATH)
+    contract = load_contract(ACTIVE_CONTRACT_PATH)
     dataset_config = DatasetConfig.quick(seed) if mode == "quick" else DatasetConfig.full(seed)
     training_config = TrainingConfig.quick(seed) if mode == "quick" else TrainingConfig.full(seed)
     teacher = RolloutTeacherV2(horizon_steps=2 if mode == "quick" else 4)

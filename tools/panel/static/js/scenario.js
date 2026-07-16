@@ -125,10 +125,6 @@ function scenarioPayloadForKeys(doc, keys) {
   return sanitizeScenarioNumeric(payload);
 }
 
-function scenarioSyncPayload(doc) {
-  return scenarioPayloadForKeys(doc, SCENARIO_SYNC_KEYS);
-}
-
 function scenarioBadgePayload(doc) {
   const payload = scenarioPayloadForKeys(doc, SCENARIO_BADGE_KEYS);
   if (Array.isArray(payload.zones)) {
@@ -150,10 +146,6 @@ function stableStringify(value) {
     return `{${keys.map(key => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(",")}}`;
   }
   return JSON.stringify(value);
-}
-
-function scenarioSyncFingerprint(doc) {
-  return stableStringify(scenarioSyncPayload(doc));
 }
 
 function scenarioBadgeFingerprint(doc) {
@@ -213,9 +205,17 @@ function isScenarioNumberInputEligible(el) {
 function clearScenarioFieldInvalid(el) {
   if (!isScenarioNumberInputEligible(el)) return;
   if (!validateScenarioNumberInput(el)) {
-    el.classList.remove("field-invalid");
-    el.setAttribute("aria-invalid", "false");
+    applyFieldInvalidState(el, null);
   }
+}
+
+function pushScenarioValidationError(errors, path, message, el = null) {
+  errors.push({
+    path: path || "",
+    label: path ? scenarioFieldLabel(path) : "Formularz",
+    message,
+    el: el ?? (path ? scenarioFieldElement(path) : null),
+  });
 }
 
 function validateScenarioNumberInput(el) {
@@ -232,6 +232,50 @@ function validateScenarioNumberInput(el) {
   return null;
 }
 
+/** Paths stored as checkbox booleans even when the contract encodes them as 0/1. */
+function isScenarioBooleanPath(path) {
+  if (!path) return false;
+  return (
+    path.endsWith(".available")
+    || path.startsWith("validity.")
+    || path.includes(".validity.")
+    || path.endsWith(".lights_active")
+    || path === "pseudo.lights_active"
+  );
+}
+
+/** Cross-check document values against /api/schema field bounds (FE↔BE contract). */
+function validateScenarioAgainstSchema(doc) {
+  const errors = [];
+  if (!panelSchema?.sections || !doc || typeof doc !== "object") return errors;
+  for (const section of panelSchema.sections) {
+    for (const field of section.fields || []) {
+      if (!field.path) continue;
+      // Booleans / checkbox flags are not continuous numbers.
+      if (field.type === "boolean" || field.type === "enum" || isScenarioBooleanPath(field.path)) {
+        continue;
+      }
+      if (field.type !== "number") continue;
+      const value = getNested(doc, field.path);
+      if (value === undefined || value === null || value === "") continue;
+      // Defensive: checkbox-backed values may still be boolean in the draft.
+      if (typeof value === "boolean") continue;
+      if (typeof value !== "number" || !Number.isFinite(value)) {
+        pushScenarioValidationError(errors, field.path, "Nieprawidłowa liczba");
+        continue;
+      }
+      const min = Number(field.minimum);
+      const max = Number(field.maximum);
+      if (Number.isFinite(min) && value < min) {
+        pushScenarioValidationError(errors, field.path, `Poniżej minimum (${min})`);
+      } else if (Number.isFinite(max) && value > max) {
+        pushScenarioValidationError(errors, field.path, `Powyżej maksimum (${max})`);
+      }
+    }
+  }
+  return errors;
+}
+
 function validateScenarioLogicalRules(doc) {
   const errors = [];
   const safety = doc?.safety;
@@ -239,25 +283,88 @@ function validateScenarioLogicalRules(doc) {
     const tMax = safety.maximum_air_temperature_c;
     const tAlarm = safety.alarm_air_temperature_c;
     if (Number.isFinite(tMax) && Number.isFinite(tAlarm) && tAlarm > tMax) {
-      const path = "safety.alarm_air_temperature_c";
-      errors.push({
-        path,
-        label: scenarioFieldLabel(path),
-        message: "Alarm T nie może być wyższy niż T max (grzałka)",
-        el: scenarioFieldElement(path),
-      });
+      pushScenarioValidationError(
+        errors,
+        "safety.alarm_air_temperature_c",
+        "Alarm T nie może być wyższy niż T max (grzałka)",
+      );
     }
     const fanMin = safety.alarm_minimum_fan;
     if (Number.isFinite(fanMin) && (fanMin < 0 || fanMin > 1)) {
-      const path = "safety.alarm_minimum_fan";
-      errors.push({
-        path,
-        label: scenarioFieldLabel(path),
-        message: "Fan min musi być w zakresie 0–1",
-        el: scenarioFieldElement(path),
-      });
+      pushScenarioValidationError(
+        errors,
+        "safety.alarm_minimum_fan",
+        "Fan min musi być w zakresie 0–1",
+      );
+    }
+    const binary = safety.binary_threshold;
+    if (Number.isFinite(binary) && (binary < 0 || binary > 1)) {
+      pushScenarioValidationError(
+        errors,
+        "safety.binary_threshold",
+        "Próg bin musi być w zakresie 0–1",
+      );
+    }
+    const vent = safety.fan_venting_co2_threshold;
+    if (Number.isFinite(vent) && (vent < 0 || vent > 1)) {
+      pushScenarioValidationError(
+        errors,
+        "safety.fan_venting_co2_threshold",
+        "Fan CO₂ musi być w zakresie 0–1",
+      );
     }
   }
+
+  const targetAir = doc?.targets?.air_temperature_c;
+  const safetyMax = safety?.maximum_air_temperature_c;
+  if (Number.isFinite(targetAir) && Number.isFinite(safetyMax) && targetAir > safetyMax) {
+    pushScenarioValidationError(
+      errors,
+      "targets.air_temperature_c",
+      "Cel T powietrza nie może być wyższy niż T max safety",
+    );
+  }
+
+  const fanMinCmd = doc?.actuators?.fan?.minimum_command;
+  if (Number.isFinite(fanMinCmd) && (fanMinCmd < 0 || fanMinCmd > 1)) {
+    pushScenarioValidationError(
+      errors,
+      "actuators.fan.minimum_command",
+      "Fan min (PWM) musi być w zakresie 0–1",
+    );
+  }
+
+  const co2SafetyPulse = safety?.co2_doser_maximum_pulse_s;
+  const co2ActuatorPulse = doc?.actuators?.co2_doser?.maximum_pulse_s;
+  if (
+    doc?.actuators?.co2_doser?.available
+    && Number.isFinite(co2SafetyPulse)
+    && Number.isFinite(co2ActuatorPulse)
+    && co2SafetyPulse > co2ActuatorPulse
+  ) {
+    pushScenarioValidationError(
+      errors,
+      "safety.co2_doser_maximum_pulse_s",
+      "Impuls safety CO₂ nie może być dłuższy niż impuls aktuatora",
+    );
+  }
+
+  const zones = Array.isArray(doc?.zones) ? doc.zones : [];
+  for (let index = 0; index < zones.length; index += 1) {
+    const zone = zones[index];
+    if (!zone?.available || !zone.irrigation?.available) continue;
+    const pulse = zone.irrigation.maximum_pulse_s;
+    const interval = zone.irrigation.minimum_interval_s;
+    if (Number.isFinite(pulse) && Number.isFinite(interval) && pulse > interval) {
+      const path = `zones.${index}.irrigation.maximum_pulse_s`;
+      pushScenarioValidationError(
+        errors,
+        path,
+        "Impuls podlewania nie może być dłuższy niż przerwa min.",
+      );
+    }
+  }
+
   return errors;
 }
 
@@ -293,9 +400,25 @@ function validateScenarioForm() {
   }
   if (errors.length === 0) {
     const draft = readScenarioFromForm(scenario, { formatNumbers: false });
-    errors.push(...validateScenarioLogicalRules(draft));
+    errors.push(...validateScenarioAgainstSchema(draft));
+    if (errors.length === 0) {
+      errors.push(...validateScenarioLogicalRules(draft));
+    }
   }
   return { ok: errors.length === 0, errors };
+}
+
+function applyFieldInvalidState(el, message) {
+  if (!el) return;
+  const invalid = Boolean(message);
+  el.classList.toggle("field-invalid", invalid);
+  el.setAttribute("aria-invalid", invalid ? "true" : "false");
+  if (invalid) {
+    el.title = message;
+    el.setAttribute("data-validation-error", message);
+  } else {
+    el.removeAttribute("data-validation-error");
+  }
 }
 
 function syncScenarioFieldValidityMarks(validation = null) {
@@ -308,32 +431,44 @@ function syncScenarioFieldValidityMarks(validation = null) {
     const seedErr = errorByPath.get("seed") || (isScenarioNumberInputEligible(seedEl)
       ? validateScenarioNumberInput(seedEl)
       : null);
-    seedEl.classList.toggle("field-invalid", Boolean(seedErr));
-    seedEl.setAttribute("aria-invalid", seedErr ? "true" : "false");
+    applyFieldInvalidState(seedEl, seedErr);
   }
   forEachScenarioField(el => {
     if (!isScenarioNumberInputEligible(el)) {
-      el.classList.remove("field-invalid");
-      el.removeAttribute("aria-invalid");
+      // Logical/schema errors may still target non-number controls; clear only if no map hit.
+      const pathErr = el.dataset.path ? errorByPath.get(el.dataset.path) : null;
+      if (pathErr) {
+        applyFieldInvalidState(el, pathErr);
+      } else {
+        el.classList.remove("field-invalid");
+        el.removeAttribute("aria-invalid");
+        el.removeAttribute("data-validation-error");
+      }
       return;
     }
     const err = errorByPath.get(el.dataset.path) || validateScenarioNumberInput(el);
-    el.classList.toggle("field-invalid", Boolean(err));
-    el.setAttribute("aria-invalid", err ? "true" : "false");
+    applyFieldInvalidState(el, err);
   });
+  // Mark elements referenced by errors that are outside the number-input loop (e.g. focus targets).
+  for (const item of validation?.errors || []) {
+    if (item.el && item.message) applyFieldInvalidState(item.el, item.message);
+  }
 }
 
+/** Highlight invalid fields in-place — no modal. Focus first error. */
 function showScenarioValidationErrors(validation, { actionLabel = "wysłania" } = {}) {
   syncScenarioFieldValidityMarks(validation);
-  const items = validation.errors
-    .map(item => `<li><strong>${escapeHtml(item.label)}</strong> — ${escapeHtml(item.message)}</li>`)
-    .join("");
-  openNotice({
-    title: "Formularz ma błędy",
-    html: `<p>Popraw pola przed <strong>${escapeHtml(actionLabel)}</strong>:</p><ul>${items}</ul>`,
-  });
+  for (const item of validation.errors || []) {
+    if (!item.el) continue;
+    const detail = item.message || "Nieprawidłowa wartość";
+    item.el.title = `Popraw przed ${actionLabel}: ${detail}`;
+    item.el.setAttribute("data-validation-error", detail);
+  }
   const focusTarget = validation.errors.find(item => item.el)?.el;
-  focusTarget?.focus({ preventScroll: true });
+  if (focusTarget) {
+    focusTarget.scrollIntoView({ block: "center", behavior: "smooth" });
+    focusTarget.focus({ preventScroll: true });
+  }
 }
 
 function readScenarioFromForm(base = scenario, { formatNumbers = true } = {}) {

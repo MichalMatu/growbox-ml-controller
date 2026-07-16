@@ -236,6 +236,12 @@ function bindToolbar() {
 }
 bindToolbar();
 document.getElementById("btn-export").onclick = () => {
+  const validation = validateScenarioForm();
+  if (!validation.ok) {
+    showScenarioValidationErrors(validation, { actionLabel: "Pobierz" });
+    return;
+  }
+  syncScenarioFieldValidityMarks(validation);
   const blob = new Blob([JSON.stringify(collectScenario(), null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);

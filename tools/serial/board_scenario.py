@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from tools.panel.form_schema import default_scenario
+from tools.ml.scenario_payload import default_scenario
 
 
 def load_scenario_command(*, seed: int = 101, preset: str = "nominal") -> dict[str, Any]:

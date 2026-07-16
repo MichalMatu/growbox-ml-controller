@@ -10,7 +10,7 @@ import urllib.error
 import urllib.request
 from typing import Any
 
-from tools.panel.form_schema import default_scenario
+from tools.ml.scenario_payload import default_scenario
 
 DEFAULT_BASE = "http://127.0.0.1:8765"
 DEFAULT_PORT = "/dev/cu.usbmodem1101"

@@ -165,6 +165,47 @@ def test_panel_schema_matches_contract_feature_count():
     assert len(schema["presets"]) >= 5
 
 
+def test_panel_schema_number_fields_have_finite_bounds_and_defaults_in_range():
+    """FE↔BE contract: every numeric form field carries min/max and a valid default."""
+    schema = build_panel_schema()
+    numbers = 0
+    for section in schema["sections"]:
+        for field in section["fields"]:
+            if field.get("type") != "number":
+                continue
+            numbers += 1
+            minimum = field.get("minimum")
+            maximum = field.get("maximum")
+            default = field.get("default")
+            assert isinstance(minimum, int | float), field["path"]
+            assert isinstance(maximum, int | float), field["path"]
+            assert minimum <= maximum, field["path"]
+            assert isinstance(default, int | float), field["path"]
+            assert minimum <= default <= maximum, (
+                field["path"],
+                minimum,
+                default,
+                maximum,
+            )
+    assert numbers >= 90
+
+
+def test_panel_schema_marks_zone_validity_and_lights_as_boolean():
+    schema = build_panel_schema()
+    by_path = {
+        field["path"]: field for section in schema["sections"] for field in section["fields"]
+    }
+    for path in (
+        "zones.0.validity.soil_moisture_pct",
+        "zones.0.validity.soil_temperature_c",
+        "zones.3.validity.soil_moisture_pct",
+        "pseudo.lights_active",
+        "validity.air_temperature_c",
+        "actuators.heater.available",
+    ):
+        assert by_path[path]["type"] == "boolean", path
+
+
 def test_bridge_snapshot_serializes_history_deque():
     bridge = SerialBridge()
     bridge._state["history"] = deque([{"direction": "rx", "payload": {"type": "ack"}}], maxlen=5)

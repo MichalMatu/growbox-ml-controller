@@ -1,7 +1,11 @@
-"""Growbox environment simulator v2 — up to 4 irrigation zones, 15 ML outputs (v3 heating).
+"""Growbox environment simulator for active contract v3 (file name legacy: v2).
 
+Up to 4 irrigation zones, 15 ML outputs (climate + irrigation + nutrient/heat mats).
 Physically inspired lumped-parameter model for training (not runtime on device).
 Inactive zones (``available=False``) contribute no soil/evaporation/irrigation physics.
+
+Output names must stay byte-equal to ``contract.outputs`` for
+``schemas/environment-controller-v3.json`` — enforced by ``tools.ml.alignment``.
 """
 
 from __future__ import annotations

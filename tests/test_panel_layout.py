@@ -166,6 +166,10 @@ def test_page_avoids_broken_multi_column_form_grids():
     assert ".form-grid" not in panel_css
     assert "growbox-params-split" not in form_js
     assert ".growbox-params-split" not in panel_css
+    # Legacy multi-column / zone-card grids removed in favor of card-stack + pots-row
+    assert ".zones-grid" not in panel_css
+    assert ".section-grid" not in panel_css
+    assert "growbox-params-split" not in panel_css
 
 
 def test_main_page_keeps_two_column_layout():

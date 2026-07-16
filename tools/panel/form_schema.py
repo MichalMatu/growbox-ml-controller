@@ -1,149 +1,37 @@
-"""Build panel form metadata and default scenario payloads from contract v3."""
+"""Build panel form metadata from contract v3.
+
+Scenario payloads live in ``tools.ml.scenario_payload`` so ML/serial paths do not
+import the panel package. This module re-exports them for panel API compatibility.
+"""
 
 from __future__ import annotations
 
 import re
 from typing import Any
 
-from tools.ml.contract import V3_CONTRACT_PATH, Contract, load_contract
+from tools.ml.contract import ACTIVE_CONTRACT_PATH, Contract, load_contract
+from tools.ml.scenario_payload import (
+    ACTIVE_ZONE_PRESET,
+    INACTIVE_ZONE_PRESET,
+    NOMINAL_PRESET,
+    PANEL_ACTUATOR_CONTROL_FIELDS,
+    SCENARIO_PRESETS,
+    default_scenario,
+    list_scenario_presets,
+)
 
-INACTIVE_ZONE_PRESET: dict[str, Any] = {
-    "available": False,
-    "sensors": {"soil_moisture_pct": 50.0, "soil_temperature_c": 20.0},
-    "validity": {"soil_moisture_pct": False, "soil_temperature_c": False},
-    "cultivation": {
-        "pot_volume_l": 10.0,
-        "substrate_water_capacity_ml": 3000.0,
-        "transpiration_factor": 1.0,
-    },
-    "targets": {"soil_moisture_pct": 50.0, "soil_temperature_c": 20.0},
-    "irrigation": {
-        "available": False,
-        "flow_ml_s": 0.0,
-        "maximum_pulse_s": 0.0,
-        "minimum_interval_s": 0.0,
-        "control_type": "binary",
-    },
-    "heat_mat": {
-        "available": False,
-        "max_power_w": 0.0,
-        "control_type": "binary",
-    },
-    "previous": {"irrigation": 0.0, "heat_mat": 0.0},
-}
-
-NOMINAL_PRESET: dict[str, Any] = {
-    "sensors": {
-        "air_temperature_c": 22.0,
-        "air_humidity_pct": 58.0,
-        "co2_ppm": 920.0,
-        "nutrient_solution_temperature_c": 20.0,
-        "outside_temperature_c": 18.0,
-        "outside_humidity_pct": 52.0,
-        "outside_co2_ppm": 420.0,
-    },
-    "validity": {
-        "air_temperature_c": True,
-        "air_humidity_pct": True,
-        "co2_ppm": True,
-        "nutrient_solution_temperature_c": True,
-        "outside_temperature_c": True,
-        "outside_humidity_pct": True,
-        "outside_co2_ppm": True,
-    },
-    "zones": [
-        {
-            "available": True,
-            "sensors": {"soil_moisture_pct": 44.0, "soil_temperature_c": 20.0},
-            "validity": {"soil_moisture_pct": True, "soil_temperature_c": True},
-            "cultivation": {
-                "pot_volume_l": 12.0,
-                "substrate_water_capacity_ml": 3600.0,
-                "transpiration_factor": 1.0,
-            },
-            "targets": {"soil_moisture_pct": 50.0, "soil_temperature_c": 22.0},
-            "irrigation": {
-                "available": True,
-                "flow_ml_s": 22.0,
-                "maximum_pulse_s": 4.0,
-                "minimum_interval_s": 600.0,
-                "control_type": "binary",
-            },
-            "heat_mat": {
-                "available": False,
-                "max_power_w": 0.0,
-                "control_type": "binary",
-            },
-            "previous": {"irrigation": 0.0, "heat_mat": 0.0},
-        },
-        dict(INACTIVE_ZONE_PRESET),
-        dict(INACTIVE_ZONE_PRESET),
-        dict(INACTIVE_ZONE_PRESET),
-    ],
-    "pseudo": {"lights_active": False},
-    "environment": {
-        "growbox_volume_m3": 1.2,
-        "thermal_mass_j_per_k": 48000.0,
-        "heat_loss_w_per_k": 7.0,
-        "air_leak_rate_ach": 0.25,
-    },
-    "actuators": {
-        "heater": {
-            "available": True,
-            "max_power_w": 180.0,
-            "efficiency": 0.9,
-            "control_type": "binary",
-        },
-        "fan": {
-            "available": True,
-            "max_airflow_m3_h": 120.0,
-            "minimum_command": 0.2,
-            "control_type": "pwm",
-        },
-        "humidifier": {
-            "available": True,
-            "max_output_g_h": 180.0,
-            "control_type": "binary",
-        },
-        "dehumidifier": {
-            "available": False,
-            "max_removal_g_h": 80.0,
-            "control_type": "binary",
-        },
-        "cooler": {
-            "available": False,
-            "max_cooling_w": 200.0,
-            "control_type": "binary",
-        },
-        "co2_doser": {
-            "available": False,
-            "dose_ppm_per_full_pulse": 120.0,
-            "maximum_pulse_s": 3.0,
-            "control_type": "binary",
-        },
-        "nutrient_heater": {
-            "available": False,
-            "max_power_w": 0.0,
-            "efficiency": 0.0,
-            "control_type": "binary",
-        },
-    },
-    "targets": {
-        "air_temperature_c": 25.0,
-        "air_humidity_pct": 65.0,
-        "co2_ppm": 850.0,
-        "nutrient_solution_temperature_c": 20.0,
-    },
-    "previous": {
-        "heater": 0.0,
-        "fan": 0.0,
-        "humidifier": 0.0,
-        "dehumidifier": 0.0,
-        "cooler": 0.0,
-        "co2_doser": 0.0,
-        "nutrient_heater": 0.0,
-    },
-}
+__all__ = [
+    "ACTIVE_ZONE_PRESET",
+    "INACTIVE_ZONE_PRESET",
+    "NOMINAL_PRESET",
+    "PANEL_ACTUATOR_CONTROL_FIELDS",
+    "SCENARIO_PRESETS",
+    "SECTION_ORDER",
+    "SECTION_TITLES",
+    "build_panel_schema",
+    "default_scenario",
+    "list_scenario_presets",
+]
 
 SAFETY_FIELD_ORDER = (
     "maximum_air_temperature_c",
@@ -183,123 +71,6 @@ SAFETY_FIELD_BOUNDS: dict[str, tuple[float, float]] = {
     "fan_venting_co2_threshold": (0.0, 1.0),
     "maximum_nutrient_soil_delta_c": (0.0, 30.0),
     "minimum_nutrient_solution_temperature_c": (-10.0, 50.0),
-}
-
-ACTIVE_ZONE_PRESET: dict[str, Any] = {
-    "available": True,
-    "sensors": {"soil_moisture_pct": 44.0, "soil_temperature_c": 22.0},
-    "validity": {"soil_moisture_pct": True, "soil_temperature_c": True},
-    "cultivation": {
-        "pot_volume_l": 12.0,
-        "substrate_water_capacity_ml": 3600.0,
-        "transpiration_factor": 1.0,
-    },
-    "targets": {"soil_moisture_pct": 50.0, "soil_temperature_c": 22.0},
-    "irrigation": {
-        "available": True,
-        "flow_ml_s": 22.0,
-        "maximum_pulse_s": 4.0,
-        "minimum_interval_s": 600.0,
-        "control_type": "binary",
-    },
-    "heat_mat": {
-        "available": False,
-        "max_power_w": 0.0,
-        "control_type": "binary",
-    },
-    "previous": {"irrigation": 0.0, "heat_mat": 0.0},
-}
-
-SCENARIO_PRESETS: dict[str, dict[str, Any]] = {
-    "nominal": {
-        "title": "Nominalny (1 strefa)",
-        "description": "Domyślny profil: strefa 0 aktywna, grzałka/fan/nawilżacz włączone.",
-        "overlay": NOMINAL_PRESET,
-    },
-    "all_zones": {
-        "title": "4 strefy aktywne",
-        "description": "Wszystkie donice i pompy włączone — test mix & match 0–4.",
-        "overlay": {
-            "zones": [dict(ACTIVE_ZONE_PRESET) for _ in range(4)],
-        },
-    },
-    "disabled_actuators": {
-        "title": "Wyłączone aktuary",
-        "description": "Tylko fan dostępny — safety wymusza 0 na pozostałych wyjściach.",
-        "overlay": {
-            "actuators": {
-                "heater": {"available": False, "max_power_w": 0.0, "efficiency": 0.0},
-                "fan": {"available": True, "max_airflow_m3_h": 120.0, "minimum_command": 0.2},
-                "humidifier": {"available": False, "max_output_g_h": 0.0},
-                "dehumidifier": {"available": False, "max_removal_g_h": 0.0},
-                "cooler": {"available": False, "max_cooling_w": 0.0},
-                "co2_doser": {
-                    "available": False,
-                    "dose_ppm_per_full_pulse": 0.0,
-                    "maximum_pulse_s": 0.0,
-                },
-            },
-            "zones": [
-                {
-                    **ACTIVE_ZONE_PRESET,
-                    "irrigation": {**ACTIVE_ZONE_PRESET["irrigation"], "available": False},
-                },
-                dict(INACTIVE_ZONE_PRESET),
-                dict(INACTIVE_ZONE_PRESET),
-                dict(INACTIVE_ZONE_PRESET),
-            ],
-        },
-    },
-    "saturated_soil": {
-        "title": "Gleba nasączona",
-        "description": "Wilgotność gleby ≥ cel — safety blokuje podlewanie strefy 0.",
-        "overlay": {
-            "zones": [
-                {
-                    **ACTIVE_ZONE_PRESET,
-                    "sensors": {"soil_moisture_pct": 58.0, "soil_temperature_c": 24.0},
-                    "targets": {"soil_moisture_pct": 50.0},
-                },
-                dict(INACTIVE_ZONE_PRESET),
-                dict(INACTIVE_ZONE_PRESET),
-                dict(INACTIVE_ZONE_PRESET),
-            ],
-            "sensors": {"nutrient_solution_temperature_c": 10.0},
-            "validity": {"nutrient_solution_temperature_c": True},
-        },
-    },
-    "minimal_sensors": {
-        "title": "Minimalne czujniki",
-        "description": "Tylko T/RH powietrza valid — CO₂, gleba i zewnętrzne wyłączone.",
-        "overlay": {
-            "validity": {
-                "air_temperature_c": True,
-                "air_humidity_pct": True,
-                "co2_ppm": False,
-                "nutrient_solution_temperature_c": False,
-                "outside_temperature_c": False,
-                "outside_humidity_pct": False,
-                "outside_co2_ppm": False,
-            },
-            "zones": [dict(INACTIVE_ZONE_PRESET) for _ in range(4)],
-        },
-    },
-    "co2_high": {
-        "title": "CO₂ ≥ cel",
-        "description": "Stężenie CO₂ powyżej celu — safety blokuje dozowanie.",
-        "overlay": {
-            "sensors": {"co2_ppm": 1200.0},
-            "validity": {"co2_ppm": True},
-            "actuators": {
-                "co2_doser": {
-                    "available": True,
-                    "dose_ppm_per_full_pulse": 120.0,
-                    "maximum_pulse_s": 3.0,
-                },
-            },
-            "targets": {"co2_ppm": 900.0},
-        },
-    },
 }
 
 SECTION_ORDER = (
@@ -350,105 +121,22 @@ def _safety_fields(contract: Contract) -> list[dict[str, Any]]:
     return fields
 
 
-def _set_nested(document: dict[str, Any], path: str, value: Any) -> None:
-    parts = path.split(".")
-    current: dict[str, Any] = document
-    for part in parts[:-1]:
-        next_value = current.get(part)
-        if not isinstance(next_value, dict):
-            next_value = {}
-            current[part] = next_value
-        current = next_value
-    current[parts[-1]] = value
-
-
-def _deep_merge(base: dict[str, Any], overlay: dict[str, Any]) -> dict[str, Any]:
-    merged = dict(base)
-    for key, value in overlay.items():
-        if key == "zones" and isinstance(value, list):
-            merged[key] = [dict(zone) for zone in value]
-        elif isinstance(value, dict) and isinstance(merged.get(key), dict):
-            merged[key] = _deep_merge(merged[key], value)
-        else:
-            merged[key] = value
-    return merged
-
-
-def _normalize_zones(scenario: dict[str, Any]) -> None:
-    zones = scenario.get("zones")
-    if isinstance(zones, dict):
-        scenario["zones"] = [
-            dict(zones.get(str(index), INACTIVE_ZONE_PRESET)) for index in range(4)
-        ]
-    elif isinstance(zones, list):
-        normalized = [dict(zone) for zone in zones]
-        while len(normalized) < 4:
-            normalized.append(dict(INACTIVE_ZONE_PRESET))
-        scenario["zones"] = normalized[:4]
-
-
-def default_scenario(*, seed: int = 101, preset: str = "nominal") -> dict[str, Any]:
-    contract = load_contract(V3_CONTRACT_PATH)
-    scenario: dict[str, Any] = {"seed": seed}
-    for feature in contract.features:
-        path = feature.path
-        if path.startswith("validity."):
-            _set_nested(scenario, path, feature.default >= 0.5)
-        elif feature.encoding is not None:
-            default_name = next(
-                (name for name, encoded in feature.encoding.items() if encoded == feature.default),
-                "binary",
-            )
-            _set_nested(scenario, path, default_name)
-        elif path.endswith(".available"):
-            _set_nested(scenario, path, feature.default >= 0.5)
-        else:
-            _set_nested(scenario, path, feature.default)
-    preset_overlay = SCENARIO_PRESETS.get(preset, {}).get("overlay")
-    if preset_overlay is not None:
-        scenario = _deep_merge(scenario, preset_overlay)
-    elif preset == "nominal":
-        scenario = _deep_merge(scenario, NOMINAL_PRESET)
-    safety_defaults = contract.document.get("safety_defaults", {})
-    if safety_defaults:
-        scenario = _deep_merge(scenario, {"safety": dict(safety_defaults)})
-    for _, path, default_name in PANEL_ACTUATOR_CONTROL_FIELDS:
-        _set_nested(scenario, path, default_name)
-    _normalize_zones(scenario)
-    scenario["seed"] = seed
-    return scenario
-
-
-def list_scenario_presets() -> list[dict[str, str]]:
-    return [
-        {
-            "id": preset_id,
-            "title": str(meta["title"]),
-            "description": str(meta["description"]),
-        }
-        for preset_id, meta in SCENARIO_PRESETS.items()
-    ]
-
-
 def _field_type(feature_path: str, encoding: dict[str, float] | None) -> str:
     if encoding is not None:
         return "enum"
-    if feature_path.endswith(".available") or feature_path.startswith("validity."):
+    # Checkbox-backed flags in the panel (not continuous measurements).
+    if (
+        feature_path.endswith(".available")
+        or feature_path.startswith("validity.")
+        or ".validity." in feature_path
+        or feature_path.endswith(".lights_active")
+        or feature_path == "pseudo.lights_active"
+    ):
         return "boolean"
     return "number"
 
 
 _BINARY_PWM_ENCODING: dict[str, float] = {"binary": 0.0, "pwm": 1.0}
-
-PANEL_ACTUATOR_CONTROL_FIELDS: tuple[tuple[str, str, str], ...] = (
-    ("heater_control_type", "actuators.heater.control_type", "binary"),
-    ("fan_control_type", "actuators.fan.control_type", "pwm"),
-    ("humidifier_control_type", "actuators.humidifier.control_type", "binary"),
-    ("dehumidifier_control_type", "actuators.dehumidifier.control_type", "binary"),
-    ("cooler_control_type", "actuators.cooler.control_type", "binary"),
-    ("co2_doser_control_type", "actuators.co2_doser.control_type", "binary"),
-    ("nutrient_heater_control_type", "actuators.nutrient_heater.control_type", "binary"),
-)
 
 
 def _panel_actuator_control_fields() -> list[dict[str, Any]]:
@@ -495,7 +183,7 @@ def _section_for_path(path: str) -> str:
 
 
 def build_panel_schema(contract: Contract | None = None) -> dict[str, Any]:
-    contract = contract or load_contract(V3_CONTRACT_PATH)
+    contract = contract or load_contract(ACTIVE_CONTRACT_PATH)
     sections: dict[str, list[dict[str, Any]]] = {key: [] for key in SECTION_ORDER}
     sections["other"] = []
 

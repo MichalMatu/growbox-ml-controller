@@ -109,6 +109,8 @@ def test_panel_css_documents_chip_token_layer():
     header = css.split(":root {", 1)[0]
     assert "--chip-" in header
     assert ".sync-badge" in header
+    assert "--gap-" in header
+    assert "--shadow-" in header
 
 
 def test_top_message_uses_chip_tokens():
@@ -150,6 +152,14 @@ def test_inset_and_surface_pad_tokens_declared_in_root():
         "--surface-pad-empty:",
         "--modal-foot-pad:",
         "--live-row-pad-y:",
+        "--gap-xl:",
+        "--gap-2xl:",
+        "--gap-snug:",
+        "--gap-compact:",
+        "--radius-sm:",
+        "--radius-checkbox:",
+        "--shadow-modal:",
+        "--danger-bg-message:",
     ):
         assert token in root, token
 
@@ -166,3 +176,54 @@ def test_panel_css_avoids_banned_raw_padding_outside_root():
     outside = _css_outside_root(css)
     matches = re.findall(r"padding:\s*0\.[0-9]+rem", outside)
     assert not matches, f"raw padding outside :root: {matches}"
+
+
+def test_panel_css_avoids_raw_gap_and_radius_outside_root():
+    css = PANEL_CSS.read_text(encoding="utf-8")
+    outside = _css_outside_root(css)
+    raw_gaps = re.findall(r"(?:^|[^-])(?:gap|row-gap|column-gap):\s*[0-9]", outside)
+    # gap: 0 is allowed (explicit none)
+    raw_gaps = [
+        g
+        for g in re.findall(r"(?:gap|row-gap|column-gap):\s*([^;]+)", outside)
+        if g.strip() not in {"0", "var(--gap-0)"} and "var(" not in g
+    ]
+    assert not raw_gaps, f"raw gap outside :root: {raw_gaps}"
+    raw_radii = re.findall(r"border-radius:\s*[0-9]", outside)
+    assert not raw_radii, f"raw border-radius outside :root: {raw_radii}"
+
+
+def test_panel_css_avoids_raw_colors_outside_root():
+    css = PANEL_CSS.read_text(encoding="utf-8")
+    outside = _css_outside_root(css)
+    # data-URI SVG for checkbox may embed hex — strip url(...) first
+    scrubbed = re.sub(r"url\([^)]+\)", "url()", outside)
+    hexes = re.findall(r"#[0-9a-fA-F]{3,8}", scrubbed)
+    rgbas = re.findall(r"rgba?\([^)]+\)", scrubbed)
+    assert not hexes, f"raw hex outside :root: {hexes}"
+    assert not rgbas, f"raw rgba outside :root: {rgbas}"
+
+
+def test_dead_layout_classes_removed():
+    css = PANEL_CSS.read_text(encoding="utf-8")
+    for dead in (
+        ".zones-grid",
+        ".zone-card",
+        ".zone-subgroup",
+        ".section-grid",
+        ".subhead",
+        ".live-sensor-col-head",
+        ".group-row",
+        ".modal-tabs",
+        ".help-btn-top",
+        "body.modal-open",
+    ):
+        assert dead not in css, dead
+
+
+def test_modal_and_menu_use_shadow_tokens():
+    css = PANEL_CSS.read_text(encoding="utf-8")
+    assert "box-shadow: var(--shadow-menu)" in css
+    assert "box-shadow: var(--shadow-modal)" in css
+    assert "var(--shadow-modal-focus)" in css
+    assert "background: var(--danger-bg-message)" in css

@@ -262,9 +262,13 @@ function renderWrappedNumberInput(field, opts = {}) {
   const suffixMarkup = suffix
     ? `<span class="${suffixClassName}" aria-hidden="true">${escapeHtml(suffix)}</span>`
     : "";
+  const min = Number(field.minimum);
+  const max = Number(field.maximum);
+  const minAttr = Number.isFinite(min) ? ` min="${min}"` : "";
+  const maxAttr = Number.isFinite(max) ? ` max="${max}"` : "";
   return `<div class="${wrapClass}${suffixClass}">
     <input type="number"${fieldControlClassAttr()} data-path="${field.path}" id="${id}"${hintAttr}${disabledAttr}
-      aria-label="${ariaLabel}" min="${field.minimum}" max="${field.maximum}" step="${fieldStep(field)}"
+      aria-label="${ariaLabel}"${minAttr}${maxAttr} step="${fieldStep(field)}"
       value="${displayValue}" />
     ${suffixMarkup}
   </div>`;
@@ -277,48 +281,6 @@ function isZoneActive(zoneIndex) {
 function inactiveZoneDependentHintAttr() {
   const hint = typeof INACTIVE_ZONE_DEPENDENT_HINT === "string" ? INACTIVE_ZONE_DEPENDENT_HINT : "";
   return hint ? ` title="${hint}"` : "";
-}
-
-function renderNumberField(field, extraClass = "field-num") {
-  const id = `f-${field.path.replaceAll(".", "_")}`;
-  const wide = field.path.includes("thermal_mass") || field.path.includes("substrate_water");
-  const hintAttr = fieldHintAttr(field.name);
-  return `<label class="${wide ? "field-wide" : extraClass}">
-    <span class="lbl"${hintAttr}>${shortLabel(field.name)}</span>
-    ${renderWrappedNumberInput(field, { id })}
-  </label>`;
-}
-
-function renderBoolField(field) {
-  const id = `f-${field.path.replaceAll(".", "_")}`;
-  const value = getNested(scenario, field.path);
-  if (isAvailabilityField(field.name)) {
-    return `<label class="field-bool">
-      <input type="checkbox" data-path="${field.path}" id="${id}" ${value ? "checked" : ""} />
-    </label>`;
-  }
-  return `<label class="field-bool">
-    <input type="checkbox" data-path="${field.path}" id="${id}" ${value ? "checked" : ""} />
-    <span class="lbl">${shortLabel(field.name)}</span>
-  </label>`;
-}
-
-function renderEnumField(field) {
-  const id = `f-${field.path.replaceAll(".", "_")}`;
-  const value = getNested(scenario, field.path);
-  const opts = (field.options || []).map(o =>
-    `<option value="${o.value}" ${value === o.value ? "selected" : ""}>${formatEnumOptionLabel(o.value)}</option>`
-  ).join("");
-  return `<label class="field-num">
-    <span class="lbl">${shortLabel(field.name)}</span>
-    <select${fieldControlClassAttr()} data-path="${field.path}" id="${id}">${opts}</select>
-  </label>`;
-}
-
-function renderField(field) {
-  if (field.type === "boolean") return renderBoolField(field);
-  if (field.type === "enum") return renderEnumField(field);
-  return renderNumberField(field);
 }
 
 function renderHelpBtn(topic) {
@@ -688,17 +650,6 @@ function renderMiniCell(field) {
     </div>`;
   }
   return `<div class="mini-cell${widthClass}">${renderMiniCellInput(field)}</div>`;
-}
-
-function renderCompactBlock(title, fields, helpTopic) {
-  const cells = fields.map(renderMiniCell).join("");
-  return `<div class="card">${renderSectionHead(title, helpTopic)}<div class="compact-row">${cells}</div></div>`;
-}
-
-function renderFieldsSubCard(section, helpTopic) {
-  const cells = section.fields.map(renderMiniCell).join("");
-  const panelClass = section.id ? ` ${section.id}-panel` : "";
-  return `<div class="card growbox-panel${panelClass}">${renderSectionHead(section.title, helpTopic)}<div class="sub-card"><div class="compact-row">${cells}</div></div></div>`;
 }
 
 function renderSubCard(title, fields, helpTopic) {

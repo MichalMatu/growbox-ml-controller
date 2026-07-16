@@ -13,9 +13,13 @@ from typing import Any
 import numpy as np
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_CONTRACT_PATH = PROJECT_ROOT / "schemas" / "environment-controller-v1.json"
+# Versioned contracts. ACTIVE is the training / panel / simulator target.
+V1_CONTRACT_PATH = PROJECT_ROOT / "schemas" / "environment-controller-v1.json"
 V2_CONTRACT_PATH = PROJECT_ROOT / "schemas" / "environment-controller-v2.json"
 V3_CONTRACT_PATH = PROJECT_ROOT / "schemas" / "environment-controller-v3.json"
+ACTIVE_CONTRACT_PATH = V3_CONTRACT_PATH
+# Legacy alias: bare load_contract() still resolves v1 for historical pipeline tests.
+DEFAULT_CONTRACT_PATH = V1_CONTRACT_PATH
 
 
 def canonical_json_bytes(document: Mapping[str, Any]) -> bytes:
