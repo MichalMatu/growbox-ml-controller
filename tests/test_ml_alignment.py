@@ -20,7 +20,7 @@ def test_active_contract_is_v4_pots_with_expected_io():
     contract = load_active_contract()
     summary = summarize_training_fields(contract)
     assert summary["schema_version"] == 4
-    assert summary["schema_hash"] == "5768273a73ac"
+    assert summary["schema_hash"] == "457ddca8b0e5"
     assert summary["feature_count"] == 128
     assert summary["output_count"] == 15
     assert summary["outputs"] == list(OUTPUT_NAMES)

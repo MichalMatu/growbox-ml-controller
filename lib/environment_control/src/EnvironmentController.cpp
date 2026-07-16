@@ -83,13 +83,37 @@ void sharpenBinaryProposals(const ControllerInput& input, RawModelDecision& raw)
     lift(raw.co2_doser, co2_err > 50.0f, co2_err > 150.0f);
   }
 
-  if (input.pots[0].available && input.pots[0].irrigation.available &&
-      input.pots[0].validity.soil_moisture &&
-      std::isfinite(input.pots[0].sensors.soil_moisture_pct) &&
-      std::isfinite(input.pots[0].target_soil_moisture_pct)) {
-    const float soil_err =
-        input.pots[0].target_soil_moisture_pct - input.pots[0].sensors.soil_moisture_pct;
-    lift(raw.irrigation_pot_1, soil_err > 5.0f, soil_err > 12.0f);
+  if (input.validity.nutrient_solution_temperature &&
+      std::isfinite(input.sensors.nutrient_solution_temperature_c) &&
+      std::isfinite(input.targets.nutrient_solution_temperature_c) &&
+      input.actuators.nutrient_heater.available &&
+      input.actuators.nutrient_heater.max_power_w > 0.0f) {
+    const float n_err = input.targets.nutrient_solution_temperature_c -
+                        input.sensors.nutrient_solution_temperature_c;
+    lift(raw.nutrient_heater, n_err > 1.0f, n_err > 3.0f);
+  }
+
+  float* irrigation_channels[kMaxPots] = {&raw.irrigation_pot_1, &raw.irrigation_pot_2,
+                                          &raw.irrigation_pot_3, &raw.irrigation_pot_4};
+  float* heat_mat_channels[kMaxPots] = {&raw.heat_mat_pot_1, &raw.heat_mat_pot_2,
+                                        &raw.heat_mat_pot_3, &raw.heat_mat_pot_4};
+  for (std::size_t pot_index = 0; pot_index < kMaxPots; ++pot_index) {
+    const PotConfig& pot = input.pots[pot_index];
+    if (!pot.available) {
+      continue;
+    }
+    if (pot.irrigation.available && pot.validity.soil_moisture &&
+        std::isfinite(pot.sensors.soil_moisture_pct) &&
+        std::isfinite(pot.target_soil_moisture_pct)) {
+      const float soil_err = pot.target_soil_moisture_pct - pot.sensors.soil_moisture_pct;
+      lift(*irrigation_channels[pot_index], soil_err > 5.0f, soil_err > 12.0f);
+    }
+    if (pot.heat_mat.available && pot.validity.soil_temperature &&
+        std::isfinite(pot.sensors.soil_temperature_c) &&
+        std::isfinite(pot.target_soil_temperature_c)) {
+      const float soil_t_err = pot.target_soil_temperature_c - pot.sensors.soil_temperature_c;
+      lift(*heat_mat_channels[pot_index], soil_t_err > 1.0f, soil_t_err > 3.0f);
+    }
   }
 }
 

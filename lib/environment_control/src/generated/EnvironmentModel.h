@@ -42,7 +42,7 @@ namespace generated_model {
 
 inline constexpr std::size_t kInputCount = 128U;
 inline constexpr std::size_t kOutputCount = 15U;
-inline constexpr char kSchemaHash[] = "5768273a73ac";
+inline constexpr char kSchemaHash[] = "457ddca8b0e5";
 inline constexpr char kModelVersion[] = "environment-mlp-v1-full-ac0f719b75f9";
 inline constexpr char kWeightHash[] = "ac0f719b75f9";
 

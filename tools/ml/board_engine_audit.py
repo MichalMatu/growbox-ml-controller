@@ -351,7 +351,7 @@ def evaluate_decision(
                 "error", case, "schema_version", f"expected 4 got {decision.get('schema_version')}"
             )
         )
-    if decision.get("schema_hash") != "5768273a73ac":
+    if decision.get("schema_hash") != "457ddca8b0e5":
         findings.append(
             Finding("error", case, "schema_hash", f"unexpected hash {decision.get('schema_hash')}")
         )

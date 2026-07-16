@@ -165,7 +165,7 @@ def test_bridge_updates_status_step_from_decision():
 def test_panel_schema_hash_matches_v3_contract():
     schema = build_panel_schema()
     assert schema["schema_version"] == 4
-    assert schema["schema_hash"] == "5768273a73ac"
+    assert schema["schema_hash"] == "457ddca8b0e5"
     assert len(schema["outputs"]) == 15
 
 

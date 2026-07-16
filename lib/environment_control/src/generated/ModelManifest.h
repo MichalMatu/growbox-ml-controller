@@ -8,7 +8,7 @@
 namespace generated_manifest {
 
 inline constexpr std::uint32_t kSchemaVersion = 4U;
-inline constexpr char kSchemaHash[] = "5768273a73ac";
+inline constexpr char kSchemaHash[] = "457ddca8b0e5";
 inline constexpr char kModelVersion[] = "environment-mlp-v1-full-ac0f719b75f9";
 inline constexpr char kWeightHash[] = "ac0f719b75f9ae7c7e366a528cab082ef147d91871c92c89b296f78d344e8457";
 inline constexpr char kModelFormat[] = "emlearn-net-float32-loadable";

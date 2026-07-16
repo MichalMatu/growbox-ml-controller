@@ -82,7 +82,7 @@ def test_board_replay_produces_decision(board_port: str, tmp_path: Path):
     assert decisions, "expected at least one decision frame from firmware"
     decision = decisions[0]
     assert decision.get("schema_version") == 4
-    assert decision.get("schema_hash") == "5768273a73ac"
+    assert decision.get("schema_hash") == "457ddca8b0e5"
     diagnostics = decision.get("diagnostics", {})
     assert diagnostics.get("inference_status") == "ok"
     assert diagnostics.get("inference_status") != "schema_mismatch"

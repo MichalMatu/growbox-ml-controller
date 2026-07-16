@@ -76,7 +76,7 @@ def panel_available() -> str:
         pytest.skip(f"panel not running at {_panel_base()}: {exc}")
     if status != 200:
         pytest.skip(f"panel schema returned {status}")
-    assert payload["schema_hash"] == "5768273a73ac"
+    assert payload["schema_hash"] == "457ddca8b0e5"
     return _panel_base()
 
 
@@ -178,7 +178,7 @@ def test_panel_connect_load_resume_loop_produces_decisions(board_port: str, pane
                 break
 
     assert decision is not None, "expected decision frame after resume in closed_loop"
-    assert decision.get("schema_hash") == "5768273a73ac"
+    assert decision.get("schema_hash") == "457ddca8b0e5"
     diagnostics = decision.get("diagnostics", {})
     assert diagnostics.get("inference_status") == "ok"
     safe = decision.get("safe_output", {})

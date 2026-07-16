@@ -67,7 +67,7 @@ class FakeBridge:
         if verify:
             self._state["last_status"] = {
                 "type": "status",
-                "schema_hash": "5768273a73ac",
+                "schema_hash": "457ddca8b0e5",
                 "mode": "replay",
                 "paused": True,
                 "step": 0,
@@ -75,7 +75,7 @@ class FakeBridge:
             self._state["last_startup"] = {
                 "type": "startup",
                 "framework": "esp-idf",
-                "schema_hash": "5768273a73ac",
+                "schema_hash": "457ddca8b0e5",
             }
 
     def disconnect(self) -> None:
@@ -390,7 +390,7 @@ def test_is_growbox_handshake_accepts_status_and_startup():
         {
             "last_status": {
                 "type": "status",
-                "schema_hash": "5768273a73ac",
+                "schema_hash": "457ddca8b0e5",
                 "mode": "replay",
             }
         }
@@ -400,7 +400,7 @@ def test_is_growbox_handshake_accepts_status_and_startup():
             "last_startup": {
                 "type": "startup",
                 "framework": "esp-idf",
-                "schema_hash": "5768273a73ac",
+                "schema_hash": "457ddca8b0e5",
             }
         }
     )

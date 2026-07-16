@@ -19,7 +19,7 @@ def test_contract_hash_matches_generated_cpp():
     ).read_text(encoding="utf-8")
     cpp_hash = re.search(r'kSchemaHash\[\] = "([0-9a-f]+)"', header)
     assert cpp_hash is not None
-    assert contract.short_hash == cpp_hash.group(1) == "5768273a73ac"
+    assert contract.short_hash == cpp_hash.group(1) == "457ddca8b0e5"
     assert "kSchemaVersion = 4U" in header
     assert "kFeatureCount = 128U" in header
     assert "kOutputCount = 15U" in header
