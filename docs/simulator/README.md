@@ -15,7 +15,7 @@ simulator skeleton**. Committed MLP weights are `untrained-placeholder` until th
 | Alignment guardrail sim ↔ schema | **done** | `tools/ml/alignment.py` |
 | Training pipeline entry | **done** | `python -m tools.ml.pipeline` |
 | Lumped physics fidelity | **placeholder** | current `tools/ml/simulator.py` is a stub-grade model |
-| Research sources collected | **this folder** | [SOURCES.md](SOURCES.md) |
+| Research sources collected | **in progress** | [SOURCES.md](SOURCES.md) + `third_party/` clones |
 | Equation / param design | **next** | fill SOURCES → then [PHYSICS_SCOPE.md](PHYSICS_SCOPE.md) |
 | New sim skeleton + tests | **next** | after sources reviewed |
 

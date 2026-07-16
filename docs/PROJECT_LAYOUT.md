@@ -23,6 +23,7 @@ Intentional structure after the v4 pots cleanup. Prefer this map over scattering
 ├── tools/                    # host Python (ml, panel, serial, schema, analysis)
 ├── scripts/                  # shell gates (CI, idf helpers)
 ├── examples/                 # scenario JSONL samples
+├── third_party/              # research clones (see third_party/README.md; not build deps)
 │
 ├── lib/environment_control/  # portable C++ controller library
 ├── components/               # ESP-IDF extra components (emlearn)
