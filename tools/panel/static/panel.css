@@ -222,6 +222,9 @@
   --modal-head-title-w: 10.5rem;
   --modal-tab-w: 5.05rem;
   --modal-tab-w-wide: 5.75rem;
+  --history-modal-pad: 0.15rem 0.05rem 0.25rem;
+  --history-entry-head-pad: 0.32rem 0.5rem;
+  --history-json-pad: 0.45rem 0.55rem 0.5rem;
   --body-font: 13px;
 }
 * { box-sizing: border-box; }
@@ -1962,7 +1965,7 @@ body.modal-open {
   line-height: 1.35;
 }
 .history-modal-body {
-  padding: 0.15rem 0.05rem 0.25rem;
+  padding: var(--history-modal-pad);
 }
 .history-panel {
   display: grid;
@@ -2000,7 +2003,7 @@ body.modal-open {
   align-items: center;
   gap: 0.45rem;
   flex-wrap: wrap;
-  padding: 0.32rem 0.5rem;
+  padding: var(--history-entry-head-pad);
   border-bottom: 1px solid rgba(45, 58, 79, 0.55);
   font-size: var(--text-badge);
 }
@@ -2026,7 +2029,7 @@ body.modal-open {
 .history-json,
 .history-raw {
   margin: 0;
-  padding: 0.45rem 0.55rem 0.5rem;
+  padding: var(--history-json-pad);
   overflow: auto;
   font-family: ui-monospace, monospace;
   font-size: var(--modal-body-font);
