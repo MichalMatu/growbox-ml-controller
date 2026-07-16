@@ -130,12 +130,13 @@ Cover/floor nodes from S04, solar geometry — only if growbox has strong diurna
 
 ```text
 tools/ml/
-  simulator.py              # public API (Scenario, step, observe)
+  simulator.py              # public API (Scenario, step, observe); chamber_model=
   physics/
-    chamber_van_henten.py   # S03-derived (cite Mallick / Van Henten)
-    chamber_ges_air.py      # optional S04-reduced air node
-    pots_substrate.py       # ours
-    actuators.py            # 0–1 → SI fluxes
+    van_henten.py           # S03-derived ODEs (cite Mallick / Van Henten)  ✓ Tier A
+    actuators.py            # 0–1 → S03 u + SI moisture extras             ✓ Tier A
+    pots_substrate.py       # ours                                         (Tier B)
 ```
 
-No import from `third_party/` at runtime in product path — copy adapted equations into `tools/ml/physics/` with citations.
+No import from `third_party/` at runtime — equations live in `tools/ml/physics/` with citations.
+
+Default: `Scenario.chamber_model="van_henten"`. Fallback: `"legacy"`.

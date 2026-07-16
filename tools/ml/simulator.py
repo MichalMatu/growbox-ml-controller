@@ -1,8 +1,8 @@
-"""Growbox environment simulator for active active contract (file name legacy: v2).
+"""Growbox environment simulator for the active contract (v4 pots).
 
 Up to 4 irrigation pots, 15 ML outputs (climate + irrigation + nutrient/heat mats).
-Physically inspired lumped-parameter model for training (not runtime on device).
-Inactive pots (``available=False``) contribute no soil/evaporation/irrigation physics.
+Chamber air uses Van Henten-structured dynamics (see tools.ml.physics); pots keep
+lumped substrate water/temperature. Training-only — not runtime on device.
 
 Output names must stay byte-equal to ``contract.outputs`` for
 ``schemas/environment-controller.json`` — enforced by ``tools.ml.alignment``.
@@ -14,9 +14,12 @@ import copy
 import math
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass, field
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import numpy as np
+
+from .physics.actuators import build_chamber_forcing
+from .physics.van_henten import step_chamber_van_henten
 
 MAX_POTS = 4
 
@@ -243,13 +246,15 @@ class Scenario:
     validity: SensorValidity = field(default_factory=SensorValidity)
     timestep_s: float = 10.0
     response_lag: ResponseLag = field(default_factory=ResponseLag)
+    # Tier A default: Van Henten chamber; "legacy" keeps pure engineering balances.
+    chamber_model: Literal["van_henten", "legacy"] = "van_henten"
 
     def active_pot_indices(self) -> tuple[int, ...]:
         return tuple(index for index, pot in enumerate(self.pots) if pot.available)
 
 
 class SequentialEnvironmentSimulator:
-    """Closed-loop v2 simulator with per-pot irrigation timers."""
+    """Closed-loop growbox simulator with per-pot irrigation timers."""
 
     irrigation_output_names: ClassVar[tuple[str, ...]] = POT_IRRIGATION_NAMES
     heat_mat_output_names: ClassVar[tuple[str, ...]] = tuple(
@@ -265,6 +270,8 @@ class SequentialEnvironmentSimulator:
         self.last_irrigation_s = [-1.0e30] * MAX_POTS
         self.effective_action = ControlAction()
         self.previous_command = ControlAction()
+        # Internal crop dry-weight for Van Henten canopy terms (not a contract sensor).
+        self._crop_dry_weight = 0.0025
 
     def reset(self, *, seed: int | None = None) -> EnvironmentState:
         if seed is not None:
@@ -275,6 +282,7 @@ class SequentialEnvironmentSimulator:
         self.last_irrigation_s = [-1.0e30] * MAX_POTS
         self.effective_action = ControlAction()
         self.previous_command = ControlAction()
+        self._crop_dry_weight = 0.0025
         return copy.deepcopy(self.state)
 
     def clone(self) -> SequentialEnvironmentSimulator:
@@ -284,6 +292,7 @@ class SequentialEnvironmentSimulator:
         other.last_irrigation_s = list(self.last_irrigation_s)
         other.effective_action = self.effective_action
         other.previous_command = self.previous_command
+        other._crop_dry_weight = self._crop_dry_weight
         other.rng.bit_generator.state = copy.deepcopy(self.rng.bit_generator.state)
         return other
 
@@ -408,45 +417,7 @@ class SequentialEnvironmentSimulator:
         effective = self.effective_action
 
         volume = max(0.05, env.growbox_volume_m3)
-        thermal_mass = max(500.0, env.thermal_mass_j_per_k)
-        fan_airflow = effective.fan * caps.fan.max_airflow_m3_h
-        exchange_ach = max(0.0, env.air_leak_rate_ach + fan_airflow / volume)
-        exchange_rate_s = exchange_ach / 3600.0
-
-        heater_w = effective.heater * caps.heater.max_power_w * caps.heater.efficiency
-        cooler_w = effective.cooler * caps.cooler.max_cooling_w
-        lights_w = caps.lights.max_heat_w if state.lights_active and caps.lights.integrated else 0.0
-        passive_heat_w = env.heat_loss_w_per_k * (
-            state.outside_temperature_c - state.air_temperature_c
-        )
-        air_heat_capacity_j_k = volume * 1.225 * 1005.0
-        exchange_heat_w = (
-            air_heat_capacity_j_k
-            * exchange_rate_s
-            * (state.outside_temperature_c - state.air_temperature_c)
-        )
-        temperature_delta = (
-            (heater_w + lights_w - cooler_w + passive_heat_w + exchange_heat_w) * dt / thermal_mass
-        )
-
         air_moisture_capacity_g = max(1.0, volume * 20.0)
-        humidity_exchange_pp_s = exchange_rate_s * (
-            state.outside_humidity_pct - state.air_humidity_pct
-        )
-        humidifier_pp_s = (
-            effective.humidifier
-            * caps.humidifier.max_output_g_h
-            / 3600.0
-            * 100.0
-            / air_moisture_capacity_g
-        )
-        dehumidifier_pp_s = (
-            -effective.dehumidifier
-            * caps.dehumidifier.max_removal_g_h
-            / 3600.0
-            * 100.0
-            / air_moisture_capacity_g
-        )
 
         vapor_deficit = _clamp((100.0 - state.air_humidity_pct) / 60.0, 0.1, 1.5)
         evap_pp_s = sum(
@@ -494,15 +465,121 @@ class SequentialEnvironmentSimulator:
                 ) * mix_fraction
             irrigation_humidity_boost_pp += irrigation_ml * 0.04 * 100.0 / air_moisture_capacity_g
 
-        humidity_delta = (
-            humidity_exchange_pp_s + humidifier_pp_s + dehumidifier_pp_s + evap_pp_s
-        ) * dt + irrigation_humidity_boost_pp
-
-        co2_exchange_ppm_s = exchange_rate_s * (state.outside_co2_ppm - state.co2_ppm)
-        co2_dose_ppm = 0.0
-        if command.co2_doser > 0.0 and caps.co2_doser.available:
-            co2_dose_ppm = command.co2_doser * caps.co2_doser.dose_ppm_per_full_pulse
-        biological_co2_ppm_s = 0.0020 * (850.0 - state.co2_ppm)
+        # --- Chamber air (Tier A: Van Henten backbone or legacy balances) ---
+        if self.scenario.chamber_model == "van_henten":
+            forcing = build_chamber_forcing(
+                heater=effective.heater,
+                fan=effective.fan,
+                humidifier=effective.humidifier,
+                dehumidifier=effective.dehumidifier,
+                cooler=effective.cooler,
+                co2_doser=command.co2_doser,
+                lights_active=state.lights_active,
+                heater_max_power_w=caps.heater.max_power_w,
+                heater_efficiency=caps.heater.efficiency,
+                fan_max_airflow_m3_h=caps.fan.max_airflow_m3_h,
+                growbox_volume_m3=volume,
+                humidifier_max_output_g_h=caps.humidifier.max_output_g_h,
+                dehumidifier_max_removal_g_h=caps.dehumidifier.max_removal_g_h,
+                cooler_max_cooling_w=caps.cooler.max_cooling_w,
+                co2_dose_ppm_per_full_pulse=caps.co2_doser.dose_ppm_per_full_pulse,
+                lights_max_heat_w=caps.lights.max_heat_w,
+                lights_integrated=caps.lights.integrated,
+            )
+            # Fold leak ACH into vent channel (S03 base leak is small p10).
+            leak_boost = max(0.0, env.air_leak_rate_ach) * 0.15
+            u_vent = forcing.u_vent + leak_boost
+            new_t, new_rh, new_co2, self._crop_dry_weight = step_chamber_van_henten(
+                air_temperature_c=state.air_temperature_c,
+                air_humidity_pct=state.air_humidity_pct,
+                co2_ppm=state.co2_ppm,
+                outside_temperature_c=state.outside_temperature_c,
+                outside_humidity_pct=state.outside_humidity_pct,
+                outside_co2_ppm=state.outside_co2_ppm,
+                u_co2=forcing.u_co2,
+                u_vent=u_vent,
+                u_heat=forcing.u_heat,
+                radiation=forcing.radiation,
+                dt_s=dt,
+                crop_dry_weight=self._crop_dry_weight,
+                evolve_crop=False,
+            )
+            # Extra moisture actuators + pot evaporation (not in classic Van Henten u).
+            hum_pp = forcing.humidifier_g_s * 100.0 / air_moisture_capacity_g
+            dehum_pp = -forcing.dehumidifier_g_s * 100.0 / air_moisture_capacity_g
+            new_rh = _clamp(
+                new_rh + (hum_pp + dehum_pp + evap_pp_s) * dt + irrigation_humidity_boost_pp,
+                0.0,
+                100.0,
+            )
+            # Discrete CO2 pulse on top of continuous supply (contract dose semantics).
+            if command.co2_doser > 0.0 and caps.co2_doser.available:
+                new_co2 = _clamp(
+                    new_co2 + command.co2_doser * caps.co2_doser.dose_ppm_per_full_pulse,
+                    250.0,
+                    5000.0,
+                )
+            state.air_temperature_c = new_t
+            state.air_humidity_pct = new_rh
+            state.co2_ppm = new_co2
+        else:
+            thermal_mass = max(500.0, env.thermal_mass_j_per_k)
+            fan_airflow = effective.fan * caps.fan.max_airflow_m3_h
+            exchange_ach = max(0.0, env.air_leak_rate_ach + fan_airflow / volume)
+            exchange_rate_s = exchange_ach / 3600.0
+            heater_w = effective.heater * caps.heater.max_power_w * caps.heater.efficiency
+            cooler_w = effective.cooler * caps.cooler.max_cooling_w
+            lights_w = (
+                caps.lights.max_heat_w if state.lights_active and caps.lights.integrated else 0.0
+            )
+            passive_heat_w = env.heat_loss_w_per_k * (
+                state.outside_temperature_c - state.air_temperature_c
+            )
+            air_heat_capacity_j_k = volume * 1.225 * 1005.0
+            exchange_heat_w = (
+                air_heat_capacity_j_k
+                * exchange_rate_s
+                * (state.outside_temperature_c - state.air_temperature_c)
+            )
+            temperature_delta = (
+                (heater_w + lights_w - cooler_w + passive_heat_w + exchange_heat_w)
+                * dt
+                / thermal_mass
+            )
+            humidity_exchange_pp_s = exchange_rate_s * (
+                state.outside_humidity_pct - state.air_humidity_pct
+            )
+            humidifier_pp_s = (
+                effective.humidifier
+                * caps.humidifier.max_output_g_h
+                / 3600.0
+                * 100.0
+                / air_moisture_capacity_g
+            )
+            dehumidifier_pp_s = (
+                -effective.dehumidifier
+                * caps.dehumidifier.max_removal_g_h
+                / 3600.0
+                * 100.0
+                / air_moisture_capacity_g
+            )
+            humidity_delta = (
+                humidity_exchange_pp_s + humidifier_pp_s + dehumidifier_pp_s + evap_pp_s
+            ) * dt + irrigation_humidity_boost_pp
+            co2_exchange_ppm_s = exchange_rate_s * (state.outside_co2_ppm - state.co2_ppm)
+            co2_dose_ppm = 0.0
+            if command.co2_doser > 0.0 and caps.co2_doser.available:
+                co2_dose_ppm = command.co2_doser * caps.co2_doser.dose_ppm_per_full_pulse
+            biological_co2_ppm_s = 0.0020 * (850.0 - state.co2_ppm)
+            state.air_temperature_c = _clamp(
+                state.air_temperature_c + temperature_delta, -30.0, 70.0
+            )
+            state.air_humidity_pct = _clamp(state.air_humidity_pct + humidity_delta, 0.0, 100.0)
+            state.co2_ppm = _clamp(
+                state.co2_ppm + (co2_exchange_ppm_s + biological_co2_ppm_s) * dt + co2_dose_ppm,
+                250.0,
+                5000.0,
+            )
 
         for index, pot_cfg in enumerate(self.scenario.pots):
             if not pot_cfg.available or not pot_cfg.soil_moisture_valid:
@@ -541,13 +618,6 @@ class SequentialEnvironmentSimulator:
 
         state.nutrient_solution_temperature_c = _clamp(
             state.nutrient_solution_temperature_c + nutrient_temp_delta, 0.0, 50.0
-        )
-        state.air_temperature_c = _clamp(state.air_temperature_c + temperature_delta, -30.0, 70.0)
-        state.air_humidity_pct = _clamp(state.air_humidity_pct + humidity_delta, 0.0, 100.0)
-        state.co2_ppm = _clamp(
-            state.co2_ppm + (co2_exchange_ppm_s + biological_co2_ppm_s) * dt + co2_dose_ppm,
-            250.0,
-            5000.0,
         )
 
 

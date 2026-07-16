@@ -19,7 +19,7 @@ simulator skeleton**. Committed MLP weights are `untrained-placeholder` until th
 | Formula extract S03/S04 | **done** | [FORMULAS.md](FORMULAS.md) |
 | Slot map → contract v4 | **done** | [SLOT_MAP.md](SLOT_MAP.md) |
 | Equation / param design | **in progress** | [PHYSICS_SCOPE.md](PHYSICS_SCOPE.md) — refine after Tier A |
-| New sim skeleton + tests | **next** | `tools/ml/` physics package per SLOT_MAP |
+| New sim skeleton + tests | **Tier A done** | `tools/ml/physics/` + simulator `chamber_model=van_henten` |
 
 ## What “ready for skeleton” means
 
@@ -37,8 +37,8 @@ You should **not** yet treat `make train-full` as product training.
 ```text
 1. Collect sources          → SOURCES.md + third_party/     ✓
 2. Extract formulas + map   → FORMULAS.md + SLOT_MAP.md     ✓
-3. Agree physics scope      → PHYSICS_SCOPE.md (Tier A/B)
-4. Skeleton API + tests     → tools/ml/ (+ physics/ package)
+3. Tier A chamber physics   → tools/ml/physics/van_henten.py ✓
+4. Tier B pot substrate     → pots water/heat coupling      next
 5. Teacher cost on new dyn. → tools/ml/teacher.py
 6. train-quick smoke        → then train-full + commit weights
 ```
