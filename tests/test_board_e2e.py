@@ -1,4 +1,4 @@
-"""On-device serial E2E against flashed v3 firmware."""
+"""On-device serial E2E against flashed pots-contract (v4) firmware."""
 
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ def board_port() -> str:
     return port
 
 
-def test_v3_replay_script_fits_serial_limit(tmp_path: Path):
+def test_replay_script_fits_serial_limit(tmp_path: Path):
     scenario_path = tmp_path / "nominal-pots.jsonl"
     write_replay_script(scenario_path, seed=101)
     for line_number, line in enumerate(scenario_path.read_text(encoding="utf-8").splitlines(), 1):
@@ -43,7 +43,7 @@ def test_v3_replay_script_fits_serial_limit(tmp_path: Path):
         assert len(line.encode("utf-8")) <= 8192, f"line {line_number} exceeds serial limit"
 
 
-def test_examples_v3_nominal_script_matches_panel_preset():
+def test_examples_nominal_pots_script_matches_panel_preset():
     example_path = EXAMPLES_DIR / "nominal-pots.jsonl"
     assert example_path.exists()
     commands = [
@@ -55,10 +55,11 @@ def test_examples_v3_nominal_script_matches_panel_preset():
 
 
 @pytest.mark.hardware
-def test_board_replay_produces_v3_decision(board_port: str, tmp_path: Path):
+def test_board_replay_produces_decision(board_port: str, tmp_path: Path):
+    """Requires board flashed with the current pots (v4) firmware."""
     if shutil.which("python3") is None:
         pytest.skip("python3 not available")
-    scenario_path = tmp_path / "v3-board.jsonl"
+    scenario_path = tmp_path / "pots-board.jsonl"
     output_path = tmp_path / "session.ndjson"
     write_replay_script(scenario_path, seed=101)
 

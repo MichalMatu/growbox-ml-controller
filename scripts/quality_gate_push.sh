@@ -9,7 +9,8 @@ if [[ ! -x "$PY" ]]; then
 fi
 
 echo "==> pytest"
-"$PY" -m pytest -q
+# Hardware board E2E needs a matching flashed firmware; exclude from pre-push.
+"$PY" -m pytest -q -m "not hardware"
 
 echo "==> host C++ tests"
 cmake -S test/host -B build/host-tests -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
