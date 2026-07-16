@@ -1967,17 +1967,46 @@ body.modal-open {
 @media (max-width: 720px) {
   .diag-split { grid-template-columns: 1fr; }
 }
-.diag-split .live-data-table col.sensor-col { width: 42%; }
-.diag-split .live-data-table col.reading-col { width: 58%; }
+.diag-split .live-data-table col.sensor-col { width: 32%; }
+.diag-split .live-data-table col.reading-col { width: 68%; }
+.diag-split .live-data-table tbody th {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.diag-split .live-data-table td.num {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .live-data-table td.diag-meter-cell {
-  text-align: left;
+  text-align: right;
   vertical-align: middle;
+  overflow: visible;
+  white-space: normal;
 }
 .live-data-table td.diag-meter-cell .diag-meter {
   margin: 0;
+  width: 100%;
+  min-width: 0;
 }
 .live-data-table td.diag-meter-cell .diag-meter-head {
   font-size: var(--live-text);
+  margin-bottom: 0.14rem;
+}
+.live-data-table td.diag-meter-cell .diag-meter-head--solo {
+  display: block;
+}
+.live-data-table td.diag-meter-cell .diag-meter-head--solo .diag-meter-value {
+  display: block;
+  width: 100%;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.live-data-table td.diag-meter-cell .diag-meter-track {
+  width: 100%;
 }
 .live-data-table td.diag-meter-cell .diag-meter-value {
   font-size: var(--live-text);

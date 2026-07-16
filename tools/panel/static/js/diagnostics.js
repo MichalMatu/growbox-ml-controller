@@ -24,14 +24,19 @@ function formatUsageDetail(used, total) {
   return `${formatBytes(used)} / ${formatBytes(total)} · ${formatUsagePct(used, total)}`;
 }
 
-function renderDiagMeter(label, used, total, { tone = "accent", detail = "" } = {}) {
+function renderDiagMeter(label, used, total, { tone = "accent", detail = "", showLabel = true } = {}) {
   const pct = formatDiagPercent(used, total);
   const barPct = used > 0 && pct < 1 ? Math.max(pct, 0.8) : pct;
   const fillCls = ["diag-meter-fill", tone, used > 0 ? "has-use" : ""].filter(Boolean).join(" ");
+  const valueText = detail || formatUsageDetail(used, total);
+  const headClass = showLabel ? "diag-meter-head" : "diag-meter-head diag-meter-head--solo";
+  const labelMarkup = showLabel
+    ? `<span class="diag-meter-label">${escapeHtml(label)}</span>`
+    : "";
   return `<div class="diag-meter">
-    <div class="diag-meter-head">
-      <span class="diag-meter-label">${label}</span>
-      <span class="diag-meter-value">${detail || formatUsageDetail(used, total)}</span>
+    <div class="${headClass}">
+      ${labelMarkup}
+      <span class="diag-meter-value">${escapeHtml(valueText)}</span>
     </div>
     <div class="diag-meter-track" aria-hidden="true">
       <span class="${fillCls}" style="width:${barPct}%"></span>
@@ -44,6 +49,7 @@ function renderDiagTableRow(row) {
     const meter = renderDiagMeter(row.label, row.used, row.total, {
       tone: row.tone,
       detail: row.detail,
+      showLabel: false,
     });
     return `<tr><th scope="row">${escapeHtml(row.label)}</th><td class="num diag-meter-cell">${meter}</td></tr>`;
   }
