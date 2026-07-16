@@ -129,7 +129,7 @@
   --menu-item-pad: 0.36rem 0.42rem;
   --top-card-pad: var(--gap-md) var(--toolbar-pad-x);
   --toggle-track-pad: var(--gap-2xs);
-  --surface-pad-zone: 0.35rem 0.45rem 0.5rem;
+  --surface-pad-pot: 0.35rem 0.45rem 0.5rem;
   --surface-pad-actuator-card: var(--card-pad-y) 0.4rem;
   --surface-pad-empty: 0.45rem 0.5rem;
   --modal-foot-pad: 0.45rem 0.65rem;
@@ -1088,13 +1088,13 @@ input[type="checkbox"].field-invalid {
   border-color: var(--danger);
   box-shadow: 0 0 0 2px var(--danger-border-glow);
 }
-.mini-cell.inactive-zone-target,
-.mini-cell.inactive-zone-pump,
+.mini-cell.inactive-pot-target,
+.mini-cell.inactive-pot-pump,
 .mini-cell.inactive-actuator-off {
   opacity: 0.62;
 }
-.mini-cell.inactive-zone-target .field-control:disabled,
-.mini-cell.inactive-zone-pump .field-control:disabled {
+.mini-cell.inactive-pot-target .field-control:disabled,
+.mini-cell.inactive-pot-pump .field-control:disabled {
   cursor: not-allowed;
   color: var(--muted);
 }
@@ -1896,7 +1896,7 @@ input[type="checkbox"].field-invalid {
   padding-left: var(--field-suffix-inset);
   padding-right: var(--field-suffix-inset);
 }
-#setup-pane-growbox .setup-actuator-type-card.inactive-zone-pump .setup-control-type-select:disabled {
+#setup-pane-growbox .setup-actuator-type-card.inactive-pot-pump .setup-control-type-select:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }

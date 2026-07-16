@@ -45,19 +45,19 @@ private:
   float uniformSigned() noexcept;
   static float clamp(float value, float lower, float upper) noexcept;
   static float lag(float previous, float requested, float dt, float time_constant) noexcept;
-  bool irrigationReady(std::size_t zone_index) const noexcept;
-  float zoneEvaporationPctPerSecond(std::size_t zone_index, float vapor_deficit,
+  bool irrigationReady(std::size_t pot_index) const noexcept;
+  float zoneEvaporationPctPerSecond(std::size_t pot_index, float vapor_deficit,
                                     float air_temperature_c) const noexcept;
-  float irrigationCommand(std::size_t zone_index,
+  float irrigationCommand(std::size_t pot_index,
                           const control::SafeControlDecision& decision) const noexcept;
-  float heatMatCommand(std::size_t zone_index,
+  float heatMatCommand(std::size_t pot_index,
                        const control::SafeControlDecision& decision) const noexcept;
 
   control::ControllerInput input_{};
   std::uint32_t initial_seed_ = 20260711U;
   std::uint32_t rng_state_ = 20260711U;
   float elapsed_s_ = 0.0f;
-  std::array<float, control::kMaxZones> last_irrigation_s_{};
+  std::array<float, control::kMaxPots> last_irrigation_s_{};
   float effective_heater_ = 0.0f;
   float effective_fan_ = 0.0f;
   float effective_humidifier_ = 0.0f;

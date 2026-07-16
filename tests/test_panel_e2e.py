@@ -9,7 +9,7 @@ from http.server import ThreadingHTTPServer
 import pytest
 from tests.test_panel import _http_json
 
-from tools.ml.contract import V3_CONTRACT_PATH, load_contract
+from tools.ml.contract import ACTIVE_CONTRACT_PATH, load_contract
 from tools.panel.bridge import SERIAL_MAX_LINE_BYTES
 from tools.panel.form_schema import SCENARIO_PRESETS, build_panel_schema, default_scenario
 from tools.panel.server import PanelHandler
@@ -17,8 +17,8 @@ from tools.panel.server import PanelHandler
 
 def test_schema_exposes_v3_metadata_and_presets():
     schema = build_panel_schema()
-    contract = load_contract(V3_CONTRACT_PATH)
-    assert schema["schema_version"] == 3
+    contract = load_contract(ACTIVE_CONTRACT_PATH)
+    assert schema["schema_version"] == 4
     assert schema["schema_hash"] == contract.short_hash
     assert schema["feature_count"] == 128
     assert len(schema["outputs"]) == 15
@@ -30,8 +30,8 @@ def test_schema_exposes_v3_metadata_and_presets():
 def test_each_preset_produces_valid_v3_scenario(preset_id: str):
     scenario = default_scenario(seed=202, preset=preset_id)
     assert scenario["seed"] == 202
-    assert isinstance(scenario.get("zones"), list)
-    assert len(scenario["zones"]) == 4
+    assert isinstance(scenario.get("pots"), list)
+    assert len(scenario["pots"]) == 4
     assert "actuators" in scenario
     assert "heater" in scenario["actuators"]
     assert "nutrient_heater" in scenario["actuators"]
@@ -76,7 +76,7 @@ def test_e2e_load_scenario_all_presets(panel_http_server):
         assert payload == {"ok": True}
         sent = fake.commands[-1]
         assert sent["command"] == "load_scenario"
-        assert len(sent["zones"]) == 4
+        assert len(sent["pots"]) == 4
 
 
 def test_v3_scenario_presets_fit_serial_line_limit():
@@ -92,21 +92,21 @@ def test_v3_scenario_presets_fit_serial_line_limit():
 
 def test_default_scenario_has_all_v3_sections():
     scenario = default_scenario()
-    assert isinstance(scenario["zones"], list)
-    assert len(scenario["zones"]) == 4
+    assert isinstance(scenario["pots"], list)
+    assert len(scenario["pots"]) == 4
     assert "pseudo" in scenario
     assert "lights_active" in scenario["pseudo"]
     assert len(scenario["previous"]) == 7
     assert "nutrient_heater" in scenario["previous"]
     assert "dehumidifier" in scenario["previous"]
-    assert "irrigation_zone_1" not in scenario["previous"]
-    assert "heat_mat" in scenario["zones"][0]
-    assert scenario["zones"][0]["irrigation"]["control_type"] in {"binary", "pwm"}
+    assert "irrigation_pot_1" not in scenario["previous"]
+    assert "heat_mat" in scenario["pots"][0]
+    assert scenario["pots"][0]["irrigation"]["control_type"] in {"binary", "pwm"}
 
 
 def test_saturated_soil_preset_has_high_moisture():
     scenario = default_scenario(seed=1, preset="saturated_soil")
-    zone0 = scenario["zones"][0]
+    zone0 = scenario["pots"][0]
     assert zone0["sensors"]["soil_moisture_pct"] >= zone0["targets"]["soil_moisture_pct"]
 
 

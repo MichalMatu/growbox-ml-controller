@@ -67,7 +67,7 @@ class FakeBridge:
         if verify:
             self._state["last_status"] = {
                 "type": "status",
-                "schema_hash": "160a87b17bef",
+                "schema_hash": "5768273a73ac",
                 "mode": "replay",
                 "paused": True,
                 "step": 0,
@@ -75,7 +75,7 @@ class FakeBridge:
             self._state["last_startup"] = {
                 "type": "startup",
                 "framework": "esp-idf",
-                "schema_hash": "160a87b17bef",
+                "schema_hash": "5768273a73ac",
             }
 
     def disconnect(self) -> None:
@@ -123,9 +123,9 @@ def test_default_scenario_has_nominal_actuators():
     assert scenario["seed"] == 101
     assert scenario["actuators"]["heater"]["available"] is True
     assert scenario["actuators"]["fan"]["available"] is True
-    assert scenario["zones"][0]["available"] is True
-    assert scenario["zones"][0]["irrigation"]["control_type"] == "binary"
-    assert scenario["zones"][0]["irrigation"]["available"] is True
+    assert scenario["pots"][0]["available"] is True
+    assert scenario["pots"][0]["irrigation"]["control_type"] == "binary"
+    assert scenario["pots"][0]["irrigation"]["available"] is True
     assert scenario["pseudo"]["lights_active"] is False
     assert scenario["sensors"]["air_temperature_c"] == 22.0
     assert scenario["sensors"]["outside_co2_ppm"] == 420.0
@@ -144,21 +144,21 @@ def test_panel_schema_matches_contract_feature_count():
         "dehumidifier",
         "cooler",
         "co2_doser",
-        "irrigation_zone_1",
-        "irrigation_zone_2",
-        "irrigation_zone_3",
-        "irrigation_zone_4",
+        "irrigation_pot_1",
+        "irrigation_pot_2",
+        "irrigation_pot_3",
+        "irrigation_pot_4",
         "nutrient_heater",
-        "heat_mat_zone_1",
-        "heat_mat_zone_2",
-        "heat_mat_zone_3",
-        "heat_mat_zone_4",
+        "heat_mat_pot_1",
+        "heat_mat_pot_2",
+        "heat_mat_pot_3",
+        "heat_mat_pot_4",
     ]
     assert len(schema["sections"]) >= 8
     actuators = next(section for section in schema["sections"] if section["id"] == "actuators")
     assert actuators["title"] == "Aktuary"
-    zones = next(section for section in schema["sections"] if section["id"] == "zones")
-    assert zones["title"] == "Strefy uprawy"
+    pots = next(section for section in schema["sections"] if section["id"] == "pots")
+    assert pots["title"] == "Donice"
     safety = next(section for section in schema["sections"] if section["id"] == "safety")
     assert len(safety["fields"]) == 17
     assert "presets" in schema
@@ -196,9 +196,9 @@ def test_panel_schema_marks_zone_validity_and_lights_as_boolean():
         field["path"]: field for section in schema["sections"] for field in section["fields"]
     }
     for path in (
-        "zones.0.validity.soil_moisture_pct",
-        "zones.0.validity.soil_temperature_c",
-        "zones.3.validity.soil_moisture_pct",
+        "pots.0.validity.soil_moisture_pct",
+        "pots.0.validity.soil_temperature_c",
+        "pots.3.validity.soil_moisture_pct",
         "pseudo.lights_active",
         "validity.air_temperature_c",
         "actuators.heater.available",
@@ -390,7 +390,7 @@ def test_is_growbox_handshake_accepts_status_and_startup():
         {
             "last_status": {
                 "type": "status",
-                "schema_hash": "160a87b17bef",
+                "schema_hash": "5768273a73ac",
                 "mode": "replay",
             }
         }
@@ -400,7 +400,7 @@ def test_is_growbox_handshake_accepts_status_and_startup():
             "last_startup": {
                 "type": "startup",
                 "framework": "esp-idf",
-                "schema_hash": "160a87b17bef",
+                "schema_hash": "5768273a73ac",
             }
         }
     )
@@ -462,7 +462,7 @@ def test_http_load_scenario_flattens_payload(panel_http_server):
     assert sent["command"] == "load_scenario"
     assert sent["seed"] == 303
     assert sent["sensors"]["air_temperature_c"] == scenario["sensors"]["air_temperature_c"]
-    assert sent["zones"][0]["irrigation"]["control_type"] == "binary"
+    assert sent["pots"][0]["irrigation"]["control_type"] == "binary"
 
 
 def test_http_step_sends_step_command(panel_http_server):

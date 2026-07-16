@@ -9,7 +9,7 @@ namespace model_golden_vectors {
 inline constexpr std::size_t kVectorCount = 3U;
 inline constexpr std::size_t kInputCount = 128U;
 inline constexpr std::size_t kOutputCount = 15U;
-inline constexpr char kSchemaHash[] = "c91e249af9d3";
+inline constexpr char kSchemaHash[] = "5768273a73ac";
 inline constexpr char kModelVersion[] = "environment-mlp-v1-v3-quick-aafb7ea9a7c0";
 
 inline constexpr std::array<std::array<float, kInputCount>, kVectorCount> kFeatures{{

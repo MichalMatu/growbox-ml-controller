@@ -147,7 +147,7 @@ def test_inset_and_surface_pad_tokens_declared_in_root():
         "--inset-pad-actuator:",
         "--inset-pad-setup-actuator:",
         "--top-card-pad:",
-        "--surface-pad-zone:",
+        "--surface-pad-pot:",
         "--surface-pad-actuator-card:",
         "--surface-pad-empty:",
         "--modal-foot-pad:",

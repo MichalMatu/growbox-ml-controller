@@ -20,23 +20,23 @@ float valueAt(const RawModelDecision& decision, std::size_t index) noexcept {
   case 5U:
     return decision.co2_doser;
   case 6U:
-    return decision.irrigation_zone_1;
+    return decision.irrigation_pot_1;
   case 7U:
-    return decision.irrigation_zone_2;
+    return decision.irrigation_pot_2;
   case 8U:
-    return decision.irrigation_zone_3;
+    return decision.irrigation_pot_3;
   case 9U:
-    return decision.irrigation_zone_4;
+    return decision.irrigation_pot_4;
   case 10U:
     return decision.nutrient_heater;
   case 11U:
-    return decision.heat_mat_zone_1;
+    return decision.heat_mat_pot_1;
   case 12U:
-    return decision.heat_mat_zone_2;
+    return decision.heat_mat_pot_2;
   case 13U:
-    return decision.heat_mat_zone_3;
+    return decision.heat_mat_pot_3;
   case 14U:
-    return decision.heat_mat_zone_4;
+    return decision.heat_mat_pot_4;
   default:
     return 0.0f;
   }
@@ -57,23 +57,23 @@ float& mutableValueAt(RawModelDecision& decision, std::size_t index) noexcept {
   case 5U:
     return decision.co2_doser;
   case 6U:
-    return decision.irrigation_zone_1;
+    return decision.irrigation_pot_1;
   case 7U:
-    return decision.irrigation_zone_2;
+    return decision.irrigation_pot_2;
   case 8U:
-    return decision.irrigation_zone_3;
+    return decision.irrigation_pot_3;
   case 9U:
-    return decision.irrigation_zone_4;
+    return decision.irrigation_pot_4;
   case 10U:
     return decision.nutrient_heater;
   case 11U:
-    return decision.heat_mat_zone_1;
+    return decision.heat_mat_pot_1;
   case 12U:
-    return decision.heat_mat_zone_2;
+    return decision.heat_mat_pot_2;
   case 13U:
-    return decision.heat_mat_zone_3;
+    return decision.heat_mat_pot_3;
   default:
-    return decision.heat_mat_zone_4;
+    return decision.heat_mat_pot_4;
   }
 }
 
@@ -92,25 +92,25 @@ float safeValueAt(const SafeControlDecision& decision, std::size_t index) noexce
   case 5U:
     return decision.co2_doser;
   case 6U:
-    return decision.irrigation_zone_1;
+    return decision.irrigation_pot_1;
   case 7U:
-    return decision.irrigation_zone_2;
+    return decision.irrigation_pot_2;
   case 8U:
-    return decision.irrigation_zone_3;
+    return decision.irrigation_pot_3;
   case 9U:
-    return decision.irrigation_zone_4;
+    return decision.irrigation_pot_4;
   case 10U:
     return decision.nutrient_heater;
   case 11U:
-    return decision.heat_mat_zone_1;
+    return decision.heat_mat_pot_1;
   case 12U:
-    return decision.heat_mat_zone_2;
+    return decision.heat_mat_pot_2;
   case 13U:
-    return decision.heat_mat_zone_3;
+    return decision.heat_mat_pot_3;
   case 14U:
-    return decision.heat_mat_zone_4;
+    return decision.heat_mat_pot_4;
   default:
-    return decision.heat_mat_zone_4;
+    return decision.heat_mat_pot_4;
   }
 }
 
@@ -129,23 +129,23 @@ float& mutableSafeValueAt(SafeControlDecision& decision, std::size_t index) noex
   case 5U:
     return decision.co2_doser;
   case 6U:
-    return decision.irrigation_zone_1;
+    return decision.irrigation_pot_1;
   case 7U:
-    return decision.irrigation_zone_2;
+    return decision.irrigation_pot_2;
   case 8U:
-    return decision.irrigation_zone_3;
+    return decision.irrigation_pot_3;
   case 9U:
-    return decision.irrigation_zone_4;
+    return decision.irrigation_pot_4;
   case 10U:
     return decision.nutrient_heater;
   case 11U:
-    return decision.heat_mat_zone_1;
+    return decision.heat_mat_pot_1;
   case 12U:
-    return decision.heat_mat_zone_2;
+    return decision.heat_mat_pot_2;
   case 13U:
-    return decision.heat_mat_zone_3;
+    return decision.heat_mat_pot_3;
   default:
-    return decision.heat_mat_zone_4;
+    return decision.heat_mat_pot_4;
   }
 }
 

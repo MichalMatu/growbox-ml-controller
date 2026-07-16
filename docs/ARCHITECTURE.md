@@ -43,7 +43,7 @@ second, representing ten simulated seconds. No code path configures or writes GP
 
 ### Contract and generated metadata
 
-`schemas/environment-controller-v1.json` owns field names, feature and output order, ranges,
+`schemas/environment-controller.json` owns field names, feature and output order, ranges,
 defaults, units, and availability semantics. The generator emits `EnvironmentSchema.h` and model
 metadata. A canonical schema hash is embedded in the schema header, model header, model manifest,
 and boot log. The model runtime refuses inference when these values differ.

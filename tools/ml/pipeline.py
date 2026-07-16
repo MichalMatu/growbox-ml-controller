@@ -1,9 +1,8 @@
-"""Run the deterministic dataset, Keras training, emlearn export, and verification."""
+"""Run dataset generation, Keras training, emlearn export, and verification."""
 
 from __future__ import annotations
 
 import argparse
-import importlib.metadata
 import json
 import tempfile
 from dataclasses import asdict, dataclass
@@ -12,7 +11,8 @@ from typing import Any
 
 import numpy as np
 
-from .contract import PROJECT_ROOT, load_contract
+from .contract import ACTIVE_CONTRACT_PATH, PROJECT_ROOT, load_contract
+from .dataset import Dataset, DatasetConfig
 from .export_model import (
     DEFAULT_GENERATED_DIR,
     DEFAULT_GOLDEN_HEADER,
@@ -21,7 +21,7 @@ from .export_model import (
     export_model,
     render_golden_header,
 )
-from .generate_dataset import Dataset, DatasetConfig, generate_dataset
+from .generate_dataset import generate_dataset
 from .teacher import RolloutTeacher
 from .train_model import TrainingConfig, TrainingResult, train
 from .verify_export import VerificationResult, verify_export
@@ -41,135 +41,15 @@ class PipelineResult:
     report_path: Path
 
 
-def _package_version(name: str) -> str:
-    try:
-        return importlib.metadata.version(name)
-    except importlib.metadata.PackageNotFoundError:
-        return "not-installed"
-
-
-def _dataset_report(dataset: Dataset) -> dict[str, object]:
-    splits: dict[str, object] = {}
-    for split in ("train", "validation", "test"):
-        mask = dataset.splits == split
-        splits[split] = {
-            "rows": int(np.count_nonzero(mask)),
-            "scenarios": int(len(set(dataset.scenario_ids[mask].tolist()))),
-        }
+def _dataset_report(dataset: Dataset) -> dict[str, Any]:
     return {
         "rows": int(len(dataset.features)),
-        "scenarios": int(len(set(dataset.scenario_ids.tolist()))),
         "feature_count": int(dataset.features.shape[1]),
         "output_count": int(dataset.labels.shape[1]),
-        "splits": splits,
-    }
-
-
-def _write_report(
-    path: Path,
-    *,
-    mode: str,
-    seed: int,
-    dataset: Dataset,
-    training: TrainingResult,
-    exported: ExportResult,
-    verification: VerificationResult,
-    teacher: RolloutTeacher,
-) -> None:
-    contract = load_contract()
-    document: dict[str, Any] = {
-        "schema_version": contract.schema_version,
-        "schema_hash": contract.short_hash,
-        "model_version": exported.model_version,
-        "weight_hash": exported.weight_hash,
-        "mode": mode,
-        "training_seed": seed,
-        "dataset": _dataset_report(dataset),
-        "teacher": {
-            "candidate_count": len(teacher.candidates),
-            "horizon_steps": teacher.horizon_steps,
-            "cost": asdict(teacher.cost_config),
-        },
-        "model": {
-            "architecture": [32, 32, len(contract.outputs)],
-            "hidden_activation": "relu",
-            "output_activation": "sigmoid",
-            "format": "emlearn-net-float32-loadable",
-            "parameter_count": training.metrics["parameter_count"],
-            "export_weight_decimal_places": training.metrics["export_weight_decimals"],
-        },
-        "metrics": training.metrics,
-        "python_c_verification": asdict(verification),
-        "dependencies": {
-            "numpy": _package_version("numpy"),
-            "tensorflow": _package_version("tensorflow"),
-            "keras": _package_version("keras"),
-            "emlearn": _package_version("emlearn"),
+        "split_counts": {
+            split: int(np.sum(dataset.splits == split)) for split in ("train", "validation", "test")
         },
     }
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(document, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-
-
-def run_pipeline(
-    *,
-    mode: str,
-    seed: int = 1847,
-    artifact_root: Path = DEFAULT_ARTIFACT_ROOT,
-    generated_dir: Path = DEFAULT_GENERATED_DIR,
-    golden_json: Path = DEFAULT_GOLDEN_JSON,
-    golden_header: Path = DEFAULT_GOLDEN_HEADER,
-) -> PipelineResult:
-    if mode not in ("quick", "full"):
-        raise ValueError("mode must be quick or full")
-    contract = load_contract()
-    dataset_config = DatasetConfig.quick(seed) if mode == "quick" else DatasetConfig.full(seed)
-    training_config = TrainingConfig.quick(seed) if mode == "quick" else TrainingConfig.full(seed)
-    teacher = RolloutTeacher(horizon_steps=2 if mode == "quick" else 4)
-    dataset = generate_dataset(dataset_config, contract=contract, teacher=teacher)
-
-    mode_artifacts = artifact_root / mode
-    mode_artifacts.mkdir(parents=True, exist_ok=True)
-    dataset_path = mode_artifacts / "dataset.npz"
-    model_path = mode_artifacts / "environment_model.keras"
-    dataset.save(dataset_path)
-    training = train(dataset, training_config)
-    training.model.save(model_path)
-    exported = export_model(
-        training.model,
-        dataset,
-        training.metrics,
-        contract=contract,
-        mode=mode,
-        training_seed=seed,
-        generated_dir=generated_dir,
-        golden_json=golden_json,
-        golden_header=golden_header,
-    )
-    verification = verify_export(
-        environment_header=exported.environment_model_header,
-        golden_json=exported.golden_json,
-        golden_header=exported.golden_header,
-    )
-    report_path = mode_artifacts / "report.json"
-    _write_report(
-        report_path,
-        mode=mode,
-        seed=seed,
-        dataset=dataset,
-        training=training,
-        exported=exported,
-        verification=verification,
-        teacher=teacher,
-    )
-    return PipelineResult(
-        mode=mode,
-        dataset=dataset,
-        training=training,
-        export=exported,
-        verification=verification,
-        report_path=report_path,
-    )
 
 
 def _golden_mismatches(temporary: dict[str, Any], committed: dict[str, Any]) -> list[str]:
@@ -278,7 +158,78 @@ def _compare_generated(temporary: ExportResult) -> None:
                 if header_text != expected_header:
                     mismatches.append(f"{label} golden header does not match its JSON fixture")
     if mismatches:
-        raise RuntimeError("\n".join(mismatches))
+        raise SystemExit("generated artifact check failed:\n- " + "\n- ".join(mismatches))
+
+
+def run_pipeline(
+    *,
+    mode: str,
+    seed: int = 1847,
+    artifact_root: Path = DEFAULT_ARTIFACT_ROOT,
+    generated_dir: Path = DEFAULT_GENERATED_DIR,
+    golden_json: Path = DEFAULT_GOLDEN_JSON,
+    golden_header: Path = DEFAULT_GOLDEN_HEADER,
+) -> PipelineResult:
+    if mode not in ("quick", "full"):
+        raise ValueError("mode must be quick or full")
+    contract = load_contract(ACTIVE_CONTRACT_PATH)
+    dataset_config = DatasetConfig.quick(seed) if mode == "quick" else DatasetConfig.full(seed)
+    training_config = TrainingConfig.quick(seed) if mode == "quick" else TrainingConfig.full(seed)
+    teacher = RolloutTeacher(horizon_steps=2 if mode == "quick" else 4)
+    dataset = generate_dataset(dataset_config, contract=contract, teacher=teacher)
+
+    mode_artifacts = artifact_root / mode
+    mode_artifacts.mkdir(parents=True, exist_ok=True)
+    dataset_path = mode_artifacts / "dataset.npz"
+    model_path = mode_artifacts / "environment_model.keras"
+    dataset.save(dataset_path)
+    training = train(dataset, training_config)
+    training.model.save(model_path)
+
+    exported = export_model(
+        training.model,
+        dataset,
+        training.metrics,
+        contract=contract,
+        mode=mode,
+        training_seed=seed,
+        generated_dir=generated_dir,
+        golden_json=golden_json,
+        golden_header=golden_header,
+    )
+    verification = verify_export(
+        environment_header=exported.environment_model_header,
+        golden_json=exported.golden_json,
+        golden_header=exported.golden_header,
+    )
+    report_path = mode_artifacts / "report.json"
+    report_document = {
+        "schema_version": contract.schema_version,
+        "schema_hash": contract.short_hash,
+        "model_version": exported.model_version,
+        "weight_hash": exported.weight_hash,
+        "mode": mode,
+        "training_seed": seed,
+        "dataset": _dataset_report(dataset),
+        "teacher": {
+            "horizon_steps": teacher.horizon_steps,
+            "cost": asdict(teacher.cost_config),
+        },
+        "metrics": training.metrics,
+        "python_c_verification": asdict(verification),
+        "note": "quick is CI smoke only; full training after simulator fidelity work",
+    }
+    report_path.write_text(
+        json.dumps(report_document, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    return PipelineResult(
+        mode=mode,
+        dataset=dataset,
+        training=training,
+        export=exported,
+        verification=verification,
+        report_path=report_path,
+    )
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -311,17 +262,10 @@ def main(argv: list[str] | None = None) -> int:
                 golden_header=root / "fixtures" / "ModelGoldenVectors.h",
             )
             _compare_generated(result.export)
-            print(
-                "generated model and manifest are byte-deterministic; "
-                "golden vectors are numerically reproducible"
-            )
+            print("generated model and golden vectors are reproducible")
             return 0
 
-    result = run_pipeline(
-        mode=mode,
-        seed=args.seed,
-        artifact_root=args.artifact_root,
-    )
+    result = run_pipeline(mode=mode, seed=args.seed, artifact_root=args.artifact_root)
     test_metrics = result.training.metrics["test"]
     print(
         f"{mode} pipeline complete: rows={len(result.dataset.features)}, "

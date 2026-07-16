@@ -13,13 +13,8 @@ from typing import Any
 import numpy as np
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-# Versioned contracts. ACTIVE is the training / panel / simulator target.
-V1_CONTRACT_PATH = PROJECT_ROOT / "schemas" / "environment-controller-v1.json"
-V2_CONTRACT_PATH = PROJECT_ROOT / "schemas" / "environment-controller-v2.json"
-V3_CONTRACT_PATH = PROJECT_ROOT / "schemas" / "environment-controller-v3.json"
-ACTIVE_CONTRACT_PATH = V3_CONTRACT_PATH
-# Legacy alias: bare load_contract() still resolves v1 for historical pipeline tests.
-DEFAULT_CONTRACT_PATH = V1_CONTRACT_PATH
+ACTIVE_CONTRACT_PATH = PROJECT_ROOT / "schemas" / "environment-controller.json"
+DEFAULT_CONTRACT_PATH = ACTIVE_CONTRACT_PATH
 
 
 def canonical_json_bytes(document: Mapping[str, Any]) -> bytes:
@@ -104,10 +99,10 @@ class Contract:
                 )
                 if not bool(valid):
                     normalized = feature.normalize(feature.default)
-            zone_available_path = _zone_available_path_for_target_feature(feature.path)
-            if zone_available_path is not None:
+            pot_available_path = _pot_available_path_for_target_feature(feature.path)
+            if pot_available_path is not None:
                 available = bool(
-                    _resolve_path_or_default(controller_input, zone_available_path, False)
+                    _resolve_path_or_default(controller_input, pot_available_path, False)
                 )
                 if not available:
                     normalized = feature.normalize(feature.default)
@@ -216,16 +211,16 @@ def _validity_path_for_sensor_feature(feature_path: str) -> str | None:
     return None
 
 
-def _zone_available_path_for_target_feature(feature_path: str) -> str | None:
-    if not feature_path.startswith("zones."):
+def _pot_available_path_for_target_feature(feature_path: str) -> str | None:
+    if not feature_path.startswith("pots."):
         return None
     parts = feature_path.split(".")
     if len(parts) < 4 or parts[2] != "targets":
         return None
-    zone_index = parts[1]
-    if not zone_index.isdigit():
+    pot_index = parts[1]
+    if not pot_index.isdigit():
         return None
-    return f"zones.{zone_index}.available"
+    return f"pots.{pot_index}.available"
 
 
 def _resolve_path(document: Mapping[str, Any], path: str) -> Any:

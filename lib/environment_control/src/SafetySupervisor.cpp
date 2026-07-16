@@ -18,20 +18,20 @@ constexpr std::size_t coolerIndex = schema::index(schema::OutputIndex::Cooler);
 constexpr std::size_t co2Index = schema::index(schema::OutputIndex::Co2Doser);
 constexpr std::size_t nutrientHeaterIndex = schema::index(schema::OutputIndex::NutrientHeater);
 
-constexpr std::array<schema::OutputIndex, kMaxZones> kIrrigationOutputs{
-    schema::OutputIndex::IrrigationZone1, schema::OutputIndex::IrrigationZone2,
-    schema::OutputIndex::IrrigationZone3, schema::OutputIndex::IrrigationZone4};
+constexpr std::array<schema::OutputIndex, kMaxPots> kIrrigationOutputs{
+    schema::OutputIndex::IrrigationPot1, schema::OutputIndex::IrrigationPot2,
+    schema::OutputIndex::IrrigationPot3, schema::OutputIndex::IrrigationPot4};
 
-constexpr std::array<schema::OutputIndex, kMaxZones> kHeatMatOutputs{
-    schema::OutputIndex::HeatMatZone1, schema::OutputIndex::HeatMatZone2,
-    schema::OutputIndex::HeatMatZone3, schema::OutputIndex::HeatMatZone4};
+constexpr std::array<schema::OutputIndex, kMaxPots> kHeatMatOutputs{
+    schema::OutputIndex::HeatMatPot1, schema::OutputIndex::HeatMatPot2,
+    schema::OutputIndex::HeatMatPot3, schema::OutputIndex::HeatMatPot4};
 
-constexpr std::array<FeatureIndex, kMaxZones> kZoneMaxPulseFeatures{
-    FeatureIndex::Zone1IrrigationMaximumPulseS, FeatureIndex::Zone2IrrigationMaximumPulseS,
-    FeatureIndex::Zone3IrrigationMaximumPulseS, FeatureIndex::Zone4IrrigationMaximumPulseS};
-constexpr std::array<FeatureIndex, kMaxZones> kZoneMaxIntervalFeatures{
-    FeatureIndex::Zone1IrrigationMinimumIntervalS, FeatureIndex::Zone2IrrigationMinimumIntervalS,
-    FeatureIndex::Zone3IrrigationMinimumIntervalS, FeatureIndex::Zone4IrrigationMinimumIntervalS};
+constexpr std::array<FeatureIndex, kMaxPots> kZoneMaxPulseFeatures{
+    FeatureIndex::Pot1IrrigationMaximumPulseS, FeatureIndex::Pot2IrrigationMaximumPulseS,
+    FeatureIndex::Pot3IrrigationMaximumPulseS, FeatureIndex::Pot4IrrigationMaximumPulseS};
+constexpr std::array<FeatureIndex, kMaxPots> kZoneMaxIntervalFeatures{
+    FeatureIndex::Pot1IrrigationMinimumIntervalS, FeatureIndex::Pot2IrrigationMinimumIntervalS,
+    FeatureIndex::Pot3IrrigationMinimumIntervalS, FeatureIndex::Pot4IrrigationMinimumIntervalS};
 
 float clamp01(float value) noexcept {
   return std::max(0.0f, std::min(1.0f, value));
@@ -81,19 +81,18 @@ bool safetyInputsFinite(const ControllerInput& input) noexcept {
                                    std::isfinite(actuators.co2_doser.maximum_pulse_s) &&
                                    std::isfinite(actuators.nutrient_heater.max_power_w) &&
                                    std::isfinite(actuators.nutrient_heater.efficiency);
-  for (const ZoneConfig& zone : input.zones) {
-    if (!std::isfinite(zone.sensors.soil_moisture_pct) ||
-        !std::isfinite(zone.sensors.soil_temperature_c) ||
-        !std::isfinite(zone.cultivation.pot_volume_l) ||
-        !std::isfinite(zone.cultivation.substrate_water_capacity_ml) ||
-        !std::isfinite(zone.cultivation.transpiration_factor) ||
-        !std::isfinite(zone.target_soil_moisture_pct) ||
-        !std::isfinite(zone.target_soil_temperature_c) ||
-        !std::isfinite(zone.irrigation.flow_ml_s) ||
-        !std::isfinite(zone.irrigation.maximum_pulse_s) ||
-        !std::isfinite(zone.irrigation.minimum_interval_s) ||
-        !std::isfinite(zone.heat_mat.max_power_w) || !std::isfinite(zone.previous_irrigation) ||
-        !std::isfinite(zone.previous_heat_mat)) {
+  for (const PotConfig& pot : input.pots) {
+    if (!std::isfinite(pot.sensors.soil_moisture_pct) ||
+        !std::isfinite(pot.sensors.soil_temperature_c) ||
+        !std::isfinite(pot.cultivation.pot_volume_l) ||
+        !std::isfinite(pot.cultivation.substrate_water_capacity_ml) ||
+        !std::isfinite(pot.cultivation.transpiration_factor) ||
+        !std::isfinite(pot.target_soil_moisture_pct) ||
+        !std::isfinite(pot.target_soil_temperature_c) || !std::isfinite(pot.irrigation.flow_ml_s) ||
+        !std::isfinite(pot.irrigation.maximum_pulse_s) ||
+        !std::isfinite(pot.irrigation.minimum_interval_s) ||
+        !std::isfinite(pot.heat_mat.max_power_w) || !std::isfinite(pot.previous_irrigation) ||
+        !std::isfinite(pot.previous_heat_mat)) {
       return false;
     }
   }
@@ -329,16 +328,16 @@ bool nutrientSolutionTooCold(const ControllerInput& input) noexcept {
              input.safety.minimum_nutrient_solution_temperature_c;
 }
 
-bool nutrientSoilDeltaExceeded(const ControllerInput& input, const ZoneConfig& zone) noexcept {
-  if (!input.validity.nutrient_solution_temperature || !zone.validity.soil_temperature) {
+bool nutrientSoilDeltaExceeded(const ControllerInput& input, const PotConfig& pot) noexcept {
+  if (!input.validity.nutrient_solution_temperature || !pot.validity.soil_temperature) {
     return false;
   }
   if (!std::isfinite(input.sensors.nutrient_solution_temperature_c) ||
-      !std::isfinite(zone.sensors.soil_temperature_c)) {
+      !std::isfinite(pot.sensors.soil_temperature_c)) {
     return false;
   }
   const float delta =
-      input.sensors.nutrient_solution_temperature_c - zone.sensors.soil_temperature_c;
+      input.sensors.nutrient_solution_temperature_c - pot.sensors.soil_temperature_c;
   return delta < -input.safety.maximum_nutrient_soil_delta_c ||
          delta > input.safety.maximum_nutrient_soil_delta_c;
 }
@@ -470,42 +469,42 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
                     input.monotonic_time_ms, nutrient_heater_, report, nutrientHeaterIndex);
 
   const bool nutrient_cold = nutrientSolutionTooCold(input);
-  for (std::size_t zone_index = 0; zone_index < kMaxZones; ++zone_index) {
-    const ZoneConfig& zone = input.zones[zone_index];
-    const schema::OutputIndex output = kIrrigationOutputs[zone_index];
+  for (std::size_t pot_index = 0; pot_index < kMaxPots; ++pot_index) {
+    const PotConfig& pot = input.pots[pot_index];
+    const schema::OutputIndex output = kIrrigationOutputs[pot_index];
     const std::size_t output_index = schema::index(output);
     float& irrigation = safeOutputValue(safe, output);
 
     const bool capability_valid =
-        zone.irrigation.flow_ml_s > 0.0f && zone.irrigation.maximum_pulse_s > 0.0f;
-    if (!zone.available || !zone.irrigation.available || !capability_valid) {
-      if (!zone.irrigation.available || !zone.available) {
+        pot.irrigation.flow_ml_s > 0.0f && pot.irrigation.maximum_pulse_s > 0.0f;
+    if (!pot.available || !pot.irrigation.available || !capability_valid) {
+      if (!pot.irrigation.available || !pot.available) {
         addReason(report, output_index, SafetyReason::ActuatorUnavailable);
       } else if (irrigation != 0.0f || rawOutputValue(raw, output) != 0.0f) {
         addReason(report, output_index, SafetyReason::InvalidCapability);
       }
       irrigation = 0.0f;
-      safe.irrigation_pulse_s[zone_index] = 0.0f;
+      safe.irrigation_pulse_s[pot_index] = 0.0f;
       continue;
     }
 
-    if (!zone.validity.soil_moisture) {
+    if (!pot.validity.soil_moisture) {
       if (irrigation > 0.0f || rawOutputValue(raw, output) > 0.0f) {
         addReason(report, output_index, SafetyReason::SoilMoistureUnavailable);
       }
       irrigation = 0.0f;
-      safe.irrigation_pulse_s[zone_index] = 0.0f;
+      safe.irrigation_pulse_s[pot_index] = 0.0f;
       continue;
     }
 
-    if (zone.validity.soil_moisture && std::isfinite(zone.sensors.soil_moisture_pct) &&
-        std::isfinite(zone.target_soil_moisture_pct) &&
-        zone.sensors.soil_moisture_pct >= zone.target_soil_moisture_pct) {
+    if (pot.validity.soil_moisture && std::isfinite(pot.sensors.soil_moisture_pct) &&
+        std::isfinite(pot.target_soil_moisture_pct) &&
+        pot.sensors.soil_moisture_pct >= pot.target_soil_moisture_pct) {
       if (irrigation > 0.0f || rawOutputValue(raw, output) > 0.0f) {
         addReason(report, output_index, SafetyReason::SoilMoistureSatisfied);
       }
       irrigation = 0.0f;
-      safe.irrigation_pulse_s[zone_index] = 0.0f;
+      safe.irrigation_pulse_s[pot_index] = 0.0f;
       continue;
     }
 
@@ -514,20 +513,20 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
         addReason(report, output_index, SafetyReason::NutrientSolutionTooCold);
       }
       irrigation = 0.0f;
-      safe.irrigation_pulse_s[zone_index] = 0.0f;
+      safe.irrigation_pulse_s[pot_index] = 0.0f;
       continue;
     }
 
-    if (nutrientSoilDeltaExceeded(input, zone)) {
+    if (nutrientSoilDeltaExceeded(input, pot)) {
       if (irrigation > 0.0f || rawOutputValue(raw, output) > 0.0f) {
         addReason(report, output_index, SafetyReason::NutrientSoilDeltaExceeded);
       }
       irrigation = 0.0f;
-      safe.irrigation_pulse_s[zone_index] = 0.0f;
+      safe.irrigation_pulse_s[pot_index] = 0.0f;
       continue;
     }
 
-    if (zone.irrigation.control_type == ActuatorControlType::Binary) {
+    if (pot.irrigation.control_type == ActuatorControlType::Binary) {
       const bool requested_on = irrigation >= threshold;
       const float thresholded = requested_on ? 1.0f : 0.0f;
       if (irrigation != thresholded) {
@@ -538,31 +537,31 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
 
     if (irrigation > 0.0f) {
       const float schema_maximum_pulse =
-          schema::kFeatureMaximums[schema::index(kZoneMaxPulseFeatures[zone_index])];
+          schema::kFeatureMaximums[schema::index(kZoneMaxPulseFeatures[pot_index])];
       const float maximum_pulse =
-          clampRange(zone.irrigation.maximum_pulse_s, 0.0f, schema_maximum_pulse);
-      if (maximum_pulse != zone.irrigation.maximum_pulse_s) {
+          clampRange(pot.irrigation.maximum_pulse_s, 0.0f, schema_maximum_pulse);
+      if (maximum_pulse != pot.irrigation.maximum_pulse_s) {
         addReason(report, output_index, SafetyReason::PumpPulseLimited);
       }
-      safe.irrigation_pulse_s[zone_index] = irrigation * maximum_pulse;
+      safe.irrigation_pulse_s[pot_index] = irrigation * maximum_pulse;
 
-      PumpRuntime& pump = zone_pumps_[zone_index];
+      PumpRuntime& pump = zone_pumps_[pot_index];
       if (!pump.initialized) {
         pump.initialized = true;
-        if (zone.previous_irrigation > 0.0f) {
+        if (pot.previous_irrigation > 0.0f) {
           pump.has_pulse = true;
           pump.last_pulse_start_ms = input.monotonic_time_ms;
         }
       }
       const float schema_maximum_interval =
-          schema::kFeatureMaximums[schema::index(kZoneMaxIntervalFeatures[zone_index])];
+          schema::kFeatureMaximums[schema::index(kZoneMaxIntervalFeatures[pot_index])];
       const float interval_s =
-          clampRange(zone.irrigation.minimum_interval_s, 0.0f, schema_maximum_interval);
+          clampRange(pot.irrigation.minimum_interval_s, 0.0f, schema_maximum_interval);
       const std::uint64_t interval_ms = durationMs(interval_s);
       if (pump.has_pulse &&
           elapsedMs(input.monotonic_time_ms, pump.last_pulse_start_ms) < interval_ms) {
         irrigation = 0.0f;
-        safe.irrigation_pulse_s[zone_index] = 0.0f;
+        safe.irrigation_pulse_s[pot_index] = 0.0f;
         addReason(report, output_index, SafetyReason::PumpMinimumInterval);
       } else {
         pump.has_pulse = true;
@@ -571,15 +570,15 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
     }
   }
 
-  for (std::size_t zone_index = 0; zone_index < kMaxZones; ++zone_index) {
-    const ZoneConfig& zone = input.zones[zone_index];
-    const schema::OutputIndex output = kHeatMatOutputs[zone_index];
+  for (std::size_t pot_index = 0; pot_index < kMaxPots; ++pot_index) {
+    const PotConfig& pot = input.pots[pot_index];
+    const schema::OutputIndex output = kHeatMatOutputs[pot_index];
     const std::size_t output_index = schema::index(output);
     float& heat_mat = safeOutputValue(safe, output);
 
-    applyBinaryActuatorSafety(zone.available && zone.heat_mat.available, zone.heat_mat.max_power_w,
+    applyBinaryActuatorSafety(pot.available && pot.heat_mat.available, pot.heat_mat.max_power_w,
                               heat_mat, rawOutputValue(raw, output), output_index, report);
-    if (!zone.validity.soil_temperature) {
+    if (!pot.validity.soil_temperature) {
       if (heat_mat != 0.0f || rawOutputValue(raw, output) != 0.0f) {
         addReason(report, output_index, SafetyReason::TemperatureUnavailable);
       }
@@ -587,11 +586,11 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
       continue;
     }
 
-    if (zone.heat_mat.control_type == ActuatorControlType::Binary) {
-      heat_mat = enforceBinary(heat_mat, zone.previous_heat_mat, threshold,
-                               input.safety.heater_minimum_on_s, input.safety.heater_minimum_off_s,
-                               input.monotonic_time_ms, heat_mat_binary_[zone_index], report,
-                               output_index);
+    if (pot.heat_mat.control_type == ActuatorControlType::Binary) {
+      heat_mat =
+          enforceBinary(heat_mat, pot.previous_heat_mat, threshold,
+                        input.safety.heater_minimum_on_s, input.safety.heater_minimum_off_s,
+                        input.monotonic_time_ms, heat_mat_binary_[pot_index], report, output_index);
     }
   }
 
@@ -601,13 +600,13 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
                     different(raw.cooler, safe.cooler) ||
                     different(raw.co2_doser, safe.co2_doser) ||
                     different(raw.nutrient_heater, safe.nutrient_heater);
-  for (std::size_t zone_index = 0; zone_index < kMaxZones; ++zone_index) {
+  for (std::size_t pot_index = 0; pot_index < kMaxPots; ++pot_index) {
     report.modified =
-        report.modified || different(rawOutputValue(raw, kIrrigationOutputs[zone_index]),
-                                     safeOutputValue(safe, kIrrigationOutputs[zone_index]));
+        report.modified || different(rawOutputValue(raw, kIrrigationOutputs[pot_index]),
+                                     safeOutputValue(safe, kIrrigationOutputs[pot_index]));
     report.modified =
-        report.modified || different(rawOutputValue(raw, kHeatMatOutputs[zone_index]),
-                                     safeOutputValue(safe, kHeatMatOutputs[zone_index]));
+        report.modified || different(rawOutputValue(raw, kHeatMatOutputs[pot_index]),
+                                     safeOutputValue(safe, kHeatMatOutputs[pot_index]));
   }
 }
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "EnvironmentSchemaV3.h"
+#include "EnvironmentSchema.h"
 
 #include <array>
 #include <cstddef>
@@ -9,7 +9,7 @@
 namespace growbox {
 namespace control {
 
-inline constexpr std::size_t kMaxZones = 4U;
+inline constexpr std::size_t kMaxPots = 4U;
 
 static_assert(schema::kFeatureCount <= schema::kFeatureDiagnosticsMaskBits,
               "Encoder diagnostics mask must cover every feature");
@@ -56,17 +56,17 @@ struct SensorValidity {
   bool outside_co2 = detail::schemaDefaultBool(schema::FeatureIndex::OutsideCo2Valid);
 };
 
-struct ZoneSensorState {
+struct PotSensorState {
   float soil_moisture_pct = 50.0f;
   float soil_temperature_c = 20.0f;
 };
 
-struct ZoneSensorValidity {
+struct PotSensorValidity {
   bool soil_moisture = false;
   bool soil_temperature = false;
 };
 
-struct ZoneCultivationConfig {
+struct PotCultivationConfig {
   float pot_volume_l = 10.0f;
   float substrate_water_capacity_ml = 3000.0f;
   float transpiration_factor = 1.0f;
@@ -86,11 +86,11 @@ struct HeatMatCapabilities {
   ActuatorControlType control_type = ActuatorControlType::Binary;
 };
 
-struct ZoneConfig {
+struct PotConfig {
   bool available = false;
-  ZoneSensorState sensors{};
-  ZoneSensorValidity validity{};
-  ZoneCultivationConfig cultivation{};
+  PotSensorState sensors{};
+  PotSensorValidity validity{};
+  PotCultivationConfig cultivation{};
   float target_soil_moisture_pct = 50.0f;
   float target_soil_temperature_c = 20.0f;
   IrrigationPumpCapabilities irrigation{};
@@ -197,7 +197,7 @@ struct SafetyConfig {
 struct ControllerInput {
   SensorState sensors{};
   SensorValidity validity{};
-  std::array<ZoneConfig, kMaxZones> zones{};
+  std::array<PotConfig, kMaxPots> pots{};
   bool lights_active = false;
   EnvironmentConfig environment{};
   GlobalActuatorCapabilities actuators{};
@@ -218,15 +218,15 @@ struct RawModelDecision {
   float dehumidifier = 0.0f;
   float cooler = 0.0f;
   float co2_doser = 0.0f;
-  float irrigation_zone_1 = 0.0f;
-  float irrigation_zone_2 = 0.0f;
-  float irrigation_zone_3 = 0.0f;
-  float irrigation_zone_4 = 0.0f;
+  float irrigation_pot_1 = 0.0f;
+  float irrigation_pot_2 = 0.0f;
+  float irrigation_pot_3 = 0.0f;
+  float irrigation_pot_4 = 0.0f;
   float nutrient_heater = 0.0f;
-  float heat_mat_zone_1 = 0.0f;
-  float heat_mat_zone_2 = 0.0f;
-  float heat_mat_zone_3 = 0.0f;
-  float heat_mat_zone_4 = 0.0f;
+  float heat_mat_pot_1 = 0.0f;
+  float heat_mat_pot_2 = 0.0f;
+  float heat_mat_pot_3 = 0.0f;
+  float heat_mat_pot_4 = 0.0f;
 };
 
 struct SafeControlDecision {
@@ -236,16 +236,16 @@ struct SafeControlDecision {
   float dehumidifier = 0.0f;
   float cooler = 0.0f;
   float co2_doser = 0.0f;
-  float irrigation_zone_1 = 0.0f;
-  float irrigation_zone_2 = 0.0f;
-  float irrigation_zone_3 = 0.0f;
-  float irrigation_zone_4 = 0.0f;
+  float irrigation_pot_1 = 0.0f;
+  float irrigation_pot_2 = 0.0f;
+  float irrigation_pot_3 = 0.0f;
+  float irrigation_pot_4 = 0.0f;
   float nutrient_heater = 0.0f;
-  float heat_mat_zone_1 = 0.0f;
-  float heat_mat_zone_2 = 0.0f;
-  float heat_mat_zone_3 = 0.0f;
-  float heat_mat_zone_4 = 0.0f;
-  std::array<float, kMaxZones> irrigation_pulse_s{};
+  float heat_mat_pot_1 = 0.0f;
+  float heat_mat_pot_2 = 0.0f;
+  float heat_mat_pot_3 = 0.0f;
+  float heat_mat_pot_4 = 0.0f;
+  std::array<float, kMaxPots> irrigation_pulse_s{};
 };
 
 struct EncoderMask {

@@ -10,7 +10,7 @@ from typing import Any
 
 from .contract import ACTIVE_CONTRACT_PATH, Contract, load_contract
 
-INACTIVE_ZONE_PRESET: dict[str, Any] = {
+INACTIVE_POT_PRESET: dict[str, Any] = {
     "available": False,
     "sensors": {"soil_moisture_pct": 50.0, "soil_temperature_c": 20.0},
     "validity": {"soil_moisture_pct": False, "soil_temperature_c": False},
@@ -35,7 +35,7 @@ INACTIVE_ZONE_PRESET: dict[str, Any] = {
     "previous": {"irrigation": 0.0, "heat_mat": 0.0},
 }
 
-ACTIVE_ZONE_PRESET: dict[str, Any] = {
+ACTIVE_POT_PRESET: dict[str, Any] = {
     "available": True,
     "sensors": {"soil_moisture_pct": 44.0, "soil_temperature_c": 22.0},
     "validity": {"soil_moisture_pct": True, "soil_temperature_c": True},
@@ -79,7 +79,7 @@ NOMINAL_PRESET: dict[str, Any] = {
         "outside_humidity_pct": True,
         "outside_co2_ppm": True,
     },
-    "zones": [
+    "pots": [
         {
             "available": True,
             "sensors": {"soil_moisture_pct": 44.0, "soil_temperature_c": 20.0},
@@ -104,9 +104,9 @@ NOMINAL_PRESET: dict[str, Any] = {
             },
             "previous": {"irrigation": 0.0, "heat_mat": 0.0},
         },
-        dict(INACTIVE_ZONE_PRESET),
-        dict(INACTIVE_ZONE_PRESET),
-        dict(INACTIVE_ZONE_PRESET),
+        dict(INACTIVE_POT_PRESET),
+        dict(INACTIVE_POT_PRESET),
+        dict(INACTIVE_POT_PRESET),
     ],
     "pseudo": {"lights_active": False},
     "environment": {
@@ -180,11 +180,11 @@ SCENARIO_PRESETS: dict[str, dict[str, Any]] = {
         "description": "Domyślny profil: strefa 0 aktywna, grzałka/fan/nawilżacz włączone.",
         "overlay": NOMINAL_PRESET,
     },
-    "all_zones": {
+    "all_pots": {
         "title": "4 strefy aktywne",
         "description": "Wszystkie donice i pompy włączone — test mix & match 0–4.",
         "overlay": {
-            "zones": [dict(ACTIVE_ZONE_PRESET) for _ in range(4)],
+            "pots": [dict(ACTIVE_POT_PRESET) for _ in range(4)],
         },
     },
     "disabled_actuators": {
@@ -203,14 +203,14 @@ SCENARIO_PRESETS: dict[str, dict[str, Any]] = {
                     "maximum_pulse_s": 0.0,
                 },
             },
-            "zones": [
+            "pots": [
                 {
-                    **ACTIVE_ZONE_PRESET,
-                    "irrigation": {**ACTIVE_ZONE_PRESET["irrigation"], "available": False},
+                    **ACTIVE_POT_PRESET,
+                    "irrigation": {**ACTIVE_POT_PRESET["irrigation"], "available": False},
                 },
-                dict(INACTIVE_ZONE_PRESET),
-                dict(INACTIVE_ZONE_PRESET),
-                dict(INACTIVE_ZONE_PRESET),
+                dict(INACTIVE_POT_PRESET),
+                dict(INACTIVE_POT_PRESET),
+                dict(INACTIVE_POT_PRESET),
             ],
         },
     },
@@ -218,15 +218,15 @@ SCENARIO_PRESETS: dict[str, dict[str, Any]] = {
         "title": "Gleba nasączona",
         "description": "Wilgotność gleby ≥ cel — safety blokuje podlewanie strefy 0.",
         "overlay": {
-            "zones": [
+            "pots": [
                 {
-                    **ACTIVE_ZONE_PRESET,
+                    **ACTIVE_POT_PRESET,
                     "sensors": {"soil_moisture_pct": 58.0, "soil_temperature_c": 24.0},
                     "targets": {"soil_moisture_pct": 50.0},
                 },
-                dict(INACTIVE_ZONE_PRESET),
-                dict(INACTIVE_ZONE_PRESET),
-                dict(INACTIVE_ZONE_PRESET),
+                dict(INACTIVE_POT_PRESET),
+                dict(INACTIVE_POT_PRESET),
+                dict(INACTIVE_POT_PRESET),
             ],
             "sensors": {"nutrient_solution_temperature_c": 10.0},
             "validity": {"nutrient_solution_temperature_c": True},
@@ -245,7 +245,7 @@ SCENARIO_PRESETS: dict[str, dict[str, Any]] = {
                 "outside_humidity_pct": False,
                 "outside_co2_ppm": False,
             },
-            "zones": [dict(INACTIVE_ZONE_PRESET) for _ in range(4)],
+            "pots": [dict(INACTIVE_POT_PRESET) for _ in range(4)],
         },
     },
     "co2_high": {
@@ -298,8 +298,8 @@ def _set_nested(document: dict[str, Any], path: str, value: Any) -> None:
 def _deep_merge(base: dict[str, Any], overlay: dict[str, Any]) -> dict[str, Any]:
     merged = dict(base)
     for key, value in overlay.items():
-        if key == "zones" and isinstance(value, list):
-            merged[key] = [dict(zone) for zone in value]
+        if key == "pots" and isinstance(value, list):
+            merged[key] = [dict(pot) for pot in value]
         elif isinstance(value, dict) and isinstance(merged.get(key), dict):
             merged[key] = _deep_merge(merged[key], value)
         else:
@@ -307,17 +307,15 @@ def _deep_merge(base: dict[str, Any], overlay: dict[str, Any]) -> dict[str, Any]
     return merged
 
 
-def _normalize_zones(scenario: dict[str, Any]) -> None:
-    zones = scenario.get("zones")
-    if isinstance(zones, dict):
-        scenario["zones"] = [
-            dict(zones.get(str(index), INACTIVE_ZONE_PRESET)) for index in range(4)
-        ]
-    elif isinstance(zones, list):
-        normalized = [dict(zone) for zone in zones]
+def _normalize_pots(scenario: dict[str, Any]) -> None:
+    pots = scenario.get("pots")
+    if isinstance(pots, dict):
+        scenario["pots"] = [dict(pots.get(str(index), INACTIVE_POT_PRESET)) for index in range(4)]
+    elif isinstance(pots, list):
+        normalized = [dict(pot) for pot in pots]
         while len(normalized) < 4:
-            normalized.append(dict(INACTIVE_ZONE_PRESET))
-        scenario["zones"] = normalized[:4]
+            normalized.append(dict(INACTIVE_POT_PRESET))
+        scenario["pots"] = normalized[:4]
 
 
 def default_scenario(
@@ -353,7 +351,7 @@ def default_scenario(
         scenario = _deep_merge(scenario, {"safety": dict(safety_defaults)})
     for _, path, default_name in ACTUATOR_CONTROL_FIELDS:
         _set_nested(scenario, path, default_name)
-    _normalize_zones(scenario)
+    _normalize_pots(scenario)
     scenario["seed"] = seed
     return scenario
 

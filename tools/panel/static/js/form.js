@@ -1,22 +1,22 @@
 function shortLabel(name) {
   if (LABEL_MAP[name]) return LABEL_MAP[name];
   if (typeof OUTPUT_LABELS !== "undefined" && OUTPUT_LABELS[name]) return OUTPUT_LABELS[name];
-  const zoneTarget = name.match(/^zone_(\d+)_target_soil_moisture_pct$/);
+  const zoneTarget = name.match(/^pot_(\d+)_target_soil_moisture_pct$/);
   if (zoneTarget) return `Donica ${zoneTarget[1]}`;
-  const zoneTempTarget = name.match(/^zone_(\d+)_target_soil_temperature_c$/);
+  const zoneTempTarget = name.match(/^pot_(\d+)_target_soil_temperature_c$/);
   if (zoneTempTarget) return `Donica ${zoneTempTarget[1]}`;
-  const zoneAvail = name.match(/^zone_(\d+)_available$/);
+  const zoneAvail = name.match(/^pot_(\d+)_available$/);
   if (zoneAvail) return `Donica ${zoneAvail[1]}`;
-  const zonePrev = name.match(/^zone_(\d+)_previous_irrigation$/);
+  const zonePrev = name.match(/^pot_(\d+)_previous_irrigation$/);
   if (zonePrev) return `Pompa ${zonePrev[1]}`;
-  const zoneHeatPrev = name.match(/^zone_(\d+)_previous_heat_mat$/);
+  const zoneHeatPrev = name.match(/^pot_(\d+)_previous_heat_mat$/);
   if (zoneHeatPrev) return `Mata ${zoneHeatPrev[1]}`;
-  const zoneIrr = name.match(/^zone_\d+_irrigation_(.+)$/);
+  const zoneIrr = name.match(/^pot_\d+_irrigation_(.+)$/);
   if (zoneIrr) {
     const baseKey = `irrigation_${zoneIrr[1]}`;
     if (LABEL_MAP[baseKey]) return LABEL_MAP[baseKey];
   }
-  const zoneCult = name.match(/^zone_\d+_(pot_volume_l|substrate_water_capacity_ml|transpiration_factor)$/);
+  const zoneCult = name.match(/^pot_\d+_(pot_volume_l|substrate_water_capacity_ml|transpiration_factor)$/);
   if (zoneCult && LABEL_MAP[zoneCult[1]]) return LABEL_MAP[zoneCult[1]];
   return name.replace(/_/g, " ");
 }
@@ -80,35 +80,35 @@ const FIELD_CONTROL_CLASS = "field-control";
 
 function fieldHint(name) {
   if (FIELD_HINTS[name]) return FIELD_HINTS[name];
-  if (/^zone_\d+_target_soil_moisture_pct$/.test(name)) {
+  if (/^pot_(\d+)_target_soil_moisture_pct$/.test(name)) {
     return FIELD_HINTS.target_soil_moisture_pct || "";
   }
-  if (/^zone_\d+_target_soil_temperature_c$/.test(name)) {
+  if (/^pot_(\d+)_target_soil_temperature_c$/.test(name)) {
     return FIELD_HINTS.target_soil_temperature_c || "";
   }
-  if (/^soil_moisture_zone_\d+_pct$/.test(name)) {
+  if (/^soil_moisture_pot_\d+_pct$/.test(name)) {
     return FIELD_HINTS.soil_moisture_pct || "";
   }
-  if (/^soil_temperature_zone_\d+_c$/.test(name)) {
+  if (/^soil_temperature_pot_\d+_c$/.test(name)) {
     return FIELD_HINTS.soil_temperature_c || "";
   }
-  if (/^zone_\d+_previous_irrigation$/.test(name)) {
+  if (/^pot_\d+_previous_irrigation$/.test(name)) {
     return FIELD_HINTS.previous_irrigation || "";
   }
-  if (/^zone_\d+_previous_heat_mat$/.test(name)) {
+  if (/^pot_\d+_previous_heat_mat$/.test(name)) {
     return FIELD_HINTS.previous_heat_mat || "";
   }
-  const zoneHeatMat = name.match(/^zone_\d+_heat_mat_(.+)$/);
+  const zoneHeatMat = name.match(/^pot_\d+_heat_mat_(.+)$/);
   if (zoneHeatMat) {
     const baseKey = `heat_mat_${zoneHeatMat[1]}`;
     if (FIELD_HINTS[baseKey]) return FIELD_HINTS[baseKey];
   }
-  const zoneIrr = name.match(/^zone_\d+_irrigation_(.+)$/);
+  const zoneIrr = name.match(/^pot_\d+_irrigation_(.+)$/);
   if (zoneIrr) {
     const baseKey = `irrigation_${zoneIrr[1]}`;
     if (FIELD_HINTS[baseKey]) return FIELD_HINTS[baseKey];
   }
-  const zoneCult = name.match(/^zone_\d+_(pot_volume_l|substrate_water_capacity_ml|transpiration_factor)$/);
+  const zoneCult = name.match(/^pot_\d+_(pot_volume_l|substrate_water_capacity_ml|transpiration_factor)$/);
   if (zoneCult && FIELD_HINTS[zoneCult[1]]) return FIELD_HINTS[zoneCult[1]];
   return "";
 }
@@ -180,17 +180,17 @@ function fieldUnitSuffix(field) {
     maximum_nutrient_soil_delta_c: "°C",
   };
   if (suffixByName[field.name]) return suffixByName[field.name];
-  const zoneIrr = field.name.match(/^zone_\d+_irrigation_(flow_ml_s|maximum_pulse_s|minimum_interval_s)$/);
+  const zoneIrr = field.name.match(/^pot_\d+_irrigation_(flow_ml_s|maximum_pulse_s|minimum_interval_s)$/);
   if (zoneIrr) {
     if (zoneIrr[1] === "flow_ml_s") return "mL/s";
     return "s";
   }
-  const zoneHeatMat = field.name.match(/^zone_\d+_heat_mat_(.+)$/);
+  const zoneHeatMat = field.name.match(/^pot_\d+_heat_mat_(.+)$/);
   if (zoneHeatMat) {
     const baseKey = `heat_mat_${zoneHeatMat[1]}`;
     if (suffixByName[baseKey]) return suffixByName[baseKey];
   }
-  const zoneCult = field.name.match(/^zone_\d+_(pot_volume_l|substrate_water_capacity_ml|transpiration_factor)$/);
+  const zoneCult = field.name.match(/^pot_\d+_(pot_volume_l|substrate_water_capacity_ml|transpiration_factor)$/);
   if (zoneCult) {
     if (zoneCult[1] === "pot_volume_l") return "L";
     if (zoneCult[1] === "substrate_water_capacity_ml") return "mL";
@@ -231,7 +231,7 @@ function fieldSuffixWidthClass(suffix) {
 }
 
 function fieldMiniCellWidthClass(field) {
-  const zoneCult = field.name.match(/^zone_\d+_(pot_volume_l|substrate_water_capacity_ml|transpiration_factor)$/);
+  const zoneCult = field.name.match(/^pot_\d+_(pot_volume_l|substrate_water_capacity_ml|transpiration_factor)$/);
   if (zoneCult) {
     if (zoneCult[1] === "pot_volume_l") return " mini-cell-pct";
     if (zoneCult[1] === "substrate_water_capacity_ml") return " mini-cell-ppm";
@@ -275,7 +275,7 @@ function renderWrappedNumberInput(field, opts = {}) {
 }
 
 function isZoneActive(zoneIndex) {
-  return Boolean(getNested(scenario, `zones.${zoneIndex}.available`));
+  return Boolean(getNested(scenario, `pots.${zoneIndex}.available`));
 }
 
 function inactiveZoneDependentHintAttr() {
@@ -384,7 +384,7 @@ function renderSensorMiniCell(sensorKey, validityKey) {
   return renderPathSensorMiniCell(wrappedSensor, wrappedValidity, shortLabel(sensorKey));
 }
 
-function renderZoneAvailableTick(featureName) {
+function renderPotAvailableTick(featureName) {
   const field = fieldByName(featureName);
   if (!field) return "";
   const id = `f-${field.path.replaceAll(".", "_")}`;
@@ -406,7 +406,7 @@ function renderPotCard(row) {
   return `<div class="pot-card">
     <div class="head-row">
       <span class="name">${row.title}</span>
-      <span class="pot-card-avail" title="Donica w profilu">${renderZoneAvailableTick(row.zoneAvailable)}</span>
+      <span class="pot-card-avail" title="Donica w profilu">${renderPotAvailableTick(row.zoneAvailable)}</span>
     </div>
     <div class="pot-card-sensors">${moisture}${temp}</div>
   </div>`;
@@ -506,10 +506,10 @@ function fieldStepForPath(path) {
     if (path.includes("threshold") || path.includes("minimum_fan")) return "0.01";
     return "0.1";
   }
-  if (path.startsWith("sensors.") || (path.includes("zones.") && path.includes(".sensors."))) {
+  if (path.startsWith("sensors.") || (path.includes("pots.") && path.includes(".sensors."))) {
     return isCo2PpmPath(path) ? "1" : "0.1";
   }
-  if (path.includes("zones.") && path.includes(".targets.")) return "0.1";
+  if (path.includes("pots.") && path.includes(".targets.")) return "0.1";
   if (path.startsWith("previous.")) return "0.001";
   if (isTranspirationFactorPath(path)) return "0.01";
   if (path.includes("pct") || path.includes("ratio") || path.includes("efficiency") || path.includes("minimum_command")) {
@@ -661,12 +661,12 @@ function renderSubCard(title, fields, helpTopic) {
 }
 
 function renderGrowboxCultivationSubCard(section) {
-  const zones = [[], [], [], []];
+  const pots = [[], [], [], []];
   for (const field of section.fields) {
-    const match = field.path.match(/^zones\.(\d+)\.cultivation\./);
-    if (match) zones[Number(match[1])].push(field);
+    const match = field.path.match(/^pots\.(\d+)\.cultivation\./);
+    if (match) pots[Number(match[1])].push(field);
   }
-  const cards = zones.map((fields, index) => renderZoneCultivationCard(fields, index)).join("");
+  const cards = pots.map((fields, index) => renderPotCultivationCard(fields, index)).join("");
   if (!cards) return "";
   return `<div class="sub-card pots-block"><div class="card-head"><h3>Donice</h3></div><div class="compact-row pots-row">${cards}</div></div>`;
 }
@@ -694,7 +694,7 @@ function renderGrowboxActuatorTypeCard(title, names, sectionId) {
   if (!controlTypeField) return "";
   const zoneIndex = zoneIndexFromPumpGroup(names) ?? zoneIndexFromHeatMatGroup(names);
   const zonePumpInactive = zoneIndex !== null && !isZoneActive(zoneIndex);
-  const inactiveClass = zonePumpInactive ? " inactive-zone-pump" : "";
+  const inactiveClass = zonePumpInactive ? " inactive-pot-pump" : "";
   const titleHintAttr = zonePumpInactive ? inactiveZoneDependentHintAttr() : "";
   return `<div class="pot-card setup-actuator-type-card${inactiveClass}">
     <div class="head-row"><span class="name"${titleHintAttr}>${title}</span></div>
@@ -708,8 +708,8 @@ function renderGrowboxActuatorTypeRow(groups, sectionId) {
 
 function renderGrowboxActuatorsSubCard() {
   const climate = renderGrowboxActuatorTypeRow(ACTUATOR_CLIMATE_GROUPS, "actuators");
-  const pumps = renderGrowboxActuatorTypeRow(ACTUATOR_PUMP_GROUPS, "zones");
-  const heatMats = renderGrowboxActuatorTypeRow(ACTUATOR_HEAT_MAT_GROUPS, "zones");
+  const pumps = renderGrowboxActuatorTypeRow(ACTUATOR_PUMP_GROUPS, "pots");
+  const heatMats = renderGrowboxActuatorTypeRow(ACTUATOR_HEAT_MAT_GROUPS, "pots");
   if (!climate && !pumps && !heatMats) return "";
   return `<div class="sub-card setup-actuators-block">
     <div class="card-head"><h3>Aktuary</h3></div>
@@ -723,7 +723,7 @@ function renderGrowboxActuatorsSubCard() {
 
 function renderGrowboxPanel(inSetup = false) {
   const env = panelSchema.sections.find(s => s.id === "environment");
-  const zonesSection = sectionById("zones");
+  const zonesSection = sectionById("pots");
   if (!env && !zonesSection) return "";
   const obudowa = env ? renderSubCard("Obudowa", env.fields, inSetup ? null : "environment") : "";
   const donice = zonesSection ? renderGrowboxCultivationSubCard(zonesSection) : "";
@@ -735,7 +735,7 @@ function renderGrowboxPanel(inSetup = false) {
 }
 
 function isZoneSoilTargetActive(field) {
-  const match = field.name.match(/^zone_(\d+)_target_soil_(moisture_pct|temperature_c)$/);
+  const match = field.name.match(/^pot_(\d+)_target_soil_(moisture_pct|temperature_c)$/);
   if (!match) return true;
   return isZoneActive(Number(match[1]) - 1);
 }
@@ -749,7 +749,7 @@ function renderSoilTargetMiniCell(field) {
     const displayValue = formatFieldNumber(value ?? field.default, field.path);
     const label = `<div class="label-row"><span class="name"${inactiveHint}>${shortLabel(field.name)}</span></div>`;
     const widthClass = fieldMiniCellWidthClass(field);
-    return `<div class="mini-cell inactive-zone-target${widthClass}">
+    return `<div class="mini-cell inactive-pot-target${widthClass}">
       ${label}
       ${renderWrappedNumberInput(field, { id, displayValue, disabled: true })}
     </div>`;
@@ -761,7 +761,7 @@ function syncInactiveZoneTargetInputs() {
   for (let index = 0; index < 4; index += 1) {
     for (const fieldName of [
       zoneTargetFieldName(index),
-      `zone_${index + 1}_target_soil_temperature_c`,
+      `pot_${index + 1}_target_soil_temperature_c`,
     ]) {
       const field = fieldByName(fieldName);
       if (!field) continue;
@@ -769,7 +769,7 @@ function syncInactiveZoneTargetInputs() {
       const el = document.getElementById(`f-${field.path.replaceAll(".", "_")}`);
       if (!el || el.type !== "number") continue;
       const cell = el.closest(".mini-cell");
-      if (cell) cell.classList.toggle("inactive-zone-target", !active);
+      if (cell) cell.classList.toggle("inactive-pot-target", !active);
       el.disabled = !active;
       el.title = active ? (fieldHint(field.name) || "") : INACTIVE_ZONE_DEPENDENT_HINT;
       const nameEl = cell?.querySelector(".name");
@@ -782,9 +782,9 @@ function syncInactiveZoneTargetInputs() {
 }
 
 function zoneIndexFromZoneActuatorGroup(names, kind) {
-  const availableName = names.find(name => new RegExp(`^zone_\\d+_${kind}_available$`).test(name));
+  const availableName = names.find(name => new RegExp(`^pot_\\d+_${kind}_available$`).test(name));
   if (!availableName) return null;
-  const match = availableName.match(/^zone_(\d+)_/);
+  const match = availableName.match(/^pot_(\d+)_/);
   return match ? Number(match[1]) - 1 : null;
 }
 
@@ -853,22 +853,22 @@ function syncInactiveActuatorCapabilityInputs() {
 
 function syncInactiveZonePumpInputs() {
   for (let index = 0; index < 4; index += 1) {
-    const field = fieldByName(`zone_${index + 1}_irrigation_available`, "zones");
+    const field = fieldByName(`pot_${index + 1}_irrigation_available`, "pots");
     if (!field) continue;
     const active = isZoneActive(index);
     const availEl = document.getElementById(`f-${field.path.replaceAll(".", "_")}`);
     const cell = availEl?.closest(".mini-cell.actuator-cell");
-    if (cell) cell.classList.toggle("inactive-zone-pump", !active);
+    if (cell) cell.classList.toggle("inactive-pot-pump", !active);
     if (availEl) {
       availEl.disabled = !active;
       if (!active) availEl.checked = false;
       availEl.title = active ? (fieldHint(field.name) || "") : INACTIVE_ZONE_DEPENDENT_HINT;
     }
-    const controlField = fieldByName(`zone_${index + 1}_irrigation_control_type`, "zones");
+    const controlField = fieldByName(`pot_${index + 1}_irrigation_control_type`, "pots");
     if (controlField) {
       const selectEl = document.querySelector(`select.setup-control-type-select[data-path="${controlField.path}"]`);
       const typeCard = selectEl?.closest(".setup-actuator-type-card");
-      if (typeCard) typeCard.classList.toggle("inactive-zone-pump", !active);
+      if (typeCard) typeCard.classList.toggle("inactive-pot-pump", !active);
       if (selectEl) {
         selectEl.disabled = !active;
         selectEl.title = active ? (fieldHint(controlField.name) || "") : INACTIVE_ZONE_DEPENDENT_HINT;
@@ -888,22 +888,22 @@ function syncInactiveZonePumpInputs() {
 
 function syncInactiveZoneHeatMatInputs() {
   for (let index = 0; index < 4; index += 1) {
-    const field = fieldByName(`zone_${index + 1}_heat_mat_available`, "zones");
+    const field = fieldByName(`pot_${index + 1}_heat_mat_available`, "pots");
     if (!field) continue;
     const active = isZoneActive(index);
     const availEl = document.getElementById(`f-${field.path.replaceAll(".", "_")}`);
     const cell = availEl?.closest(".mini-cell.actuator-cell");
-    if (cell) cell.classList.toggle("inactive-zone-pump", !active);
+    if (cell) cell.classList.toggle("inactive-pot-pump", !active);
     if (availEl) {
       availEl.disabled = !active;
       if (!active) availEl.checked = false;
       availEl.title = active ? (fieldHint(field.name) || "") : INACTIVE_ZONE_DEPENDENT_HINT;
     }
-    const controlField = fieldByName(`zone_${index + 1}_heat_mat_control_type`, "zones");
+    const controlField = fieldByName(`pot_${index + 1}_heat_mat_control_type`, "pots");
     if (controlField) {
       const selectEl = document.querySelector(`select.setup-control-type-select[data-path="${controlField.path}"]`);
       const typeCard = selectEl?.closest(".setup-actuator-type-card");
-      if (typeCard) typeCard.classList.toggle("inactive-zone-pump", !active);
+      if (typeCard) typeCard.classList.toggle("inactive-pot-pump", !active);
       if (selectEl) {
         selectEl.disabled = !active;
         selectEl.title = active ? (fieldHint(controlField.name) || "") : INACTIVE_ZONE_DEPENDENT_HINT;
@@ -959,7 +959,7 @@ function renderPreviousBlock(inSetup = false) {
   return `<div class="card previous-panel">${renderSectionHead("Poprzedni stan aktuatorów", "previous")}${body}</div>`;
 }
 
-function renderZoneCultivationCard(fields, index) {
+function renderPotCultivationCard(fields, index) {
   if (!fields.length) return "";
   const cells = fields.map(renderMiniCell).join("");
   return `<div class="pot-card cultivation-pot-card"><div class="head-row"><span class="name">Donica ${index + 1}</span></div><div class="pot-card-cultivation">${cells}</div></div>`;
@@ -1021,7 +1021,7 @@ function renderActuatorGroupCell(title, names, sectionId) {
     : (availableField ? fieldHintAttr(availableField.name) : "");
   const disabledAttr = zoneOnlyInactive ? " disabled" : "";
   const inactiveClass = groupInactive
-    ? (zoneOnlyInactive ? " inactive-zone-pump" : " inactive-actuator-off")
+    ? (zoneOnlyInactive ? " inactive-pot-pump" : " inactive-actuator-off")
     : "";
   const titleHintAttr = zoneOnlyInactive ? inactiveZoneDependentHintAttr() : "";
   const stack = `<div class="field-stack">${paramFields
@@ -1044,8 +1044,8 @@ function renderActuatorRow(groups, sectionId) {
 
 function renderActuatorBlock() {
   const climate = renderActuatorRow(ACTUATOR_CLIMATE_GROUPS, "actuators");
-  const pumps = renderActuatorRow(ACTUATOR_PUMP_GROUPS, "zones");
-  const heatMats = renderActuatorRow(ACTUATOR_HEAT_MAT_GROUPS, "zones");
+  const pumps = renderActuatorRow(ACTUATOR_PUMP_GROUPS, "pots");
+  const heatMats = renderActuatorRow(ACTUATOR_HEAT_MAT_GROUPS, "pots");
   return `<div class="actuators-split">
     <div class="sub-card actuators-climate-block"><div class="card-head"><h3>Klimat</h3></div><div class="compact-row">${climate}</div></div>
     <div class="sub-card actuators-pumps-block"><div class="card-head"><h3>Pompy</h3></div><div class="compact-row">${pumps}</div></div>

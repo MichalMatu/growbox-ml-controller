@@ -4,13 +4,13 @@ from dataclasses import replace
 
 import pytest
 
-from tools.ml.simulator_v2 import (
+from tools.ml.simulator import (
     ControlAction,
     LightsConfig,
+    PotConfig,
+    PotState,
     PumpCapabilities,
-    SequentialEnvironmentSimulatorV2,
-    ZoneConfig,
-    ZoneState,
+    SequentialEnvironmentSimulator,
     default_scenario_v2,
 )
 
@@ -20,14 +20,14 @@ def scenario_v2():
     return default_scenario_v2(seed=11)
 
 
-def test_v2_simulator_is_deterministic(scenario_v2):
+def test_simulator_is_deterministic(scenario_v2):
     commands = [
         ControlAction(heater=1.0),
         ControlAction(fan=0.5),
-        ControlAction(irrigation_zone_1=1.0),
+        ControlAction(irrigation_pot_1=1.0),
     ] * 4
-    first = SequentialEnvironmentSimulatorV2(scenario_v2, seed=3)
-    second = SequentialEnvironmentSimulatorV2(scenario_v2, seed=3)
+    first = SequentialEnvironmentSimulator(scenario_v2, seed=3)
+    second = SequentialEnvironmentSimulator(scenario_v2, seed=3)
     trail_a = [
         first.step(command, add_sensor_noise=False).air_temperature_c for command in commands
     ]
@@ -38,18 +38,18 @@ def test_v2_simulator_is_deterministic(scenario_v2):
 
 
 def test_inactive_zones_do_not_receive_irrigation(scenario_v2):
-    simulator = SequentialEnvironmentSimulatorV2(scenario_v2)
-    before = simulator.state.zones[2].soil_moisture_pct
-    simulator.step(ControlAction(irrigation_zone_3=1.0), add_sensor_noise=False)
-    assert simulator.state.zones[2].soil_moisture_pct == before
+    simulator = SequentialEnvironmentSimulator(scenario_v2)
+    before = simulator.state.pots[2].soil_moisture_pct
+    simulator.step(ControlAction(irrigation_pot_3=1.0), add_sensor_noise=False)
+    assert simulator.state.pots[2].soil_moisture_pct == before
 
 
 def test_active_zone_irrigation_increases_soil_and_humidity(scenario_v2):
-    simulator = SequentialEnvironmentSimulatorV2(scenario_v2)
-    soil_before = simulator.state.zones[0].soil_moisture_pct
+    simulator = SequentialEnvironmentSimulator(scenario_v2)
+    soil_before = simulator.state.pots[0].soil_moisture_pct
     humidity_before = simulator.state.air_humidity_pct
-    simulator.step(ControlAction(irrigation_zone_1=1.0), add_sensor_noise=False)
-    assert simulator.state.zones[0].soil_moisture_pct > soil_before
+    simulator.step(ControlAction(irrigation_pot_1=1.0), add_sensor_noise=False)
+    assert simulator.state.pots[0].soil_moisture_pct > soil_before
     assert simulator.state.air_humidity_pct >= humidity_before
 
 
@@ -64,8 +64,8 @@ def test_lights_active_adds_heat(scenario_v2):
             scenario_v2.initial_state, lights_active=True, air_temperature_c=20.0
         ),
     )
-    heated = SequentialEnvironmentSimulatorV2(scenario)
-    idle = SequentialEnvironmentSimulatorV2(
+    heated = SequentialEnvironmentSimulator(scenario)
+    idle = SequentialEnvironmentSimulator(
         replace(scenario, initial_state=replace(scenario.initial_state, lights_active=False))
     )
     for _ in range(8):
@@ -75,28 +75,28 @@ def test_lights_active_adds_heat(scenario_v2):
 
 
 def test_mix_and_match_two_zones():
-    zone_a = ZoneConfig(
+    zone_a = PotConfig(
         available=True, soil_moisture_valid=True, irrigation=PumpCapabilities(available=True)
     )
-    zone_b = ZoneConfig(
+    zone_b = PotConfig(
         available=True, soil_moisture_valid=True, irrigation=PumpCapabilities(available=True)
     )
     scenario = replace(
         default_scenario_v2(seed=5),
-        zones=(zone_a, zone_b, ZoneConfig(), ZoneConfig()),
+        pots=(zone_a, zone_b, PotConfig(), PotConfig()),
         initial_state=replace(
             default_scenario_v2().initial_state,
-            zones=[
-                ZoneState(soil_moisture_pct=35.0),
-                ZoneState(soil_moisture_pct=60.0),
-                ZoneState(),
-                ZoneState(),
+            pots=[
+                PotState(soil_moisture_pct=35.0),
+                PotState(soil_moisture_pct=60.0),
+                PotState(),
+                PotState(),
             ],
         ),
     )
-    simulator = SequentialEnvironmentSimulatorV2(scenario)
-    simulator.step(ControlAction(irrigation_zone_1=1.0), add_sensor_noise=False)
-    assert simulator.state.zones[0].soil_moisture_pct > 35.0
-    # Zone 2 active but not irrigated — only background drying, no irrigation jump.
-    assert simulator.state.zones[1].soil_moisture_pct < 60.0
-    assert simulator.state.zones[1].soil_moisture_pct > 59.0
+    simulator = SequentialEnvironmentSimulator(scenario)
+    simulator.step(ControlAction(irrigation_pot_1=1.0), add_sensor_noise=False)
+    assert simulator.state.pots[0].soil_moisture_pct > 35.0
+    # Pot 2 active but not irrigated — only background drying, no irrigation jump.
+    assert simulator.state.pots[1].soil_moisture_pct < 60.0
+    assert simulator.state.pots[1].soil_moisture_pct > 59.0

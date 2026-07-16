@@ -4,15 +4,15 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from tools.ml.simulator_v2 import (
+from tools.ml.simulator import (
     ControlAction,
     EnvironmentState,
     GlobalActuators,
     HeatMatCapabilities,
     NutrientHeaterCapabilities,
-    SequentialEnvironmentSimulatorV2,
-    ZoneConfig,
-    ZoneState,
+    PotConfig,
+    PotState,
+    SequentialEnvironmentSimulator,
     default_scenario_v2,
 )
 
@@ -30,7 +30,7 @@ def test_nutrient_heater_raises_solution_temperature():
             )
         ),
     )
-    simulator = SequentialEnvironmentSimulatorV2(scenario)
+    simulator = SequentialEnvironmentSimulator(scenario)
     before = simulator.state.nutrient_solution_temperature_c
     for _ in range(30):
         simulator.step(ControlAction(nutrient_heater=1.0), timestep_s=60.0)
@@ -40,7 +40,7 @@ def test_nutrient_heater_raises_solution_temperature():
 
 def test_heat_mat_raises_soil_temperature():
     base = default_scenario_v2(seed=11)
-    zone_one = ZoneConfig(
+    zone_one = PotConfig(
         available=True,
         soil_moisture_valid=True,
         soil_temperature_valid=True,
@@ -48,14 +48,14 @@ def test_heat_mat_raises_soil_temperature():
     )
     scenario = replace(
         base,
-        zones=(zone_one, base.zones[1], base.zones[2], base.zones[3]),
+        pots=(zone_one, base.pots[1], base.pots[2], base.pots[3]),
         initial_state=EnvironmentState(
-            zones=[ZoneState(soil_temperature_c=19.0), ZoneState(), ZoneState(), ZoneState()]
+            pots=[PotState(soil_temperature_c=19.0), PotState(), PotState(), PotState()]
         ),
     )
-    simulator = SequentialEnvironmentSimulatorV2(scenario)
-    before = simulator.state.zones[0].soil_temperature_c
+    simulator = SequentialEnvironmentSimulator(scenario)
+    before = simulator.state.pots[0].soil_temperature_c
     for _ in range(40):
-        simulator.step(ControlAction(heat_mat_zone_1=1.0), timestep_s=60.0)
-    after = simulator.state.zones[0].soil_temperature_c
+        simulator.step(ControlAction(heat_mat_pot_1=1.0), timestep_s=60.0)
+    after = simulator.state.pots[0].soil_temperature_c
     assert after > before + 0.3

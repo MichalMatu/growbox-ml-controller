@@ -1,11 +1,12 @@
 """Deterministic data generation and TinyML training tools.
 
-Active training contract: environment-controller-v3 (128 features, 15 outputs).
-Import path for a growbox simulation script:
+Active contract: schemas/environment-controller.json (v4, 128 features, 15 outputs, pots).
 
-    from tools.ml.alignment import load_active_contract, summarize_training_fields
+Import path for a growbox simulation script::
+
+    from tools.ml import load_active_contract, summarize_training_fields
     from tools.ml.controller_input import controller_input_record
-    from tools.ml.simulator_v2 import SequentialEnvironmentSimulatorV2
+    from tools.ml.simulator import SequentialEnvironmentSimulator
     from tools.ml.scenario_payload import default_scenario
 """
 

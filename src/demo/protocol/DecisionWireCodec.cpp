@@ -89,9 +89,9 @@ const char* primarySafetyReason(std::uint32_t mask) noexcept {
   return SafetySupervisor::reasonCode(SafetyReason::None);
 }
 
-bool irrigationAvailable(const control::ControllerInput& input, std::size_t zone_index) noexcept {
-  return zone_index < control::kMaxZones && input.zones[zone_index].available &&
-         input.zones[zone_index].irrigation.available;
+bool irrigationAvailable(const control::ControllerInput& input, std::size_t pot_index) noexcept {
+  return pot_index < control::kMaxPots && input.pots[pot_index].available &&
+         input.pots[pot_index].irrigation.available;
 }
 
 float maskedRawOutput(const control::ControllerInput& input, const control::RawModelDecision& raw,
@@ -109,28 +109,28 @@ float maskedRawOutput(const control::ControllerInput& input, const control::RawM
     return input.actuators.cooler.available ? raw.cooler : 0.0f;
   case OutputIndex::Co2Doser:
     return input.actuators.co2_doser.available ? raw.co2_doser : 0.0f;
-  case OutputIndex::IrrigationZone1:
-    return irrigationAvailable(input, 0U) ? raw.irrigation_zone_1 : 0.0f;
-  case OutputIndex::IrrigationZone2:
-    return irrigationAvailable(input, 1U) ? raw.irrigation_zone_2 : 0.0f;
-  case OutputIndex::IrrigationZone3:
-    return irrigationAvailable(input, 2U) ? raw.irrigation_zone_3 : 0.0f;
-  case OutputIndex::IrrigationZone4:
-    return irrigationAvailable(input, 3U) ? raw.irrigation_zone_4 : 0.0f;
+  case OutputIndex::IrrigationPot1:
+    return irrigationAvailable(input, 0U) ? raw.irrigation_pot_1 : 0.0f;
+  case OutputIndex::IrrigationPot2:
+    return irrigationAvailable(input, 1U) ? raw.irrigation_pot_2 : 0.0f;
+  case OutputIndex::IrrigationPot3:
+    return irrigationAvailable(input, 2U) ? raw.irrigation_pot_3 : 0.0f;
+  case OutputIndex::IrrigationPot4:
+    return irrigationAvailable(input, 3U) ? raw.irrigation_pot_4 : 0.0f;
   case OutputIndex::NutrientHeater:
     return input.actuators.nutrient_heater.available ? raw.nutrient_heater : 0.0f;
-  case OutputIndex::HeatMatZone1:
-    return input.zones[0U].available && input.zones[0U].heat_mat.available ? raw.heat_mat_zone_1
-                                                                           : 0.0f;
-  case OutputIndex::HeatMatZone2:
-    return input.zones[1U].available && input.zones[1U].heat_mat.available ? raw.heat_mat_zone_2
-                                                                           : 0.0f;
-  case OutputIndex::HeatMatZone3:
-    return input.zones[2U].available && input.zones[2U].heat_mat.available ? raw.heat_mat_zone_3
-                                                                           : 0.0f;
-  case OutputIndex::HeatMatZone4:
-    return input.zones[3U].available && input.zones[3U].heat_mat.available ? raw.heat_mat_zone_4
-                                                                           : 0.0f;
+  case OutputIndex::HeatMatPot1:
+    return input.pots[0U].available && input.pots[0U].heat_mat.available ? raw.heat_mat_pot_1
+                                                                         : 0.0f;
+  case OutputIndex::HeatMatPot2:
+    return input.pots[1U].available && input.pots[1U].heat_mat.available ? raw.heat_mat_pot_2
+                                                                         : 0.0f;
+  case OutputIndex::HeatMatPot3:
+    return input.pots[2U].available && input.pots[2U].heat_mat.available ? raw.heat_mat_pot_3
+                                                                         : 0.0f;
+  case OutputIndex::HeatMatPot4:
+    return input.pots[3U].available && input.pots[3U].heat_mat.available ? raw.heat_mat_pot_4
+                                                                         : 0.0f;
   }
   return 0.0f;
 }
@@ -174,9 +174,9 @@ void emitDecision(const DecisionEmitRequest& request) noexcept {
   }
 
   cJSON* irrigation_pulse_s = cJSON_AddArrayToObject(safe, "irrigation_pulse_s");
-  for (std::size_t zone_index = 0U; zone_index < control::kMaxZones; ++zone_index) {
+  for (std::size_t pot_index = 0U; pot_index < control::kMaxPots; ++pot_index) {
     cJSON_AddItemToArray(irrigation_pulse_s,
-                         cJSON_CreateNumber(output.safe.irrigation_pulse_s[zone_index]));
+                         cJSON_CreateNumber(output.safe.irrigation_pulse_s[pot_index]));
   }
 
   cJSON* diagnostics = cJSON_AddObjectToObject(document, "diagnostics");

@@ -22,7 +22,7 @@ SERIAL_MAX_LINE_BYTES = 8192
 _SCENARIO_SNAPSHOT_KEYS = (
     "sensors",
     "validity",
-    "zones",
+    "pots",
     "pseudo",
     "environment",
     "actuators",

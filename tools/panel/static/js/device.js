@@ -259,7 +259,7 @@ function tryApplyScenarioFromDevice(state, { force = false } = {}) {
     seed: state.last_status.seed ?? panelSchema.default_scenario.seed,
     sensors: snap.sensors,
     validity: snap.validity,
-    zones: snap.zones,
+    pots: snap.pots,
     pseudo: snap.pseudo,
     environment: snap.environment,
     actuators: snap.actuators,

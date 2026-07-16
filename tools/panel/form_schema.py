@@ -11,8 +11,8 @@ from typing import Any
 
 from tools.ml.contract import ACTIVE_CONTRACT_PATH, Contract, load_contract
 from tools.ml.scenario_payload import (
-    ACTIVE_ZONE_PRESET,
-    INACTIVE_ZONE_PRESET,
+    ACTIVE_POT_PRESET,
+    INACTIVE_POT_PRESET,
     NOMINAL_PRESET,
     PANEL_ACTUATOR_CONTROL_FIELDS,
     SCENARIO_PRESETS,
@@ -21,8 +21,8 @@ from tools.ml.scenario_payload import (
 )
 
 __all__ = [
-    "ACTIVE_ZONE_PRESET",
-    "INACTIVE_ZONE_PRESET",
+    "ACTIVE_POT_PRESET",
+    "INACTIVE_POT_PRESET",
     "NOMINAL_PRESET",
     "PANEL_ACTUATOR_CONTROL_FIELDS",
     "SCENARIO_PRESETS",
@@ -77,7 +77,7 @@ SECTION_ORDER = (
     "connection",
     "sensors",
     "validity",
-    "zones",
+    "pots",
     "pseudo",
     "environment",
     "actuators",
@@ -90,7 +90,7 @@ SECTION_TITLES = {
     "connection": "Połączenie i runtime",
     "sensors": "Czujniki",
     "validity": "Ważność czujników",
-    "zones": "Strefy uprawy",
+    "pots": "Donice",
     "pseudo": "Wejścia pseudo",
     "environment": "Parametry growboxa",
     "actuators": "Aktuary",
@@ -165,8 +165,8 @@ def _panel_actuator_control_fields() -> list[dict[str, Any]]:
 def _section_for_path(path: str) -> str:
     if path.startswith("pseudo."):
         return "pseudo"
-    if re.match(r"zones\.\d+", path):
-        return "zones"
+    if re.match(r"pots\.\d+", path):
+        return "pots"
     if path.startswith("sensors."):
         return "sensors"
     if path.startswith("validity."):

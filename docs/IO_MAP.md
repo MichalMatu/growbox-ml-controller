@@ -1,7 +1,7 @@
 # Mapowanie I/O
 
-**Schema v1 (produkcja):** [`schemas/environment-controller-v1.json`](../schemas/environment-controller-v1.json)
-**Schema v2:** [`schemas/environment-controller-v2.json`](../schemas/environment-controller-v2.json) — **I/O definitywne** (kod jeszcze v1).
+**Schema v1 (produkcja):** [`schemas/environment-controller.json`](../schemas/environment-controller.json)
+**Schema v2:** [`schemas/environment-controller.json`](../schemas/environment-controller.json) — **I/O definitywne** (kod jeszcze v1).
 
 Kontekst produktowy: [plan.md](plan.md) → *Wizja produktu*.
 
@@ -14,7 +14,7 @@ Kontekst produktowy: [plan.md](plan.md) → *Wizja produktu*.
 | **Powietrze w boxie** | `air_temperature_c`, `air_humidity_pct`, `co2_ppm` | tak |
 | **Zbiornik nawozu** | `nutrient_solution_temperature_c` | tak |
 | **Powietrze przy wlocie** | `outside_temperature_c`, `outside_humidity_pct`, `outside_co2_ppm` | tak |
-| **Gleba ×4 donice** | `soil_moisture_zone_1…4_pct`, `soil_temperature_zone_1…4_c` | tak |
+| **Gleba ×4 donice** | `soil_moisture_pot_1…4_pct`, `soil_temperature_pot_1…4_c` | tak |
 | **Pseudo (nie czujnik)** | `lights_active` | tak — harmonogram / readback, nie PPFD |
 
 **Zasady sensing (zamknięte):**
@@ -43,10 +43,10 @@ W produkcie **każdy wiersz** z checklisty = osobny checkbox w konfiguracji / pa
 |-----|--------------|--------------|
 | **Czujnik** | `validity.<slot> = true` + odczyt z mostka | `validity.<slot> = false` — encoder: default + maska |
 | **Wyjście ML** | `actuators.<slot>.available = true` | `available = false` — model widzi brak; safety → 0 |
-| **Strefa N** | `zones[N].available = true` | strefa wyłączona w profilu (sloty strefy ignorowane) |
+| **Strefa N** | `pots[N].available = true` | strefa wyłączona w profilu (sloty strefy ignorowane) |
 | **Światło (pseudo)** | harmonogram / readback → `lights_active` | brak integracji lampy — `lights_active` z planu lub false |
 
-**Checklista v2 (26 slotów + 4× `zones[N].available` opcj.):**
+**Checklista v2 (26 slotów + 4× `pots[N].available` opcj.):**
 
 | # | Slot | Grupa | ☐ = |
 |---|------|-------|-----|
@@ -57,18 +57,18 @@ W produkcie **każdy wiersz** z checklisty = osobny checkbox w konfiguracji / pa
 | 5 | `outside_temperature_c` | zewn. | `validity: false` |
 | 6 | `outside_humidity_pct` | zewn. | `validity: false` |
 | 7 | `outside_co2_ppm` | zewn. | `validity: false` |
-| 8 | `soil_moisture_zone_1_pct` | strefa 1 | `validity: false` |
-| 9 | `soil_temperature_zone_1_c` | strefa 1 | `validity: false` |
-| 10 | `irrigation_zone_1` | strefa 1 | `zones[0].irrigation.available: false` |
-| 11 | `soil_moisture_zone_2_pct` | strefa 2 | `validity: false` |
-| 12 | `soil_temperature_zone_2_c` | strefa 2 | `validity: false` |
-| 13 | `irrigation_zone_2` | strefa 2 | `zones[1].irrigation.available: false` |
-| 14 | `soil_moisture_zone_3_pct` | strefa 3 | `validity: false` |
-| 15 | `soil_temperature_zone_3_c` | strefa 3 | `validity: false` |
-| 16 | `irrigation_zone_3` | strefa 3 | `zones[2].irrigation.available: false` |
-| 17 | `soil_moisture_zone_4_pct` | strefa 4 | `validity: false` |
-| 18 | `soil_temperature_zone_4_c` | strefa 4 | `validity: false` |
-| 19 | `irrigation_zone_4` | strefa 4 | `zones[3].irrigation.available: false` |
+| 8 | `soil_moisture_pot_1_pct` | strefa 1 | `validity: false` |
+| 9 | `soil_temperature_pot_1_c` | strefa 1 | `validity: false` |
+| 10 | `irrigation_pot_1` | strefa 1 | `pots[0].irrigation.available: false` |
+| 11 | `soil_moisture_pot_2_pct` | strefa 2 | `validity: false` |
+| 12 | `soil_temperature_pot_2_c` | strefa 2 | `validity: false` |
+| 13 | `irrigation_pot_2` | strefa 2 | `pots[1].irrigation.available: false` |
+| 14 | `soil_moisture_pot_3_pct` | strefa 3 | `validity: false` |
+| 15 | `soil_temperature_pot_3_c` | strefa 3 | `validity: false` |
+| 16 | `irrigation_pot_3` | strefa 3 | `pots[2].irrigation.available: false` |
+| 17 | `soil_moisture_pot_4_pct` | strefa 4 | `validity: false` |
+| 18 | `soil_temperature_pot_4_c` | strefa 4 | `validity: false` |
+| 19 | `irrigation_pot_4` | strefa 4 | `pots[3].irrigation.available: false` |
 | 20 | `lights_active` | pseudo | brak lampy w setupie |
 | 21 | `heater` | wyjście | `available: false` |
 | 22 | `fan` | wyjście | `available: false` |
@@ -77,7 +77,7 @@ W produkcie **każdy wiersz** z checklisty = osobny checkbox w konfiguracji / pa
 | 25 | `cooler` | wyjście | `available: false` |
 | 26 | `co2_doser` | wyjście | `available: false` |
 
-Opcjonalnie **4×** `zones[N].available` — chowa całą donicę w profilu (nie zastępuje checkboxów wilgotności / pompy).
+Opcjonalnie **4×** `pots[N].available` — chowa całą donicę w profilu (nie zastępuje checkboxów wilgotności / pompy).
 
 **Safety przy odznaczonych:** pompa bez valid wilgotności → brak podlewania; `co2_doser` bez valid `co2_ppm` → blokada; brak temp. wewn. → ograniczona regulacja klimatu (alarmy wg `SafetyConfig`).
 
@@ -103,16 +103,16 @@ Tylko **pomiary**. Aktuary — sekcja niżej. **Zewnątrz** — następna sekcja
 | 2 | `air_humidity_pct` | powietrze, przy temp. | ☑/☐ | tak | tak | RH w komorze |
 | 3 | `co2_ppm` | powietrze, strefa liści | ☑/☐ | tak | tak | enrichment tylko gdy ☑ + `co2_doser` ☑ |
 | 4 | `nutrient_solution_temperature_c` | **zbiornik odżywki** / linia przed pompą | ☑/☐ | tak | nie | **DS18B20**; ≠ temp. gleby |
-| 5 | `soil_moisture_zone_1_pct` | substrat, strefa 1 | ☑/☐ | tak | jeden globalny | pompa sensowna gdy ☑ wilgotność |
-| 6 | `soil_temperature_zone_1_c` | substrat, strefa 1 | ☑/☐ | tak | nie (v2) | niezależnie od wilgotności |
-| 7–10 | wilg. + temp. gleby | strefy 2–4 | ☑/☐ każdy | tak | — | + `zones[N].available` per donica |
+| 5 | `soil_moisture_pot_1_pct` | substrat, strefa 1 | ☑/☐ | tak | jeden globalny | pompa sensowna gdy ☑ wilgotność |
+| 6 | `soil_temperature_pot_1_c` | substrat, strefa 1 | ☑/☐ | tak | nie (v2) | niezależnie od wilgotności |
+| 7–10 | wilg. + temp. gleby | strefy 2–4 | ☑/☐ każdy | tak | — | + `pots[N].available` per donica |
 
 **Trzy różne temperatury (nie mylić):**
 
 | Pomiar | Gdzie | Po co |
 |--------|--------|--------|
 | `air_temperature_c` | powietrze w boxie | klimat, grzałka, fan |
-| `soil_temperature_zone_N_c` | donica / substrat | korzenie, stres cieplny gleby |
+| `soil_temperature_pot_N_c` | donica / substrat | korzenie, stres cieplny gleby |
 | `nutrient_solution_temperature_c` | zbiornik nawozu | **nie lać zimnym roztworem na rozgrzaną ziemię** |
 
 Wewnątrz **zamknięte na v2** — bez dalszych czujników w komorze (patrz *Świadomie poza v2*).
@@ -178,7 +178,7 @@ Jeden growbox, jedno powietrze w komorze:
 
 Cztery donice (strefy 1–4) w tym samym boxie:
   per donica: wilgotność gleby ☑/☐, temp. gleby ☑/☐, pompa ☑/☐
-  zones[N].available — czy w ogóle masz N-tą donicę (mix & match sprzętu)
+  pots[N].available — czy w ogóle masz N-tą donicę (mix & match sprzętu)
 ```
 
 **Fizyka (nie w tym pliku):** jedna komora; **do 4 slotów** donic w symulatorze — **mix & match** jak w kontrakcie (0–4 aktywne, reszta wyłączona w scenariuszu). Sprzężenia T↔RH↔gleba↔fan → [plan.md](plan.md) → *Symulator — termodynamika growboxa*.
@@ -199,7 +199,7 @@ Mix & match dotyczy **które donice i sprzęt** masz w profilu — nie osobnych 
     "air_humidity_pct": true,
     "co2_ppm": true
   },
-  "zones": [
+  "pots": [
     {
       "available": true,
       "sensors": { "soil_moisture_pct": 44, "soil_temperature_c": 21.5 },
@@ -242,14 +242,14 @@ Wartości ciągłe `[0, 1]`. Safety może wymusić 0, skwantować binarnie (`co2
 
 | # | Slot | Fizycznie | Mix & match | Uwagi |
 |---|------|-----------|-------------|--------|
-| 7 | `irrigation_zone_1` | pompa strefy 1 | ☑/☐ | `zones[0].irrigation.available`; impuls per strefa |
-| 8 | `irrigation_zone_2` | pompa strefy 2 | ☑/☐ | niezależnie od innych stref |
-| 9 | `irrigation_zone_3` | pompa strefy 3 | ☑/☐ | |
-| 10 | `irrigation_zone_4` | pompa strefy 4 | ☑/☐ | |
+| 7 | `irrigation_pot_1` | pompa strefy 1 | ☑/☐ | `pots[0].irrigation.available`; impuls per strefa |
+| 8 | `irrigation_pot_2` | pompa strefy 2 | ☑/☐ | niezależnie od innych stref |
+| 9 | `irrigation_pot_3` | pompa strefy 3 | ☑/☐ | |
+| 10 | `irrigation_pot_4` | pompa strefy 4 | ☑/☐ | |
 
 ```text
 ML (10):     heater, fan, humidifier, dehumidifier, cooler, co2_doser
-             + irrigation_zone_1 … irrigation_zone_4
+             + irrigation_pot_1 … irrigation_pot_4
 Poza ML:     lights (harmonogram → lights_active jako wejście)
 Mostek:      1× fan → N relay; światło → przekaźnik LED
 ```
@@ -263,7 +263,7 @@ Mostek:      1× fan → N relay; światło → przekaźnik LED
 | **Mata grzewcza / donica** | poza v2 |
 | **Perystaltyka nawozu** | v2.1 hydro |
 
-Szkic kontraktu: [`environment-controller-v2.json`](../schemas/environment-controller-v2.json) → `model.outputs`.
+Szkic kontraktu: [`environment-controller.json`](../schemas/environment-controller.json) → `model.outputs`.
 
 ## Świadomie poza v2 — roadmap (mentalny obraz)
 

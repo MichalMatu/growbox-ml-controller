@@ -12,25 +12,9 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_SCHEMA_V1 = ROOT / "schemas" / "environment-controller-v1.json"
-DEFAULT_SCHEMA_V2 = ROOT / "schemas" / "environment-controller-v2.json"
-DEFAULT_SCHEMA_V3 = ROOT / "schemas" / "environment-controller-v3.json"
-DEFAULT_OUTPUT_V1 = ROOT / "lib" / "environment_control" / "src" / "EnvironmentSchema.h"
-DEFAULT_OUTPUT_V2 = ROOT / "lib" / "environment_control" / "src" / "EnvironmentSchemaV2.h"
-DEFAULT_OUTPUT_V3 = ROOT / "lib" / "environment_control" / "src" / "EnvironmentSchemaV3.h"
-CANONICAL_GROUPS_V1 = (
-    "sensors",
-    "validity",
-    "environment",
-    "cultivation",
-    "actuators.heater",
-    "actuators.fan",
-    "actuators.humidifier",
-    "actuators.irrigation",
-    "targets",
-    "previous",
-)
-MAX_FEATURE_COUNT_V2 = 128
+DEFAULT_SCHEMA = ROOT / "schemas" / "environment-controller.json"
+DEFAULT_OUTPUT = ROOT / "lib" / "environment_control" / "src" / "EnvironmentSchema.h"
+MAX_FEATURE_COUNT = 128
 
 
 def canonical_bytes(document: dict[str, Any]) -> bytes:
@@ -48,55 +32,45 @@ def schema_hash(document: dict[str, Any]) -> str:
 def cpp_identifier(name: str) -> str:
     pieces = re.findall(r"[A-Za-z0-9]+", name)
     identifier = "".join(piece[:1].upper() + piece[1:] for piece in pieces)
-    if not identifier or identifier[0].isdigit():
-        identifier = "Value" + identifier
+    if not identifier:
+        raise ValueError(f"cannot form C++ identifier from {name!r}")
+    if identifier[0].isdigit():
+        identifier = f"N{identifier}"
     return identifier
 
 
 def cpp_string(value: str) -> str:
-    return json.dumps(value, ensure_ascii=True)
+    escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+    return f'"{escaped}"'
 
 
 def cpp_float(value: float) -> str:
-    rendered = format(float(value), ".9g")
+    numeric = float(value)
+    if not math.isfinite(numeric):
+        raise ValueError("schema numeric literals must be finite")
+    rendered = f"{numeric:.9g}"
     if "." not in rendered and "e" not in rendered.lower():
         rendered += ".0"
     return rendered + "f"
 
 
-def _validate_ranges(items: list[dict[str, Any]]) -> None:
-    for item in items:
+def _validate_ranges(entries: list[dict[str, Any]]) -> None:
+    for item in entries:
         minimum = float(item["minimum"])
         maximum = float(item["maximum"])
         default = float(item["default"])
         if not all(math.isfinite(value) for value in (minimum, maximum, default)):
-            raise ValueError(f"non-finite contract value for {item['name']}")
-        if not minimum < maximum:
-            raise ValueError(f"invalid range for {item['name']}")
+            raise ValueError(f"non-finite range for {item.get('name')!r}")
+        if minimum > maximum:
+            raise ValueError(f"invalid range for {item.get('name')!r}")
         if not minimum <= default <= maximum:
-            raise ValueError(f"default outside range for {item['name']}")
-        item_type = item.get("type")
-        if item_type == "boolean" and (minimum, maximum) != (0.0, 1.0):
-            raise ValueError(f"boolean range must be [0, 1] for {item['name']}")
-        if item_type == "boolean" and default not in (0.0, 1.0):
-            raise ValueError(f"boolean default must be 0 or 1 for {item['name']}")
-        if item_type == "enum":
-            encoding = item.get("encoding")
-            if not isinstance(encoding, dict) or not encoding:
-                raise ValueError(f"enum encoding is required for {item['name']}")
-            values = [float(value) for value in encoding.values()]
-            if not all(math.isfinite(value) for value in values):
-                raise ValueError(f"non-finite enum encoding for {item['name']}")
-            if len(values) != len(set(values)):
-                raise ValueError(f"enum encoding values must be unique for {item['name']}")
-            if not all(minimum <= value <= maximum for value in values):
-                raise ValueError(f"enum encoding outside range for {item['name']}")
-            if default not in values:
-                raise ValueError(f"enum default is not encoded for {item['name']}")
+            raise ValueError(f"default out of range for {item.get('name')!r}")
 
 
 def _validate_hash_contract(document: dict[str, Any]) -> None:
-    hash_contract = document.get("hash", {})
+    hash_contract = document.get("hash")
+    if not isinstance(hash_contract, dict):
+        raise ValueError("hash contract metadata is required")
     if hash_contract.get("algorithm") != "sha256":
         raise ValueError("hash.algorithm must be sha256")
     if hash_contract.get("canonicalization") != (
@@ -110,8 +84,8 @@ def _validate_hash_contract(document: dict[str, Any]) -> None:
 
 def validate(document: dict[str, Any]) -> None:
     version = document.get("schema_version")
-    if version not in (1, 2, 3):
-        raise ValueError("schema_version must be 1, 2, or 3")
+    if version != 4:
+        raise ValueError("schema_version must be 4 (active pots contract)")
     _validate_hash_contract(document)
 
     features = document["model"]["features"]
@@ -129,37 +103,23 @@ def validate(document: dict[str, Any]) -> None:
         raise ValueError("model feature paths must be unique")
     if any("source" in item for item in features):
         raise ValueError("model features must use path, not source")
-    if version in (2, 3) and len(features) > MAX_FEATURE_COUNT_V2:
-        raise ValueError(f"v{version} feature count must be <= {MAX_FEATURE_COUNT_V2}")
+    if len(features) > MAX_FEATURE_COUNT:
+        raise ValueError(f"feature count must be <= {MAX_FEATURE_COUNT}")
 
     features_by_name = {item["name"]: item for item in features}
-    if version == 1:
-        groups = document["groups"]
-        grouped = [name for group in groups.values() for name in group]
-        if grouped != feature_names:
-            raise ValueError("groups must enumerate features once and in model order")
-        if tuple(groups) != CANONICAL_GROUPS_V1:
-            raise ValueError("groups must use the canonical wire namespaces in order")
-        for group_path, names in groups.items():
-            expected_prefix = group_path.split(".")
-            for name in names:
-                path = features_by_name[name]["path"]
-                if path.split(".")[:-1] != expected_prefix:
-                    raise ValueError(f"feature path {path!r} does not match group {group_path!r}")
-    else:
-        sections = document.get("group_sections")
-        if not isinstance(sections, list) or not sections:
-            raise ValueError("v2 contracts must define group_sections")
-        grouped = [name for section in sections for name in section["features"]]
-        if grouped != feature_names:
-            raise ValueError("group_sections must enumerate features once and in model order")
-        for section in sections:
-            group_path = section["path"]
-            expected_prefix = group_path.split(".")
-            for name in section["features"]:
-                path = features_by_name[name]["path"]
-                if path.split(".")[:-1] != expected_prefix:
-                    raise ValueError(f"feature path {path!r} does not match group {group_path!r}")
+    sections = document.get("group_sections")
+    if not isinstance(sections, list) or not sections:
+        raise ValueError("contract must define group_sections")
+    grouped = [name for section in sections for name in section["features"]]
+    if grouped != feature_names:
+        raise ValueError("group_sections must enumerate features once and in model order")
+    for section in sections:
+        group_path = section["path"]
+        expected_prefix = group_path.split(".")
+        for name in section["features"]:
+            path = features_by_name[name]["path"]
+            if path.split(".")[:-1] != expected_prefix:
+                raise ValueError(f"feature path {path!r} does not match group {group_path!r}")
 
     _validate_ranges(features)
     _validate_ranges(outputs)
@@ -181,14 +141,22 @@ def _binary_pwm_encoding(features: list[dict[str, Any]]) -> dict[str, float]:
 
 def _safety_constant_lines(safety: dict[str, Any]) -> str:
     lines = [
-        f"inline constexpr float kDefaultMaximumAirTemperatureC = {cpp_float(safety['maximum_air_temperature_c'])};",
-        f"inline constexpr float kDefaultAlarmAirTemperatureC = {cpp_float(safety['alarm_air_temperature_c'])};",
-        f"inline constexpr float kDefaultAlarmMinimumFan = {cpp_float(safety['alarm_minimum_fan'])};",
-        f"inline constexpr float kDefaultBinaryThreshold = {cpp_float(safety['binary_threshold'])};",
-        f"inline constexpr float kDefaultHeaterMinimumOnS = {cpp_float(safety['heater_minimum_on_s'])};",
-        f"inline constexpr float kDefaultHeaterMinimumOffS = {cpp_float(safety['heater_minimum_off_s'])};",
-        f"inline constexpr float kDefaultHumidifierMinimumOnS = {cpp_float(safety['humidifier_minimum_on_s'])};",
-        f"inline constexpr float kDefaultHumidifierMinimumOffS = {cpp_float(safety['humidifier_minimum_off_s'])};",
+        f"inline constexpr float kDefaultMaximumAirTemperatureC = "
+        f"{cpp_float(safety['maximum_air_temperature_c'])};",
+        f"inline constexpr float kDefaultAlarmAirTemperatureC = "
+        f"{cpp_float(safety['alarm_air_temperature_c'])};",
+        f"inline constexpr float kDefaultAlarmMinimumFan = "
+        f"{cpp_float(safety['alarm_minimum_fan'])};",
+        f"inline constexpr float kDefaultBinaryThreshold = "
+        f"{cpp_float(safety['binary_threshold'])};",
+        f"inline constexpr float kDefaultHeaterMinimumOnS = "
+        f"{cpp_float(safety['heater_minimum_on_s'])};",
+        f"inline constexpr float kDefaultHeaterMinimumOffS = "
+        f"{cpp_float(safety['heater_minimum_off_s'])};",
+        f"inline constexpr float kDefaultHumidifierMinimumOnS = "
+        f"{cpp_float(safety['humidifier_minimum_on_s'])};",
+        f"inline constexpr float kDefaultHumidifierMinimumOffS = "
+        f"{cpp_float(safety['humidifier_minimum_off_s'])};",
     ]
     optional = (
         ("dehumidifier_minimum_on_s", "DehumidifierMinimumOnS"),
@@ -258,10 +226,6 @@ def render(document: dict[str, Any]) -> str:
     if float(heater_pwm) != float(heater_control["pwm"]) or not 0 <= heater_pwm <= 255:
         raise ValueError("pwm encoding must be an unsigned 8-bit integer")
 
-    version = int(document["schema_version"])
-    diagnostics_mask_line = ""
-    if version in (2, 3):
-        diagnostics_mask_line = "inline constexpr std::size_t kFeatureDiagnosticsMaskBits = 128U;\n"
     return f"""// Generated by tools/schema/generate_environment_schema.py. Do not edit.
 #pragma once
 
@@ -278,7 +242,8 @@ inline constexpr char kSchemaId[] = {cpp_string(document["schema_id"])};
 inline constexpr char kSchemaHash[] = {cpp_string(digest)};
 inline constexpr std::size_t kFeatureCount = {len(features)}U;
 inline constexpr std::size_t kOutputCount = {len(outputs)}U;
-{diagnostics_mask_line}inline constexpr std::uint8_t kHeaterControlTypeBinary = {heater_binary}U;
+inline constexpr std::size_t kFeatureDiagnosticsMaskBits = 128U;
+inline constexpr std::uint8_t kHeaterControlTypeBinary = {heater_binary}U;
 inline constexpr std::uint8_t kHeaterControlTypePwm = {heater_pwm}U;
 
 {wire_root_constants}
@@ -356,31 +321,22 @@ constexpr const char* wireKey(FeatureIndex value) noexcept {{
 """
 
 
-def default_output_for_schema(schema_path: Path) -> Path:
-    resolved = schema_path.resolve()
-    if resolved == DEFAULT_SCHEMA_V3.resolve():
-        return DEFAULT_OUTPUT_V3
-    if resolved == DEFAULT_SCHEMA_V2.resolve():
-        return DEFAULT_OUTPUT_V2
-    return DEFAULT_OUTPUT_V1
-
-
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--schema", type=Path, default=DEFAULT_SCHEMA_V1)
-    parser.add_argument("--output", type=Path, default=None)
+    parser.add_argument("--schema", type=Path, default=DEFAULT_SCHEMA)
+    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
 
-    output = args.output or default_output_for_schema(args.schema)
     document = json.loads(args.schema.read_text(encoding="utf-8"))
     generated = render(document)
     if args.check:
-        if not output.exists() or output.read_text(encoding="utf-8") != generated:
-            raise SystemExit(f"generated schema header is stale: {output}")
+        if not args.output.exists() or args.output.read_text(encoding="utf-8") != generated:
+            raise SystemExit(f"generated schema header is stale: {args.output}")
         return 0
-    output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(generated, encoding="utf-8")
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(generated, encoding="utf-8")
+    print(f"wrote {args.output} hash={schema_hash(document)}")
     return 0
 
 

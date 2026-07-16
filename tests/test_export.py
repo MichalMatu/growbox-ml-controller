@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from copy import deepcopy
 
-from tools.ml.contract import V3_CONTRACT_PATH, load_contract
+from tools.ml.contract import ACTIVE_CONTRACT_PATH, load_contract
 from tools.ml.export_model import (
     DEFAULT_GENERATED_DIR,
     DEFAULT_GOLDEN_HEADER,
@@ -19,7 +19,7 @@ from tools.ml.verify_export import verify_export
 
 
 def test_committed_export_metadata_matches_contract():
-    contract = load_contract(V3_CONTRACT_PATH)
+    contract = load_contract(ACTIVE_CONTRACT_PATH)
     model_header = (DEFAULT_GENERATED_DIR / "EnvironmentModel.h").read_text(encoding="utf-8")
     manifest = (DEFAULT_GENERATED_DIR / "ModelManifest.h").read_text(encoding="utf-8")
     golden = json.loads(DEFAULT_GOLDEN_JSON.read_text(encoding="utf-8"))

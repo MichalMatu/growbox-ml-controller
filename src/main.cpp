@@ -86,15 +86,15 @@ void syncPreviousState(growbox::control::ControllerInput& input,
   input.previous.dehumidifier = safe.dehumidifier;
   input.previous.cooler = safe.cooler;
   input.previous.co2_doser = safe.co2_doser;
-  constexpr std::array<OutputIndex, growbox::control::kMaxZones> kZoneIrrigationOutputs{{
-      OutputIndex::IrrigationZone1,
-      OutputIndex::IrrigationZone2,
-      OutputIndex::IrrigationZone3,
-      OutputIndex::IrrigationZone4,
+  constexpr std::array<OutputIndex, growbox::control::kMaxPots> kZoneIrrigationOutputs{{
+      OutputIndex::IrrigationPot1,
+      OutputIndex::IrrigationPot2,
+      OutputIndex::IrrigationPot3,
+      OutputIndex::IrrigationPot4,
   }};
-  for (std::size_t zone_index = 0U; zone_index < growbox::control::kMaxZones; ++zone_index) {
-    input.zones[zone_index].previous_irrigation =
-        growbox::control::safeOutputValue(safe, kZoneIrrigationOutputs[zone_index]);
+  for (std::size_t pot_index = 0U; pot_index < growbox::control::kMaxPots; ++pot_index) {
+    input.pots[pot_index].previous_irrigation =
+        growbox::control::safeOutputValue(safe, kZoneIrrigationOutputs[pot_index]);
   }
 }
 

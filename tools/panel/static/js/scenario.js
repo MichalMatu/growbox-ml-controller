@@ -127,10 +127,10 @@ function scenarioPayloadForKeys(doc, keys) {
 
 function scenarioBadgePayload(doc) {
   const payload = scenarioPayloadForKeys(doc, SCENARIO_BADGE_KEYS);
-  if (Array.isArray(payload.zones)) {
-    payload.zones = payload.zones.map((zone) => {
-      if (!zone || typeof zone !== "object" || Array.isArray(zone)) return zone;
-      const { previous, ...rest } = zone;
+  if (Array.isArray(payload.pots)) {
+    payload.pots = payload.pots.map((pot) => {
+      if (!pot || typeof pot !== "object" || Array.isArray(pot)) return pot;
+      const { previous, ...rest } = pot;
       return rest;
     });
   }
@@ -164,20 +164,20 @@ const INACTIVE_ZONE_DEPENDENT_HINT =
   "Donica wyłączona w Czujnikach — ustawienie ignorowane przez model i safety";
 
 function applyInactiveZonePolicy(doc) {
-  if (!doc?.zones || !Array.isArray(doc.zones)) return doc;
-  for (let index = 0; index < doc.zones.length; index += 1) {
-    const zone = doc.zones[index];
-    if (!zone || zone.available) continue;
+  if (!doc?.pots || !Array.isArray(doc.pots)) return doc;
+  for (let index = 0; index < doc.pots.length; index += 1) {
+    const pot = doc.pots[index];
+    if (!pot || pot.available) continue;
     const targetField = fieldByName(zoneTargetFieldName(index));
     const fallback = targetField?.default ?? 50;
-    if (!zone.targets || typeof zone.targets !== "object") zone.targets = {};
-    zone.targets.soil_moisture_pct = fallback;
+    if (!pot.targets || typeof pot.targets !== "object") pot.targets = {};
+    pot.targets.soil_moisture_pct = fallback;
     const tempField = fieldByName(`zone_${index + 1}_target_soil_temperature_c`);
-    zone.targets.soil_temperature_c = tempField?.default ?? 20;
-    if (!zone.irrigation || typeof zone.irrigation !== "object") zone.irrigation = {};
-    zone.irrigation.available = false;
-    if (!zone.heat_mat || typeof zone.heat_mat !== "object") zone.heat_mat = {};
-    zone.heat_mat.available = false;
+    pot.targets.soil_temperature_c = tempField?.default ?? 20;
+    if (!pot.irrigation || typeof pot.irrigation !== "object") pot.irrigation = {};
+    pot.irrigation.available = false;
+    if (!pot.heat_mat || typeof pot.heat_mat !== "object") pot.heat_mat = {};
+    pot.heat_mat.available = false;
   }
   return doc;
 }
@@ -349,14 +349,14 @@ function validateScenarioLogicalRules(doc) {
     );
   }
 
-  const zones = Array.isArray(doc?.zones) ? doc.zones : [];
-  for (let index = 0; index < zones.length; index += 1) {
-    const zone = zones[index];
-    if (!zone?.available || !zone.irrigation?.available) continue;
-    const pulse = zone.irrigation.maximum_pulse_s;
-    const interval = zone.irrigation.minimum_interval_s;
+  const pots = Array.isArray(doc?.pots) ? doc.pots : [];
+  for (let index = 0; index < pots.length; index += 1) {
+    const pot = pots[index];
+    if (!pot?.available || !pot.irrigation?.available) continue;
+    const pulse = pot.irrigation.maximum_pulse_s;
+    const interval = pot.irrigation.minimum_interval_s;
     if (Number.isFinite(pulse) && Number.isFinite(interval) && pulse > interval) {
-      const path = `zones.${index}.irrigation.maximum_pulse_s`;
+      const path = `pots.${index}.irrigation.maximum_pulse_s`;
       pushScenarioValidationError(
         errors,
         path,

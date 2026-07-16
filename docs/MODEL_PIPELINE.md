@@ -1,30 +1,27 @@
 # Model pipeline
 
-Deterministic path: simulation → teacher labels → Keras MLP → emlearn C export → golden-vector parity on host and firmware.
+Deterministic path: simulation → teacher labels → Keras MLP → emlearn C export → golden-vector parity.
 
-> **Do not treat `--quick` as the production model.** See [plan.md](plan.md): complete contract v2 first, then `train-full`.
-
-## Simulator fidelity
-
-The training simulator (`tools/ml/simulator.py`, mirrored in firmware `DummyEnvironmentSimulator`) should model growbox **thermodynamics as closely as practical**: one air volume, up to four coupled pots, nonlinear T↔RH↔soil↔fan↔outside exchange. It is a lumped-parameter model, not CFD — but weak physics yields weak ML policies. Full coupling spec: [plan.md](plan.md) → *Symulator — termodynamika growboxa*. I/O slots live in [IO_MAP.md](IO_MAP.md), not physics equations.
+> **Do not treat `--quick` as a production model.** The currently committed weights may be marked
+> `untrained-placeholder` until a full train runs against a high-fidelity pots simulator.
 
 ## Commands
 
 ```bash
-make train-quick    # small dataset, CI smoke
-make train-full     # larger dataset — use after v2
-python -m tools.ml.pipeline --check-generated   # CI: byte-stable headers
+make train-quick    # small dataset, CI smoke only
+make train-full     # larger dataset — use after simulator fidelity work
+python -m tools.ml.pipeline --check-generated
 ```
 
 ## Stages
 
-1. Validate schema
+1. Validate schema (`schemas/environment-controller.json`)
 2. Generate scenarios (split by seed: train / val / test)
-3. Label with rollout teacher (fixed action grid, short horizon)
-4. Train MLP (sigmoid outputs)
+3. Label with rollout teacher (finite action grid, short horizon)
+4. Train MLP (sigmoid outputs, 128 → 32 → 32 → 15)
 5. Export emlearn + manifest + golden vectors
 6. Host C++ tests match Python within tolerance
 
-Teacher is explicit cost search on simulator rollouts, not RL. Calibrate simulator parameters against real growbox replay over time.
+Teacher is explicit cost search on simulator rollouts, not RL.
 
-Details: `tools/ml/pipeline.py`, `teacher.py`, `simulator.py`.
+Details: `tools/ml/pipeline.py`, `teacher.py`, `simulator.py`, `controller_input.py`.

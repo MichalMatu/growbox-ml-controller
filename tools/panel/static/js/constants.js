@@ -140,18 +140,18 @@ const LABEL_MAP = {
   nutrient_solution_temperature_c: "Roztwór",
   soil_moisture_pct: "Gleba",
   soil_temperature_c: "Gleba T",
-  zone_1_available: "Donica 1",
-  zone_2_available: "Donica 2",
-  zone_3_available: "Donica 3",
-  zone_4_available: "Donica 4",
-  zone_1_target_soil_moisture_pct: "Donica 1",
-  zone_2_target_soil_moisture_pct: "Donica 2",
-  zone_3_target_soil_moisture_pct: "Donica 3",
-  zone_4_target_soil_moisture_pct: "Donica 4",
-  zone_1_target_soil_temperature_c: "Donica 1",
-  zone_2_target_soil_temperature_c: "Donica 2",
-  zone_3_target_soil_temperature_c: "Donica 3",
-  zone_4_target_soil_temperature_c: "Donica 4",
+  pot_1_available: "Donica 1",
+  pot_2_available: "Donica 2",
+  pot_3_available: "Donica 3",
+  pot_4_available: "Donica 4",
+  pot_1_target_soil_moisture_pct: "Donica 1",
+  pot_2_target_soil_moisture_pct: "Donica 2",
+  pot_3_target_soil_moisture_pct: "Donica 3",
+  pot_4_target_soil_moisture_pct: "Donica 4",
+  pot_1_target_soil_temperature_c: "Donica 1",
+  pot_2_target_soil_temperature_c: "Donica 2",
+  pot_3_target_soil_temperature_c: "Donica 3",
+  pot_4_target_soil_temperature_c: "Donica 4",
   target_nutrient_solution_temperature_c: "Roztwór T",
   lights_active: "Lampa",
   outside_temperature_c: "Temp",
@@ -213,10 +213,10 @@ const LABEL_MAP = {
   previous_cooler: "Chłodz.",
   previous_co2_doser: "CO₂",
   previous_nutrient_heater: "Grz. roztw.",
-  zone_1_previous_heat_mat: "Mata 1",
-  zone_2_previous_heat_mat: "Mata 2",
-  zone_3_previous_heat_mat: "Mata 3",
-  zone_4_previous_heat_mat: "Mata 4",
+  pot_1_previous_heat_mat: "Mata 1",
+  pot_2_previous_heat_mat: "Mata 2",
+  pot_3_previous_heat_mat: "Mata 3",
+  pot_4_previous_heat_mat: "Mata 4",
   nutrient_heater_available: "Grzałka roztworu",
   dehumidifier_available: "Osuszacz",
   dehumidifier_max_removal_g_h: "g/h",
@@ -256,35 +256,35 @@ const SENSOR_GROUPS = [
 const POT_SENSOR_ROWS = [
   {
     title: "Donica 1",
-    zoneAvailable: "zone_1_available",
-    moisture: "soil_moisture_zone_1_pct",
-    moistureValid: "soil_moisture_zone_1_valid",
-    temp: "soil_temperature_zone_1_c",
-    tempValid: "soil_temperature_zone_1_valid",
+    zoneAvailable: "pot_1_available",
+    moisture: "soil_moisture_pot_1_pct",
+    moistureValid: "soil_moisture_pot_1_valid",
+    temp: "soil_temperature_pot_1_c",
+    tempValid: "soil_temperature_pot_1_valid",
   },
   {
     title: "Donica 2",
-    zoneAvailable: "zone_2_available",
-    moisture: "soil_moisture_zone_2_pct",
-    moistureValid: "soil_moisture_zone_2_valid",
-    temp: "soil_temperature_zone_2_c",
-    tempValid: "soil_temperature_zone_2_valid",
+    zoneAvailable: "pot_2_available",
+    moisture: "soil_moisture_pot_2_pct",
+    moistureValid: "soil_moisture_pot_2_valid",
+    temp: "soil_temperature_pot_2_c",
+    tempValid: "soil_temperature_pot_2_valid",
   },
   {
     title: "Donica 3",
-    zoneAvailable: "zone_3_available",
-    moisture: "soil_moisture_zone_3_pct",
-    moistureValid: "soil_moisture_zone_3_valid",
-    temp: "soil_temperature_zone_3_c",
-    tempValid: "soil_temperature_zone_3_valid",
+    zoneAvailable: "pot_3_available",
+    moisture: "soil_moisture_pot_3_pct",
+    moistureValid: "soil_moisture_pot_3_valid",
+    temp: "soil_temperature_pot_3_c",
+    tempValid: "soil_temperature_pot_3_valid",
   },
   {
     title: "Donica 4",
-    zoneAvailable: "zone_4_available",
-    moisture: "soil_moisture_zone_4_pct",
-    moistureValid: "soil_moisture_zone_4_valid",
-    temp: "soil_temperature_zone_4_c",
-    tempValid: "soil_temperature_zone_4_valid",
+    zoneAvailable: "pot_4_available",
+    moisture: "soil_moisture_pot_4_pct",
+    moistureValid: "soil_moisture_pot_4_valid",
+    temp: "soil_temperature_pot_4_c",
+    tempValid: "soil_temperature_pot_4_valid",
   },
 ];
 
@@ -296,17 +296,17 @@ const TARGET_AIR_FIELDS = [
 ];
 
 const TARGET_SOIL_MOISTURE_FIELDS = [
-  "zone_1_target_soil_moisture_pct",
-  "zone_2_target_soil_moisture_pct",
-  "zone_3_target_soil_moisture_pct",
-  "zone_4_target_soil_moisture_pct",
+  "pot_1_target_soil_moisture_pct",
+  "pot_2_target_soil_moisture_pct",
+  "pot_3_target_soil_moisture_pct",
+  "pot_4_target_soil_moisture_pct",
 ];
 
 const TARGET_SOIL_TEMPERATURE_FIELDS = [
-  "zone_1_target_soil_temperature_c",
-  "zone_2_target_soil_temperature_c",
-  "zone_3_target_soil_temperature_c",
-  "zone_4_target_soil_temperature_c",
+  "pot_1_target_soil_temperature_c",
+  "pot_2_target_soil_temperature_c",
+  "pot_3_target_soil_temperature_c",
+  "pot_4_target_soil_temperature_c",
 ];
 
 const PREVIOUS_GLOBAL_FIELDS = [
@@ -348,17 +348,17 @@ const SAFETY_ANTIFLAP_GROUPS = [
 ];
 
 const PREVIOUS_PUMP_FIELDS = [
-  "zone_1_previous_irrigation",
-  "zone_2_previous_irrigation",
-  "zone_3_previous_irrigation",
-  "zone_4_previous_irrigation",
+  "pot_1_previous_irrigation",
+  "pot_2_previous_irrigation",
+  "pot_3_previous_irrigation",
+  "pot_4_previous_irrigation",
 ];
 
 const PREVIOUS_HEAT_MAT_FIELDS = [
-  "zone_1_previous_heat_mat",
-  "zone_2_previous_heat_mat",
-  "zone_3_previous_heat_mat",
-  "zone_4_previous_heat_mat",
+  "pot_1_previous_heat_mat",
+  "pot_2_previous_heat_mat",
+  "pot_3_previous_heat_mat",
+  "pot_4_previous_heat_mat",
 ];
 
 const LIVE_SENSOR_GROUPS = [
@@ -383,11 +383,11 @@ const LIVE_SENSOR_GROUPS = [
 ];
 
 var SCENARIO_SYNC_KEYS = [
-  "sensors", "validity", "zones", "pseudo", "environment", "actuators", "targets", "safety", "previous",
+  "sensors", "validity", "pots", "pseudo", "environment", "actuators", "targets", "safety", "previous",
 ];
 /** User-editable payload for Wyślij badge — excludes runtime previous updated by live decisions. */
 var SCENARIO_BADGE_KEYS = [
-  "sensors", "validity", "zones", "pseudo", "environment", "actuators", "targets", "safety",
+  "sensors", "validity", "pots", "pseudo", "environment", "actuators", "targets", "safety",
 ];
 const ACTUATOR_CLIMATE_GROUPS = [
   ["Grzałka", ["heater_available", "heater_max_power_w", "heater_efficiency", "heater_control_type"]],
@@ -400,17 +400,17 @@ const ACTUATOR_CLIMATE_GROUPS = [
 ];
 
 const ACTUATOR_PUMP_GROUPS = [
-  ["Pompa 1", ["zone_1_irrigation_available", "zone_1_irrigation_flow_ml_s", "zone_1_irrigation_maximum_pulse_s", "zone_1_irrigation_minimum_interval_s", "zone_1_irrigation_control_type"]],
-  ["Pompa 2", ["zone_2_irrigation_available", "zone_2_irrigation_flow_ml_s", "zone_2_irrigation_maximum_pulse_s", "zone_2_irrigation_minimum_interval_s", "zone_2_irrigation_control_type"]],
-  ["Pompa 3", ["zone_3_irrigation_available", "zone_3_irrigation_flow_ml_s", "zone_3_irrigation_maximum_pulse_s", "zone_3_irrigation_minimum_interval_s", "zone_3_irrigation_control_type"]],
-  ["Pompa 4", ["zone_4_irrigation_available", "zone_4_irrigation_flow_ml_s", "zone_4_irrigation_maximum_pulse_s", "zone_4_irrigation_minimum_interval_s", "zone_4_irrigation_control_type"]],
+  ["Pompa 1", ["pot_1_irrigation_available", "pot_1_irrigation_flow_ml_s", "pot_1_irrigation_maximum_pulse_s", "pot_1_irrigation_minimum_interval_s", "pot_1_irrigation_control_type"]],
+  ["Pompa 2", ["pot_2_irrigation_available", "pot_2_irrigation_flow_ml_s", "pot_2_irrigation_maximum_pulse_s", "pot_2_irrigation_minimum_interval_s", "pot_2_irrigation_control_type"]],
+  ["Pompa 3", ["pot_3_irrigation_available", "pot_3_irrigation_flow_ml_s", "pot_3_irrigation_maximum_pulse_s", "pot_3_irrigation_minimum_interval_s", "pot_3_irrigation_control_type"]],
+  ["Pompa 4", ["pot_4_irrigation_available", "pot_4_irrigation_flow_ml_s", "pot_4_irrigation_maximum_pulse_s", "pot_4_irrigation_minimum_interval_s", "pot_4_irrigation_control_type"]],
 ];
 
 const ACTUATOR_HEAT_MAT_GROUPS = [
-  ["Mata 1", ["zone_1_heat_mat_available", "zone_1_heat_mat_max_power_w", "zone_1_heat_mat_control_type"]],
-  ["Mata 2", ["zone_2_heat_mat_available", "zone_2_heat_mat_max_power_w", "zone_2_heat_mat_control_type"]],
-  ["Mata 3", ["zone_3_heat_mat_available", "zone_3_heat_mat_max_power_w", "zone_3_heat_mat_control_type"]],
-  ["Mata 4", ["zone_4_heat_mat_available", "zone_4_heat_mat_max_power_w", "zone_4_heat_mat_control_type"]],
+  ["Mata 1", ["pot_1_heat_mat_available", "pot_1_heat_mat_max_power_w", "pot_1_heat_mat_control_type"]],
+  ["Mata 2", ["pot_2_heat_mat_available", "pot_2_heat_mat_max_power_w", "pot_2_heat_mat_control_type"]],
+  ["Mata 3", ["pot_3_heat_mat_available", "pot_3_heat_mat_max_power_w", "pot_3_heat_mat_control_type"]],
+  ["Mata 4", ["pot_4_heat_mat_available", "pot_4_heat_mat_max_power_w", "pot_4_heat_mat_control_type"]],
 ];
 
 const OUTPUT_LABELS = {
@@ -420,19 +420,19 @@ const OUTPUT_LABELS = {
   dehumidifier: "Osuszacz",
   cooler: "Chłodzenie",
   co2_doser: "CO₂",
-  irrigation_zone_1: "Pompa 1",
-  irrigation_zone_2: "Pompa 2",
-  irrigation_zone_3: "Pompa 3",
-  irrigation_zone_4: "Pompa 4",
+  irrigation_pot_1: "Pompa 1",
+  irrigation_pot_2: "Pompa 2",
+  irrigation_pot_3: "Pompa 3",
+  irrigation_pot_4: "Pompa 4",
   nutrient_heater: "Grz. roztworu",
-  heat_mat_zone_1: "Mata 1",
-  heat_mat_zone_2: "Mata 2",
-  heat_mat_zone_3: "Mata 3",
-  heat_mat_zone_4: "Mata 4",
-  zone_1_target_soil_moisture_pct: "Donica 1",
-  zone_2_target_soil_moisture_pct: "Donica 2",
-  zone_3_target_soil_moisture_pct: "Donica 3",
-  zone_4_target_soil_moisture_pct: "Donica 4",
+  heat_mat_pot_1: "Mata 1",
+  heat_mat_pot_2: "Mata 2",
+  heat_mat_pot_3: "Mata 3",
+  heat_mat_pot_4: "Mata 4",
+  pot_1_target_soil_moisture_pct: "Donica 1",
+  pot_2_target_soil_moisture_pct: "Donica 2",
+  pot_3_target_soil_moisture_pct: "Donica 3",
+  pot_4_target_soil_moisture_pct: "Donica 4",
 };
 
 function isAvailabilityField(name) {
@@ -536,13 +536,13 @@ const ACTUATOR_AVAILABILITY_PATHS = {
   cooler: "actuators.cooler.available",
   co2_doser: "actuators.co2_doser.available",
   nutrient_heater: "actuators.nutrient_heater.available",
-  irrigation_zone_1: "zones.0.irrigation.available",
-  irrigation_zone_2: "zones.1.irrigation.available",
-  irrigation_zone_3: "zones.2.irrigation.available",
-  irrigation_zone_4: "zones.3.irrigation.available",
-  heat_mat_zone_1: "zones.0.heat_mat.available",
-  heat_mat_zone_2: "zones.1.heat_mat.available",
-  heat_mat_zone_3: "zones.2.heat_mat.available",
-  heat_mat_zone_4: "zones.3.heat_mat.available",
+  irrigation_pot_1: "pots.0.irrigation.available",
+  irrigation_pot_2: "pots.1.irrigation.available",
+  irrigation_pot_3: "pots.2.irrigation.available",
+  irrigation_pot_4: "pots.3.irrigation.available",
+  heat_mat_pot_1: "pots.0.heat_mat.available",
+  heat_mat_pot_2: "pots.1.heat_mat.available",
+  heat_mat_pot_3: "pots.2.heat_mat.available",
+  heat_mat_pot_4: "pots.3.heat_mat.available",
 };
 const SAFETY_REASON_ACTUATOR_UNAVAILABLE = 64;

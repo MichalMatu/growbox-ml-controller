@@ -9,8 +9,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from .simulator_v2 import (
-    MAX_ZONES,
+from .simulator import (
+    MAX_POTS,
     ControlAction,
     EnvironmentState,
     Scenario,
@@ -26,7 +26,7 @@ GLOBAL_SENSOR_NAMES = (
     "outside_co2_ppm",
 )
 
-ZONE_SENSOR_NAMES = ("soil_moisture_pct", "soil_temperature_c")
+POT_SENSOR_NAMES = ("soil_moisture_pct", "soil_temperature_c")
 
 
 def controller_input_record(
@@ -34,7 +34,7 @@ def controller_input_record(
     state: EnvironmentState,
     *,
     validity: Mapping[str, bool],
-    zone_validity: Mapping[int, Mapping[str, bool]],
+    pot_validity: Mapping[int, Mapping[str, bool]],
     previous: ControlAction,
 ) -> dict[str, object]:
     """Map simulator observation + scenario config into a contract-shaped dict."""
@@ -53,35 +53,35 @@ def controller_input_record(
                 continue
             sensors.pop(name, None)
 
-    zones_payload: list[dict[str, object]] = []
-    for zone_index, zone in enumerate(scenario.zones):
-        zone_state = state.zones[zone_index]
-        zone_valid = zone_validity.get(zone_index, {})
-        zone_sensors: dict[str, float] = {}
-        if zone_valid.get("soil_moisture_pct", False):
-            zone_sensors["soil_moisture_pct"] = zone_state.soil_moisture_pct
-        if zone_valid.get("soil_temperature_c", False):
-            zone_sensors["soil_temperature_c"] = zone_state.soil_temperature_c
-        irrigation = zone.irrigation
-        heat_mat = zone.heat_mat
-        irrigation_name = f"irrigation_zone_{zone_index + 1}"
-        heat_mat_name = f"heat_mat_zone_{zone_index + 1}"
-        zones_payload.append(
+    pots_payload: list[dict[str, object]] = []
+    for pot_index, pot in enumerate(scenario.pots):
+        pot_state = state.pots[pot_index]
+        pot_valid = pot_validity.get(pot_index, {})
+        pot_sensors: dict[str, float] = {}
+        if pot_valid.get("soil_moisture_pct", False):
+            pot_sensors["soil_moisture_pct"] = pot_state.soil_moisture_pct
+        if pot_valid.get("soil_temperature_c", False):
+            pot_sensors["soil_temperature_c"] = pot_state.soil_temperature_c
+        irrigation = pot.irrigation
+        heat_mat = pot.heat_mat
+        irrigation_name = f"irrigation_pot_{pot_index + 1}"
+        heat_mat_name = f"heat_mat_pot_{pot_index + 1}"
+        pots_payload.append(
             {
-                "available": zone.available,
-                "sensors": zone_sensors,
+                "available": pot.available,
+                "sensors": pot_sensors,
                 "validity": {
-                    "soil_moisture_pct": bool(zone_valid.get("soil_moisture_pct", False)),
-                    "soil_temperature_c": bool(zone_valid.get("soil_temperature_c", False)),
+                    "soil_moisture_pct": bool(pot_valid.get("soil_moisture_pct", False)),
+                    "soil_temperature_c": bool(pot_valid.get("soil_temperature_c", False)),
                 },
                 "cultivation": {
-                    "pot_volume_l": zone.cultivation.pot_volume_l,
-                    "substrate_water_capacity_ml": zone.cultivation.substrate_water_capacity_ml,
-                    "transpiration_factor": zone.cultivation.transpiration_factor,
+                    "pot_volume_l": pot.cultivation.pot_volume_l,
+                    "substrate_water_capacity_ml": pot.cultivation.substrate_water_capacity_ml,
+                    "transpiration_factor": pot.cultivation.transpiration_factor,
                 },
                 "targets": {
-                    "soil_moisture_pct": zone.target_soil_moisture_pct,
-                    "soil_temperature_c": zone.target_soil_temperature_c,
+                    "soil_moisture_pct": pot.target_soil_moisture_pct,
+                    "soil_temperature_c": pot.target_soil_temperature_c,
                 },
                 "irrigation": {
                     "available": irrigation.available,
@@ -178,18 +178,18 @@ def controller_input_record(
             "co2_doser": previous.co2_doser,
             "nutrient_heater": previous.nutrient_heater,
         },
-        "zones": zones_payload,
+        "pots": pots_payload,
         "pseudo": {"lights_active": state.lights_active},
     }
 
 
 # Backward-compatible alias used by v2/v3 dataset and tests.
-controller_input_record_v2 = controller_input_record
+controller_input_record = controller_input_record
 
 __all__ = [
     "GLOBAL_SENSOR_NAMES",
-    "MAX_ZONES",
-    "ZONE_SENSOR_NAMES",
+    "MAX_POTS",
+    "POT_SENSOR_NAMES",
     "controller_input_record",
-    "controller_input_record_v2",
+    "controller_input_record",
 ]

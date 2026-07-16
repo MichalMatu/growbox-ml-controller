@@ -38,18 +38,18 @@ ControllerInput nominalInput() {
   input.sensors.outside_humidity_pct = 52.0f;
   input.sensors.outside_co2_ppm = 420.0f;
 
-  input.zones[0].available = true;
-  input.zones[0].validity.soil_moisture = true;
-  input.zones[0].sensors.soil_moisture_pct = 44.0f;
-  input.zones[0].cultivation.pot_volume_l = 12.0f;
-  input.zones[0].cultivation.substrate_water_capacity_ml = 3600.0f;
-  input.zones[0].cultivation.transpiration_factor = 1.0f;
-  input.zones[0].target_soil_moisture_pct = 50.0f;
-  input.zones[0].irrigation.available = true;
-  input.zones[0].irrigation.flow_ml_s = 20.0f;
-  input.zones[0].irrigation.maximum_pulse_s = 10.0f;
-  input.zones[0].irrigation.minimum_interval_s = 60.0f;
-  input.zones[0].irrigation.control_type = ActuatorControlType::Binary;
+  input.pots[0].available = true;
+  input.pots[0].validity.soil_moisture = true;
+  input.pots[0].sensors.soil_moisture_pct = 44.0f;
+  input.pots[0].cultivation.pot_volume_l = 12.0f;
+  input.pots[0].cultivation.substrate_water_capacity_ml = 3600.0f;
+  input.pots[0].cultivation.transpiration_factor = 1.0f;
+  input.pots[0].target_soil_moisture_pct = 50.0f;
+  input.pots[0].irrigation.available = true;
+  input.pots[0].irrigation.flow_ml_s = 20.0f;
+  input.pots[0].irrigation.maximum_pulse_s = 10.0f;
+  input.pots[0].irrigation.minimum_interval_s = 60.0f;
+  input.pots[0].irrigation.control_type = ActuatorControlType::Binary;
 
   input.actuators.heater.available = true;
   input.actuators.heater.max_power_w = 250.0f;
@@ -79,15 +79,15 @@ void assertDecisionInRange(const SafeControlDecision& decision) {
 }
 
 void test_schema_feature_count_and_order() {
-  TEST_ASSERT_EQUAL_UINT32(3U, schema::kSchemaVersion);
+  TEST_ASSERT_EQUAL_UINT32(4U, schema::kSchemaVersion);
   TEST_ASSERT_EQUAL_UINT32(128U, schema::kFeatureCount);
   TEST_ASSERT_EQUAL_UINT32(15U, schema::kOutputCount);
   TEST_ASSERT_EQUAL_STRING("air_temperature_c", schema::kFeatureNames[0]);
   TEST_ASSERT_EQUAL_STRING("lights_active", schema::kFeatureNames[34]);
   TEST_ASSERT_EQUAL_STRING("heater", schema::kOutputNames[0]);
-  TEST_ASSERT_EQUAL_STRING("irrigation_zone_4", schema::kOutputNames[9]);
+  TEST_ASSERT_EQUAL_STRING("irrigation_pot_4", schema::kOutputNames[9]);
   TEST_ASSERT_EQUAL_STRING("nutrient_heater", schema::kOutputNames[10]);
-  TEST_ASSERT_EQUAL_STRING("heat_mat_zone_4", schema::kOutputNames[14]);
+  TEST_ASSERT_EQUAL_STRING("heat_mat_pot_4", schema::kOutputNames[14]);
 }
 
 void test_feature_encoder_uses_generated_indices_and_normalization() {
@@ -123,21 +123,21 @@ void test_cpp_defaults_match_schema_defaults() {
 
 void test_unavailable_zone_target_is_canonicalized_to_schema_default() {
   ControllerInput input = nominalInput();
-  input.zones[1].available = false;
-  input.zones[1].target_soil_moisture_pct = 72.0f;
+  input.pots[1].available = false;
+  input.pots[1].target_soil_moisture_pct = 72.0f;
   FeatureVector features{};
   EncoderReport report{};
 
   TEST_ASSERT_EQUAL_UINT8(
       static_cast<std::uint8_t>(EncoderStatus::Ok),
       static_cast<std::uint8_t>(FeatureEncoder::encode(input, features, report)));
-  const std::size_t target_index = schema::index(schema::FeatureIndex::Zone2TargetSoilMoisturePct);
+  const std::size_t target_index = schema::index(schema::FeatureIndex::Pot2TargetSoilMoisturePct);
   const float expected =
       (schema::kFeatureDefaults[target_index] - schema::kFeatureMinimums[target_index]) /
       (schema::kFeatureMaximums[target_index] - schema::kFeatureMinimums[target_index]);
   TEST_ASSERT_FLOAT_WITHIN(1.0e-6f, expected, features.values[target_index]);
   TEST_ASSERT_TRUE(
-      maskHas(report.substituted_feature_mask, schema::FeatureIndex::Zone2TargetSoilMoisturePct));
+      maskHas(report.substituted_feature_mask, schema::FeatureIndex::Pot2TargetSoilMoisturePct));
 }
 
 void test_unavailable_actuator_capabilities_are_canonicalized_to_zero() {
@@ -146,8 +146,8 @@ void test_unavailable_actuator_capabilities_are_canonicalized_to_zero() {
   input.actuators.heater.max_power_w = 500.0f;
   input.actuators.fan.available = false;
   input.actuators.fan.max_airflow_m3_h = 200.0f;
-  input.zones[0].irrigation.available = false;
-  input.zones[0].irrigation.flow_ml_s = 20.0f;
+  input.pots[0].irrigation.available = false;
+  input.pots[0].irrigation.flow_ml_s = 20.0f;
   FeatureVector features{};
   EncoderReport report{};
 
@@ -159,7 +159,7 @@ void test_unavailable_actuator_capabilities_are_canonicalized_to_zero() {
   TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f,
                            features.values[schema::index(schema::FeatureIndex::FanMaxAirflowM3H)]);
   TEST_ASSERT_FLOAT_WITHIN(
-      0.0f, 0.0f, features.values[schema::index(schema::FeatureIndex::Zone1IrrigationFlowMlS)]);
+      0.0f, 0.0f, features.values[schema::index(schema::FeatureIndex::Pot1IrrigationFlowMlS)]);
   TEST_ASSERT_TRUE(maskAny(report.substituted_feature_mask));
 }
 
@@ -203,7 +203,7 @@ void test_safety_masks_unavailable_outputs_and_missing_temperature() {
   raw.heater = 1.0f;
   raw.fan = 1.0f;
   raw.humidifier = 1.0f;
-  raw.irrigation_zone_1 = 1.0f;
+  raw.irrigation_pot_1 = 1.0f;
   SafeControlDecision safe{};
   SafetyReport report{};
   SafetySupervisor supervisor{};
@@ -235,93 +235,93 @@ void test_alarm_temperature_forces_heater_off_and_fan_minimum() {
 
 void test_zone_pump_pulse_and_minimum_interval() {
   ControllerInput input = nominalInput();
-  input.zones[0].irrigation.maximum_pulse_s = 1000.0f;
-  input.zones[0].irrigation.minimum_interval_s = 60.0f;
+  input.pots[0].irrigation.maximum_pulse_s = 1000.0f;
+  input.pots[0].irrigation.minimum_interval_s = 60.0f;
   RawModelDecision raw{};
-  raw.irrigation_zone_1 = 1.0f;
+  raw.irrigation_pot_1 = 1.0f;
   SafeControlDecision safe{};
   SafetyReport report{};
   SafetySupervisor supervisor{};
 
   supervisor.apply(input, raw, SafetyReason::None, safe, report);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 1.0f, safe.irrigation_zone_1);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 1.0f, safe.irrigation_pot_1);
   TEST_ASSERT_FLOAT_WITHIN(1.0e-6f, 600.0f, safe.irrigation_pulse_s[0]);
   TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::PumpPulseLimited));
 
   input.monotonic_time_ms += 1000U;
-  raw.irrigation_zone_1 = 1.0f;
+  raw.irrigation_pot_1 = 1.0f;
   supervisor.apply(input, raw, SafetyReason::None, safe, report);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.irrigation_zone_1);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.irrigation_pot_1);
   TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::PumpMinimumInterval));
 
   input.monotonic_time_ms += 60000U;
   supervisor.apply(input, raw, SafetyReason::None, safe, report);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 1.0f, safe.irrigation_zone_1);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 1.0f, safe.irrigation_pot_1);
 }
 
 void test_soil_moisture_at_target_blocks_irrigation() {
   ControllerInput input = nominalInput();
-  input.zones[0].sensors.soil_moisture_pct = 55.0f;
-  input.zones[0].target_soil_moisture_pct = 50.0f;
+  input.pots[0].sensors.soil_moisture_pct = 55.0f;
+  input.pots[0].target_soil_moisture_pct = 50.0f;
   RawModelDecision raw{};
-  raw.irrigation_zone_1 = 1.0f;
+  raw.irrigation_pot_1 = 1.0f;
   SafeControlDecision safe{};
   SafetyReport report{};
   SafetySupervisor supervisor{};
 
   supervisor.apply(input, raw, SafetyReason::None, safe, report);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.irrigation_zone_1);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.irrigation_pot_1);
   TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::SoilMoistureSatisfied));
 }
 
 void test_invalid_soil_moisture_blocks_irrigation() {
   ControllerInput input = nominalInput();
-  input.zones[0].validity.soil_moisture = false;
+  input.pots[0].validity.soil_moisture = false;
   RawModelDecision raw{};
-  raw.irrigation_zone_1 = 1.0f;
+  raw.irrigation_pot_1 = 1.0f;
   SafeControlDecision safe{};
   SafetyReport report{};
   SafetySupervisor supervisor{};
 
   supervisor.apply(input, raw, SafetyReason::None, safe, report);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.irrigation_zone_1);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.irrigation_pot_1);
   TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::SoilMoistureUnavailable));
 }
 
 void test_cold_nutrient_solution_blocks_irrigation() {
   ControllerInput input = nominalInput();
-  input.zones[0].sensors.soil_moisture_pct = 30.0f;
+  input.pots[0].sensors.soil_moisture_pct = 30.0f;
   input.sensors.nutrient_solution_temperature_c = 10.0f;
   input.validity.nutrient_solution_temperature = true;
   input.safety.minimum_nutrient_solution_temperature_c = 15.0f;
   RawModelDecision raw{};
-  raw.irrigation_zone_1 = 1.0f;
+  raw.irrigation_pot_1 = 1.0f;
   SafeControlDecision safe{};
   SafetyReport report{};
   SafetySupervisor supervisor{};
 
   supervisor.apply(input, raw, SafetyReason::None, safe, report);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.irrigation_zone_1);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.irrigation_pot_1);
   TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::NutrientSolutionTooCold));
 }
 
 void test_nutrient_soil_delta_blocks_irrigation() {
   ControllerInput input = nominalInput();
-  input.zones[0].sensors.soil_moisture_pct = 30.0f;
-  input.zones[0].sensors.soil_temperature_c = 30.0f;
-  input.zones[0].validity.soil_temperature = true;
+  input.pots[0].sensors.soil_moisture_pct = 30.0f;
+  input.pots[0].sensors.soil_temperature_c = 30.0f;
+  input.pots[0].validity.soil_temperature = true;
   input.sensors.nutrient_solution_temperature_c = 20.0f;
   input.validity.nutrient_solution_temperature = true;
   input.safety.maximum_nutrient_soil_delta_c = 8.0f;
   input.safety.minimum_nutrient_solution_temperature_c = 15.0f;
   RawModelDecision raw{};
-  raw.irrigation_zone_1 = 1.0f;
+  raw.irrigation_pot_1 = 1.0f;
   SafeControlDecision safe{};
   SafetyReport report{};
   SafetySupervisor supervisor{};
 
   supervisor.apply(input, raw, SafetyReason::None, safe, report);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.irrigation_zone_1);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.irrigation_pot_1);
   TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::NutrientSoilDeltaExceeded));
 }
 

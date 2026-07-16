@@ -40,7 +40,7 @@ def badge_payload(doc: dict[str, Any]) -> dict[str, Any]:
     keys = (
         "sensors",
         "validity",
-        "zones",
+        "pots",
         "pseudo",
         "environment",
         "actuators",
@@ -51,11 +51,11 @@ def badge_payload(doc: dict[str, Any]) -> dict[str, Any]:
     for key in keys:
         if key in doc:
             payload[key] = json.loads(json.dumps(doc[key]))
-    zones = payload.get("zones")
-    if isinstance(zones, list):
-        payload["zones"] = [
-            {k: v for k, v in zone.items() if k != "previous"} if isinstance(zone, dict) else zone
-            for zone in zones
+    pots = payload.get("pots")
+    if isinstance(pots, list):
+        payload["pots"] = [
+            {k: v for k, v in pot.items() if k != "previous"} if isinstance(pot, dict) else pot
+            for pot in pots
         ]
     return payload
 

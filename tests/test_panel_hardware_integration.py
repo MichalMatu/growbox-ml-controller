@@ -76,7 +76,7 @@ def panel_available() -> str:
         pytest.skip(f"panel not running at {_panel_base()}: {exc}")
     if status != 200:
         pytest.skip(f"panel schema returned {status}")
-    assert payload["schema_hash"] == "c91e249af9d3"
+    assert payload["schema_hash"] == "5768273a73ac"
     return _panel_base()
 
 
@@ -84,7 +84,7 @@ def _badge_payload_python(doc: dict[str, Any]) -> dict[str, Any]:
     keys = (
         "sensors",
         "validity",
-        "zones",
+        "pots",
         "pseudo",
         "environment",
         "actuators",
@@ -95,11 +95,11 @@ def _badge_payload_python(doc: dict[str, Any]) -> dict[str, Any]:
     for key in keys:
         if key in doc:
             payload[key] = json.loads(json.dumps(doc[key]))
-    zones = payload.get("zones")
-    if isinstance(zones, list):
-        payload["zones"] = [
-            {k: v for k, v in zone.items() if k != "previous"} if isinstance(zone, dict) else zone
-            for zone in zones
+    pots = payload.get("pots")
+    if isinstance(pots, list):
+        payload["pots"] = [
+            {k: v for k, v in pot.items() if k != "previous"} if isinstance(pot, dict) else pot
+            for pot in pots
         ]
     return payload
 
@@ -125,7 +125,7 @@ def _badge_fingerprint(doc: dict[str, Any]) -> str:
 def test_panel_schema_endpoint(panel_available: str):
     status, schema = _http_json("GET", "/api/schema")
     assert status == 200
-    assert schema["schema_version"] == 3
+    assert schema["schema_version"] == 4
     assert len(schema["outputs"]) == 15
     assert "default_scenario" in schema
 
@@ -178,7 +178,7 @@ def test_panel_connect_load_resume_loop_produces_decisions(board_port: str, pane
                 break
 
     assert decision is not None, "expected decision frame after resume in closed_loop"
-    assert decision.get("schema_hash") == "c91e249af9d3"
+    assert decision.get("schema_hash") == "5768273a73ac"
     diagnostics = decision.get("diagnostics", {})
     assert diagnostics.get("inference_status") == "ok"
     safe = decision.get("safe_output", {})

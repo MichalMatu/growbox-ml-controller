@@ -4,20 +4,20 @@ from dataclasses import replace
 
 import pytest
 
-from tools.ml.generate_dataset_v2 import random_scenario_v2
-from tools.ml.simulator_v2 import (
+from tools.ml.generate_dataset import random_scenario
+from tools.ml.simulator import (
     ControlAction,
     HeaterCapabilities,
     HeatMatCapabilities,
     NutrientHeaterCapabilities,
+    PotConfig,
     PumpCapabilities,
-    SequentialEnvironmentSimulatorV2,
-    ZoneConfig,
+    SequentialEnvironmentSimulator,
     default_scenario_v2,
 )
-from tools.ml.teacher_v2 import (
+from tools.ml.teacher import (
     CostConfig,
-    RolloutTeacherV2,
+    RolloutTeacher,
     build_candidates,
     heat_mat_levels_for_zone,
     irrigation_levels_for_zone,
@@ -31,23 +31,23 @@ def scenario_v2():
 
 
 def test_build_candidates_scales_with_active_zones(scenario_v2):
-    one_zone = SequentialEnvironmentSimulatorV2(scenario_v2)
+    one_zone = SequentialEnvironmentSimulator(scenario_v2)
     assert len(build_candidates(one_zone)) == 320
 
     two_zone_scenario = replace(
         scenario_v2,
-        zones=(
-            ZoneConfig(available=True, soil_moisture_valid=True, irrigation=PumpCapabilities(True)),
-            ZoneConfig(available=True, soil_moisture_valid=True, irrigation=PumpCapabilities(True)),
-            ZoneConfig(),
-            ZoneConfig(),
+        pots=(
+            PotConfig(available=True, soil_moisture_valid=True, irrigation=PumpCapabilities(True)),
+            PotConfig(available=True, soil_moisture_valid=True, irrigation=PumpCapabilities(True)),
+            PotConfig(),
+            PotConfig(),
         ),
     )
-    two_zone = SequentialEnvironmentSimulatorV2(two_zone_scenario)
+    two_zone = SequentialEnvironmentSimulator(two_zone_scenario)
     assert len(build_candidates(two_zone)) == 640
 
-    zero_zone = SequentialEnvironmentSimulatorV2(
-        replace(scenario_v2, zones=(ZoneConfig(), ZoneConfig(), ZoneConfig(), ZoneConfig()))
+    zero_zone = SequentialEnvironmentSimulator(
+        replace(scenario_v2, pots=(PotConfig(), PotConfig(), PotConfig(), PotConfig()))
     )
     assert len(build_candidates(zero_zone)) == 160
 
@@ -65,17 +65,17 @@ def test_zero_cost_tie_selects_first_candidate(scenario_v2):
         unreachable_target=0.0,
         terminal_multiplier=0.0,
     )
-    result = RolloutTeacherV2(cost=zero, horizon_steps=1).choose(
-        SequentialEnvironmentSimulatorV2(scenario_v2)
+    result = RolloutTeacher(cost=zero, horizon_steps=1).choose(
+        SequentialEnvironmentSimulator(scenario_v2)
     )
     assert result.candidate_index == 0
     assert result.action == ControlAction()
 
 
 def test_teacher_is_deterministic_and_does_not_advance_source(scenario_v2):
-    simulator = SequentialEnvironmentSimulatorV2(scenario_v2)
+    simulator = SequentialEnvironmentSimulator(scenario_v2)
     before_temp = simulator.state.air_temperature_c
-    teacher = RolloutTeacherV2(horizon_steps=2)
+    teacher = RolloutTeacher(horizon_steps=2)
     first = teacher.choose(simulator)
     second = teacher.choose(simulator)
     assert first == second
@@ -93,35 +93,35 @@ def test_teacher_never_selects_unavailable_outputs(scenario_v2):
         cooler=replace(scenario_v2.actuators.cooler, available=False),
         co2_doser=replace(scenario_v2.actuators.co2_doser, available=False),
     )
-    zones = tuple(
-        replace(zone, irrigation=replace(zone.irrigation, available=False))
-        for zone in scenario_v2.zones
+    pots = tuple(
+        replace(pot, irrigation=replace(pot.irrigation, available=False))
+        for pot in scenario_v2.pots
     )
-    simulator = SequentialEnvironmentSimulatorV2(
-        replace(scenario_v2, actuators=unavailable, zones=zones)
+    simulator = SequentialEnvironmentSimulator(
+        replace(scenario_v2, actuators=unavailable, pots=pots)
     )
-    result = RolloutTeacherV2(horizon_steps=2).choose(simulator)
+    result = RolloutTeacher(horizon_steps=2).choose(simulator)
     assert result.action == ControlAction()
 
 
 def test_irrigation_blocked_when_soil_at_target(scenario_v2):
-    simulator = SequentialEnvironmentSimulatorV2(scenario_v2)
-    zone = simulator.scenario.zones[0]
-    simulator.state.zones[0].soil_moisture_pct = zone.target_soil_moisture_pct
+    simulator = SequentialEnvironmentSimulator(scenario_v2)
+    pot = simulator.scenario.pots[0]
+    simulator.state.pots[0].soil_moisture_pct = pot.target_soil_moisture_pct
     assert irrigation_levels_for_zone(simulator, 0) == (0.0,)
 
 
 def test_irrigation_interval_violation_has_explicit_cost(scenario_v2):
-    simulator = SequentialEnvironmentSimulatorV2(scenario_v2)
-    simulator.step(ControlAction(irrigation_zone_1=1.0), add_sensor_noise=False)
-    teacher = RolloutTeacherV2(horizon_steps=1)
-    irrigation = teacher.evaluate(simulator, ControlAction(irrigation_zone_1=1.0))
+    simulator = SequentialEnvironmentSimulator(scenario_v2)
+    simulator.step(ControlAction(irrigation_pot_1=1.0), add_sensor_noise=False)
+    teacher = RolloutTeacher(horizon_steps=1)
+    irrigation = teacher.evaluate(simulator, ControlAction(irrigation_pot_1=1.0))
     idle = teacher.evaluate(simulator, ControlAction())
     assert irrigation > idle
 
 
 def test_heating_levels_only_when_below_target(scenario_v2):
-    simulator = SequentialEnvironmentSimulatorV2(scenario_v2)
+    simulator = SequentialEnvironmentSimulator(scenario_v2)
     assert nutrient_heater_levels(simulator) == (0.0,)
     assert heat_mat_levels_for_zone(simulator, 0) == (0.0,)
 
@@ -133,20 +133,20 @@ def test_heating_levels_only_when_below_target(scenario_v2):
             nutrient_heater=NutrientHeaterCapabilities(available=True, max_power_w=120.0),
         ),
     )
-    cold_sim = SequentialEnvironmentSimulatorV2(cold_nutrient)
+    cold_sim = SequentialEnvironmentSimulator(cold_nutrient)
     cold_sim.state.nutrient_solution_temperature_c = 16.0
     assert nutrient_heater_levels(cold_sim) == (0.0, 1.0)
 
     heated_zone = replace(
-        scenario_v2.zones[0],
+        scenario_v2.pots[0],
         soil_temperature_valid=True,
         heat_mat=HeatMatCapabilities(available=True, max_power_w=30.0),
         target_soil_temperature_c=24.0,
     )
-    soil_sim = SequentialEnvironmentSimulatorV2(
-        replace(scenario_v2, zones=(heated_zone,) + scenario_v2.zones[1:])
+    soil_sim = SequentialEnvironmentSimulator(
+        replace(scenario_v2, pots=(heated_zone,) + scenario_v2.pots[1:])
     )
-    soil_sim.state.zones[0].soil_temperature_c = 18.0
+    soil_sim.state.pots[0].soil_temperature_c = 18.0
     assert heat_mat_levels_for_zone(soil_sim, 0) == (0.0, 1.0)
 
 
@@ -160,10 +160,10 @@ def test_teacher_can_select_nutrient_heater_when_solution_is_cold(scenario_v2):
             nutrient_heater=NutrientHeaterCapabilities(available=True, max_power_w=150.0),
         ),
     )
-    simulator = SequentialEnvironmentSimulatorV2(cold)
+    simulator = SequentialEnvironmentSimulator(cold)
     simulator.state.nutrient_solution_temperature_c = 16.0
-    zone = simulator.scenario.zones[0]
-    simulator.state.zones[0].soil_moisture_pct = zone.target_soil_moisture_pct
+    pot = simulator.scenario.pots[0]
+    simulator.state.pots[0].soil_moisture_pct = pot.target_soil_moisture_pct
     nutrient_focus = CostConfig(
         temperature_error=0.0,
         humidity_error=0.0,
@@ -178,13 +178,11 @@ def test_teacher_can_select_nutrient_heater_when_solution_is_cold(scenario_v2):
         unreachable_target=0.0,
         terminal_multiplier=2.0,
     )
-    result = RolloutTeacherV2(cost=nutrient_focus, horizon_steps=2).choose(simulator)
+    result = RolloutTeacher(cost=nutrient_focus, horizon_steps=2).choose(simulator)
     assert result.action.nutrient_heater == 1.0
-    assert result.action.irrigation_zone_1 == 0.0
+    assert result.action.irrigation_pot_1 == 0.0
 
 
 def test_random_scenario_supports_zero_to_four_active_zones():
-    counts = {
-        len(random_scenario_v2(index, 9000 + index).active_zone_indices()) for index in range(40)
-    }
+    counts = {len(random_scenario(index, 9000 + index).active_pot_indices()) for index in range(40)}
     assert counts == {0, 1, 2, 3, 4}

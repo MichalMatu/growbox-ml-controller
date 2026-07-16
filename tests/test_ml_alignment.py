@@ -11,21 +11,22 @@ from tools.ml.alignment import (
     summarize_training_fields,
 )
 from tools.ml.controller_input import controller_input_record
-from tools.ml.generate_dataset_v2 import random_scenario_v2
+from tools.ml.generate_dataset import random_scenario
 from tools.ml.scenario_payload import default_scenario
-from tools.ml.simulator_v2 import OUTPUT_NAMES, ControlAction, SequentialEnvironmentSimulatorV2
+from tools.ml.simulator import OUTPUT_NAMES, ControlAction, SequentialEnvironmentSimulator
 
 
-def test_active_contract_is_v3_with_expected_io():
+def test_active_contract_is_v4_pots_with_expected_io():
     contract = load_active_contract()
     summary = summarize_training_fields(contract)
-    assert summary["schema_version"] == 3
+    assert summary["schema_version"] == 4
+    assert summary["schema_hash"] == "5768273a73ac"
     assert summary["feature_count"] == 128
     assert summary["output_count"] == 15
     assert summary["outputs"] == list(OUTPUT_NAMES)
     assert summary["feature_groups"]["sensors"] == 7
-    assert summary["feature_groups"]["zones.*.irrigation"] == 20
-    assert summary["feature_groups"]["zones.*.heat_mat"] == 12
+    assert summary["feature_groups"]["pots.*.irrigation"] == 20
+    assert summary["feature_groups"]["pots.*.heat_mat"] == 12
 
 
 def test_simulator_outputs_match_active_contract():
@@ -41,8 +42,8 @@ def test_simulator_outputs_mismatch_raises():
 
 def test_controller_input_covers_all_feature_paths():
     contract = load_active_contract()
-    scenario = random_scenario_v2(0, 42)
-    simulator = SequentialEnvironmentSimulatorV2(scenario)
+    scenario = random_scenario(0, 42)
+    simulator = SequentialEnvironmentSimulator(scenario)
     state = simulator.observe(add_sensor_noise=False)
     record = controller_input_record(
         scenario,
@@ -56,7 +57,7 @@ def test_controller_input_covers_all_feature_paths():
             "outside_humidity_pct": True,
             "outside_co2_ppm": True,
         },
-        zone_validity={
+        pot_validity={
             index: {"soil_moisture_pct": True, "soil_temperature_c": True} for index in range(4)
         },
         previous=ControlAction(),

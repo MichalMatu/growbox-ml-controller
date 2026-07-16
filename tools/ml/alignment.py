@@ -2,7 +2,7 @@
 
 Physics lives in the simulator; field names, order, and counts live in the schema.
 This module is the guardrail between those layers so a new growbox sim script cannot
-silently drift from ``schemas/environment-controller-v3.json``.
+silently drift from ``schemas/environment-controller.json``.
 """
 
 from __future__ import annotations
@@ -71,8 +71,8 @@ def summarize_training_fields(contract: Contract | None = None) -> dict[str, Any
     groups: dict[str, list[str]] = {}
     for feature in contract.features:
         parts = feature.path.split(".")
-        if parts[0] == "zones" and len(parts) >= 3:
-            group = f"zones.*.{parts[2]}"
+        if parts[0] == "pots" and len(parts) >= 3:
+            group = f"pots.*.{parts[2]}"
         else:
             group = parts[0]
         groups.setdefault(group, []).append(feature.name)

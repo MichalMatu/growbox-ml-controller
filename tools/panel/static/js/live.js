@@ -32,12 +32,12 @@ function previousStepForDisplay() {
 }
 
 function snapshotPreviousActuators() {
-  const zones = Array.isArray(scenario.zones) ? scenario.zones : [];
+  const pots = Array.isArray(scenario.pots) ? scenario.pots : [];
   return {
     previous: { ...(scenario.previous || {}) },
-    zones: zones.map((zone) => ({
-      ...(zone || {}),
-      previous: { ...(zone?.previous || { irrigation: 0 }) },
+    pots: pots.map((pot) => ({
+      ...(pot || {}),
+      previous: { ...(pot?.previous || { irrigation: 0 }) },
     })),
   };
 }
@@ -120,32 +120,32 @@ function renderLiveMetricRow(metric, decision) {
 const LIVE_SOIL_TARGET_HINT = "Cel z formularza — na płytce po Wyślij";
 
 function isLiveZoneActive(decision, zoneIndex) {
-  const fromDecision = decision?.zones?.[zoneIndex]?.available;
+  const fromDecision = decision?.pots?.[zoneIndex]?.available;
   if (typeof fromDecision === "boolean") return fromDecision;
   return isZoneActive(zoneIndex);
 }
 
 function liveZoneSoilTarget(zoneIndex, decision) {
-  const fromDecision = decision?.zones?.[zoneIndex]?.targets?.soil_moisture_pct;
+  const fromDecision = decision?.pots?.[zoneIndex]?.targets?.soil_moisture_pct;
   if (typeof fromDecision === "number" && Number.isFinite(fromDecision)) {
     return { value: fromDecision, hint: "" };
   }
   const field = fieldByName(`zone_${zoneIndex + 1}_target_soil_moisture_pct`);
   const value = field
     ? getNested(scenario, field.path)
-    : getNested(scenario, `zones.${zoneIndex}.targets.soil_moisture_pct`);
+    : getNested(scenario, `pots.${zoneIndex}.targets.soil_moisture_pct`);
   return { value, hint: LIVE_SOIL_TARGET_HINT };
 }
 
 function liveZoneSoilTempTarget(zoneIndex, decision) {
-  const fromDecision = decision?.zones?.[zoneIndex]?.targets?.soil_temperature_c;
+  const fromDecision = decision?.pots?.[zoneIndex]?.targets?.soil_temperature_c;
   if (typeof fromDecision === "number" && Number.isFinite(fromDecision)) {
     return { value: fromDecision, hint: "" };
   }
   const field = fieldByName(`zone_${zoneIndex + 1}_target_soil_temperature_c`);
   const value = field
     ? getNested(scenario, field.path)
-    : getNested(scenario, `zones.${zoneIndex}.targets.soil_temperature_c`);
+    : getNested(scenario, `pots.${zoneIndex}.targets.soil_temperature_c`);
   return { value, hint: LIVE_SOIL_TARGET_HINT };
 }
 
@@ -169,9 +169,9 @@ function renderLivePotMetricRow(label, value, decimals, unit, targetValue, targe
 function renderLivePotGroupTable(decision) {
   const rowParts = POT_SENSOR_ROWS.flatMap((_pot, index) => {
     if (!isLiveZoneActive(decision, index)) return [];
-    const zone = decision?.zones?.[index] || {};
-    const sensors = zone.sensors || {};
-    const validity = zone.validity || {};
+    const pot = decision?.pots?.[index] || {};
+    const sensors = pot.sensors || {};
+    const validity = pot.validity || {};
     const { value: moistureTarget, hint: moistureHint } = liveZoneSoilTarget(index, decision);
     const { value: tempTarget, hint: tempHint } = liveZoneSoilTempTarget(index, decision);
     const potNo = index + 1;
@@ -337,15 +337,15 @@ function outputLabel(name) {
 function syncPreviousActuators(safe, decision = lastDecision) {
   if (!safe || typeof safe !== "object") return;
   if (!scenario.previous) scenario.previous = {};
-  if (!Array.isArray(scenario.zones)) scenario.zones = [];
+  if (!Array.isArray(scenario.pots)) scenario.pots = [];
   for (const name of panelOutputNames()) {
     const value = resolveActuatorAvailability(name, decision) ? (Number(safe[name]) || 0) : 0;
-    const zoneMatch = name.match(/^irrigation_zone_(\d+)$/);
+    const zoneMatch = name.match(/^irrigation_pot_(\d+)$/);
     if (zoneMatch) {
       const zoneIndex = Number(zoneMatch[1]) - 1;
-      if (!scenario.zones[zoneIndex]) scenario.zones[zoneIndex] = {};
-      if (!scenario.zones[zoneIndex].previous) scenario.zones[zoneIndex].previous = {};
-      scenario.zones[zoneIndex].previous.irrigation = value;
+      if (!scenario.pots[zoneIndex]) scenario.pots[zoneIndex] = {};
+      if (!scenario.pots[zoneIndex].previous) scenario.pots[zoneIndex].previous = {};
+      scenario.pots[zoneIndex].previous.irrigation = value;
       continue;
     }
     scenario.previous[name] = value;

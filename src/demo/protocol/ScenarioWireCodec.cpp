@@ -84,263 +84,263 @@ const char* readString(const cJSON* object, const char* key) noexcept {
   return cJSON_IsString(value) && value->valuestring != nullptr ? value->valuestring : nullptr;
 }
 
-FeatureIndex zoneAvailableIndex(std::size_t zone_index) noexcept {
-  switch (zone_index) {
+FeatureIndex zoneAvailableIndex(std::size_t pot_index) noexcept {
+  switch (pot_index) {
   case 0U:
-    return FeatureIndex::Zone1Available;
+    return FeatureIndex::Pot1Available;
   case 1U:
-    return FeatureIndex::Zone2Available;
+    return FeatureIndex::Pot2Available;
   case 2U:
-    return FeatureIndex::Zone3Available;
+    return FeatureIndex::Pot3Available;
   default:
-    return FeatureIndex::Zone4Available;
+    return FeatureIndex::Pot4Available;
   }
 }
 
-FeatureIndex zoneSoilMoistureIndex(std::size_t zone_index) noexcept {
-  switch (zone_index) {
+FeatureIndex zoneSoilMoistureIndex(std::size_t pot_index) noexcept {
+  switch (pot_index) {
   case 0U:
-    return FeatureIndex::SoilMoistureZone1Pct;
+    return FeatureIndex::SoilMoisturePot1Pct;
   case 1U:
-    return FeatureIndex::SoilMoistureZone2Pct;
+    return FeatureIndex::SoilMoisturePot2Pct;
   case 2U:
-    return FeatureIndex::SoilMoistureZone3Pct;
+    return FeatureIndex::SoilMoisturePot3Pct;
   default:
-    return FeatureIndex::SoilMoistureZone4Pct;
+    return FeatureIndex::SoilMoisturePot4Pct;
   }
 }
 
-FeatureIndex zoneSoilTemperatureIndex(std::size_t zone_index) noexcept {
-  switch (zone_index) {
+FeatureIndex zoneSoilTemperatureIndex(std::size_t pot_index) noexcept {
+  switch (pot_index) {
   case 0U:
-    return FeatureIndex::SoilTemperatureZone1C;
+    return FeatureIndex::SoilTemperaturePot1C;
   case 1U:
-    return FeatureIndex::SoilTemperatureZone2C;
+    return FeatureIndex::SoilTemperaturePot2C;
   case 2U:
-    return FeatureIndex::SoilTemperatureZone3C;
+    return FeatureIndex::SoilTemperaturePot3C;
   default:
-    return FeatureIndex::SoilTemperatureZone4C;
+    return FeatureIndex::SoilTemperaturePot4C;
   }
 }
 
-FeatureIndex zoneSoilMoistureValidIndex(std::size_t zone_index) noexcept {
-  switch (zone_index) {
+FeatureIndex zoneSoilMoistureValidIndex(std::size_t pot_index) noexcept {
+  switch (pot_index) {
   case 0U:
-    return FeatureIndex::SoilMoistureZone1Valid;
+    return FeatureIndex::SoilMoisturePot1Valid;
   case 1U:
-    return FeatureIndex::SoilMoistureZone2Valid;
+    return FeatureIndex::SoilMoisturePot2Valid;
   case 2U:
-    return FeatureIndex::SoilMoistureZone3Valid;
+    return FeatureIndex::SoilMoisturePot3Valid;
   default:
-    return FeatureIndex::SoilMoistureZone4Valid;
+    return FeatureIndex::SoilMoisturePot4Valid;
   }
 }
 
-FeatureIndex zoneSoilTemperatureValidIndex(std::size_t zone_index) noexcept {
-  switch (zone_index) {
+FeatureIndex zoneSoilTemperatureValidIndex(std::size_t pot_index) noexcept {
+  switch (pot_index) {
   case 0U:
-    return FeatureIndex::SoilTemperatureZone1Valid;
+    return FeatureIndex::SoilTemperaturePot1Valid;
   case 1U:
-    return FeatureIndex::SoilTemperatureZone2Valid;
+    return FeatureIndex::SoilTemperaturePot2Valid;
   case 2U:
-    return FeatureIndex::SoilTemperatureZone3Valid;
+    return FeatureIndex::SoilTemperaturePot3Valid;
   default:
-    return FeatureIndex::SoilTemperatureZone4Valid;
+    return FeatureIndex::SoilTemperaturePot4Valid;
   }
 }
 
-FeatureIndex zonePotVolumeIndex(std::size_t zone_index) noexcept {
-  switch (zone_index) {
+FeatureIndex zonePotVolumeIndex(std::size_t pot_index) noexcept {
+  switch (pot_index) {
   case 0U:
-    return FeatureIndex::Zone1PotVolumeL;
+    return FeatureIndex::Pot1PotVolumeL;
   case 1U:
-    return FeatureIndex::Zone2PotVolumeL;
+    return FeatureIndex::Pot2PotVolumeL;
   case 2U:
-    return FeatureIndex::Zone3PotVolumeL;
+    return FeatureIndex::Pot3PotVolumeL;
   default:
-    return FeatureIndex::Zone4PotVolumeL;
+    return FeatureIndex::Pot4PotVolumeL;
   }
 }
 
-FeatureIndex zoneSubstrateCapacityIndex(std::size_t zone_index) noexcept {
-  switch (zone_index) {
+FeatureIndex zoneSubstrateCapacityIndex(std::size_t pot_index) noexcept {
+  switch (pot_index) {
   case 0U:
-    return FeatureIndex::Zone1SubstrateWaterCapacityMl;
+    return FeatureIndex::Pot1SubstrateWaterCapacityMl;
   case 1U:
-    return FeatureIndex::Zone2SubstrateWaterCapacityMl;
+    return FeatureIndex::Pot2SubstrateWaterCapacityMl;
   case 2U:
-    return FeatureIndex::Zone3SubstrateWaterCapacityMl;
+    return FeatureIndex::Pot3SubstrateWaterCapacityMl;
   default:
-    return FeatureIndex::Zone4SubstrateWaterCapacityMl;
+    return FeatureIndex::Pot4SubstrateWaterCapacityMl;
   }
 }
 
-FeatureIndex zoneTranspirationIndex(std::size_t zone_index) noexcept {
-  switch (zone_index) {
+FeatureIndex zoneTranspirationIndex(std::size_t pot_index) noexcept {
+  switch (pot_index) {
   case 0U:
-    return FeatureIndex::Zone1TranspirationFactor;
+    return FeatureIndex::Pot1TranspirationFactor;
   case 1U:
-    return FeatureIndex::Zone2TranspirationFactor;
+    return FeatureIndex::Pot2TranspirationFactor;
   case 2U:
-    return FeatureIndex::Zone3TranspirationFactor;
+    return FeatureIndex::Pot3TranspirationFactor;
   default:
-    return FeatureIndex::Zone4TranspirationFactor;
+    return FeatureIndex::Pot4TranspirationFactor;
   }
 }
 
-FeatureIndex zoneTargetSoilMoistureIndex(std::size_t zone_index) noexcept {
-  switch (zone_index) {
+FeatureIndex zoneTargetSoilMoistureIndex(std::size_t pot_index) noexcept {
+  switch (pot_index) {
   case 0U:
-    return FeatureIndex::Zone1TargetSoilMoisturePct;
+    return FeatureIndex::Pot1TargetSoilMoisturePct;
   case 1U:
-    return FeatureIndex::Zone2TargetSoilMoisturePct;
+    return FeatureIndex::Pot2TargetSoilMoisturePct;
   case 2U:
-    return FeatureIndex::Zone3TargetSoilMoisturePct;
+    return FeatureIndex::Pot3TargetSoilMoisturePct;
   default:
-    return FeatureIndex::Zone4TargetSoilMoisturePct;
+    return FeatureIndex::Pot4TargetSoilMoisturePct;
   }
 }
 
-FeatureIndex zoneIrrigationAvailableIndex(std::size_t zone_index) noexcept {
-  switch (zone_index) {
+FeatureIndex zoneIrrigationAvailableIndex(std::size_t pot_index) noexcept {
+  switch (pot_index) {
   case 0U:
-    return FeatureIndex::Zone1IrrigationAvailable;
+    return FeatureIndex::Pot1IrrigationAvailable;
   case 1U:
-    return FeatureIndex::Zone2IrrigationAvailable;
+    return FeatureIndex::Pot2IrrigationAvailable;
   case 2U:
-    return FeatureIndex::Zone3IrrigationAvailable;
+    return FeatureIndex::Pot3IrrigationAvailable;
   default:
-    return FeatureIndex::Zone4IrrigationAvailable;
+    return FeatureIndex::Pot4IrrigationAvailable;
   }
 }
 
-FeatureIndex zoneIrrigationFlowIndex(std::size_t zone_index) noexcept {
-  switch (zone_index) {
+FeatureIndex zoneIrrigationFlowIndex(std::size_t pot_index) noexcept {
+  switch (pot_index) {
   case 0U:
-    return FeatureIndex::Zone1IrrigationFlowMlS;
+    return FeatureIndex::Pot1IrrigationFlowMlS;
   case 1U:
-    return FeatureIndex::Zone2IrrigationFlowMlS;
+    return FeatureIndex::Pot2IrrigationFlowMlS;
   case 2U:
-    return FeatureIndex::Zone3IrrigationFlowMlS;
+    return FeatureIndex::Pot3IrrigationFlowMlS;
   default:
-    return FeatureIndex::Zone4IrrigationFlowMlS;
+    return FeatureIndex::Pot4IrrigationFlowMlS;
   }
 }
 
-FeatureIndex zoneIrrigationMaximumPulseIndex(std::size_t zone_index) noexcept {
-  switch (zone_index) {
+FeatureIndex zoneIrrigationMaximumPulseIndex(std::size_t pot_index) noexcept {
+  switch (pot_index) {
   case 0U:
-    return FeatureIndex::Zone1IrrigationMaximumPulseS;
+    return FeatureIndex::Pot1IrrigationMaximumPulseS;
   case 1U:
-    return FeatureIndex::Zone2IrrigationMaximumPulseS;
+    return FeatureIndex::Pot2IrrigationMaximumPulseS;
   case 2U:
-    return FeatureIndex::Zone3IrrigationMaximumPulseS;
+    return FeatureIndex::Pot3IrrigationMaximumPulseS;
   default:
-    return FeatureIndex::Zone4IrrigationMaximumPulseS;
+    return FeatureIndex::Pot4IrrigationMaximumPulseS;
   }
 }
 
-FeatureIndex zoneIrrigationMinimumIntervalIndex(std::size_t zone_index) noexcept {
-  switch (zone_index) {
+FeatureIndex zoneIrrigationMinimumIntervalIndex(std::size_t pot_index) noexcept {
+  switch (pot_index) {
   case 0U:
-    return FeatureIndex::Zone1IrrigationMinimumIntervalS;
+    return FeatureIndex::Pot1IrrigationMinimumIntervalS;
   case 1U:
-    return FeatureIndex::Zone2IrrigationMinimumIntervalS;
+    return FeatureIndex::Pot2IrrigationMinimumIntervalS;
   case 2U:
-    return FeatureIndex::Zone3IrrigationMinimumIntervalS;
+    return FeatureIndex::Pot3IrrigationMinimumIntervalS;
   default:
-    return FeatureIndex::Zone4IrrigationMinimumIntervalS;
+    return FeatureIndex::Pot4IrrigationMinimumIntervalS;
   }
 }
 
-FeatureIndex zoneIrrigationControlTypeIndex(std::size_t zone_index) noexcept {
-  switch (zone_index) {
+FeatureIndex zoneIrrigationControlTypeIndex(std::size_t pot_index) noexcept {
+  switch (pot_index) {
   case 0U:
-    return FeatureIndex::Zone1IrrigationControlType;
+    return FeatureIndex::Pot1IrrigationControlType;
   case 1U:
-    return FeatureIndex::Zone2IrrigationControlType;
+    return FeatureIndex::Pot2IrrigationControlType;
   case 2U:
-    return FeatureIndex::Zone3IrrigationControlType;
+    return FeatureIndex::Pot3IrrigationControlType;
   default:
-    return FeatureIndex::Zone4IrrigationControlType;
+    return FeatureIndex::Pot4IrrigationControlType;
   }
 }
 
-FeatureIndex zonePreviousIrrigationIndex(std::size_t zone_index) noexcept {
-  switch (zone_index) {
+FeatureIndex zonePreviousIrrigationIndex(std::size_t pot_index) noexcept {
+  switch (pot_index) {
   case 0U:
-    return FeatureIndex::Zone1PreviousIrrigation;
+    return FeatureIndex::Pot1PreviousIrrigation;
   case 1U:
-    return FeatureIndex::Zone2PreviousIrrigation;
+    return FeatureIndex::Pot2PreviousIrrigation;
   case 2U:
-    return FeatureIndex::Zone3PreviousIrrigation;
+    return FeatureIndex::Pot3PreviousIrrigation;
   default:
-    return FeatureIndex::Zone4PreviousIrrigation;
+    return FeatureIndex::Pot4PreviousIrrigation;
   }
 }
 
-FeatureIndex zoneTargetSoilTemperatureIndex(std::size_t zone_index) noexcept {
-  switch (zone_index) {
+FeatureIndex zoneTargetSoilTemperatureIndex(std::size_t pot_index) noexcept {
+  switch (pot_index) {
   case 0U:
-    return FeatureIndex::Zone1TargetSoilTemperatureC;
+    return FeatureIndex::Pot1TargetSoilTemperatureC;
   case 1U:
-    return FeatureIndex::Zone2TargetSoilTemperatureC;
+    return FeatureIndex::Pot2TargetSoilTemperatureC;
   case 2U:
-    return FeatureIndex::Zone3TargetSoilTemperatureC;
+    return FeatureIndex::Pot3TargetSoilTemperatureC;
   default:
-    return FeatureIndex::Zone4TargetSoilTemperatureC;
+    return FeatureIndex::Pot4TargetSoilTemperatureC;
   }
 }
 
-FeatureIndex zoneHeatMatAvailableIndex(std::size_t zone_index) noexcept {
-  switch (zone_index) {
+FeatureIndex zoneHeatMatAvailableIndex(std::size_t pot_index) noexcept {
+  switch (pot_index) {
   case 0U:
-    return FeatureIndex::Zone1HeatMatAvailable;
+    return FeatureIndex::Pot1HeatMatAvailable;
   case 1U:
-    return FeatureIndex::Zone2HeatMatAvailable;
+    return FeatureIndex::Pot2HeatMatAvailable;
   case 2U:
-    return FeatureIndex::Zone3HeatMatAvailable;
+    return FeatureIndex::Pot3HeatMatAvailable;
   default:
-    return FeatureIndex::Zone4HeatMatAvailable;
+    return FeatureIndex::Pot4HeatMatAvailable;
   }
 }
 
-FeatureIndex zoneHeatMatMaxPowerIndex(std::size_t zone_index) noexcept {
-  switch (zone_index) {
+FeatureIndex zoneHeatMatMaxPowerIndex(std::size_t pot_index) noexcept {
+  switch (pot_index) {
   case 0U:
-    return FeatureIndex::Zone1HeatMatMaxPowerW;
+    return FeatureIndex::Pot1HeatMatMaxPowerW;
   case 1U:
-    return FeatureIndex::Zone2HeatMatMaxPowerW;
+    return FeatureIndex::Pot2HeatMatMaxPowerW;
   case 2U:
-    return FeatureIndex::Zone3HeatMatMaxPowerW;
+    return FeatureIndex::Pot3HeatMatMaxPowerW;
   default:
-    return FeatureIndex::Zone4HeatMatMaxPowerW;
+    return FeatureIndex::Pot4HeatMatMaxPowerW;
   }
 }
 
-FeatureIndex zoneHeatMatControlTypeIndex(std::size_t zone_index) noexcept {
-  switch (zone_index) {
+FeatureIndex zoneHeatMatControlTypeIndex(std::size_t pot_index) noexcept {
+  switch (pot_index) {
   case 0U:
-    return FeatureIndex::Zone1HeatMatControlType;
+    return FeatureIndex::Pot1HeatMatControlType;
   case 1U:
-    return FeatureIndex::Zone2HeatMatControlType;
+    return FeatureIndex::Pot2HeatMatControlType;
   case 2U:
-    return FeatureIndex::Zone3HeatMatControlType;
+    return FeatureIndex::Pot3HeatMatControlType;
   default:
-    return FeatureIndex::Zone4HeatMatControlType;
+    return FeatureIndex::Pot4HeatMatControlType;
   }
 }
 
-FeatureIndex zonePreviousHeatMatIndex(std::size_t zone_index) noexcept {
-  switch (zone_index) {
+FeatureIndex zonePreviousHeatMatIndex(std::size_t pot_index) noexcept {
+  switch (pot_index) {
   case 0U:
-    return FeatureIndex::Zone1PreviousHeatMat;
+    return FeatureIndex::Pot1PreviousHeatMat;
   case 1U:
-    return FeatureIndex::Zone2PreviousHeatMat;
+    return FeatureIndex::Pot2PreviousHeatMat;
   case 2U:
-    return FeatureIndex::Zone3PreviousHeatMat;
+    return FeatureIndex::Pot3PreviousHeatMat;
   default:
-    return FeatureIndex::Zone4PreviousHeatMat;
+    return FeatureIndex::Pot4PreviousHeatMat;
   }
 }
 
@@ -413,62 +413,61 @@ bool parseControlType(const char* control_type,
   return false;
 }
 
-bool parseZoneCultivation(const cJSON* object, control::ZoneCultivationConfig& cultivation,
-                          std::size_t zone_index) noexcept {
+bool parseZoneCultivation(const cJSON* object, control::PotCultivationConfig& cultivation,
+                          std::size_t pot_index) noexcept {
   return object != nullptr &&
-         readFiniteFloat(object, control::schema::wireKey(zonePotVolumeIndex(zone_index)),
+         readFiniteFloat(object, control::schema::wireKey(zonePotVolumeIndex(pot_index)),
                          cultivation.pot_volume_l) &&
-         readFiniteFloat(object, control::schema::wireKey(zoneSubstrateCapacityIndex(zone_index)),
+         readFiniteFloat(object, control::schema::wireKey(zoneSubstrateCapacityIndex(pot_index)),
                          cultivation.substrate_water_capacity_ml) &&
-         readFiniteFloat(object, control::schema::wireKey(zoneTranspirationIndex(zone_index)),
+         readFiniteFloat(object, control::schema::wireKey(zoneTranspirationIndex(pot_index)),
                          cultivation.transpiration_factor);
 }
 
 bool parseZoneHeatMat(const cJSON* object, control::HeatMatCapabilities& heat_mat,
-                      std::size_t zone_index) noexcept {
+                      std::size_t pot_index) noexcept {
   if (object == nullptr) {
     return true;
   }
   control::ActuatorControlType control_type = control::ActuatorControlType::Binary;
   if (!parseControlType(
-          readString(object, control::schema::wireKey(zoneHeatMatControlTypeIndex(zone_index))),
+          readString(object, control::schema::wireKey(zoneHeatMatControlTypeIndex(pot_index))),
           control_type)) {
     return false;
   }
   heat_mat.control_type = control_type;
-  return readOptionalBool(object, control::schema::wireKey(zoneHeatMatAvailableIndex(zone_index)),
+  return readOptionalBool(object, control::schema::wireKey(zoneHeatMatAvailableIndex(pot_index)),
                           heat_mat.available) &&
          readOptionalFiniteFloat(object,
-                                 control::schema::wireKey(zoneHeatMatMaxPowerIndex(zone_index)),
+                                 control::schema::wireKey(zoneHeatMatMaxPowerIndex(pot_index)),
                                  heat_mat.max_power_w);
 }
 
 bool parseZoneIrrigation(const cJSON* object, control::IrrigationPumpCapabilities& irrigation,
-                         std::size_t zone_index) noexcept {
+                         std::size_t pot_index) noexcept {
   if (object == nullptr) {
     return false;
   }
   control::ActuatorControlType control_type = control::ActuatorControlType::Binary;
   if (!parseControlType(
-          readString(object, control::schema::wireKey(zoneIrrigationControlTypeIndex(zone_index))),
+          readString(object, control::schema::wireKey(zoneIrrigationControlTypeIndex(pot_index))),
           control_type)) {
     return false;
   }
   irrigation.control_type = control_type;
-  return readBool(object, control::schema::wireKey(zoneIrrigationAvailableIndex(zone_index)),
+  return readBool(object, control::schema::wireKey(zoneIrrigationAvailableIndex(pot_index)),
                   irrigation.available) &&
-         readFiniteFloat(object, control::schema::wireKey(zoneIrrigationFlowIndex(zone_index)),
+         readFiniteFloat(object, control::schema::wireKey(zoneIrrigationFlowIndex(pot_index)),
                          irrigation.flow_ml_s) &&
          readFiniteFloat(object,
-                         control::schema::wireKey(zoneIrrigationMaximumPulseIndex(zone_index)),
+                         control::schema::wireKey(zoneIrrigationMaximumPulseIndex(pot_index)),
                          irrigation.maximum_pulse_s) &&
          readFiniteFloat(object,
-                         control::schema::wireKey(zoneIrrigationMinimumIntervalIndex(zone_index)),
+                         control::schema::wireKey(zoneIrrigationMinimumIntervalIndex(pot_index)),
                          irrigation.minimum_interval_s);
 }
 
-bool parseZoneObject(const cJSON* object, control::ZoneConfig& zone,
-                     std::size_t zone_index) noexcept {
+bool parseZoneObject(const cJSON* object, control::PotConfig& pot, std::size_t pot_index) noexcept {
   const cJSON* sensors = objectItem(object, "sensors");
   const cJSON* validity = objectItem(object, "validity");
   const cJSON* cultivation = objectItem(object, "cultivation");
@@ -477,43 +476,41 @@ bool parseZoneObject(const cJSON* object, control::ZoneConfig& zone,
   const cJSON* heat_mat = objectItem(object, "heat_mat");
   const cJSON* previous = objectItem(object, "previous");
   return object != nullptr &&
-         readBool(object, control::schema::wireKey(zoneAvailableIndex(zone_index)),
-                  zone.available) &&
+         readBool(object, control::schema::wireKey(zoneAvailableIndex(pot_index)), pot.available) &&
          sensors != nullptr &&
-         readFiniteFloat(sensors, control::schema::wireKey(zoneSoilMoistureIndex(zone_index)),
-                         zone.sensors.soil_moisture_pct) &&
-         readFiniteFloat(sensors, control::schema::wireKey(zoneSoilTemperatureIndex(zone_index)),
-                         zone.sensors.soil_temperature_c) &&
+         readFiniteFloat(sensors, control::schema::wireKey(zoneSoilMoistureIndex(pot_index)),
+                         pot.sensors.soil_moisture_pct) &&
+         readFiniteFloat(sensors, control::schema::wireKey(zoneSoilTemperatureIndex(pot_index)),
+                         pot.sensors.soil_temperature_c) &&
          validity != nullptr &&
-         readBool(validity, control::schema::wireKey(zoneSoilMoistureValidIndex(zone_index)),
-                  zone.validity.soil_moisture) &&
-         readBool(validity, control::schema::wireKey(zoneSoilTemperatureValidIndex(zone_index)),
-                  zone.validity.soil_temperature) &&
-         parseZoneCultivation(cultivation, zone.cultivation, zone_index) && targets != nullptr &&
-         readFiniteFloat(targets, control::schema::wireKey(zoneTargetSoilMoistureIndex(zone_index)),
-                         zone.target_soil_moisture_pct) &&
+         readBool(validity, control::schema::wireKey(zoneSoilMoistureValidIndex(pot_index)),
+                  pot.validity.soil_moisture) &&
+         readBool(validity, control::schema::wireKey(zoneSoilTemperatureValidIndex(pot_index)),
+                  pot.validity.soil_temperature) &&
+         parseZoneCultivation(cultivation, pot.cultivation, pot_index) && targets != nullptr &&
+         readFiniteFloat(targets, control::schema::wireKey(zoneTargetSoilMoistureIndex(pot_index)),
+                         pot.target_soil_moisture_pct) &&
          readOptionalFiniteFloat(
-             targets, control::schema::wireKey(zoneTargetSoilTemperatureIndex(zone_index)),
-             zone.target_soil_temperature_c) &&
-         parseZoneIrrigation(irrigation, zone.irrigation, zone_index) &&
-         parseZoneHeatMat(heat_mat, zone.heat_mat, zone_index) && previous != nullptr &&
-         readFiniteFloat(previous,
-                         control::schema::wireKey(zonePreviousIrrigationIndex(zone_index)),
-                         zone.previous_irrigation) &&
+             targets, control::schema::wireKey(zoneTargetSoilTemperatureIndex(pot_index)),
+             pot.target_soil_temperature_c) &&
+         parseZoneIrrigation(irrigation, pot.irrigation, pot_index) &&
+         parseZoneHeatMat(heat_mat, pot.heat_mat, pot_index) && previous != nullptr &&
+         readFiniteFloat(previous, control::schema::wireKey(zonePreviousIrrigationIndex(pot_index)),
+                         pot.previous_irrigation) &&
          readOptionalFiniteFloat(previous,
-                                 control::schema::wireKey(zonePreviousHeatMatIndex(zone_index)),
-                                 zone.previous_heat_mat);
+                                 control::schema::wireKey(zonePreviousHeatMatIndex(pot_index)),
+                                 pot.previous_heat_mat);
 }
 
 bool parseZones(const cJSON* array,
-                std::array<control::ZoneConfig, control::kMaxZones>& zones) noexcept {
+                std::array<control::PotConfig, control::kMaxPots>& pots) noexcept {
   if (array == nullptr ||
-      static_cast<std::size_t>(cJSON_GetArraySize(array)) != control::kMaxZones) {
+      static_cast<std::size_t>(cJSON_GetArraySize(array)) != control::kMaxPots) {
     return false;
   }
-  for (std::size_t zone_index = 0U; zone_index < control::kMaxZones; ++zone_index) {
-    const cJSON* zone_json = cJSON_GetArrayItem(array, static_cast<int>(zone_index));
-    if (!parseZoneObject(zone_json, zones[zone_index], zone_index)) {
+  for (std::size_t pot_index = 0U; pot_index < control::kMaxPots; ++pot_index) {
+    const cJSON* zone_json = cJSON_GetArrayItem(array, static_cast<int>(pot_index));
+    if (!parseZoneObject(zone_json, pots[pot_index], pot_index)) {
       return false;
     }
   }
@@ -665,76 +662,75 @@ bool parseActuators(const cJSON* object, control::GlobalActuatorCapabilities& ac
                                  actuators.nutrient_heater.efficiency);
 }
 
-void addZoneSnapshot(cJSON* zone_json, const control::ZoneConfig& zone,
-                     std::size_t zone_index) noexcept {
+void addZoneSnapshot(cJSON* zone_json, const control::PotConfig& pot,
+                     std::size_t pot_index) noexcept {
   if (zone_json == nullptr) {
     return;
   }
 
-  cJSON_AddBoolToObject(zone_json, control::schema::wireKey(zoneAvailableIndex(zone_index)),
-                        zone.available);
+  cJSON_AddBoolToObject(zone_json, control::schema::wireKey(zoneAvailableIndex(pot_index)),
+                        pot.available);
 
   cJSON* sensors = cJSON_AddObjectToObject(zone_json, "sensors");
-  cJSON_AddNumberToObject(sensors, control::schema::wireKey(zoneSoilMoistureIndex(zone_index)),
-                          zone.sensors.soil_moisture_pct);
-  cJSON_AddNumberToObject(sensors, control::schema::wireKey(zoneSoilTemperatureIndex(zone_index)),
-                          zone.sensors.soil_temperature_c);
+  cJSON_AddNumberToObject(sensors, control::schema::wireKey(zoneSoilMoistureIndex(pot_index)),
+                          pot.sensors.soil_moisture_pct);
+  cJSON_AddNumberToObject(sensors, control::schema::wireKey(zoneSoilTemperatureIndex(pot_index)),
+                          pot.sensors.soil_temperature_c);
 
   cJSON* validity = cJSON_AddObjectToObject(zone_json, "validity");
-  cJSON_AddBoolToObject(validity, control::schema::wireKey(zoneSoilMoistureValidIndex(zone_index)),
-                        zone.validity.soil_moisture);
+  cJSON_AddBoolToObject(validity, control::schema::wireKey(zoneSoilMoistureValidIndex(pot_index)),
+                        pot.validity.soil_moisture);
   cJSON_AddBoolToObject(validity,
-                        control::schema::wireKey(zoneSoilTemperatureValidIndex(zone_index)),
-                        zone.validity.soil_temperature);
+                        control::schema::wireKey(zoneSoilTemperatureValidIndex(pot_index)),
+                        pot.validity.soil_temperature);
 
   cJSON* cultivation = cJSON_AddObjectToObject(zone_json, "cultivation");
-  cJSON_AddNumberToObject(cultivation, control::schema::wireKey(zonePotVolumeIndex(zone_index)),
-                          zone.cultivation.pot_volume_l);
+  cJSON_AddNumberToObject(cultivation, control::schema::wireKey(zonePotVolumeIndex(pot_index)),
+                          pot.cultivation.pot_volume_l);
   cJSON_AddNumberToObject(cultivation,
-                          control::schema::wireKey(zoneSubstrateCapacityIndex(zone_index)),
-                          zone.cultivation.substrate_water_capacity_ml);
-  cJSON_AddNumberToObject(cultivation, control::schema::wireKey(zoneTranspirationIndex(zone_index)),
-                          zone.cultivation.transpiration_factor);
+                          control::schema::wireKey(zoneSubstrateCapacityIndex(pot_index)),
+                          pot.cultivation.substrate_water_capacity_ml);
+  cJSON_AddNumberToObject(cultivation, control::schema::wireKey(zoneTranspirationIndex(pot_index)),
+                          pot.cultivation.transpiration_factor);
 
   cJSON* targets = cJSON_AddObjectToObject(zone_json, "targets");
+  cJSON_AddNumberToObject(targets, control::schema::wireKey(zoneTargetSoilMoistureIndex(pot_index)),
+                          pot.target_soil_moisture_pct);
   cJSON_AddNumberToObject(targets,
-                          control::schema::wireKey(zoneTargetSoilMoistureIndex(zone_index)),
-                          zone.target_soil_moisture_pct);
-  cJSON_AddNumberToObject(targets,
-                          control::schema::wireKey(zoneTargetSoilTemperatureIndex(zone_index)),
-                          zone.target_soil_temperature_c);
+                          control::schema::wireKey(zoneTargetSoilTemperatureIndex(pot_index)),
+                          pot.target_soil_temperature_c);
 
   cJSON* irrigation = cJSON_AddObjectToObject(zone_json, "irrigation");
   cJSON_AddBoolToObject(irrigation,
-                        control::schema::wireKey(zoneIrrigationAvailableIndex(zone_index)),
-                        zone.irrigation.available);
-  cJSON_AddNumberToObject(irrigation, control::schema::wireKey(zoneIrrigationFlowIndex(zone_index)),
-                          zone.irrigation.flow_ml_s);
+                        control::schema::wireKey(zoneIrrigationAvailableIndex(pot_index)),
+                        pot.irrigation.available);
+  cJSON_AddNumberToObject(irrigation, control::schema::wireKey(zoneIrrigationFlowIndex(pot_index)),
+                          pot.irrigation.flow_ml_s);
   cJSON_AddNumberToObject(irrigation,
-                          control::schema::wireKey(zoneIrrigationMaximumPulseIndex(zone_index)),
-                          zone.irrigation.maximum_pulse_s);
+                          control::schema::wireKey(zoneIrrigationMaximumPulseIndex(pot_index)),
+                          pot.irrigation.maximum_pulse_s);
   cJSON_AddNumberToObject(irrigation,
-                          control::schema::wireKey(zoneIrrigationMinimumIntervalIndex(zone_index)),
-                          zone.irrigation.minimum_interval_s);
+                          control::schema::wireKey(zoneIrrigationMinimumIntervalIndex(pot_index)),
+                          pot.irrigation.minimum_interval_s);
   cJSON_AddStringToObject(irrigation,
-                          control::schema::wireKey(zoneIrrigationControlTypeIndex(zone_index)),
-                          controlTypeName(zone.irrigation.control_type));
+                          control::schema::wireKey(zoneIrrigationControlTypeIndex(pot_index)),
+                          controlTypeName(pot.irrigation.control_type));
 
   cJSON* heat_mat = cJSON_AddObjectToObject(zone_json, "heat_mat");
-  cJSON_AddBoolToObject(heat_mat, control::schema::wireKey(zoneHeatMatAvailableIndex(zone_index)),
-                        zone.heat_mat.available);
-  cJSON_AddNumberToObject(heat_mat, control::schema::wireKey(zoneHeatMatMaxPowerIndex(zone_index)),
-                          zone.heat_mat.max_power_w);
+  cJSON_AddBoolToObject(heat_mat, control::schema::wireKey(zoneHeatMatAvailableIndex(pot_index)),
+                        pot.heat_mat.available);
+  cJSON_AddNumberToObject(heat_mat, control::schema::wireKey(zoneHeatMatMaxPowerIndex(pot_index)),
+                          pot.heat_mat.max_power_w);
   cJSON_AddStringToObject(heat_mat,
-                          control::schema::wireKey(zoneHeatMatControlTypeIndex(zone_index)),
-                          controlTypeName(zone.heat_mat.control_type));
+                          control::schema::wireKey(zoneHeatMatControlTypeIndex(pot_index)),
+                          controlTypeName(pot.heat_mat.control_type));
 
   cJSON* previous = cJSON_AddObjectToObject(zone_json, "previous");
   cJSON_AddNumberToObject(previous,
-                          control::schema::wireKey(zonePreviousIrrigationIndex(zone_index)),
-                          zone.previous_irrigation);
-  cJSON_AddNumberToObject(previous, control::schema::wireKey(zonePreviousHeatMatIndex(zone_index)),
-                          zone.previous_heat_mat);
+                          control::schema::wireKey(zonePreviousIrrigationIndex(pot_index)),
+                          pot.previous_irrigation);
+  cJSON_AddNumberToObject(previous, control::schema::wireKey(zonePreviousHeatMatIndex(pot_index)),
+                          pot.previous_heat_mat);
 }
 
 void addActuatorAvailability(cJSON* document,
@@ -801,11 +797,11 @@ void addScenarioSnapshot(cJSON* document, const control::ControllerInput& input)
   cJSON_AddBoolToObject(validity, control::schema::wireKey(FeatureIndex::OutsideCo2Valid),
                         input.validity.outside_co2);
 
-  cJSON* zones = cJSON_AddArrayToObject(document, control::schema::kWireRootZones);
-  for (std::size_t zone_index = 0U; zone_index < control::kMaxZones; ++zone_index) {
+  cJSON* pots = cJSON_AddArrayToObject(document, control::schema::kWireRootPots);
+  for (std::size_t pot_index = 0U; pot_index < control::kMaxPots; ++pot_index) {
     cJSON* zone_json = cJSON_CreateObject();
-    addZoneSnapshot(zone_json, input.zones[zone_index], zone_index);
-    cJSON_AddItemToArray(zones, zone_json);
+    addZoneSnapshot(zone_json, input.pots[pot_index], pot_index);
+    cJSON_AddItemToArray(pots, zone_json);
   }
 
   cJSON* pseudo = cJSON_AddObjectToObject(document, control::schema::kWireRootPseudo);
@@ -959,21 +955,21 @@ void addDecisionContext(cJSON* document, const control::ControllerInput& input) 
   cJSON_AddBoolToObject(validity, "outside_humidity_pct", input.validity.outside_humidity);
   cJSON_AddBoolToObject(validity, "outside_co2_ppm", input.validity.outside_co2);
 
-  cJSON* zones = cJSON_AddArrayToObject(document, "zones");
-  for (std::size_t zone_index = 0U; zone_index < control::kMaxZones; ++zone_index) {
-    const auto& zone = input.zones[zone_index];
+  cJSON* pots = cJSON_AddArrayToObject(document, "pots");
+  for (std::size_t pot_index = 0U; pot_index < control::kMaxPots; ++pot_index) {
+    const auto& pot = input.pots[pot_index];
     cJSON* zone_json = cJSON_CreateObject();
-    cJSON_AddBoolToObject(zone_json, "available", zone.available);
-    cJSON* zone_sensors = cJSON_AddObjectToObject(zone_json, "sensors");
-    cJSON_AddNumberToObject(zone_sensors, "soil_moisture_pct", zone.sensors.soil_moisture_pct);
-    cJSON_AddNumberToObject(zone_sensors, "soil_temperature_c", zone.sensors.soil_temperature_c);
-    cJSON* zone_validity = cJSON_AddObjectToObject(zone_json, "validity");
-    cJSON_AddBoolToObject(zone_validity, "soil_moisture_pct", zone.validity.soil_moisture);
-    cJSON_AddBoolToObject(zone_validity, "soil_temperature_c", zone.validity.soil_temperature);
+    cJSON_AddBoolToObject(zone_json, "available", pot.available);
+    cJSON* pot_sensors = cJSON_AddObjectToObject(zone_json, "sensors");
+    cJSON_AddNumberToObject(pot_sensors, "soil_moisture_pct", pot.sensors.soil_moisture_pct);
+    cJSON_AddNumberToObject(pot_sensors, "soil_temperature_c", pot.sensors.soil_temperature_c);
+    cJSON* pot_validity = cJSON_AddObjectToObject(zone_json, "validity");
+    cJSON_AddBoolToObject(pot_validity, "soil_moisture_pct", pot.validity.soil_moisture);
+    cJSON_AddBoolToObject(pot_validity, "soil_temperature_c", pot.validity.soil_temperature);
     cJSON* zone_targets = cJSON_AddObjectToObject(zone_json, "targets");
-    cJSON_AddNumberToObject(zone_targets, "soil_moisture_pct", zone.target_soil_moisture_pct);
-    cJSON_AddNumberToObject(zone_targets, "soil_temperature_c", zone.target_soil_temperature_c);
-    cJSON_AddItemToArray(zones, zone_json);
+    cJSON_AddNumberToObject(zone_targets, "soil_moisture_pct", pot.target_soil_moisture_pct);
+    cJSON_AddNumberToObject(zone_targets, "soil_temperature_c", pot.target_soil_temperature_c);
+    cJSON_AddItemToArray(pots, zone_json);
   }
 
   cJSON* pseudo = cJSON_AddObjectToObject(document, "pseudo");
@@ -993,7 +989,7 @@ bool parseLoadScenario(const cJSON* root, control::ControllerInput& scenario,
                        std::uint32_t& seed) noexcept {
   const cJSON* sensors = objectItem(root, control::schema::kWireRootSensors);
   const cJSON* validity = objectItem(root, control::schema::kWireRootValidity);
-  const cJSON* zones = arrayItem(root, control::schema::kWireRootZones);
+  const cJSON* pots = arrayItem(root, control::schema::kWireRootPots);
   const cJSON* pseudo = objectItem(root, control::schema::kWireRootPseudo);
   const cJSON* environment = objectItem(root, control::schema::kWireRootEnvironment);
   const cJSON* actuators = objectItem(root, control::schema::kWireRootActuators);
@@ -1001,7 +997,7 @@ bool parseLoadScenario(const cJSON* root, control::ControllerInput& scenario,
   const cJSON* previous = objectItem(root, control::schema::kWireRootPrevious);
   const cJSON* safety = item(root, "safety");
   return readUnsigned(root, "seed", seed) && parseSensors(sensors, scenario.sensors) &&
-         parseValidity(validity, scenario.validity) && parseZones(zones, scenario.zones) &&
+         parseValidity(validity, scenario.validity) && parseZones(pots, scenario.pots) &&
          parsePseudo(pseudo, scenario.lights_active) &&
          parseEnvironment(environment, scenario.environment) &&
          parseActuators(actuators, scenario.actuators) &&

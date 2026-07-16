@@ -1,7 +1,7 @@
 """Panel UI layout contracts and anti-patterns.
 
 Mini-cards (donice, aktuary, cele) keep parameter fields in a horizontal row.
-Stacking label+input blocks vertically inside a single pot/zone card is an
+Stacking label+input blocks vertically inside a single pot/pot card is an
 anti-pattern — it wastes vertical space and breaks visual parity with Czujniki
 and Aktuary.
 """
@@ -38,8 +38,8 @@ def _extract_js_function(source: str, name: str) -> str:
 
 def test_cultivation_pot_fields_are_horizontal_not_stacked():
     form_js = FORM_JS.read_text(encoding="utf-8")
-    render_fn = _extract_js_function(form_js, "renderZoneCultivationCard")
-    assert render_fn, "renderZoneCultivationCard must exist"
+    render_fn = _extract_js_function(form_js, "renderPotCultivationCard")
+    assert render_fn, "renderPotCultivationCard must exist"
     assert "pot-card-cultivation" in render_fn
     assert "field-stack" not in render_fn
 
@@ -82,7 +82,7 @@ def test_cultivation_pot_css_uses_tokenized_grid_like_sensors():
 def test_cultivation_pots_match_sensor_pot_card_width():
     panel_css = PANEL_CSS.read_text(encoding="utf-8")
     form_js = FORM_JS.read_text(encoding="utf-8")
-    render_fn = _extract_js_function(form_js, "renderZoneCultivationCard")
+    render_fn = _extract_js_function(form_js, "renderPotCultivationCard")
     assert render_fn
     assert "pot-card cultivation-pot-card" in render_fn
     assert "--pot-sensor-card-w: calc(" in panel_css
@@ -110,12 +110,12 @@ def test_sensor_pot_fields_use_horizontal_layout_reference():
     )
 
 
-def test_zone_soil_target_labels_use_donica_names():
+def test_pot_soil_target_labels_use_donica_names():
     constants_js = (PANEL_STATIC / "js" / "constants.js").read_text(encoding="utf-8")
     form_js = FORM_JS.read_text(encoding="utf-8")
     for index in range(1, 5):
-        assert f'zone_{index}_target_soil_moisture_pct: "Donica {index}"' in constants_js
-    assert "zone_(\\d+)_target_soil_moisture_pct" in form_js
+        assert f'pot_{index}_target_soil_moisture_pct: "Donica {index}"' in constants_js
+    assert "pot_(\\d+)_target_soil_moisture_pct" in form_js
 
 
 def test_diagnostics_modal_uses_live_data_tables_like_previous():
@@ -166,8 +166,8 @@ def test_page_avoids_broken_multi_column_form_grids():
     assert ".form-grid" not in panel_css
     assert "growbox-params-split" not in form_js
     assert ".growbox-params-split" not in panel_css
-    # Legacy multi-column / zone-card grids removed in favor of card-stack + pots-row
-    assert ".zones-grid" not in panel_css
+    # Legacy multi-column / pot-card grids removed in favor of card-stack + pots-row
+    assert ".pots-grid" not in panel_css
     assert ".section-grid" not in panel_css
     assert "growbox-params-split" not in panel_css
 
@@ -238,15 +238,15 @@ def test_watt_fields_use_one_ch_narrower_width_than_pct():
     assert ".actuator-input-wrap.suffix-w-w" in panel_css
 
 
-def test_zone_heat_mat_max_power_uses_in_input_w_suffix():
+def test_pot_heat_mat_max_power_uses_in_input_w_suffix():
     form_js = FORM_JS.read_text(encoding="utf-8")
     suffix_fn = _extract_js_function(form_js, "fieldUnitSuffix")
-    assert "zone_\\d+_heat_mat_" in suffix_fn
+    assert "pot_\\d+_heat_mat_" in suffix_fn
     assert "heat_mat_${zoneHeatMat[1]}" in suffix_fn or "heat_mat_" in suffix_fn
     assert 'heat_mat_max_power_w: "W"' in suffix_fn
 
 
-def test_inactive_zone_dependents_are_linked_to_zone_available():
+def test_inactive_pot_dependents_are_linked_to_pot_available():
     form_js = FORM_JS.read_text(encoding="utf-8")
     scenario_js = SCENARIO_JS.read_text(encoding="utf-8")
     panel_css = PANEL_CSS.read_text(encoding="utf-8")
@@ -254,16 +254,16 @@ def test_inactive_zone_dependents_are_linked_to_zone_available():
     cell_fn = _extract_js_function(form_js, "renderActuatorGroupCell")
     assert "applyInactiveZonePolicy" in scenario_js
     assert "applyInactiveZonePolicy(next)" in read_fn
-    assert "zone.irrigation.available = false" in scenario_js
+    assert "pot.irrigation.available = false" in scenario_js
     assert "renderSoilTargetMiniCell" in form_js
     soil_fn = _extract_js_function(form_js, "renderSoilTargetMiniCell")
     assert "fieldMiniCellWidthClass(field)" in soil_fn
     assert "syncInactiveZoneDependentInputs" in form_js
     assert "syncInactiveZonePumpInputs" in form_js
     assert "zoneIndexFromPumpGroup" in form_js
-    assert "inactive-zone-pump" in cell_fn
-    assert "inactive-zone-target" in panel_css
-    assert "inactive-zone-pump" in panel_css
+    assert "inactive-pot-pump" in cell_fn
+    assert "inactive-pot-target" in panel_css
+    assert "inactive-pot-pump" in panel_css
 
 
 def test_ppm_cells_use_one_ch_narrower_width():
@@ -508,7 +508,7 @@ def test_field_by_name_supports_section_scope_for_duplicate_names():
     assert "sectionId && section.id !== sectionId" in by_name_fn
     assert "fieldByName(name, sectionId)" in cell_fn
     assert 'renderActuatorRow(ACTUATOR_CLIMATE_GROUPS, "actuators")' in block_fn
-    assert 'renderActuatorRow(ACTUATOR_PUMP_GROUPS, "zones")' in block_fn
+    assert 'renderActuatorRow(ACTUATOR_PUMP_GROUPS, "pots")' in block_fn
     assert 'fieldByName(name, "safety")' in safety_fn
 
 
@@ -670,7 +670,7 @@ def test_panel_legacy_cleanup_removes_dead_code_and_renames_helpers():
     assert 'id="btn-panel-scenario"' in html
 
 
-def test_live_section_includes_pots_lights_and_zone_readings():
+def test_live_section_includes_pots_lights_and_pot_readings():
     live_js = (PANEL_STATIC / "js" / "live.js").read_text(encoding="utf-8")
     constants_js = (PANEL_STATIC / "js" / "constants.js").read_text(encoding="utf-8")
     panel_css = PANEL_CSS.read_text(encoding="utf-8")
@@ -782,7 +782,7 @@ def test_growbox_setup_modal_has_single_help_entry_point():
     assert 'pane: "previous"' in modal_js
 
 
-def test_panel_action_btn_tokens_and_live_zone_filter():
+def test_panel_action_btn_tokens_and_live_pot_filter():
     html = INDEX_HTML.read_text(encoding="utf-8")
     panel_css = PANEL_CSS.read_text(encoding="utf-8")
     live_js = (PANEL_STATIC / "js" / "live.js").read_text(encoding="utf-8")
@@ -810,14 +810,14 @@ def test_panel_action_btn_tokens_and_live_zone_filter():
     assert '"targets": { "soil_moisture_pct":' in fixture
 
 
-def test_decision_wire_includes_zone_soil_targets():
+def test_decision_wire_includes_pot_soil_targets():
     codec = (
         Path(__file__).resolve().parents[1] / "src" / "demo" / "protocol" / "ScenarioWireCodec.cpp"
     ).read_text(encoding="utf-8")
     start = codec.index("void addDecisionContext")
     end = codec.index("bool parseLoadScenario", start)
     fn = codec[start:end]
-    assert "zone_targets" in fn
+    assert 'cJSON_AddObjectToObject(zone_json, "targets")' in fn or "pot_targets" in fn
     assert "target_soil_moisture_pct" in fn
 
 
@@ -892,12 +892,12 @@ def test_v3_nutrient_heater_in_climate_actuator_groups():
     assert "flex-direction: column" not in cell_fn
 
 
-def test_v3_soil_temperature_targets_use_two_pot_rows():
+def test_soil_temperature_targets_use_two_pot_rows():
     constants_js = (PANEL_STATIC / "js" / "constants.js").read_text(encoding="utf-8")
     form_js = FORM_JS.read_text(encoding="utf-8")
     panel_css = PANEL_CSS.read_text(encoding="utf-8")
     for index in range(1, 5):
-        assert f'zone_{index}_target_soil_temperature_c: "Donica {index}"' in constants_js
+        assert f'pot_{index}_target_soil_temperature_c: "Donica {index}"' in constants_js
     targets_fn = _extract_js_function(form_js, "renderTargetsBlock")
     assert "TARGET_SOIL_TEMPERATURE_FIELDS" in targets_fn
     assert "TARGET_SOIL_MOISTURE_FIELDS" in targets_fn

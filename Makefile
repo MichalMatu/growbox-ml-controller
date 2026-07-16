@@ -19,7 +19,7 @@ endif
 
 .PHONY: help setup setup-dev install-hooks ensure-venv ensure-idf \
         check check-fast check-push fmt lint clang-tidy-host schema schema-check \
-        train-quick train-full train-quick-v2 train-full-v2 train-quick-v3 train-full-v3 \
+        train-quick train-full \
         test-board board-e2e \
         test test-python test-host test-panel test-layout test-visual panel-screenshots \
         panel ports idf-gate-build build build-n8 build-n32r16v rebuild clean-idf \
@@ -49,11 +49,9 @@ help: ## Lista komend make (domyślny cel)
 	@printf '  Python / ML:\n'
 	@printf '    make setup          — venv + requirements-lock.txt\n'
 	@printf '    make setup-dev      — setup + dev deps + pre-commit\n'
-	@printf '    make train-quick-v2 — smoke treningu v2\n'
-	@printf '    make train-full-v2  — pełny trening v2\n'
-	@printf '    make train-quick-v3 — smoke treningu v3 (CI)\n'
-	@printf '    make train-full-v3  — pełny trening v3\n'
-	@printf '    make schema-check   — sprawdź zgodność schema v3 z nagłówkiem\n'
+	@printf '    make train-quick    — smoke treningu (CI; nie produkcja)\n'
+	@printf '    make train-full     — pełny trening (po symulatorze)\n'
+	@printf '    make schema-check   — zgodność schema z EnvironmentSchema.h\n'
 	@printf '    make test-board     — test E2E na płytce (GROWBOX_BOARD_PORT)\n\n'
 	@printf '  Inne profile firmware:\n'
 	@printf '    make build-n8       — build bez PSRAM (DevKitC N8)\n'
@@ -116,18 +114,6 @@ train-quick: ensure-venv
 
 train-full: ensure-venv
 	$(PY) -m tools.ml.pipeline --full
-
-train-quick-v2: ensure-venv
-	$(PY) -m tools.ml.pipeline_v2 --quick
-
-train-full-v2: ensure-venv
-	$(PY) -m tools.ml.pipeline_v2 --full
-
-train-quick-v3: ensure-venv
-	$(PY) -m tools.ml.pipeline_v3 --quick
-
-train-full-v3: ensure-venv
-	$(PY) -m tools.ml.pipeline_v3 --full
 
 test-board: ensure-venv
 	$(PY) -m pytest tests/test_board_e2e.py -q

@@ -35,7 +35,7 @@ def board_port() -> str:
 
 
 def test_v3_replay_script_fits_serial_limit(tmp_path: Path):
-    scenario_path = tmp_path / "v3-nominal.jsonl"
+    scenario_path = tmp_path / "nominal-pots.jsonl"
     write_replay_script(scenario_path, seed=101)
     for line_number, line in enumerate(scenario_path.read_text(encoding="utf-8").splitlines(), 1):
         if not line.strip():
@@ -44,7 +44,7 @@ def test_v3_replay_script_fits_serial_limit(tmp_path: Path):
 
 
 def test_examples_v3_nominal_script_matches_panel_preset():
-    example_path = EXAMPLES_DIR / "v3-nominal.jsonl"
+    example_path = EXAMPLES_DIR / "nominal-pots.jsonl"
     assert example_path.exists()
     commands = [
         json.loads(line)
@@ -81,7 +81,7 @@ def test_board_replay_produces_v3_decision(board_port: str, tmp_path: Path):
     assert decisions, "expected at least one decision frame from firmware"
     decision = decisions[0]
     assert decision.get("schema_version") == 3
-    assert decision.get("schema_hash") == "c91e249af9d3"
+    assert decision.get("schema_hash") == "5768273a73ac"
     diagnostics = decision.get("diagnostics", {})
     assert diagnostics.get("inference_status") == "ok"
     assert diagnostics.get("inference_status") != "schema_mismatch"
@@ -94,15 +94,15 @@ def test_board_replay_produces_v3_decision(board_port: str, tmp_path: Path):
         "dehumidifier",
         "cooler",
         "co2_doser",
-        "irrigation_zone_1",
-        "irrigation_zone_2",
-        "irrigation_zone_3",
-        "irrigation_zone_4",
+        "irrigation_pot_1",
+        "irrigation_pot_2",
+        "irrigation_pot_3",
+        "irrigation_pot_4",
         "nutrient_heater",
-        "heat_mat_zone_1",
-        "heat_mat_zone_2",
-        "heat_mat_zone_3",
-        "heat_mat_zone_4",
+        "heat_mat_pot_1",
+        "heat_mat_pot_2",
+        "heat_mat_pot_3",
+        "heat_mat_pot_4",
     ):
         assert output_name in safe_output
         value = float(safe_output[output_name])

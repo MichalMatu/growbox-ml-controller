@@ -11,7 +11,7 @@ The demonstration firmware only drives its local simulator: **it never configure
 > This is an engineering demo, not a calibrated physical model or a validated controller for
 > unattended heaters, pumps, or other real equipment.
 
-The long-term target is a **commercial configurable controller** (multi-zone irrigation, optional
+The long-term target is a **commercial configurable controller** (multi-pot irrigation, optional
 ML, deterministic safety), not a single hobby growbox. Product scope, v2 I/O, and work order:
 [docs/plan.md](docs/plan.md) (section *Wizja produktu*).
 
@@ -231,7 +231,7 @@ python -m tools.analysis.report logs/closed-loop.ndjson --csv logs/closed-loop.c
 
 ## Contract and availability
 
-`schemas/environment-controller-v1.json` is the single source of truth for field names, order,
+`schemas/environment-controller.json` is the single source of truth for field names, order,
 units, ranges, defaults, and model inputs/outputs. Generation embeds its canonical short hash in the
 C++ schema metadata, model, manifest, firmware, and startup logs. Firmware rejects a model built for
 a different contract identity.

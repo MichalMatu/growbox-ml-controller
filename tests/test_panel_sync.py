@@ -25,7 +25,7 @@ BRIDGE_PY = (
 SCENARIO_BADGE_KEYS = (
     "sensors",
     "validity",
-    "zones",
+    "pots",
     "pseudo",
     "environment",
     "actuators",
@@ -60,11 +60,11 @@ def badge_payload_python(doc: dict[str, Any]) -> dict[str, Any]:
     for key in SCENARIO_BADGE_KEYS:
         if key in doc:
             payload[key] = copy.deepcopy(doc[key])
-    zones = payload.get("zones")
-    if isinstance(zones, list):
-        payload["zones"] = [
-            {k: v for k, v in zone.items() if k != "previous"} if isinstance(zone, dict) else zone
-            for zone in zones
+    pots = payload.get("pots")
+    if isinstance(pots, list):
+        payload["pots"] = [
+            {k: v for k, v in pot.items() if k != "previous"} if isinstance(pot, dict) else pot
+            for pot in pots
         ]
     return payload
 
@@ -104,7 +104,7 @@ def test_scenario_js_uses_badge_fingerprint_for_sync_badge():
     assert "scenarioSyncFingerprint(readScenarioFromForm" not in badge_fn
     assert "function scenarioBadgePayload" in scenario_js
     assert "SCENARIO_BADGE_KEYS" in scenario_js
-    assert "const { previous, ...rest } = zone" in scenario_js
+    assert "const { previous, ...rest } = pot" in scenario_js
 
 
 def test_main_init_uses_cached_device_scenario_on_refresh():
@@ -133,7 +133,7 @@ def test_badge_fingerprint_ignores_previous_mutations():
     baseline = badge_fingerprint_python(scenario)
     mutated = copy.deepcopy(scenario)
     mutated["previous"]["fan"] = 0.88
-    mutated["zones"][0]["previous"]["irrigation"] = 0.42
+    mutated["pots"][0]["previous"]["irrigation"] = 0.42
     assert badge_fingerprint_python(mutated) == baseline
 
 
@@ -164,8 +164,8 @@ def test_bridge_updates_status_step_from_decision():
 
 def test_panel_schema_hash_matches_v3_contract():
     schema = build_panel_schema()
-    assert schema["schema_version"] == 3
-    assert schema["schema_hash"] == "c91e249af9d3"
+    assert schema["schema_version"] == 4
+    assert schema["schema_hash"] == "5768273a73ac"
     assert len(schema["outputs"]) == 15
 
 
@@ -174,7 +174,7 @@ def test_default_scenario_badge_payload_roundtrip(preset_id: str):
     scenario = default_scenario(seed=202, preset=preset_id)
     payload = badge_payload_python(scenario)
     assert "previous" not in payload
-    for zone in payload["zones"]:
-        assert "previous" not in zone
+    for pot in payload["pots"]:
+        assert "previous" not in pot
     assert payload["seed"] == 202
     assert "actuators" in payload

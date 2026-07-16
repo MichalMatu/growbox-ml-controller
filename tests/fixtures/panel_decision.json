@@ -24,7 +24,7 @@
     "air_humidity_pct": 65,
     "co2_ppm": 850
   },
-  "zones": [
+  "pots": [
     {
       "available": true,
       "sensors": { "soil_moisture_pct": 42, "soil_temperature_c": 20.0 },

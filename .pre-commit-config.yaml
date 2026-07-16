@@ -34,7 +34,7 @@ repos:
         entry: bash scripts/check_schema.sh
         language: system
         pass_filenames: false
-        files: ^(tools/schema/|schemas/environment-controller-v3\.json|lib/environment_control/src/EnvironmentSchemaV3\.h)
+        files: ^(tools/schema/|schemas/environment-controller\.json|lib/environment_control/src/EnvironmentSchema\.h)
 
       - id: quality-gate-push
         name: quality gate (pytest, host, idf build, clang-tidy)

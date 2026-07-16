@@ -2,7 +2,7 @@
 
 Żywy dokument: kolejność prac i ustalenia z analizy panelu / symulatora (2026-07).
 
-**Źródło prawdy techniczne:** v1 w kodzie — [`environment-controller-v1.json`](../schemas/environment-controller-v1.json); **I/O v2 definitywne** — tabelka w [IO_MAP.md](IO_MAP.md) → *Kontrakt v2*.
+**Źródło prawdy techniczne:** v1 w kodzie — [`environment-controller.json`](../schemas/environment-controller.json); **I/O v2 definitywne** — tabelka w [IO_MAP.md](IO_MAP.md) → *Kontrakt v2*.
 
 **Indeks dokumentacji**
 
@@ -170,12 +170,12 @@ Nie dodajemy na v2: **czujnik nasłonecznienia / PPFD** (zastępuje stan lampy),
 
 **Jedna strefa = jedna donica w tym samym growboxie** — wspólne powietrze (`air_*`, `co2_ppm`); per donica: czujnik gleby + pompa (indeks 1…4). Podlewanie **zawsze** wpływa na RH (i pośrednio na T) w całej komorze — wielkość efektu zależy od scenariusza; symulator v2 modeluje sprzężenia T↔RH↔gleba↔fan↔zewnątrz. **ML** uczy sterowania w tym układzie, nie zastępuje fizyki w runtime (fizyka = symulator treningowy + reguły safety).
 
-| Per strefa `zones[i]` | Wymagane? | Uwagi |
+| Per strefa `pots[i]` | Wymagane? | Uwagi |
 |----------------------|-----------|--------|
 | `soil_moisture_pct` + `validity` | **tak** (gdy strefa aktywna) | Podlewanie; źródło dowolne (ADC, Zigbee, Tuya…) |
 | `soil_temperature_c` + `validity` | **nie** | **Osobne, niepowiązane wejście** — np. **DS18B20** (1-Wire) |
 | `target_soil_moisture_pct` | tak | cel tej donicy |
-| pompa + `available`, parametry | tak | `irrigation_zone_N` |
+| pompa + `available`, parametry | tak | `irrigation_pot_N` |
 | `previous_irrigation` | tak | per strefa |
 
 **Wilgotność i temp. gleby = dwa niezależne wejścia** (osobne ścieżki JSON, osobne `validity`, osobni driverzy w mostku). **Brak** założenia „jeden moduł 2-w-1”:
@@ -193,17 +193,17 @@ Przykłady kombinacji:
 | ADC / tanie | DS18B20 | oba true, **różne hardware** |
 | Tuya 2-w-1 | ten sam moduł | oba true — mostek wypełnia oba sloty |
 
-Szkic pól: [`schemas/environment-controller-v2.json`](../schemas/environment-controller-v2.json) (draft, nie w CI).
+Szkic pól: [`schemas/environment-controller.json`](../schemas/environment-controller.json) (draft, nie w CI).
 
 Mostek ustawia `validity`; encoder podstawia default + maskę (jak przy innych czujnikach). Safety i podlewanie **nie zależą** od temp. gleby. Reguły na temp. gleby (np. zimna gleba) tylko gdy `soil_temperature_c` valid.
 
-Nieużywane strefy: `zone.available = false`. Trening losuje: strefa z/bez temp. gleby, 1–4 aktywne strefy.
+Nieużywane strefy: `pot.available = false`. Trening losuje: strefa z/bez temp. gleby, 1–4 aktywne strefy.
 
-**Wyjścia ML:** `irrigation_zone_1` … `irrigation_zone_4`. Safety: `irrigation_zone_N_pulse_s` per strefa.
+**Wyjścia ML:** `irrigation_pot_1` … `irrigation_pot_4`. Safety: `irrigation_pot_N_pulse_s` per strefa.
 
 ### Wyjścia ML v2 (zamknięte — 10 slotów)
 
-Tabela sprzętu: [IO_MAP.md](IO_MAP.md) → *Wyjścia ML*. Szkic: `schemas/environment-controller-v2.json`.
+Tabela sprzętu: [IO_MAP.md](IO_MAP.md) → *Wyjścia ML*. Szkic: `schemas/environment-controller.json`.
 
 | Wyjście | v1 | v2 | Uwagi |
 |---------|----|----|--------|
@@ -213,7 +213,7 @@ Tabela sprzętu: [IO_MAP.md](IO_MAP.md) → *Wyjścia ML*. Szkic: `schemas/envir
 | `dehumidifier` | nie | **tak** | Osobne wyjście (potwierdzone) |
 | `cooler` | nie | **tak** | Osobno od grzałki i osuszacza (potwierdzone) |
 | `co2_doser` | nie | **tak** | Binarny impuls; `available` gdy brak butli |
-| `irrigation_zone_1…4` | jedna pompa | **tak** | 0–4 aktywnych; per strefa safety |
+| `irrigation_pot_1…4` | jedna pompa | **tak** | 0–4 aktywnych; per strefa safety |
 | światło | nie | **poza ML** | Harmonogram + `lights_active` jako **wejście**; obciążenie cieplne lampy w symulatorze; OFF przy alarmie T |
 
 ### Dozowanie CO₂ z butli (ustalone 2026-07)
@@ -285,7 +285,7 @@ Growbox to **jedna komora** z **wieloma sprzężonymi** procesami: temperatura i
 
 **Sprzężenia do odwzorowania w v2** (wzory w kodzie, nie lista reguł w dokumentacji):
 
-1. **Donica → powietrze** — **suma po aktywnych strefach** (0–4, nie zawsze cztery): parowanie / transpiracja do wspólnego `air_humidity_pct`; per slot wilgotność gleby, temp. gleby (gdy valid), RH i T powietrza; wyłączona strefa = brak składnika (jak `validity: false` / `zone.available: false`).
+1. **Donica → powietrze** — **suma po aktywnych strefach** (0–4, nie zawsze cztery): parowanie / transpiracja do wspólnego `air_humidity_pct`; per slot wilgotność gleby, temp. gleby (gdy valid), RH i T powietrza; wyłączona strefa = brak składnika (jak `validity: false` / `pot.available: false`).
 2. **T ↔ RH komory** — wymiana z `outside_*` (fan, przecieki), nawilżacz / osuszacz / chłodzenie, **ciepło utajone** parowania (RH ↑ może iść w parze z krótkim T ↓).
 3. **Podlewanie** — dyskretny impuls per strefa → gleba N + natychmiastowy i utajony składnik evap.
 4. **CO₂** — `co2_doser`, wymiana przez fan w stronę `outside_co2_ppm`, uproszczony metabolizm.
@@ -357,15 +357,15 @@ poza kontraktem     harmonogram, Nodeflow, interlocki, support, LiteGraph
 - [x] **Wyjścia ML v2** — zamknięte (10 slotów)
 - [ ] Potwierdzić pytania otwarte (poniżej) — tylko cele / wentylatory, nie czujniki
 - [ ] Wypełnić [IO_MAP.md](IO_MAP.md) — kolumna „Twój sprzęt” (instalacja użytkownika)
-- [ ] Dopisać w `environment-controller-v2.json`: `lights_active`, targets, actuators w `features` (Faza 2)
+- [ ] Dopisać w `environment-controller.json`: `lights_active`, targets, actuators w `features` (Faza 2)
 
 ### Faza 2 — kontrakt v2 w kodzie (jeden duży PR)
 
 Kolejność wewnątrz fazy:
 
-1. `schemas/environment-controller-v2.json` + generator → `EnvironmentSchema.h`
+1. `schemas/environment-controller.json` + generator → `EnvironmentSchema.h`
 2. `EnvironmentTypes.h`, `FeatureEncoder`, `SafetySupervisor`
-3. Symulator Python (`tools/ml/simulator.py`) — **termodynamika v2**; **do 4 slotów** donic (mix & match: `zones[N].available`, `validity`, `irrigation.available` — scenariusze losują 0–4 aktywne); teacher na tych trajektoriach
+3. Symulator Python (`tools/ml/simulator.py`) — **termodynamika v2**; **do 4 slotów** donic (mix & match: `pots[N].available`, `validity`, `irrigation.available` — scenariusze losują 0–4 aktywne); teacher na tych trajektoriach
 4. `DummyEnvironmentSimulator.cpp` — **ta sama fizyka** co Python; wire codec + panel (`form_schema.py`)
 5. Testy kontraktu i hosta (wymiary, golden vectors — po retreningu)
 
@@ -395,7 +395,7 @@ Kolejność wewnątrz fazy:
 1. ~~**Światło**~~ — **zamknięte:** harmonogram + `lights_active` / readback przekaźnika; **bez** czujnika nasłonecznienia na v2.
 2. ~~**Klimatyzator vs osuszacz**~~ — **zamknięte:** `cooler` + `dehumidifier`, dwa osobne wyjścia.
 3. **Dwa wentylatory** — domyślnie 1× `fan` ML + mapowanie w mostku (bez drugiego slotu ML).
-4. **Cel wilgotności gleby** — jeden wspólny czy osobny per strefa? (plan: per strefa w `zones[i]`)
+4. **Cel wilgotności gleby** — jeden wspólny czy osobny per strefa? (plan: per strefa w `pots[i]`)
 
 ## Zamknięte decyzje
 
@@ -411,7 +411,7 @@ Kolejność wewnątrz fazy:
 - **Wejścia czujnikowe v2:** **domknięte** — nie wracamy do listy slotów przed v2.1; roadmap → [IO_MAP.md](IO_MAP.md).
 - **Świadomie poza v2:** PPFD, EC/pH, liść IR, zalanie, wylot wentylacji, światło w ML — roadmap v2.1 / v2.2+, nie scope Fazy 2.
 - **I/O v2 definitywne (2026-07):** checklista 26 slotów w [IO_MAP.md](IO_MAP.md) → *Mix & match*; bez nowych czujników/wyjść ML w tej wersji.
-- **Mix & match:** 26 slotów + opcj. `zones[N].available` — każdy osobno (`validity` / `available`); brak pakietów wymaganych.
+- **Mix & match:** 26 slotów + opcj. `pots[N].available` — każdy osobno (`validity` / `available`); brak pakietów wymaganych.
 - Dokładanie sprzętu = włączenie kolejnego indeksu strefy, bez nowego kontraktu.
 
 ---

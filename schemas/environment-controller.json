@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Growbox Environment Controller Contract v3 (draft)",
-  "schema_id": "environment-controller-v3",
-  "schema_version": 3,
-  "status": "draft",
+  "title": "Growbox Environment Controller Contract (pots, 4 max)",
+  "schema_id": "environment-controller",
+  "schema_version": 4,
+  "status": "active",
   "io_status": "definitive",
   "sensing_status": "definitive",
-  "draft_note": "v3 adds nutrient solution heater + per-zone heat mats (15 ML outputs, 129 features). Panel + Python simulator wired; firmware encoder rewrite deferred.",
+  "draft_note": "v4 renames zones to pots (4 donice in one chamber). 15 ML outputs, 128 features. Single active contract; v1–v3 retired.",
   "sensing_scope": {
     "physical_slots": 15,
     "pseudo_inputs": [
@@ -26,15 +26,15 @@
         "outside_humidity_pct",
         "outside_co2_ppm"
       ],
-      "soil_per_zone": [
-        "soil_moisture_zone_1_pct",
-        "soil_temperature_zone_1_c",
-        "soil_moisture_zone_2_pct",
-        "soil_temperature_zone_2_c",
-        "soil_moisture_zone_3_pct",
-        "soil_temperature_zone_3_c",
-        "soil_moisture_zone_4_pct",
-        "soil_temperature_zone_4_c"
+      "soil_per_pot": [
+        "soil_moisture_pot_1_pct",
+        "soil_temperature_pot_1_c",
+        "soil_moisture_pot_2_pct",
+        "soil_temperature_pot_2_c",
+        "soil_moisture_pot_3_pct",
+        "soil_temperature_pot_3_c",
+        "soil_moisture_pot_4_pct",
+        "soil_temperature_pot_4_c"
       ]
     },
     "explicitly_not_v2": [
@@ -51,9 +51,9 @@
     "mix_and_match": true,
     "sensor_off": "validity.<slot> = false",
     "actuator_off": "actuators.<slot>.available = false",
-    "zone_off": "zones[N].available = false",
+    "pot_off": "pots[N].available = false",
     "no_required_bundles": true,
-    "simulator_note": "Up to 4 zone slots; training scenarios randomize active count 0-4 and per-slot validity/irrigation — not always four pots."
+    "simulator_note": "Up to 4 pot slots; training scenarios randomize active count 0-4 and per-slot validity/irrigation — not always four pots."
   },
   "hash": {
     "algorithm": "sha256",
@@ -79,49 +79,49 @@
       "outside_humidity_valid",
       "outside_co2_valid"
     ],
-    "zones.0": [
-      "zone_1_available"
+    "pots.0": [
+      "pot_1_available"
     ],
-    "zones.0.sensors": [
-      "soil_moisture_zone_1_pct",
-      "soil_temperature_zone_1_c"
+    "pots.0.sensors": [
+      "soil_moisture_pot_1_pct",
+      "soil_temperature_pot_1_c"
     ],
-    "zones.0.validity": [
-      "soil_moisture_zone_1_valid",
-      "soil_temperature_zone_1_valid"
+    "pots.0.validity": [
+      "soil_moisture_pot_1_valid",
+      "soil_temperature_pot_1_valid"
     ],
-    "zones.1": [
-      "zone_2_available"
+    "pots.1": [
+      "pot_2_available"
     ],
-    "zones.1.sensors": [
-      "soil_moisture_zone_2_pct",
-      "soil_temperature_zone_2_c"
+    "pots.1.sensors": [
+      "soil_moisture_pot_2_pct",
+      "soil_temperature_pot_2_c"
     ],
-    "zones.1.validity": [
-      "soil_moisture_zone_2_valid",
-      "soil_temperature_zone_2_valid"
+    "pots.1.validity": [
+      "soil_moisture_pot_2_valid",
+      "soil_temperature_pot_2_valid"
     ],
-    "zones.2": [
-      "zone_3_available"
+    "pots.2": [
+      "pot_3_available"
     ],
-    "zones.2.sensors": [
-      "soil_moisture_zone_3_pct",
-      "soil_temperature_zone_3_c"
+    "pots.2.sensors": [
+      "soil_moisture_pot_3_pct",
+      "soil_temperature_pot_3_c"
     ],
-    "zones.2.validity": [
-      "soil_moisture_zone_3_valid",
-      "soil_temperature_zone_3_valid"
+    "pots.2.validity": [
+      "soil_moisture_pot_3_valid",
+      "soil_temperature_pot_3_valid"
     ],
-    "zones.3": [
-      "zone_4_available"
+    "pots.3": [
+      "pot_4_available"
     ],
-    "zones.3.sensors": [
-      "soil_moisture_zone_4_pct",
-      "soil_temperature_zone_4_c"
+    "pots.3.sensors": [
+      "soil_moisture_pot_4_pct",
+      "soil_temperature_pot_4_c"
     ],
-    "zones.3.validity": [
-      "soil_moisture_zone_4_valid",
-      "soil_temperature_zone_4_valid"
+    "pots.3.validity": [
+      "soil_moisture_pot_4_valid",
+      "soil_temperature_pot_4_valid"
     ],
     "pseudo": [
       "lights_active"
@@ -174,110 +174,110 @@
       "previous_co2_doser",
       "previous_nutrient_heater"
     ],
-    "zones.0.cultivation": [
-      "zone_1_pot_volume_l",
-      "zone_1_substrate_water_capacity_ml",
-      "zone_1_transpiration_factor"
+    "pots.0.cultivation": [
+      "pot_1_pot_volume_l",
+      "pot_1_substrate_water_capacity_ml",
+      "pot_1_transpiration_factor"
     ],
-    "zones.0.targets": [
-      "zone_1_target_soil_moisture_pct",
-      "zone_1_target_soil_temperature_c"
+    "pots.0.targets": [
+      "pot_1_target_soil_moisture_pct",
+      "pot_1_target_soil_temperature_c"
     ],
-    "zones.0.irrigation": [
-      "zone_1_irrigation_available",
-      "zone_1_irrigation_flow_ml_s",
-      "zone_1_irrigation_maximum_pulse_s",
-      "zone_1_irrigation_minimum_interval_s",
-      "zone_1_irrigation_control_type"
+    "pots.0.irrigation": [
+      "pot_1_irrigation_available",
+      "pot_1_irrigation_flow_ml_s",
+      "pot_1_irrigation_maximum_pulse_s",
+      "pot_1_irrigation_minimum_interval_s",
+      "pot_1_irrigation_control_type"
     ],
-    "zones.0.previous": [
-      "zone_1_previous_irrigation",
-      "zone_1_previous_heat_mat"
+    "pots.0.previous": [
+      "pot_1_previous_irrigation",
+      "pot_1_previous_heat_mat"
     ],
-    "zones.1.cultivation": [
-      "zone_2_pot_volume_l",
-      "zone_2_substrate_water_capacity_ml",
-      "zone_2_transpiration_factor"
+    "pots.1.cultivation": [
+      "pot_2_pot_volume_l",
+      "pot_2_substrate_water_capacity_ml",
+      "pot_2_transpiration_factor"
     ],
-    "zones.1.targets": [
-      "zone_2_target_soil_moisture_pct",
-      "zone_2_target_soil_temperature_c"
+    "pots.1.targets": [
+      "pot_2_target_soil_moisture_pct",
+      "pot_2_target_soil_temperature_c"
     ],
-    "zones.1.irrigation": [
-      "zone_2_irrigation_available",
-      "zone_2_irrigation_flow_ml_s",
-      "zone_2_irrigation_maximum_pulse_s",
-      "zone_2_irrigation_minimum_interval_s",
-      "zone_2_irrigation_control_type"
+    "pots.1.irrigation": [
+      "pot_2_irrigation_available",
+      "pot_2_irrigation_flow_ml_s",
+      "pot_2_irrigation_maximum_pulse_s",
+      "pot_2_irrigation_minimum_interval_s",
+      "pot_2_irrigation_control_type"
     ],
-    "zones.1.previous": [
-      "zone_2_previous_irrigation",
-      "zone_2_previous_heat_mat"
+    "pots.1.previous": [
+      "pot_2_previous_irrigation",
+      "pot_2_previous_heat_mat"
     ],
-    "zones.2.cultivation": [
-      "zone_3_pot_volume_l",
-      "zone_3_substrate_water_capacity_ml",
-      "zone_3_transpiration_factor"
+    "pots.2.cultivation": [
+      "pot_3_pot_volume_l",
+      "pot_3_substrate_water_capacity_ml",
+      "pot_3_transpiration_factor"
     ],
-    "zones.2.targets": [
-      "zone_3_target_soil_moisture_pct",
-      "zone_3_target_soil_temperature_c"
+    "pots.2.targets": [
+      "pot_3_target_soil_moisture_pct",
+      "pot_3_target_soil_temperature_c"
     ],
-    "zones.2.irrigation": [
-      "zone_3_irrigation_available",
-      "zone_3_irrigation_flow_ml_s",
-      "zone_3_irrigation_maximum_pulse_s",
-      "zone_3_irrigation_minimum_interval_s",
-      "zone_3_irrigation_control_type"
+    "pots.2.irrigation": [
+      "pot_3_irrigation_available",
+      "pot_3_irrigation_flow_ml_s",
+      "pot_3_irrigation_maximum_pulse_s",
+      "pot_3_irrigation_minimum_interval_s",
+      "pot_3_irrigation_control_type"
     ],
-    "zones.2.previous": [
-      "zone_3_previous_irrigation",
-      "zone_3_previous_heat_mat"
+    "pots.2.previous": [
+      "pot_3_previous_irrigation",
+      "pot_3_previous_heat_mat"
     ],
-    "zones.3.cultivation": [
-      "zone_4_pot_volume_l",
-      "zone_4_substrate_water_capacity_ml",
-      "zone_4_transpiration_factor"
+    "pots.3.cultivation": [
+      "pot_4_pot_volume_l",
+      "pot_4_substrate_water_capacity_ml",
+      "pot_4_transpiration_factor"
     ],
-    "zones.3.targets": [
-      "zone_4_target_soil_moisture_pct",
-      "zone_4_target_soil_temperature_c"
+    "pots.3.targets": [
+      "pot_4_target_soil_moisture_pct",
+      "pot_4_target_soil_temperature_c"
     ],
-    "zones.3.irrigation": [
-      "zone_4_irrigation_available",
-      "zone_4_irrigation_flow_ml_s",
-      "zone_4_irrigation_maximum_pulse_s",
-      "zone_4_irrigation_minimum_interval_s",
-      "zone_4_irrigation_control_type"
+    "pots.3.irrigation": [
+      "pot_4_irrigation_available",
+      "pot_4_irrigation_flow_ml_s",
+      "pot_4_irrigation_maximum_pulse_s",
+      "pot_4_irrigation_minimum_interval_s",
+      "pot_4_irrigation_control_type"
     ],
-    "zones.3.previous": [
-      "zone_4_previous_irrigation",
-      "zone_4_previous_heat_mat"
+    "pots.3.previous": [
+      "pot_4_previous_irrigation",
+      "pot_4_previous_heat_mat"
     ],
     "actuators.nutrient_heater": [
       "nutrient_heater_available",
       "nutrient_heater_max_power_w",
       "nutrient_heater_efficiency"
     ],
-    "zones.0.heat_mat": [
-      "zone_1_heat_mat_available",
-      "zone_1_heat_mat_max_power_w",
-      "zone_1_heat_mat_control_type"
+    "pots.0.heat_mat": [
+      "pot_1_heat_mat_available",
+      "pot_1_heat_mat_max_power_w",
+      "pot_1_heat_mat_control_type"
     ],
-    "zones.1.heat_mat": [
-      "zone_2_heat_mat_available",
-      "zone_2_heat_mat_max_power_w",
-      "zone_2_heat_mat_control_type"
+    "pots.1.heat_mat": [
+      "pot_2_heat_mat_available",
+      "pot_2_heat_mat_max_power_w",
+      "pot_2_heat_mat_control_type"
     ],
-    "zones.2.heat_mat": [
-      "zone_3_heat_mat_available",
-      "zone_3_heat_mat_max_power_w",
-      "zone_3_heat_mat_control_type"
+    "pots.2.heat_mat": [
+      "pot_3_heat_mat_available",
+      "pot_3_heat_mat_max_power_w",
+      "pot_3_heat_mat_control_type"
     ],
-    "zones.3.heat_mat": [
-      "zone_4_heat_mat_available",
-      "zone_4_heat_mat_max_power_w",
-      "zone_4_heat_mat_control_type"
+    "pots.3.heat_mat": [
+      "pot_4_heat_mat_available",
+      "pot_4_heat_mat_max_power_w",
+      "pot_4_heat_mat_control_type"
     ]
   },
   "output_scope": {
@@ -288,12 +288,12 @@
     "notes": [
       "lights: pseudo-input lights_active (ML feature); relay via schedule/Nodeflow; safety thermal cutoff forces OFF; optional heat-assist policy; lamp heat watts in simulator config.",
       "fan: jedno wyjście ML; kilka fizycznych wentylatorów → mapowanie w mostku sprzętowym.",
-      "irrigation_zone_N: 0–4 aktywnych stref (zones[N].irrigation.available); nieaktywne = available false, safe output 0.",
-      "nutrient_heater: grzałka zbiornika roztworu; heat_mat_zone_N: mata pod donicą (0 gdy strefa lub mata unavailable)."
+      "irrigation_pot_N: 0–4 active pots (pots[N].irrigation.available); inactive = available false, safe output 0.",
+      "nutrient_heater: tank heater; heat_mat_pot_N: mat under pot (0 when pot or mat unavailable)."
     ]
   },
   "independence_rules": [
-    "soil_moisture_pct and soil_temperature_c per zone are unrelated inputs (e.g. moisture probe + DS18B20 in pot).",
+    "soil_moisture_pct and soil_temperature_c per pot are unrelated inputs (e.g. moisture probe + DS18B20 in pot).",
     "nutrient_solution_temperature_c is separate from soil_temperature_c (DS18B20 in nutrient tank / feed line).",
     "Compare solution vs soil temp in safety before irrigation — avoid cold nutrient on warm substrate."
   ],
@@ -427,8 +427,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_1_available",
-        "path": "zones.0.available",
+        "name": "pot_1_available",
+        "path": "pots.0.available",
         "type": "boolean",
         "unit": "mask",
         "minimum": 0.0,
@@ -436,8 +436,8 @@
         "default": 0.0
       },
       {
-        "name": "soil_moisture_zone_1_pct",
-        "path": "zones.0.sensors.soil_moisture_pct",
+        "name": "soil_moisture_pot_1_pct",
+        "path": "pots.0.sensors.soil_moisture_pct",
         "type": "number",
         "unit": "percent",
         "minimum": 0.0,
@@ -445,8 +445,8 @@
         "default": 50.0
       },
       {
-        "name": "soil_temperature_zone_1_c",
-        "path": "zones.0.sensors.soil_temperature_c",
+        "name": "soil_temperature_pot_1_c",
+        "path": "pots.0.sensors.soil_temperature_c",
         "type": "number",
         "unit": "degC",
         "minimum": -10.0,
@@ -454,8 +454,8 @@
         "default": 20.0
       },
       {
-        "name": "soil_moisture_zone_1_valid",
-        "path": "zones.0.validity.soil_moisture_pct",
+        "name": "soil_moisture_pot_1_valid",
+        "path": "pots.0.validity.soil_moisture_pct",
         "type": "boolean",
         "unit": "mask",
         "minimum": 0.0,
@@ -463,8 +463,8 @@
         "default": 0.0
       },
       {
-        "name": "soil_temperature_zone_1_valid",
-        "path": "zones.0.validity.soil_temperature_c",
+        "name": "soil_temperature_pot_1_valid",
+        "path": "pots.0.validity.soil_temperature_c",
         "type": "boolean",
         "unit": "mask",
         "minimum": 0.0,
@@ -472,8 +472,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_2_available",
-        "path": "zones.1.available",
+        "name": "pot_2_available",
+        "path": "pots.1.available",
         "type": "boolean",
         "unit": "mask",
         "minimum": 0.0,
@@ -481,8 +481,8 @@
         "default": 0.0
       },
       {
-        "name": "soil_moisture_zone_2_pct",
-        "path": "zones.1.sensors.soil_moisture_pct",
+        "name": "soil_moisture_pot_2_pct",
+        "path": "pots.1.sensors.soil_moisture_pct",
         "type": "number",
         "unit": "percent",
         "minimum": 0.0,
@@ -490,8 +490,8 @@
         "default": 50.0
       },
       {
-        "name": "soil_temperature_zone_2_c",
-        "path": "zones.1.sensors.soil_temperature_c",
+        "name": "soil_temperature_pot_2_c",
+        "path": "pots.1.sensors.soil_temperature_c",
         "type": "number",
         "unit": "degC",
         "minimum": -10.0,
@@ -499,8 +499,8 @@
         "default": 20.0
       },
       {
-        "name": "soil_moisture_zone_2_valid",
-        "path": "zones.1.validity.soil_moisture_pct",
+        "name": "soil_moisture_pot_2_valid",
+        "path": "pots.1.validity.soil_moisture_pct",
         "type": "boolean",
         "unit": "mask",
         "minimum": 0.0,
@@ -508,8 +508,8 @@
         "default": 0.0
       },
       {
-        "name": "soil_temperature_zone_2_valid",
-        "path": "zones.1.validity.soil_temperature_c",
+        "name": "soil_temperature_pot_2_valid",
+        "path": "pots.1.validity.soil_temperature_c",
         "type": "boolean",
         "unit": "mask",
         "minimum": 0.0,
@@ -517,8 +517,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_3_available",
-        "path": "zones.2.available",
+        "name": "pot_3_available",
+        "path": "pots.2.available",
         "type": "boolean",
         "unit": "mask",
         "minimum": 0.0,
@@ -526,8 +526,8 @@
         "default": 0.0
       },
       {
-        "name": "soil_moisture_zone_3_pct",
-        "path": "zones.2.sensors.soil_moisture_pct",
+        "name": "soil_moisture_pot_3_pct",
+        "path": "pots.2.sensors.soil_moisture_pct",
         "type": "number",
         "unit": "percent",
         "minimum": 0.0,
@@ -535,8 +535,8 @@
         "default": 50.0
       },
       {
-        "name": "soil_temperature_zone_3_c",
-        "path": "zones.2.sensors.soil_temperature_c",
+        "name": "soil_temperature_pot_3_c",
+        "path": "pots.2.sensors.soil_temperature_c",
         "type": "number",
         "unit": "degC",
         "minimum": -10.0,
@@ -544,8 +544,8 @@
         "default": 20.0
       },
       {
-        "name": "soil_moisture_zone_3_valid",
-        "path": "zones.2.validity.soil_moisture_pct",
+        "name": "soil_moisture_pot_3_valid",
+        "path": "pots.2.validity.soil_moisture_pct",
         "type": "boolean",
         "unit": "mask",
         "minimum": 0.0,
@@ -553,8 +553,8 @@
         "default": 0.0
       },
       {
-        "name": "soil_temperature_zone_3_valid",
-        "path": "zones.2.validity.soil_temperature_c",
+        "name": "soil_temperature_pot_3_valid",
+        "path": "pots.2.validity.soil_temperature_c",
         "type": "boolean",
         "unit": "mask",
         "minimum": 0.0,
@@ -562,8 +562,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_4_available",
-        "path": "zones.3.available",
+        "name": "pot_4_available",
+        "path": "pots.3.available",
         "type": "boolean",
         "unit": "mask",
         "minimum": 0.0,
@@ -571,8 +571,8 @@
         "default": 0.0
       },
       {
-        "name": "soil_moisture_zone_4_pct",
-        "path": "zones.3.sensors.soil_moisture_pct",
+        "name": "soil_moisture_pot_4_pct",
+        "path": "pots.3.sensors.soil_moisture_pct",
         "type": "number",
         "unit": "percent",
         "minimum": 0.0,
@@ -580,8 +580,8 @@
         "default": 50.0
       },
       {
-        "name": "soil_temperature_zone_4_c",
-        "path": "zones.3.sensors.soil_temperature_c",
+        "name": "soil_temperature_pot_4_c",
+        "path": "pots.3.sensors.soil_temperature_c",
         "type": "number",
         "unit": "degC",
         "minimum": -10.0,
@@ -589,8 +589,8 @@
         "default": 20.0
       },
       {
-        "name": "soil_moisture_zone_4_valid",
-        "path": "zones.3.validity.soil_moisture_pct",
+        "name": "soil_moisture_pot_4_valid",
+        "path": "pots.3.validity.soil_moisture_pct",
         "type": "boolean",
         "unit": "mask",
         "minimum": 0.0,
@@ -598,8 +598,8 @@
         "default": 0.0
       },
       {
-        "name": "soil_temperature_zone_4_valid",
-        "path": "zones.3.validity.soil_temperature_c",
+        "name": "soil_temperature_pot_4_valid",
+        "path": "pots.3.validity.soil_temperature_c",
         "type": "boolean",
         "unit": "mask",
         "minimum": 0.0,
@@ -913,8 +913,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_1_pot_volume_l",
-        "path": "zones.0.cultivation.pot_volume_l",
+        "name": "pot_1_pot_volume_l",
+        "path": "pots.0.cultivation.pot_volume_l",
         "type": "number",
         "unit": "L",
         "minimum": 0.1,
@@ -922,8 +922,8 @@
         "default": 10.0
       },
       {
-        "name": "zone_1_substrate_water_capacity_ml",
-        "path": "zones.0.cultivation.substrate_water_capacity_ml",
+        "name": "pot_1_substrate_water_capacity_ml",
+        "path": "pots.0.cultivation.substrate_water_capacity_ml",
         "type": "number",
         "unit": "mL",
         "minimum": 10.0,
@@ -931,8 +931,8 @@
         "default": 3000.0
       },
       {
-        "name": "zone_1_transpiration_factor",
-        "path": "zones.0.cultivation.transpiration_factor",
+        "name": "pot_1_transpiration_factor",
+        "path": "pots.0.cultivation.transpiration_factor",
         "type": "number",
         "unit": "ratio",
         "minimum": 0.0,
@@ -940,8 +940,8 @@
         "default": 1.0
       },
       {
-        "name": "zone_1_target_soil_moisture_pct",
-        "path": "zones.0.targets.soil_moisture_pct",
+        "name": "pot_1_target_soil_moisture_pct",
+        "path": "pots.0.targets.soil_moisture_pct",
         "type": "number",
         "unit": "percent",
         "minimum": 0.0,
@@ -949,8 +949,8 @@
         "default": 50.0
       },
       {
-        "name": "zone_1_target_soil_temperature_c",
-        "path": "zones.0.targets.soil_temperature_c",
+        "name": "pot_1_target_soil_temperature_c",
+        "path": "pots.0.targets.soil_temperature_c",
         "type": "number",
         "unit": "degC",
         "minimum": -10.0,
@@ -958,8 +958,8 @@
         "default": 20.0
       },
       {
-        "name": "zone_1_irrigation_available",
-        "path": "zones.0.irrigation.available",
+        "name": "pot_1_irrigation_available",
+        "path": "pots.0.irrigation.available",
         "type": "boolean",
         "unit": "mask",
         "minimum": 0.0,
@@ -967,8 +967,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_1_irrigation_flow_ml_s",
-        "path": "zones.0.irrigation.flow_ml_s",
+        "name": "pot_1_irrigation_flow_ml_s",
+        "path": "pots.0.irrigation.flow_ml_s",
         "type": "number",
         "unit": "mL/s",
         "minimum": 0.0,
@@ -976,8 +976,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_1_irrigation_maximum_pulse_s",
-        "path": "zones.0.irrigation.maximum_pulse_s",
+        "name": "pot_1_irrigation_maximum_pulse_s",
+        "path": "pots.0.irrigation.maximum_pulse_s",
         "type": "number",
         "unit": "s",
         "minimum": 0.0,
@@ -985,8 +985,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_1_irrigation_minimum_interval_s",
-        "path": "zones.0.irrigation.minimum_interval_s",
+        "name": "pot_1_irrigation_minimum_interval_s",
+        "path": "pots.0.irrigation.minimum_interval_s",
         "type": "number",
         "unit": "s",
         "minimum": 0.0,
@@ -994,8 +994,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_1_irrigation_control_type",
-        "path": "zones.0.irrigation.control_type",
+        "name": "pot_1_irrigation_control_type",
+        "path": "pots.0.irrigation.control_type",
         "type": "enum",
         "unit": "enum",
         "minimum": 0.0,
@@ -1007,8 +1007,8 @@
         }
       },
       {
-        "name": "zone_1_heat_mat_available",
-        "path": "zones.0.heat_mat.available",
+        "name": "pot_1_heat_mat_available",
+        "path": "pots.0.heat_mat.available",
         "type": "boolean",
         "unit": "mask",
         "minimum": 0.0,
@@ -1016,8 +1016,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_1_heat_mat_max_power_w",
-        "path": "zones.0.heat_mat.max_power_w",
+        "name": "pot_1_heat_mat_max_power_w",
+        "path": "pots.0.heat_mat.max_power_w",
         "type": "number",
         "unit": "W",
         "minimum": 0.0,
@@ -1025,8 +1025,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_1_heat_mat_control_type",
-        "path": "zones.0.heat_mat.control_type",
+        "name": "pot_1_heat_mat_control_type",
+        "path": "pots.0.heat_mat.control_type",
         "type": "enum",
         "unit": "enum",
         "minimum": 0.0,
@@ -1038,8 +1038,8 @@
         }
       },
       {
-        "name": "zone_1_previous_irrigation",
-        "path": "zones.0.previous.irrigation",
+        "name": "pot_1_previous_irrigation",
+        "path": "pots.0.previous.irrigation",
         "type": "number",
         "unit": "ratio",
         "minimum": 0.0,
@@ -1047,8 +1047,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_1_previous_heat_mat",
-        "path": "zones.0.previous.heat_mat",
+        "name": "pot_1_previous_heat_mat",
+        "path": "pots.0.previous.heat_mat",
         "type": "number",
         "unit": "ratio",
         "minimum": 0.0,
@@ -1056,8 +1056,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_2_pot_volume_l",
-        "path": "zones.1.cultivation.pot_volume_l",
+        "name": "pot_2_pot_volume_l",
+        "path": "pots.1.cultivation.pot_volume_l",
         "type": "number",
         "unit": "L",
         "minimum": 0.1,
@@ -1065,8 +1065,8 @@
         "default": 10.0
       },
       {
-        "name": "zone_2_substrate_water_capacity_ml",
-        "path": "zones.1.cultivation.substrate_water_capacity_ml",
+        "name": "pot_2_substrate_water_capacity_ml",
+        "path": "pots.1.cultivation.substrate_water_capacity_ml",
         "type": "number",
         "unit": "mL",
         "minimum": 10.0,
@@ -1074,8 +1074,8 @@
         "default": 3000.0
       },
       {
-        "name": "zone_2_transpiration_factor",
-        "path": "zones.1.cultivation.transpiration_factor",
+        "name": "pot_2_transpiration_factor",
+        "path": "pots.1.cultivation.transpiration_factor",
         "type": "number",
         "unit": "ratio",
         "minimum": 0.0,
@@ -1083,8 +1083,8 @@
         "default": 1.0
       },
       {
-        "name": "zone_2_target_soil_moisture_pct",
-        "path": "zones.1.targets.soil_moisture_pct",
+        "name": "pot_2_target_soil_moisture_pct",
+        "path": "pots.1.targets.soil_moisture_pct",
         "type": "number",
         "unit": "percent",
         "minimum": 0.0,
@@ -1092,8 +1092,8 @@
         "default": 50.0
       },
       {
-        "name": "zone_2_target_soil_temperature_c",
-        "path": "zones.1.targets.soil_temperature_c",
+        "name": "pot_2_target_soil_temperature_c",
+        "path": "pots.1.targets.soil_temperature_c",
         "type": "number",
         "unit": "degC",
         "minimum": -10.0,
@@ -1101,8 +1101,8 @@
         "default": 20.0
       },
       {
-        "name": "zone_2_irrigation_available",
-        "path": "zones.1.irrigation.available",
+        "name": "pot_2_irrigation_available",
+        "path": "pots.1.irrigation.available",
         "type": "boolean",
         "unit": "mask",
         "minimum": 0.0,
@@ -1110,8 +1110,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_2_irrigation_flow_ml_s",
-        "path": "zones.1.irrigation.flow_ml_s",
+        "name": "pot_2_irrigation_flow_ml_s",
+        "path": "pots.1.irrigation.flow_ml_s",
         "type": "number",
         "unit": "mL/s",
         "minimum": 0.0,
@@ -1119,8 +1119,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_2_irrigation_maximum_pulse_s",
-        "path": "zones.1.irrigation.maximum_pulse_s",
+        "name": "pot_2_irrigation_maximum_pulse_s",
+        "path": "pots.1.irrigation.maximum_pulse_s",
         "type": "number",
         "unit": "s",
         "minimum": 0.0,
@@ -1128,8 +1128,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_2_irrigation_minimum_interval_s",
-        "path": "zones.1.irrigation.minimum_interval_s",
+        "name": "pot_2_irrigation_minimum_interval_s",
+        "path": "pots.1.irrigation.minimum_interval_s",
         "type": "number",
         "unit": "s",
         "minimum": 0.0,
@@ -1137,8 +1137,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_2_irrigation_control_type",
-        "path": "zones.1.irrigation.control_type",
+        "name": "pot_2_irrigation_control_type",
+        "path": "pots.1.irrigation.control_type",
         "type": "enum",
         "unit": "enum",
         "minimum": 0.0,
@@ -1150,8 +1150,8 @@
         }
       },
       {
-        "name": "zone_2_heat_mat_available",
-        "path": "zones.1.heat_mat.available",
+        "name": "pot_2_heat_mat_available",
+        "path": "pots.1.heat_mat.available",
         "type": "boolean",
         "unit": "mask",
         "minimum": 0.0,
@@ -1159,8 +1159,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_2_heat_mat_max_power_w",
-        "path": "zones.1.heat_mat.max_power_w",
+        "name": "pot_2_heat_mat_max_power_w",
+        "path": "pots.1.heat_mat.max_power_w",
         "type": "number",
         "unit": "W",
         "minimum": 0.0,
@@ -1168,8 +1168,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_2_heat_mat_control_type",
-        "path": "zones.1.heat_mat.control_type",
+        "name": "pot_2_heat_mat_control_type",
+        "path": "pots.1.heat_mat.control_type",
         "type": "enum",
         "unit": "enum",
         "minimum": 0.0,
@@ -1181,8 +1181,8 @@
         }
       },
       {
-        "name": "zone_2_previous_irrigation",
-        "path": "zones.1.previous.irrigation",
+        "name": "pot_2_previous_irrigation",
+        "path": "pots.1.previous.irrigation",
         "type": "number",
         "unit": "ratio",
         "minimum": 0.0,
@@ -1190,8 +1190,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_2_previous_heat_mat",
-        "path": "zones.1.previous.heat_mat",
+        "name": "pot_2_previous_heat_mat",
+        "path": "pots.1.previous.heat_mat",
         "type": "number",
         "unit": "ratio",
         "minimum": 0.0,
@@ -1199,8 +1199,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_3_pot_volume_l",
-        "path": "zones.2.cultivation.pot_volume_l",
+        "name": "pot_3_pot_volume_l",
+        "path": "pots.2.cultivation.pot_volume_l",
         "type": "number",
         "unit": "L",
         "minimum": 0.1,
@@ -1208,8 +1208,8 @@
         "default": 10.0
       },
       {
-        "name": "zone_3_substrate_water_capacity_ml",
-        "path": "zones.2.cultivation.substrate_water_capacity_ml",
+        "name": "pot_3_substrate_water_capacity_ml",
+        "path": "pots.2.cultivation.substrate_water_capacity_ml",
         "type": "number",
         "unit": "mL",
         "minimum": 10.0,
@@ -1217,8 +1217,8 @@
         "default": 3000.0
       },
       {
-        "name": "zone_3_transpiration_factor",
-        "path": "zones.2.cultivation.transpiration_factor",
+        "name": "pot_3_transpiration_factor",
+        "path": "pots.2.cultivation.transpiration_factor",
         "type": "number",
         "unit": "ratio",
         "minimum": 0.0,
@@ -1226,8 +1226,8 @@
         "default": 1.0
       },
       {
-        "name": "zone_3_target_soil_moisture_pct",
-        "path": "zones.2.targets.soil_moisture_pct",
+        "name": "pot_3_target_soil_moisture_pct",
+        "path": "pots.2.targets.soil_moisture_pct",
         "type": "number",
         "unit": "percent",
         "minimum": 0.0,
@@ -1235,8 +1235,8 @@
         "default": 50.0
       },
       {
-        "name": "zone_3_target_soil_temperature_c",
-        "path": "zones.2.targets.soil_temperature_c",
+        "name": "pot_3_target_soil_temperature_c",
+        "path": "pots.2.targets.soil_temperature_c",
         "type": "number",
         "unit": "degC",
         "minimum": -10.0,
@@ -1244,8 +1244,8 @@
         "default": 20.0
       },
       {
-        "name": "zone_3_irrigation_available",
-        "path": "zones.2.irrigation.available",
+        "name": "pot_3_irrigation_available",
+        "path": "pots.2.irrigation.available",
         "type": "boolean",
         "unit": "mask",
         "minimum": 0.0,
@@ -1253,8 +1253,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_3_irrigation_flow_ml_s",
-        "path": "zones.2.irrigation.flow_ml_s",
+        "name": "pot_3_irrigation_flow_ml_s",
+        "path": "pots.2.irrigation.flow_ml_s",
         "type": "number",
         "unit": "mL/s",
         "minimum": 0.0,
@@ -1262,8 +1262,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_3_irrigation_maximum_pulse_s",
-        "path": "zones.2.irrigation.maximum_pulse_s",
+        "name": "pot_3_irrigation_maximum_pulse_s",
+        "path": "pots.2.irrigation.maximum_pulse_s",
         "type": "number",
         "unit": "s",
         "minimum": 0.0,
@@ -1271,8 +1271,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_3_irrigation_minimum_interval_s",
-        "path": "zones.2.irrigation.minimum_interval_s",
+        "name": "pot_3_irrigation_minimum_interval_s",
+        "path": "pots.2.irrigation.minimum_interval_s",
         "type": "number",
         "unit": "s",
         "minimum": 0.0,
@@ -1280,8 +1280,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_3_irrigation_control_type",
-        "path": "zones.2.irrigation.control_type",
+        "name": "pot_3_irrigation_control_type",
+        "path": "pots.2.irrigation.control_type",
         "type": "enum",
         "unit": "enum",
         "minimum": 0.0,
@@ -1293,8 +1293,8 @@
         }
       },
       {
-        "name": "zone_3_heat_mat_available",
-        "path": "zones.2.heat_mat.available",
+        "name": "pot_3_heat_mat_available",
+        "path": "pots.2.heat_mat.available",
         "type": "boolean",
         "unit": "mask",
         "minimum": 0.0,
@@ -1302,8 +1302,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_3_heat_mat_max_power_w",
-        "path": "zones.2.heat_mat.max_power_w",
+        "name": "pot_3_heat_mat_max_power_w",
+        "path": "pots.2.heat_mat.max_power_w",
         "type": "number",
         "unit": "W",
         "minimum": 0.0,
@@ -1311,8 +1311,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_3_heat_mat_control_type",
-        "path": "zones.2.heat_mat.control_type",
+        "name": "pot_3_heat_mat_control_type",
+        "path": "pots.2.heat_mat.control_type",
         "type": "enum",
         "unit": "enum",
         "minimum": 0.0,
@@ -1324,8 +1324,8 @@
         }
       },
       {
-        "name": "zone_3_previous_irrigation",
-        "path": "zones.2.previous.irrigation",
+        "name": "pot_3_previous_irrigation",
+        "path": "pots.2.previous.irrigation",
         "type": "number",
         "unit": "ratio",
         "minimum": 0.0,
@@ -1333,8 +1333,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_3_previous_heat_mat",
-        "path": "zones.2.previous.heat_mat",
+        "name": "pot_3_previous_heat_mat",
+        "path": "pots.2.previous.heat_mat",
         "type": "number",
         "unit": "ratio",
         "minimum": 0.0,
@@ -1342,8 +1342,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_4_pot_volume_l",
-        "path": "zones.3.cultivation.pot_volume_l",
+        "name": "pot_4_pot_volume_l",
+        "path": "pots.3.cultivation.pot_volume_l",
         "type": "number",
         "unit": "L",
         "minimum": 0.1,
@@ -1351,8 +1351,8 @@
         "default": 10.0
       },
       {
-        "name": "zone_4_substrate_water_capacity_ml",
-        "path": "zones.3.cultivation.substrate_water_capacity_ml",
+        "name": "pot_4_substrate_water_capacity_ml",
+        "path": "pots.3.cultivation.substrate_water_capacity_ml",
         "type": "number",
         "unit": "mL",
         "minimum": 10.0,
@@ -1360,8 +1360,8 @@
         "default": 3000.0
       },
       {
-        "name": "zone_4_transpiration_factor",
-        "path": "zones.3.cultivation.transpiration_factor",
+        "name": "pot_4_transpiration_factor",
+        "path": "pots.3.cultivation.transpiration_factor",
         "type": "number",
         "unit": "ratio",
         "minimum": 0.0,
@@ -1369,8 +1369,8 @@
         "default": 1.0
       },
       {
-        "name": "zone_4_target_soil_moisture_pct",
-        "path": "zones.3.targets.soil_moisture_pct",
+        "name": "pot_4_target_soil_moisture_pct",
+        "path": "pots.3.targets.soil_moisture_pct",
         "type": "number",
         "unit": "percent",
         "minimum": 0.0,
@@ -1378,8 +1378,8 @@
         "default": 50.0
       },
       {
-        "name": "zone_4_target_soil_temperature_c",
-        "path": "zones.3.targets.soil_temperature_c",
+        "name": "pot_4_target_soil_temperature_c",
+        "path": "pots.3.targets.soil_temperature_c",
         "type": "number",
         "unit": "degC",
         "minimum": -10.0,
@@ -1387,8 +1387,8 @@
         "default": 20.0
       },
       {
-        "name": "zone_4_irrigation_available",
-        "path": "zones.3.irrigation.available",
+        "name": "pot_4_irrigation_available",
+        "path": "pots.3.irrigation.available",
         "type": "boolean",
         "unit": "mask",
         "minimum": 0.0,
@@ -1396,8 +1396,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_4_irrigation_flow_ml_s",
-        "path": "zones.3.irrigation.flow_ml_s",
+        "name": "pot_4_irrigation_flow_ml_s",
+        "path": "pots.3.irrigation.flow_ml_s",
         "type": "number",
         "unit": "mL/s",
         "minimum": 0.0,
@@ -1405,8 +1405,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_4_irrigation_maximum_pulse_s",
-        "path": "zones.3.irrigation.maximum_pulse_s",
+        "name": "pot_4_irrigation_maximum_pulse_s",
+        "path": "pots.3.irrigation.maximum_pulse_s",
         "type": "number",
         "unit": "s",
         "minimum": 0.0,
@@ -1414,8 +1414,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_4_irrigation_minimum_interval_s",
-        "path": "zones.3.irrigation.minimum_interval_s",
+        "name": "pot_4_irrigation_minimum_interval_s",
+        "path": "pots.3.irrigation.minimum_interval_s",
         "type": "number",
         "unit": "s",
         "minimum": 0.0,
@@ -1423,8 +1423,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_4_irrigation_control_type",
-        "path": "zones.3.irrigation.control_type",
+        "name": "pot_4_irrigation_control_type",
+        "path": "pots.3.irrigation.control_type",
         "type": "enum",
         "unit": "enum",
         "minimum": 0.0,
@@ -1436,8 +1436,8 @@
         }
       },
       {
-        "name": "zone_4_heat_mat_available",
-        "path": "zones.3.heat_mat.available",
+        "name": "pot_4_heat_mat_available",
+        "path": "pots.3.heat_mat.available",
         "type": "boolean",
         "unit": "mask",
         "minimum": 0.0,
@@ -1445,8 +1445,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_4_heat_mat_max_power_w",
-        "path": "zones.3.heat_mat.max_power_w",
+        "name": "pot_4_heat_mat_max_power_w",
+        "path": "pots.3.heat_mat.max_power_w",
         "type": "number",
         "unit": "W",
         "minimum": 0.0,
@@ -1454,8 +1454,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_4_heat_mat_control_type",
-        "path": "zones.3.heat_mat.control_type",
+        "name": "pot_4_heat_mat_control_type",
+        "path": "pots.3.heat_mat.control_type",
         "type": "enum",
         "unit": "enum",
         "minimum": 0.0,
@@ -1467,8 +1467,8 @@
         }
       },
       {
-        "name": "zone_4_previous_irrigation",
-        "path": "zones.3.previous.irrigation",
+        "name": "pot_4_previous_irrigation",
+        "path": "pots.3.previous.irrigation",
         "type": "number",
         "unit": "ratio",
         "minimum": 0.0,
@@ -1476,8 +1476,8 @@
         "default": 0.0
       },
       {
-        "name": "zone_4_previous_heat_mat",
-        "path": "zones.3.previous.heat_mat",
+        "name": "pot_4_previous_heat_mat",
+        "path": "pots.3.previous.heat_mat",
         "type": "number",
         "unit": "ratio",
         "minimum": 0.0,
@@ -1529,28 +1529,28 @@
         "default": 0.0
       },
       {
-        "name": "irrigation_zone_1",
+        "name": "irrigation_pot_1",
         "unit": "ratio",
         "minimum": 0.0,
         "maximum": 1.0,
         "default": 0.0
       },
       {
-        "name": "irrigation_zone_2",
+        "name": "irrigation_pot_2",
         "unit": "ratio",
         "minimum": 0.0,
         "maximum": 1.0,
         "default": 0.0
       },
       {
-        "name": "irrigation_zone_3",
+        "name": "irrigation_pot_3",
         "unit": "ratio",
         "minimum": 0.0,
         "maximum": 1.0,
         "default": 0.0
       },
       {
-        "name": "irrigation_zone_4",
+        "name": "irrigation_pot_4",
         "unit": "ratio",
         "minimum": 0.0,
         "maximum": 1.0,
@@ -1564,28 +1564,28 @@
         "default": 0.0
       },
       {
-        "name": "heat_mat_zone_1",
+        "name": "heat_mat_pot_1",
         "unit": "ratio",
         "minimum": 0.0,
         "maximum": 1.0,
         "default": 0.0
       },
       {
-        "name": "heat_mat_zone_2",
+        "name": "heat_mat_pot_2",
         "unit": "ratio",
         "minimum": 0.0,
         "maximum": 1.0,
         "default": 0.0
       },
       {
-        "name": "heat_mat_zone_3",
+        "name": "heat_mat_pot_3",
         "unit": "ratio",
         "minimum": 0.0,
         "maximum": 1.0,
         "default": 0.0
       },
       {
-        "name": "heat_mat_zone_4",
+        "name": "heat_mat_pot_4",
         "unit": "ratio",
         "minimum": 0.0,
         "maximum": 1.0,
@@ -1659,83 +1659,83 @@
       ]
     },
     {
-      "path": "zones.0",
+      "path": "pots.0",
       "features": [
-        "zone_1_available"
+        "pot_1_available"
       ]
     },
     {
-      "path": "zones.0.sensors",
+      "path": "pots.0.sensors",
       "features": [
-        "soil_moisture_zone_1_pct",
-        "soil_temperature_zone_1_c"
+        "soil_moisture_pot_1_pct",
+        "soil_temperature_pot_1_c"
       ]
     },
     {
-      "path": "zones.0.validity",
+      "path": "pots.0.validity",
       "features": [
-        "soil_moisture_zone_1_valid",
-        "soil_temperature_zone_1_valid"
+        "soil_moisture_pot_1_valid",
+        "soil_temperature_pot_1_valid"
       ]
     },
     {
-      "path": "zones.1",
+      "path": "pots.1",
       "features": [
-        "zone_2_available"
+        "pot_2_available"
       ]
     },
     {
-      "path": "zones.1.sensors",
+      "path": "pots.1.sensors",
       "features": [
-        "soil_moisture_zone_2_pct",
-        "soil_temperature_zone_2_c"
+        "soil_moisture_pot_2_pct",
+        "soil_temperature_pot_2_c"
       ]
     },
     {
-      "path": "zones.1.validity",
+      "path": "pots.1.validity",
       "features": [
-        "soil_moisture_zone_2_valid",
-        "soil_temperature_zone_2_valid"
+        "soil_moisture_pot_2_valid",
+        "soil_temperature_pot_2_valid"
       ]
     },
     {
-      "path": "zones.2",
+      "path": "pots.2",
       "features": [
-        "zone_3_available"
+        "pot_3_available"
       ]
     },
     {
-      "path": "zones.2.sensors",
+      "path": "pots.2.sensors",
       "features": [
-        "soil_moisture_zone_3_pct",
-        "soil_temperature_zone_3_c"
+        "soil_moisture_pot_3_pct",
+        "soil_temperature_pot_3_c"
       ]
     },
     {
-      "path": "zones.2.validity",
+      "path": "pots.2.validity",
       "features": [
-        "soil_moisture_zone_3_valid",
-        "soil_temperature_zone_3_valid"
+        "soil_moisture_pot_3_valid",
+        "soil_temperature_pot_3_valid"
       ]
     },
     {
-      "path": "zones.3",
+      "path": "pots.3",
       "features": [
-        "zone_4_available"
+        "pot_4_available"
       ]
     },
     {
-      "path": "zones.3.sensors",
+      "path": "pots.3.sensors",
       "features": [
-        "soil_moisture_zone_4_pct",
-        "soil_temperature_zone_4_c"
+        "soil_moisture_pot_4_pct",
+        "soil_temperature_pot_4_c"
       ]
     },
     {
-      "path": "zones.3.validity",
+      "path": "pots.3.validity",
       "features": [
-        "soil_moisture_zone_4_valid",
-        "soil_temperature_zone_4_valid"
+        "soil_moisture_pot_4_valid",
+        "soil_temperature_pot_4_valid"
       ]
     },
     {
@@ -1828,163 +1828,163 @@
       ]
     },
     {
-      "path": "zones.0.cultivation",
+      "path": "pots.0.cultivation",
       "features": [
-        "zone_1_pot_volume_l",
-        "zone_1_substrate_water_capacity_ml",
-        "zone_1_transpiration_factor"
+        "pot_1_pot_volume_l",
+        "pot_1_substrate_water_capacity_ml",
+        "pot_1_transpiration_factor"
       ]
     },
     {
-      "path": "zones.0.targets",
+      "path": "pots.0.targets",
       "features": [
-        "zone_1_target_soil_moisture_pct",
-        "zone_1_target_soil_temperature_c"
+        "pot_1_target_soil_moisture_pct",
+        "pot_1_target_soil_temperature_c"
       ]
     },
     {
-      "path": "zones.0.irrigation",
+      "path": "pots.0.irrigation",
       "features": [
-        "zone_1_irrigation_available",
-        "zone_1_irrigation_flow_ml_s",
-        "zone_1_irrigation_maximum_pulse_s",
-        "zone_1_irrigation_minimum_interval_s",
-        "zone_1_irrigation_control_type"
+        "pot_1_irrigation_available",
+        "pot_1_irrigation_flow_ml_s",
+        "pot_1_irrigation_maximum_pulse_s",
+        "pot_1_irrigation_minimum_interval_s",
+        "pot_1_irrigation_control_type"
       ]
     },
     {
-      "path": "zones.0.heat_mat",
+      "path": "pots.0.heat_mat",
       "features": [
-        "zone_1_heat_mat_available",
-        "zone_1_heat_mat_max_power_w",
-        "zone_1_heat_mat_control_type"
+        "pot_1_heat_mat_available",
+        "pot_1_heat_mat_max_power_w",
+        "pot_1_heat_mat_control_type"
       ]
     },
     {
-      "path": "zones.0.previous",
+      "path": "pots.0.previous",
       "features": [
-        "zone_1_previous_irrigation",
-        "zone_1_previous_heat_mat"
+        "pot_1_previous_irrigation",
+        "pot_1_previous_heat_mat"
       ]
     },
     {
-      "path": "zones.1.cultivation",
+      "path": "pots.1.cultivation",
       "features": [
-        "zone_2_pot_volume_l",
-        "zone_2_substrate_water_capacity_ml",
-        "zone_2_transpiration_factor"
+        "pot_2_pot_volume_l",
+        "pot_2_substrate_water_capacity_ml",
+        "pot_2_transpiration_factor"
       ]
     },
     {
-      "path": "zones.1.targets",
+      "path": "pots.1.targets",
       "features": [
-        "zone_2_target_soil_moisture_pct",
-        "zone_2_target_soil_temperature_c"
+        "pot_2_target_soil_moisture_pct",
+        "pot_2_target_soil_temperature_c"
       ]
     },
     {
-      "path": "zones.1.irrigation",
+      "path": "pots.1.irrigation",
       "features": [
-        "zone_2_irrigation_available",
-        "zone_2_irrigation_flow_ml_s",
-        "zone_2_irrigation_maximum_pulse_s",
-        "zone_2_irrigation_minimum_interval_s",
-        "zone_2_irrigation_control_type"
+        "pot_2_irrigation_available",
+        "pot_2_irrigation_flow_ml_s",
+        "pot_2_irrigation_maximum_pulse_s",
+        "pot_2_irrigation_minimum_interval_s",
+        "pot_2_irrigation_control_type"
       ]
     },
     {
-      "path": "zones.1.heat_mat",
+      "path": "pots.1.heat_mat",
       "features": [
-        "zone_2_heat_mat_available",
-        "zone_2_heat_mat_max_power_w",
-        "zone_2_heat_mat_control_type"
+        "pot_2_heat_mat_available",
+        "pot_2_heat_mat_max_power_w",
+        "pot_2_heat_mat_control_type"
       ]
     },
     {
-      "path": "zones.1.previous",
+      "path": "pots.1.previous",
       "features": [
-        "zone_2_previous_irrigation",
-        "zone_2_previous_heat_mat"
+        "pot_2_previous_irrigation",
+        "pot_2_previous_heat_mat"
       ]
     },
     {
-      "path": "zones.2.cultivation",
+      "path": "pots.2.cultivation",
       "features": [
-        "zone_3_pot_volume_l",
-        "zone_3_substrate_water_capacity_ml",
-        "zone_3_transpiration_factor"
+        "pot_3_pot_volume_l",
+        "pot_3_substrate_water_capacity_ml",
+        "pot_3_transpiration_factor"
       ]
     },
     {
-      "path": "zones.2.targets",
+      "path": "pots.2.targets",
       "features": [
-        "zone_3_target_soil_moisture_pct",
-        "zone_3_target_soil_temperature_c"
+        "pot_3_target_soil_moisture_pct",
+        "pot_3_target_soil_temperature_c"
       ]
     },
     {
-      "path": "zones.2.irrigation",
+      "path": "pots.2.irrigation",
       "features": [
-        "zone_3_irrigation_available",
-        "zone_3_irrigation_flow_ml_s",
-        "zone_3_irrigation_maximum_pulse_s",
-        "zone_3_irrigation_minimum_interval_s",
-        "zone_3_irrigation_control_type"
+        "pot_3_irrigation_available",
+        "pot_3_irrigation_flow_ml_s",
+        "pot_3_irrigation_maximum_pulse_s",
+        "pot_3_irrigation_minimum_interval_s",
+        "pot_3_irrigation_control_type"
       ]
     },
     {
-      "path": "zones.2.heat_mat",
+      "path": "pots.2.heat_mat",
       "features": [
-        "zone_3_heat_mat_available",
-        "zone_3_heat_mat_max_power_w",
-        "zone_3_heat_mat_control_type"
+        "pot_3_heat_mat_available",
+        "pot_3_heat_mat_max_power_w",
+        "pot_3_heat_mat_control_type"
       ]
     },
     {
-      "path": "zones.2.previous",
+      "path": "pots.2.previous",
       "features": [
-        "zone_3_previous_irrigation",
-        "zone_3_previous_heat_mat"
+        "pot_3_previous_irrigation",
+        "pot_3_previous_heat_mat"
       ]
     },
     {
-      "path": "zones.3.cultivation",
+      "path": "pots.3.cultivation",
       "features": [
-        "zone_4_pot_volume_l",
-        "zone_4_substrate_water_capacity_ml",
-        "zone_4_transpiration_factor"
+        "pot_4_pot_volume_l",
+        "pot_4_substrate_water_capacity_ml",
+        "pot_4_transpiration_factor"
       ]
     },
     {
-      "path": "zones.3.targets",
+      "path": "pots.3.targets",
       "features": [
-        "zone_4_target_soil_moisture_pct",
-        "zone_4_target_soil_temperature_c"
+        "pot_4_target_soil_moisture_pct",
+        "pot_4_target_soil_temperature_c"
       ]
     },
     {
-      "path": "zones.3.irrigation",
+      "path": "pots.3.irrigation",
       "features": [
-        "zone_4_irrigation_available",
-        "zone_4_irrigation_flow_ml_s",
-        "zone_4_irrigation_maximum_pulse_s",
-        "zone_4_irrigation_minimum_interval_s",
-        "zone_4_irrigation_control_type"
+        "pot_4_irrigation_available",
+        "pot_4_irrigation_flow_ml_s",
+        "pot_4_irrigation_maximum_pulse_s",
+        "pot_4_irrigation_minimum_interval_s",
+        "pot_4_irrigation_control_type"
       ]
     },
     {
-      "path": "zones.3.heat_mat",
+      "path": "pots.3.heat_mat",
       "features": [
-        "zone_4_heat_mat_available",
-        "zone_4_heat_mat_max_power_w",
-        "zone_4_heat_mat_control_type"
+        "pot_4_heat_mat_available",
+        "pot_4_heat_mat_max_power_w",
+        "pot_4_heat_mat_control_type"
       ]
     },
     {
-      "path": "zones.3.previous",
+      "path": "pots.3.previous",
       "features": [
-        "zone_4_previous_irrigation",
-        "zone_4_previous_heat_mat"
+        "pot_4_previous_irrigation",
+        "pot_4_previous_heat_mat"
       ]
     }
   ]
