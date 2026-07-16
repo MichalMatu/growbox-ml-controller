@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from tools.ml.contract import V2_CONTRACT_PATH, load_contract
+from tools.ml.contract import V2_CONTRACT_PATH, V3_CONTRACT_PATH, load_contract
 from tools.ml.generate_dataset import DatasetConfig, split_scenarios
 from tools.ml.generate_dataset_v2 import (
     controller_input_record_v2,
@@ -38,14 +38,45 @@ def test_v2_controller_input_record_matches_contract_paths():
         },
         previous=ControlAction(),
     )
-    contract = load_contract(V2_CONTRACT_PATH)
+    contract = load_contract(V3_CONTRACT_PATH)
     encoded = contract.encode(record)
     assert encoded.shape == (len(contract.features),)
     assert np.all((0.0 <= encoded) & (encoded <= 1.0))
 
 
-def test_generated_v2_rows_keep_each_scenario_in_one_split():
+def test_v2_controller_input_record_still_encodes_under_v2_contract():
+    scenario = random_scenario_v2(0, 4242)
+    simulator = SequentialEnvironmentSimulatorV2(scenario)
+    state = simulator.observe(add_sensor_noise=False)
+    record = controller_input_record_v2(
+        scenario,
+        state,
+        validity={
+            "air_temperature_c": True,
+            "air_humidity_pct": True,
+            "co2_ppm": scenario.validity.co2_ppm,
+            "nutrient_solution_temperature_c": scenario.validity.nutrient_solution_temperature_c,
+            "outside_temperature_c": True,
+            "outside_humidity_pct": True,
+            "outside_co2_ppm": scenario.validity.outside_co2_ppm,
+        },
+        zone_validity={
+            index: {
+                "soil_moisture_pct": zone.available and zone.soil_moisture_valid,
+                "soil_temperature_c": zone.available and zone.soil_temperature_valid,
+            }
+            for index, zone in enumerate(scenario.zones)
+        },
+        previous=ControlAction(),
+    )
     contract = load_contract(V2_CONTRACT_PATH)
+    encoded = contract.encode(record)
+    assert encoded.shape == (103,)
+    assert np.all((0.0 <= encoded) & (encoded <= 1.0))
+
+
+def test_generated_v2_rows_keep_each_scenario_in_one_split():
+    contract = load_contract(V3_CONTRACT_PATH)
     dataset = generate_dataset_v2(
         DatasetConfig(scenario_count=6, steps_per_scenario=3, seed=91),
         teacher=RolloutTeacherV2(horizon_steps=1),

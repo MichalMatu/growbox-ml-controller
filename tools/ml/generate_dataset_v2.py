@@ -1,4 +1,4 @@
-"""Scenario-level randomized sequential dataset generation for contract v2."""
+"""Scenario-level randomized sequential dataset generation for contract v3."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .contract import V2_CONTRACT_PATH, Contract, load_contract
+from .contract import V3_CONTRACT_PATH, Contract, load_contract
 from .generate_dataset import Dataset, DatasetConfig, split_scenarios
 from .simulator_v2 import (
     MAX_ZONES,
@@ -22,8 +22,10 @@ from .simulator_v2 import (
     FanCapabilities,
     GlobalActuators,
     HeaterCapabilities,
+    HeatMatCapabilities,
     HumidifierCapabilities,
     LightsConfig,
+    NutrientHeaterCapabilities,
     PumpCapabilities,
     ResponseLag,
     Scenario,
@@ -62,6 +64,7 @@ def _random_zone_config(
     soil_moisture_valid = bool(rng.random() >= 0.10)
     soil_temperature_valid = bool(rng.random() >= 0.22)
     irrigation_available = bool(rng.random() >= 0.16)
+    heat_mat_available = soil_temperature_valid and bool(rng.random() >= 0.72)
     pot_volume = float(rng.uniform(2.0, 35.0))
     return ZoneConfig(
         available=True,
@@ -78,7 +81,12 @@ def _random_zone_config(
             maximum_pulse_s=float(rng.uniform(1.0, 12.0)) if irrigation_available else 0.0,
             minimum_interval_s=float(rng.uniform(120.0, 1800.0)) if irrigation_available else 300.0,
         ),
+        heat_mat=HeatMatCapabilities(
+            available=heat_mat_available,
+            max_power_w=float(rng.uniform(8.0, 45.0)) if heat_mat_available else 0.0,
+        ),
         target_soil_moisture_pct=float(rng.uniform(38.0, 70.0)),
+        target_soil_temperature_c=float(rng.uniform(16.0, 28.0)),
     )
 
 
@@ -104,6 +112,7 @@ def random_scenario_v2(index: int, seed: int) -> Scenario:
     co2_valid = bool(rng.random() >= 0.12)
     outside_co2_valid = bool(rng.random() >= 0.18)
     nutrient_valid = bool(rng.random() >= 0.55)
+    nutrient_heater_available = nutrient_valid and bool(rng.random() >= 0.78)
 
     zones = tuple(
         _random_zone_config(rng, available=zone_index in active_indices)
@@ -151,6 +160,11 @@ def random_scenario_v2(index: int, seed: int) -> Scenario:
             dose_ppm_per_full_pulse=float(rng.uniform(60.0, 220.0)) if co2_doser_available else 0.0,
             maximum_pulse_s=float(rng.uniform(1.5, 6.0)) if co2_doser_available else 0.0,
         ),
+        nutrient_heater=NutrientHeaterCapabilities(
+            available=nutrient_heater_available,
+            max_power_w=float(rng.uniform(40.0, 250.0)) if nutrient_heater_available else 0.0,
+            efficiency=float(rng.uniform(0.75, 1.0)),
+        ),
         lights=LightsConfig(
             integrated=bool(rng.random() >= 0.08),
             max_heat_w=float(rng.uniform(40.0, 350.0)),
@@ -183,6 +197,7 @@ def random_scenario_v2(index: int, seed: int) -> Scenario:
             target_air_temperature_c=float(rng.uniform(19.0, 30.0)),
             target_air_humidity_pct=float(rng.uniform(45.0, 80.0)),
             target_co2_ppm=float(rng.uniform(550.0, 1300.0)),
+            target_nutrient_solution_temperature_c=float(rng.uniform(16.0, 26.0)),
         ),
         validity=SensorValidity(
             air_temperature_c=True,
@@ -269,7 +284,9 @@ def controller_input_record_v2(
         if zone_valid.get("soil_temperature_c", False):
             zone_sensors["soil_temperature_c"] = zone_state.soil_temperature_c
         irrigation = zone.irrigation
-        output_name = f"irrigation_zone_{zone_index + 1}"
+        heat_mat = zone.heat_mat
+        irrigation_name = f"irrigation_zone_{zone_index + 1}"
+        heat_mat_name = f"heat_mat_zone_{zone_index + 1}"
         zones_payload.append(
             {
                 "available": zone.available,
@@ -283,7 +300,10 @@ def controller_input_record_v2(
                     "substrate_water_capacity_ml": zone.cultivation.substrate_water_capacity_ml,
                     "transpiration_factor": zone.cultivation.transpiration_factor,
                 },
-                "targets": {"soil_moisture_pct": zone.target_soil_moisture_pct},
+                "targets": {
+                    "soil_moisture_pct": zone.target_soil_moisture_pct,
+                    "soil_temperature_c": zone.target_soil_temperature_c,
+                },
                 "irrigation": {
                     "available": irrigation.available,
                     "flow_ml_s": irrigation.flow_ml_s,
@@ -291,7 +311,15 @@ def controller_input_record_v2(
                     "minimum_interval_s": irrigation.minimum_interval_s,
                     "control_type": "pwm",
                 },
-                "previous": {"irrigation": getattr(previous, output_name)},
+                "heat_mat": {
+                    "available": heat_mat.available,
+                    "max_power_w": heat_mat.max_power_w,
+                    "control_type": "binary",
+                },
+                "previous": {
+                    "irrigation": getattr(previous, irrigation_name),
+                    "heat_mat": getattr(previous, heat_mat_name),
+                },
             }
         )
 
@@ -348,11 +376,17 @@ def controller_input_record_v2(
                 "dose_ppm_per_full_pulse": caps.co2_doser.dose_ppm_per_full_pulse,
                 "maximum_pulse_s": caps.co2_doser.maximum_pulse_s,
             },
+            "nutrient_heater": {
+                "available": caps.nutrient_heater.available,
+                "max_power_w": caps.nutrient_heater.max_power_w,
+                "efficiency": caps.nutrient_heater.efficiency,
+            },
         },
         "targets": {
             "air_temperature_c": scenario.targets.target_air_temperature_c,
             "air_humidity_pct": scenario.targets.target_air_humidity_pct,
             "co2_ppm": scenario.targets.target_co2_ppm,
+            "nutrient_solution_temperature_c": scenario.targets.target_nutrient_solution_temperature_c,
         },
         "previous": {
             "heater": previous.heater,
@@ -361,6 +395,7 @@ def controller_input_record_v2(
             "dehumidifier": previous.dehumidifier,
             "cooler": previous.cooler,
             "co2_doser": previous.co2_doser,
+            "nutrient_heater": previous.nutrient_heater,
         },
         "zones": zones_payload,
         "pseudo": {"lights_active": state.lights_active},
@@ -386,7 +421,7 @@ def generate_dataset_v2(
     contract: Contract | None = None,
     teacher: RolloutTeacherV2 | None = None,
 ) -> Dataset:
-    contract = contract or load_contract(V2_CONTRACT_PATH)
+    contract = contract or load_contract(V3_CONTRACT_PATH)
     teacher = teacher or RolloutTeacherV2()
     scenarios = randomized_scenarios_v2(config)
     split_by_id = split_scenarios(
