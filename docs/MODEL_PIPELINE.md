@@ -2,8 +2,9 @@
 
 Deterministic path: simulation → teacher labels → Keras MLP → emlearn C export → golden-vector parity.
 
-> **Do not treat `--quick` as a production model.** The currently committed weights may be marked
-> `untrained-placeholder` until a full train runs against a high-fidelity pots simulator.
+> **Do not treat `--quick` as a production model.** Full train (`make train-full`) exports the
+> committed emlearn weights used on ESP demo firmware. After physics/teacher changes, re-run full
+> train and flash (`PORT=… make flash`) before on-device evaluation.
 
 ## Commands
 

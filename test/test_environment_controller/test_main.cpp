@@ -233,6 +233,71 @@ void test_alarm_temperature_forces_heater_off_and_fan_minimum() {
   TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::TemperatureAlarmFan));
 }
 
+void test_soft_heater_proposal_lifts_when_cold() {
+  // MLP often emits ~0.4 for heater when cold; binary threshold is 0.5.
+  ControllerInput input = nominalInput();
+  input.sensors.air_temperature_c = 16.0f;
+  input.targets.air_temperature_c = 25.0f;
+  input.safety.heater_minimum_on_s = 30.0f;
+  input.safety.heater_minimum_off_s = 30.0f;
+  input.previous.heater = 0.0f;
+  input.monotonic_time_ms = 1000U;
+
+  RawModelDecision raw{};
+  raw.heater = 0.5f; // post-sharpen value the controller would lift from ~0.42
+  raw.fan = 0.2f;
+  SafeControlDecision safe{};
+  SafetyReport report{};
+  SafetySupervisor supervisor{};
+  supervisor.apply(input, raw, SafetyReason::None, safe, report);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 1.0f, safe.heater);
+}
+
+void test_binary_min_off_does_not_block_first_engagement() {
+  ControllerInput input = nominalInput();
+  input.safety.heater_minimum_on_s = 30.0f;
+  input.safety.heater_minimum_off_s = 30.0f;
+  input.previous.heater = 0.0f;
+  input.monotonic_time_ms = 0U;
+  RawModelDecision raw{};
+  raw.heater = 1.0f;
+  SafeControlDecision safe{};
+  SafetyReport report{};
+  SafetySupervisor supervisor{};
+  supervisor.apply(input, raw, SafetyReason::None, safe, report);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 1.0f, safe.heater);
+}
+
+void test_overtemperature_beats_heater_minimum_on_dwell() {
+  // Binary min-on must not keep the heater ON past maximum air temperature.
+  ControllerInput input = nominalInput();
+  input.safety.heater_minimum_on_s = 30.0f;
+  input.safety.heater_minimum_off_s = 30.0f;
+  input.previous.heater = 1.0f;
+  input.monotonic_time_ms = 1000U;
+
+  RawModelDecision raw{};
+  raw.heater = 1.0f;
+  raw.fan = 0.0f;
+  SafeControlDecision safe{};
+  SafetyReport report{};
+  SafetySupervisor supervisor{};
+
+  // Step 1: heater legitimately ON below alarm.
+  input.sensors.air_temperature_c = 24.0f;
+  supervisor.apply(input, raw, SafetyReason::None, safe, report);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 1.0f, safe.heater);
+
+  // Step 2: temperature spikes above maximum; heater must cut immediately.
+  input.sensors.air_temperature_c = 36.0f;
+  input.previous.heater = 1.0f;
+  input.monotonic_time_ms = 1500U; // still inside min-on window
+  supervisor.apply(input, raw, SafetyReason::None, safe, report);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.heater);
+  TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::OverTemperature));
+  TEST_ASSERT_TRUE(safe.fan + 1.0e-6f >= input.safety.alarm_minimum_fan);
+}
+
 void test_zone_pump_pulse_and_minimum_interval() {
   ControllerInput input = nominalInput();
   input.pots[0].irrigation.maximum_pulse_s = 1000.0f;
@@ -429,6 +494,9 @@ int main(int, char**) {
   RUN_TEST(test_encoder_rejects_non_finite_input_and_imputes_finite_masked_sensor);
   RUN_TEST(test_safety_masks_unavailable_outputs_and_missing_temperature);
   RUN_TEST(test_alarm_temperature_forces_heater_off_and_fan_minimum);
+  RUN_TEST(test_soft_heater_proposal_lifts_when_cold);
+  RUN_TEST(test_binary_min_off_does_not_block_first_engagement);
+  RUN_TEST(test_overtemperature_beats_heater_minimum_on_dwell);
   RUN_TEST(test_zone_pump_pulse_and_minimum_interval);
   RUN_TEST(test_soil_moisture_at_target_blocks_irrigation);
   RUN_TEST(test_invalid_soil_moisture_blocks_irrigation);

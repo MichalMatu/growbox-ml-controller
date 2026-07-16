@@ -22,18 +22,20 @@ IRRIGATION_LEVELS = (0.0, 1.0)
 
 @dataclass(frozen=True)
 class CostConfig:
-    temperature_error: float = 5.0
-    humidity_error: float = 2.2
-    co2_error: float = 0.8
-    soil_moisture_error: float = 2.8
-    nutrient_temperature_error: float = 3.2
-    soil_temperature_error: float = 2.6
-    energy: float = 0.12
-    water: float = 0.18
-    switching: float = 0.10
+    # Prefer tracking climate setpoints over energy when errors are large; weak
+    # sigmoid outputs otherwise fall below safety binary_threshold (0.5).
+    temperature_error: float = 8.0
+    humidity_error: float = 3.4
+    co2_error: float = 1.1
+    soil_moisture_error: float = 3.2
+    nutrient_temperature_error: float = 3.6
+    soil_temperature_error: float = 3.0
+    energy: float = 0.08
+    water: float = 0.16
+    switching: float = 0.08
     constraint_violation: float = 100.0
     unreachable_target: float = 0.35
-    terminal_multiplier: float = 1.5
+    terminal_multiplier: float = 1.8
 
 
 @dataclass(frozen=True)

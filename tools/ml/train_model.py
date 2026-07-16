@@ -118,6 +118,20 @@ def prediction_metrics(
     }
 
 
+def output_loss_weights(output_names: tuple[str, ...]) -> np.ndarray:
+    """Emphasize climate binary actuators that binary-threshold safety hardens."""
+    weights = {
+        "heater": 3.0,
+        "cooler": 2.5,
+        "humidifier": 2.5,
+        "dehumidifier": 2.5,
+        "fan": 1.5,
+        "co2_doser": 1.5,
+        "nutrient_heater": 1.5,
+    }
+    return np.asarray([weights.get(name, 1.0) for name in output_names], dtype=np.float32)
+
+
 def train(dataset: Dataset, config: TrainingConfig) -> TrainingResult:
     x_train, y_train = dataset.select("train")
     x_validation, y_validation = dataset.select("validation")
@@ -131,7 +145,14 @@ def train(dataset: Dataset, config: TrainingConfig) -> TrainingResult:
     optimizer = tf.keras.optimizers.SGD(
         learning_rate=config.learning_rate, momentum=0.0, nesterov=False
     )
-    model.compile(optimizer=optimizer, loss="mse", metrics=["mae"])
+    loss_weights = output_loss_weights(tuple(dataset.output_names))
+    loss_weights_tf = tf.constant(loss_weights, dtype=tf.float32)
+
+    def weighted_mse(y_true: Any, y_pred: Any) -> Any:
+        err = tf.square(y_true - y_pred) * loss_weights_tf
+        return tf.reduce_mean(err)
+
+    model.compile(optimizer=optimizer, loss=weighted_mse, metrics=["mae"])
     history_values: dict[str, list[float]] = {
         "loss": [],
         "mae": [],

@@ -329,7 +329,12 @@ def default_scenario(
     scenario: dict[str, Any] = {"seed": seed}
     for feature in contract.features:
         path = feature.path
-        if path.startswith("validity."):
+        # Contract stores mask/bool features as 0/1 floats; wire protocol needs JSON bools.
+        # Paths include top-level validity.* and per-pot pots.N.validity.*.
+        is_validity = path.startswith("validity.") or ".validity." in path
+        is_available = path.endswith(".available")
+        is_lights = path.endswith("lights_active") or path == "pseudo.lights_active"
+        if is_validity or is_available or is_lights:
             _set_nested(scenario, path, feature.default >= 0.5)
         elif feature.encoding is not None:
             default_name = next(
@@ -337,21 +342,30 @@ def default_scenario(
                 "binary",
             )
             _set_nested(scenario, path, default_name)
-        elif path.endswith(".available"):
-            _set_nested(scenario, path, feature.default >= 0.5)
         else:
             _set_nested(scenario, path, feature.default)
-    preset_overlay = SCENARIO_PRESETS.get(preset, {}).get("overlay")
-    if preset_overlay is not None:
+    # Always start from a complete nominal demo profile so partial preset overlays
+    # (all_pots, co2_high, …) keep finite actuators/sensors/validity for firmware.
+    scenario = _deep_merge(scenario, NOMINAL_PRESET)
+    if preset != "nominal":
+        preset_overlay = SCENARIO_PRESETS.get(preset, {}).get("overlay")
+        if preset_overlay is None:
+            raise ValueError(f"unknown scenario preset: {preset}")
         scenario = _deep_merge(scenario, preset_overlay)
-    elif preset == "nominal":
-        scenario = _deep_merge(scenario, NOMINAL_PRESET)
     safety_defaults = contract.document.get("safety_defaults", {})
     if safety_defaults:
         scenario = _deep_merge(scenario, {"safety": dict(safety_defaults)})
     for _, path, default_name in ACTUATOR_CONTROL_FIELDS:
         _set_nested(scenario, path, default_name)
     _normalize_pots(scenario)
+    # Ensure pot targets keep soil temperature when overlays omit it.
+    for pot in scenario.get("pots", []):
+        if not isinstance(pot, dict):
+            continue
+        targets = pot.setdefault("targets", {})
+        if "soil_temperature_c" not in targets:
+            sensors = pot.get("sensors") or {}
+            targets["soil_temperature_c"] = float(sensors.get("soil_temperature_c", 20.0))
     scenario["seed"] = seed
     return scenario
 

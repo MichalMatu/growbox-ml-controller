@@ -9,8 +9,8 @@ namespace generated_manifest {
 
 inline constexpr std::uint32_t kSchemaVersion = 4U;
 inline constexpr char kSchemaHash[] = "5768273a73ac";
-inline constexpr char kModelVersion[] = "environment-mlp-v1-full-facf571bcb2f";
-inline constexpr char kWeightHash[] = "facf571bcb2f10e92eab1ea8bfaa1118ade4da6c8c061958cfa20fc9e99c9a38";
+inline constexpr char kModelVersion[] = "environment-mlp-v1-full-ac0f719b75f9";
+inline constexpr char kWeightHash[] = "ac0f719b75f9ae7c7e366a528cab082ef147d91871c92c89b296f78d344e8457";
 inline constexpr char kModelFormat[] = "emlearn-net-float32-loadable";
 inline constexpr char kTrainingMode[] = "full";
 inline constexpr std::uint32_t kTrainingSeed = 1847U;
@@ -562,42 +562,42 @@ inline constexpr std::array<float, kInputCount> kNormalizationDefaults{{
         0.0f
 }};
 
-inline constexpr float kTestMae = 0.0895505f;
-inline constexpr float kTestRmse = 0.1725471f;
-inline constexpr float kTestMaxAbsError = 0.9945398f;
+inline constexpr float kTestMae = 0.0818365f;
+inline constexpr float kTestRmse = 0.1592277f;
+inline constexpr float kTestMaxAbsError = 0.9969951f;
 inline constexpr std::array<float, kOutputCount> kTestOutputMae{{
-        0.3506314f,
-        0.3146205f,
-        0.1068732f,
-        0.145572f,
-        0.2238637f,
-        0.03469f,
-        0.0169358f,
-        0.0185038f,
-        0.0250158f,
-        0.0251433f,
-        0.0208658f,
-        0.0172555f,
-        0.0180212f,
-        0.0115115f,
-        0.0137545f
+        0.168017f,
+        0.3066332f,
+        0.2411527f,
+        0.2080524f,
+        0.1074405f,
+        0.027275f,
+        0.0217951f,
+        0.0161262f,
+        0.0242465f,
+        0.0219084f,
+        0.0155859f,
+        0.0277996f,
+        0.0175415f,
+        0.0099847f,
+        0.0139881f
 }};
 inline constexpr std::array<float, kOutputCount> kTestOutputRmse{{
-        0.38407f,
-        0.3573437f,
-        0.1854356f,
-        0.2263605f,
-        0.2295159f,
-        0.1124774f,
-        0.0496854f,
-        0.0579208f,
-        0.0796262f,
-        0.0803754f,
-        0.0240211f,
-        0.020387f,
-        0.019127f,
-        0.0138079f,
-        0.015993f
+        0.188736f,
+        0.332558f,
+        0.317948f,
+        0.2741793f,
+        0.1549297f,
+        0.1116509f,
+        0.0578422f,
+        0.0572758f,
+        0.0796042f,
+        0.0801947f,
+        0.0182691f,
+        0.0298115f,
+        0.0182693f,
+        0.0117814f,
+        0.01619f
 }};
 
 }  // namespace generated_manifest

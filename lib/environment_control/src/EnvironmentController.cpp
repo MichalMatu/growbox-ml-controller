@@ -1,5 +1,8 @@
 #include "EnvironmentController.h"
 
+#include <algorithm>
+#include <cmath>
+
 namespace growbox {
 namespace control {
 namespace {
@@ -18,6 +21,76 @@ SafetyReason modelFailureReason(ModelStatus status) noexcept {
     return SafetyReason::ModelFailure;
   }
   return SafetyReason::ModelFailure;
+}
+
+float clamp01(float value) noexcept {
+  return std::max(0.0f, std::min(1.0f, value));
+}
+
+// Soft MLP outputs often land just below binary_threshold even when residual is clear.
+// Lift those mid-range proposals to the threshold so safety binary dwell can engage.
+// Safety still owns hard limits (overtemp, unavailable, mutual exclusion).
+void sharpenBinaryProposals(const ControllerInput& input, RawModelDecision& raw) noexcept {
+  if (!std::isfinite(input.safety.binary_threshold)) {
+    return;
+  }
+  const float thr = clamp01(input.safety.binary_threshold);
+  if (thr <= 0.0f) {
+    return;
+  }
+  // Soft floor: mid-range model votes with clear residual lift to thr.
+  // Severe residual uses a lower floor so weak but non-zero MLP output still acts.
+  const float soft = thr * 0.2f;
+  const float soft_severe = thr * 0.04f;
+
+  auto lift = [&](float& channel, bool need_on, bool severe) {
+    if (!need_on) {
+      return;
+    }
+    const float floor = severe ? soft_severe : soft;
+    if (std::isfinite(channel) && channel >= floor && channel < thr) {
+      channel = thr;
+    }
+  };
+
+  if (input.validity.air_temperature && std::isfinite(input.sensors.air_temperature_c) &&
+      std::isfinite(input.targets.air_temperature_c)) {
+    const float temp_err = input.targets.air_temperature_c - input.sensors.air_temperature_c;
+    if (input.actuators.heater.available && input.actuators.heater.max_power_w > 0.0f) {
+      lift(raw.heater, temp_err > 1.5f, temp_err > 4.0f);
+    }
+    if (input.actuators.cooler.available && input.actuators.cooler.max_cooling_w > 0.0f) {
+      lift(raw.cooler, temp_err < -1.5f, temp_err < -4.0f);
+    }
+  }
+
+  if (input.validity.air_humidity && std::isfinite(input.sensors.air_humidity_pct) &&
+      std::isfinite(input.targets.air_humidity_pct)) {
+    const float rh_err = input.targets.air_humidity_pct - input.sensors.air_humidity_pct;
+    if (input.actuators.humidifier.available && input.actuators.humidifier.max_output_g_h > 0.0f) {
+      lift(raw.humidifier, rh_err > 8.0f, rh_err > 15.0f);
+    }
+    if (input.actuators.dehumidifier.available &&
+        input.actuators.dehumidifier.max_removal_g_h > 0.0f) {
+      lift(raw.dehumidifier, rh_err < -8.0f, rh_err < -15.0f);
+    }
+  }
+
+  if (input.validity.co2 && std::isfinite(input.sensors.co2_ppm) &&
+      std::isfinite(input.targets.co2_ppm) && input.actuators.co2_doser.available &&
+      input.actuators.co2_doser.dose_ppm_per_full_pulse > 0.0f) {
+    const float co2_err = input.targets.co2_ppm - input.sensors.co2_ppm;
+    lift(raw.co2_doser, co2_err > 50.0f, co2_err > 150.0f);
+  }
+
+  if (input.pots[0].available && input.pots[0].irrigation.available &&
+      input.pots[0].validity.soil_moisture &&
+      std::isfinite(input.pots[0].sensors.soil_moisture_pct) &&
+      std::isfinite(input.pots[0].target_soil_moisture_pct)) {
+    const float soil_err =
+        input.pots[0].target_soil_moisture_pct - input.pots[0].sensors.soil_moisture_pct;
+    lift(raw.irrigation_pot_1, soil_err > 5.0f, soil_err > 12.0f);
+  }
 }
 
 } // namespace
@@ -42,6 +115,7 @@ ControllerStatus EnvironmentController::process(const ControllerInput& input,
     return ControllerStatus::ModelError;
   }
 
+  sharpenBinaryProposals(input, output.raw);
   safety_.apply(input, output.raw, SafetyReason::None, output.safe, output.diagnostics.safety);
   return ControllerStatus::Ok;
 }

@@ -251,9 +251,12 @@ float enforceBinary(float desired, float previous, float threshold, float minimu
   }
 
   if (!runtime.initialized) {
+    // Seed from previous command without arming a dwell window. Otherwise the first
+    // control cycle after reset/load_scenario cannot leave the previous state until
+    // min-on/min-off elapses (false BinaryMinimumOff with previous already off).
     runtime.initialized = true;
-    runtime.has_transition = true;
     runtime.on = previous >= threshold;
+    runtime.has_transition = false;
     runtime.last_transition_ms = now;
   }
 
@@ -418,6 +421,10 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
 
   applyHeaterCoolerExclusion(input, raw, safe, report);
   applyHumidityControlExclusion(input, raw, safe, report);
+
+  // Hard thermal limits must win over binary min-on dwell (previous heater ON).
+  applyHeaterSafety(input, raw, safe, report);
+  applyEmergencyFan(input, raw, safe, report);
 
   if (!input.actuators.co2_doser.available ||
       input.actuators.co2_doser.dose_ppm_per_full_pulse <= 0.0f) {
