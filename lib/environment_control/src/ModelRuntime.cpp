@@ -51,10 +51,9 @@ ModelStatus ModelRuntime::infer(const FeatureVector& features,
     }
   }
 
-  decision.heater = output[schema::index(schema::OutputIndex::Heater)];
-  decision.fan = output[schema::index(schema::OutputIndex::Fan)];
-  decision.humidifier = output[schema::index(schema::OutputIndex::Humidifier)];
-  decision.irrigation = output[schema::index(schema::OutputIndex::Irrigation)];
+  for (std::size_t index = 0; index < schema::kOutputCount; ++index) {
+    rawOutputValue(decision, static_cast<schema::OutputIndex>(index)) = output[index];
+  }
   return ModelStatus::Ok;
 }
 

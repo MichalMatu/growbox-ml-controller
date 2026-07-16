@@ -11,6 +11,7 @@ venv/
 __pycache__/
 *.py[cod]
 .pytest_cache/
+tests/fixtures/panel_screenshots/*.actual.png
 .mypy_cache/
 .ruff_cache/
 .coverage
@@ -45,6 +46,18 @@ captures/
 
 # PlatformIO build artifacts
 .pio/
+
+# Accidental npm tree (panel visual tests use pip playwright, not package.json)
+node_modules/
+
+# Research clones / PDFs (fetch: bash scripts/fetch_third_party.sh)
+third_party/GES/
+third_party/mpcrl-greenhouse/
+third_party/Thermca/
+third_party/thermal-nn/
+third_party/OCHRE/
+third_party/pyBuildingEnergy/
+third_party/papers/
 
 # Secrets and local configuration
 .env

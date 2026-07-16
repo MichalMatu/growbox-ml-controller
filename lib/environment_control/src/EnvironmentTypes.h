@@ -9,9 +9,12 @@
 namespace growbox {
 namespace control {
 
-static_assert(schema::kFeatureCount <= 64U, "Encoder diagnostics use a 64-bit feature mask");
-static_assert(schema::kOutputCount == 4U,
-              "Environment decision structures implement four schema outputs");
+inline constexpr std::size_t kMaxPots = 4U;
+
+static_assert(schema::kFeatureCount <= schema::kFeatureDiagnosticsMaskBits,
+              "Encoder diagnostics mask must cover every feature");
+static_assert(schema::kOutputCount == 15U,
+              "Environment decision structures implement fifteen schema outputs");
 
 namespace detail {
 
@@ -34,19 +37,66 @@ struct SensorState {
   float air_temperature_c = detail::schemaDefault(schema::FeatureIndex::AirTemperatureC);
   float air_humidity_pct = detail::schemaDefault(schema::FeatureIndex::AirHumidityPct);
   float co2_ppm = detail::schemaDefault(schema::FeatureIndex::Co2Ppm);
-  float soil_moisture_pct = detail::schemaDefault(schema::FeatureIndex::SoilMoisturePct);
+  float nutrient_solution_temperature_c =
+      detail::schemaDefault(schema::FeatureIndex::NutrientSolutionTemperatureC);
   float outside_temperature_c = detail::schemaDefault(schema::FeatureIndex::OutsideTemperatureC);
   float outside_humidity_pct = detail::schemaDefault(schema::FeatureIndex::OutsideHumidityPct);
+  float outside_co2_ppm = detail::schemaDefault(schema::FeatureIndex::OutsideCo2Ppm);
 };
 
 struct SensorValidity {
   bool air_temperature = detail::schemaDefaultBool(schema::FeatureIndex::AirTemperatureValid);
   bool air_humidity = detail::schemaDefaultBool(schema::FeatureIndex::AirHumidityValid);
   bool co2 = detail::schemaDefaultBool(schema::FeatureIndex::Co2Valid);
-  bool soil_moisture = detail::schemaDefaultBool(schema::FeatureIndex::SoilMoistureValid);
+  bool nutrient_solution_temperature =
+      detail::schemaDefaultBool(schema::FeatureIndex::NutrientSolutionTemperatureValid);
   bool outside_temperature =
       detail::schemaDefaultBool(schema::FeatureIndex::OutsideTemperatureValid);
   bool outside_humidity = detail::schemaDefaultBool(schema::FeatureIndex::OutsideHumidityValid);
+  bool outside_co2 = detail::schemaDefaultBool(schema::FeatureIndex::OutsideCo2Valid);
+};
+
+struct PotSensorState {
+  float soil_moisture_pct = 50.0f;
+  float soil_temperature_c = 20.0f;
+};
+
+struct PotSensorValidity {
+  bool soil_moisture = false;
+  bool soil_temperature = false;
+};
+
+struct PotCultivationConfig {
+  float pot_volume_l = 10.0f;
+  float substrate_water_capacity_ml = 3000.0f;
+  float transpiration_factor = 1.0f;
+};
+
+struct IrrigationPumpCapabilities {
+  bool available = false;
+  float flow_ml_s = 0.0f;
+  float maximum_pulse_s = 0.0f;
+  float minimum_interval_s = 0.0f;
+  ActuatorControlType control_type = ActuatorControlType::Binary;
+};
+
+struct HeatMatCapabilities {
+  bool available = false;
+  float max_power_w = 0.0f;
+  ActuatorControlType control_type = ActuatorControlType::Binary;
+};
+
+struct PotConfig {
+  bool available = false;
+  PotSensorState sensors{};
+  PotSensorValidity validity{};
+  PotCultivationConfig cultivation{};
+  float target_soil_moisture_pct = 50.0f;
+  float target_soil_temperature_c = 20.0f;
+  IrrigationPumpCapabilities irrigation{};
+  HeatMatCapabilities heat_mat{};
+  float previous_irrigation = 0.0f;
+  float previous_heat_mat = 0.0f;
 };
 
 struct EnvironmentConfig {
@@ -56,19 +106,10 @@ struct EnvironmentConfig {
   float air_leak_rate_ach = detail::schemaDefault(schema::FeatureIndex::AirLeakRateAch);
 };
 
-struct CultivationConfig {
-  float pot_volume_l = detail::schemaDefault(schema::FeatureIndex::PotVolumeL);
-  float substrate_water_capacity_ml =
-      detail::schemaDefault(schema::FeatureIndex::SubstrateWaterCapacityMl);
-  float transpiration_factor = detail::schemaDefault(schema::FeatureIndex::TranspirationFactor);
-};
-
 struct HeaterCapabilities {
   bool available = detail::schemaDefaultBool(schema::FeatureIndex::HeaterAvailable);
   float max_power_w = detail::schemaDefault(schema::FeatureIndex::HeaterMaxPowerW);
   float efficiency = detail::schemaDefault(schema::FeatureIndex::HeaterEfficiency);
-  ActuatorControlType control_type = static_cast<ActuatorControlType>(
-      static_cast<std::uint8_t>(detail::schemaDefault(schema::FeatureIndex::HeaterControlType)));
 };
 
 struct FanCapabilities {
@@ -82,33 +123,55 @@ struct HumidifierCapabilities {
   float max_output_g_h = detail::schemaDefault(schema::FeatureIndex::HumidifierMaxOutputGH);
 };
 
-struct IrrigationPumpCapabilities {
-  bool available = detail::schemaDefaultBool(schema::FeatureIndex::IrrigationAvailable);
-  float flow_ml_s = detail::schemaDefault(schema::FeatureIndex::IrrigationFlowMlS);
-  float maximum_pulse_s = detail::schemaDefault(schema::FeatureIndex::IrrigationMaximumPulseS);
-  float minimum_interval_s =
-      detail::schemaDefault(schema::FeatureIndex::IrrigationMinimumIntervalS);
+struct DehumidifierCapabilities {
+  bool available = detail::schemaDefaultBool(schema::FeatureIndex::DehumidifierAvailable);
+  float max_removal_g_h = detail::schemaDefault(schema::FeatureIndex::DehumidifierMaxRemovalGH);
 };
 
-struct ActuatorCapabilities {
+struct CoolerCapabilities {
+  bool available = detail::schemaDefaultBool(schema::FeatureIndex::CoolerAvailable);
+  float max_cooling_w = detail::schemaDefault(schema::FeatureIndex::CoolerMaxCoolingW);
+};
+
+struct Co2DoserCapabilities {
+  bool available = detail::schemaDefaultBool(schema::FeatureIndex::Co2DoserAvailable);
+  float dose_ppm_per_full_pulse =
+      detail::schemaDefault(schema::FeatureIndex::Co2DoserDosePpmPerFullPulse);
+  float maximum_pulse_s = detail::schemaDefault(schema::FeatureIndex::Co2DoserMaximumPulseS);
+};
+
+struct NutrientHeaterCapabilities {
+  bool available = detail::schemaDefaultBool(schema::FeatureIndex::NutrientHeaterAvailable);
+  float max_power_w = detail::schemaDefault(schema::FeatureIndex::NutrientHeaterMaxPowerW);
+  float efficiency = detail::schemaDefault(schema::FeatureIndex::NutrientHeaterEfficiency);
+};
+
+struct GlobalActuatorCapabilities {
   HeaterCapabilities heater{};
   FanCapabilities fan{};
   HumidifierCapabilities humidifier{};
-  IrrigationPumpCapabilities irrigation_pump{};
+  DehumidifierCapabilities dehumidifier{};
+  CoolerCapabilities cooler{};
+  Co2DoserCapabilities co2_doser{};
+  NutrientHeaterCapabilities nutrient_heater{};
 };
 
 struct ControlTargets {
   float air_temperature_c = detail::schemaDefault(schema::FeatureIndex::TargetAirTemperatureC);
   float air_humidity_pct = detail::schemaDefault(schema::FeatureIndex::TargetAirHumidityPct);
   float co2_ppm = detail::schemaDefault(schema::FeatureIndex::TargetCo2Ppm);
-  float soil_moisture_pct = detail::schemaDefault(schema::FeatureIndex::TargetSoilMoisturePct);
+  float nutrient_solution_temperature_c =
+      detail::schemaDefault(schema::FeatureIndex::TargetNutrientSolutionTemperatureC);
 };
 
 struct PreviousControlState {
   float heater = detail::schemaDefault(schema::FeatureIndex::PreviousHeater);
   float fan = detail::schemaDefault(schema::FeatureIndex::PreviousFan);
   float humidifier = detail::schemaDefault(schema::FeatureIndex::PreviousHumidifier);
-  float irrigation = detail::schemaDefault(schema::FeatureIndex::PreviousIrrigation);
+  float dehumidifier = detail::schemaDefault(schema::FeatureIndex::PreviousDehumidifier);
+  float cooler = detail::schemaDefault(schema::FeatureIndex::PreviousCooler);
+  float co2_doser = detail::schemaDefault(schema::FeatureIndex::PreviousCo2Doser);
+  float nutrient_heater = detail::schemaDefault(schema::FeatureIndex::PreviousNutrientHeater);
 };
 
 struct SafetyConfig {
@@ -120,14 +183,24 @@ struct SafetyConfig {
   float heater_minimum_off_s = schema::kDefaultHeaterMinimumOffS;
   float humidifier_minimum_on_s = schema::kDefaultHumidifierMinimumOnS;
   float humidifier_minimum_off_s = schema::kDefaultHumidifierMinimumOffS;
+  float dehumidifier_minimum_on_s = schema::kDefaultDehumidifierMinimumOnS;
+  float dehumidifier_minimum_off_s = schema::kDefaultDehumidifierMinimumOffS;
+  float cooler_minimum_on_s = schema::kDefaultCoolerMinimumOnS;
+  float cooler_minimum_off_s = schema::kDefaultCoolerMinimumOffS;
+  float co2_doser_minimum_interval_s = schema::kDefaultCo2DoserMinimumIntervalS;
+  float fan_venting_co2_threshold = schema::kDefaultFanVentingCo2Threshold;
+  float maximum_nutrient_soil_delta_c = schema::kDefaultMaximumNutrientSoilDeltaC;
+  float minimum_nutrient_solution_temperature_c =
+      schema::kDefaultMinimumNutrientSolutionTemperatureC;
 };
 
 struct ControllerInput {
   SensorState sensors{};
   SensorValidity validity{};
+  std::array<PotConfig, kMaxPots> pots{};
+  bool lights_active = false;
   EnvironmentConfig environment{};
-  CultivationConfig cultivation{};
-  ActuatorCapabilities actuators{};
+  GlobalActuatorCapabilities actuators{};
   ControlTargets targets{};
   PreviousControlState previous{};
   SafetyConfig safety{};
@@ -142,15 +215,53 @@ struct RawModelDecision {
   float heater = 0.0f;
   float fan = 0.0f;
   float humidifier = 0.0f;
-  float irrigation = 0.0f;
+  float dehumidifier = 0.0f;
+  float cooler = 0.0f;
+  float co2_doser = 0.0f;
+  float irrigation_pot_1 = 0.0f;
+  float irrigation_pot_2 = 0.0f;
+  float irrigation_pot_3 = 0.0f;
+  float irrigation_pot_4 = 0.0f;
+  float nutrient_heater = 0.0f;
+  float heat_mat_pot_1 = 0.0f;
+  float heat_mat_pot_2 = 0.0f;
+  float heat_mat_pot_3 = 0.0f;
+  float heat_mat_pot_4 = 0.0f;
 };
 
 struct SafeControlDecision {
   float heater = 0.0f;
   float fan = 0.0f;
   float humidifier = 0.0f;
-  float irrigation = 0.0f;
-  float irrigation_pulse_s = 0.0f;
+  float dehumidifier = 0.0f;
+  float cooler = 0.0f;
+  float co2_doser = 0.0f;
+  float irrigation_pot_1 = 0.0f;
+  float irrigation_pot_2 = 0.0f;
+  float irrigation_pot_3 = 0.0f;
+  float irrigation_pot_4 = 0.0f;
+  float nutrient_heater = 0.0f;
+  float heat_mat_pot_1 = 0.0f;
+  float heat_mat_pot_2 = 0.0f;
+  float heat_mat_pot_3 = 0.0f;
+  float heat_mat_pot_4 = 0.0f;
+  std::array<float, kMaxPots> irrigation_pulse_s{};
+};
+
+struct EncoderMask {
+  std::array<std::uint64_t, 2> words{};
+
+  void set(std::size_t index) noexcept {
+    if (index < 64U) {
+      words[0] |= (std::uint64_t{1U} << index);
+    } else {
+      words[1] |= (std::uint64_t{1U} << (index - 64U));
+    }
+  }
+
+  bool any() const noexcept {
+    return words[0] != 0U || words[1] != 0U;
+  }
 };
 
 enum class EncoderStatus : std::uint8_t {
@@ -159,8 +270,8 @@ enum class EncoderStatus : std::uint8_t {
 };
 
 struct EncoderReport {
-  std::uint64_t clamped_feature_mask = 0U;
-  std::uint64_t substituted_feature_mask = 0U;
+  EncoderMask clamped_feature_mask{};
+  EncoderMask substituted_feature_mask{};
 };
 
 enum class ModelStatus : std::uint8_t {
@@ -189,6 +300,15 @@ enum class SafetyReason : std::uint32_t {
   BinaryMinimumOn = 1U << 12U,
   BinaryMinimumOff = 1U << 13U,
   InvalidCapability = 1U << 14U,
+  Co2VentingFan = 1U << 15U,
+  SoilMoistureSatisfied = 1U << 16U,
+  SoilMoistureUnavailable = 1U << 17U,
+  NutrientSoilDeltaExceeded = 1U << 18U,
+  NutrientSolutionTooCold = 1U << 19U,
+  Co2TargetReached = 1U << 20U,
+  Co2SensorUnavailable = 1U << 21U,
+  HumidityUnavailable = 1U << 22U,
+  ActuatorConflict = 1U << 23U,
 };
 
 constexpr std::uint32_t reasonBit(SafetyReason reason) noexcept {
@@ -212,7 +332,6 @@ struct ControllerDiagnostics {
   ModelStatus model_status = ModelStatus::Ok;
   EncoderReport encoder{};
   SafetyReport safety{};
-  // The platform application owns timing and may populate this after process().
   std::uint32_t inference_us = 0U;
 };
 
@@ -221,6 +340,11 @@ struct ControllerOutput {
   SafeControlDecision safe{};
   ControllerDiagnostics diagnostics{};
 };
+
+float rawOutputValue(const RawModelDecision& decision, schema::OutputIndex output) noexcept;
+float& rawOutputValue(RawModelDecision& decision, schema::OutputIndex output) noexcept;
+float safeOutputValue(const SafeControlDecision& decision, schema::OutputIndex output) noexcept;
+float& safeOutputValue(SafeControlDecision& decision, schema::OutputIndex output) noexcept;
 
 } // namespace control
 } // namespace growbox

@@ -3,16 +3,15 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import dataclass
 import json
-from pathlib import Path
 import shutil
 import subprocess
 import tempfile
+from dataclasses import dataclass
+from pathlib import Path
 
 import numpy as np
 
-from .contract import PROJECT_ROOT
 from .export_model import (
     DEFAULT_GENERATED_DIR,
     DEFAULT_GOLDEN_HEADER,
@@ -47,7 +46,7 @@ def compiled_predictions(
     environment_header: Path,
     golden_header: Path,
 ) -> np.ndarray:
-    source = r'''#include <cstdio>
+    source = r"""#include <cstdio>
 #include "EnvironmentModel.h"
 #include "ModelGoldenVectors.h"
 
@@ -64,7 +63,7 @@ int main() {
     }
     return 0;
 }
-'''
+"""
     with tempfile.TemporaryDirectory(prefix="growbox-verify-") as directory:
         temporary = Path(directory)
         source_path = temporary / "verify.cpp"
@@ -87,22 +86,15 @@ int main() {
             "-o",
             str(binary_path),
         ]
-        compilation = subprocess.run(
-            command, text=True, capture_output=True, check=False
-        )
+        compilation = subprocess.run(command, text=True, capture_output=True, check=False)
         if compilation.returncode != 0:
             raise RuntimeError(
-                "exported model did not compile:\n"
-                + compilation.stdout
-                + compilation.stderr
+                "exported model did not compile:\n" + compilation.stdout + compilation.stderr
             )
-        execution = subprocess.run(
-            [str(binary_path)], text=True, capture_output=True, check=False
-        )
+        execution = subprocess.run([str(binary_path)], text=True, capture_output=True, check=False)
         if execution.returncode != 0:
             raise RuntimeError(
-                f"compiled model inference failed with {execution.returncode}:\n"
-                + execution.stderr
+                f"compiled model inference failed with {execution.returncode}:\n" + execution.stderr
             )
     rows = [
         [float(token) for token in line.split(",")]
@@ -120,9 +112,7 @@ def verify_export(
     tolerance: float = 2.0e-5,
 ) -> VerificationResult:
     golden = json.loads(golden_json.read_text(encoding="utf-8"))
-    expected = np.asarray(
-        [vector["expected"] for vector in golden["vectors"]], dtype=np.float32
-    )
+    expected = np.asarray([vector["expected"] for vector in golden["vectors"]], dtype=np.float32)
     actual = compiled_predictions(
         environment_header=environment_header, golden_header=golden_header
     )
@@ -167,8 +157,7 @@ def main(argv: list[str] | None = None) -> int:
         tolerance=args.tolerance,
     )
     print(
-        f"verified {result.vector_count} Python/C vectors; "
-        f"max_abs_error={result.max_abs_error:.9g}"
+        f"verified {result.vector_count} Python/C vectors; max_abs_error={result.max_abs_error:.9g}"
     )
     return 0
 

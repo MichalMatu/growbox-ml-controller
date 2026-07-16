@@ -1,45 +1,33 @@
-# Data contract v1
+# Data contract
 
-The machine-readable source of truth is
-[`schemas/environment-controller-v1.json`](../schemas/environment-controller-v1.json). Do not add a
-Python-only or C++-only feature. Change the schema, regenerate derived files, retrain the model, and
-commit all resulting deterministic artifacts together.
+**Source of truth:** [`schemas/environment-controller.json`](../schemas/environment-controller.json) (schema_version **4**)
 
-## Inputs
+Field names, order, ranges, and outputs are defined only there. Change the schema → regenerate C++ → retrain → commit generated artifacts together.
 
-The contract includes:
+## Domain: pots, not zones
 
-- six measurements and a separate validity mask for every measurement;
-- growbox volume, thermal mass, heat loss, and air leakage;
-- pot volume, substrate water capacity, and transpiration factor;
-- heater, fan, humidifier, and irrigation-pump availability and capabilities;
-- temperature, humidity, CO2, and soil-moisture targets;
-- the previous four normalized actuator commands.
+Up to **four pots (donice)** share one growbox air volume. JSON root is `pots` (array index 0..3). Feature names use 1-based labels (`pot_1_*`, `irrigation_pot_1`, …).
 
-Every scalar has a unit, allowed range, normalization range, and default. The generated header owns
-the exact model-feature order and count.
+## Rules
 
-## Missing sensors
+**Mix & match:** fixed slot list; every sensor and actuator is independently enabled. No required bundles.
 
-A missing or rejected reading has a false validity mask. Its numeric slot is replaced with the
-contract default before normalization; the mask tells the model that the value is imputed. A
-non-finite reading is still an invalid controller input and causes the independent safety layer to
-select a fail-safe decision.
+**Sensors:** each measurement has its own `validity` flag. If false, the encoder substitutes the contract default and the mask tells the model the value is imputed.
 
-## Missing actuators
+**Actuators:** each output has its own `available`. When false, zero max capability; safety forces final output to zero.
 
-An absent actuator is represented by `available = false` and zero maximum capability. The feature
-encoder supplies that state to the model, and the safety supervisor independently forces the final
-command to zero. Availability is therefore both learnable context and a hard constraint.
+**Outputs:** continuous `[0, 1]` per actuator (15 total including irrigation and heat mats per pot).
 
-## Outputs
+**Physics (training only):** lumped growbox thermodynamics live in `tools/ml/simulator.py`, not in the JSON contract.
 
-The model output order is `heater`, `fan`, `humidifier`, `irrigation`. All four are continuous and
-normalized to `[0, 1]`. A physical adapter interprets them according to an actuator's control type.
-Safety may quantize a binary actuator or suppress/limit an irrigation pulse.
+**Version:** schema version + hash. `ModelRuntime` rejects a model built for a different hash/dimensions.
 
-## Version and hash
+## Regenerate
 
-The schema version identifies compatibility policy; the canonical short hash detects an exact
-contract mismatch. Firmware boot records expose both. `ModelRuntime` rejects a generated model
-whose input/output dimensions or schema hash do not match the compiled contract.
+```bash
+python tools/schema/generate_environment_schema.py
+python tools/schema/generate_environment_schema.py --check   # CI
+```
+
+I/O worksheet: [IO_MAP.md](IO_MAP.md). Full ML inventory: [simulator/IO_INVENTORY.md](simulator/IO_INVENTORY.md).
+Pipeline: [MODEL_PIPELINE.md](MODEL_PIPELINE.md). Simulator research: [simulator/README.md](simulator/README.md).

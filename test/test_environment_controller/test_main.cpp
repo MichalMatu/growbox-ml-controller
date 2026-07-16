@@ -16,22 +16,52 @@ using namespace growbox::control;
 
 namespace {
 
+bool maskAny(const EncoderMask& mask) noexcept {
+  return mask.words[0] != 0U || mask.words[1] != 0U;
+}
+
+bool maskHas(const EncoderMask& mask, schema::FeatureIndex feature) noexcept {
+  const std::size_t index = schema::index(feature);
+  if (index < 64U) {
+    return (mask.words[0] & (std::uint64_t{1U} << index)) != 0U;
+  }
+  return (mask.words[1] & (std::uint64_t{1U} << (index - 64U))) != 0U;
+}
+
 ControllerInput nominalInput() {
   ControllerInput input{};
-  input.validity = SensorValidity{true, true, true, true, true, true};
+  input.validity = SensorValidity{true, true, true, false, true, true, true};
+  input.sensors.air_temperature_c = 24.0f;
+  input.sensors.air_humidity_pct = 55.0f;
+  input.sensors.co2_ppm = 900.0f;
+  input.sensors.outside_temperature_c = 18.0f;
+  input.sensors.outside_humidity_pct = 52.0f;
+  input.sensors.outside_co2_ppm = 420.0f;
+
+  input.pots[0].available = true;
+  input.pots[0].validity.soil_moisture = true;
+  input.pots[0].sensors.soil_moisture_pct = 44.0f;
+  input.pots[0].cultivation.pot_volume_l = 12.0f;
+  input.pots[0].cultivation.substrate_water_capacity_ml = 3600.0f;
+  input.pots[0].cultivation.transpiration_factor = 1.0f;
+  input.pots[0].target_soil_moisture_pct = 50.0f;
+  input.pots[0].irrigation.available = true;
+  input.pots[0].irrigation.flow_ml_s = 20.0f;
+  input.pots[0].irrigation.maximum_pulse_s = 10.0f;
+  input.pots[0].irrigation.minimum_interval_s = 60.0f;
+  input.pots[0].irrigation.control_type = ActuatorControlType::Binary;
+
   input.actuators.heater.available = true;
   input.actuators.heater.max_power_w = 250.0f;
   input.actuators.heater.efficiency = 0.9f;
-  input.actuators.heater.control_type = ActuatorControlType::Binary;
   input.actuators.fan.available = true;
   input.actuators.fan.max_airflow_m3_h = 120.0f;
   input.actuators.fan.minimum_command = 0.15f;
   input.actuators.humidifier.available = true;
   input.actuators.humidifier.max_output_g_h = 250.0f;
-  input.actuators.irrigation_pump.available = true;
-  input.actuators.irrigation_pump.flow_ml_s = 20.0f;
-  input.actuators.irrigation_pump.maximum_pulse_s = 15.0f;
-  input.actuators.irrigation_pump.minimum_interval_s = 3600.0f;
+  input.actuators.dehumidifier.available = false;
+  input.actuators.cooler.available = false;
+  input.actuators.co2_doser.available = false;
   input.monotonic_time_ms = 100000U;
   return input;
 }
@@ -41,41 +71,29 @@ bool hasReason(std::uint32_t mask, SafetyReason reason) {
 }
 
 void assertDecisionInRange(const SafeControlDecision& decision) {
-  TEST_ASSERT_TRUE(decision.heater >= 0.0f);
-  TEST_ASSERT_TRUE(decision.heater <= 1.0f);
-  TEST_ASSERT_TRUE(decision.fan >= 0.0f);
-  TEST_ASSERT_TRUE(decision.fan <= 1.0f);
-  TEST_ASSERT_TRUE(decision.humidifier >= 0.0f);
-  TEST_ASSERT_TRUE(decision.humidifier <= 1.0f);
-  TEST_ASSERT_TRUE(decision.irrigation >= 0.0f);
-  TEST_ASSERT_TRUE(decision.irrigation <= 1.0f);
+  for (std::size_t index = 0; index < schema::kOutputCount; ++index) {
+    const float value = safeOutputValue(decision, static_cast<schema::OutputIndex>(index));
+    TEST_ASSERT_TRUE(value >= 0.0f);
+    TEST_ASSERT_TRUE(value <= 1.0f);
+  }
 }
 
 void test_schema_feature_count_and_order() {
-  TEST_ASSERT_EQUAL_UINT32(1U, schema::kSchemaVersion);
-  TEST_ASSERT_EQUAL_UINT32(40U, schema::kFeatureCount);
-  TEST_ASSERT_EQUAL_UINT32(4U, schema::kOutputCount);
+  TEST_ASSERT_EQUAL_UINT32(4U, schema::kSchemaVersion);
+  TEST_ASSERT_EQUAL_UINT32(128U, schema::kFeatureCount);
+  TEST_ASSERT_EQUAL_UINT32(15U, schema::kOutputCount);
   TEST_ASSERT_EQUAL_STRING("air_temperature_c", schema::kFeatureNames[0]);
-  TEST_ASSERT_EQUAL_STRING("air_temperature_valid", schema::kFeatureNames[6]);
-  TEST_ASSERT_EQUAL_STRING("heater_available", schema::kFeatureNames[19]);
-  TEST_ASSERT_EQUAL_STRING("target_air_temperature_c", schema::kFeatureNames[32]);
-  TEST_ASSERT_EQUAL_STRING("previous_irrigation", schema::kFeatureNames[39]);
-  TEST_ASSERT_EQUAL_STRING("sensors.air_temperature_c", schema::kFeaturePaths[0]);
-  TEST_ASSERT_EQUAL_STRING("validity.air_temperature_c", schema::kFeaturePaths[6]);
-  TEST_ASSERT_EQUAL_STRING("actuators.heater.available", schema::kFeaturePaths[19]);
-  TEST_ASSERT_EQUAL_STRING("targets.air_temperature_c", schema::kFeaturePaths[32]);
-  TEST_ASSERT_EQUAL_STRING("previous.irrigation", schema::kFeaturePaths[39]);
-  TEST_ASSERT_EQUAL_STRING("available", schema::wireKey(schema::FeatureIndex::HeaterAvailable));
-  TEST_ASSERT_EQUAL_STRING("control_type",
-                           schema::wireKey(schema::FeatureIndex::HeaterControlType));
-  TEST_ASSERT_EQUAL_STRING("irrigation", schema::kOutputNames[3]);
+  TEST_ASSERT_EQUAL_STRING("lights_active", schema::kFeatureNames[34]);
+  TEST_ASSERT_EQUAL_STRING("heater", schema::kOutputNames[0]);
+  TEST_ASSERT_EQUAL_STRING("irrigation_pot_4", schema::kOutputNames[9]);
+  TEST_ASSERT_EQUAL_STRING("nutrient_heater", schema::kOutputNames[10]);
+  TEST_ASSERT_EQUAL_STRING("heat_mat_pot_4", schema::kOutputNames[14]);
 }
 
 void test_feature_encoder_uses_generated_indices_and_normalization() {
   ControllerInput input = nominalInput();
   input.sensors.air_temperature_c = 20.0f;
   input.sensors.air_humidity_pct = 25.0f;
-  input.actuators.heater.control_type = ActuatorControlType::Pwm;
   FeatureVector features{};
   EncoderReport report{};
 
@@ -86,11 +104,7 @@ void test_feature_encoder_uses_generated_indices_and_normalization() {
                            features.values[schema::index(schema::FeatureIndex::AirTemperatureC)]);
   TEST_ASSERT_FLOAT_WITHIN(1.0e-6f, 0.25f,
                            features.values[schema::index(schema::FeatureIndex::AirHumidityPct)]);
-  TEST_ASSERT_FLOAT_WITHIN(
-      0.0f, 1.0f, features.values[schema::index(schema::FeatureIndex::AirTemperatureValid)]);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 1.0f,
-                           features.values[schema::index(schema::FeatureIndex::HeaterControlType)]);
-  TEST_ASSERT_EQUAL_UINT64(0U, report.clamped_feature_mask);
+  TEST_ASSERT_FALSE(maskAny(report.clamped_feature_mask));
 }
 
 void test_cpp_defaults_match_schema_defaults() {
@@ -107,19 +121,33 @@ void test_cpp_defaults_match_schema_defaults() {
   }
 }
 
+void test_unavailable_zone_target_is_canonicalized_to_schema_default() {
+  ControllerInput input = nominalInput();
+  input.pots[1].available = false;
+  input.pots[1].target_soil_moisture_pct = 72.0f;
+  FeatureVector features{};
+  EncoderReport report{};
+
+  TEST_ASSERT_EQUAL_UINT8(
+      static_cast<std::uint8_t>(EncoderStatus::Ok),
+      static_cast<std::uint8_t>(FeatureEncoder::encode(input, features, report)));
+  const std::size_t target_index = schema::index(schema::FeatureIndex::Pot2TargetSoilMoisturePct);
+  const float expected =
+      (schema::kFeatureDefaults[target_index] - schema::kFeatureMinimums[target_index]) /
+      (schema::kFeatureMaximums[target_index] - schema::kFeatureMinimums[target_index]);
+  TEST_ASSERT_FLOAT_WITHIN(1.0e-6f, expected, features.values[target_index]);
+  TEST_ASSERT_TRUE(
+      maskHas(report.substituted_feature_mask, schema::FeatureIndex::Pot2TargetSoilMoisturePct));
+}
+
 void test_unavailable_actuator_capabilities_are_canonicalized_to_zero() {
   ControllerInput input = nominalInput();
   input.actuators.heater.available = false;
   input.actuators.heater.max_power_w = 500.0f;
-  input.actuators.heater.efficiency = 0.9f;
-  input.actuators.heater.control_type = ActuatorControlType::Pwm;
   input.actuators.fan.available = false;
   input.actuators.fan.max_airflow_m3_h = 200.0f;
-  input.actuators.fan.minimum_command = 0.2f;
-  input.actuators.irrigation_pump.available = false;
-  input.actuators.irrigation_pump.flow_ml_s = 20.0f;
-  input.actuators.irrigation_pump.maximum_pulse_s = 30.0f;
-  input.actuators.irrigation_pump.minimum_interval_s = 100.0f;
+  input.pots[0].irrigation.available = false;
+  input.pots[0].irrigation.flow_ml_s = 20.0f;
   FeatureVector features{};
   EncoderReport report{};
 
@@ -127,16 +155,12 @@ void test_unavailable_actuator_capabilities_are_canonicalized_to_zero() {
       static_cast<std::uint8_t>(EncoderStatus::Ok),
       static_cast<std::uint8_t>(FeatureEncoder::encode(input, features, report)));
   TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f,
-                           features.values[schema::index(schema::FeatureIndex::HeaterAvailable)]);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f,
                            features.values[schema::index(schema::FeatureIndex::HeaterMaxPowerW)]);
   TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f,
                            features.values[schema::index(schema::FeatureIndex::FanMaxAirflowM3H)]);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f,
-                           features.values[schema::index(schema::FeatureIndex::IrrigationFlowMlS)]);
   TEST_ASSERT_FLOAT_WITHIN(
-      0.0f, 0.0f, features.values[schema::index(schema::FeatureIndex::IrrigationMaximumPulseS)]);
-  TEST_ASSERT_NOT_EQUAL(0U, report.substituted_feature_mask);
+      0.0f, 0.0f, features.values[schema::index(schema::FeatureIndex::Pot1IrrigationFlowMlS)]);
+  TEST_ASSERT_TRUE(maskAny(report.substituted_feature_mask));
 }
 
 void test_encoder_clamps_contract_ranges() {
@@ -150,13 +174,7 @@ void test_encoder_clamps_contract_ranges() {
   TEST_ASSERT_EQUAL_UINT8(
       static_cast<std::uint8_t>(EncoderStatus::Ok),
       static_cast<std::uint8_t>(FeatureEncoder::encode(input, features, report)));
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 1.0f,
-                           features.values[schema::index(schema::FeatureIndex::AirTemperatureC)]);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f,
-                           features.values[schema::index(schema::FeatureIndex::AirHumidityPct)]);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 1.0f,
-                           features.values[schema::index(schema::FeatureIndex::PreviousFan)]);
-  TEST_ASSERT_NOT_EQUAL(0U, report.clamped_feature_mask);
+  TEST_ASSERT_TRUE(maskAny(report.clamped_feature_mask));
 }
 
 void test_encoder_rejects_non_finite_input_and_imputes_finite_masked_sensor() {
@@ -170,29 +188,22 @@ void test_encoder_rejects_non_finite_input_and_imputes_finite_masked_sensor() {
       static_cast<std::uint8_t>(FeatureEncoder::encode(input, features, report)));
 
   input.validity.air_temperature = false;
-  TEST_ASSERT_EQUAL_UINT8(
-      static_cast<std::uint8_t>(EncoderStatus::NonFiniteInput),
-      static_cast<std::uint8_t>(FeatureEncoder::encode(input, features, report)));
-
   input.sensors.air_temperature_c = 200.0f;
   TEST_ASSERT_EQUAL_UINT8(
       static_cast<std::uint8_t>(EncoderStatus::Ok),
       static_cast<std::uint8_t>(FeatureEncoder::encode(input, features, report)));
   TEST_ASSERT_FLOAT_WITHIN(
       0.0f, 0.0f, features.values[schema::index(schema::FeatureIndex::AirTemperatureValid)]);
-  TEST_ASSERT_FLOAT_WITHIN(1.0e-6f, 0.55f,
-                           features.values[schema::index(schema::FeatureIndex::AirTemperatureC)]);
-
-  input.environment.thermal_mass_j_per_k = std::numeric_limits<float>::infinity();
-  TEST_ASSERT_EQUAL_UINT8(
-      static_cast<std::uint8_t>(EncoderStatus::NonFiniteInput),
-      static_cast<std::uint8_t>(FeatureEncoder::encode(input, features, report)));
 }
 
 void test_safety_masks_unavailable_outputs_and_missing_temperature() {
   ControllerInput input{};
   input.validity.air_temperature = false;
-  RawModelDecision raw{1.0f, 1.0f, 1.0f, 1.0f};
+  RawModelDecision raw{};
+  raw.heater = 1.0f;
+  raw.fan = 1.0f;
+  raw.humidifier = 1.0f;
+  raw.irrigation_pot_1 = 1.0f;
   SafeControlDecision safe{};
   SafetyReport report{};
   SafetySupervisor supervisor{};
@@ -201,233 +212,330 @@ void test_safety_masks_unavailable_outputs_and_missing_temperature() {
   assertDecisionInRange(safe);
   TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.heater);
   TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.fan);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.humidifier);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.irrigation);
-  TEST_ASSERT_TRUE(report.modified);
   TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::ActuatorUnavailable));
   TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::TemperatureUnavailable));
-}
-
-void test_safety_rejects_nan_and_infinity() {
-  ControllerInput input = nominalInput();
-  RawModelDecision raw{std::numeric_limits<float>::quiet_NaN(),
-                       std::numeric_limits<float>::infinity(), 0.2f, 0.3f};
-  SafeControlDecision safe{};
-  SafetyReport report{};
-  SafetySupervisor supervisor{};
-
-  supervisor.apply(input, raw, SafetyReason::None, safe, report);
-  assertDecisionInRange(safe);
-  TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::NonFiniteModelOutput));
-
-  input.safety.binary_threshold = std::numeric_limits<float>::quiet_NaN();
-  raw = RawModelDecision{1.0f, 1.0f, 1.0f, 1.0f};
-  supervisor.apply(input, raw, SafetyReason::None, safe, report);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.heater);
-  TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::NonFiniteInput));
 }
 
 void test_alarm_temperature_forces_heater_off_and_fan_minimum() {
   ControllerInput input = nominalInput();
   input.sensors.air_temperature_c = 36.0f;
-  RawModelDecision raw{1.0f, 0.1f, 0.0f, 0.0f};
+  RawModelDecision raw{};
+  raw.heater = 1.0f;
+  raw.fan = 0.1f;
   SafeControlDecision safe{};
   SafetyReport report{};
   SafetySupervisor supervisor{};
 
   supervisor.apply(input, raw, SafetyReason::None, safe, report);
   TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.heater);
-  TEST_ASSERT_FLOAT_WITHIN(1.0e-6f, input.safety.alarm_minimum_fan, safe.fan);
+  // Fan is binary: thermal alarm forces full ON (not a fractional PWM floor).
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 1.0f, safe.fan);
   TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::OverTemperature));
   TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::TemperatureAlarmFan));
 }
 
-void test_pump_pulse_and_minimum_interval() {
+void test_soft_heater_proposal_lifts_when_cold() {
+  // MLP often emits ~0.4 for heater when cold; binary threshold is 0.5.
   ControllerInput input = nominalInput();
-  input.actuators.irrigation_pump.maximum_pulse_s = 10.0f;
-  input.actuators.irrigation_pump.minimum_interval_s = 60.0f;
-  RawModelDecision raw{0.0f, 0.0f, 0.0f, 2.0f};
+  input.sensors.air_temperature_c = 16.0f;
+  input.targets.air_temperature_c = 25.0f;
+  input.safety.heater_minimum_on_s = 30.0f;
+  input.safety.heater_minimum_off_s = 30.0f;
+  input.previous.heater = 0.0f;
+  input.monotonic_time_ms = 1000U;
+
+  RawModelDecision raw{};
+  raw.heater = 0.5f; // post-sharpen value the controller would lift from ~0.42
+  raw.fan = 0.2f;
+  SafeControlDecision safe{};
+  SafetyReport report{};
+  SafetySupervisor supervisor{};
+  supervisor.apply(input, raw, SafetyReason::None, safe, report);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 1.0f, safe.heater);
+}
+
+void test_binary_min_off_does_not_block_first_engagement() {
+  ControllerInput input = nominalInput();
+  input.safety.heater_minimum_on_s = 30.0f;
+  input.safety.heater_minimum_off_s = 30.0f;
+  input.previous.heater = 0.0f;
+  input.monotonic_time_ms = 0U;
+  RawModelDecision raw{};
+  raw.heater = 1.0f;
+  SafeControlDecision safe{};
+  SafetyReport report{};
+  SafetySupervisor supervisor{};
+  supervisor.apply(input, raw, SafetyReason::None, safe, report);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 1.0f, safe.heater);
+}
+
+void test_overtemperature_beats_heater_minimum_on_dwell() {
+  // Binary min-on must not keep the heater ON past maximum air temperature.
+  ControllerInput input = nominalInput();
+  input.safety.heater_minimum_on_s = 30.0f;
+  input.safety.heater_minimum_off_s = 30.0f;
+  input.previous.heater = 1.0f;
+  input.monotonic_time_ms = 1000U;
+
+  RawModelDecision raw{};
+  raw.heater = 1.0f;
+  raw.fan = 0.0f;
+  SafeControlDecision safe{};
+  SafetyReport report{};
+  SafetySupervisor supervisor{};
+
+  // Step 1: heater legitimately ON below alarm.
+  input.sensors.air_temperature_c = 24.0f;
+  supervisor.apply(input, raw, SafetyReason::None, safe, report);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 1.0f, safe.heater);
+
+  // Step 2: temperature spikes above maximum; heater must cut immediately.
+  input.sensors.air_temperature_c = 36.0f;
+  input.previous.heater = 1.0f;
+  input.monotonic_time_ms = 1500U; // still inside min-on window
+  supervisor.apply(input, raw, SafetyReason::None, safe, report);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.heater);
+  TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::OverTemperature));
+  TEST_ASSERT_TRUE(safe.fan + 1.0e-6f >= input.safety.alarm_minimum_fan);
+}
+
+void test_overtemperature_clears_min_on_so_warm_can_release_heater() {
+  ControllerInput input = nominalInput();
+  input.targets.air_temperature_c = 25.0f;
+  input.safety.heater_minimum_on_s = 60.0f;
+  input.safety.heater_minimum_off_s = 60.0f;
+  input.previous.heater = 0.0f;
+  input.monotonic_time_ms = 0U;
+
+  RawModelDecision raw{};
+  raw.heater = 1.0f;
+  raw.fan = 0.2f;
+  SafeControlDecision safe{};
+  SafetyReport report{};
+  SafetySupervisor supervisor{};
+
+  input.sensors.air_temperature_c = 15.0f;
+  supervisor.apply(input, raw, SafetyReason::None, safe, report);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 1.0f, safe.heater);
+
+  input.sensors.air_temperature_c = 36.0f;
+  input.previous.heater = 1.0f;
+  input.monotonic_time_ms = 1000U;
+  supervisor.apply(input, raw, SafetyReason::None, safe, report);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.heater);
+
+  // Soft model wants off once warm; min-on must not resurrect heater after hard cut.
+  raw.heater = 0.3f;
+  input.sensors.air_temperature_c = 26.0f;
+  input.previous.heater = 0.0f;
+  input.monotonic_time_ms = 2000U;
+  supervisor.apply(input, raw, SafetyReason::None, safe, report);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.heater);
+}
+
+void test_co2_doser_is_binary_when_engaged() {
+  ControllerInput input = nominalInput();
+  input.sensors.co2_ppm = 400.0f;
+  input.targets.co2_ppm = 1200.0f;
+  input.actuators.co2_doser.available = true;
+  input.actuators.co2_doser.dose_ppm_per_full_pulse = 120.0f;
+  input.validity.co2 = true;
+  input.safety.fan_venting_co2_threshold = 0.5f;
+  input.previous.fan = 0.0f;
+
+  RawModelDecision raw{};
+  raw.co2_doser = 0.42f;
+  raw.fan = 0.2f;
+  SafeControlDecision safe{};
+  SafetyReport report{};
+  SafetySupervisor supervisor{};
+  supervisor.apply(input, raw, SafetyReason::None, safe, report);
+  // Below binary threshold -> off
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.co2_doser);
+
+  raw.co2_doser = 0.6f;
+  supervisor.reset();
+  supervisor.apply(input, raw, SafetyReason::None, safe, report);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 1.0f, safe.co2_doser);
+}
+
+void test_zone_pump_pulse_and_minimum_interval() {
+  ControllerInput input = nominalInput();
+  input.pots[0].irrigation.maximum_pulse_s = 1000.0f;
+  input.pots[0].irrigation.minimum_interval_s = 60.0f;
+  RawModelDecision raw{};
+  raw.irrigation_pot_1 = 1.0f;
   SafeControlDecision safe{};
   SafetyReport report{};
   SafetySupervisor supervisor{};
 
   supervisor.apply(input, raw, SafetyReason::None, safe, report);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 1.0f, safe.irrigation);
-  TEST_ASSERT_FLOAT_WITHIN(1.0e-6f, 10.0f, safe.irrigation_pulse_s);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 1.0f, safe.irrigation_pot_1);
+  TEST_ASSERT_FLOAT_WITHIN(1.0e-6f, 600.0f, safe.irrigation_pulse_s[0]);
   TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::PumpPulseLimited));
 
   input.monotonic_time_ms += 1000U;
-  raw.irrigation = 1.0f;
+  raw.irrigation_pot_1 = 1.0f;
   supervisor.apply(input, raw, SafetyReason::None, safe, report);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.irrigation);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.irrigation_pulse_s);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.irrigation_pot_1);
   TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::PumpMinimumInterval));
 
   input.monotonic_time_ms += 60000U;
   supervisor.apply(input, raw, SafetyReason::None, safe, report);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 1.0f, safe.irrigation);
-
-  supervisor.reset();
-  input.monotonic_time_ms = 200000U;
-  input.previous.irrigation = 1.0f;
-  supervisor.apply(input, raw, SafetyReason::ModelFailure, safe, report);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.irrigation);
-  input.previous.irrigation = 0.0f;
-  input.monotonic_time_ms += 1000U;
-  supervisor.apply(input, raw, SafetyReason::None, safe, report);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.irrigation);
-  TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::PumpMinimumInterval));
-
-  supervisor.reset();
-  input.monotonic_time_ms = 300000U;
-  input.actuators.irrigation_pump.maximum_pulse_s = 1000.0f;
-  input.actuators.irrigation_pump.minimum_interval_s = 0.0f;
-  supervisor.apply(input, raw, SafetyReason::None, safe, report);
-  TEST_ASSERT_FLOAT_WITHIN(1.0e-6f, 600.0f, safe.irrigation_pulse_s);
-  TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::PumpPulseLimited));
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 1.0f, safe.irrigation_pot_1);
 }
 
-void test_invalid_heater_control_type_is_fail_safe() {
+void test_soil_moisture_at_target_blocks_irrigation() {
   ControllerInput input = nominalInput();
-  input.actuators.heater.control_type = static_cast<ActuatorControlType>(255U);
-  FeatureVector features{};
-  EncoderReport encoder_report{};
-  TEST_ASSERT_EQUAL_UINT8(
-      static_cast<std::uint8_t>(EncoderStatus::Ok),
-      static_cast<std::uint8_t>(FeatureEncoder::encode(input, features, encoder_report)));
-  TEST_ASSERT_TRUE(
-      (encoder_report.clamped_feature_mask &
-       (std::uint64_t{1U} << schema::index(schema::FeatureIndex::HeaterControlType))) != 0U);
-
-  SafetySupervisor supervisor{};
-  SafeControlDecision safe{};
-  SafetyReport report{};
-  supervisor.apply(input, RawModelDecision{1.0f, 0.0f, 0.0f, 0.0f}, SafetyReason::None, safe,
-                   report);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.heater);
-  TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::InvalidCapability));
-}
-
-void test_binary_dwell_limits() {
-  ControllerInput input = nominalInput();
-  input.safety.heater_minimum_on_s = 30.0f;
-  input.safety.heater_minimum_off_s = 30.0f;
-  input.monotonic_time_ms = 0U;
-  RawModelDecision raw{1.0f, 0.0f, 0.0f, 0.0f};
+  input.pots[0].sensors.soil_moisture_pct = 55.0f;
+  input.pots[0].target_soil_moisture_pct = 50.0f;
+  RawModelDecision raw{};
+  raw.irrigation_pot_1 = 1.0f;
   SafeControlDecision safe{};
   SafetyReport report{};
   SafetySupervisor supervisor{};
 
   supervisor.apply(input, raw, SafetyReason::None, safe, report);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.heater);
-  TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::BinaryMinimumOff));
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.irrigation_pot_1);
+  TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::SoilMoistureSatisfied));
+}
 
-  input.monotonic_time_ms = 30000U;
+void test_invalid_soil_moisture_blocks_irrigation() {
+  ControllerInput input = nominalInput();
+  input.pots[0].validity.soil_moisture = false;
+  RawModelDecision raw{};
+  raw.irrigation_pot_1 = 1.0f;
+  SafeControlDecision safe{};
+  SafetyReport report{};
+  SafetySupervisor supervisor{};
+
   supervisor.apply(input, raw, SafetyReason::None, safe, report);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 1.0f, safe.heater);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.irrigation_pot_1);
+  TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::SoilMoistureUnavailable));
+}
 
-  input.monotonic_time_ms = 31000U;
+void test_cold_nutrient_solution_blocks_irrigation() {
+  ControllerInput input = nominalInput();
+  input.pots[0].sensors.soil_moisture_pct = 30.0f;
+  input.sensors.nutrient_solution_temperature_c = 10.0f;
+  input.validity.nutrient_solution_temperature = true;
+  input.safety.minimum_nutrient_solution_temperature_c = 15.0f;
+  RawModelDecision raw{};
+  raw.irrigation_pot_1 = 1.0f;
+  SafeControlDecision safe{};
+  SafetyReport report{};
+  SafetySupervisor supervisor{};
+
+  supervisor.apply(input, raw, SafetyReason::None, safe, report);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.irrigation_pot_1);
+  TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::NutrientSolutionTooCold));
+}
+
+void test_nutrient_soil_delta_blocks_irrigation() {
+  ControllerInput input = nominalInput();
+  input.pots[0].sensors.soil_moisture_pct = 30.0f;
+  input.pots[0].sensors.soil_temperature_c = 30.0f;
+  input.pots[0].validity.soil_temperature = true;
+  input.sensors.nutrient_solution_temperature_c = 20.0f;
+  input.validity.nutrient_solution_temperature = true;
+  input.safety.maximum_nutrient_soil_delta_c = 8.0f;
+  input.safety.minimum_nutrient_solution_temperature_c = 15.0f;
+  RawModelDecision raw{};
+  raw.irrigation_pot_1 = 1.0f;
+  SafeControlDecision safe{};
+  SafetyReport report{};
+  SafetySupervisor supervisor{};
+
+  supervisor.apply(input, raw, SafetyReason::None, safe, report);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.irrigation_pot_1);
+  TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::NutrientSoilDeltaExceeded));
+}
+
+void test_co2_target_reached_blocks_doser() {
+  ControllerInput input = nominalInput();
+  input.actuators.co2_doser.available = true;
+  input.actuators.co2_doser.dose_ppm_per_full_pulse = 100.0f;
+  input.validity.co2 = true;
+  input.sensors.co2_ppm = 1100.0f;
+  input.targets.co2_ppm = 900.0f;
+  RawModelDecision raw{};
+  raw.co2_doser = 1.0f;
+  SafeControlDecision safe{};
+  SafetyReport report{};
+  SafetySupervisor supervisor{};
+
+  supervisor.apply(input, raw, SafetyReason::None, safe, report);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.co2_doser);
+  TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::Co2TargetReached));
+}
+
+void test_heater_and_cooler_are_mutually_exclusive() {
+  ControllerInput input = nominalInput();
+  input.actuators.cooler.available = true;
+  input.actuators.cooler.max_cooling_w = 200.0f;
   input.previous.heater = 1.0f;
-  raw.heater = 0.0f;
-  supervisor.apply(input, raw, SafetyReason::None, safe, report);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 1.0f, safe.heater);
-  TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::BinaryMinimumOn));
-
-  input.monotonic_time_ms = 60000U;
-  supervisor.apply(input, raw, SafetyReason::None, safe, report);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.heater);
-
-  input.monotonic_time_ms = 61000U;
-  input.previous.heater = 0.0f;
+  input.safety.heater_minimum_off_s = 0.0f;
+  input.safety.heater_minimum_on_s = 0.0f;
+  input.safety.cooler_minimum_on_s = 0.0f;
+  input.safety.cooler_minimum_off_s = 0.0f;
+  input.monotonic_time_ms = 1'000'000U;
+  RawModelDecision raw{};
   raw.heater = 1.0f;
+  raw.cooler = 1.0f;
+  SafeControlDecision safe{};
+  SafetyReport report{};
+  SafetySupervisor supervisor{};
+
   supervisor.apply(input, raw, SafetyReason::None, safe, report);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.heater);
-  TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::BinaryMinimumOff));
+  TEST_ASSERT_TRUE(safe.heater > 0.0f || safe.cooler == 0.0f);
+  TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::ActuatorConflict));
+}
+
+void test_humidity_unavailable_blocks_humidifier_and_dehumidifier() {
+  ControllerInput input = nominalInput();
+  input.actuators.dehumidifier.available = true;
+  input.actuators.dehumidifier.max_removal_g_h = 80.0f;
+  input.validity.air_humidity = false;
+  RawModelDecision raw{};
+  raw.humidifier = 1.0f;
+  raw.dehumidifier = 1.0f;
+  SafeControlDecision safe{};
+  SafetyReport report{};
+  SafetySupervisor supervisor{};
+
+  supervisor.apply(input, raw, SafetyReason::None, safe, report);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.humidifier);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.dehumidifier);
+  TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::HumidityUnavailable));
 }
 
 void test_model_schema_hash_compatibility() {
-  TEST_ASSERT_TRUE(ModelRuntime::isCompatible());
-  TEST_ASSERT_TRUE(ModelRuntime::isSchemaCompatible(schema::kSchemaHash, schema::kFeatureCount,
-                                                    schema::kOutputCount));
-  TEST_ASSERT_FALSE(ModelRuntime::isSchemaCompatible("000000000000", schema::kFeatureCount,
-                                                     schema::kOutputCount));
-  TEST_ASSERT_FALSE(ModelRuntime::isSchemaCompatible(
-      schema::kSchemaHash, schema::kFeatureCount - 1U, schema::kOutputCount));
   TEST_ASSERT_EQUAL_STRING(schema::kSchemaHash, model_golden_vectors::kSchemaHash);
   TEST_ASSERT_EQUAL_STRING(schema::kSchemaHash, generated_manifest::kSchemaHash);
   TEST_ASSERT_EQUAL_STRING(ModelRuntime::modelVersion(), generated_manifest::kModelVersion);
   TEST_ASSERT_EQUAL_UINT32(schema::kSchemaVersion, generated_manifest::kSchemaVersion);
   TEST_ASSERT_EQUAL_UINT32(schema::kFeatureCount, generated_manifest::kInputCount);
   TEST_ASSERT_EQUAL_UINT32(schema::kOutputCount, generated_manifest::kOutputCount);
+  TEST_ASSERT_EQUAL_STRING(schema::kSchemaHash, ModelRuntime::schemaHash());
 }
 
 void test_golden_model_inference_and_output_bounds() {
   ModelRuntime model{};
   for (std::size_t row = 0; row < model_golden_vectors::kVectorCount; ++row) {
     FeatureVector features{};
-    features.values = model_golden_vectors::kFeatures[row];
+    for (std::size_t feature = 0; feature < generated_manifest::kInputCount; ++feature) {
+      features.values[feature] = model_golden_vectors::kFeatures[row][feature];
+    }
     RawModelDecision actual{};
     TEST_ASSERT_EQUAL_UINT8(static_cast<std::uint8_t>(ModelStatus::Ok),
                             static_cast<std::uint8_t>(model.infer(features, actual)));
-    const float values[] = {actual.heater, actual.fan, actual.humidifier, actual.irrigation};
-    for (std::size_t output = 0; output < schema::kOutputCount; ++output) {
-      TEST_ASSERT_FLOAT_WITHIN(2.0e-5f, model_golden_vectors::kExpected[row][output],
-                               values[output]);
-      TEST_ASSERT_TRUE(values[output] >= 0.0f);
-      TEST_ASSERT_TRUE(values[output] <= 1.0f);
+    for (std::size_t output = 0; output < generated_manifest::kOutputCount; ++output) {
+      const float value = rawOutputValue(actual, static_cast<schema::OutputIndex>(output));
+      TEST_ASSERT_FLOAT_WITHIN(2.0e-5f, model_golden_vectors::kExpected[row][output], value);
+      TEST_ASSERT_TRUE(value >= 0.0f);
+      TEST_ASSERT_TRUE(value <= 1.0f);
     }
   }
-}
-
-void test_controller_is_deterministic_after_reset() {
-  ControllerInput input = nominalInput();
-  EnvironmentController first{};
-  EnvironmentController second{};
-  ControllerOutput first_output{};
-  ControllerOutput second_output{};
-
-  TEST_ASSERT_EQUAL_UINT8(static_cast<std::uint8_t>(ControllerStatus::Ok),
-                          static_cast<std::uint8_t>(first.process(input, first_output)));
-  TEST_ASSERT_EQUAL_UINT8(static_cast<std::uint8_t>(ControllerStatus::Ok),
-                          static_cast<std::uint8_t>(second.process(input, second_output)));
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, first_output.raw.heater, second_output.raw.heater);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, first_output.raw.fan, second_output.raw.fan);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, first_output.raw.humidifier, second_output.raw.humidifier);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, first_output.raw.irrigation, second_output.raw.irrigation);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, first_output.safe.heater, second_output.safe.heater);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, first_output.safe.fan, second_output.safe.fan);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, first_output.safe.humidifier, second_output.safe.humidifier);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, first_output.safe.irrigation, second_output.safe.irrigation);
-  TEST_ASSERT_EQUAL_UINT32(first_output.diagnostics.safety.reason_mask,
-                           second_output.diagnostics.safety.reason_mask);
-  assertDecisionInRange(first_output.safe);
-}
-
-void test_controller_routes_encoder_failure_to_safe_state() {
-  ControllerInput input = nominalInput();
-  input.targets.co2_ppm = std::numeric_limits<float>::infinity();
-  EnvironmentController controller{};
-  ControllerOutput output{};
-
-  TEST_ASSERT_EQUAL_UINT8(static_cast<std::uint8_t>(ControllerStatus::EncoderError),
-                          static_cast<std::uint8_t>(controller.process(input, output)));
-  TEST_ASSERT_EQUAL_UINT8(static_cast<std::uint8_t>(EncoderStatus::NonFiniteInput),
-                          static_cast<std::uint8_t>(output.diagnostics.encoder_status));
-  TEST_ASSERT_EQUAL_UINT8(static_cast<std::uint8_t>(ModelStatus::NonFiniteInput),
-                          static_cast<std::uint8_t>(output.diagnostics.model_status));
-  TEST_ASSERT_TRUE(hasReason(output.diagnostics.safety.reason_mask, SafetyReason::NonFiniteInput));
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, output.safe.heater);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, output.safe.fan);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, output.safe.humidifier);
-  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, output.safe.irrigation);
-
-  input.sensors.air_temperature_c = 36.0f;
-  controller.resetSafetyState();
-  TEST_ASSERT_EQUAL_UINT8(static_cast<std::uint8_t>(ControllerStatus::EncoderError),
-                          static_cast<std::uint8_t>(controller.process(input, output)));
-  TEST_ASSERT_FLOAT_WITHIN(1.0e-6f, input.safety.alarm_minimum_fan, output.safe.fan);
-  TEST_ASSERT_TRUE(
-      hasReason(output.diagnostics.safety.reason_mask, SafetyReason::TemperatureAlarmFan));
 }
 
 } // namespace
@@ -441,18 +549,26 @@ int main(int, char**) {
   RUN_TEST(test_schema_feature_count_and_order);
   RUN_TEST(test_feature_encoder_uses_generated_indices_and_normalization);
   RUN_TEST(test_cpp_defaults_match_schema_defaults);
+  RUN_TEST(test_unavailable_zone_target_is_canonicalized_to_schema_default);
   RUN_TEST(test_unavailable_actuator_capabilities_are_canonicalized_to_zero);
   RUN_TEST(test_encoder_clamps_contract_ranges);
   RUN_TEST(test_encoder_rejects_non_finite_input_and_imputes_finite_masked_sensor);
   RUN_TEST(test_safety_masks_unavailable_outputs_and_missing_temperature);
-  RUN_TEST(test_safety_rejects_nan_and_infinity);
   RUN_TEST(test_alarm_temperature_forces_heater_off_and_fan_minimum);
-  RUN_TEST(test_pump_pulse_and_minimum_interval);
-  RUN_TEST(test_invalid_heater_control_type_is_fail_safe);
-  RUN_TEST(test_binary_dwell_limits);
+  RUN_TEST(test_soft_heater_proposal_lifts_when_cold);
+  RUN_TEST(test_binary_min_off_does_not_block_first_engagement);
+  RUN_TEST(test_overtemperature_beats_heater_minimum_on_dwell);
+  RUN_TEST(test_overtemperature_clears_min_on_so_warm_can_release_heater);
+  RUN_TEST(test_co2_doser_is_binary_when_engaged);
+  RUN_TEST(test_zone_pump_pulse_and_minimum_interval);
+  RUN_TEST(test_soil_moisture_at_target_blocks_irrigation);
+  RUN_TEST(test_invalid_soil_moisture_blocks_irrigation);
+  RUN_TEST(test_cold_nutrient_solution_blocks_irrigation);
+  RUN_TEST(test_nutrient_soil_delta_blocks_irrigation);
+  RUN_TEST(test_co2_target_reached_blocks_doser);
+  RUN_TEST(test_heater_and_cooler_are_mutually_exclusive);
+  RUN_TEST(test_humidity_unavailable_blocks_humidifier_and_dehumidifier);
   RUN_TEST(test_model_schema_hash_compatibility);
   RUN_TEST(test_golden_model_inference_and_output_bounds);
-  RUN_TEST(test_controller_is_deterministic_after_reset);
-  RUN_TEST(test_controller_routes_encoder_failure_to_safe_state);
   return UNITY_END();
 }

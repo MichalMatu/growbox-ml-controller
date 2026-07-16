@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import dataclass
 import json
 import os
+from collections.abc import Mapping
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 import numpy as np
 
@@ -24,11 +25,11 @@ class TrainingConfig:
     export_weight_decimals: int = 5
 
     @classmethod
-    def quick(cls, seed: int = 1847) -> "TrainingConfig":
+    def quick(cls, seed: int = 1847) -> TrainingConfig:
         return cls(seed=seed, epochs=18, batch_size=32, learning_rate=0.025)
 
     @classmethod
-    def full(cls, seed: int = 1847) -> "TrainingConfig":
+    def full(cls, seed: int = 1847) -> TrainingConfig:
         return cls(seed=seed, epochs=70, batch_size=64, learning_rate=0.012)
 
 
@@ -117,6 +118,20 @@ def prediction_metrics(
     }
 
 
+def output_loss_weights(output_names: tuple[str, ...]) -> np.ndarray:
+    """Emphasize climate binary actuators that binary-threshold safety hardens."""
+    weights = {
+        "heater": 3.0,
+        "cooler": 2.5,
+        "humidifier": 2.5,
+        "dehumidifier": 2.5,
+        "fan": 1.5,
+        "co2_doser": 1.5,
+        "nutrient_heater": 1.5,
+    }
+    return np.asarray([weights.get(name, 1.0) for name in output_names], dtype=np.float32)
+
+
 def train(dataset: Dataset, config: TrainingConfig) -> TrainingResult:
     x_train, y_train = dataset.select("train")
     x_validation, y_validation = dataset.select("validation")
@@ -126,13 +141,18 @@ def train(dataset: Dataset, config: TrainingConfig) -> TrainingResult:
 
     tf = configure_tensorflow_determinism(config.seed)
     tf.keras.backend.clear_session()
-    model = build_model(
-        dataset.features.shape[1], dataset.labels.shape[1], config=config
-    )
+    model = build_model(dataset.features.shape[1], dataset.labels.shape[1], config=config)
     optimizer = tf.keras.optimizers.SGD(
         learning_rate=config.learning_rate, momentum=0.0, nesterov=False
     )
-    model.compile(optimizer=optimizer, loss="mse", metrics=["mae"])
+    loss_weights = output_loss_weights(tuple(dataset.output_names))
+    loss_weights_tf = tf.constant(loss_weights, dtype=tf.float32)
+
+    def weighted_mse(y_true: Any, y_pred: Any) -> Any:
+        err = tf.square(y_true - y_pred) * loss_weights_tf
+        return tf.reduce_mean(err)
+
+    model.compile(optimizer=optimizer, loss=weighted_mse, metrics=["mae"])
     history_values: dict[str, list[float]] = {
         "loss": [],
         "mae": [],
@@ -147,15 +167,9 @@ def train(dataset: Dataset, config: TrainingConfig) -> TrainingResult:
             stop = start + batch_size
             model.train_on_batch(x_train[start:stop], y_train[start:stop])
         training_prediction = np.asarray(model(x_train, training=False), dtype=np.float32)
-        validation_prediction = np.asarray(
-            model(x_validation, training=False), dtype=np.float32
-        )
-        history_values["loss"].append(
-            float(np.mean(np.square(training_prediction - y_train)))
-        )
-        history_values["mae"].append(
-            float(np.mean(np.abs(training_prediction - y_train)))
-        )
+        validation_prediction = np.asarray(model(x_validation, training=False), dtype=np.float32)
+        history_values["loss"].append(float(np.mean(np.square(training_prediction - y_train))))
+        history_values["mae"].append(float(np.mean(np.abs(training_prediction - y_train))))
         history_values["val_loss"].append(
             float(np.mean(np.square(validation_prediction - y_validation)))
         )
@@ -175,9 +189,7 @@ def train(dataset: Dataset, config: TrainingConfig) -> TrainingResult:
     validation_prediction = np.asarray(model(x_validation, training=False), dtype=np.float32)
     test_prediction = np.asarray(model(x_test, training=False), dtype=np.float32)
     metrics: dict[str, object] = {
-        "validation": prediction_metrics(
-            y_validation, validation_prediction, dataset.output_names
-        ),
+        "validation": prediction_metrics(y_validation, validation_prediction, dataset.output_names),
         "test": prediction_metrics(y_test, test_prediction, dataset.output_names),
         "parameter_count": int(model.count_params()),
         "epochs": config.epochs,

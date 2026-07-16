@@ -6,15 +6,14 @@ import argparse
 import json
 import signal
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import TextIO
 
 import serial
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def capture(
@@ -73,12 +72,17 @@ def capture(
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--port", required=True, help="Serial device, for example /dev/cu.usbserial-10")
+    parser.add_argument(
+        "--port", required=True, help="Serial device, for example /dev/cu.usbserial-10"
+    )
     parser.add_argument("--output", required=True, type=Path, help="Append NDJSON records here")
     parser.add_argument("--baud", type=int, default=115_200)
     parser.add_argument("--timeout", type=float, default=1.0)
     parser.add_argument(
-        "--invalid", choices=("mark", "skip"), default="mark", help="How to handle malformed lines"
+        "--invalid",
+        choices=("mark", "skip"),
+        default="mark",
+        help="How to handle malformed lines",
     )
     return parser
 

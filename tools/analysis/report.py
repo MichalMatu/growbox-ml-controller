@@ -7,10 +7,10 @@ import csv
 import json
 import math
 import sys
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 from statistics import fmean
-from typing import Any, Iterable
+from typing import Any
 
 TRACKED_OUTPUTS = ("heater", "fan", "humidifier", "irrigation")
 TRACKED_TARGETS = {
@@ -47,7 +47,7 @@ def parse_log(path: Path) -> tuple[list[dict[str, Any]], list[str]]:
 
 
 def _finite_number(value: Any) -> float | None:
-    if not isinstance(value, (int, float)) or isinstance(value, bool):
+    if not isinstance(value, int | float) or isinstance(value, bool):
         return None
     try:
         number = float(value)

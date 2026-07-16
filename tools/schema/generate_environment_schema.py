@@ -11,31 +11,17 @@ import re
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_SCHEMA = ROOT / "schemas" / "environment-controller-v1.json"
-DEFAULT_OUTPUT = (
-    ROOT / "lib" / "environment_control" / "src" / "EnvironmentSchema.h"
-)
-CANONICAL_GROUPS = (
-    "sensors",
-    "validity",
-    "environment",
-    "cultivation",
-    "actuators.heater",
-    "actuators.fan",
-    "actuators.humidifier",
-    "actuators.irrigation",
-    "targets",
-    "previous",
-)
+DEFAULT_SCHEMA = ROOT / "schemas" / "environment-controller.json"
+DEFAULT_OUTPUT = ROOT / "lib" / "environment_control" / "src" / "EnvironmentSchema.h"
+MAX_FEATURE_COUNT = 128
 
 
 def canonical_bytes(document: dict[str, Any]) -> bytes:
     """Return the canonical bytes used everywhere to identify the contract."""
-    return json.dumps(
-        document, sort_keys=True, separators=(",", ":"), ensure_ascii=True
-    ).encode("utf-8")
+    return json.dumps(document, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode(
+        "utf-8"
+    )
 
 
 def schema_hash(document: dict[str, Any]) -> str:
@@ -46,26 +32,45 @@ def schema_hash(document: dict[str, Any]) -> str:
 def cpp_identifier(name: str) -> str:
     pieces = re.findall(r"[A-Za-z0-9]+", name)
     identifier = "".join(piece[:1].upper() + piece[1:] for piece in pieces)
-    if not identifier or identifier[0].isdigit():
-        identifier = "Value" + identifier
+    if not identifier:
+        raise ValueError(f"cannot form C++ identifier from {name!r}")
+    if identifier[0].isdigit():
+        identifier = f"N{identifier}"
     return identifier
 
 
 def cpp_string(value: str) -> str:
-    return json.dumps(value, ensure_ascii=True)
+    escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+    return f'"{escaped}"'
 
 
 def cpp_float(value: float) -> str:
-    rendered = format(float(value), ".9g")
+    numeric = float(value)
+    if not math.isfinite(numeric):
+        raise ValueError("schema numeric literals must be finite")
+    rendered = f"{numeric:.9g}"
     if "." not in rendered and "e" not in rendered.lower():
         rendered += ".0"
     return rendered + "f"
 
 
-def validate(document: dict[str, Any]) -> None:
-    if document.get("schema_version") != 1:
-        raise ValueError("only schema_version 1 is supported")
-    hash_contract = document.get("hash", {})
+def _validate_ranges(entries: list[dict[str, Any]]) -> None:
+    for item in entries:
+        minimum = float(item["minimum"])
+        maximum = float(item["maximum"])
+        default = float(item["default"])
+        if not all(math.isfinite(value) for value in (minimum, maximum, default)):
+            raise ValueError(f"non-finite range for {item.get('name')!r}")
+        if minimum > maximum:
+            raise ValueError(f"invalid range for {item.get('name')!r}")
+        if not minimum <= default <= maximum:
+            raise ValueError(f"default out of range for {item.get('name')!r}")
+
+
+def _validate_hash_contract(document: dict[str, Any]) -> None:
+    hash_contract = document.get("hash")
+    if not isinstance(hash_contract, dict):
+        raise ValueError("hash contract metadata is required")
     if hash_contract.get("algorithm") != "sha256":
         raise ValueError("hash.algorithm must be sha256")
     if hash_contract.get("canonicalization") != (
@@ -75,6 +80,14 @@ def validate(document: dict[str, Any]) -> None:
     hash_length = hash_contract.get("short_hex_characters")
     if not isinstance(hash_length, int) or not 1 <= hash_length <= 64:
         raise ValueError("hash.short_hex_characters must be in [1, 64]")
+
+
+def validate(document: dict[str, Any]) -> None:
+    version = document.get("schema_version")
+    if version != 4:
+        raise ValueError("schema_version must be 4 (active pots contract)")
+    _validate_hash_contract(document)
+
     features = document["model"]["features"]
     outputs = document["model"]["outputs"]
     feature_names = [item["name"] for item in features]
@@ -90,53 +103,76 @@ def validate(document: dict[str, Any]) -> None:
         raise ValueError("model feature paths must be unique")
     if any("source" in item for item in features):
         raise ValueError("model features must use path, not source")
-    groups = document["groups"]
-    if tuple(groups) != CANONICAL_GROUPS:
-        raise ValueError("groups must use the canonical wire namespaces in order")
-    grouped = [name for group in groups.values() for name in group]
-    if grouped != feature_names:
-        raise ValueError("groups must enumerate features once and in model order")
+    if len(features) > MAX_FEATURE_COUNT:
+        raise ValueError(f"feature count must be <= {MAX_FEATURE_COUNT}")
+
     features_by_name = {item["name"]: item for item in features}
-    for group_path, names in groups.items():
+    sections = document.get("group_sections")
+    if not isinstance(sections, list) or not sections:
+        raise ValueError("contract must define group_sections")
+    grouped = [name for section in sections for name in section["features"]]
+    if grouped != feature_names:
+        raise ValueError("group_sections must enumerate features once and in model order")
+    for section in sections:
+        group_path = section["path"]
         expected_prefix = group_path.split(".")
-        for name in names:
+        for name in section["features"]:
             path = features_by_name[name]["path"]
             if path.split(".")[:-1] != expected_prefix:
-                raise ValueError(
-                    f"feature path {path!r} does not match group {group_path!r}"
-                )
-    for item in features + outputs:
-        minimum = float(item["minimum"])
-        maximum = float(item["maximum"])
-        default = float(item["default"])
-        if not all(math.isfinite(value) for value in (minimum, maximum, default)):
-            raise ValueError(f"non-finite contract value for {item['name']}")
-        if not minimum < maximum:
-            raise ValueError(f"invalid range for {item['name']}")
-        if not minimum <= default <= maximum:
-            raise ValueError(f"default outside range for {item['name']}")
-        item_type = item.get("type")
-        if item_type == "boolean" and (minimum, maximum) != (0.0, 1.0):
-            raise ValueError(f"boolean range must be [0, 1] for {item['name']}")
-        if item_type == "boolean" and default not in (0.0, 1.0):
-            raise ValueError(f"boolean default must be 0 or 1 for {item['name']}")
-        if item_type == "enum":
-            encoding = item.get("encoding")
-            if not isinstance(encoding, dict) or not encoding:
-                raise ValueError(f"enum encoding is required for {item['name']}")
-            values = [float(value) for value in encoding.values()]
-            if not all(math.isfinite(value) for value in values):
-                raise ValueError(f"non-finite enum encoding for {item['name']}")
-            if len(values) != len(set(values)):
-                raise ValueError(f"enum encoding values must be unique for {item['name']}")
-            if not all(minimum <= value <= maximum for value in values):
-                raise ValueError(f"enum encoding outside range for {item['name']}")
-            if default not in values:
-                raise ValueError(f"enum default is not encoded for {item['name']}")
+                raise ValueError(f"feature path {path!r} does not match group {group_path!r}")
+
+    _validate_ranges(features)
+    _validate_ranges(outputs)
 
 
 def array(values: list[str], indentation: str = "    ") -> str:
     return "\n".join(f"{indentation}{value}," for value in values)
+
+
+def _binary_pwm_encoding(features: list[dict[str, Any]]) -> dict[str, float]:
+    for item in features:
+        if item.get("type") != "enum":
+            continue
+        encoding = item.get("encoding")
+        if isinstance(encoding, dict) and "binary" in encoding and "pwm" in encoding:
+            return encoding
+    return {"binary": 0.0, "pwm": 1.0}
+
+
+def _safety_constant_lines(safety: dict[str, Any]) -> str:
+    lines = [
+        f"inline constexpr float kDefaultMaximumAirTemperatureC = "
+        f"{cpp_float(safety['maximum_air_temperature_c'])};",
+        f"inline constexpr float kDefaultAlarmAirTemperatureC = "
+        f"{cpp_float(safety['alarm_air_temperature_c'])};",
+        f"inline constexpr float kDefaultAlarmMinimumFan = "
+        f"{cpp_float(safety['alarm_minimum_fan'])};",
+        f"inline constexpr float kDefaultBinaryThreshold = "
+        f"{cpp_float(safety['binary_threshold'])};",
+        f"inline constexpr float kDefaultHeaterMinimumOnS = "
+        f"{cpp_float(safety['heater_minimum_on_s'])};",
+        f"inline constexpr float kDefaultHeaterMinimumOffS = "
+        f"{cpp_float(safety['heater_minimum_off_s'])};",
+        f"inline constexpr float kDefaultHumidifierMinimumOnS = "
+        f"{cpp_float(safety['humidifier_minimum_on_s'])};",
+        f"inline constexpr float kDefaultHumidifierMinimumOffS = "
+        f"{cpp_float(safety['humidifier_minimum_off_s'])};",
+    ]
+    optional = (
+        ("dehumidifier_minimum_on_s", "DehumidifierMinimumOnS"),
+        ("dehumidifier_minimum_off_s", "DehumidifierMinimumOffS"),
+        ("cooler_minimum_on_s", "CoolerMinimumOnS"),
+        ("cooler_minimum_off_s", "CoolerMinimumOffS"),
+        ("co2_doser_minimum_interval_s", "Co2DoserMinimumIntervalS"),
+        ("co2_doser_maximum_pulse_s", "Co2DoserMaximumPulseS"),
+        ("fan_venting_co2_threshold", "FanVentingCo2Threshold"),
+        ("maximum_nutrient_soil_delta_c", "MaximumNutrientSoilDeltaC"),
+        ("minimum_nutrient_solution_temperature_c", "MinimumNutrientSolutionTemperatureC"),
+    )
+    for key, suffix in optional:
+        if key in safety:
+            lines.append(f"inline constexpr float kDefault{suffix} = {cpp_float(safety[key])};")
+    return "\n".join(lines)
 
 
 def render(document: dict[str, Any]) -> str:
@@ -168,7 +204,9 @@ def render(document: dict[str, Any]) -> str:
     path_parts = [item["path"].split(".") for item in features]
     wire_roots = list(dict.fromkeys(parts[0] for parts in path_parts))
     wire_objects = list(
-        dict.fromkeys(parts[1] for parts in path_parts if len(parts) == 3)
+        dict.fromkeys(
+            parts[1] for parts in path_parts if len(parts) >= 3 and not parts[1].isdigit()
+        )
     )
     wire_root_constants = "\n".join(
         f"inline constexpr char kWireRoot{cpp_identifier(key)}[] = {cpp_string(key)};"
@@ -180,15 +218,14 @@ def render(document: dict[str, Any]) -> str:
     )
 
     safety = document["safety_defaults"]
-    heater_control = next(
-        item for item in features if item["name"] == "heater_control_type"
-    )["encoding"]
+    heater_control = _binary_pwm_encoding(features)
     heater_binary = int(heater_control["binary"])
     heater_pwm = int(heater_control["pwm"])
     if float(heater_binary) != float(heater_control["binary"]) or not 0 <= heater_binary <= 255:
-        raise ValueError("heater binary encoding must be an unsigned 8-bit integer")
+        raise ValueError("binary encoding must be an unsigned 8-bit integer")
     if float(heater_pwm) != float(heater_control["pwm"]) or not 0 <= heater_pwm <= 255:
-        raise ValueError("heater pwm encoding must be an unsigned 8-bit integer")
+        raise ValueError("pwm encoding must be an unsigned 8-bit integer")
+
     return f"""// Generated by tools/schema/generate_environment_schema.py. Do not edit.
 #pragma once
 
@@ -200,11 +237,12 @@ namespace growbox {{
 namespace control {{
 namespace schema {{
 
-inline constexpr std::uint32_t kSchemaVersion = {document['schema_version']}U;
-inline constexpr char kSchemaId[] = {cpp_string(document['schema_id'])};
+inline constexpr std::uint32_t kSchemaVersion = {document["schema_version"]}U;
+inline constexpr char kSchemaId[] = {cpp_string(document["schema_id"])};
 inline constexpr char kSchemaHash[] = {cpp_string(digest)};
 inline constexpr std::size_t kFeatureCount = {len(features)}U;
 inline constexpr std::size_t kOutputCount = {len(outputs)}U;
+inline constexpr std::size_t kFeatureDiagnosticsMaskBits = 128U;
 inline constexpr std::uint8_t kHeaterControlTypeBinary = {heater_binary}U;
 inline constexpr std::uint8_t kHeaterControlTypePwm = {heater_pwm}U;
 
@@ -263,14 +301,7 @@ inline constexpr std::array<float, kOutputCount> kOutputDefaults{{{{
 {output_defaults}
 }}}};
 
-inline constexpr float kDefaultMaximumAirTemperatureC = {cpp_float(safety['maximum_air_temperature_c'])};
-inline constexpr float kDefaultAlarmAirTemperatureC = {cpp_float(safety['alarm_air_temperature_c'])};
-inline constexpr float kDefaultAlarmMinimumFan = {cpp_float(safety['alarm_minimum_fan'])};
-inline constexpr float kDefaultBinaryThreshold = {cpp_float(safety['binary_threshold'])};
-inline constexpr float kDefaultHeaterMinimumOnS = {cpp_float(safety['heater_minimum_on_s'])};
-inline constexpr float kDefaultHeaterMinimumOffS = {cpp_float(safety['heater_minimum_off_s'])};
-inline constexpr float kDefaultHumidifierMinimumOnS = {cpp_float(safety['humidifier_minimum_on_s'])};
-inline constexpr float kDefaultHumidifierMinimumOffS = {cpp_float(safety['humidifier_minimum_off_s'])};
+{_safety_constant_lines(safety)}
 
 constexpr std::size_t index(FeatureIndex value) noexcept {{
     return static_cast<std::size_t>(value);
@@ -305,6 +336,7 @@ def main() -> int:
         return 0
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(generated, encoding="utf-8")
+    print(f"wrote {args.output} hash={schema_hash(document)}")
     return 0
 
 

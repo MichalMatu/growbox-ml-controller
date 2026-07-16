@@ -11,6 +11,10 @@ The demonstration firmware only drives its local simulator: **it never configure
 > This is an engineering demo, not a calibrated physical model or a validated controller for
 > unattended heaters, pumps, or other real equipment.
 
+The long-term target is a **commercial configurable controller** (multi-pot irrigation, optional
+ML, deterministic safety), not a single hobby growbox. Product scope, v2 I/O, and work order:
+[docs/plan.md](docs/plan.md) (section *Wizja produktu*).
+
 ## How it works
 
 Python runs on the development computer to create and train the model. The ESP32-S3 runs only the
@@ -52,8 +56,9 @@ Every control cycle follows the same five steps:
    simulator.
 
 The reusable `lib/environment_control` library has no dependency on ESP-IDF, Arduino, serial I/O,
-JSON, GPIO, Wi-Fi, FreeRTOS, sensor drivers, actuator drivers, or the simulator. See
-[Architecture](docs/ARCHITECTURE.md).
+JSON, GPIO, Wi-Fi, FreeRTOS, sensor drivers, actuator drivers, or the simulator.
+
+**Docs:** [Plan prac (v2)](docs/plan.md) · [Architecture](docs/ARCHITECTURE.md) · [I/O map](docs/IO_MAP.md) · [Contract](docs/DATA_CONTRACT.md) · [Training](docs/MODEL_PIPELINE.md)
 
 ## Firmware stack
 
@@ -83,6 +88,30 @@ For a standard ESP-IDF installation, activate it before running firmware command
 idf.py --version
 ```
 
+## Quality gate (local)
+
+One-time setup installs pre-commit hooks and dev linters:
+
+```bash
+make setup-dev
+```
+
+| Command | When |
+|---------|------|
+| `make check-fast` | Lint/format + schema check (matches CI pre-commit step) |
+| `make check` | Full gate: pre-commit + pre-push steps below |
+| `make check-push` | pytest, host C++ tests, **idf build** (N8 gate), **clang-tidy** (lib) |
+| `make idf-gate-build` | Firmware compile gate only (`build/idf-gate`, fast N8 profile) |
+| `make clang-tidy-host` | Static analysis on portable controller (`lib/environment_control`) |
+| `make fmt` | Auto-fix Python (ruff) and C++ (clang-format) on the tree |
+
+On `git commit`, fast hooks run on staged files. On `git push`, `make check-push` runs
+(`scripts/quality_gate_push.sh`). Requires ESP-IDF in the shell (`source export.sh`). For
+`idf.py clang-check` in CI, install esp-clang once: `python $IDF_PATH/tools/idf_tools.py install esp-clang`.
+
+Skip temporarily: `SKIP=quality-gate-push git push`, `SKIP_IDF_BUILD=1`, `SKIP_CLANG_TIDY=1`, or
+`git commit --no-verify` when needed.
+
 ## Quick start
 
 ```bash
@@ -109,7 +138,7 @@ Only for a module explicitly marked `ESP32-S3-WROOM-2-N32R16V`:
 
 ```bash
 idf.py -B build/idf-n32r16v \
-  -D "SDKCONFIG_DEFAULTS=sdkconfig.defaults.n32r16v" \
+  -D "SDKCONFIG_DEFAULTS=config/idf/sdkconfig.defaults.n32r16v" \
   -D GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n32r16v \
   build
 ```
@@ -120,17 +149,21 @@ PSRAM configuration.
 ## Project layout
 
 ```text
-components/emlearn_runtime/       minimal pinned inference runtime
-lib/environment_control/          portable controller ESP-IDF component and package
-src/                              ESP-IDF application component
-src/demo/                         simulator and bounded UART/JSON adapter
-schemas/                          versioned model/controller contract
-tools/ml/                         simulation, training, export, parity checks
-tools/serial/                     capture and replay tools
-test/host/                        CMake/CTest harness
-test/test_environment_controller/ portable controller test cases
-tests/                            Python tests and golden fixtures
+config/idf/                       board sdkconfig.defaults profiles
+schemas/                          active ML/wire contract (v4 pots)
+docs/                             documentation (+ docs/simulator research)
+tools/ml/                         simulation, training, export
+tools/panel/                      host control panel
+tools/serial/                     capture and replay
+lib/environment_control/          portable controller library
+components/emlearn_runtime/       pinned inference runtime
+src/                              ESP-IDF application (demo + UART)
+test/host/                        CMake/CTest (portable C++)
+tests/                            pytest
+scripts/                          CI and IDF helpers
 ```
+
+Full map: [docs/PROJECT_LAYOUT.md](docs/PROJECT_LAYOUT.md).
 
 The root `CMakeLists.txt` registers `src/` and `lib/environment_control` as ESP-IDF components.
 `library.json` remains in the portable library because LiteGraph is still expected to consume an
@@ -138,23 +171,15 @@ immutable release of that library through its PlatformIO build.
 
 ## Training and export
 
-The quick profile exercises the complete deterministic path with a small dataset:
+The quick profile is for CI and smoke tests only. Full training waits for the high-fidelity
+growbox simulator — see [docs/simulator/](docs/simulator/).
 
 ```bash
-python -m tools.ml.pipeline --quick
+make train-quick   # CI / smoke (not production weights)
+make train-full    # after simulator fidelity work
 ```
 
-Use the larger scenario and epoch budget for an offline run:
-
-```bash
-python -m tools.ml.pipeline --full
-```
-
-Both modes generate whole time-series scenarios, split by scenario seed, label them with a
-deterministic finite-action rollout teacher, train and test Keras, export via emlearn, and compare
-Python predictions with compiled-C predictions. Generated firmware model headers, metadata, and
-small golden vectors are committed; large datasets and working model files are ignored. See
-[Model pipeline](docs/MODEL_PIPELINE.md).
+See [Model pipeline](docs/MODEL_PIPELINE.md).
 
 ## Build, flash, and monitor
 
@@ -181,7 +206,7 @@ Commands are one JSON object per line. Supported operations remain:
 - `load_scenario`
 - `mode` with `closed_loop` or `replay`
 
-The ESP-IDF UART adapter uses a bounded 1536-byte line buffer and returns structured errors for
+The ESP-IDF UART adapter uses a bounded 4096-byte line buffer and returns structured errors for
 oversized, malformed, or unsupported input.
 
 Replay a committed scenario and save the bidirectional session:
@@ -210,7 +235,7 @@ python -m tools.analysis.report logs/closed-loop.ndjson --csv logs/closed-loop.c
 
 ## Contract and availability
 
-`schemas/environment-controller-v1.json` is the single source of truth for field names, order,
+`schemas/environment-controller.json` is the single source of truth for field names, order,
 units, ranges, defaults, and model inputs/outputs. Generation embeds its canonical short hash in the
 C++ schema metadata, model, manifest, firmware, and startup logs. Firmware rejects a model built for
 a different contract identity.
@@ -244,7 +269,8 @@ and an ESP-IDF 5.5.1 ESP32-S3 firmware build. No physical board is required for 
 
 ## Demo limitations
 
-- The simulator uses simplified thermal, humidity, CO2, and soil-water relationships.
+- The training simulator is still **placeholder-grade** physics; high-fidelity work is tracked under
+  [docs/simulator/](docs/simulator/). Committed model weights may be `untrained-placeholder`.
 - Synthetic training cannot establish real-world performance or safety.
 - The v1 teacher is a short-horizon deterministic search, not model-predictive control or RL.
 - The exported float model favors a transparent demonstration over aggressive quantization.

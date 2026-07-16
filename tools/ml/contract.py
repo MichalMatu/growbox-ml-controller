@@ -2,18 +2,19 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import hashlib
 import json
 import math
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 import numpy as np
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_CONTRACT_PATH = PROJECT_ROOT / "schemas" / "environment-controller-v1.json"
+ACTIVE_CONTRACT_PATH = PROJECT_ROOT / "schemas" / "environment-controller.json"
+DEFAULT_CONTRACT_PATH = ACTIVE_CONTRACT_PATH
 
 
 def canonical_json_bytes(document: Mapping[str, Any]) -> bytes:
@@ -82,26 +83,28 @@ class Contract:
         encoded: list[float] = []
         feature_by_path = {feature.path: feature for feature in self.features}
         for feature in self.features:
-            value = _resolve_path_or_default(
-                controller_input, feature.path, feature.default
-            )
+            value = _resolve_path_or_default(controller_input, feature.path, feature.default)
             # Validate every supplied value before applying a sensor mask. This
             # mirrors the firmware fail-safe contract: NaN/Inf is never an
             # encoding for "missing"; use a false mask plus a finite value or
             # omit the value so its schema default is used.
             normalized = feature.normalize(value)
-            if feature.path.startswith("sensors."):
-                sensor_name = feature.path.split(".", 1)[1]
-                validity_path = f"validity.{sensor_name}"
+            validity_path = _validity_path_for_sensor_feature(feature.path)
+            if validity_path is not None:
                 validity_feature = feature_by_path.get(validity_path)
                 if validity_feature is None:
-                    raise ValueError(
-                        f"contract has no validity feature for {feature.path!r}"
-                    )
+                    raise ValueError(f"contract has no validity feature for {feature.path!r}")
                 valid = _resolve_path_or_default(
                     controller_input, validity_path, validity_feature.default
                 )
                 if not bool(valid):
+                    normalized = feature.normalize(feature.default)
+            pot_available_path = _pot_available_path_for_target_feature(feature.path)
+            if pot_available_path is not None:
+                available = bool(
+                    _resolve_path_or_default(controller_input, pot_available_path, False)
+                )
+                if not available:
                     normalized = feature.normalize(feature.default)
             encoded.append(normalized)
         return np.asarray(encoded, dtype=np.float32)
@@ -198,18 +201,52 @@ def load_contract(path: str | Path = DEFAULT_CONTRACT_PATH) -> Contract:
     )
 
 
+def _validity_path_for_sensor_feature(feature_path: str) -> str | None:
+    if feature_path.startswith("sensors."):
+        sensor_name = feature_path.split(".", 1)[1]
+        return f"validity.{sensor_name}"
+    if ".sensors." in feature_path:
+        prefix, sensor_name = feature_path.rsplit(".sensors.", 1)
+        return f"{prefix}.validity.{sensor_name}"
+    return None
+
+
+def _pot_available_path_for_target_feature(feature_path: str) -> str | None:
+    if not feature_path.startswith("pots."):
+        return None
+    parts = feature_path.split(".")
+    if len(parts) < 4 or parts[2] != "targets":
+        return None
+    pot_index = parts[1]
+    if not pot_index.isdigit():
+        return None
+    return f"pots.{pot_index}.available"
+
+
 def _resolve_path(document: Mapping[str, Any], path: str) -> Any:
     current: Any = document
     for part in path.split("."):
-        if not isinstance(current, Mapping) or part not in current:
-            raise KeyError(f"contract feature path {path!r} is absent from controller input")
-        current = current[part]
+        if isinstance(current, Mapping):
+            if part not in current:
+                raise KeyError(f"contract feature path {path!r} is absent from controller input")
+            current = current[part]
+            continue
+        if isinstance(current, Sequence) and not isinstance(current, str | bytes):
+            try:
+                index = int(part)
+            except ValueError as exc:
+                raise KeyError(
+                    f"contract feature path {path!r} is absent from controller input"
+                ) from exc
+            if index < 0 or index >= len(current):
+                raise KeyError(f"contract feature path {path!r} is absent from controller input")
+            current = current[index]
+            continue
+        raise KeyError(f"contract feature path {path!r} is absent from controller input")
     return current
 
 
-def _resolve_path_or_default(
-    document: Mapping[str, Any], path: str, default: Any
-) -> Any:
+def _resolve_path_or_default(document: Mapping[str, Any], path: str, default: Any) -> Any:
     try:
         return _resolve_path(document, path)
     except KeyError:
