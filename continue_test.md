@@ -1,60 +1,166 @@
-# Kontynuacja audytu exhaustive na Raspberry Pi 5
+# Dwie maszyny deweloperskie — Mac M1 + Raspberry Pi 5
 
-Projekt przeniesiony z **MacBook Air M1** na **Raspberry Pi 5 (16 GB RAM)**. Pi działa 24/7 — audyt na płytce ESP może lecieć bez przerwy (Mac usypiał i przerywał test).
+Projekt **growbox-ml-controller** można rozwijać **niezależnie** na:
 
-## Co było w toku
+| Maszyna | Rola typowa |
+|---------|-------------|
+| **MacBook Air M1** | Kod, panel UI, szybki build/flash, testy lokalne |
+| **Raspberry Pi 5 (16 GB)** | Build/flash, testy serial **24/7**, długie audyty (tmux) |
+
+Synchronizacja kodu: **git** (`pull` / `push`). Każda maszyna ma **własny** `.venv`, `build/`, `sdkconfig` i instalację ESP-IDF — artefakty buildu **nie są współdzielone** (są w `.gitignore`).
+
+---
+
+## Zasady współpracy (obie maszyny)
+
+1. **Przed pracą:** `git pull` na maszynie, na której zaczynasz.
+2. **Po zmianach:** commit + push; druga maszyna robi `git pull`.
+3. **ESP32 pod USB:** fizycznie podłączony do **jednej** maszyny naraz (przenosisz kabel lub zostawiasz na Pi pod audyty).
+4. **Port serial:** ustaw per maszyna (patrz tabela poniżej).
+5. **Panel + audyt serial:** tylko **jeden** klient na port — przed audytem `disconnect` panelu lub nie uruchamiaj panelu.
+6. **Checkpointy audytu** (`build/audit/*.jsonl`): opcjonalnie `scp`/`rsync` między maszynami — nie ma ich w git.
+
+### Porty i zmienne
+
+| | MacBook Air M1 | Raspberry Pi 5 |
+|--|----------------|----------------|
+| Port typowy | `/dev/cu.usbmodem1101` | `/dev/ttyACM0` lub `/dev/ttyUSB0` |
+| `make flash` | `PORT=/dev/cu.usbmodem1101 make flash` | `PORT=/dev/ttyACM0 make flash` |
+| Python / audyt | `export GROWBOX_BOARD_PORT=/dev/cu.usbmodem1101` | `export GROWBOX_BOARD_PORT=/dev/ttyACM0` |
+| Lista portów | `make ports` | `make ports` |
+
+---
+
+## Setup jednorazowy — MacBook Air M1
+
+```bash
+cd ~/Documents/PlatformIO/Projects/ml   # lub inna ścieżka
+git clone <url-repo> .                    # jeśli świeży klon
+git checkout agent/migrate-firmware-to-esp-idf
+
+make setup-dev          # venv + pre-commit (opcjonalnie setup bez -dev)
+
+# ESP-IDF 5.5.1 (jeśli jeszcze nie ma)
+mkdir -p ~/esp && cd ~/esp
+git clone -b v5.5.1 --recursive https://github.com/espressif/esp-idf.git
+cd esp-idf && ./install.sh esp32s3
+# w każdej nowej sesji terminala:
+source ~/esp/esp-idf/export.sh
+# lub z katalogu repo:
+source scripts/source_idf.sh
+```
+
+### Pełny flow na Macu
+
+```bash
+source scripts/source_idf.sh
+make check-fast                    # lint / format
+make test                          # pytest + host C++
+PORT=/dev/cu.usbmodem1101 make flash
+export GROWBOX_BOARD_PORT=/dev/cu.usbmodem1101
+make test-board                    # E2E na płytce
+
+make panel                         # http://127.0.0.1:8765
+python -m tools.ml.board_engine_audit --matrix-only
+python -m tools.ml.panel_endpoint_audit
+
+make train-quick                   # smoke ML (CI)
+make probe-sim                     # fizyka symulatora
+```
+
+---
+
+## Setup jednorazowy — Raspberry Pi 5 (16 GB)
+
+Pi ma **ten sam komplet** możliwości co Mac: build, flash, panel, trening, audyty.
+
+### System (Debian / Raspberry Pi OS 64-bit)
+
+```bash
+sudo apt update
+sudo apt install -y git wget flex bison gperf python3 python3-pip python3-venv \
+  cmake ninja-build ccache libffi-dev libssl-dev dfu-util libusb-1.0-0 \
+  build-essential
+
+sudo usermod -aG dialout $USER
+# wyloguj i zaloguj — dostęp do /dev/ttyACM*
+```
+
+### Repo + Python
+
+```bash
+git clone https://github.com/MichalMatu/growbox-ml-controller.git ~/ml
+cd ~/ml
+git checkout agent/migrate-firmware-to-esp-idf
+
+make setup-dev
+```
+
+### ESP-IDF 5.5.1 na Pi (aarch64)
+
+```bash
+mkdir -p ~/esp && cd ~/esp
+git clone -b v5.5.1 --recursive https://github.com/espressif/esp-idf.git
+cd esp-idf
+./install.sh esp32s3
+```
+
+Dodaj do `~/.bashrc` (opcjonalnie):
+
+```bash
+alias get_idf='. ~/esp/esp-idf/export.sh'
+```
+
+Pierwszy `make build` na Pi trwa **dłużej** niż na Macu — to normalne. 16 GB RAM wystarcza z zapasem.
+
+### Pełny flow na Pi
+
+```bash
+cd ~/ml
+source scripts/source_idf.sh
+
+make build
+PORT=/dev/ttyACM0 make flash          # dostosuj PORT po: make ports
+
+export GROWBOX_BOARD_PORT=/dev/ttyACM0
+make test-board
+make test-board-exhaustive            # długi audyt — patrz sekcja poniżej
+
+# panel (opcjonalnie; nie razem z audytem na tym samym porcie)
+make panel
+```
+
+Testy host C++ i pełny quality gate:
+
+```bash
+make test-host
+make check-push                       # jak przed push — wolniejsze, wymaga IDF
+```
+
+---
+
+## Kontynuacja audytu exhaustive (stan na migracji)
+
+Audyt zatrzymany na Macu; wznawiany na Pi (lub ponownie na Macu — ten sam checkpoint).
 
 | Element | Wartość |
 |---------|---------|
-| Test | `exhaustive_board_audit` — CONFIG_MATRIX × siatki wartości czujników × previous |
-| Plan | **460 395** case (z `--skip-heavy-over 50000`) |
+| Test | `exhaustive_board_audit` |
+| Plan | **460 395** case (`--skip-heavy-over 50000`) |
 | Zatrzymano na | **6510** case (~1,4%) — profil **P03** |
 | Ostatni case | `P03/X[…]` — `status=ok`, `errors=0` |
 | Checkpoint | `build/audit/exhaustive_checkpoint.jsonl` |
 | Log | `build/audit/exhaustive_board.log` |
-| Raport (po zakończeniu) | `build/audit/exhaustive_board_audit.json` |
+| Raport (koniec) | `build/audit/exhaustive_board_audit.json` |
 
-Test zatrzymany celowo na Macu (`pkill` / SIGTERM). Checkpoint **nie jest w git** (`build/` w `.gitignore`) — trzeba go skopiować ręcznie na Pi.
+### Skopiuj checkpoint Mac → Pi (jednorazowo)
 
-## Różnice Mac M1 → Pi 5
-
-| | MacBook Air M1 | Raspberry Pi 5 |
-|--|----------------|----------------|
-| Port USB serial | `/dev/cu.usbmodem1101` | zwykle `/dev/ttyACM0` lub `/dev/ttyUSB0` |
-| Zmienna środowiska | `GROWBOX_BOARD_PORT` | to samo |
-| Panel | opcjonalnie `:8765` | **nie uruchamiaj** podczas audytu (jeden klient na serial) |
-| Czas do końca | ~46 h @ ~380 ms/case | ten sam порядок wielkości |
-
-## Przygotowanie na Pi (jednorazowo)
-
-```bash
-# klon repo (ta sama gałąź co na Macu)
-git clone <url-repo> ~/ml
-cd ~/ml
-git checkout agent/migrate-firmware-to-esp-idf   # lub aktualna gałąź
-
-make setup
-
-# grupa dialout (serial)
-sudo usermod -aG dialout $USER
-# wyloguj i zaloguj ponownie
-
-# ESP32 pod USB — sprawdź port
-ls -la /dev/ttyACM* /dev/ttyUSB* 2>/dev/null
-```
-
-### Skopiuj checkpoint z Maca
-
-Z Maca (dostosuj host i ścieżkę):
+Z Maca:
 
 ```bash
 scp /Users/michal/Documents/PlatformIO/Projects/ml/build/audit/exhaustive_checkpoint.jsonl \
     pi@<adres-pi>:~/ml/build/audit/
-```
-
-Opcjonalnie log:
-
-```bash
+# opcjonalnie:
 scp build/audit/exhaustive_board.log pi@<adres-pi>:~/ml/build/audit/
 ```
 
@@ -65,15 +171,14 @@ mkdir -p ~/ml/build/audit
 wc -l ~/ml/build/audit/exhaustive_checkpoint.jsonl   # oczekiwane: 6510
 ```
 
-## Wznowienie audytu (24/7)
-
-Uruchom w **tmux** (przeżyje rozłączenie SSH):
+### Wznowienie 24/7 na Pi (tmux)
 
 ```bash
 tmux new -s audit
 cd ~/ml
+source scripts/source_idf.sh   # nie wymagane do audytu, ale wygodne w jednej sesji
 
-export GROWBOX_BOARD_PORT=/dev/ttyACM0   # dostosuj do ls /dev/ttyACM*
+export GROWBOX_BOARD_PORT=/dev/ttyACM0
 
 .venv/bin/python -m tools.ml.exhaustive_board_audit \
   --port "$GROWBOX_BOARD_PORT" \
@@ -83,58 +188,114 @@ export GROWBOX_BOARD_PORT=/dev/ttyACM0   # dostosuj do ls /dev/ttyACM*
   2>&1 | tee -a build/audit/exhaustive_board.log
 ```
 
-Odłączenie od SSH: `Ctrl+B`, potem `D`.
-Powrót: `tmux attach -t audit`
+Odłączenie SSH: `Ctrl+B`, `D`. Powrót: `tmux attach -t audit`.
 
-Alternatywa przez Makefile:
+Alternatywa: `export GROWBOX_BOARD_PORT=/dev/ttyACM0 && make test-board-exhaustive`
 
-```bash
-export GROWBOX_BOARD_PORT=/dev/ttyACM0
-make test-board-exhaustive
-```
-
-(make domyślnie używa `/dev/cu.usbmodem1101` — na Pi **musisz** ustawić `GROWBOX_BOARD_PORT`.)
-
-## Jak działa wznowienie
-
-- Skrypt czyta `exhaustive_checkpoint.jsonl` i **pomija** case ze `status: ok`.
-- Case ze `fail` / `error` (timeout serial, reset ESP) zostaną **powtórzone** po restarcie.
-- Raport JSON powstaje **na końcu** biegu; postęp na żywo:
+### Postęp i PASS/FAIL
 
 ```bash
 wc -l build/audit/exhaustive_checkpoint.jsonl
 tail -f build/audit/exhaustive_board.log
 ```
 
-Co ~50 case w logu: `[N] P03/X[…] e=0 w=0 379ms` — `e` = błędy, `w` = warny ML.
+- Wznowienie pomija case ze `status: ok` w checkpoint.
+- **PASS** = `error_count: 0` w `exhaustive_board_audit.json`.
+- **WARN** = słabe miejsca ML — do przejrzenia, nie blokuje flashu.
 
-## PASS / FAIL
+Szacowany czas od 6510: **~46 h** @ ~380 ms/case.
 
-| Wynik | Znaczenie |
-|-------|-----------|
-| **PASS** | `error_count: 0` w `exhaustive_board_audit.json` |
-| **WARN** | ML nie zareagował na oczywisty off-target — do przejrzenia, nie blokuje flashu |
-| **FAIL** | `error_count > 0` — safety, schema lub firmware |
+---
+
+## Typowy dzień pracy na dwóch maszynach
+
+### Scenariusz A — kodujesz na Macu, Pi testuje w tle
+
+```bash
+# Mac
+git pull
+# ... edycja kodu ...
+make check-fast && make test
+git commit -am "..." && git push
+
+# Pi (SSH)
+git pull
+# jeśli zmiana firmware:
+source scripts/source_idf.sh && PORT=/dev/ttyACM0 make flash
+# audyt już leci w tmux — nie restartuj bez potrzeby
+```
+
+### Scenariusz B — kodujesz na Pi
+
+Ten sam schemat — `git push` z Pi, `git pull` na Macu. Obie maszyny mają ESP-IDF i `make flash`.
+
+### Scenariusz C — przenosisz ESP z Pi na Mac
+
+1. Zatrzymaj audyt / monitor na Pi.
+2. Odłącz USB, podłącz do Maca.
+3. `make ports` — nowy port.
+4. `PORT=... make flash` na Macu.
+
+---
+
+## Co jest / nie jest w git
+
+| W git | Lokalnie per maszyna |
+|-------|----------------------|
+| Źródła, schema, Makefile | `.venv/` |
+| Wyeksportowane nagłówki modelu | `build/` (IDF, host-tests, audit) |
+| `config/idf/sdkconfig.defaults*` | `sdkconfig` (generowany przy build) |
+| | `~/esp/esp-idf/` |
+| | checkpointy `build/audit/*.jsonl` |
+
+**Nie commituj** `build/`, `sdkconfig`, `.venv`. Checkpoint audytu przenosisz `scp` tylko gdy wznawiasz na drugiej maszynie.
+
+---
 
 ## Po zakończeniu exhaustive
 
-1. Szybki regres (opcjonalnie na Pi lub Macu po flashu):
-   - `python -m tools.ml.board_engine_audit --matrix-only`
-   - `python -m tools.ml.panel_endpoint_audit`
-2. Rozszerzenia (kolejność dowolna):
-   - `validity_matrix_audit` — 32 768 masek validity (~3–5 h)
-   - `make train-full` + flash — po dopracowaniu symulatora
-   - exhaustive **bez** `--skip-heavy-over` — tylko jeśli potrzebne profile P05/P06 (bardzo długo)
+1. Regres na maszynie z ESP:
+   ```bash
+   export GROWBOX_BOARD_PORT=<port>
+   python -m tools.ml.board_engine_audit --matrix-only
+   python -m tools.ml.panel_endpoint_audit   # wymaga panelu
+   ```
+2. Rozszerzenia (dowolna maszyna z ESP + czas):
+   - `make test-board-validity-matrix` — 32 768 masek validity
+   - `make train-full` + `make flash` — po dopracowaniu symulatora
+   - exhaustive bez `--skip-heavy-over` — profile P05/P06 (bardzo długo)
 
-## Typowe problemy na Pi
+---
+
+## Typowe problemy
 
 | Problem | Rozwiązanie |
 |---------|-------------|
-| `Permission denied` na `/dev/ttyACM0` | `usermod -aG dialout`, re-login |
-| `multiple access on port` | zatrzymaj panel / inny monitor serial |
-| timeout po resecie ESP | poczekaj ~2 s, uruchom ponownie — checkpoint wznawia |
-| brak portu po odłączeniu USB | powered hub USB; `dmesg \| tail` |
+| `ESP-IDF niedostępne` | `source ~/esp/esp-idf/export.sh` lub `source scripts/source_idf.sh` |
+| `Permission denied` na `/dev/ttyACM0` (Pi) | `usermod -aG dialout`, re-login |
+| `multiple access on port` | jeden klient serial; panel disconnect lub stop audytu |
+| Build na Pi wolny | pierwszy build długi; `ccache` już w zależnościach apt |
+| Różny `sdkconfig` między maszynami | OK — generowany lokalnie z `config/idf/sdkconfig.defaults*` |
+| Konflikt po `git pull` | rozwiąż merge; **nie** kopiuj `build/` między maszynami |
 
-## Flash i build firmware
+---
 
-Na Pi **nie jest wymagane** do samego audytu. Firmware wgrany na ESP z Maca wystarczy. Build (`make flash`) można dalej robić na Macu z ESP-IDF; Pi służy głównie do **testów serial 24/7**.
+## Szybka ściąga komend
+
+```bash
+# obie maszyny
+source scripts/source_idf.sh
+make setup-dev          # raz
+git pull / git push     # sync
+
+# flash (PORT per maszyna)
+PORT=<port> make flash
+
+# audyt (GROWBOX_BOARD_PORT per maszyna)
+export GROWBOX_BOARD_PORT=<port>
+make test-board-exhaustive
+
+# panel
+make panel              # :8765
+make ports              # lista USB
+```
