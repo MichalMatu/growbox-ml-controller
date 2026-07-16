@@ -4,8 +4,9 @@
 
 | Gałąź | Rola |
 |-------|------|
-| **`main`** | **Jedyna gałąź robocza** — pełny stack ESP-IDF, panel, ML, CONFIG_MATRIX, audyty |
-| `agent/migrate-firmware-to-esp-idf` | Historyczna; migracja ESP-IDF jest już w `main`. Można usunąć po `git pull` na wszystkich maszynach. |
+| **`main`** | **Jedyna gałąź** — ESP-IDF, panel, ML, CONFIG_MATRIX, audyty |
+
+Gałąź `agent/migrate-firmware-to-esp-idf` została scalona do `main` i usunięta (lokalnie i na GitHub).
 
 Domyślna gałąź na GitHub: **`main`**.
 
