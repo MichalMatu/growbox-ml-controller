@@ -52,7 +52,6 @@ function renderPreviousGroupTable(title, fields) {
   if (!fields.length) return "";
   const rows = fields.map(renderPreviousRow).join("");
   return `<div class="live-sensor-col">
-    <div class="live-sensor-col-head">${title}</div>
     <div class="live-data-table-wrap">
       <table class="live-data-table previous-data-table" aria-label="${title}">
         <colgroup>
@@ -61,7 +60,7 @@ function renderPreviousGroupTable(title, fields) {
         </colgroup>
         <thead>
           <tr>
-            <th scope="col" class="sensor-col"></th>
+            <th scope="col" class="sensor-col live-table-group-head">${title}</th>
             <th scope="col" class="num">Wyjście</th>
           </tr>
         </thead>

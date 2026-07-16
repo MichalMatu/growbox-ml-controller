@@ -308,6 +308,8 @@ def test_previous_actuators_use_readonly_live_style_two_column_tables():
     assert "previous-split" in prev_block
     assert "renderPreviousGroupTable" in prev_block
     assert "live-data-table" in prev_group
+    assert "live-sensor-col-head" not in prev_group
+    assert 'live-table-group-head">${title}</th>' in prev_group
     assert "data-previous-path" in prev_row
     assert "renderMiniCell" not in prev_block
     assert "targets-split" not in prev_block
