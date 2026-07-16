@@ -166,6 +166,22 @@ def evaluate(case: str, scenario: dict[str, Any], decision: dict[str, Any]) -> l
             Finding("error", case, "inference", str(diag.get("inference_status")), {"diag": diag})
         )
 
+    binary_outputs = (
+        "heater",
+        "humidifier",
+        "dehumidifier",
+        "cooler",
+        "co2_doser",
+        "irrigation_pot_1",
+        "irrigation_pot_2",
+        "irrigation_pot_3",
+        "irrigation_pot_4",
+        "nutrient_heater",
+        "heat_mat_pot_1",
+        "heat_mat_pot_2",
+        "heat_mat_pot_3",
+        "heat_mat_pot_4",
+    )
     for name in OUTPUTS:
         if name not in safe:
             findings.append(Finding("error", case, "missing_output", name))
@@ -173,6 +189,15 @@ def evaluate(case: str, scenario: dict[str, Any], decision: dict[str, Any]) -> l
         val = float(safe[name])
         if not (0.0 <= val <= 1.0):
             findings.append(Finding("error", case, "range", f"{name}={val}"))
+        if (
+            name in binary_outputs
+            and val not in (0.0, 1.0)
+            and abs(val - 0.0) > 1e-5
+            and abs(val - 1.0) > 1e-5
+        ):
+            findings.append(
+                Finding("error", case, "non_binary_safe", f"{name}={val}", {"raw": raw.get(name)})
+            )
 
     sensors = scenario.get("sensors") or {}
     targets = scenario.get("targets") or {}
@@ -689,6 +714,93 @@ def main(argv: list[str] | None = None) -> int:
             }
         )
         print(f"    e={len(errs)} w={len(warns)}", flush=True)
+
+    # Sequential overtemp → warm: min-on must not resurrect heater after hard cut.
+    print("  seq_overtemp_warm...", flush=True)
+
+    def step_with_sensors(sensors: dict[str, Any] | None = None) -> dict[str, Any]:
+        before = client.get("/api/state").get("last_decision")
+        before_step = before.get("step") if isinstance(before, dict) else None
+        body: dict[str, Any] = {}
+        if sensors is not None:
+            body["sensors"] = sensors
+            body["validity"] = sc_seq["validity"]
+        client.post("/api/step", body)
+        deadline = time.monotonic() + 8.0
+        while time.monotonic() < deadline:
+            decision = client.get("/api/state").get("last_decision")
+            if isinstance(decision, dict) and decision.get("type") == "decision":
+                if before_step is None or decision.get("step") != before_step:
+                    return decision
+            time.sleep(0.05)
+        raise TimeoutError("no new decision after step")
+
+    try:
+        client.post("/api/command", {"command": "pause"})
+        client.post("/api/command", {"command": "mode", "value": "replay"})
+        sc_seq = default_scenario(seed=701, preset="nominal")
+        sc_seq["safety"]["heater_minimum_on_s"] = 60.0
+        sc_seq["safety"]["heater_minimum_off_s"] = 60.0
+        sc_seq["sensors"]["air_temperature_c"] = 15.0
+        sc_seq["targets"]["air_temperature_c"] = 25.0
+        client.post("/api/load_scenario", {"scenario": sc_seq, "seed": 701})
+        time.sleep(0.05)
+        d1 = step_with_sensors()
+        d2 = step_with_sensors({**sc_seq["sensors"], "air_temperature_c": 36.0})
+        d3 = step_with_sensors({**sc_seq["sensors"], "air_temperature_c": 26.0})
+        for label, d in (("cold", d1), ("over", d2), ("warm", d3)):
+            safe = d.get("safe_output") or {}
+            raw = d.get("raw_output") or {}
+            h = float(safe.get("heater", -1))
+            errs: list[Finding] = []
+            warns: list[Finding] = []
+            if label == "cold" and h < 0.5:
+                warns.append(
+                    Finding(
+                        "warn",
+                        "seq_overtemp/cold",
+                        "expected_heat",
+                        f"safe={h} raw={raw.get('heater')}",
+                    )
+                )
+            if label == "over" and h > 1e-6:
+                errs.append(
+                    Finding("error", "seq_overtemp/over", "heater_on_overtemp", f"safe={h}")
+                )
+            if label == "warm" and h > 1e-6 and float(raw.get("heater", 0)) < 0.5:
+                errs.append(
+                    Finding(
+                        "error",
+                        "seq_overtemp/warm",
+                        "min_on_resurrect",
+                        f"raw={raw.get('heater')} safe={h}",
+                    )
+                )
+            all_findings.extend(errs)
+            all_findings.extend(warns)
+            case_rows.append(
+                {
+                    "case": f"seq_overtemp/{label}",
+                    "errors": [asdict(f) for f in errs],
+                    "warns": [asdict(f) for f in warns],
+                    "snapshot": {
+                        "raw": raw,
+                        "safe": safe,
+                        "diagnostics": d.get("diagnostics"),
+                        "model_version": d.get("model_version"),
+                    },
+                }
+            )
+        print(
+            f"    seq heater cold/over/warm="
+            f"{(d1.get('safe_output') or {}).get('heater')}/"
+            f"{(d2.get('safe_output') or {}).get('heater')}/"
+            f"{(d3.get('safe_output') or {}).get('heater')}",
+            flush=True,
+        )
+    except Exception as exc:  # noqa: BLE001
+        all_findings.append(Finding("error", "seq_overtemp", "session", str(exc)))
+        print(f"    seq error {exc}", flush=True)
 
     # Closed-loop multi-step via commands
     print("  closed_loop_10...", flush=True)

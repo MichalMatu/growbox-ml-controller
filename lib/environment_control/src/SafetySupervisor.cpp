@@ -51,6 +51,10 @@ void addReason(SafetyReport& report, std::size_t output_index, SafetyReason reas
   report.output_reason_masks[output_index] |= bit;
 }
 
+bool hasReason(std::uint32_t mask, SafetyReason reason) noexcept {
+  return (mask & reasonBit(reason)) != 0U;
+}
+
 bool rawOutputsFinite(const RawModelDecision& raw) noexcept {
   for (std::size_t index = 0; index < schema::kOutputCount; ++index) {
     if (!std::isfinite(rawOutputValue(raw, static_cast<schema::OutputIndex>(index)))) {
@@ -426,6 +430,20 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
   applyHeaterSafety(input, raw, safe, report);
   applyEmergencyFan(input, raw, safe, report);
 
+  // If hard safety forced the heater off, clear binary dwell state so min-on cannot
+  // re-assert heater on the next cycle once temperature drops below the hard limit
+  // while the MLP already wants heater off (or only weakly on).
+  if (safe.heater <= 0.0f && (hasReason(report.reason_mask, SafetyReason::OverTemperature) ||
+                              hasReason(report.reason_mask, SafetyReason::TemperatureUnavailable) ||
+                              hasReason(report.reason_mask, SafetyReason::ActuatorUnavailable) ||
+                              hasReason(report.reason_mask, SafetyReason::InvalidCapability))) {
+    heater_.initialized = true;
+    heater_.on = false;
+    heater_.has_transition = true;
+    heater_.last_transition_ms = input.monotonic_time_ms;
+    safe.heater = 0.0f;
+  }
+
   if (!input.actuators.co2_doser.available ||
       input.actuators.co2_doser.dose_ppm_per_full_pulse <= 0.0f) {
     applyBinaryActuatorSafety(input.actuators.co2_doser.available,
@@ -447,16 +465,25 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
       addReason(report, co2Index, SafetyReason::Co2VentingFan);
     }
     safe.co2_doser = 0.0f;
-  } else if (safe.co2_doser > 0.0f) {
-    const std::uint64_t interval_ms = durationMs(input.safety.co2_doser_minimum_interval_s);
-    if (co2_doser_.has_pulse &&
-        elapsedMs(input.monotonic_time_ms, co2_doser_.last_pulse_start_ms) < interval_ms) {
-      safe.co2_doser = 0.0f;
-      addReason(report, co2Index, SafetyReason::PumpMinimumInterval);
-    } else {
-      co2_doser_.initialized = true;
-      co2_doser_.has_pulse = true;
-      co2_doser_.last_pulse_start_ms = input.monotonic_time_ms;
+  } else {
+    // Binary actuator: collapse soft MLP output before interval gating.
+    const bool requested_on = safe.co2_doser >= threshold;
+    const float thresholded = requested_on ? 1.0f : 0.0f;
+    if (safe.co2_doser != thresholded) {
+      addReason(report, co2Index, SafetyReason::BinaryThreshold);
+    }
+    safe.co2_doser = thresholded;
+    if (requested_on) {
+      const std::uint64_t interval_ms = durationMs(input.safety.co2_doser_minimum_interval_s);
+      if (co2_doser_.has_pulse &&
+          elapsedMs(input.monotonic_time_ms, co2_doser_.last_pulse_start_ms) < interval_ms) {
+        safe.co2_doser = 0.0f;
+        addReason(report, co2Index, SafetyReason::PumpMinimumInterval);
+      } else {
+        co2_doser_.initialized = true;
+        co2_doser_.has_pulse = true;
+        co2_doser_.last_pulse_start_ms = input.monotonic_time_ms;
+      }
     }
   }
 

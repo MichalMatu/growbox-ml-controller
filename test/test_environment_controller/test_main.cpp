@@ -298,6 +298,66 @@ void test_overtemperature_beats_heater_minimum_on_dwell() {
   TEST_ASSERT_TRUE(safe.fan + 1.0e-6f >= input.safety.alarm_minimum_fan);
 }
 
+void test_overtemperature_clears_min_on_so_warm_can_release_heater() {
+  ControllerInput input = nominalInput();
+  input.targets.air_temperature_c = 25.0f;
+  input.safety.heater_minimum_on_s = 60.0f;
+  input.safety.heater_minimum_off_s = 60.0f;
+  input.previous.heater = 0.0f;
+  input.monotonic_time_ms = 0U;
+
+  RawModelDecision raw{};
+  raw.heater = 1.0f;
+  raw.fan = 0.2f;
+  SafeControlDecision safe{};
+  SafetyReport report{};
+  SafetySupervisor supervisor{};
+
+  input.sensors.air_temperature_c = 15.0f;
+  supervisor.apply(input, raw, SafetyReason::None, safe, report);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 1.0f, safe.heater);
+
+  input.sensors.air_temperature_c = 36.0f;
+  input.previous.heater = 1.0f;
+  input.monotonic_time_ms = 1000U;
+  supervisor.apply(input, raw, SafetyReason::None, safe, report);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.heater);
+
+  // Soft model wants off once warm; min-on must not resurrect heater after hard cut.
+  raw.heater = 0.3f;
+  input.sensors.air_temperature_c = 26.0f;
+  input.previous.heater = 0.0f;
+  input.monotonic_time_ms = 2000U;
+  supervisor.apply(input, raw, SafetyReason::None, safe, report);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.heater);
+}
+
+void test_co2_doser_is_binary_when_engaged() {
+  ControllerInput input = nominalInput();
+  input.sensors.co2_ppm = 400.0f;
+  input.targets.co2_ppm = 1200.0f;
+  input.actuators.co2_doser.available = true;
+  input.actuators.co2_doser.dose_ppm_per_full_pulse = 120.0f;
+  input.validity.co2 = true;
+  input.safety.fan_venting_co2_threshold = 0.5f;
+  input.previous.fan = 0.0f;
+
+  RawModelDecision raw{};
+  raw.co2_doser = 0.42f;
+  raw.fan = 0.2f;
+  SafeControlDecision safe{};
+  SafetyReport report{};
+  SafetySupervisor supervisor{};
+  supervisor.apply(input, raw, SafetyReason::None, safe, report);
+  // Below binary threshold -> off
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.co2_doser);
+
+  raw.co2_doser = 0.6f;
+  supervisor.reset();
+  supervisor.apply(input, raw, SafetyReason::None, safe, report);
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 1.0f, safe.co2_doser);
+}
+
 void test_zone_pump_pulse_and_minimum_interval() {
   ControllerInput input = nominalInput();
   input.pots[0].irrigation.maximum_pulse_s = 1000.0f;
@@ -497,6 +557,8 @@ int main(int, char**) {
   RUN_TEST(test_soft_heater_proposal_lifts_when_cold);
   RUN_TEST(test_binary_min_off_does_not_block_first_engagement);
   RUN_TEST(test_overtemperature_beats_heater_minimum_on_dwell);
+  RUN_TEST(test_overtemperature_clears_min_on_so_warm_can_release_heater);
+  RUN_TEST(test_co2_doser_is_binary_when_engaged);
   RUN_TEST(test_zone_pump_pulse_and_minimum_interval);
   RUN_TEST(test_soil_moisture_at_target_blocks_irrigation);
   RUN_TEST(test_invalid_soil_moisture_blocks_irrigation);
