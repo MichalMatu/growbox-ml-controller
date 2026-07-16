@@ -117,6 +117,20 @@ float maskedRawOutput(const control::ControllerInput& input, const control::RawM
     return irrigationAvailable(input, 2U) ? raw.irrigation_zone_3 : 0.0f;
   case OutputIndex::IrrigationZone4:
     return irrigationAvailable(input, 3U) ? raw.irrigation_zone_4 : 0.0f;
+  case OutputIndex::NutrientHeater:
+    return input.actuators.nutrient_heater.available ? raw.nutrient_heater : 0.0f;
+  case OutputIndex::HeatMatZone1:
+    return input.zones[0U].available && input.zones[0U].heat_mat.available ? raw.heat_mat_zone_1
+                                                                           : 0.0f;
+  case OutputIndex::HeatMatZone2:
+    return input.zones[1U].available && input.zones[1U].heat_mat.available ? raw.heat_mat_zone_2
+                                                                           : 0.0f;
+  case OutputIndex::HeatMatZone3:
+    return input.zones[2U].available && input.zones[2U].heat_mat.available ? raw.heat_mat_zone_3
+                                                                           : 0.0f;
+  case OutputIndex::HeatMatZone4:
+    return input.zones[3U].available && input.zones[3U].heat_mat.available ? raw.heat_mat_zone_4
+                                                                           : 0.0f;
   }
   return 0.0f;
 }

@@ -76,47 +76,100 @@ struct ZoneFeatureMap {
   FeatureIndex water_capacity;
   FeatureIndex transpiration;
   FeatureIndex target_soil;
+  FeatureIndex target_soil_temperature;
   FeatureIndex irrigation_available;
   FeatureIndex irrigation_flow;
   FeatureIndex irrigation_pulse;
   FeatureIndex irrigation_interval;
   FeatureIndex irrigation_control;
+  FeatureIndex heat_mat_available;
+  FeatureIndex heat_mat_max_power;
+  FeatureIndex heat_mat_control;
   FeatureIndex previous_irrigation;
+  FeatureIndex previous_heat_mat;
 };
 
 constexpr std::array<ZoneFeatureMap, kMaxZones> kZoneFeatures{{
-    {FeatureIndex::Zone1Available, FeatureIndex::SoilMoistureZone1Pct,
-     FeatureIndex::SoilTemperatureZone1C, FeatureIndex::SoilMoistureZone1Valid,
-     FeatureIndex::SoilTemperatureZone1Valid, FeatureIndex::Zone1PotVolumeL,
-     FeatureIndex::Zone1SubstrateWaterCapacityMl, FeatureIndex::Zone1TranspirationFactor,
-     FeatureIndex::Zone1TargetSoilMoisturePct, FeatureIndex::Zone1IrrigationAvailable,
-     FeatureIndex::Zone1IrrigationFlowMlS, FeatureIndex::Zone1IrrigationMaximumPulseS,
-     FeatureIndex::Zone1IrrigationMinimumIntervalS, FeatureIndex::Zone1IrrigationControlType,
-     FeatureIndex::Zone1PreviousIrrigation},
-    {FeatureIndex::Zone2Available, FeatureIndex::SoilMoistureZone2Pct,
-     FeatureIndex::SoilTemperatureZone2C, FeatureIndex::SoilMoistureZone2Valid,
-     FeatureIndex::SoilTemperatureZone2Valid, FeatureIndex::Zone2PotVolumeL,
-     FeatureIndex::Zone2SubstrateWaterCapacityMl, FeatureIndex::Zone2TranspirationFactor,
-     FeatureIndex::Zone2TargetSoilMoisturePct, FeatureIndex::Zone2IrrigationAvailable,
-     FeatureIndex::Zone2IrrigationFlowMlS, FeatureIndex::Zone2IrrigationMaximumPulseS,
-     FeatureIndex::Zone2IrrigationMinimumIntervalS, FeatureIndex::Zone2IrrigationControlType,
-     FeatureIndex::Zone2PreviousIrrigation},
-    {FeatureIndex::Zone3Available, FeatureIndex::SoilMoistureZone3Pct,
-     FeatureIndex::SoilTemperatureZone3C, FeatureIndex::SoilMoistureZone3Valid,
-     FeatureIndex::SoilTemperatureZone3Valid, FeatureIndex::Zone3PotVolumeL,
-     FeatureIndex::Zone3SubstrateWaterCapacityMl, FeatureIndex::Zone3TranspirationFactor,
-     FeatureIndex::Zone3TargetSoilMoisturePct, FeatureIndex::Zone3IrrigationAvailable,
-     FeatureIndex::Zone3IrrigationFlowMlS, FeatureIndex::Zone3IrrigationMaximumPulseS,
-     FeatureIndex::Zone3IrrigationMinimumIntervalS, FeatureIndex::Zone3IrrigationControlType,
-     FeatureIndex::Zone3PreviousIrrigation},
-    {FeatureIndex::Zone4Available, FeatureIndex::SoilMoistureZone4Pct,
-     FeatureIndex::SoilTemperatureZone4C, FeatureIndex::SoilMoistureZone4Valid,
-     FeatureIndex::SoilTemperatureZone4Valid, FeatureIndex::Zone4PotVolumeL,
-     FeatureIndex::Zone4SubstrateWaterCapacityMl, FeatureIndex::Zone4TranspirationFactor,
-     FeatureIndex::Zone4TargetSoilMoisturePct, FeatureIndex::Zone4IrrigationAvailable,
-     FeatureIndex::Zone4IrrigationFlowMlS, FeatureIndex::Zone4IrrigationMaximumPulseS,
-     FeatureIndex::Zone4IrrigationMinimumIntervalS, FeatureIndex::Zone4IrrigationControlType,
-     FeatureIndex::Zone4PreviousIrrigation},
+    {FeatureIndex::Zone1Available,
+     FeatureIndex::SoilMoistureZone1Pct,
+     FeatureIndex::SoilTemperatureZone1C,
+     FeatureIndex::SoilMoistureZone1Valid,
+     FeatureIndex::SoilTemperatureZone1Valid,
+     FeatureIndex::Zone1PotVolumeL,
+     FeatureIndex::Zone1SubstrateWaterCapacityMl,
+     FeatureIndex::Zone1TranspirationFactor,
+     FeatureIndex::Zone1TargetSoilMoisturePct,
+     FeatureIndex::Zone1TargetSoilTemperatureC,
+     FeatureIndex::Zone1IrrigationAvailable,
+     FeatureIndex::Zone1IrrigationFlowMlS,
+     FeatureIndex::Zone1IrrigationMaximumPulseS,
+     FeatureIndex::Zone1IrrigationMinimumIntervalS,
+     FeatureIndex::Zone1IrrigationControlType,
+     FeatureIndex::Zone1HeatMatAvailable,
+     FeatureIndex::Zone1HeatMatMaxPowerW,
+     FeatureIndex::Zone1HeatMatControlType,
+     FeatureIndex::Zone1PreviousIrrigation,
+     FeatureIndex::Zone1PreviousHeatMat},
+    {FeatureIndex::Zone2Available,
+     FeatureIndex::SoilMoistureZone2Pct,
+     FeatureIndex::SoilTemperatureZone2C,
+     FeatureIndex::SoilMoistureZone2Valid,
+     FeatureIndex::SoilTemperatureZone2Valid,
+     FeatureIndex::Zone2PotVolumeL,
+     FeatureIndex::Zone2SubstrateWaterCapacityMl,
+     FeatureIndex::Zone2TranspirationFactor,
+     FeatureIndex::Zone2TargetSoilMoisturePct,
+     FeatureIndex::Zone2TargetSoilTemperatureC,
+     FeatureIndex::Zone2IrrigationAvailable,
+     FeatureIndex::Zone2IrrigationFlowMlS,
+     FeatureIndex::Zone2IrrigationMaximumPulseS,
+     FeatureIndex::Zone2IrrigationMinimumIntervalS,
+     FeatureIndex::Zone2IrrigationControlType,
+     FeatureIndex::Zone2HeatMatAvailable,
+     FeatureIndex::Zone2HeatMatMaxPowerW,
+     FeatureIndex::Zone2HeatMatControlType,
+     FeatureIndex::Zone2PreviousIrrigation,
+     FeatureIndex::Zone2PreviousHeatMat},
+    {FeatureIndex::Zone3Available,
+     FeatureIndex::SoilMoistureZone3Pct,
+     FeatureIndex::SoilTemperatureZone3C,
+     FeatureIndex::SoilMoistureZone3Valid,
+     FeatureIndex::SoilTemperatureZone3Valid,
+     FeatureIndex::Zone3PotVolumeL,
+     FeatureIndex::Zone3SubstrateWaterCapacityMl,
+     FeatureIndex::Zone3TranspirationFactor,
+     FeatureIndex::Zone3TargetSoilMoisturePct,
+     FeatureIndex::Zone3TargetSoilTemperatureC,
+     FeatureIndex::Zone3IrrigationAvailable,
+     FeatureIndex::Zone3IrrigationFlowMlS,
+     FeatureIndex::Zone3IrrigationMaximumPulseS,
+     FeatureIndex::Zone3IrrigationMinimumIntervalS,
+     FeatureIndex::Zone3IrrigationControlType,
+     FeatureIndex::Zone3HeatMatAvailable,
+     FeatureIndex::Zone3HeatMatMaxPowerW,
+     FeatureIndex::Zone3HeatMatControlType,
+     FeatureIndex::Zone3PreviousIrrigation,
+     FeatureIndex::Zone3PreviousHeatMat},
+    {FeatureIndex::Zone4Available,
+     FeatureIndex::SoilMoistureZone4Pct,
+     FeatureIndex::SoilTemperatureZone4C,
+     FeatureIndex::SoilMoistureZone4Valid,
+     FeatureIndex::SoilTemperatureZone4Valid,
+     FeatureIndex::Zone4PotVolumeL,
+     FeatureIndex::Zone4SubstrateWaterCapacityMl,
+     FeatureIndex::Zone4TranspirationFactor,
+     FeatureIndex::Zone4TargetSoilMoisturePct,
+     FeatureIndex::Zone4TargetSoilTemperatureC,
+     FeatureIndex::Zone4IrrigationAvailable,
+     FeatureIndex::Zone4IrrigationFlowMlS,
+     FeatureIndex::Zone4IrrigationMaximumPulseS,
+     FeatureIndex::Zone4IrrigationMinimumIntervalS,
+     FeatureIndex::Zone4IrrigationControlType,
+     FeatureIndex::Zone4HeatMatAvailable,
+     FeatureIndex::Zone4HeatMatMaxPowerW,
+     FeatureIndex::Zone4HeatMatControlType,
+     FeatureIndex::Zone4PreviousIrrigation,
+     FeatureIndex::Zone4PreviousHeatMat},
 }};
 
 bool encodeZone(const ZoneConfig& zone, const ZoneFeatureMap& features, FeatureVector& output,
@@ -143,6 +196,15 @@ bool encodeZone(const ZoneConfig& zone, const ZoneFeatureMap& features, FeatureV
   }
   finite &= encodeFinite(target_soil, features.target_soil, output, report);
 
+  const float target_soil_temperature =
+      zone.available ? zone.target_soil_temperature_c
+                     : schema::kFeatureDefaults[schema::index(features.target_soil_temperature)];
+  if (!zone.available) {
+    markSubstitutionIfNeeded(zone.target_soil_temperature_c, target_soil_temperature,
+                             features.target_soil_temperature, report);
+  }
+  finite &= encodeFinite(target_soil_temperature, features.target_soil_temperature, output, report);
+
   output.values[schema::index(features.irrigation_available)] =
       zone.irrigation.available ? 1.0f : 0.0f;
   const float flow = zone.irrigation.available ? zone.irrigation.flow_ml_s : 0.0f;
@@ -158,7 +220,18 @@ bool encodeZone(const ZoneConfig& zone, const ZoneFeatureMap& features, FeatureV
                          report);
   finite &= encodeFinite(static_cast<float>(zone.irrigation.control_type),
                          features.irrigation_control, output, report);
+
+  output.values[schema::index(features.heat_mat_available)] = zone.heat_mat.available ? 1.0f : 0.0f;
+  const float heat_mat_power = zone.heat_mat.available ? zone.heat_mat.max_power_w : 0.0f;
+  if (!zone.heat_mat.available) {
+    markSubstitutionIfNeeded(zone.heat_mat.max_power_w, heat_mat_power, features.heat_mat_max_power,
+                             report);
+  }
+  finite &= encodeFinite(heat_mat_power, features.heat_mat_max_power, output, report);
+  finite &= encodeFinite(static_cast<float>(zone.heat_mat.control_type), features.heat_mat_control,
+                         output, report);
   finite &= encodeFinite(zone.previous_irrigation, features.previous_irrigation, output, report);
+  finite &= encodeFinite(zone.previous_heat_mat, features.previous_heat_mat, output, report);
   return finite;
 }
 
@@ -278,11 +351,27 @@ EncoderStatus FeatureEncoder::encode(const ControllerInput& input, FeatureVector
   finite &= encodeFinite(co2_dose, FeatureIndex::Co2DoserDosePpmPerFullPulse, output, report);
   finite &= encodeFinite(co2_pulse, FeatureIndex::Co2DoserMaximumPulseS, output, report);
 
+  output.values[schema::index(FeatureIndex::NutrientHeaterAvailable)] =
+      input.actuators.nutrient_heater.available ? 1.0f : 0.0f;
+  const float nutrient_heater_power = input.actuators.nutrient_heater.available
+                                          ? input.actuators.nutrient_heater.max_power_w
+                                          : 0.0f;
+  if (!input.actuators.nutrient_heater.available) {
+    markSubstitutionIfNeeded(input.actuators.nutrient_heater.max_power_w, nutrient_heater_power,
+                             FeatureIndex::NutrientHeaterMaxPowerW, report);
+  }
+  finite &=
+      encodeFinite(nutrient_heater_power, FeatureIndex::NutrientHeaterMaxPowerW, output, report);
+  finite &= encodeFinite(input.actuators.nutrient_heater.efficiency,
+                         FeatureIndex::NutrientHeaterEfficiency, output, report);
+
   finite &= encodeFinite(input.targets.air_temperature_c, FeatureIndex::TargetAirTemperatureC,
                          output, report);
   finite &= encodeFinite(input.targets.air_humidity_pct, FeatureIndex::TargetAirHumidityPct, output,
                          report);
   finite &= encodeFinite(input.targets.co2_ppm, FeatureIndex::TargetCo2Ppm, output, report);
+  finite &= encodeFinite(input.targets.nutrient_solution_temperature_c,
+                         FeatureIndex::TargetNutrientSolutionTemperatureC, output, report);
   finite &= encodeFinite(input.previous.heater, FeatureIndex::PreviousHeater, output, report);
   finite &= encodeFinite(input.previous.fan, FeatureIndex::PreviousFan, output, report);
   finite &=
@@ -291,6 +380,8 @@ EncoderStatus FeatureEncoder::encode(const ControllerInput& input, FeatureVector
       encodeFinite(input.previous.dehumidifier, FeatureIndex::PreviousDehumidifier, output, report);
   finite &= encodeFinite(input.previous.cooler, FeatureIndex::PreviousCooler, output, report);
   finite &= encodeFinite(input.previous.co2_doser, FeatureIndex::PreviousCo2Doser, output, report);
+  finite &= encodeFinite(input.previous.nutrient_heater, FeatureIndex::PreviousNutrientHeater,
+                         output, report);
 
   return finite ? EncoderStatus::Ok : EncoderStatus::NonFiniteInput;
 }

@@ -1,8 +1,4 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT="$(git rev-parse --show-toplevel)"
-PY="${ROOT}/.venv/bin/python"
-if [[ ! -x "$PY" ]]; then
-  PY="$(command -v python3)"
-fi
-exec "$PY" "${ROOT}/tools/schema/generate_environment_schema.py" --check
+exec bash "${ROOT}/scripts/check_schema_v3.sh"

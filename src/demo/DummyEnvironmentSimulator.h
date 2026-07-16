@@ -50,6 +50,8 @@ private:
                                     float air_temperature_c) const noexcept;
   float irrigationCommand(std::size_t zone_index,
                           const control::SafeControlDecision& decision) const noexcept;
+  float heatMatCommand(std::size_t zone_index,
+                       const control::SafeControlDecision& decision) const noexcept;
 
   control::ControllerInput input_{};
   std::uint32_t initial_seed_ = 20260711U;
@@ -61,6 +63,7 @@ private:
   float effective_humidifier_ = 0.0f;
   float effective_dehumidifier_ = 0.0f;
   float effective_cooler_ = 0.0f;
+  float effective_nutrient_heater_ = 0.0f;
 };
 
 } // namespace demo

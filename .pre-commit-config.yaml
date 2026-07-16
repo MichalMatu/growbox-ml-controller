@@ -25,7 +25,7 @@ repos:
     hooks:
       - id: clang-format
         files: ^(src/|lib/environment_control/src/|test/)
-        exclude: ^lib/environment_control/src/(generated/|EnvironmentSchema\.h)
+        exclude: ^lib/environment_control/src/(generated/|EnvironmentSchema.*\.h)
 
   - repo: local
     hooks:
@@ -34,7 +34,7 @@ repos:
         entry: bash scripts/check_schema.sh
         language: system
         pass_filenames: false
-        files: ^(tools/schema/|lib/environment_control/src/EnvironmentSchema\.h)
+        files: ^(tools/schema/|schemas/environment-controller-v3\.json|lib/environment_control/src/EnvironmentSchemaV3\.h)
 
       - id: quality-gate-push
         name: quality gate (pytest, host, idf build, clang-tidy)

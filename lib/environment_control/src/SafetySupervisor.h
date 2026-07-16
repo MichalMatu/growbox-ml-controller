@@ -38,10 +38,12 @@ private:
   };
 
   BinaryRuntime heater_{};
+  BinaryRuntime nutrient_heater_{};
   BinaryRuntime humidifier_{};
   BinaryRuntime dehumidifier_{};
   BinaryRuntime cooler_{};
   std::array<BinaryRuntime, kMaxZones> irrigation_binary_{};
+  std::array<BinaryRuntime, kMaxZones> heat_mat_binary_{};
   std::array<PumpRuntime, kMaxZones> zone_pumps_{};
   PulseRuntime co2_doser_{};
 };

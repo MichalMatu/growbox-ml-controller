@@ -1,6 +1,6 @@
 #pragma once
 
-#include "EnvironmentSchemaV2.h"
+#include "EnvironmentSchemaV3.h"
 
 #include <array>
 #include <cstddef>
@@ -13,8 +13,8 @@ inline constexpr std::size_t kMaxZones = 4U;
 
 static_assert(schema::kFeatureCount <= schema::kFeatureDiagnosticsMaskBits,
               "Encoder diagnostics mask must cover every feature");
-static_assert(schema::kOutputCount == 10U,
-              "Environment decision structures implement ten schema outputs");
+static_assert(schema::kOutputCount == 15U,
+              "Environment decision structures implement fifteen schema outputs");
 
 namespace detail {
 
@@ -80,14 +80,23 @@ struct IrrigationPumpCapabilities {
   ActuatorControlType control_type = ActuatorControlType::Binary;
 };
 
+struct HeatMatCapabilities {
+  bool available = false;
+  float max_power_w = 0.0f;
+  ActuatorControlType control_type = ActuatorControlType::Binary;
+};
+
 struct ZoneConfig {
   bool available = false;
   ZoneSensorState sensors{};
   ZoneSensorValidity validity{};
   ZoneCultivationConfig cultivation{};
   float target_soil_moisture_pct = 50.0f;
+  float target_soil_temperature_c = 20.0f;
   IrrigationPumpCapabilities irrigation{};
+  HeatMatCapabilities heat_mat{};
   float previous_irrigation = 0.0f;
+  float previous_heat_mat = 0.0f;
 };
 
 struct EnvironmentConfig {
@@ -131,6 +140,12 @@ struct Co2DoserCapabilities {
   float maximum_pulse_s = detail::schemaDefault(schema::FeatureIndex::Co2DoserMaximumPulseS);
 };
 
+struct NutrientHeaterCapabilities {
+  bool available = detail::schemaDefaultBool(schema::FeatureIndex::NutrientHeaterAvailable);
+  float max_power_w = detail::schemaDefault(schema::FeatureIndex::NutrientHeaterMaxPowerW);
+  float efficiency = detail::schemaDefault(schema::FeatureIndex::NutrientHeaterEfficiency);
+};
+
 struct GlobalActuatorCapabilities {
   HeaterCapabilities heater{};
   FanCapabilities fan{};
@@ -138,12 +153,15 @@ struct GlobalActuatorCapabilities {
   DehumidifierCapabilities dehumidifier{};
   CoolerCapabilities cooler{};
   Co2DoserCapabilities co2_doser{};
+  NutrientHeaterCapabilities nutrient_heater{};
 };
 
 struct ControlTargets {
   float air_temperature_c = detail::schemaDefault(schema::FeatureIndex::TargetAirTemperatureC);
   float air_humidity_pct = detail::schemaDefault(schema::FeatureIndex::TargetAirHumidityPct);
   float co2_ppm = detail::schemaDefault(schema::FeatureIndex::TargetCo2Ppm);
+  float nutrient_solution_temperature_c =
+      detail::schemaDefault(schema::FeatureIndex::TargetNutrientSolutionTemperatureC);
 };
 
 struct PreviousControlState {
@@ -153,6 +171,7 @@ struct PreviousControlState {
   float dehumidifier = detail::schemaDefault(schema::FeatureIndex::PreviousDehumidifier);
   float cooler = detail::schemaDefault(schema::FeatureIndex::PreviousCooler);
   float co2_doser = detail::schemaDefault(schema::FeatureIndex::PreviousCo2Doser);
+  float nutrient_heater = detail::schemaDefault(schema::FeatureIndex::PreviousNutrientHeater);
 };
 
 struct SafetyConfig {
@@ -203,6 +222,11 @@ struct RawModelDecision {
   float irrigation_zone_2 = 0.0f;
   float irrigation_zone_3 = 0.0f;
   float irrigation_zone_4 = 0.0f;
+  float nutrient_heater = 0.0f;
+  float heat_mat_zone_1 = 0.0f;
+  float heat_mat_zone_2 = 0.0f;
+  float heat_mat_zone_3 = 0.0f;
+  float heat_mat_zone_4 = 0.0f;
 };
 
 struct SafeControlDecision {
@@ -216,6 +240,11 @@ struct SafeControlDecision {
   float irrigation_zone_2 = 0.0f;
   float irrigation_zone_3 = 0.0f;
   float irrigation_zone_4 = 0.0f;
+  float nutrient_heater = 0.0f;
+  float heat_mat_zone_1 = 0.0f;
+  float heat_mat_zone_2 = 0.0f;
+  float heat_mat_zone_3 = 0.0f;
+  float heat_mat_zone_4 = 0.0f;
   std::array<float, kMaxZones> irrigation_pulse_s{};
 };
 

@@ -27,6 +27,16 @@ float valueAt(const RawModelDecision& decision, std::size_t index) noexcept {
     return decision.irrigation_zone_3;
   case 9U:
     return decision.irrigation_zone_4;
+  case 10U:
+    return decision.nutrient_heater;
+  case 11U:
+    return decision.heat_mat_zone_1;
+  case 12U:
+    return decision.heat_mat_zone_2;
+  case 13U:
+    return decision.heat_mat_zone_3;
+  case 14U:
+    return decision.heat_mat_zone_4;
   default:
     return 0.0f;
   }
@@ -52,8 +62,18 @@ float& mutableValueAt(RawModelDecision& decision, std::size_t index) noexcept {
     return decision.irrigation_zone_2;
   case 8U:
     return decision.irrigation_zone_3;
-  default:
+  case 9U:
     return decision.irrigation_zone_4;
+  case 10U:
+    return decision.nutrient_heater;
+  case 11U:
+    return decision.heat_mat_zone_1;
+  case 12U:
+    return decision.heat_mat_zone_2;
+  case 13U:
+    return decision.heat_mat_zone_3;
+  default:
+    return decision.heat_mat_zone_4;
   }
 }
 
@@ -77,8 +97,20 @@ float safeValueAt(const SafeControlDecision& decision, std::size_t index) noexce
     return decision.irrigation_zone_2;
   case 8U:
     return decision.irrigation_zone_3;
-  default:
+  case 9U:
     return decision.irrigation_zone_4;
+  case 10U:
+    return decision.nutrient_heater;
+  case 11U:
+    return decision.heat_mat_zone_1;
+  case 12U:
+    return decision.heat_mat_zone_2;
+  case 13U:
+    return decision.heat_mat_zone_3;
+  case 14U:
+    return decision.heat_mat_zone_4;
+  default:
+    return decision.heat_mat_zone_4;
   }
 }
 
@@ -102,8 +134,18 @@ float& mutableSafeValueAt(SafeControlDecision& decision, std::size_t index) noex
     return decision.irrigation_zone_2;
   case 8U:
     return decision.irrigation_zone_3;
-  default:
+  case 9U:
     return decision.irrigation_zone_4;
+  case 10U:
+    return decision.nutrient_heater;
+  case 11U:
+    return decision.heat_mat_zone_1;
+  case 12U:
+    return decision.heat_mat_zone_2;
+  case 13U:
+    return decision.heat_mat_zone_3;
+  default:
+    return decision.heat_mat_zone_4;
   }
 }
 

@@ -16,10 +16,15 @@ constexpr std::size_t humidifierIndex = schema::index(schema::OutputIndex::Humid
 constexpr std::size_t dehumidifierIndex = schema::index(schema::OutputIndex::Dehumidifier);
 constexpr std::size_t coolerIndex = schema::index(schema::OutputIndex::Cooler);
 constexpr std::size_t co2Index = schema::index(schema::OutputIndex::Co2Doser);
+constexpr std::size_t nutrientHeaterIndex = schema::index(schema::OutputIndex::NutrientHeater);
 
 constexpr std::array<schema::OutputIndex, kMaxZones> kIrrigationOutputs{
     schema::OutputIndex::IrrigationZone1, schema::OutputIndex::IrrigationZone2,
     schema::OutputIndex::IrrigationZone3, schema::OutputIndex::IrrigationZone4};
+
+constexpr std::array<schema::OutputIndex, kMaxZones> kHeatMatOutputs{
+    schema::OutputIndex::HeatMatZone1, schema::OutputIndex::HeatMatZone2,
+    schema::OutputIndex::HeatMatZone3, schema::OutputIndex::HeatMatZone4};
 
 constexpr std::array<FeatureIndex, kMaxZones> kZoneMaxPulseFeatures{
     FeatureIndex::Zone1IrrigationMaximumPulseS, FeatureIndex::Zone2IrrigationMaximumPulseS,
@@ -73,7 +78,9 @@ bool safetyInputsFinite(const ControllerInput& input) noexcept {
                                    std::isfinite(actuators.dehumidifier.max_removal_g_h) &&
                                    std::isfinite(actuators.cooler.max_cooling_w) &&
                                    std::isfinite(actuators.co2_doser.dose_ppm_per_full_pulse) &&
-                                   std::isfinite(actuators.co2_doser.maximum_pulse_s);
+                                   std::isfinite(actuators.co2_doser.maximum_pulse_s) &&
+                                   std::isfinite(actuators.nutrient_heater.max_power_w) &&
+                                   std::isfinite(actuators.nutrient_heater.efficiency);
   for (const ZoneConfig& zone : input.zones) {
     if (!std::isfinite(zone.sensors.soil_moisture_pct) ||
         !std::isfinite(zone.sensors.soil_temperature_c) ||
@@ -81,10 +88,12 @@ bool safetyInputsFinite(const ControllerInput& input) noexcept {
         !std::isfinite(zone.cultivation.substrate_water_capacity_ml) ||
         !std::isfinite(zone.cultivation.transpiration_factor) ||
         !std::isfinite(zone.target_soil_moisture_pct) ||
+        !std::isfinite(zone.target_soil_temperature_c) ||
         !std::isfinite(zone.irrigation.flow_ml_s) ||
         !std::isfinite(zone.irrigation.maximum_pulse_s) ||
         !std::isfinite(zone.irrigation.minimum_interval_s) ||
-        !std::isfinite(zone.previous_irrigation)) {
+        !std::isfinite(zone.heat_mat.max_power_w) || !std::isfinite(zone.previous_irrigation) ||
+        !std::isfinite(zone.previous_heat_mat)) {
       return false;
     }
   }
@@ -103,14 +112,15 @@ bool safetyInputsFinite(const ControllerInput& input) noexcept {
                                   std::isfinite(environment.heat_loss_w_per_k) &&
                                   std::isfinite(environment.air_leak_rate_ach);
   const auto& targets = input.targets;
-  const bool targets_finite = std::isfinite(targets.air_temperature_c) &&
-                              std::isfinite(targets.air_humidity_pct) &&
-                              std::isfinite(targets.co2_ppm);
+  const bool targets_finite =
+      std::isfinite(targets.air_temperature_c) && std::isfinite(targets.air_humidity_pct) &&
+      std::isfinite(targets.co2_ppm) && std::isfinite(targets.nutrient_solution_temperature_c);
   const auto& previous = input.previous;
-  const bool previous_finite = std::isfinite(previous.heater) && std::isfinite(previous.fan) &&
-                               std::isfinite(previous.humidifier) &&
-                               std::isfinite(previous.dehumidifier) &&
-                               std::isfinite(previous.cooler) && std::isfinite(previous.co2_doser);
+  const bool previous_finite =
+      std::isfinite(previous.heater) && std::isfinite(previous.fan) &&
+      std::isfinite(previous.humidifier) && std::isfinite(previous.dehumidifier) &&
+      std::isfinite(previous.cooler) && std::isfinite(previous.co2_doser) &&
+      std::isfinite(previous.nutrient_heater);
   return sensors_finite && capabilities_finite && safety_finite && environment_finite &&
          targets_finite && previous_finite;
 }
@@ -337,10 +347,12 @@ bool nutrientSoilDeltaExceeded(const ControllerInput& input, const ZoneConfig& z
 
 void SafetySupervisor::reset() noexcept {
   heater_ = {};
+  nutrient_heater_ = {};
   humidifier_ = {};
   dehumidifier_ = {};
   cooler_ = {};
   irrigation_binary_ = {};
+  heat_mat_binary_ = {};
   zone_pumps_ = {};
   co2_doser_ = {};
 }
@@ -441,6 +453,21 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
       co2_doser_.last_pulse_start_ms = input.monotonic_time_ms;
     }
   }
+
+  const float nutrient_heater_capability =
+      input.actuators.nutrient_heater.max_power_w * input.actuators.nutrient_heater.efficiency;
+  applyBinaryActuatorSafety(input.actuators.nutrient_heater.available, nutrient_heater_capability,
+                            safe.nutrient_heater, raw.nutrient_heater, nutrientHeaterIndex, report);
+  if (!input.validity.nutrient_solution_temperature) {
+    if (safe.nutrient_heater != 0.0f || raw.nutrient_heater != 0.0f) {
+      addReason(report, nutrientHeaterIndex, SafetyReason::TemperatureUnavailable);
+    }
+    safe.nutrient_heater = 0.0f;
+  }
+  safe.nutrient_heater =
+      enforceBinary(safe.nutrient_heater, input.previous.nutrient_heater, threshold,
+                    input.safety.heater_minimum_on_s, input.safety.heater_minimum_off_s,
+                    input.monotonic_time_ms, nutrient_heater_, report, nutrientHeaterIndex);
 
   const bool nutrient_cold = nutrientSolutionTooCold(input);
   for (std::size_t zone_index = 0; zone_index < kMaxZones; ++zone_index) {
@@ -544,14 +571,43 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
     }
   }
 
+  for (std::size_t zone_index = 0; zone_index < kMaxZones; ++zone_index) {
+    const ZoneConfig& zone = input.zones[zone_index];
+    const schema::OutputIndex output = kHeatMatOutputs[zone_index];
+    const std::size_t output_index = schema::index(output);
+    float& heat_mat = safeOutputValue(safe, output);
+
+    applyBinaryActuatorSafety(zone.available && zone.heat_mat.available, zone.heat_mat.max_power_w,
+                              heat_mat, rawOutputValue(raw, output), output_index, report);
+    if (!zone.validity.soil_temperature) {
+      if (heat_mat != 0.0f || rawOutputValue(raw, output) != 0.0f) {
+        addReason(report, output_index, SafetyReason::TemperatureUnavailable);
+      }
+      heat_mat = 0.0f;
+      continue;
+    }
+
+    if (zone.heat_mat.control_type == ActuatorControlType::Binary) {
+      heat_mat = enforceBinary(heat_mat, zone.previous_heat_mat, threshold,
+                               input.safety.heater_minimum_on_s, input.safety.heater_minimum_off_s,
+                               input.monotonic_time_ms, heat_mat_binary_[zone_index], report,
+                               output_index);
+    }
+  }
+
   report.modified = report.modified || different(raw.heater, safe.heater) ||
                     different(raw.fan, safe.fan) || different(raw.humidifier, safe.humidifier) ||
                     different(raw.dehumidifier, safe.dehumidifier) ||
-                    different(raw.cooler, safe.cooler) || different(raw.co2_doser, safe.co2_doser);
+                    different(raw.cooler, safe.cooler) ||
+                    different(raw.co2_doser, safe.co2_doser) ||
+                    different(raw.nutrient_heater, safe.nutrient_heater);
   for (std::size_t zone_index = 0; zone_index < kMaxZones; ++zone_index) {
     report.modified =
         report.modified || different(rawOutputValue(raw, kIrrigationOutputs[zone_index]),
                                      safeOutputValue(safe, kIrrigationOutputs[zone_index]));
+    report.modified =
+        report.modified || different(rawOutputValue(raw, kHeatMatOutputs[zone_index]),
+                                     safeOutputValue(safe, kHeatMatOutputs[zone_index]));
   }
 }
 

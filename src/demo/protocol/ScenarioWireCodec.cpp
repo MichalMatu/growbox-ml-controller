@@ -279,6 +279,71 @@ FeatureIndex zonePreviousIrrigationIndex(std::size_t zone_index) noexcept {
   }
 }
 
+FeatureIndex zoneTargetSoilTemperatureIndex(std::size_t zone_index) noexcept {
+  switch (zone_index) {
+  case 0U:
+    return FeatureIndex::Zone1TargetSoilTemperatureC;
+  case 1U:
+    return FeatureIndex::Zone2TargetSoilTemperatureC;
+  case 2U:
+    return FeatureIndex::Zone3TargetSoilTemperatureC;
+  default:
+    return FeatureIndex::Zone4TargetSoilTemperatureC;
+  }
+}
+
+FeatureIndex zoneHeatMatAvailableIndex(std::size_t zone_index) noexcept {
+  switch (zone_index) {
+  case 0U:
+    return FeatureIndex::Zone1HeatMatAvailable;
+  case 1U:
+    return FeatureIndex::Zone2HeatMatAvailable;
+  case 2U:
+    return FeatureIndex::Zone3HeatMatAvailable;
+  default:
+    return FeatureIndex::Zone4HeatMatAvailable;
+  }
+}
+
+FeatureIndex zoneHeatMatMaxPowerIndex(std::size_t zone_index) noexcept {
+  switch (zone_index) {
+  case 0U:
+    return FeatureIndex::Zone1HeatMatMaxPowerW;
+  case 1U:
+    return FeatureIndex::Zone2HeatMatMaxPowerW;
+  case 2U:
+    return FeatureIndex::Zone3HeatMatMaxPowerW;
+  default:
+    return FeatureIndex::Zone4HeatMatMaxPowerW;
+  }
+}
+
+FeatureIndex zoneHeatMatControlTypeIndex(std::size_t zone_index) noexcept {
+  switch (zone_index) {
+  case 0U:
+    return FeatureIndex::Zone1HeatMatControlType;
+  case 1U:
+    return FeatureIndex::Zone2HeatMatControlType;
+  case 2U:
+    return FeatureIndex::Zone3HeatMatControlType;
+  default:
+    return FeatureIndex::Zone4HeatMatControlType;
+  }
+}
+
+FeatureIndex zonePreviousHeatMatIndex(std::size_t zone_index) noexcept {
+  switch (zone_index) {
+  case 0U:
+    return FeatureIndex::Zone1PreviousHeatMat;
+  case 1U:
+    return FeatureIndex::Zone2PreviousHeatMat;
+  case 2U:
+    return FeatureIndex::Zone3PreviousHeatMat;
+  default:
+    return FeatureIndex::Zone4PreviousHeatMat;
+  }
+}
+
 bool parseSensors(const cJSON* object, control::SensorState& sensors) noexcept {
   return object != nullptr &&
          readFiniteFloat(object, control::schema::wireKey(FeatureIndex::AirTemperatureC),
@@ -359,6 +424,25 @@ bool parseZoneCultivation(const cJSON* object, control::ZoneCultivationConfig& c
                          cultivation.transpiration_factor);
 }
 
+bool parseZoneHeatMat(const cJSON* object, control::HeatMatCapabilities& heat_mat,
+                      std::size_t zone_index) noexcept {
+  if (object == nullptr) {
+    return true;
+  }
+  control::ActuatorControlType control_type = control::ActuatorControlType::Binary;
+  if (!parseControlType(
+          readString(object, control::schema::wireKey(zoneHeatMatControlTypeIndex(zone_index))),
+          control_type)) {
+    return false;
+  }
+  heat_mat.control_type = control_type;
+  return readOptionalBool(object, control::schema::wireKey(zoneHeatMatAvailableIndex(zone_index)),
+                          heat_mat.available) &&
+         readOptionalFiniteFloat(object,
+                                 control::schema::wireKey(zoneHeatMatMaxPowerIndex(zone_index)),
+                                 heat_mat.max_power_w);
+}
+
 bool parseZoneIrrigation(const cJSON* object, control::IrrigationPumpCapabilities& irrigation,
                          std::size_t zone_index) noexcept {
   if (object == nullptr) {
@@ -390,6 +474,7 @@ bool parseZoneObject(const cJSON* object, control::ZoneConfig& zone,
   const cJSON* cultivation = objectItem(object, "cultivation");
   const cJSON* targets = objectItem(object, "targets");
   const cJSON* irrigation = objectItem(object, "irrigation");
+  const cJSON* heat_mat = objectItem(object, "heat_mat");
   const cJSON* previous = objectItem(object, "previous");
   return object != nullptr &&
          readBool(object, control::schema::wireKey(zoneAvailableIndex(zone_index)),
@@ -407,10 +492,17 @@ bool parseZoneObject(const cJSON* object, control::ZoneConfig& zone,
          parseZoneCultivation(cultivation, zone.cultivation, zone_index) && targets != nullptr &&
          readFiniteFloat(targets, control::schema::wireKey(zoneTargetSoilMoistureIndex(zone_index)),
                          zone.target_soil_moisture_pct) &&
-         parseZoneIrrigation(irrigation, zone.irrigation, zone_index) && previous != nullptr &&
+         readOptionalFiniteFloat(
+             targets, control::schema::wireKey(zoneTargetSoilTemperatureIndex(zone_index)),
+             zone.target_soil_temperature_c) &&
+         parseZoneIrrigation(irrigation, zone.irrigation, zone_index) &&
+         parseZoneHeatMat(heat_mat, zone.heat_mat, zone_index) && previous != nullptr &&
          readFiniteFloat(previous,
                          control::schema::wireKey(zonePreviousIrrigationIndex(zone_index)),
-                         zone.previous_irrigation);
+                         zone.previous_irrigation) &&
+         readOptionalFiniteFloat(previous,
+                                 control::schema::wireKey(zonePreviousHeatMatIndex(zone_index)),
+                                 zone.previous_heat_mat);
 }
 
 bool parseZones(const cJSON* array,
@@ -449,7 +541,9 @@ bool parseTargets(const cJSON* object, control::ControlTargets& targets,
                     targets.air_temperature_c) &&
       read_optional(control::schema::wireKey(FeatureIndex::TargetAirHumidityPct),
                     targets.air_humidity_pct) &&
-      read_optional(control::schema::wireKey(FeatureIndex::TargetCo2Ppm), targets.co2_ppm);
+      read_optional(control::schema::wireKey(FeatureIndex::TargetCo2Ppm), targets.co2_ppm) &&
+      read_optional(control::schema::wireKey(FeatureIndex::TargetNutrientSolutionTemperatureC),
+                    targets.nutrient_solution_temperature_c);
   return valid && (require_all || parsed_any);
 }
 
@@ -466,7 +560,10 @@ bool parsePrevious(const cJSON* object, control::PreviousControlState& previous)
          readFiniteFloat(object, control::schema::wireKey(FeatureIndex::PreviousCooler),
                          previous.cooler) &&
          readFiniteFloat(object, control::schema::wireKey(FeatureIndex::PreviousCo2Doser),
-                         previous.co2_doser);
+                         previous.co2_doser) &&
+         readOptionalFiniteFloat(object,
+                                 control::schema::wireKey(FeatureIndex::PreviousNutrientHeater),
+                                 previous.nutrient_heater);
 }
 
 bool parseSafety(const cJSON* object, control::SafetyConfig& safety) noexcept {
@@ -512,43 +609,60 @@ bool parseActuators(const cJSON* object, control::GlobalActuatorCapabilities& ac
   const cJSON* dehumidifier = objectItem(object, control::schema::kWireObjectDehumidifier);
   const cJSON* cooler = objectItem(object, control::schema::kWireObjectCooler);
   const cJSON* co2_doser = objectItem(object, control::schema::kWireObjectCo2Doser);
+  const cJSON* nutrient_heater = objectItem(object, control::schema::kWireObjectNutrientHeater);
   if (heater == nullptr || fan == nullptr || humidifier == nullptr || dehumidifier == nullptr ||
       cooler == nullptr || co2_doser == nullptr) {
     return false;
   }
 
-  return readBool(heater, control::schema::wireKey(FeatureIndex::HeaterAvailable),
-                  actuators.heater.available) &&
-         readFiniteFloat(heater, control::schema::wireKey(FeatureIndex::HeaterMaxPowerW),
-                         actuators.heater.max_power_w) &&
-         readFiniteFloat(heater, control::schema::wireKey(FeatureIndex::HeaterEfficiency),
-                         actuators.heater.efficiency) &&
-         readBool(fan, control::schema::wireKey(FeatureIndex::FanAvailable),
-                  actuators.fan.available) &&
-         readFiniteFloat(fan, control::schema::wireKey(FeatureIndex::FanMaxAirflowM3H),
-                         actuators.fan.max_airflow_m3_h) &&
-         readFiniteFloat(fan, control::schema::wireKey(FeatureIndex::FanMinimumCommand),
-                         actuators.fan.minimum_command) &&
-         readBool(humidifier, control::schema::wireKey(FeatureIndex::HumidifierAvailable),
-                  actuators.humidifier.available) &&
-         readFiniteFloat(humidifier, control::schema::wireKey(FeatureIndex::HumidifierMaxOutputGH),
-                         actuators.humidifier.max_output_g_h) &&
-         readBool(dehumidifier, control::schema::wireKey(FeatureIndex::DehumidifierAvailable),
-                  actuators.dehumidifier.available) &&
-         readFiniteFloat(dehumidifier,
-                         control::schema::wireKey(FeatureIndex::DehumidifierMaxRemovalGH),
-                         actuators.dehumidifier.max_removal_g_h) &&
-         readBool(cooler, control::schema::wireKey(FeatureIndex::CoolerAvailable),
-                  actuators.cooler.available) &&
-         readFiniteFloat(cooler, control::schema::wireKey(FeatureIndex::CoolerMaxCoolingW),
-                         actuators.cooler.max_cooling_w) &&
-         readBool(co2_doser, control::schema::wireKey(FeatureIndex::Co2DoserAvailable),
-                  actuators.co2_doser.available) &&
-         readFiniteFloat(co2_doser,
-                         control::schema::wireKey(FeatureIndex::Co2DoserDosePpmPerFullPulse),
-                         actuators.co2_doser.dose_ppm_per_full_pulse) &&
-         readFiniteFloat(co2_doser, control::schema::wireKey(FeatureIndex::Co2DoserMaximumPulseS),
-                         actuators.co2_doser.maximum_pulse_s);
+  const bool parsed_core =
+      readBool(heater, control::schema::wireKey(FeatureIndex::HeaterAvailable),
+               actuators.heater.available) &&
+      readFiniteFloat(heater, control::schema::wireKey(FeatureIndex::HeaterMaxPowerW),
+                      actuators.heater.max_power_w) &&
+      readFiniteFloat(heater, control::schema::wireKey(FeatureIndex::HeaterEfficiency),
+                      actuators.heater.efficiency) &&
+      readBool(fan, control::schema::wireKey(FeatureIndex::FanAvailable),
+               actuators.fan.available) &&
+      readFiniteFloat(fan, control::schema::wireKey(FeatureIndex::FanMaxAirflowM3H),
+                      actuators.fan.max_airflow_m3_h) &&
+      readFiniteFloat(fan, control::schema::wireKey(FeatureIndex::FanMinimumCommand),
+                      actuators.fan.minimum_command) &&
+      readBool(humidifier, control::schema::wireKey(FeatureIndex::HumidifierAvailable),
+               actuators.humidifier.available) &&
+      readFiniteFloat(humidifier, control::schema::wireKey(FeatureIndex::HumidifierMaxOutputGH),
+                      actuators.humidifier.max_output_g_h) &&
+      readBool(dehumidifier, control::schema::wireKey(FeatureIndex::DehumidifierAvailable),
+               actuators.dehumidifier.available) &&
+      readFiniteFloat(dehumidifier,
+                      control::schema::wireKey(FeatureIndex::DehumidifierMaxRemovalGH),
+                      actuators.dehumidifier.max_removal_g_h) &&
+      readBool(cooler, control::schema::wireKey(FeatureIndex::CoolerAvailable),
+               actuators.cooler.available) &&
+      readFiniteFloat(cooler, control::schema::wireKey(FeatureIndex::CoolerMaxCoolingW),
+                      actuators.cooler.max_cooling_w) &&
+      readBool(co2_doser, control::schema::wireKey(FeatureIndex::Co2DoserAvailable),
+               actuators.co2_doser.available) &&
+      readFiniteFloat(co2_doser,
+                      control::schema::wireKey(FeatureIndex::Co2DoserDosePpmPerFullPulse),
+                      actuators.co2_doser.dose_ppm_per_full_pulse) &&
+      readFiniteFloat(co2_doser, control::schema::wireKey(FeatureIndex::Co2DoserMaximumPulseS),
+                      actuators.co2_doser.maximum_pulse_s);
+  if (!parsed_core) {
+    return false;
+  }
+  if (nutrient_heater == nullptr) {
+    return true;
+  }
+  return readOptionalBool(nutrient_heater,
+                          control::schema::wireKey(FeatureIndex::NutrientHeaterAvailable),
+                          actuators.nutrient_heater.available) &&
+         readOptionalFiniteFloat(nutrient_heater,
+                                 control::schema::wireKey(FeatureIndex::NutrientHeaterMaxPowerW),
+                                 actuators.nutrient_heater.max_power_w) &&
+         readOptionalFiniteFloat(nutrient_heater,
+                                 control::schema::wireKey(FeatureIndex::NutrientHeaterEfficiency),
+                                 actuators.nutrient_heater.efficiency);
 }
 
 void addZoneSnapshot(cJSON* zone_json, const control::ZoneConfig& zone,
@@ -586,6 +700,9 @@ void addZoneSnapshot(cJSON* zone_json, const control::ZoneConfig& zone,
   cJSON_AddNumberToObject(targets,
                           control::schema::wireKey(zoneTargetSoilMoistureIndex(zone_index)),
                           zone.target_soil_moisture_pct);
+  cJSON_AddNumberToObject(targets,
+                          control::schema::wireKey(zoneTargetSoilTemperatureIndex(zone_index)),
+                          zone.target_soil_temperature_c);
 
   cJSON* irrigation = cJSON_AddObjectToObject(zone_json, "irrigation");
   cJSON_AddBoolToObject(irrigation,
@@ -603,10 +720,21 @@ void addZoneSnapshot(cJSON* zone_json, const control::ZoneConfig& zone,
                           control::schema::wireKey(zoneIrrigationControlTypeIndex(zone_index)),
                           controlTypeName(zone.irrigation.control_type));
 
+  cJSON* heat_mat = cJSON_AddObjectToObject(zone_json, "heat_mat");
+  cJSON_AddBoolToObject(heat_mat, control::schema::wireKey(zoneHeatMatAvailableIndex(zone_index)),
+                        zone.heat_mat.available);
+  cJSON_AddNumberToObject(heat_mat, control::schema::wireKey(zoneHeatMatMaxPowerIndex(zone_index)),
+                          zone.heat_mat.max_power_w);
+  cJSON_AddStringToObject(heat_mat,
+                          control::schema::wireKey(zoneHeatMatControlTypeIndex(zone_index)),
+                          controlTypeName(zone.heat_mat.control_type));
+
   cJSON* previous = cJSON_AddObjectToObject(zone_json, "previous");
   cJSON_AddNumberToObject(previous,
                           control::schema::wireKey(zonePreviousIrrigationIndex(zone_index)),
                           zone.previous_irrigation);
+  cJSON_AddNumberToObject(previous, control::schema::wireKey(zonePreviousHeatMatIndex(zone_index)),
+                          zone.previous_heat_mat);
 }
 
 void addActuatorAvailability(cJSON* document,
@@ -627,6 +755,9 @@ void addActuatorAvailability(cJSON* document,
   cJSON_AddBoolToObject(cooler_json, "available", actuators.cooler.available);
   cJSON* co2_doser_json = cJSON_AddObjectToObject(actuators_json, "co2_doser");
   cJSON_AddBoolToObject(co2_doser_json, "available", actuators.co2_doser.available);
+  cJSON* nutrient_heater_json =
+      cJSON_AddObjectToObject(actuators_json, control::schema::kWireObjectNutrientHeater);
+  cJSON_AddBoolToObject(nutrient_heater_json, "available", actuators.nutrient_heater.available);
 }
 
 } // namespace
@@ -737,6 +868,18 @@ void addScenarioSnapshot(cJSON* document, const control::ControllerInput& input)
   cJSON_AddNumberToObject(co2_doser, control::schema::wireKey(FeatureIndex::Co2DoserMaximumPulseS),
                           input.actuators.co2_doser.maximum_pulse_s);
 
+  cJSON* nutrient_heater =
+      cJSON_AddObjectToObject(actuators, control::schema::kWireObjectNutrientHeater);
+  cJSON_AddBoolToObject(nutrient_heater,
+                        control::schema::wireKey(FeatureIndex::NutrientHeaterAvailable),
+                        input.actuators.nutrient_heater.available);
+  cJSON_AddNumberToObject(nutrient_heater,
+                          control::schema::wireKey(FeatureIndex::NutrientHeaterMaxPowerW),
+                          input.actuators.nutrient_heater.max_power_w);
+  cJSON_AddNumberToObject(nutrient_heater,
+                          control::schema::wireKey(FeatureIndex::NutrientHeaterEfficiency),
+                          input.actuators.nutrient_heater.efficiency);
+
   cJSON* targets = cJSON_AddObjectToObject(document, control::schema::kWireRootTargets);
   cJSON_AddNumberToObject(targets, control::schema::wireKey(FeatureIndex::TargetAirTemperatureC),
                           input.targets.air_temperature_c);
@@ -744,6 +887,9 @@ void addScenarioSnapshot(cJSON* document, const control::ControllerInput& input)
                           input.targets.air_humidity_pct);
   cJSON_AddNumberToObject(targets, control::schema::wireKey(FeatureIndex::TargetCo2Ppm),
                           input.targets.co2_ppm);
+  cJSON_AddNumberToObject(
+      targets, control::schema::wireKey(FeatureIndex::TargetNutrientSolutionTemperatureC),
+      input.targets.nutrient_solution_temperature_c);
 
   cJSON* previous = cJSON_AddObjectToObject(document, control::schema::kWireRootPrevious);
   cJSON_AddNumberToObject(previous, control::schema::wireKey(FeatureIndex::PreviousHeater),
@@ -758,6 +904,8 @@ void addScenarioSnapshot(cJSON* document, const control::ControllerInput& input)
                           input.previous.cooler);
   cJSON_AddNumberToObject(previous, control::schema::wireKey(FeatureIndex::PreviousCo2Doser),
                           input.previous.co2_doser);
+  cJSON_AddNumberToObject(previous, control::schema::wireKey(FeatureIndex::PreviousNutrientHeater),
+                          input.previous.nutrient_heater);
 
   cJSON* safety = cJSON_AddObjectToObject(document, "safety");
   cJSON_AddNumberToObject(safety, "maximum_air_temperature_c",
@@ -824,6 +972,7 @@ void addDecisionContext(cJSON* document, const control::ControllerInput& input) 
     cJSON_AddBoolToObject(zone_validity, "soil_temperature_c", zone.validity.soil_temperature);
     cJSON* zone_targets = cJSON_AddObjectToObject(zone_json, "targets");
     cJSON_AddNumberToObject(zone_targets, "soil_moisture_pct", zone.target_soil_moisture_pct);
+    cJSON_AddNumberToObject(zone_targets, "soil_temperature_c", zone.target_soil_temperature_c);
     cJSON_AddItemToArray(zones, zone_json);
   }
 
@@ -834,6 +983,8 @@ void addDecisionContext(cJSON* document, const control::ControllerInput& input) 
   cJSON_AddNumberToObject(targets, "air_temperature_c", input.targets.air_temperature_c);
   cJSON_AddNumberToObject(targets, "air_humidity_pct", input.targets.air_humidity_pct);
   cJSON_AddNumberToObject(targets, "co2_ppm", input.targets.co2_ppm);
+  cJSON_AddNumberToObject(targets, "nutrient_solution_temperature_c",
+                          input.targets.nutrient_solution_temperature_c);
 
   addActuatorAvailability(document, input.actuators);
 }

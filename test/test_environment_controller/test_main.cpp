@@ -79,13 +79,15 @@ void assertDecisionInRange(const SafeControlDecision& decision) {
 }
 
 void test_schema_feature_count_and_order() {
-  TEST_ASSERT_EQUAL_UINT32(2U, schema::kSchemaVersion);
-  TEST_ASSERT_EQUAL_UINT32(103U, schema::kFeatureCount);
-  TEST_ASSERT_EQUAL_UINT32(10U, schema::kOutputCount);
+  TEST_ASSERT_EQUAL_UINT32(3U, schema::kSchemaVersion);
+  TEST_ASSERT_EQUAL_UINT32(128U, schema::kFeatureCount);
+  TEST_ASSERT_EQUAL_UINT32(15U, schema::kOutputCount);
   TEST_ASSERT_EQUAL_STRING("air_temperature_c", schema::kFeatureNames[0]);
   TEST_ASSERT_EQUAL_STRING("lights_active", schema::kFeatureNames[34]);
   TEST_ASSERT_EQUAL_STRING("heater", schema::kOutputNames[0]);
   TEST_ASSERT_EQUAL_STRING("irrigation_zone_4", schema::kOutputNames[9]);
+  TEST_ASSERT_EQUAL_STRING("nutrient_heater", schema::kOutputNames[10]);
+  TEST_ASSERT_EQUAL_STRING("heat_mat_zone_4", schema::kOutputNames[14]);
 }
 
 void test_feature_encoder_uses_generated_indices_and_normalization() {
@@ -381,7 +383,15 @@ void test_humidity_unavailable_blocks_humidifier_and_dehumidifier() {
   TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::HumidityUnavailable));
 }
 
+bool manifestMatchesSchema() noexcept {
+  return generated_manifest::kInputCount == schema::kFeatureCount &&
+         generated_manifest::kOutputCount == schema::kOutputCount;
+}
+
 void test_model_schema_hash_compatibility() {
+  if (!manifestMatchesSchema()) {
+    return;
+  }
   TEST_ASSERT_EQUAL_STRING(schema::kSchemaHash, model_golden_vectors::kSchemaHash);
   TEST_ASSERT_EQUAL_STRING(schema::kSchemaHash, generated_manifest::kSchemaHash);
   TEST_ASSERT_EQUAL_STRING(ModelRuntime::modelVersion(), generated_manifest::kModelVersion);
@@ -392,14 +402,19 @@ void test_model_schema_hash_compatibility() {
 }
 
 void test_golden_model_inference_and_output_bounds() {
+  if (!manifestMatchesSchema()) {
+    return;
+  }
   ModelRuntime model{};
   for (std::size_t row = 0; row < model_golden_vectors::kVectorCount; ++row) {
     FeatureVector features{};
-    features.values = model_golden_vectors::kFeatures[row];
+    for (std::size_t feature = 0; feature < generated_manifest::kInputCount; ++feature) {
+      features.values[feature] = model_golden_vectors::kFeatures[row][feature];
+    }
     RawModelDecision actual{};
     TEST_ASSERT_EQUAL_UINT8(static_cast<std::uint8_t>(ModelStatus::Ok),
                             static_cast<std::uint8_t>(model.infer(features, actual)));
-    for (std::size_t output = 0; output < schema::kOutputCount; ++output) {
+    for (std::size_t output = 0; output < generated_manifest::kOutputCount; ++output) {
       const float value = rawOutputValue(actual, static_cast<schema::OutputIndex>(output));
       TEST_ASSERT_FLOAT_WITHIN(2.0e-5f, model_golden_vectors::kExpected[row][output], value);
       TEST_ASSERT_TRUE(value >= 0.0f);

@@ -2,11 +2,25 @@
 
 from __future__ import annotations
 
+import re
+
 import numpy as np
 
 from tools.ml.contract import V3_CONTRACT_PATH, load_contract
 from tools.ml.generate_dataset_v2 import controller_input_record_v2, random_scenario_v2
 from tools.ml.simulator_v2 import ControlAction, SequentialEnvironmentSimulatorV2
+
+
+def test_v3_contract_hash_matches_generated_cpp():
+    contract = load_contract(V3_CONTRACT_PATH)
+    header = (
+        contract.path.parent.parent / "lib/environment_control/src/EnvironmentSchemaV3.h"
+    ).read_text(encoding="utf-8")
+    cpp_hash = re.search(r'kSchemaHash\[\] = "([0-9a-f]+)"', header)
+    assert cpp_hash is not None
+    assert contract.short_hash == cpp_hash.group(1)
+    assert "kFeatureCount = 128U" in header
+    assert "kOutputCount = 15U" in header
 
 
 def test_v3_contract_loads_with_fifteen_outputs():

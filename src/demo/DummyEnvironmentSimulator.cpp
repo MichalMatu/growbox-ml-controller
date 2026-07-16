@@ -88,6 +88,7 @@ void DummyEnvironmentSimulator::reset(std::uint32_t seed) noexcept {
   input_.targets.air_temperature_c = 25.0f;
   input_.targets.air_humidity_pct = 65.0f;
   input_.targets.co2_ppm = 850.0f;
+  input_.targets.nutrient_solution_temperature_c = 22.0f;
   input_.monotonic_time_ms = 0U;
   setSeed(seed);
   elapsed_s_ = 0.0f;
@@ -97,6 +98,7 @@ void DummyEnvironmentSimulator::reset(std::uint32_t seed) noexcept {
   effective_humidifier_ = 0.0f;
   effective_dehumidifier_ = 0.0f;
   effective_cooler_ = 0.0f;
+  effective_nutrient_heater_ = 0.0f;
 }
 
 void DummyEnvironmentSimulator::load(const control::ControllerInput& scenario,
@@ -111,6 +113,7 @@ void DummyEnvironmentSimulator::load(const control::ControllerInput& scenario,
   effective_humidifier_ = clamp(input_.previous.humidifier, 0.0f, 1.0f);
   effective_dehumidifier_ = clamp(input_.previous.dehumidifier, 0.0f, 1.0f);
   effective_cooler_ = clamp(input_.previous.cooler, 0.0f, 1.0f);
+  effective_nutrient_heater_ = clamp(input_.previous.nutrient_heater, 0.0f, 1.0f);
 }
 
 void DummyEnvironmentSimulator::setSeed(std::uint32_t seed) noexcept {
@@ -175,6 +178,20 @@ float DummyEnvironmentSimulator::irrigationCommand(
   }
 }
 
+float DummyEnvironmentSimulator::heatMatCommand(
+    std::size_t zone_index, const control::SafeControlDecision& decision) const noexcept {
+  switch (zone_index) {
+  case 0U:
+    return decision.heat_mat_zone_1;
+  case 1U:
+    return decision.heat_mat_zone_2;
+  case 2U:
+    return decision.heat_mat_zone_3;
+  default:
+    return decision.heat_mat_zone_4;
+  }
+}
+
 float DummyEnvironmentSimulator::zoneEvaporationPctPerSecond(
     std::size_t zone_index, float vapor_deficit, float air_temperature_c) const noexcept {
   if (zone_index >= control::kMaxZones) {
@@ -214,8 +231,11 @@ void DummyEnvironmentSimulator::advance(const control::SafeControlDecision& deci
   const float command_dehumidifier = clamp(decision.dehumidifier, 0.0f, 1.0f);
   const float command_cooler = clamp(decision.cooler, 0.0f, 1.0f);
   const float command_co2_doser = clamp(decision.co2_doser, 0.0f, 1.0f);
+  const float command_nutrient_heater = clamp(decision.nutrient_heater, 0.0f, 1.0f);
 
   effective_heater_ = lag(effective_heater_, command_heater, step_seconds, kHeaterLagS);
+  effective_nutrient_heater_ =
+      lag(effective_nutrient_heater_, command_nutrient_heater, step_seconds, kHeaterLagS);
   effective_fan_ = lag(effective_fan_, command_fan, step_seconds, kFanLagS);
   effective_humidifier_ =
       lag(effective_humidifier_, command_humidifier, step_seconds, kHumidifierLagS);
@@ -262,6 +282,19 @@ void DummyEnvironmentSimulator::advance(const control::SafeControlDecision& deci
         zoneEvaporationPctPerSecond(zone_index, vapor_deficit, input_.sensors.air_temperature_c);
   }
 
+  const float nutrient_heater_w =
+      input_.actuators.nutrient_heater.available
+          ? effective_nutrient_heater_ * input_.actuators.nutrient_heater.max_power_w *
+                clamp(input_.actuators.nutrient_heater.efficiency, 0.0f, 1.0f)
+          : 0.0f;
+  constexpr float kNutrientThermalMassJK = 84000.0f;
+  constexpr float kNutrientLossWPerK = 3.5f;
+  const float nutrient_loss_w =
+      kNutrientLossWPerK *
+      (input_.sensors.outside_temperature_c - input_.sensors.nutrient_solution_temperature_c);
+  const float nutrient_temp_delta =
+      (nutrient_heater_w + nutrient_loss_w) * step_seconds / kNutrientThermalMassJK;
+
   float irrigation_humidity_boost_pp = 0.0f;
   for (std::size_t zone_index = 0U; zone_index < control::kMaxZones; ++zone_index) {
     auto& zone = input_.zones[zone_index];
@@ -282,6 +315,12 @@ void DummyEnvironmentSimulator::advance(const control::SafeControlDecision& deci
                                      : zone.cultivation.substrate_water_capacity_ml;
     zone.sensors.soil_moisture_pct = clamp(
         zone.sensors.soil_moisture_pct + irrigation_ml * 100.0f / water_capacity, 0.0f, 100.0f);
+    if (zone.validity.soil_temperature && irrigation_ml > 0.0f) {
+      const float mix_fraction = clamp(irrigation_ml / water_capacity, 0.0f, 0.35f);
+      zone.sensors.soil_temperature_c +=
+          (input_.sensors.nutrient_solution_temperature_c - zone.sensors.soil_temperature_c) *
+          mix_fraction;
+    }
     irrigation_humidity_boost_pp += irrigation_ml * 0.04f * 100.0f / air_moisture_capacity_g;
   }
 
@@ -316,6 +355,28 @@ void DummyEnvironmentSimulator::advance(const control::SafeControlDecision& deci
         clamp(zone.sensors.soil_moisture_pct - soil_loss_pp, 0.0f, 100.0f);
   }
 
+  for (std::size_t zone_index = 0U; zone_index < control::kMaxZones; ++zone_index) {
+    auto& zone = input_.zones[zone_index];
+    if (!zone.available || !zone.validity.soil_temperature) {
+      continue;
+    }
+    const float heat_mat_command = heatMatCommand(zone_index, decision);
+    const float heat_mat_w =
+        zone.heat_mat.available ? heat_mat_command * zone.heat_mat.max_power_w : 0.0f;
+    const float pot_volume =
+        zone.cultivation.pot_volume_l < 0.5f ? 0.5f : zone.cultivation.pot_volume_l;
+    const float soil_thermal_mass_j_k =
+        pot_volume * 1800.0f < 2000.0f ? 2000.0f : pot_volume * 1800.0f;
+    const float air_coupling_w =
+        0.35f * (input_.sensors.air_temperature_c - zone.sensors.soil_temperature_c);
+    const float soil_temp_delta =
+        (heat_mat_w + air_coupling_w) * step_seconds / soil_thermal_mass_j_k;
+    zone.sensors.soil_temperature_c =
+        clamp(zone.sensors.soil_temperature_c + soil_temp_delta, -10.0f, 50.0f);
+  }
+
+  input_.sensors.nutrient_solution_temperature_c =
+      clamp(input_.sensors.nutrient_solution_temperature_c + nutrient_temp_delta, 0.0f, 50.0f);
   input_.sensors.air_temperature_c += temperature_delta;
   input_.sensors.air_humidity_pct += humidity_delta;
   input_.sensors.co2_ppm +=
@@ -328,6 +389,12 @@ void DummyEnvironmentSimulator::advance(const control::SafeControlDecision& deci
     if (input_.zones[zone_index].validity.soil_moisture) {
       input_.zones[zone_index].sensors.soil_moisture_pct += uniformSigned() * 0.015f;
     }
+    if (input_.zones[zone_index].validity.soil_temperature) {
+      input_.zones[zone_index].sensors.soil_temperature_c += uniformSigned() * 0.01f;
+    }
+  }
+  if (input_.validity.nutrient_solution_temperature) {
+    input_.sensors.nutrient_solution_temperature_c += uniformSigned() * 0.01f;
   }
 
   input_.sensors.air_temperature_c = clamp(input_.sensors.air_temperature_c, -30.0f, 70.0f);
@@ -336,6 +403,14 @@ void DummyEnvironmentSimulator::advance(const control::SafeControlDecision& deci
   for (std::size_t zone_index = 0U; zone_index < control::kMaxZones; ++zone_index) {
     input_.zones[zone_index].sensors.soil_moisture_pct =
         clamp(input_.zones[zone_index].sensors.soil_moisture_pct, 0.0f, 100.0f);
+    if (input_.zones[zone_index].validity.soil_temperature) {
+      input_.zones[zone_index].sensors.soil_temperature_c =
+          clamp(input_.zones[zone_index].sensors.soil_temperature_c, -10.0f, 50.0f);
+    }
+  }
+  if (input_.validity.nutrient_solution_temperature) {
+    input_.sensors.nutrient_solution_temperature_c =
+        clamp(input_.sensors.nutrient_solution_temperature_c, 0.0f, 50.0f);
   }
 
   input_.previous.heater = command_heater;
@@ -344,8 +419,10 @@ void DummyEnvironmentSimulator::advance(const control::SafeControlDecision& deci
   input_.previous.dehumidifier = command_dehumidifier;
   input_.previous.cooler = command_cooler;
   input_.previous.co2_doser = command_co2_doser;
+  input_.previous.nutrient_heater = command_nutrient_heater;
   for (std::size_t zone_index = 0U; zone_index < control::kMaxZones; ++zone_index) {
     input_.zones[zone_index].previous_irrigation = irrigationCommand(zone_index, decision);
+    input_.zones[zone_index].previous_heat_mat = heatMatCommand(zone_index, decision);
   }
 
   elapsed_s_ += step_seconds;

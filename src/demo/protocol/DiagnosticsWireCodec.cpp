@@ -1,6 +1,6 @@
 #include "DiagnosticsWireCodec.h"
 
-#include "EnvironmentSchemaV2.h"
+#include "EnvironmentSchemaV3.h"
 #include "HeapDiagnostics.h"
 #include "JsonLineWriter.h"
 
