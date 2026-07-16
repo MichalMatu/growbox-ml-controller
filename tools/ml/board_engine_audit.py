@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any
 
 import serial
+from tools.ml.config_matrix import DEFAULT_MATRIX, matrix_cases
 from tools.ml.scenario_payload import SCENARIO_PRESETS, default_scenario
 
 DEFAULT_PORT = os.environ.get("GROWBOX_BOARD_PORT", "/dev/cu.usbmodem1101")
@@ -336,8 +337,36 @@ def stress_cases() -> list[tuple[str, dict[str, Any]]]:
     return cases
 
 
+def evaluate_expected_safe_zeros(
+    case: str, safe: dict[str, Any], expected_zeros: list[str]
+) -> list[Finding]:
+    findings: list[Finding] = []
+    for name in expected_zeros:
+        if name not in OUTPUT_NAMES:
+            findings.append(
+                Finding("error", case, "unknown_expected_output", f"unknown output {name}")
+            )
+            continue
+        value = float(safe.get(name, 0.0))
+        if value > 1e-6:
+            findings.append(
+                Finding(
+                    "error",
+                    case,
+                    "expected_safe_zero",
+                    f"{name} safe={value} expected 0",
+                    {"safe": safe.get(name), "raw": None},
+                )
+            )
+    return findings
+
+
 def evaluate_decision(
-    case: str, scenario: dict[str, Any], decision: dict[str, Any]
+    case: str,
+    scenario: dict[str, Any],
+    decision: dict[str, Any],
+    *,
+    expected_safe_zeros: list[str] | None = None,
 ) -> list[Finding]:
     findings: list[Finding] = []
     diag = decision.get("diagnostics") or {}
@@ -370,6 +399,9 @@ def evaluate_decision(
         val = float(safe[name])
         if not (0.0 <= val <= 1.0):
             findings.append(Finding("error", case, "out_of_range", f"{name}={val}"))
+
+    if expected_safe_zeros:
+        findings.extend(evaluate_expected_safe_zeros(case, safe, expected_safe_zeros))
 
     sensors = scenario.get("sensors") or {}
     targets = scenario.get("targets") or {}
@@ -561,7 +593,12 @@ def evaluate_decision(
 
 
 def run_case(
-    session: BoardSession, case: str, scenario: dict[str, Any], *, steps: int = 1
+    session: BoardSession,
+    case: str,
+    scenario: dict[str, Any],
+    *,
+    steps: int = 1,
+    expected_safe_zeros: list[str] | None = None,
 ) -> list[Finding]:
     findings: list[Finding] = []
     session.send({"command": "pause"}, expect="ack", expect_cmd="pause")
@@ -571,7 +608,14 @@ def run_case(
     for step_i in range(steps):
         decision = session.send({"command": "step"}, expect="decision")
         last_decision = decision
-        findings.extend(evaluate_decision(f"{case}#s{step_i}", scenario, decision))
+        findings.extend(
+            evaluate_decision(
+                f"{case}#s{step_i}",
+                scenario,
+                decision,
+                expected_safe_zeros=expected_safe_zeros,
+            )
+        )
         # After first step sensors evolve on device; for multi-step closed physics
         # we only re-evaluate last decision strictly.
     if last_decision is not None and steps > 1:
@@ -631,6 +675,17 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--port", default=DEFAULT_PORT)
     parser.add_argument("--report", type=Path, default=Path("build/audit/board_engine_audit.json"))
+    parser.add_argument(
+        "--matrix",
+        type=Path,
+        default=None,
+        help="Run CONFIG_MATRIX profiles (default: docs/CONFIG_MATRIX.csv when --matrix-only)",
+    )
+    parser.add_argument(
+        "--matrix-only",
+        action="store_true",
+        help="Run only CONFIG_MATRIX profiles (no built-in stress cases)",
+    )
     parser.add_argument("--closed-loop-steps", type=int, default=15)
     parser.add_argument("--timeout", type=float, default=8.0)
     args = parser.parse_args(argv)
@@ -639,18 +694,38 @@ def main(argv: list[str] | None = None) -> int:
         print(f"board port missing: {args.port}", file=sys.stderr)
         return 2
 
-    cases = stress_cases()
+    matrix_path = args.matrix
+    if args.matrix_only and matrix_path is None:
+        matrix_path = DEFAULT_MATRIX
+
+    matrix_profile_cases: list[tuple[str, dict[str, Any], list[str]]] = []
+    if matrix_path is not None:
+        if not matrix_path.is_file():
+            print(f"matrix not found: {matrix_path}", file=sys.stderr)
+            return 2
+        matrix_profile_cases = matrix_cases(matrix_path)
+
+    cases: list[tuple[str, dict[str, Any], list[str] | None]] = []
+    if not args.matrix_only:
+        cases.extend((name, scenario, None) for name, scenario in stress_cases())
+    cases.extend((name, scenario, expected) for name, scenario, expected in matrix_profile_cases)
     all_findings: list[Finding] = []
     case_results: list[dict[str, Any]] = []
 
     print(f"audit start port={args.port} cases={len(cases)}", flush=True)
     with BoardSession(args.port, timeout=args.timeout) as session:
-        for name, scenario in cases:
+        for name, scenario, expected_safe_zeros in cases:
             print(f"  case {name}...", flush=True)
             try:
-                findings = run_case(session, name, scenario, steps=1)
-                # a few multi-step stress cases
-                if name in {
+                findings = run_case(
+                    session,
+                    name,
+                    scenario,
+                    steps=1,
+                    expected_safe_zeros=expected_safe_zeros,
+                )
+                # a few multi-step stress cases (not for CONFIG_MATRIX rows)
+                if expected_safe_zeros is None and name in {
                     "cold_below_target",
                     "hot_above_target",
                     "dry_soil_needs_irrigation",
@@ -674,14 +749,15 @@ def main(argv: list[str] | None = None) -> int:
             warn_n = sum(1 for f in findings if f.severity == "warn")
             print(f"    -> errors={err_n} warns={warn_n}", flush=True)
 
-        print("  closed_loop_burst...", flush=True)
-        try:
-            cl = run_closed_loop_burst(session, steps=args.closed_loop_steps)
-            all_findings.extend(cl)
-        except Exception as exc:  # noqa: BLE001
-            all_findings.append(
-                Finding("error", "closed_loop_burst", "session_exception", str(exc))
-            )
+        if not args.matrix_only:
+            print("  closed_loop_burst...", flush=True)
+            try:
+                cl = run_closed_loop_burst(session, steps=args.closed_loop_steps)
+                all_findings.extend(cl)
+            except Exception as exc:  # noqa: BLE001
+                all_findings.append(
+                    Finding("error", "closed_loop_burst", "session_exception", str(exc))
+                )
 
     summary = summarize(all_findings)
     report = {

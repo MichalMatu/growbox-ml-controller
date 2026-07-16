@@ -61,6 +61,41 @@ Dla **każdego** aktywnego aktuatora/czujnika w profilu: ustaw parametry na **{m
 Dla previous_*: `{0, 0.5, 1}`.
 Dla targets: nominal + skraj (za zimno / za wilgotno / niski CO2).
 
+## Warstwa 2 — ciągłe sweepy (host) + behawior ML (płytka)
+
+CONFIG_MATRIX (59 wierszy) pokrywa **dyskretną konfigurację I/O** (availability, validity, donice, typy sterowania). To **Warstwa 1**.
+
+| Warstwa | Narzędzie | Gdzie | Co testuje |
+|---------|-----------|-------|------------|
+| **1 — I/O mix & match** | `python -m tools.ml.run_config_matrix` | Host | Encoder 128, safety (Python mirror), krótki sim 5 kroków, sweep min/def/max per profil |
+| **2a — wartości ciągłe** | ten sam harness (`check_continuous_sweeps`) | Host | T/RH/CO2/capabilities w siatce 3-punktowej dla każdego aktywnego pola |
+| **2b — ML raw/safe + polityka** | `python -m tools.ml.panel_endpoint_audit` | Płytka (po `make flash`) | Sweepy T/RH/CO₂/gleby, heurystyki zimno→heat, overtemperature, `extreme_multi_need` |
+| **2c — CONFIG_MATRIX na ESP** | `python -m tools.ml.board_engine_audit --matrix-only` | Płytka | Te same 59 profili: `load_scenario` → `step` → `expected_safe_zero_outputs` + reguły safety |
+
+**CO₂ w Warstwie 1:** gdy `avail_co2_doser` i `valid_co2_ppm` są true, harness ustawia `sensors.co2_ppm = 500` (poniżej celu 850), żeby testować **dostępność** dosera, a nie regułę „target reached” przy nominalnym 920 ppm.
+
+### Komendy
+
+```bash
+# Warstwa 1 (host, bez płytki)
+python -m tools.ml.run_config_matrix
+# domyślnie: docs/CONFIG_MATRIX.csv → build/audit/CONFIG_MATRIX_RESULTS.csv
+
+# Skrypty serial per profil (do ręcznego replay / audytu)
+python -m tools.ml.config_matrix --write-scripts build/matrix-replay
+
+# Warstwa 2c — 59 profili na płytce (wymaga flash + port)
+GROWBOX_BOARD_PORT=/dev/cu.usbmodem1101 \
+  python -m tools.ml.board_engine_audit --matrix-only \
+  --report build/audit/board_config_matrix.json
+
+# Warstwa 2b — sweepy behawioralne (szersza macierz, ~57 case)
+python -m tools.panel &   # :8765
+python -m tools.ml.panel_endpoint_audit --port /dev/cu.usbmodem1101
+```
+
+Stress cases (`board_engine_audit` bez `--matrix-only`) i `panel_endpoint_audit` pozostają **osobną** macierzą behawioralną — uzupełniają CONFIG_MATRIX, nie zastępują.
+
 ## Wymagane asercje na profil (agent musi zalogować PASS/FAIL per id)
 1. Encoder produkuje wektor 128 finite w [0,1] po normalizacji.
 2. ModelRuntime nie crashuje (schema hash OK).

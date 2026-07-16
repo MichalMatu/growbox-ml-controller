@@ -18,8 +18,17 @@ from typing import Any
 import numpy as np
 
 from tools.ml.alignment import assert_encoded_vector, feature_path_index
+from tools.ml.config_matrix import (
+    DEFAULT_MATRIX,
+    DEFAULT_RESULTS,
+    GLOBAL_ACTUATORS,
+    GLOBAL_SENSORS,
+    OP_ACTUATOR_CAPS,
+    OUTPUTS,
+    build_controller_input,
+    load_matrix_rows,
+)
 from tools.ml.contract import Contract, load_contract
-from tools.ml.scenario_payload import default_scenario
 from tools.ml.simulator import (
     MAX_POTS,
     Co2DoserCapabilities,
@@ -45,78 +54,6 @@ from tools.ml.simulator import (
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_MATRIX = Path("/Users/michal/Downloads/CONFIG_MATRIX.csv")
-DEFAULT_RESULTS = Path("/Users/michal/Downloads/RESULTS.csv")
-
-GLOBAL_SENSORS = (
-    "air_temperature_c",
-    "air_humidity_pct",
-    "co2_ppm",
-    "nutrient_solution_temperature_c",
-    "outside_temperature_c",
-    "outside_humidity_pct",
-    "outside_co2_ppm",
-)
-
-GLOBAL_ACTUATORS = (
-    "heater",
-    "fan",
-    "humidifier",
-    "dehumidifier",
-    "cooler",
-    "co2_doser",
-    "nutrient_heater",
-)
-
-OUTPUTS = (
-    "heater",
-    "fan",
-    "humidifier",
-    "dehumidifier",
-    "cooler",
-    "co2_doser",
-    "irrigation_pot_1",
-    "irrigation_pot_2",
-    "irrigation_pot_3",
-    "irrigation_pot_4",
-    "nutrient_heater",
-    "heat_mat_pot_1",
-    "heat_mat_pot_2",
-    "heat_mat_pot_3",
-    "heat_mat_pot_4",
-)
-
-# Operational defaults for available actuators (contract defaults are often 0).
-OP_ACTUATOR_CAPS: dict[str, dict[str, float]] = {
-    "heater": {"max_power_w": 180.0, "efficiency": 0.9},
-    "fan": {"max_airflow_m3_h": 120.0, "minimum_command": 0.2},
-    "humidifier": {"max_output_g_h": 180.0},
-    "dehumidifier": {"max_removal_g_h": 80.0},
-    "cooler": {"max_cooling_w": 200.0},
-    "co2_doser": {"dose_ppm_per_full_pulse": 120.0, "maximum_pulse_s": 5.0},
-    "nutrient_heater": {"max_power_w": 150.0, "efficiency": 0.95},
-}
-
-SENSOR_NOMINAL: dict[str, float] = {
-    "air_temperature_c": 22.0,
-    "air_humidity_pct": 58.0,
-    "co2_ppm": 920.0,
-    "nutrient_solution_temperature_c": 20.0,
-    "outside_temperature_c": 18.0,
-    "outside_humidity_pct": 52.0,
-    "outside_co2_ppm": 420.0,
-}
-
-
-def _parse_bool(value: str) -> bool:
-    return str(value).strip().lower() in {"1", "true", "yes", "y"}
-
-
-def _csv_list(value: str) -> list[str]:
-    text = (value or "").strip()
-    if not text or text in {"∅", "empty"}:
-        return []
-    return [part.strip() for part in text.split(",") if part.strip()]
 
 
 def _set_nested(document: dict[str, Any], path: str, value: Any) -> None:
@@ -133,87 +70,11 @@ def _set_nested(document: dict[str, Any], path: str, value: Any) -> None:
     current[parts[-1]] = value
 
 
-def build_controller_input(row: dict[str, str], contract: Contract) -> dict[str, Any]:
-    """Build a full controller-input document from one matrix row."""
-    record = default_scenario(seed=hash(row["id"]) % 10_000, contract=contract)
-
-    # Global validity / sensors
-    for sensor in GLOBAL_SENSORS:
-        valid = _parse_bool(row[f"valid_{sensor}"])
-        record["validity"][sensor] = valid
-        # Keep a finite sensor value even when invalid (firmware contract).
-        record["sensors"][sensor] = float(SENSOR_NOMINAL[sensor])
-
-    # Global actuators
-    for name in GLOBAL_ACTUATORS:
-        available = _parse_bool(row[f"avail_{name}"])
-        act = record["actuators"].setdefault(name, {})
-        act["available"] = available
-        caps = OP_ACTUATOR_CAPS[name]
-        for key, value in caps.items():
-            act[key] = float(value if available else 0.0)
-        if "control_type" not in act:
-            act["control_type"] = "binary" if name != "fan" else "pwm"
-
-    # Pots
-    pots: list[dict[str, Any]] = []
-    for index in range(1, MAX_POTS + 1):
-        available = _parse_bool(row[f"pot{index}_available"])
-        moisture_valid = _parse_bool(row[f"pot{index}_soil_moisture_valid"])
-        temp_valid = _parse_bool(row[f"pot{index}_soil_temperature_valid"])
-        irr_available = _parse_bool(row[f"pot{index}_irrigation_available"])
-        heat_available = _parse_bool(row[f"pot{index}_heat_mat_available"])
-        irr_type = (row.get(f"pot{index}_irrigation_control_type") or "binary").strip()
-        heat_type = (row.get(f"pot{index}_heat_mat_control_type") or "binary").strip()
-        pot = {
-            "available": available,
-            "sensors": {
-                "soil_moisture_pct": 44.0 if moisture_valid else 50.0,
-                "soil_temperature_c": 22.0 if temp_valid else 20.0,
-            },
-            "validity": {
-                "soil_moisture_pct": moisture_valid,
-                "soil_temperature_c": temp_valid,
-            },
-            "cultivation": {
-                "pot_volume_l": 12.0 if available else 10.0,
-                "substrate_water_capacity_ml": 3600.0 if available else 3000.0,
-                "transpiration_factor": 1.0,
-            },
-            "targets": {
-                "soil_moisture_pct": 50.0,
-                "soil_temperature_c": 22.0,
-            },
-            "irrigation": {
-                "available": irr_available and available,
-                "flow_ml_s": 22.0 if irr_available and available else 0.0,
-                "maximum_pulse_s": 4.0 if irr_available and available else 0.0,
-                "minimum_interval_s": 600.0 if irr_available and available else 0.0,
-                "control_type": irr_type if irr_type in {"binary", "pwm"} else "binary",
-            },
-            "heat_mat": {
-                "available": heat_available and available,
-                "max_power_w": 25.0 if heat_available and available else 0.0,
-                "control_type": heat_type if heat_type in {"binary", "pwm"} else "binary",
-            },
-            "previous": {"irrigation": 0.0, "heat_mat": 0.0},
-        }
-        pots.append(pot)
-    record["pots"] = pots
-
-    # Runtime lights from profile id
-    lights = row["id"] == "L1" or row.get("name") == "lights_on_runtime"
-    record.setdefault("pseudo", {})["lights_active"] = bool(lights)
-
-    # Nominal targets / previous
-    record["targets"] = {
-        "air_temperature_c": 25.0,
-        "air_humidity_pct": 65.0,
-        "co2_ppm": 850.0,
-        "nutrient_solution_temperature_c": 20.0,
-    }
-    record["previous"] = {name: 0.0 for name in GLOBAL_ACTUATORS}
-    return record
+def _csv_list(value: str) -> list[str]:
+    text = (value or "").strip()
+    if not text or text in {"∅", "empty"}:
+        return []
+    return [part.strip() for part in text.split(",") if part.strip()]
 
 
 def apply_safety_python(record: dict[str, Any], raw: dict[str, float]) -> dict[str, float]:
@@ -726,8 +587,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     contract = load_contract()
-    with args.matrix.open(newline="", encoding="utf-8") as stream:
-        rows = list(csv.DictReader(stream))
+    rows = load_matrix_rows(args.matrix)
 
     if not rows:
         print("empty matrix", file=sys.stderr)
