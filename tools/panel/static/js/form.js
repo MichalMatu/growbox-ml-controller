@@ -4,7 +4,7 @@ function shortLabel(name) {
   const zoneTarget = name.match(/^zone_(\d+)_target_soil_moisture_pct$/);
   if (zoneTarget) return `Donica ${zoneTarget[1]}`;
   const zoneTempTarget = name.match(/^zone_(\d+)_target_soil_temperature_c$/);
-  if (zoneTempTarget) return `Donica ${zoneTempTarget[1]} T`;
+  if (zoneTempTarget) return `Donica ${zoneTempTarget[1]}`;
   const zoneAvail = name.match(/^zone_(\d+)_available$/);
   if (zoneAvail) return `Donica ${zoneAvail[1]}`;
   const zonePrev = name.match(/^zone_(\d+)_previous_irrigation$/);
@@ -140,6 +140,9 @@ function fieldUnitSuffix(field) {
   const suffixByName = {
     heater_max_power_w: "W",
     heater_efficiency: "η",
+    nutrient_heater_max_power_w: "W",
+    nutrient_heater_efficiency: "η",
+    heat_mat_max_power_w: "W",
     fan_max_airflow_m3_h: "m³/h",
     fan_minimum_command: "min",
     humidifier_max_output_g_h: "g/h",
@@ -818,6 +821,61 @@ function zoneIndexFromHeatMatGroup(names) {
   return zoneIndexFromZoneActuatorGroup(names, "heat_mat");
 }
 
+const ACTUATOR_CAPABILITY_DEFAULTS = {
+  "actuators.nutrient_heater": { max_power_w: 80, efficiency: 0.9 },
+};
+
+function isActuatorGroupInactive(names, sectionId) {
+  const zoneIndex = zoneIndexFromPumpGroup(names) ?? zoneIndexFromHeatMatGroup(names);
+  if (zoneIndex !== null && !isZoneActive(zoneIndex)) return true;
+  const availableName = names.find(n => n.endsWith("_available"));
+  if (!availableName) return false;
+  const availableField = fieldByName(availableName, sectionId);
+  if (!availableField) return false;
+  return !Boolean(getNested(scenario, availableField.path));
+}
+
+function syncActuatorCapabilityDefaultsFromInput(el) {
+  if (!el?.matches?.('input[type="checkbox"][data-path$=".available"]')) return;
+  if (!el.checked || !el.dataset.path?.startsWith("actuators.")) return;
+  const match = el.dataset.path.match(/^actuators\.([^.]+)\.available$/);
+  if (!match) return;
+  const defaults = ACTUATOR_CAPABILITY_DEFAULTS[`actuators.${match[1]}`];
+  if (!defaults) return;
+  for (const [key, value] of Object.entries(defaults)) {
+    const fieldPath = `actuators.${match[1]}.${key}`;
+    const current = getNested(scenario, fieldPath);
+    if (current === 0 || current === null || current === undefined) {
+      setNested(scenario, fieldPath, value);
+      const inputEl = document.querySelector(`[data-path="${fieldPath}"]`);
+      if (inputEl) inputEl.value = formatFieldNumber(value, fieldPath);
+    }
+  }
+}
+
+function syncInactiveActuatorCapabilityInputs() {
+  for (const [, names] of ACTUATOR_CLIMATE_GROUPS) {
+    const inactive = isActuatorGroupInactive(names, "actuators");
+    const availableName = names.find(n => n.endsWith("_available"));
+    const availField = availableName ? fieldByName(availableName, "actuators") : null;
+    const availEl = availField
+      ? document.getElementById(`f-${availField.path.replaceAll(".", "_")}`)
+      : null;
+    const cell = availEl?.closest(".mini-cell.actuator-cell");
+    if (cell) cell.classList.toggle("inactive-actuator-off", inactive);
+    if (!cell) continue;
+    cell.querySelectorAll("input.field-control, select.field-control").forEach(input => {
+      if (input === availEl) return;
+      input.disabled = inactive;
+      if (inactive) {
+        input.title = "Aktuator wyłączony — zaznacz checkbox, aby ustawić parametry";
+      } else {
+        input.removeAttribute("title");
+      }
+    });
+  }
+}
+
 function syncInactiveZonePumpInputs() {
   for (let index = 0; index < 4; index += 1) {
     const field = fieldByName(`zone_${index + 1}_irrigation_available`, "zones");
@@ -892,6 +950,7 @@ function syncInactiveZoneDependentInputs() {
   syncInactiveZoneTargetInputs();
   syncInactiveZonePumpInputs();
   syncInactiveZoneHeatMatInputs();
+  syncInactiveActuatorCapabilityInputs();
 }
 
 function renderTargetsBlock() {
@@ -903,8 +962,13 @@ function renderTargetsBlock() {
   const soilTempCells = soilTempFields.map(renderSoilTargetMiniCell).join("");
   return `<div class="card targets-panel">${renderSectionHead("Cele", "targets")}
     <div class="targets-split">
-      <div class="sub-card"><div class="card-head"><h3>Powietrze</h3></div><div class="compact-row">${airCells}</div></div>
-      <div class="sub-card"><div class="card-head"><h3>Donice</h3></div><div class="compact-row">${soilMoistureCells}${soilTempCells}</div></div>
+      <div class="sub-card"><div class="card-head"><h3>Środowisko</h3></div><div class="compact-row">${airCells}</div></div>
+      <div class="sub-card"><div class="card-head"><h3>Donice</h3></div>
+        <div class="targets-pots-grid">
+          <div class="compact-row targets-pots-row">${soilMoistureCells}</div>
+          <div class="compact-row targets-pots-row">${soilTempCells}</div>
+        </div>
+      </div>
     </div></div>`;
 }
 
@@ -970,20 +1034,23 @@ function renderActuatorGroupCell(title, names, sectionId) {
     .map(n => field(n))
     .filter(Boolean);
   const zoneIndex = zoneIndexFromPumpGroup(names) ?? zoneIndexFromHeatMatGroup(names);
-  const zonePumpInactive = zoneIndex !== null && !isZoneActive(zoneIndex);
+  const zoneOnlyInactive = zoneIndex !== null && !isZoneActive(zoneIndex);
+  const groupInactive = isActuatorGroupInactive(names, sectionId);
   const wide = paramFields.some(isWideField) ? " wide" : "";
   const availId = availableField ? `f-${availableField.path.replaceAll(".", "_")}` : "";
-  const availVal = zonePumpInactive
+  const availVal = zoneOnlyInactive
     ? false
     : (availableField ? getNested(scenario, availableField.path) : false);
-  const availHintAttr = zonePumpInactive
+  const availHintAttr = zoneOnlyInactive
     ? inactiveZoneDependentHintAttr()
     : (availableField ? fieldHintAttr(availableField.name) : "");
-  const disabledAttr = zonePumpInactive ? " disabled" : "";
-  const inactiveClass = zonePumpInactive ? " inactive-zone-pump" : "";
-  const titleHintAttr = zonePumpInactive ? inactiveZoneDependentHintAttr() : "";
+  const disabledAttr = zoneOnlyInactive ? " disabled" : "";
+  const inactiveClass = groupInactive
+    ? (zoneOnlyInactive ? " inactive-zone-pump" : " inactive-actuator-off")
+    : "";
+  const titleHintAttr = zoneOnlyInactive ? inactiveZoneDependentHintAttr() : "";
   const stack = `<div class="field-stack">${paramFields
-    .map(f => renderActuatorParamField(f, { disabled: zonePumpInactive }))
+    .map(f => renderActuatorParamField(f, { disabled: groupInactive }))
     .join("")}</div>`;
   return `<div class="mini-cell actuator-cell${wide}${inactiveClass}">
     <div class="head-row">

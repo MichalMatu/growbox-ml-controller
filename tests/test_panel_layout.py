@@ -840,15 +840,22 @@ def test_v3_nutrient_heater_in_climate_actuator_groups():
     assert "flex-direction: column" not in cell_fn
 
 
-def test_v3_soil_temperature_targets_use_horizontal_compact_row():
+def test_v3_soil_temperature_targets_use_two_pot_rows():
     constants_js = (PANEL_STATIC / "js" / "constants.js").read_text(encoding="utf-8")
     form_js = FORM_JS.read_text(encoding="utf-8")
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
     for index in range(1, 5):
-        assert f'zone_{index}_target_soil_temperature_c: "Donica {index} T"' in constants_js
+        assert f'zone_{index}_target_soil_temperature_c: "Donica {index}"' in constants_js
     targets_fn = _extract_js_function(form_js, "renderTargetsBlock")
     assert "TARGET_SOIL_TEMPERATURE_FIELDS" in targets_fn
+    assert "TARGET_SOIL_MOISTURE_FIELDS" in targets_fn
     assert "renderSoilTargetMiniCell" in targets_fn
+    assert "targets-pots-grid" in targets_fn
+    assert "targets-pots-row" in targets_fn
     assert "field-stack" not in targets_fn
+    assert "--targets-pot-cell-w:" in panel_css
+    assert ".targets-pots-row .mini-cell.mini-cell-pct" in panel_css
+    assert ".targets-pots-row .mini-cell.mini-cell-temp" in panel_css
 
 
 def test_v3_live_tables_expose_temperature_targets():

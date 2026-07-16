@@ -71,8 +71,7 @@ const HELP_TOPICS = {
     html: `
       <p>Wartości zadane — do czego model ma dążyć.</p>
       <ul>
-        <li><strong>Powietrze</strong> — temperatura, wilgotność, CO₂ (cały box)</li>
-        <li><strong>Roztwór</strong> — docelowa temperatura roztworu nawozu</li>
+        <li><strong>Środowisko</strong> — temperatura i wilgotność powietrza, CO₂ oraz docelowa temperatura roztworu (cały box)</li>
         <li><strong>Donice</strong> — docelowa wilgotność i temperatura gleby per donica (tylko gdy donica jest zaznaczona w <strong>Czujniki</strong>)</li>
         <li>Wyłączona donica — cel i pompa w <strong>Aktuary</strong> są zablokowane</li>
       </ul>
@@ -149,10 +148,10 @@ const LABEL_MAP = {
   zone_2_target_soil_moisture_pct: "Donica 2",
   zone_3_target_soil_moisture_pct: "Donica 3",
   zone_4_target_soil_moisture_pct: "Donica 4",
-  zone_1_target_soil_temperature_c: "Donica 1 T",
-  zone_2_target_soil_temperature_c: "Donica 2 T",
-  zone_3_target_soil_temperature_c: "Donica 3 T",
-  zone_4_target_soil_temperature_c: "Donica 4 T",
+  zone_1_target_soil_temperature_c: "Donica 1",
+  zone_2_target_soil_temperature_c: "Donica 2",
+  zone_3_target_soil_temperature_c: "Donica 3",
+  zone_4_target_soil_temperature_c: "Donica 4",
   target_nutrient_solution_temperature_c: "Roztwór T",
   lights_active: "Lampa",
   outside_temperature_c: "Temp",
@@ -461,8 +460,8 @@ const FIELD_HINTS = {
   heater_max_power_w: "Maksymalna moc grzałki (W)",
   heater_efficiency: "Sprawność grzałki (0–1) — ułamek mocy idącej do powietrza",
   nutrient_heater_available: "Grzałka roztworu w zestawie — odznaczone = wyjście zawsze 0 po wysłaniu",
-  nutrient_heater_max_power_w: "Maksymalna moc grzałki roztworu (W)",
-  nutrient_heater_efficiency: "Sprawność grzałki roztworu (0–1)",
+  nutrient_heater_max_power_w: "Moc grzałki roztworu — przy wyłączonej grzałce zostaw 0",
+  nutrient_heater_efficiency: "Sprawność grzałki (0–1) — przy wyłączonej grzałce zostaw 0",
   nutrient_heater_control_type: "bin = przekaźnik wł/wył, pwm = modulacja mocy",
   heat_mat_available: "Mata grzewcza w zestawie — odznaczone = wyjście zawsze 0 po wysłaniu",
   heat_mat_max_power_w: "Maksymalna moc maty grzewczej (W)",

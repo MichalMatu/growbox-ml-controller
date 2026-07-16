@@ -160,8 +160,10 @@
   --pot-cult-water-w: var(--cell-w-ppm);
   --pot-cult-factor-w: var(--cell-w-factor);
   --field-input-w-pct: var(--cell-w-pct);
+  --field-input-w-temp: var(--cell-w-temp);
   --field-input-w-ppm: var(--cell-w-ppm);
   --field-input-w-factor: var(--cell-w-factor);
+  --targets-pot-cell-w: var(--cell-w-temp);
   --pot-card-inline-pad: 0.3rem;
   --pot-sensor-card-w: calc(
     var(--pot-sensor-w) + var(--pot-sensor-w-temp) + var(--cell-gap)
@@ -1059,7 +1061,8 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
   font-variant-numeric: tabular-nums;
 }
 .mini-cell.inactive-zone-target,
-.mini-cell.inactive-zone-pump {
+.mini-cell.inactive-zone-pump,
+.mini-cell.inactive-actuator-off {
   opacity: 0.62;
 }
 .mini-cell.inactive-zone-target .field-control:disabled,
@@ -1296,6 +1299,26 @@ label.field-bool span.lbl { font-size: var(--text-badge); }
 .targets-panel .sub-card .compact-row,
 .safety-panel .sub-card .compact-row {
   justify-content: flex-start;
+}
+.targets-pots-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cell-gap);
+}
+.targets-pots-row {
+  flex-wrap: nowrap;
+}
+/* Cele → Donice: jedna szerokość kolumny (% i °C — inaczej pct jest węższy o 1ch). */
+.targets-pots-row .mini-cell.mini-cell-pct,
+.targets-pots-row .mini-cell.mini-cell-temp {
+  width: var(--targets-pot-cell-w);
+  max-width: var(--targets-pot-cell-w);
+  flex: 0 0 var(--targets-pot-cell-w);
+}
+.targets-pots-row .mini-cell .field-input-wrap.suffix-w-pct,
+.targets-pots-row .mini-cell .field-input-wrap.suffix-w-temp {
+  width: 100%;
+  max-width: 100%;
 }
 .safety-panel .targets-split + .targets-split,
 .safety-panel .targets-split + .sub-card {

@@ -5,6 +5,9 @@ function bindFormInputRoot(root) {
     if (el?.matches?.("select.setup-control-type-select[data-path]")) {
       syncControlTypeField(el.dataset.path, el.value);
     }
+    if (el?.matches?.('input[type="checkbox"][data-path^="actuators."][data-path$=".available"]')) {
+      syncActuatorCapabilityDefaultsFromInput(el);
+    }
     if (el?.id === "f-pseudo_lights_active") syncLightsActiveDisplay();
     collectScenario();
   });
