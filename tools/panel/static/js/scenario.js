@@ -164,8 +164,12 @@ function applyInactiveZonePolicy(doc) {
     const fallback = targetField?.default ?? 50;
     if (!zone.targets || typeof zone.targets !== "object") zone.targets = {};
     zone.targets.soil_moisture_pct = fallback;
+    const tempField = fieldByName(`zone_${index + 1}_target_soil_temperature_c`);
+    zone.targets.soil_temperature_c = tempField?.default ?? 20;
     if (!zone.irrigation || typeof zone.irrigation !== "object") zone.irrigation = {};
     zone.irrigation.available = false;
+    if (!zone.heat_mat || typeof zone.heat_mat !== "object") zone.heat_mat = {};
+    zone.heat_mat.available = false;
   }
   return doc;
 }

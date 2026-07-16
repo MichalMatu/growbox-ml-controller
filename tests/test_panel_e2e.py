@@ -1,4 +1,4 @@
-"""End-to-end panel API tests for v2 scenarios and presets."""
+"""End-to-end panel API tests for v3 scenarios and presets."""
 
 from __future__ import annotations
 
@@ -9,31 +9,34 @@ from http.server import ThreadingHTTPServer
 import pytest
 from tests.test_panel import _http_json
 
-from tools.ml.contract import V2_CONTRACT_PATH, load_contract
+from tools.ml.contract import V3_CONTRACT_PATH, load_contract
 from tools.panel.bridge import SERIAL_MAX_LINE_BYTES
 from tools.panel.form_schema import SCENARIO_PRESETS, build_panel_schema, default_scenario
 from tools.panel.server import PanelHandler
 
 
-def test_schema_exposes_v2_metadata_and_presets():
+def test_schema_exposes_v3_metadata_and_presets():
     schema = build_panel_schema()
-    contract = load_contract(V2_CONTRACT_PATH)
-    assert schema["schema_version"] == 2
+    contract = load_contract(V3_CONTRACT_PATH)
+    assert schema["schema_version"] == 3
     assert schema["schema_hash"] == contract.short_hash
-    assert schema["feature_count"] == 103
-    assert len(schema["outputs"]) == 10
+    assert schema["feature_count"] == 128
+    assert len(schema["outputs"]) == 15
     preset_ids = {preset["id"] for preset in schema["presets"]}
     assert preset_ids == set(SCENARIO_PRESETS.keys())
 
 
 @pytest.mark.parametrize("preset_id", list(SCENARIO_PRESETS.keys()))
-def test_each_preset_produces_valid_v2_scenario(preset_id: str):
+def test_each_preset_produces_valid_v3_scenario(preset_id: str):
     scenario = default_scenario(seed=202, preset=preset_id)
     assert scenario["seed"] == 202
     assert isinstance(scenario.get("zones"), list)
     assert len(scenario["zones"]) == 4
     assert "actuators" in scenario
     assert "heater" in scenario["actuators"]
+    assert "nutrient_heater" in scenario["actuators"]
+    assert scenario["actuators"]["nutrient_heater"]["available"] is False
+    assert "nutrient_solution_temperature_c" in scenario["targets"]
     assert "safety" in scenario
     assert "maximum_nutrient_soil_delta_c" in scenario["safety"]
 
@@ -76,7 +79,7 @@ def test_e2e_load_scenario_all_presets(panel_http_server):
         assert len(sent["zones"]) == 4
 
 
-def test_v2_scenario_presets_fit_serial_line_limit():
+def test_v3_scenario_presets_fit_serial_line_limit():
     import json
 
     for preset_id in SCENARIO_PRESETS:
@@ -87,15 +90,17 @@ def test_v2_scenario_presets_fit_serial_line_limit():
         assert line_len <= SERIAL_MAX_LINE_BYTES, preset_id
 
 
-def test_default_scenario_has_all_v2_sections():
+def test_default_scenario_has_all_v3_sections():
     scenario = default_scenario()
     assert isinstance(scenario["zones"], list)
     assert len(scenario["zones"]) == 4
     assert "pseudo" in scenario
     assert "lights_active" in scenario["pseudo"]
-    assert len(scenario["previous"]) == 6
+    assert len(scenario["previous"]) == 7
+    assert "nutrient_heater" in scenario["previous"]
     assert "dehumidifier" in scenario["previous"]
     assert "irrigation_zone_1" not in scenario["previous"]
+    assert "heat_mat" in scenario["zones"][0]
     assert scenario["zones"][0]["irrigation"]["control_type"] in {"binary", "pwm"}
 
 

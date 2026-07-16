@@ -136,7 +136,7 @@ def test_default_scenario_has_nominal_actuators():
 
 def test_panel_schema_matches_contract_feature_count():
     schema = build_panel_schema()
-    assert schema["feature_count"] == 103
+    assert schema["feature_count"] == 128
     assert schema["outputs"] == [
         "heater",
         "fan",
@@ -148,6 +148,11 @@ def test_panel_schema_matches_contract_feature_count():
         "irrigation_zone_2",
         "irrigation_zone_3",
         "irrigation_zone_4",
+        "nutrient_heater",
+        "heat_mat_zone_1",
+        "heat_mat_zone_2",
+        "heat_mat_zone_3",
+        "heat_mat_zone_4",
     ]
     assert len(schema["sections"]) >= 8
     actuators = next(section for section in schema["sections"] if section["id"] == "actuators")

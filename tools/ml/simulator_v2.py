@@ -1,4 +1,4 @@
-"""Growbox environment simulator v2 — up to 4 irrigation zones, 10 ML outputs.
+"""Growbox environment simulator v2 — up to 4 irrigation zones, 15 ML outputs (v3 heating).
 
 Physically inspired lumped-parameter model for training (not runtime on device).
 Inactive zones (``available=False``) contribute no soil/evaporation/irrigation physics.
@@ -25,9 +25,12 @@ GLOBAL_OUTPUT_NAMES = (
     "co2_doser",
 )
 
-ZONE_OUTPUT_NAMES = tuple(f"irrigation_zone_{index}" for index in range(1, MAX_ZONES + 1))
+ZONE_IRRIGATION_NAMES = tuple(f"irrigation_zone_{index}" for index in range(1, MAX_ZONES + 1))
+HEATING_OUTPUT_NAMES = ("nutrient_heater",) + tuple(
+    f"heat_mat_zone_{index}" for index in range(1, MAX_ZONES + 1)
+)
 
-OUTPUT_NAMES = GLOBAL_OUTPUT_NAMES + ZONE_OUTPUT_NAMES
+OUTPUT_NAMES = GLOBAL_OUTPUT_NAMES + ZONE_IRRIGATION_NAMES + HEATING_OUTPUT_NAMES
 
 
 def _clamp(value: float, low: float, high: float) -> float:
@@ -89,11 +92,24 @@ class Co2DoserCapabilities:
 
 
 @dataclass(frozen=True)
+class NutrientHeaterCapabilities:
+    available: bool = False
+    max_power_w: float = 150.0
+    efficiency: float = 0.95
+
+
+@dataclass(frozen=True)
 class PumpCapabilities:
     available: bool = False
     flow_ml_s: float = 18.0
     maximum_pulse_s: float = 4.0
     minimum_interval_s: float = 300.0
+
+
+@dataclass(frozen=True)
+class HeatMatCapabilities:
+    available: bool = False
+    max_power_w: float = 25.0
 
 
 @dataclass(frozen=True)
@@ -109,7 +125,9 @@ class ZoneConfig:
     soil_temperature_valid: bool = False
     cultivation: ZoneCultivation = field(default_factory=ZoneCultivation)
     irrigation: PumpCapabilities = field(default_factory=PumpCapabilities)
+    heat_mat: HeatMatCapabilities = field(default_factory=HeatMatCapabilities)
     target_soil_moisture_pct: float = 52.0
+    target_soil_temperature_c: float = 22.0
 
 
 @dataclass(frozen=True)
@@ -120,6 +138,7 @@ class GlobalActuators:
     dehumidifier: DehumidifierCapabilities = field(default_factory=DehumidifierCapabilities)
     cooler: CoolerCapabilities = field(default_factory=CoolerCapabilities)
     co2_doser: Co2DoserCapabilities = field(default_factory=Co2DoserCapabilities)
+    nutrient_heater: NutrientHeaterCapabilities = field(default_factory=NutrientHeaterCapabilities)
     lights: LightsConfig = field(default_factory=LightsConfig)
 
 
@@ -128,6 +147,7 @@ class ControlTargets:
     target_air_temperature_c: float = 25.0
     target_air_humidity_pct: float = 65.0
     target_co2_ppm: float = 850.0
+    target_nutrient_solution_temperature_c: float = 20.0
 
 
 @dataclass(frozen=True)
@@ -142,6 +162,11 @@ class ControlAction:
     irrigation_zone_2: float = 0.0
     irrigation_zone_3: float = 0.0
     irrigation_zone_4: float = 0.0
+    nutrient_heater: float = 0.0
+    heat_mat_zone_1: float = 0.0
+    heat_mat_zone_2: float = 0.0
+    heat_mat_zone_3: float = 0.0
+    heat_mat_zone_4: float = 0.0
 
     def clipped(self) -> ControlAction:
         return ControlAction(*(_clamp(value, 0.0, 1.0) for value in self.as_tuple()))
@@ -222,7 +247,10 @@ class Scenario:
 class SequentialEnvironmentSimulatorV2:
     """Closed-loop v2 simulator with per-zone irrigation timers."""
 
-    irrigation_output_names: ClassVar[tuple[str, ...]] = ZONE_OUTPUT_NAMES
+    irrigation_output_names: ClassVar[tuple[str, ...]] = ZONE_IRRIGATION_NAMES
+    heat_mat_output_names: ClassVar[tuple[str, ...]] = tuple(
+        name for name in HEATING_OUTPUT_NAMES if name.startswith("heat_mat_")
+    )
 
     def __init__(self, scenario: Scenario, *, seed: int | None = None):
         self.scenario = copy.deepcopy(scenario)
@@ -297,10 +325,16 @@ class SequentialEnvironmentSimulatorV2:
         values["dehumidifier"] = values["dehumidifier"] if caps.dehumidifier.available else 0.0
         values["cooler"] = values["cooler"] if caps.cooler.available else 0.0
         values["co2_doser"] = values["co2_doser"] if caps.co2_doser.available else 0.0
+        values["nutrient_heater"] = (
+            values["nutrient_heater"] if caps.nutrient_heater.available else 0.0
+        )
         for index, zone in enumerate(self.scenario.zones):
             name = self.irrigation_output_names[index]
             if not zone.available or not zone.irrigation.available:
                 values[name] = 0.0
+            heat_name = self.heat_mat_output_names[index]
+            if not zone.available or not zone.heat_mat.available:
+                values[heat_name] = 0.0
         return ControlAction.from_mapping(values)
 
     @staticmethod
@@ -324,6 +358,13 @@ class SequentialEnvironmentSimulatorV2:
             irrigation_zone_2=command.irrigation_zone_2,
             irrigation_zone_3=command.irrigation_zone_3,
             irrigation_zone_4=command.irrigation_zone_4,
+            nutrient_heater=self._lag(
+                old.nutrient_heater, command.nutrient_heater, dt, lag.heater_s
+            ),
+            heat_mat_zone_1=command.heat_mat_zone_1,
+            heat_mat_zone_2=command.heat_mat_zone_2,
+            heat_mat_zone_3=command.heat_mat_zone_3,
+            heat_mat_zone_4=command.heat_mat_zone_4,
         )
 
     def _zone_evaporation_pp_s(
@@ -411,6 +452,20 @@ class SequentialEnvironmentSimulatorV2:
             for index in range(MAX_ZONES)
         )
 
+        nutrient_heater_w = (
+            effective.nutrient_heater
+            * caps.nutrient_heater.max_power_w
+            * caps.nutrient_heater.efficiency
+            if caps.nutrient_heater.available
+            else 0.0
+        )
+        nutrient_thermal_mass_j_k = 84_000.0
+        nutrient_loss_w_per_k = 3.5
+        nutrient_loss_w = nutrient_loss_w_per_k * (
+            state.outside_temperature_c - state.nutrient_solution_temperature_c
+        )
+        nutrient_temp_delta = (nutrient_heater_w + nutrient_loss_w) * dt / nutrient_thermal_mass_j_k
+
         irrigation_humidity_boost_pp = 0.0
         for index, zone_cfg in enumerate(self.scenario.zones):
             if not zone_cfg.available or not zone_cfg.irrigation.available:
@@ -428,6 +483,11 @@ class SequentialEnvironmentSimulatorV2:
                 0.0,
                 100.0,
             )
+            if zone_cfg.soil_temperature_valid and irrigation_ml > 0.0:
+                mix_fraction = _clamp(irrigation_ml / max(1.0, water_capacity), 0.0, 0.35)
+                zone_state.soil_temperature_c += (
+                    state.nutrient_solution_temperature_c - zone_state.soil_temperature_c
+                ) * mix_fraction
             irrigation_humidity_boost_pp += irrigation_ml * 0.04 * 100.0 / air_moisture_capacity_g
 
         humidity_delta = (
@@ -457,6 +517,27 @@ class SequentialEnvironmentSimulatorV2:
                 zone_state.soil_moisture_pct - soil_loss_pp, 0.0, 100.0
             )
 
+        for index, zone_cfg in enumerate(self.scenario.zones):
+            if not zone_cfg.available or not zone_cfg.soil_temperature_valid:
+                continue
+            zone_state = state.zones[index]
+            crop = zone_cfg.cultivation
+            soil_thermal_mass_j_k = max(2_000.0, crop.pot_volume_l * 1_800.0)
+            heat_mat_name = self.heat_mat_output_names[index]
+            heat_mat_w = (
+                getattr(effective, heat_mat_name) * zone_cfg.heat_mat.max_power_w
+                if zone_cfg.heat_mat.available
+                else 0.0
+            )
+            air_coupling_w = 0.35 * (state.air_temperature_c - zone_state.soil_temperature_c)
+            soil_temp_delta = (heat_mat_w + air_coupling_w) * dt / soil_thermal_mass_j_k
+            zone_state.soil_temperature_c = _clamp(
+                zone_state.soil_temperature_c + soil_temp_delta, -10.0, 50.0
+            )
+
+        state.nutrient_solution_temperature_c = _clamp(
+            state.nutrient_solution_temperature_c + nutrient_temp_delta, 0.0, 50.0
+        )
         state.air_temperature_c = _clamp(state.air_temperature_c + temperature_delta, -30.0, 70.0)
         state.air_humidity_pct = _clamp(state.air_humidity_pct + humidity_delta, 0.0, 100.0)
         state.co2_ppm = _clamp(

@@ -17,7 +17,7 @@ class SerialBridgeError(RuntimeError):
 
 
 # Must match growbox::demo::SerialJsonProtocol::kMaximumLineBytes (SerialJsonProtocol.h).
-SERIAL_MAX_LINE_BYTES = 4096
+SERIAL_MAX_LINE_BYTES = 8192
 
 _SCENARIO_SNAPSHOT_KEYS = (
     "sensors",

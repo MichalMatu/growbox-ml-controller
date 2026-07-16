@@ -1,11 +1,11 @@
-"""Build panel form metadata and default scenario payloads from contract v2."""
+"""Build panel form metadata and default scenario payloads from contract v3."""
 
 from __future__ import annotations
 
 import re
 from typing import Any
 
-from tools.ml.contract import V2_CONTRACT_PATH, Contract, load_contract
+from tools.ml.contract import V3_CONTRACT_PATH, Contract, load_contract
 
 INACTIVE_ZONE_PRESET: dict[str, Any] = {
     "available": False,
@@ -16,7 +16,7 @@ INACTIVE_ZONE_PRESET: dict[str, Any] = {
         "substrate_water_capacity_ml": 3000.0,
         "transpiration_factor": 1.0,
     },
-    "targets": {"soil_moisture_pct": 50.0},
+    "targets": {"soil_moisture_pct": 50.0, "soil_temperature_c": 20.0},
     "irrigation": {
         "available": False,
         "flow_ml_s": 0.0,
@@ -24,7 +24,12 @@ INACTIVE_ZONE_PRESET: dict[str, Any] = {
         "minimum_interval_s": 0.0,
         "control_type": "binary",
     },
-    "previous": {"irrigation": 0.0},
+    "heat_mat": {
+        "available": False,
+        "max_power_w": 0.0,
+        "control_type": "binary",
+    },
+    "previous": {"irrigation": 0.0, "heat_mat": 0.0},
 }
 
 NOMINAL_PRESET: dict[str, Any] = {
@@ -56,7 +61,7 @@ NOMINAL_PRESET: dict[str, Any] = {
                 "substrate_water_capacity_ml": 3600.0,
                 "transpiration_factor": 1.0,
             },
-            "targets": {"soil_moisture_pct": 50.0},
+            "targets": {"soil_moisture_pct": 50.0, "soil_temperature_c": 22.0},
             "irrigation": {
                 "available": True,
                 "flow_ml_s": 22.0,
@@ -64,7 +69,12 @@ NOMINAL_PRESET: dict[str, Any] = {
                 "minimum_interval_s": 600.0,
                 "control_type": "binary",
             },
-            "previous": {"irrigation": 0.0},
+            "heat_mat": {
+                "available": False,
+                "max_power_w": 0.0,
+                "control_type": "binary",
+            },
+            "previous": {"irrigation": 0.0, "heat_mat": 0.0},
         },
         dict(INACTIVE_ZONE_PRESET),
         dict(INACTIVE_ZONE_PRESET),
@@ -111,11 +121,18 @@ NOMINAL_PRESET: dict[str, Any] = {
             "maximum_pulse_s": 3.0,
             "control_type": "binary",
         },
+        "nutrient_heater": {
+            "available": False,
+            "max_power_w": 0.0,
+            "efficiency": 0.0,
+            "control_type": "binary",
+        },
     },
     "targets": {
         "air_temperature_c": 25.0,
         "air_humidity_pct": 65.0,
         "co2_ppm": 850.0,
+        "nutrient_solution_temperature_c": 20.0,
     },
     "previous": {
         "heater": 0.0,
@@ -124,6 +141,7 @@ NOMINAL_PRESET: dict[str, Any] = {
         "dehumidifier": 0.0,
         "cooler": 0.0,
         "co2_doser": 0.0,
+        "nutrient_heater": 0.0,
     },
 }
 
@@ -176,7 +194,7 @@ ACTIVE_ZONE_PRESET: dict[str, Any] = {
         "substrate_water_capacity_ml": 3600.0,
         "transpiration_factor": 1.0,
     },
-    "targets": {"soil_moisture_pct": 50.0},
+    "targets": {"soil_moisture_pct": 50.0, "soil_temperature_c": 22.0},
     "irrigation": {
         "available": True,
         "flow_ml_s": 22.0,
@@ -184,7 +202,12 @@ ACTIVE_ZONE_PRESET: dict[str, Any] = {
         "minimum_interval_s": 600.0,
         "control_type": "binary",
     },
-    "previous": {"irrigation": 0.0},
+    "heat_mat": {
+        "available": False,
+        "max_power_w": 0.0,
+        "control_type": "binary",
+    },
+    "previous": {"irrigation": 0.0, "heat_mat": 0.0},
 }
 
 SCENARIO_PRESETS: dict[str, dict[str, Any]] = {
@@ -365,7 +388,7 @@ def _normalize_zones(scenario: dict[str, Any]) -> None:
 
 
 def default_scenario(*, seed: int = 101, preset: str = "nominal") -> dict[str, Any]:
-    contract = load_contract(V2_CONTRACT_PATH)
+    contract = load_contract(V3_CONTRACT_PATH)
     scenario: dict[str, Any] = {"seed": seed}
     for feature in contract.features:
         path = feature.path
@@ -424,6 +447,7 @@ PANEL_ACTUATOR_CONTROL_FIELDS: tuple[tuple[str, str, str], ...] = (
     ("dehumidifier_control_type", "actuators.dehumidifier.control_type", "binary"),
     ("cooler_control_type", "actuators.cooler.control_type", "binary"),
     ("co2_doser_control_type", "actuators.co2_doser.control_type", "binary"),
+    ("nutrient_heater_control_type", "actuators.nutrient_heater.control_type", "binary"),
 )
 
 
@@ -471,7 +495,7 @@ def _section_for_path(path: str) -> str:
 
 
 def build_panel_schema(contract: Contract | None = None) -> dict[str, Any]:
-    contract = contract or load_contract(V2_CONTRACT_PATH)
+    contract = contract or load_contract(V3_CONTRACT_PATH)
     sections: dict[str, list[dict[str, Any]]] = {key: [] for key in SECTION_ORDER}
     sections["other"] = []
 

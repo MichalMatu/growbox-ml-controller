@@ -1,4 +1,4 @@
-"""Deterministic rollout teacher for simulator v2 (10 ML outputs)."""
+"""Deterministic rollout teacher for simulator v2 (15 ML outputs; heating stubbed at 0)."""
 
 from __future__ import annotations
 
@@ -92,6 +92,9 @@ def build_candidates(simulator: SequentialEnvironmentSimulatorV2) -> tuple[Contr
                     values[name] = irrigation_combo[combo_index]
                 else:
                     values[name] = 0.0
+            values["nutrient_heater"] = 0.0
+            for heat_name in OUTPUT_NAMES[11:]:
+                values[heat_name] = 0.0
             candidates.append(ControlAction.from_mapping(values))
     return tuple(candidates)
 

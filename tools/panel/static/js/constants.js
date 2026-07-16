@@ -57,7 +57,7 @@ const HELP_TOPICS = {
     html: `
       <p>Co jest podłączone w growboxie i jakie ma limity. Checkbox przy nazwie = urządzenie jest w zestawie.</p>
       <ul>
-        <li><strong>Klimat</strong> (6 kart) i <strong>Pompy</strong> (4 karty) — ten sam układ: nazwa, checkbox, parametry w poziomym rzędzie</li>
+        <li><strong>Klimat</strong> (7 kart), <strong>Pompy</strong> i <strong>Maty</strong> (4+4) — ten sam układ: nazwa, checkbox, parametry w poziomym rzędzie</li>
         <li><strong>Pompa N</strong> — edytowalna tylko gdy <strong>Donica N</strong> jest zaznaczona w <strong>Czujniki</strong></li>
         <li><strong>bin / pwm</strong> — klikalna etykieta w nagłówku karty aktuatora (przełącza typ sterowania)</li>
         <li><strong>Fan min</strong> — dolna granica PWM przy alarmie temperatury</li>
@@ -72,7 +72,8 @@ const HELP_TOPICS = {
       <p>Wartości zadane — do czego model ma dążyć.</p>
       <ul>
         <li><strong>Powietrze</strong> — temperatura, wilgotność, CO₂ (cały box)</li>
-        <li><strong>Donice</strong> — docelowa wilgotność gleby per donica (tylko gdy donica jest zaznaczona w <strong>Czujniki</strong>)</li>
+        <li><strong>Roztwór</strong> — docelowa temperatura roztworu nawozu</li>
+        <li><strong>Donice</strong> — docelowa wilgotność i temperatura gleby per donica (tylko gdy donica jest zaznaczona w <strong>Czujniki</strong>)</li>
         <li>Wyłączona donica — cel i pompa w <strong>Aktuary</strong> są zablokowane</li>
       </ul>
     `,
@@ -97,7 +98,7 @@ const HELP_TOPICS = {
     html: `
       <p>Ostatnie wyjścia sterownika w skali 0–1 z poprzedniego kroku.</p>
       <ul>
-        <li>10 wyjść ML (6 globalnych + 4 pompy strefowe)</li>
+        <li>15 wyjść ML (7 globalnych + 4 pompy + 4 maty)</li>
         <li>Model używa tego jako kontekstu (histereza, płynność sterowania)</li>
       </ul>
       <p>Przycisk <strong>Poprzedni</strong> pod <strong>Na żywo</strong> (panel modal). Badge <strong>Krok N−1</strong> — wyjścia z kroku poprzedniego (kontekst wejściowy bieżącej decyzji). Tabela tylko do odczytu; po <strong>Krok</strong> pokazuje <strong>Safety</strong> sprzed aktualizacji, nie bieżące paski.</p>
@@ -148,6 +149,11 @@ const LABEL_MAP = {
   zone_2_target_soil_moisture_pct: "Donica 2",
   zone_3_target_soil_moisture_pct: "Donica 3",
   zone_4_target_soil_moisture_pct: "Donica 4",
+  zone_1_target_soil_temperature_c: "Donica 1 T",
+  zone_2_target_soil_temperature_c: "Donica 2 T",
+  zone_3_target_soil_temperature_c: "Donica 3 T",
+  zone_4_target_soil_temperature_c: "Donica 4 T",
+  target_nutrient_solution_temperature_c: "Roztwór T",
   lights_active: "Lampa",
   outside_temperature_c: "Temp",
   outside_humidity_pct: "Wilg.",
@@ -177,7 +183,14 @@ const LABEL_MAP = {
   target_air_temperature_c: "T °C",
   target_air_humidity_pct: "Wilg %",
   target_co2_ppm: "CO₂",
+  target_nutrient_solution_temperature_c: "Roztwór T",
   target_soil_moisture_pct: "Gleba %",
+  target_soil_temperature_c: "Gleba T",
+  nutrient_heater_max_power_w: "W max",
+  nutrient_heater_efficiency: "η",
+  nutrient_heater_control_type: "typ",
+  heat_mat_max_power_w: "W max",
+  heat_mat_control_type: "typ",
   maximum_air_temperature_c: "T max",
   alarm_air_temperature_c: "Alarm T",
   alarm_minimum_fan: "Fan min",
@@ -200,6 +213,12 @@ const LABEL_MAP = {
   previous_dehumidifier: "Osusz.",
   previous_cooler: "Chłodz.",
   previous_co2_doser: "CO₂",
+  previous_nutrient_heater: "Grz. roztw.",
+  zone_1_previous_heat_mat: "Mata 1",
+  zone_2_previous_heat_mat: "Mata 2",
+  zone_3_previous_heat_mat: "Mata 3",
+  zone_4_previous_heat_mat: "Mata 4",
+  nutrient_heater_available: "Grzałka roztworu",
   dehumidifier_available: "Osuszacz",
   dehumidifier_max_removal_g_h: "g/h",
   cooler_available: "Chłodzenie",
@@ -274,13 +293,21 @@ const TARGET_AIR_FIELDS = [
   "target_air_temperature_c",
   "target_air_humidity_pct",
   "target_co2_ppm",
+  "target_nutrient_solution_temperature_c",
 ];
 
-const TARGET_SOIL_FIELDS = [
+const TARGET_SOIL_MOISTURE_FIELDS = [
   "zone_1_target_soil_moisture_pct",
   "zone_2_target_soil_moisture_pct",
   "zone_3_target_soil_moisture_pct",
   "zone_4_target_soil_moisture_pct",
+];
+
+const TARGET_SOIL_TEMPERATURE_FIELDS = [
+  "zone_1_target_soil_temperature_c",
+  "zone_2_target_soil_temperature_c",
+  "zone_3_target_soil_temperature_c",
+  "zone_4_target_soil_temperature_c",
 ];
 
 const PREVIOUS_GLOBAL_FIELDS = [
@@ -290,6 +317,7 @@ const PREVIOUS_GLOBAL_FIELDS = [
   "previous_dehumidifier",
   "previous_cooler",
   "previous_co2_doser",
+  "previous_nutrient_heater",
 ];
 
 const SAFETY_TEMPERATURE_FIELDS = [
@@ -327,6 +355,13 @@ const PREVIOUS_PUMP_FIELDS = [
   "zone_4_previous_irrigation",
 ];
 
+const PREVIOUS_HEAT_MAT_FIELDS = [
+  "zone_1_previous_heat_mat",
+  "zone_2_previous_heat_mat",
+  "zone_3_previous_heat_mat",
+  "zone_4_previous_heat_mat",
+];
+
 const LIVE_SENSOR_GROUPS = [
   {
     title: "Wewnętrzne",
@@ -334,7 +369,7 @@ const LIVE_SENSOR_GROUPS = [
       { key: "air_temperature_c", targetKey: "air_temperature_c", decimals: 1, unit: "°C" },
       { key: "air_humidity_pct", targetKey: "air_humidity_pct", decimals: 0, unit: "%" },
       { key: "co2_ppm", targetKey: "co2_ppm", decimals: 0, unit: " ppm" },
-      { key: "nutrient_solution_temperature_c", targetKey: null, decimals: 1, unit: "°C" },
+      { key: "nutrient_solution_temperature_c", targetKey: "nutrient_solution_temperature_c", decimals: 1, unit: "°C" },
       { key: "lights_active", kind: "pseudo", label: "Lampa" },
     ],
   },
@@ -358,6 +393,7 @@ const ACTUATOR_CLIMATE_GROUPS = [
   ["Osuszacz", ["dehumidifier_available", "dehumidifier_max_removal_g_h", "dehumidifier_control_type"]],
   ["Chłodzenie", ["cooler_available", "cooler_max_cooling_w", "cooler_control_type"]],
   ["CO₂", ["co2_doser_available", "co2_doser_dose_ppm_per_full_pulse", "co2_doser_maximum_pulse_s", "co2_doser_control_type"]],
+  ["Grzałka roztworu", ["nutrient_heater_available", "nutrient_heater_max_power_w", "nutrient_heater_efficiency", "nutrient_heater_control_type"]],
 ];
 
 const ACTUATOR_PUMP_GROUPS = [
@@ -365,6 +401,13 @@ const ACTUATOR_PUMP_GROUPS = [
   ["Pompa 2", ["zone_2_irrigation_available", "zone_2_irrigation_flow_ml_s", "zone_2_irrigation_maximum_pulse_s", "zone_2_irrigation_minimum_interval_s", "zone_2_irrigation_control_type"]],
   ["Pompa 3", ["zone_3_irrigation_available", "zone_3_irrigation_flow_ml_s", "zone_3_irrigation_maximum_pulse_s", "zone_3_irrigation_minimum_interval_s", "zone_3_irrigation_control_type"]],
   ["Pompa 4", ["zone_4_irrigation_available", "zone_4_irrigation_flow_ml_s", "zone_4_irrigation_maximum_pulse_s", "zone_4_irrigation_minimum_interval_s", "zone_4_irrigation_control_type"]],
+];
+
+const ACTUATOR_HEAT_MAT_GROUPS = [
+  ["Mata 1", ["zone_1_heat_mat_available", "zone_1_heat_mat_max_power_w", "zone_1_heat_mat_control_type"]],
+  ["Mata 2", ["zone_2_heat_mat_available", "zone_2_heat_mat_max_power_w", "zone_2_heat_mat_control_type"]],
+  ["Mata 3", ["zone_3_heat_mat_available", "zone_3_heat_mat_max_power_w", "zone_3_heat_mat_control_type"]],
+  ["Mata 4", ["zone_4_heat_mat_available", "zone_4_heat_mat_max_power_w", "zone_4_heat_mat_control_type"]],
 ];
 
 const OUTPUT_LABELS = {
@@ -378,6 +421,11 @@ const OUTPUT_LABELS = {
   irrigation_zone_2: "Pompa 2",
   irrigation_zone_3: "Pompa 3",
   irrigation_zone_4: "Pompa 4",
+  nutrient_heater: "Grz. roztworu",
+  heat_mat_zone_1: "Mata 1",
+  heat_mat_zone_2: "Mata 2",
+  heat_mat_zone_3: "Mata 3",
+  heat_mat_zone_4: "Mata 4",
   zone_1_target_soil_moisture_pct: "Donica 1",
   zone_2_target_soil_moisture_pct: "Donica 2",
   zone_3_target_soil_moisture_pct: "Donica 3",
@@ -408,6 +456,13 @@ const FIELD_HINTS = {
   heater_available: "Grzałka w zestawie — odznaczone = wyjście zawsze 0 po wysłaniu",
   heater_max_power_w: "Maksymalna moc grzałki (W)",
   heater_efficiency: "Sprawność grzałki (0–1) — ułamek mocy idącej do powietrza",
+  nutrient_heater_available: "Grzałka roztworu w zestawie — odznaczone = wyjście zawsze 0 po wysłaniu",
+  nutrient_heater_max_power_w: "Maksymalna moc grzałki roztworu (W)",
+  nutrient_heater_efficiency: "Sprawność grzałki roztworu (0–1)",
+  nutrient_heater_control_type: "bin = przekaźnik wł/wył, pwm = modulacja mocy",
+  heat_mat_available: "Mata grzewcza w zestawie — odznaczone = wyjście zawsze 0 po wysłaniu",
+  heat_mat_max_power_w: "Maksymalna moc maty grzewczej (W)",
+  heat_mat_control_type: "bin = przekaźnik wł/wył, pwm = modulacja mocy",
   fan_available: "Wentylator w zestawie — odznaczone = wyjście zawsze 0 po wysłaniu",
   fan_max_airflow_m3_h: "Maks. przepływ wentylatora (m³/h)",
   humidifier_available: "Nawilżacz w zestawie — odznaczone = wyjście zawsze 0 po wysłaniu",
@@ -432,7 +487,9 @@ const FIELD_HINTS = {
   target_air_temperature_c: "Docelowa temperatura powietrza w growboxie",
   target_air_humidity_pct: "Docelowa wilgotność powietrza",
   target_co2_ppm: "Docelowe stężenie CO₂",
+  target_nutrient_solution_temperature_c: "Docelowa temperatura roztworu nawozu",
   target_soil_moisture_pct: "Docelowa wilgotność gleby",
+  target_soil_temperature_c: "Docelowa temperatura gleby w doniczce",
   maximum_air_temperature_c: "Powyżej tej T wewnętrznej grzałka = 0 (niezależnie od modelu)",
   alarm_air_temperature_c: "Od tej T włącza się alarm wentylacji",
   alarm_minimum_fan: "Minimalny fan przy alarmie temperatury (max z Fan min w aktuatorach)",
@@ -457,7 +514,9 @@ const FIELD_HINTS = {
   previous_dehumidifier: "Poprzednie wyjście osuszacza (0–1)",
   previous_cooler: "Poprzednie wyjście chłodzenia (0–1)",
   previous_co2_doser: "Poprzednie wyjście dozownika CO₂ (0–1)",
+  previous_nutrient_heater: "Poprzednie wyjście grzałki roztworu (0–1)",
   previous_irrigation: "Poprzednie wyjście pompy podlewania (0–1)",
+  previous_heat_mat: "Poprzednie wyjście maty grzewczej (0–1)",
 };
 
 function validityHint(sensorKey) {
@@ -473,9 +532,14 @@ const ACTUATOR_AVAILABILITY_PATHS = {
   dehumidifier: "actuators.dehumidifier.available",
   cooler: "actuators.cooler.available",
   co2_doser: "actuators.co2_doser.available",
+  nutrient_heater: "actuators.nutrient_heater.available",
   irrigation_zone_1: "zones.0.irrigation.available",
   irrigation_zone_2: "zones.1.irrigation.available",
   irrigation_zone_3: "zones.2.irrigation.available",
   irrigation_zone_4: "zones.3.irrigation.available",
+  heat_mat_zone_1: "zones.0.heat_mat.available",
+  heat_mat_zone_2: "zones.1.heat_mat.available",
+  heat_mat_zone_3: "zones.2.heat_mat.available",
+  heat_mat_zone_4: "zones.3.heat_mat.available",
 };
 const SAFETY_REASON_ACTUATOR_UNAVAILABLE = 64;

@@ -137,6 +137,18 @@ function liveZoneSoilTarget(zoneIndex, decision) {
   return { value, hint: LIVE_SOIL_TARGET_HINT };
 }
 
+function liveZoneSoilTempTarget(zoneIndex, decision) {
+  const fromDecision = decision?.zones?.[zoneIndex]?.targets?.soil_temperature_c;
+  if (typeof fromDecision === "number" && Number.isFinite(fromDecision)) {
+    return { value: fromDecision, hint: "" };
+  }
+  const field = fieldByName(`zone_${zoneIndex + 1}_target_soil_temperature_c`);
+  const value = field
+    ? getNested(scenario, field.path)
+    : getNested(scenario, `zones.${zoneIndex}.targets.soil_temperature_c`);
+  return { value, hint: LIVE_SOIL_TARGET_HINT };
+}
+
 function renderLivePotMetricRow(label, value, decimals, unit, targetValue, targetDecimals, targetUnit, valid, {
   targetHint = "",
 } = {}) {
@@ -160,7 +172,8 @@ function renderLivePotGroupTable(decision) {
     const zone = decision?.zones?.[index] || {};
     const sensors = zone.sensors || {};
     const validity = zone.validity || {};
-    const { value: target, hint: targetHint } = liveZoneSoilTarget(index, decision);
+    const { value: moistureTarget, hint: moistureHint } = liveZoneSoilTarget(index, decision);
+    const { value: tempTarget, hint: tempHint } = liveZoneSoilTempTarget(index, decision);
     const potNo = index + 1;
     return [
       renderLivePotMetricRow(
@@ -168,21 +181,22 @@ function renderLivePotGroupTable(decision) {
         sensors.soil_moisture_pct,
         0,
         "%",
-        target,
+        moistureTarget,
         0,
         "%",
         validity.soil_moisture_pct !== false,
-        { targetHint },
+        { targetHint: moistureHint },
       ),
       renderLivePotMetricRow(
         `${potNo} Gleba T`,
         sensors.soil_temperature_c,
         1,
         "°C",
-        null,
+        tempTarget,
         1,
         "°C",
         validity.soil_temperature_c !== false,
+        { targetHint: tempHint },
       ),
     ];
   });

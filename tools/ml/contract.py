@@ -15,6 +15,7 @@ import numpy as np
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CONTRACT_PATH = PROJECT_ROOT / "schemas" / "environment-controller-v1.json"
 V2_CONTRACT_PATH = PROJECT_ROOT / "schemas" / "environment-controller-v2.json"
+V3_CONTRACT_PATH = PROJECT_ROOT / "schemas" / "environment-controller-v3.json"
 
 
 def canonical_json_bytes(document: Mapping[str, Any]) -> bytes:

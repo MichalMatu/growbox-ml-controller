@@ -808,6 +808,50 @@ def test_toolbar_has_no_scenario_preset_selector():
     assert "btn-defaults" in html
 
 
+def test_v3_nutrient_heater_in_climate_actuator_groups():
+    constants_js = (PANEL_STATIC / "js" / "constants.js").read_text(encoding="utf-8")
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    assert "ACTUATOR_HEAT_MAT_GROUPS" in constants_js
+    assert "nutrient_heater_available" in constants_js
+    assert "Grzałka roztworu" in constants_js
+    block_fn = _extract_js_function(form_js, "renderActuatorBlock")
+    assert block_fn
+    assert "ACTUATOR_HEAT_MAT_GROUPS" in block_fn
+    assert "actuators-heat-mats-block" in block_fn
+    cell_fn = _extract_js_function(form_js, "renderActuatorGroupCell")
+    assert "field-stack" in cell_fn
+    assert "flex-direction: column" not in cell_fn
+
+
+def test_v3_soil_temperature_targets_use_horizontal_compact_row():
+    constants_js = (PANEL_STATIC / "js" / "constants.js").read_text(encoding="utf-8")
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    for index in range(1, 5):
+        assert f'zone_{index}_target_soil_temperature_c: "Donica {index} T"' in constants_js
+    targets_fn = _extract_js_function(form_js, "renderTargetsBlock")
+    assert "TARGET_SOIL_TEMPERATURE_FIELDS" in targets_fn
+    assert "renderSoilTargetMiniCell" in targets_fn
+    assert "field-stack" not in targets_fn
+
+
+def test_v3_live_tables_expose_temperature_targets():
+    constants_js = (PANEL_STATIC / "js" / "constants.js").read_text(encoding="utf-8")
+    live_js = (PANEL_STATIC / "js" / "live.js").read_text(encoding="utf-8")
+    assert 'targetKey: "nutrient_solution_temperature_c"' in constants_js
+    assert "liveZoneSoilTempTarget" in live_js
+    assert "targets?.soil_temperature_c" in live_js
+
+
+def test_v3_previous_outputs_include_heating_actuators():
+    constants_js = (PANEL_STATIC / "js" / "constants.js").read_text(encoding="utf-8")
+    form_js = FORM_JS.read_text(encoding="utf-8")
+    assert "previous_nutrient_heater" in constants_js
+    assert "PREVIOUS_HEAT_MAT_FIELDS" in constants_js
+    prev_fn = _extract_js_function(form_js, "renderPreviousBlock")
+    assert "Maty" in prev_fn
+    assert "nutrient_heater:" in constants_js
+
+
 def test_infrequent_settings_live_in_setup_modal_not_inline_form():
     html = INDEX_HTML.read_text(encoding="utf-8")
     form_js = FORM_JS.read_text(encoding="utf-8")

@@ -3,10 +3,14 @@ function shortLabel(name) {
   if (typeof OUTPUT_LABELS !== "undefined" && OUTPUT_LABELS[name]) return OUTPUT_LABELS[name];
   const zoneTarget = name.match(/^zone_(\d+)_target_soil_moisture_pct$/);
   if (zoneTarget) return `Donica ${zoneTarget[1]}`;
+  const zoneTempTarget = name.match(/^zone_(\d+)_target_soil_temperature_c$/);
+  if (zoneTempTarget) return `Donica ${zoneTempTarget[1]} T`;
   const zoneAvail = name.match(/^zone_(\d+)_available$/);
   if (zoneAvail) return `Donica ${zoneAvail[1]}`;
   const zonePrev = name.match(/^zone_(\d+)_previous_irrigation$/);
   if (zonePrev) return `Pompa ${zonePrev[1]}`;
+  const zoneHeatPrev = name.match(/^zone_(\d+)_previous_heat_mat$/);
+  if (zoneHeatPrev) return `Mata ${zoneHeatPrev[1]}`;
   const zoneIrr = name.match(/^zone_\d+_irrigation_(.+)$/);
   if (zoneIrr) {
     const baseKey = `irrigation_${zoneIrr[1]}`;
@@ -80,6 +84,9 @@ function fieldHint(name) {
   if (/^zone_\d+_target_soil_moisture_pct$/.test(name)) {
     return FIELD_HINTS.target_soil_moisture_pct || "";
   }
+  if (/^zone_\d+_target_soil_temperature_c$/.test(name)) {
+    return FIELD_HINTS.target_soil_temperature_c || "";
+  }
   if (/^soil_moisture_zone_\d+_pct$/.test(name)) {
     return FIELD_HINTS.soil_moisture_pct || "";
   }
@@ -88,6 +95,14 @@ function fieldHint(name) {
   }
   if (/^zone_\d+_previous_irrigation$/.test(name)) {
     return FIELD_HINTS.previous_irrigation || "";
+  }
+  if (/^zone_\d+_previous_heat_mat$/.test(name)) {
+    return FIELD_HINTS.previous_heat_mat || "";
+  }
+  const zoneHeatMat = name.match(/^zone_\d+_heat_mat_(.+)$/);
+  if (zoneHeatMat) {
+    const baseKey = `heat_mat_${zoneHeatMat[1]}`;
+    if (FIELD_HINTS[baseKey]) return FIELD_HINTS[baseKey];
   }
   const zoneIrr = name.match(/^zone_\d+_irrigation_(.+)$/);
   if (zoneIrr) {
@@ -699,7 +714,7 @@ function renderGrowboxActuatorTypeSelect(field, title, { disabled = false } = {}
 function renderGrowboxActuatorTypeCard(title, names, sectionId) {
   const controlTypeField = controlTypeFieldFromGroup(names, sectionId);
   if (!controlTypeField) return "";
-  const zoneIndex = zoneIndexFromPumpGroup(names);
+  const zoneIndex = zoneIndexFromPumpGroup(names) ?? zoneIndexFromHeatMatGroup(names);
   const zonePumpInactive = zoneIndex !== null && !isZoneActive(zoneIndex);
   const inactiveClass = zonePumpInactive ? " inactive-zone-pump" : "";
   const titleHintAttr = zonePumpInactive ? inactiveZoneDependentHintAttr() : "";
@@ -716,12 +731,14 @@ function renderGrowboxActuatorTypeRow(groups, sectionId) {
 function renderGrowboxActuatorsSubCard() {
   const climate = renderGrowboxActuatorTypeRow(ACTUATOR_CLIMATE_GROUPS, "actuators");
   const pumps = renderGrowboxActuatorTypeRow(ACTUATOR_PUMP_GROUPS, "zones");
-  if (!climate && !pumps) return "";
+  const heatMats = renderGrowboxActuatorTypeRow(ACTUATOR_HEAT_MAT_GROUPS, "zones");
+  if (!climate && !pumps && !heatMats) return "";
   return `<div class="sub-card setup-actuators-block">
     <div class="card-head"><h3>Aktuary</h3></div>
     <div class="setup-actuators-groups">
       <div class="sub-card"><div class="card-head"><h3>Klimat</h3></div><div class="compact-row actuators-type-row">${climate}</div></div>
       <div class="sub-card"><div class="card-head"><h3>Pompy</h3></div><div class="compact-row actuators-type-row">${pumps}</div></div>
+      <div class="sub-card"><div class="card-head"><h3>Maty</h3></div><div class="compact-row actuators-type-row">${heatMats}</div></div>
     </div>
   </div>`;
 }
@@ -740,7 +757,7 @@ function renderGrowboxPanel(inSetup = false) {
 }
 
 function isZoneSoilTargetActive(field) {
-  const match = field.name.match(/^zone_(\d+)_target_soil_moisture_pct$/);
+  const match = field.name.match(/^zone_(\d+)_target_soil_(moisture_pct|temperature_c)$/);
   if (!match) return true;
   return isZoneActive(Number(match[1]) - 1);
 }
@@ -764,28 +781,41 @@ function renderSoilTargetMiniCell(field) {
 
 function syncInactiveZoneTargetInputs() {
   for (let index = 0; index < 4; index += 1) {
-    const field = fieldByName(zoneTargetFieldName(index));
-    if (!field) continue;
-    const active = isZoneActive(index);
-    const el = document.getElementById(`f-${field.path.replaceAll(".", "_")}`);
-    if (!el || el.type !== "number") continue;
-    const cell = el.closest(".mini-cell");
-    if (cell) cell.classList.toggle("inactive-zone-target", !active);
-    el.disabled = !active;
-    el.title = active ? (fieldHint(field.name) || "") : INACTIVE_ZONE_DEPENDENT_HINT;
-    const nameEl = cell?.querySelector(".name");
-    if (nameEl) {
-      if (!active) nameEl.setAttribute("title", INACTIVE_ZONE_DEPENDENT_HINT);
-      else nameEl.removeAttribute("title");
+    for (const fieldName of [
+      zoneTargetFieldName(index),
+      `zone_${index + 1}_target_soil_temperature_c`,
+    ]) {
+      const field = fieldByName(fieldName);
+      if (!field) continue;
+      const active = isZoneActive(index);
+      const el = document.getElementById(`f-${field.path.replaceAll(".", "_")}`);
+      if (!el || el.type !== "number") continue;
+      const cell = el.closest(".mini-cell");
+      if (cell) cell.classList.toggle("inactive-zone-target", !active);
+      el.disabled = !active;
+      el.title = active ? (fieldHint(field.name) || "") : INACTIVE_ZONE_DEPENDENT_HINT;
+      const nameEl = cell?.querySelector(".name");
+      if (nameEl) {
+        if (!active) nameEl.setAttribute("title", INACTIVE_ZONE_DEPENDENT_HINT);
+        else nameEl.removeAttribute("title");
+      }
     }
   }
 }
 
-function zoneIndexFromPumpGroup(names) {
-  const availableName = names.find(name => /^zone_\d+_irrigation_available$/.test(name));
+function zoneIndexFromZoneActuatorGroup(names, kind) {
+  const availableName = names.find(name => new RegExp(`^zone_\\d+_${kind}_available$`).test(name));
   if (!availableName) return null;
-  const match = availableName.match(/^zone_(\d+)_irrigation_available$/);
+  const match = availableName.match(/^zone_(\d+)_/);
   return match ? Number(match[1]) - 1 : null;
+}
+
+function zoneIndexFromPumpGroup(names) {
+  return zoneIndexFromZoneActuatorGroup(names, "irrigation");
+}
+
+function zoneIndexFromHeatMatGroup(names) {
+  return zoneIndexFromZoneActuatorGroup(names, "heat_mat");
 }
 
 function syncInactiveZonePumpInputs() {
@@ -823,29 +853,69 @@ function syncInactiveZonePumpInputs() {
   }
 }
 
+function syncInactiveZoneHeatMatInputs() {
+  for (let index = 0; index < 4; index += 1) {
+    const field = fieldByName(`zone_${index + 1}_heat_mat_available`, "zones");
+    if (!field) continue;
+    const active = isZoneActive(index);
+    const availEl = document.getElementById(`f-${field.path.replaceAll(".", "_")}`);
+    const cell = availEl?.closest(".mini-cell.actuator-cell");
+    if (cell) cell.classList.toggle("inactive-zone-pump", !active);
+    if (availEl) {
+      availEl.disabled = !active;
+      if (!active) availEl.checked = false;
+      availEl.title = active ? (fieldHint(field.name) || "") : INACTIVE_ZONE_DEPENDENT_HINT;
+    }
+    const controlField = fieldByName(`zone_${index + 1}_heat_mat_control_type`, "zones");
+    if (controlField) {
+      const selectEl = document.querySelector(`select.setup-control-type-select[data-path="${controlField.path}"]`);
+      const typeCard = selectEl?.closest(".setup-actuator-type-card");
+      if (typeCard) typeCard.classList.toggle("inactive-zone-pump", !active);
+      if (selectEl) {
+        selectEl.disabled = !active;
+        selectEl.title = active ? (fieldHint(controlField.name) || "") : INACTIVE_ZONE_DEPENDENT_HINT;
+      }
+    }
+    if (!cell) continue;
+    cell.querySelectorAll("input.field-control, select.field-control").forEach(el => {
+      el.disabled = !active;
+    });
+    const titleEl = cell.querySelector(".head-row .name");
+    if (titleEl) {
+      if (!active) titleEl.setAttribute("title", INACTIVE_ZONE_DEPENDENT_HINT);
+      else titleEl.removeAttribute("title");
+    }
+  }
+}
+
 function syncInactiveZoneDependentInputs() {
   syncInactiveZoneTargetInputs();
   syncInactiveZonePumpInputs();
+  syncInactiveZoneHeatMatInputs();
 }
 
 function renderTargetsBlock() {
   const airFields = TARGET_AIR_FIELDS.map(name => fieldByName(name)).filter(Boolean);
-  const soilFields = TARGET_SOIL_FIELDS.map(name => fieldByName(name)).filter(Boolean);
+  const soilMoistureFields = TARGET_SOIL_MOISTURE_FIELDS.map(name => fieldByName(name)).filter(Boolean);
+  const soilTempFields = TARGET_SOIL_TEMPERATURE_FIELDS.map(name => fieldByName(name)).filter(Boolean);
   const airCells = airFields.map(renderMiniCell).join("");
-  const soilCells = soilFields.map(renderSoilTargetMiniCell).join("");
+  const soilMoistureCells = soilMoistureFields.map(renderSoilTargetMiniCell).join("");
+  const soilTempCells = soilTempFields.map(renderSoilTargetMiniCell).join("");
   return `<div class="card targets-panel">${renderSectionHead("Cele", "targets")}
     <div class="targets-split">
       <div class="sub-card"><div class="card-head"><h3>Powietrze</h3></div><div class="compact-row">${airCells}</div></div>
-      <div class="sub-card"><div class="card-head"><h3>Donice</h3></div><div class="compact-row">${soilCells}</div></div>
+      <div class="sub-card"><div class="card-head"><h3>Donice</h3></div><div class="compact-row">${soilMoistureCells}${soilTempCells}</div></div>
     </div></div>`;
 }
 
 function renderPreviousBlock(inSetup = false) {
   const globalFields = PREVIOUS_GLOBAL_FIELDS.map(name => fieldByName(name)).filter(Boolean);
   const pumpFields = PREVIOUS_PUMP_FIELDS.map(name => fieldByName(name)).filter(Boolean);
+  const heatMatFields = PREVIOUS_HEAT_MAT_FIELDS.map(name => fieldByName(name)).filter(Boolean);
   const climate = renderPreviousGroupTable("Klimat", globalFields);
   const pumps = renderPreviousGroupTable("Pompy", pumpFields);
-  const body = `<div class="live-sensors-split previous-split" aria-label="Poprzedni stan aktuatorów">${climate}${pumps}</div>`;
+  const heatMats = renderPreviousGroupTable("Maty", heatMatFields);
+  const body = `<div class="live-sensors-split previous-split" aria-label="Poprzedni stan aktuatorów">${climate}${pumps}${heatMats}</div>`;
   if (inSetup) return body;
   return `<div class="card previous-panel">${renderSectionHead("Poprzedni stan aktuatorów", "previous")}${body}</div>`;
 }
@@ -899,7 +969,7 @@ function renderActuatorGroupCell(title, names, sectionId) {
     .filter(n => n !== availableName && !n.endsWith("_control_type"))
     .map(n => field(n))
     .filter(Boolean);
-  const zoneIndex = zoneIndexFromPumpGroup(names);
+  const zoneIndex = zoneIndexFromPumpGroup(names) ?? zoneIndexFromHeatMatGroup(names);
   const zonePumpInactive = zoneIndex !== null && !isZoneActive(zoneIndex);
   const wide = paramFields.some(isWideField) ? " wide" : "";
   const availId = availableField ? `f-${availableField.path.replaceAll(".", "_")}` : "";
@@ -933,9 +1003,11 @@ function renderActuatorRow(groups, sectionId) {
 function renderActuatorBlock() {
   const climate = renderActuatorRow(ACTUATOR_CLIMATE_GROUPS, "actuators");
   const pumps = renderActuatorRow(ACTUATOR_PUMP_GROUPS, "zones");
+  const heatMats = renderActuatorRow(ACTUATOR_HEAT_MAT_GROUPS, "zones");
   return `<div class="actuators-split">
     <div class="sub-card actuators-climate-block"><div class="card-head"><h3>Klimat</h3></div><div class="compact-row">${climate}</div></div>
     <div class="sub-card actuators-pumps-block"><div class="card-head"><h3>Pompy</h3></div><div class="compact-row">${pumps}</div></div>
+    <div class="sub-card actuators-heat-mats-block"><div class="card-head"><h3>Maty</h3></div><div class="compact-row">${heatMats}</div></div>
   </div>`;
 }
 
