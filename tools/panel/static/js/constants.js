@@ -386,6 +386,10 @@ const LIVE_SENSOR_GROUPS = [
 var SCENARIO_SYNC_KEYS = [
   "sensors", "validity", "zones", "pseudo", "environment", "actuators", "targets", "safety", "previous",
 ];
+/** User-editable payload for Wyślij badge — excludes runtime previous updated by live decisions. */
+var SCENARIO_BADGE_KEYS = [
+  "sensors", "validity", "zones", "pseudo", "environment", "actuators", "targets", "safety",
+];
 const ACTUATOR_CLIMATE_GROUPS = [
   ["Grzałka", ["heater_available", "heater_max_power_w", "heater_efficiency", "heater_control_type"]],
   ["Fan", ["fan_available", "fan_max_airflow_m3_h", "fan_minimum_command", "fan_control_type"]],

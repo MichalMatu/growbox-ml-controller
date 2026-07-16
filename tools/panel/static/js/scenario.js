@@ -129,6 +129,18 @@ function scenarioSyncPayload(doc) {
   return scenarioPayloadForKeys(doc, SCENARIO_SYNC_KEYS);
 }
 
+function scenarioBadgePayload(doc) {
+  const payload = scenarioPayloadForKeys(doc, SCENARIO_BADGE_KEYS);
+  if (Array.isArray(payload.zones)) {
+    payload.zones = payload.zones.map((zone) => {
+      if (!zone || typeof zone !== "object" || Array.isArray(zone)) return zone;
+      const { previous, ...rest } = zone;
+      return rest;
+    });
+  }
+  return payload;
+}
+
 function stableStringify(value) {
   if (Array.isArray(value)) {
     return `[${value.map(stableStringify).join(",")}]`;
@@ -142,6 +154,10 @@ function stableStringify(value) {
 
 function scenarioSyncFingerprint(doc) {
   return stableStringify(scenarioSyncPayload(doc));
+}
+
+function scenarioBadgeFingerprint(doc) {
+  return stableStringify(scenarioBadgePayload(doc));
 }
 
 function cloneScenarioDoc(doc) {
@@ -198,7 +214,7 @@ function readScenarioFromForm(base = scenario, { formatNumbers = true } = {}) {
 
 function setDeviceScenarioBaseline(doc) {
   const source = doc ?? readScenarioFromForm(scenario);
-  deviceScenarioBaseline = scenarioSyncFingerprint(source);
+  deviceScenarioBaseline = scenarioBadgeFingerprint(source);
 }
 
 function clearDeviceScenarioBaseline() {
@@ -231,7 +247,7 @@ function updateScenarioSyncBadge() {
     el.hidden = true;
     return;
   }
-  const synced = scenarioSyncFingerprint(readScenarioFromForm(scenario)) === deviceScenarioBaseline;
+  const synced = scenarioBadgeFingerprint(readScenarioFromForm(scenario)) === deviceScenarioBaseline;
   el.hidden = false;
   if (synced) {
     el.className = "sync-badge synced";

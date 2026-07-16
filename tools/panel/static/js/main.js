@@ -34,21 +34,23 @@ async function init() {
   panelSchema = await api("/api/schema");
   await refreshPorts();
   await refreshState();
+  let formRendered = false;
   if (lastState?.connected) {
-    if (!await requestDeviceScenario()) {
+    if (hasDeviceScenario(lastState)) {
+      tryApplyScenarioFromDevice(lastState, { force: true });
+      formRendered = true;
+    } else if (await requestDeviceScenario()) {
+      formRendered = true;
+    } else {
       scenario = sanitizeScenarioNumeric(loadScenarioDraft(panelSchema) || panelSchema.default_scenario);
     }
   } else {
     scenario = sanitizeScenarioNumeric(loadScenarioDraft(panelSchema) || panelSchema.default_scenario);
   }
-  renderForm();
+  if (!formRendered) renderForm();
   bindFormSync();
-  if (lastState?.connected && deviceScenarioBaseline !== null) {
-    setDeviceScenarioBaseline();
-    updateScenarioSyncBadge();
-  }
+  updateScenarioSyncBadge();
   setInterval(() => refreshState(), 900);
-  refreshState();
 }
 function bindToolbar() {
   document.addEventListener("click", async (event) => {
@@ -134,12 +136,13 @@ function bindToolbar() {
       event.preventDefault();
       if (btn.classList.contains("state-disabled")) return;
       try {
-        await runAction(() => api("/api/command", {
-          method: "POST",
-          body: btn.dataset.cmd,
-        }), btn);
         const cmdBody = btn.dataset.cmd;
-        applyCommandOptimistic(cmdBody);
+        const cmd = JSON.parse(cmdBody);
+        const isPlay = btn.dataset.ui === "playpause" && cmd.command === "resume";
+        await runAction(async () => {
+          if (isPlay) await startSimulationTransport();
+          else await postTransportCommand(cmd);
+        }, btn);
         updateToolbarState(lastState);
         setTimeout(async () => {
           await refreshState();
@@ -183,6 +186,7 @@ function bindToolbar() {
             method: "POST",
             body: JSON.stringify({ seed, scenario: body }),
           });
+          await postTransportCommand({ command: "mode", value: "closed_loop" });
           patchLocalScenarioStatus(payload);
           patchLocalTransportStatus({ command: "load_scenario" });
           deviceScenarioSynced = true;

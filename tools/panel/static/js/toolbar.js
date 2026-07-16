@@ -93,8 +93,9 @@ function updateToolbarState(state = lastState) {
       setBtnHint("mode-loop", "Przełącz na LOOP — automatyczne krokowanie");
     } else {
       setToolbarBtn("mode-loop", "state-on-accent");
-      setBtnHint("mode-loop", "Tryb: LOOP — automatyczne kroki po Wyślij");
-      setBtnHint("mode-replay", "Przełącz na REPLAY — krok po kroku ręcznie");
+      setBtnHint("mode-loop", "Tryb: LOOP — ▶ krokowanie automatyczne");
+      setBtnHint("mode-replay", "Przełącz na REPLAY — tylko ręczny Krok");
+      setBtnHint("playpause", paused ? "Start — wznów (auto Loop)" : "Stop — zatrzymaj sterowanie");
     }
 
     setBtnHint("reset", "Reset symulacji na urządzeniu");
@@ -114,6 +115,26 @@ function updateToolbarState(state = lastState) {
     });
   }
 }
+async function postTransportCommand(command) {
+  await api("/api/command", {
+    method: "POST",
+    body: JSON.stringify(command),
+  });
+  applyCommandOptimistic(JSON.stringify(command));
+}
+
+async function ensureClosedLoopMode() {
+  if (resolveMode(lastState) !== "closed_loop") {
+    await postTransportCommand({ command: "mode", value: "closed_loop" });
+  }
+}
+
+/** ▶ — always run automatic loop stepping (Replay + ▶ alone does not infer). */
+async function startSimulationTransport() {
+  await ensureClosedLoopMode();
+  await postTransportCommand({ command: "resume" });
+}
+
 function applyCommandOptimistic(cmdJson) {
   try {
     const cmd = JSON.parse(cmdJson);

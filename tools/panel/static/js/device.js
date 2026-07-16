@@ -287,6 +287,7 @@ async function waitForDeviceHandshake(maxAttempts = 20) {
 
 async function requestDeviceStatus(maxAttempts = 10) {
   if (!lastState?.connected) return false;
+  if (hasDeviceStatus(lastState)) return true;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     await api("/api/command", { method: "POST", body: '{"command":"status"}' });
     await new Promise(resolve => setTimeout(resolve, 140));
@@ -302,6 +303,9 @@ function hasDeviceScenario(state) {
 
 async function requestDeviceScenario() {
   if (!lastState?.connected) return false;
+  if (hasDeviceScenario(lastState)) {
+    return tryApplyScenarioFromDevice(lastState, { force: true });
+  }
   const ok = await requestDeviceStatus();
   updateToolbarState(lastState);
   if (!ok) return false;

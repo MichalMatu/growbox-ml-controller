@@ -477,14 +477,31 @@ def test_scenario_sync_uses_baseline_fingerprint():
     assert badge_fn
     assert read_fn
     assert "deviceScenarioFromState" not in scenario_js
-    assert "scenarioSyncFingerprint(readScenarioFromForm(scenario))" in badge_fn
+    assert "scenarioBadgeFingerprint(readScenarioFromForm(scenario))" in badge_fn
     assert "deviceScenarioBaseline" in state_js
     assert "setDeviceScenarioBaseline" in scenario_js
+    assert "scenarioBadgeFingerprint" in scenario_js
+    assert "SCENARIO_BADGE_KEYS" in (PANEL_STATIC / "js" / "constants.js").read_text(
+        encoding="utf-8"
+    )
     assert "deviceScenarioBaseline === null" in badge_fn
     assert 'bindFormInputRoot(document.getElementById("previous-section"))' not in main_js
     assert "cloneScenarioDoc(base)" in read_fn
     assert "forEachScenarioField" in read_fn
     assert 'document.querySelectorAll("[data-path]")' not in read_fn
+
+
+def test_play_and_load_force_closed_loop_transport():
+    main_js = (PANEL_STATIC / "js" / "main.js").read_text(encoding="utf-8")
+    toolbar_js = (PANEL_STATIC / "js" / "toolbar.js").read_text(encoding="utf-8")
+    assert "startSimulationTransport" in toolbar_js
+    assert "ensureClosedLoopMode" in toolbar_js
+    assert "startSimulationTransport()" in main_js
+    load_block = main_js.split('if (btn.id === "btn-load")', 1)[1].split(
+        'if (btn.id === "btn-step")', 1
+    )[0]
+    assert "postTransportCommand" in load_block
+    assert "closed_loop" in load_block
 
 
 def test_actuators_main_page_use_compact_climate_and_pump_rows():

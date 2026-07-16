@@ -422,6 +422,14 @@ class SerialBridge:
                 self._state["last_startup"] = message
             elif message_type == "decision":
                 self._state["last_decision"] = message
+                status = self._state.get("last_status")
+                if isinstance(status, dict):
+                    step = message.get("step")
+                    if step is not None:
+                        status["step"] = step
+                    simulated_time_s = message.get("simulated_time_s")
+                    if simulated_time_s is not None:
+                        status["simulated_time_s"] = simulated_time_s
             elif message_type == "status":
                 self._apply_status_message(message)
             elif message_type == "scenario":
