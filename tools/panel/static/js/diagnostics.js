@@ -39,13 +39,40 @@ function renderDiagMeter(label, used, total, { tone = "accent", detail = "" } = 
   </div>`;
 }
 
-function renderDiagRow(label, value, { mono = false, warn = false } = {}) {
-  const cls = ["diag-row", warn ? "warn" : "", mono ? "mono" : ""].filter(Boolean).join(" ");
-  return `<div class="${cls}"><span class="diag-row-label">${label}</span><span class="diag-row-value">${value}</span></div>`;
+function renderDiagTableRow(row) {
+  if (row.meter) {
+    const meter = renderDiagMeter(row.label, row.used, row.total, {
+      tone: row.tone,
+      detail: row.detail,
+    });
+    return `<tr><th scope="row">${escapeHtml(row.label)}</th><td class="num diag-meter-cell">${meter}</td></tr>`;
+  }
+  const rowCls = row.warn ? " class=\"invalid\"" : "";
+  const value = row.mono
+    ? `<strong>${escapeHtml(String(row.value ?? "—"))}</strong>`
+    : escapeHtml(String(row.value ?? "—"));
+  return `<tr${rowCls}><th scope="row">${escapeHtml(row.label)}</th><td class="num">${value}</td></tr>`;
 }
 
-function renderDiagSection(title, body) {
-  return `<section class="diag-section"><h4>${title}</h4>${body}</section>`;
+function renderDiagTable(title, rows, { valueHead = "Wartość" } = {}) {
+  const body = rows.map(renderDiagTableRow).join("");
+  return `<div class="live-sensor-col">
+    <div class="live-data-table-wrap">
+      <table class="live-data-table diag-data-table" aria-label="${escapeHtml(title)}">
+        <colgroup>
+          <col class="sensor-col" />
+          <col class="reading-col" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th scope="col" class="sensor-col live-table-group-head">${escapeHtml(title)}</th>
+            <th scope="col" class="num">${escapeHtml(valueHead)}</th>
+          </tr>
+        </thead>
+        <tbody>${body}</tbody>
+      </table>
+    </div>
+  </div>`;
 }
 
 function formatDiagnosticsHtml(snapshot) {
@@ -53,7 +80,7 @@ function formatDiagnosticsHtml(snapshot) {
     return `<p class="diag-note">Brak danych — połącz płytkę i kliknij <strong>Odśwież</strong>.</p>`;
   }
   if (typeof snapshot === "string") {
-    return `<p class="diag-note diag-error">${snapshot}</p>`;
+    return `<p class="diag-note diag-error">${escapeHtml(snapshot)}</p>`;
   }
 
   const device = snapshot.device || {};
@@ -82,63 +109,68 @@ function formatDiagnosticsHtml(snapshot) {
   const serialLineBytes = Number(memory.serial_line_bytes) || 0;
   const serialInPsram = memory.serial_line_in_psram === true;
 
-  const psramBody = psramOn
-    ? `${renderDiagMeter("Zajęte", usedPsram, totalPsram, {
-        tone: usedPsram / totalPsram > 0.85 ? "warn" : "ok",
-        detail: formatUsageDetail(usedPsram, totalPsram),
-      })}
-      ${renderDiagRow("Wolne", formatBytes(freePsram), { mono: true })}
-      ${renderDiagRow("Max blok", formatBytes(heap.largest_free_psram), { mono: true })}
-      ${renderDiagRow("Min. wolne", formatBytes(heap.min_free_psram), { mono: true })}`
-    : `<p class="diag-note">PSRAM niedostępny.</p>`;
+  const connection = renderDiagTable("Połączenie", [
+    { label: "Status", value: connected ? "OK" : "brak", warn: !connected },
+    { label: "Port", value: port, mono: true },
+    { label: "Profil", value: boardProfile, mono: true },
+    { label: "PSRAM", value: psramOn ? "włączony" : "wyłączony" },
+    { label: "Tryb", value: mode },
+    { label: "Stan", value: runState },
+    { label: "Krok", value: runtime.step ?? "—", mono: true },
+    { label: "Seed", value: runtime.seed ?? startup.seed ?? "—", mono: true },
+  ]);
 
-  const dramBody = totalInternal > 0
-    ? `${renderDiagMeter("Zajęte", usedInternal, totalInternal, {
-        tone: usedInternal / totalInternal > 0.85 ? "warn" : "accent",
-        detail: formatUsageDetail(usedInternal, totalInternal),
-      })}
-      ${renderDiagRow("Wolne", formatBytes(freeInternal), { mono: true })}
-      ${renderDiagRow("Min. wolne", formatBytes(minInternal), { mono: true })}
-      ${renderDiagRow("Max blok", formatBytes(largestInternal), { mono: true })}`
-    : `${renderDiagRow("Wolne", formatBytes(freeInternal), { mono: true })}
-      ${renderDiagRow("Min. wolne", formatBytes(minInternal), { mono: true })}
-      ${renderDiagRow("Max blok", formatBytes(largestInternal), { mono: true })}`;
+  const psramRows = psramOn
+    ? [
+        {
+          label: "Zajęte",
+          meter: true,
+          used: usedPsram,
+          total: totalPsram,
+          tone: usedPsram / totalPsram > 0.85 ? "warn" : "ok",
+          detail: formatUsageDetail(usedPsram, totalPsram),
+        },
+        { label: "Wolne", value: formatBytes(freePsram), mono: true },
+        { label: "Max blok", value: formatBytes(heap.largest_free_psram), mono: true },
+        { label: "Min. wolne", value: formatBytes(heap.min_free_psram), mono: true },
+        {
+          label: "Bufor serial",
+          value: serialLineBytes ? `${formatBytes(serialLineBytes)} · ${serialInPsram ? "PSRAM" : "DRAM"}` : "—",
+          mono: true,
+        },
+        { label: "caps alloc", value: memory.spiram_caps_alloc ? "tak" : "nie" },
+        { label: "malloc→PSRAM", value: memory.spiram_malloc ? "tak" : "nie" },
+      ]
+    : [{ label: "PSRAM", value: "niedostępny" }];
+  const psram = renderDiagTable("PSRAM", psramRows);
 
-  const allocBody = psramOn
-    ? `${renderDiagRow("Bufor serial", serialLineBytes ? `${formatBytes(serialLineBytes)} · ${serialInPsram ? "PSRAM" : "DRAM"}` : "—", { mono: true })}
-      ${renderDiagRow("caps alloc", memory.spiram_caps_alloc ? "tak" : "nie")}
-      ${renderDiagRow("malloc→PSRAM", memory.spiram_malloc ? "tak" : "nie")}`
-    : `<p class="diag-note">Brak PSRAM w buildzie.</p>`;
+  const dramRows = [];
+  if (totalInternal > 0) {
+    dramRows.push({
+      label: "Zajęte",
+      meter: true,
+      used: usedInternal,
+      total: totalInternal,
+      tone: usedInternal / totalInternal > 0.85 ? "warn" : "accent",
+      detail: formatUsageDetail(usedInternal, totalInternal),
+    });
+  }
+  dramRows.push(
+    { label: "Wolne", value: formatBytes(freeInternal), mono: true },
+    { label: "Min. wolne", value: formatBytes(minInternal), mono: true },
+    { label: "Max blok", value: formatBytes(largestInternal), mono: true },
+    {
+      label: "Stos main",
+      meter: true,
+      used: stackUsed,
+      total: stackTotal,
+      tone: stackFree < 1024 ? "warn" : "accent",
+      detail: `${formatBytes(stackFree)} wolne / ${formatBytes(stackTotal)}`,
+    },
+  );
+  const dram = renderDiagTable("DRAM", dramRows);
 
-  return `<div class="diag-panel">
-    ${renderDiagSection("Połączenie", `
-      <div class="diag-inline-grid">
-        ${renderDiagRow("Status", connected ? "OK" : "brak", { warn: !connected })}
-        ${renderDiagRow("Port", port, { mono: true })}
-        ${renderDiagRow("Profil", boardProfile, { mono: true })}
-        ${renderDiagRow("PSRAM", psramOn ? "włączony" : "wyłączony")}
-      </div>
-    `)}
-    <div class="diag-columns">
-      <div class="diag-col">
-        ${renderDiagSection("PSRAM", psramBody)}
-        ${renderDiagSection("Alokacje", allocBody)}
-      </div>
-      <div class="diag-col">
-        ${renderDiagSection("DRAM", dramBody)}
-        ${renderDiagSection("Stos main", renderDiagMeter("Zajęty", stackUsed, stackTotal, {
-          tone: stackFree < 1024 ? "warn" : "accent",
-          detail: `${formatBytes(stackFree)} wolne / ${formatBytes(stackTotal)}`,
-        }))}
-        ${renderDiagSection("Runtime", `
-          ${renderDiagRow("Tryb", mode)}
-          ${renderDiagRow("Stan", runState)}
-          ${renderDiagRow("Krok", runtime.step ?? "—", { mono: true })}
-          ${renderDiagRow("Seed", runtime.seed ?? startup.seed ?? "—", { mono: true })}
-        `)}
-      </div>
-    </div>
-  </div>`;
+  return `<div class="live-sensors-split diag-split" aria-label="Zasoby płytki">${connection}${psram}${dram}</div>`;
 }
 
 async function refreshDiagnosticsView(refreshDevice = true) {

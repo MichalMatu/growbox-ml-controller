@@ -118,6 +118,16 @@ def test_zone_soil_target_labels_use_donica_names():
     assert "zone_(\\d+)_target_soil_moisture_pct" in form_js
 
 
+def test_diagnostics_modal_uses_live_data_tables_like_previous():
+    diagnostics_js = (PANEL_STATIC / "js" / "diagnostics.js").read_text(encoding="utf-8")
+    panel_css = PANEL_CSS.read_text(encoding="utf-8")
+    assert "function renderDiagTable" in diagnostics_js
+    assert "live-sensors-split diag-split" in diagnostics_js
+    assert 'live-table-group-head">${escapeHtml(title)}</th>' in diagnostics_js
+    assert "diag-row" not in diagnostics_js
+    assert ".diag-split .live-data-table col.sensor-col" in panel_css
+
+
 def test_nutrient_soil_delta_field_has_celsius_suffix():
     form_js = FORM_JS.read_text(encoding="utf-8")
     suffix_fn = _extract_js_function(form_js, "fieldUnitSuffix")
