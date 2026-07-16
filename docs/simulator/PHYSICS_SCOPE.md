@@ -44,11 +44,14 @@ Internal (not in contract): absolute humidity, water mass per pot, effective act
 
 ## Open questions (answer using SOURCES)
 
-1. Store humidity as RH or absolute humidity internally?
-2. One soil moisture pool per pot or dual (fast surface / bulk)?
+See also [FORMULAS.md](FORMULAS.md) and [SLOT_MAP.md](SLOT_MAP.md) (Tier A/B).
+
+1. Store humidity as RH or absolute humidity internally? *(GES uses \(C_w\) kg/m³; Van Henten uses humidity state + RH output — prefer absolute internally.)*
+2. One soil moisture pool per pot or dual (fast surface / bulk)? *(start: one pool per pot.)*
 3. How strong is pot evaporation → chamber RH coupling at our box sizes?
-4. Default Δt: keep 10 s or allow multi-rate?
+4. Default Δt: keep 10 s or allow multi-rate? *(S03 env uses 900 s — we should substep.)*
 5. Which parameters are scenario-random vs global constants?
+6. Tier A backbone: compact Van Henten air triple vs reduced GES air node?
 
 ## Acceptance tests (later)
 

@@ -15,9 +15,11 @@ simulator skeleton**. Committed MLP weights are `untrained-placeholder` until th
 | Alignment guardrail sim ↔ schema | **done** | `tools/ml/alignment.py` |
 | Training pipeline entry | **done** | `python -m tools.ml.pipeline` |
 | Lumped physics fidelity | **placeholder** | current `tools/ml/simulator.py` is a stub-grade model |
-| Research sources collected | **in progress** | [SOURCES.md](SOURCES.md) + `third_party/` clones |
-| Equation / param design | **next** | fill SOURCES → then [PHYSICS_SCOPE.md](PHYSICS_SCOPE.md) |
-| New sim skeleton + tests | **next** | after sources reviewed |
+| Research sources collected | **done (catalog)** | [SOURCES.md](SOURCES.md) + `third_party/` clones |
+| Formula extract S03/S04 | **done** | [FORMULAS.md](FORMULAS.md) |
+| Slot map → contract v4 | **done** | [SLOT_MAP.md](SLOT_MAP.md) |
+| Equation / param design | **in progress** | [PHYSICS_SCOPE.md](PHYSICS_SCOPE.md) — refine after Tier A |
+| New sim skeleton + tests | **next** | `tools/ml/` physics package per SLOT_MAP |
 
 ## What “ready for skeleton” means
 
@@ -33,10 +35,10 @@ You should **not** yet treat `make train-full` as product training.
 ## Recommended work order
 
 ```text
-1. Collect sources          → docs/simulator/SOURCES.md  (you paste repos/links)
-2. Agree physics scope      → PHYSICS_SCOPE.md (coupled processes, Δt, simplifications)
-3. Parameter catalog        → which numbers live in scenario vs fixed constants
-4. Skeleton API + tests     → tools/ml/simulator.py (or tools/ml/growbox_sim/)
+1. Collect sources          → SOURCES.md + third_party/     ✓
+2. Extract formulas + map   → FORMULAS.md + SLOT_MAP.md     ✓
+3. Agree physics scope      → PHYSICS_SCOPE.md (Tier A/B)
+4. Skeleton API + tests     → tools/ml/ (+ physics/ package)
 5. Teacher cost on new dyn. → tools/ml/teacher.py
 6. train-quick smoke        → then train-full + commit weights
 ```
@@ -45,11 +47,13 @@ You should **not** yet treat `make train-full` as product training.
 
 | Doc | Role |
 |-----|------|
+| [FORMULAS.md](FORMULAS.md) | Van Henten + GES equations and parameter tables |
+| [SLOT_MAP.md](SLOT_MAP.md) | External model symbols → our 15 outputs / sensors |
 | [IO_INVENTORY.md](IO_INVENTORY.md) | Full ML I/O map from live contract |
+| [SOURCES.md](SOURCES.md) | Research index and licenses |
 | [../DATA_CONTRACT.md](../DATA_CONTRACT.md) | Contract rules |
-| [../IO_MAP.md](../IO_MAP.md) | Hardware mapping worksheet (may lag wording) |
+| [../IO_MAP.md](../IO_MAP.md) | Hardware mapping worksheet |
 | [../MODEL_PIPELINE.md](../MODEL_PIPELINE.md) | Dataset → train → export |
-| [../plan.md](../plan.md) | Product history / thermodynamics intent |
 
 ## Code entry points
 

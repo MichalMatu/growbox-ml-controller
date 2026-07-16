@@ -208,6 +208,7 @@ Priority: `high` | `medium` | `low` | `skip`.
 | 2026-07-16 | Prefer S03+S04 for equations; S01 qualitative; S02 control framing | license + fidelity fit | S01–S04 |
 | 2026-07-16 | S03 (mpcrl-greenhouse): **use OK with attribution** | authors granted permission if cited in sources | S03 |
 | 2026-07-16 | Add S05–S08 thermal/building method repos | LPTN toolkit + HVAC/ISO methods | S05–S08 |
+| 2026-07-16 | Write FORMULAS.md + SLOT_MAP.md from S03/S04 | extract ODEs and actuator mapping | S03, S04 |
 
 ---
 
