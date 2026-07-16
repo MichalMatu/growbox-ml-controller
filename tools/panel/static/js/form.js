@@ -1124,8 +1124,8 @@ function renderSafetyFieldsSubCard(title, fieldNames) {
 function renderSafetyBlock(inSetup = false) {
   const temperature = renderSafetyFieldsSubCard("Temperatura", SAFETY_TEMPERATURE_FIELDS);
   const rules = renderSafetyFieldsSubCard("Reguły", SAFETY_RULE_FIELDS);
-  const co2 = renderSafetyFieldsSubCard("CO₂", SAFETY_CO2_FIELDS);
-  const irrigation = renderSafetyFieldsSubCard("Podlewanie", SAFETY_IRRIGATION_FIELDS);
+  const co2 = renderSafetyParamCell("CO₂", SAFETY_CO2_FIELDS);
+  const irrigation = renderSafetyParamCell("Podlewanie", SAFETY_IRRIGATION_FIELDS);
   const antiflapCells = SAFETY_ANTIFLAP_GROUPS.map(([title, names]) =>
     renderSafetyParamCell(title, names)
   ).join("");

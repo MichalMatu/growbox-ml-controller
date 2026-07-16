@@ -129,6 +129,8 @@ def test_safety_section_uses_sub_cards_and_polish_labels():
     assert "Temperatura" in render_fn
     assert "Anty-flapping" in render_fn
     assert "targets-split" in render_fn
+    assert 'renderSafetyParamCell("CO₂", SAFETY_CO2_FIELDS)' in render_fn
+    assert 'renderSafetyFieldsSubCard("CO₂"' not in render_fn
 
 
 def test_page_avoids_broken_multi_column_form_grids():
