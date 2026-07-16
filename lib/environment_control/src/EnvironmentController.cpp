@@ -80,7 +80,17 @@ void sharpenBinaryProposals(const ControllerInput& input, RawModelDecision& raw)
       std::isfinite(input.targets.co2_ppm) && input.actuators.co2_doser.available &&
       input.actuators.co2_doser.dose_ppm_per_full_pulse > 0.0f) {
     const float co2_err = input.targets.co2_ppm - input.sensors.co2_ppm;
-    lift(raw.co2_doser, co2_err > 50.0f, co2_err > 150.0f);
+    const bool need_co2 = co2_err > 50.0f;
+    lift(raw.co2_doser, need_co2, co2_err > 150.0f);
+    // Binary exhaust fan blocks CO2 when ON; prefer sealing the box while dosing unless
+    // air temperature is already in thermal alarm territory.
+    const bool thermal_alarm =
+        input.validity.air_temperature && std::isfinite(input.sensors.air_temperature_c) &&
+        std::isfinite(input.safety.alarm_air_temperature_c) &&
+        input.sensors.air_temperature_c >= input.safety.alarm_air_temperature_c;
+    if (need_co2 && !thermal_alarm && input.actuators.fan.available) {
+      raw.fan = 0.0f;
+    }
   }
 
   if (input.validity.nutrient_solution_temperature &&

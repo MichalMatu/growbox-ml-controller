@@ -228,7 +228,8 @@ void test_alarm_temperature_forces_heater_off_and_fan_minimum() {
 
   supervisor.apply(input, raw, SafetyReason::None, safe, report);
   TEST_ASSERT_FLOAT_WITHIN(0.0f, 0.0f, safe.heater);
-  TEST_ASSERT_FLOAT_WITHIN(1.0e-6f, input.safety.alarm_minimum_fan, safe.fan);
+  // Fan is binary: thermal alarm forces full ON (not a fractional PWM floor).
+  TEST_ASSERT_FLOAT_WITHIN(0.0f, 1.0f, safe.fan);
   TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::OverTemperature));
   TEST_ASSERT_TRUE(hasReason(report.reason_mask, SafetyReason::TemperatureAlarmFan));
 }

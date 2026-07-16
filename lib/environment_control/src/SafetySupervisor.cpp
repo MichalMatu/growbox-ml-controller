@@ -153,6 +153,13 @@ void forceSafeState(const RawModelDecision& raw, SafetyReason reason, SafeContro
   }
 }
 
+float fanAlarmFloor(const ControllerInput& input) noexcept {
+  // Production path treats fan as binary (relay/exhaust). Alarm must force full ON.
+  const float configured = std::max(clamp01(input.safety.alarm_minimum_fan),
+                                    clamp01(input.actuators.fan.minimum_command));
+  return std::max(configured, clamp01(input.safety.binary_threshold));
+}
+
 void applyEmergencyFan(const ControllerInput& input, const RawModelDecision& raw,
                        SafeControlDecision& safe, SafetyReport& report) noexcept {
   if (!std::isfinite(input.safety.alarm_air_temperature_c) ||
@@ -165,8 +172,7 @@ void applyEmergencyFan(const ControllerInput& input, const RawModelDecision& raw
     return;
   }
 
-  const float alarm_minimum = std::max(clamp01(input.safety.alarm_minimum_fan),
-                                       clamp01(input.actuators.fan.minimum_command));
+  const float alarm_minimum = fanAlarmFloor(input);
   if (safe.fan < alarm_minimum) {
     safe.fan = alarm_minimum;
     addReason(report, fanIndex, SafetyReason::TemperatureAlarmFan);
@@ -207,13 +213,27 @@ void applyFanSafety(const ControllerInput& input, const RawModelDecision& raw,
     safe.fan = 0.0f;
   } else if (input.validity.air_temperature &&
              input.sensors.air_temperature_c >= input.safety.alarm_air_temperature_c) {
-    const float alarm_minimum = std::max(clamp01(input.safety.alarm_minimum_fan),
-                                         clamp01(input.actuators.fan.minimum_command));
+    const float alarm_minimum = fanAlarmFloor(input);
     if (safe.fan < alarm_minimum) {
       safe.fan = alarm_minimum;
       addReason(report, fanIndex, SafetyReason::TemperatureAlarmFan);
     }
   }
+}
+
+void applyFanBinary(const ControllerInput& input, const RawModelDecision& raw,
+                    SafeControlDecision& safe, SafetyReport& report, float threshold) noexcept {
+  if (!input.actuators.fan.available || input.actuators.fan.max_airflow_m3_h <= 0.0f) {
+    return;
+  }
+  // Binary exhaust/recirc relay: collapse continuous MLP fan to 0/1 after alarm floor.
+  const bool requested_on = safe.fan >= threshold;
+  const float thresholded = requested_on ? 1.0f : 0.0f;
+  if (safe.fan != thresholded) {
+    addReason(report, fanIndex, SafetyReason::BinaryThreshold);
+    report.modified = report.modified || different(raw.fan, thresholded);
+  }
+  safe.fan = thresholded;
 }
 
 void applyBinaryActuatorSafety(bool available, float capability, float& safe_value, float raw_value,
@@ -301,30 +321,63 @@ void applyHumidityDependentSafety(const ControllerInput& input, SafeControlDecis
 void applyHeaterCoolerExclusion(const ControllerInput& input, const RawModelDecision& raw,
                                 SafeControlDecision& safe, SafetyReport& report) noexcept {
   const float threshold = clamp01(input.safety.binary_threshold);
-  if (safe.heater >= threshold && safe.cooler > 0.0f) {
-    addReason(report, coolerIndex, SafetyReason::ActuatorConflict);
-    safe.cooler = 0.0f;
-    report.modified = report.modified || different(raw.cooler, safe.cooler);
+  const bool heater_on = safe.heater >= threshold;
+  const bool cooler_on = safe.cooler >= threshold;
+  if (!heater_on || !cooler_on) {
+    // Prefer cooling when air is already above target (even if cooler was soft).
+    if (heater_on && input.validity.air_temperature &&
+        std::isfinite(input.sensors.air_temperature_c) &&
+        std::isfinite(input.targets.air_temperature_c) &&
+        input.sensors.air_temperature_c > input.targets.air_temperature_c + 0.5f) {
+      addReason(report, heaterIndex, SafetyReason::ActuatorConflict);
+      safe.heater = 0.0f;
+      report.modified = report.modified || different(raw.heater, safe.heater);
+    }
+    return;
   }
-  if (safe.cooler >= threshold && safe.heater > 0.0f) {
+  // Both requested: residual decides.
+  const bool prefer_cool = input.validity.air_temperature &&
+                           std::isfinite(input.sensors.air_temperature_c) &&
+                           std::isfinite(input.targets.air_temperature_c) &&
+                           input.sensors.air_temperature_c >= input.targets.air_temperature_c;
+  if (prefer_cool) {
     addReason(report, heaterIndex, SafetyReason::ActuatorConflict);
     safe.heater = 0.0f;
     report.modified = report.modified || different(raw.heater, safe.heater);
+  } else {
+    addReason(report, coolerIndex, SafetyReason::ActuatorConflict);
+    safe.cooler = 0.0f;
+    report.modified = report.modified || different(raw.cooler, safe.cooler);
   }
 }
 
 void applyHumidityControlExclusion(const ControllerInput& input, const RawModelDecision& raw,
                                    SafeControlDecision& safe, SafetyReport& report) noexcept {
   const float threshold = clamp01(input.safety.binary_threshold);
-  if (safe.humidifier >= threshold && safe.dehumidifier > 0.0f) {
-    addReason(report, dehumidifierIndex, SafetyReason::ActuatorConflict);
-    safe.dehumidifier = 0.0f;
-    report.modified = report.modified || different(raw.dehumidifier, safe.dehumidifier);
+  const bool hum_on = safe.humidifier >= threshold;
+  const bool dehum_on = safe.dehumidifier >= threshold;
+  if (!hum_on || !dehum_on) {
+    if (hum_on && input.validity.air_humidity && std::isfinite(input.sensors.air_humidity_pct) &&
+        std::isfinite(input.targets.air_humidity_pct) &&
+        input.sensors.air_humidity_pct > input.targets.air_humidity_pct + 2.0f) {
+      addReason(report, humidifierIndex, SafetyReason::ActuatorConflict);
+      safe.humidifier = 0.0f;
+      report.modified = report.modified || different(raw.humidifier, safe.humidifier);
+    }
+    return;
   }
-  if (safe.dehumidifier >= threshold && safe.humidifier > 0.0f) {
+  const bool prefer_dehumid = input.validity.air_humidity &&
+                              std::isfinite(input.sensors.air_humidity_pct) &&
+                              std::isfinite(input.targets.air_humidity_pct) &&
+                              input.sensors.air_humidity_pct >= input.targets.air_humidity_pct;
+  if (prefer_dehumid) {
     addReason(report, humidifierIndex, SafetyReason::ActuatorConflict);
     safe.humidifier = 0.0f;
     report.modified = report.modified || different(raw.humidifier, safe.humidifier);
+  } else {
+    addReason(report, dehumidifierIndex, SafetyReason::ActuatorConflict);
+    safe.dehumidifier = 0.0f;
+    report.modified = report.modified || different(raw.dehumidifier, safe.dehumidifier);
   }
 }
 
@@ -408,6 +461,7 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
   applyHumidityDependentSafety(input, safe, report);
 
   const float threshold = clamp01(input.safety.binary_threshold);
+  applyFanBinary(input, raw, safe, report, threshold);
   safe.heater = enforceBinary(safe.heater, input.previous.heater, threshold,
                               input.safety.heater_minimum_on_s, input.safety.heater_minimum_off_s,
                               input.monotonic_time_ms, heater_, report, heaterIndex);
@@ -429,6 +483,7 @@ void SafetySupervisor::apply(const ControllerInput& input, const RawModelDecisio
   // Hard thermal limits must win over binary min-on dwell (previous heater ON).
   applyHeaterSafety(input, raw, safe, report);
   applyEmergencyFan(input, raw, safe, report);
+  applyFanBinary(input, raw, safe, report, threshold);
 
   // If hard safety forced the heater off, clear binary dwell state so min-on cannot
   // re-assert heater on the next cycle once temperature drops below the hard limit
