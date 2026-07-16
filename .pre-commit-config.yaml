@@ -1,0 +1,44 @@
+# Local quality gate. Install: make setup-dev
+# Manual run: make check-fast  |  Full gate: make check
+default_install_hook_types: [pre-commit, pre-push]
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: check-json
+      - id: detect-private-key
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.2
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v19.1.5
+    hooks:
+      - id: clang-format
+        files: ^(src/|lib/environment_control/src/|test/)
+        exclude: ^lib/environment_control/src/(generated/|EnvironmentSchema.*\.h)
+
+  - repo: local
+    hooks:
+      - id: environment-schema-check
+        name: environment schema (--check)
+        entry: bash scripts/check_schema.sh
+        language: system
+        pass_filenames: false
+        files: ^(tools/schema/|schemas/environment-controller\.json|lib/environment_control/src/EnvironmentSchema\.h)
+
+      - id: quality-gate-push
+        name: quality gate (pytest, host, idf build, clang-tidy)
+        entry: bash scripts/quality_gate_push.sh
+        language: system
+        pass_filenames: false
+        stages: [pre-push]

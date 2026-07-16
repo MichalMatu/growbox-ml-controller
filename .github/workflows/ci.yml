@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  host-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      PYTHONHASHSEED: "0"
+      TF_DETERMINISTIC_OPS: "1"
+      TF_CPP_MIN_LOG_LEVEL: "2"
+      OMP_NUM_THREADS: "1"
+    steps:
+      - name: Check out source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-lock.txt
+
+      - name: Install pinned dependencies
+        run: python -m pip install -r requirements-lock.txt
+
+      - name: Install dev tooling
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Verify dependency resolution
+        run: python -m pip check
+
+      - name: Run pre-commit quality gate
+        run: pre-commit run --all-files
+
+      - name: Run Python tests
+        run: python -m pytest
+
+      - name: Check generated schema header
+        run: bash scripts/check_schema.sh
+
+      - name: Run quick ML pipeline and check generated artifacts
+        run: |
+          python -m tools.ml.pipeline --quick --check-generated
+          git diff --exit-code
+
+      - name: Configure portable C++ tests
+        run: cmake -S test/host -B build/host-tests
+
+      - name: Build portable C++ tests
+        run: cmake --build build/host-tests --parallel
+
+      - name: Run portable C++ tests
+        run: ctest --test-dir build/host-tests --output-on-failure
+
+      - name: Install LLVM clang-tidy
+        run: sudo apt-get update && sudo apt-get install -y clang-tidy
+
+      - name: Host clang-tidy (portable controller)
+        run: bash scripts/run_clang_tidy_host.sh
+
+  esp-idf-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Check out source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Build ESP32-S3 firmware with ESP-IDF 5.5.1
+        uses: espressif/esp-idf-ci-action@v1
+        with:
+          esp_idf_version: v5.5.1
+          target: esp32s3
+          path: .
+          command: |
+            python "$IDF_PATH/tools/idf_tools.py" install esp-clang
+            idf.py -B build/idf-ci -D GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n8 build
+            idf.py -B build/idf-ci clang-check --exit-code src

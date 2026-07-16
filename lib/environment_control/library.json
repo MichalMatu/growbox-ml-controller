@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/platformio/platformio-core/develop/platformio/assets/schema/library.json",
+  "name": "environment_control",
+  "version": "0.1.0",
+  "description": "Portable fixed-size TinyML environment controller core",
+  "license": "MIT",
+  "frameworks": "*",
+  "platforms": "*",
+  "dependencies": {
+    "emlearn": "https://github.com/emlearn/emlearn.git#3a4053a60e53d79d42b9d359eba72cd5c07e4e6b"
+  },
+  "build": {
+    "flags": "-std=gnu++17"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "type": "decision",
+  "step": 42,
+  "sensors": {
+    "air_temperature_c": 24.5,
+    "air_humidity_pct": 61,
+    "co2_ppm": 820,
+    "nutrient_solution_temperature_c": 20.0,
+    "outside_temperature_c": 18.0,
+    "outside_humidity_pct": 52,
+    "outside_co2_ppm": 420
+  },
+  "validity": {
+    "air_temperature_c": true,
+    "air_humidity_pct": true,
+    "co2_ppm": true,
+    "nutrient_solution_temperature_c": true,
+    "outside_temperature_c": true,
+    "outside_humidity_pct": true,
+    "outside_co2_ppm": true
+  },
+  "targets": {
+    "air_temperature_c": 25.0,
+    "air_humidity_pct": 65,
+    "co2_ppm": 850
+  },
+  "pots": [
+    {
+      "available": true,
+      "sensors": { "soil_moisture_pct": 42, "soil_temperature_c": 20.0 },
+      "validity": { "soil_moisture_pct": true, "soil_temperature_c": true },
+      "targets": { "soil_moisture_pct": 55 }
+    },
+    {
+      "available": false,
+      "sensors": { "soil_moisture_pct": 47, "soil_temperature_c": 20.0 },
+      "validity": { "soil_moisture_pct": true, "soil_temperature_c": true },
+      "targets": { "soil_moisture_pct": 50 }
+    },
+    {
+      "available": true,
+      "sensors": { "soil_moisture_pct": 48, "soil_temperature_c": 20.0 },
+      "validity": { "soil_moisture_pct": true, "soil_temperature_c": true },
+      "targets": { "soil_moisture_pct": 52 }
+    },
+    {
+      "available": true,
+      "sensors": { "soil_moisture_pct": 50, "soil_temperature_c": 20.0 },
+      "validity": { "soil_moisture_pct": true, "soil_temperature_c": true },
+      "targets": { "soil_moisture_pct": 50 }
+    }
+  ],
+  "pseudo": { "lights_active": true },
+  "raw_output": { "heater": 0.17, "fan": 0.19 },
+  "safe_output": { "heater": 0.0, "fan": 0.19 }
+}

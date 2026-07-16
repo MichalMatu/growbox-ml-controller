@@ -1,0 +1,15 @@
+---
+Checks: >
+  bugprone-use-after-move,
+  bugprone-dangling-handle,
+  clang-analyzer-core.CallAndMessage,
+  clang-analyzer-core.DivideZero,
+  clang-analyzer-core.NullDereference,
+  modernize-use-nullptr,
+  misc-unused-using-decls,
+  readability-braces-around-statements,
+  -readability-magic-numbers,
+  -readability-identifier-length,
+  -readability-function-cognitive-complexity
+WarningsAsErrors: ''
+HeaderFilterRegex: 'lib/environment_control/src/(EnvironmentController|FeatureEncoder|ModelRuntime|SafetySupervisor)\.(cpp|h)$'
