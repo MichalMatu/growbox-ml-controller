@@ -24,11 +24,30 @@ function formatUsageDetail(used, total) {
   return `${formatBytes(used)} / ${formatBytes(total)} · ${formatUsagePct(used, total)}`;
 }
 
-function renderDiagMeter(label, used, total, { tone = "accent", detail = "", showLabel = true } = {}) {
+function formatUsageDetailParts(used, total) {
+  return {
+    bytes: `${formatBytes(used)} / ${formatBytes(total)}`,
+    pct: formatUsagePct(used, total),
+  };
+}
+
+function renderDiagMeterValue(used, total, { detail = "", compact = false } = {}) {
+  const fullText = detail || formatUsageDetail(used, total);
+  const titleAttr = ` title="${escapeHtml(fullText)}"`;
+  if (compact && !detail) {
+    const parts = formatUsageDetailParts(used, total);
+    return `<span class="diag-meter-value diag-meter-value--split"${titleAttr}>
+      <span class="diag-meter-bytes">${escapeHtml(parts.bytes)}</span>
+      <span class="diag-meter-pct">${escapeHtml(parts.pct)}</span>
+    </span>`;
+  }
+  return `<span class="diag-meter-value"${titleAttr}>${escapeHtml(fullText)}</span>`;
+}
+
+function renderDiagMeter(label, used, total, { tone = "accent", detail = "", showLabel = true, compact = false } = {}) {
   const pct = formatDiagPercent(used, total);
   const barPct = used > 0 && pct < 1 ? Math.max(pct, 0.8) : pct;
   const fillCls = ["diag-meter-fill", tone, used > 0 ? "has-use" : ""].filter(Boolean).join(" ");
-  const valueText = detail || formatUsageDetail(used, total);
   const headClass = showLabel ? "diag-meter-head" : "diag-meter-head diag-meter-head--solo";
   const labelMarkup = showLabel
     ? `<span class="diag-meter-label">${escapeHtml(label)}</span>`
@@ -36,7 +55,7 @@ function renderDiagMeter(label, used, total, { tone = "accent", detail = "", sho
   return `<div class="diag-meter">
     <div class="${headClass}">
       ${labelMarkup}
-      <span class="diag-meter-value">${escapeHtml(valueText)}</span>
+      ${renderDiagMeterValue(used, total, { detail, compact })}
     </div>
     <div class="diag-meter-track" aria-hidden="true">
       <span class="${fillCls}" style="width:${barPct}%"></span>
@@ -50,6 +69,7 @@ function renderDiagTableRow(row) {
       tone: row.tone,
       detail: row.detail,
       showLabel: false,
+      compact: !row.detail,
     });
     return `<tr><th scope="row">${escapeHtml(row.label)}</th><td class="num diag-meter-cell">${meter}</td></tr>`;
   }

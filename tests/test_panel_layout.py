@@ -128,6 +128,8 @@ def test_diagnostics_modal_uses_live_data_tables_like_previous():
     assert ".diag-split .live-data-table col.sensor-col" in panel_css
     assert "diag-meter-head--solo" in diagnostics_js
     assert "showLabel: false" in diagnostics_js
+    assert "diag-meter-value--split" in diagnostics_js
+    assert "formatUsageDetailParts" in diagnostics_js
 
 
 def test_nutrient_soil_delta_field_has_celsius_suffix():
