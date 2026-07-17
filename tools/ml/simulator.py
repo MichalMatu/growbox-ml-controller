@@ -25,6 +25,7 @@ from .physics.pots_substrate import (
     step_pot,
     water_ml_to_humidity_pp,
 )
+from .physics.psychrometrics import air_moisture_capacity_g
 from .physics.van_henten import step_chamber_van_henten
 
 MAX_POTS = 4
@@ -409,7 +410,7 @@ class SequentialEnvironmentSimulator:
         effective = self.effective_action
 
         volume = max(0.05, env.growbox_volume_m3)
-        air_moisture_capacity_g = max(1.0, volume * 20.0)
+        moisture_capacity_g = air_moisture_capacity_g(volume, state.air_temperature_c)
 
         nutrient_heater_w = (
             effective.nutrient_heater
@@ -458,8 +459,16 @@ class SequentialEnvironmentSimulator:
 
         # Splash/surface water only partially becomes bulk vapor in one step.
         pot_humidity_pp = water_ml_to_humidity_pp(
-            free_water_ml, growbox_volume_m3=volume, fraction_to_vapor=0.20
-        ) + water_ml_to_humidity_pp(evaporated_ml, growbox_volume_m3=volume, fraction_to_vapor=1.0)
+            free_water_ml,
+            growbox_volume_m3=volume,
+            fraction_to_vapor=0.20,
+            air_temperature_c=state.air_temperature_c,
+        ) + water_ml_to_humidity_pp(
+            evaporated_ml,
+            growbox_volume_m3=volume,
+            fraction_to_vapor=1.0,
+            air_temperature_c=state.air_temperature_c,
+        )
 
         # --- Chamber air (Tier A: Van Henten backbone or legacy balances) ---
         if self.scenario.chamber_model == "van_henten":
@@ -484,6 +493,11 @@ class SequentialEnvironmentSimulator:
             )
             leak_boost = max(0.0, env.air_leak_rate_ach) * 0.15
             u_vent = forcing.u_vent + leak_boost
+            # Van Henten capacity is fixed in p_scale; scale heat input so calibrated
+            # thermal_mass_j_per_k (default 35 kJ/K) still affects chamber heating rate.
+            default_thermal_mass = 35_000.0
+            mass_scale = default_thermal_mass / max(5_000.0, env.thermal_mass_j_per_k)
+            u_heat = forcing.u_heat * mass_scale
             new_t, new_rh, new_co2, self._crop_dry_weight = step_chamber_van_henten(
                 air_temperature_c=state.air_temperature_c,
                 air_humidity_pct=state.air_humidity_pct,
@@ -493,14 +507,14 @@ class SequentialEnvironmentSimulator:
                 outside_co2_ppm=state.outside_co2_ppm,
                 u_co2=forcing.u_co2,
                 u_vent=u_vent,
-                u_heat=forcing.u_heat,
-                radiation=forcing.radiation,
+                u_heat=u_heat,
+                radiation=forcing.radiation * mass_scale,
                 dt_s=dt,
                 crop_dry_weight=self._crop_dry_weight,
                 evolve_crop=False,
             )
-            hum_pp = forcing.humidifier_g_s * 100.0 / air_moisture_capacity_g
-            dehum_pp = -forcing.dehumidifier_g_s * 100.0 / air_moisture_capacity_g
+            hum_pp = forcing.humidifier_g_s * 100.0 / moisture_capacity_g
+            dehum_pp = -forcing.dehumidifier_g_s * 100.0 / moisture_capacity_g
             new_rh = _clamp(
                 new_rh + (hum_pp + dehum_pp) * dt + pot_humidity_pp,
                 0.0,
@@ -547,14 +561,14 @@ class SequentialEnvironmentSimulator:
                 * caps.humidifier.max_output_g_h
                 / 3600.0
                 * 100.0
-                / air_moisture_capacity_g
+                / moisture_capacity_g
             )
             dehumidifier_pp_s = (
                 -effective.dehumidifier
                 * caps.dehumidifier.max_removal_g_h
                 / 3600.0
                 * 100.0
-                / air_moisture_capacity_g
+                / moisture_capacity_g
             )
             humidity_delta = (
                 humidity_exchange_pp_s + humidifier_pp_s + dehumidifier_pp_s

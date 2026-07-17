@@ -20,6 +20,10 @@ simulator skeleton**. Committed MLP weights are `untrained-placeholder` until th
 | Slot map → contract v4 | **done** | [SLOT_MAP.md](SLOT_MAP.md) |
 | Equation / param design | **in progress** | [PHYSICS_SCOPE.md](PHYSICS_SCOPE.md) — refine after Tier A |
 | New sim skeleton + tests | **Tier A+B done** | chamber Van Henten + `pots_substrate.py` |
+| Psychrometrics (T-aware RH capacity) | **done** | `physics/psychrometrics.py` |
+| Live deviations + foresight | **done** | `deviations.py`, `foresight.py`; panel Δ column |
+| Open-loop calibration fit | **done** | `calibration.py` + `python -m tools.ml.calibrate_simulator` |
+| Real-box coefficient fit | **pending data** | run protocol on hardware NDJSON / series |
 
 ## What “ready for skeleton” means
 
@@ -40,11 +44,13 @@ You should **not** yet treat `make train-full` as product training.
 3. Tier A chamber physics   → tools/ml/physics/van_henten.py ✓
 4. Tier B pot substrate     → tools/ml/physics/pots_substrate.py ✓
 5. Open-loop probe / human validation → `python -m tools.ml.probe_simulator` ✓
-6. Teacher cost on new dyn. → tools/ml/teacher.py           next
-7. train-quick / train-full → after teacher + scale checks
+6. Deviations + foresight   → tools/ml/deviations.py, foresight.py ✓
+7. Calibration tooling      → tools/ml/calibration.py      ✓
+8. Fit scalars on real box  → docs/simulator/CALIBRATION.md  next
+9. Teacher / train-full     → after calibrated magnitudes
 ```
 
-Validation notes: [VALIDATION.md](VALIDATION.md).
+Validation notes: [VALIDATION.md](VALIDATION.md). Calibration: [CALIBRATION.md](CALIBRATION.md).
 
 ## Related docs
 
@@ -55,6 +61,7 @@ Validation notes: [VALIDATION.md](VALIDATION.md).
 | [IO_INVENTORY.md](IO_INVENTORY.md) | Full ML I/O map from live contract |
 | [SOURCES.md](SOURCES.md) | Research index and licenses |
 | [DEPENDENCIES.md](DEPENDENCIES.md) | Living catalog: physics / weights / safety priorities |
+| [CALIBRATION.md](CALIBRATION.md) | Open-loop fit of lumped parameters |
 | [../DATA_CONTRACT.md](../DATA_CONTRACT.md) | Contract rules |
 | [../IO_MAP.md](../IO_MAP.md) | Hardware mapping worksheet |
 | [../MODEL_PIPELINE.md](../MODEL_PIPELINE.md) | Dataset → train → export |
@@ -66,4 +73,12 @@ from tools.ml import load_active_contract, summarize_training_fields
 from tools.ml.controller_input import controller_input_record
 from tools.ml.simulator import SequentialEnvironmentSimulator, ControlAction
 from tools.ml.scenario_payload import default_scenario
+from tools.ml.deviations import deviations_from_simulator
+from tools.ml.foresight import inject_state, foresight
+```
+
+```bash
+python -m tools.ml.probe_simulator
+python -m tools.ml.calibrate_simulator protocol
+python -m tools.ml.calibrate_simulator demo --out-dir build/calibration-demo
 ```

@@ -32,7 +32,7 @@ python -m tools.ml.probe_simulator || echo "probe failed"
 ## Scale judgment (honest)
 
 - **Directions** match growbox intuition → safe enough to train a teacher against.
-- **Magnitudes** are still **synthetic**: Van Henten scales come from a commercial greenhouse model mapped into a ~0.8 m³ box; RH capacity is a lumped 20 g/m³ span, not full psychrometrics.
+- **Magnitudes** are still **synthetic** until [CALIBRATION.md](CALIBRATION.md) is run on real series: Van Henten scales come from a commercial greenhouse model mapped into a ~0.8 m³ box. RH capacity is now **T-aware** (`physics/psychrometrics.py`, Magnus sat. density × volume) instead of a fixed 20 g/m³ span — still lumped, not CFD.
 - CO₂ jumps of hundreds of ppm per few pulses are consistent with a high `dose_ppm_per_full_pulse` capability (80–120), not a bug.
 - Next calibration should use **real NDJSON** from your box (heater on duration vs ΔT, one irrigation pulse vs RH/soil).
 

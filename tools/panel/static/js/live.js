@@ -9,6 +9,23 @@ function formatLiveTargetValue(value, decimals, unit) {
   return `${formatted}${unit}`;
 }
 
+/** Signed error reading − target (positive = above setpoint). */
+function formatLiveDeviation(reading, target, decimals, unit) {
+  if (typeof reading !== "number" || !Number.isFinite(reading)) {
+    return `<span class="live-no-target" title="Brak odczytu">—</span>`;
+  }
+  if (typeof target !== "number" || !Number.isFinite(target)) {
+    return `<span class="live-no-target" title="Brak celu">—</span>`;
+  }
+  const err = reading - target;
+  const abs = Math.abs(err);
+  const formatted = decimals > 0 ? abs.toFixed(decimals) : String(Math.round(abs));
+  const sign = err > 0 ? "+" : err < 0 ? "−" : "";
+  const cls = err > 0 ? "live-delta live-delta-high" : err < 0 ? "live-delta live-delta-low" : "live-delta live-delta-ok";
+  const title = `odchylenie = odczyt − cel (${err >= 0 ? "+" : ""}${err.toFixed(Math.max(decimals, 1))}${unit})`;
+  return `<span class="${cls}" title="${title}">${sign}${formatted}${unit}</span>`;
+}
+
 function setLiveStepBadge(step) {
   const el = document.getElementById("live-step-badge");
   if (step === null || step === undefined) {
@@ -99,12 +116,17 @@ function renderLiveMetricRow(metric, decision) {
       <th scope="row">${label}</th>
       <td class="num"><strong>${active ? "ON" : "OFF"}</strong></td>
       <td class="num"><span class="live-no-target" title="Brak celu — stan symulacji">—</span></td>
+      <td class="num"><span class="live-no-target" title="Brak celu">—</span></td>
     </tr>`;
   }
   const valueText = formatLiveSensorValue(sensors[metric.key], metric.decimals);
   const valid = validity[metric.key] !== false;
+  const targetRaw = metric.targetKey ? targets[metric.targetKey] : null;
   const targetText = metric.targetKey
-    ? formatLiveTargetValue(targets[metric.targetKey], metric.decimals, metric.unit)
+    ? formatLiveTargetValue(targetRaw, metric.decimals, metric.unit)
+    : `<span class="live-no-target" title="${liveNoTargetHint(metric)}">—</span>`;
+  const deltaText = metric.targetKey
+    ? formatLiveDeviation(sensors[metric.key], targetRaw, metric.decimals, metric.unit)
     : `<span class="live-no-target" title="${liveNoTargetHint(metric)}">—</span>`;
   const invalidMark = valid ? "" : '<span class="live-invalid" title="Czujnik nieważny">⊘</span>';
   const envClass = metric.targetKey ? "" : " env-row";
@@ -114,6 +136,7 @@ function renderLiveMetricRow(metric, decision) {
     <th scope="row">${label}${invalidMark}</th>
     <td class="num"><strong>${valueText}${metric.unit}</strong></td>
     <td class="num">${targetText}</td>
+    <td class="num">${deltaText}</td>
   </tr>`;
 }
 
@@ -156,6 +179,9 @@ function renderLivePotMetricRow(label, value, decimals, unit, targetValue, targe
   const targetText = typeof targetValue === "number" && Number.isFinite(targetValue)
     ? formatLiveTargetValue(targetValue, targetDecimals, targetUnit)
     : `<span class="live-no-target" title="Brak celu — temperatura gleby bez targetu">—</span>`;
+  const deltaText = typeof targetValue === "number" && Number.isFinite(targetValue)
+    ? formatLiveDeviation(value, targetValue, targetDecimals, targetUnit)
+    : `<span class="live-no-target" title="Brak celu">—</span>`;
   const invalidMark = valid ? "" : '<span class="live-invalid" title="Czujnik nieważny">⊘</span>';
   const invalidClass = valid ? "" : " invalid";
   const targetAttr = targetHint ? ` title="${escapeHtml(targetHint)}"` : "";
@@ -163,6 +189,7 @@ function renderLivePotMetricRow(label, value, decimals, unit, targetValue, targe
     <th scope="row">${label}${invalidMark}</th>
     <td class="num"><strong>${valueText}${unit}</strong></td>
     <td class="num"${targetAttr}>${targetText}</td>
+    <td class="num">${deltaText}</td>
   </tr>`;
 }
 
@@ -202,7 +229,7 @@ function renderLivePotGroupTable(decision) {
   });
   const rows = rowParts.length
     ? rowParts.join("")
-    : `<tr><td colspan="3" class="live-empty">Brak aktywnych donic w profilu.</td></tr>`;
+    : `<tr><td colspan="4" class="live-empty">Brak aktywnych donic w profilu.</td></tr>`;
   return `<div class="live-sensor-col live-sensor-col-pots">
     <div class="live-data-table-wrap">
       <table class="live-data-table" aria-label="Donice">
@@ -210,12 +237,14 @@ function renderLivePotGroupTable(decision) {
           <col class="sensor-col" />
           <col class="reading-col" />
           <col class="target-col" />
+          <col class="delta-col" />
         </colgroup>
         <thead>
           <tr>
             <th scope="col" class="sensor-col live-table-group-head">Donice</th>
             <th scope="col" class="num">Odczyt</th>
             <th scope="col" class="num">Cel</th>
+            <th scope="col" class="num" title="odczyt − cel">Δ</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
@@ -235,12 +264,14 @@ function renderLiveSensorGroupBlock(group, decision) {
           <col class="sensor-col" />
           <col class="reading-col" />
           <col class="target-col" />
+          <col class="delta-col" />
         </colgroup>
         <thead>
           <tr>
             <th scope="col" class="sensor-col live-table-group-head">${group.title}</th>
             <th scope="col" class="num">Odczyt</th>
             <th scope="col" class="num">Cel</th>
+            <th scope="col" class="num" title="odczyt − cel">Δ</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>

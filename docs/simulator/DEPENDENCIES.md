@@ -101,11 +101,11 @@ Copy a blank block when you discover a new interaction:
 ### D002 — Heater vs cooler
 - **Situation:** both available
 - **Conflict:** waste energy if both on
-- **Layer:** **S** (mutual exclusion if coded) + **W** (energy term)
+- **Layer:** **S** (mutual exclusion if coded) + **W** (energy + opposing_actuators)
 - **Priority:** P0 never both; P2 energy
 - **Desired:** at most one of heat/cool active
-- **Where:** Safety heater/cooler exclusion; teacher energy cost
-- **Notes:** already partially in safety
+- **Where:** Safety heater/cooler exclusion; `CostConfig.opposing_actuators` (heater×cooler product)
+- **Notes:** soft label penalty always; hard safety where implemented
 
 ### D003 — Irrigation raises soil moisture and chamber RH
 - **Situation:** dry soil vs high RH
@@ -143,10 +143,10 @@ Copy a blank block when you discover a new interaction:
 ### D007 — Humidifier vs dehumidifier
 - **Situation:** both available
 - **Conflict:** cancel each other
-- **Layer:** **W** energy + optional **S** exclusion
+- **Layer:** **W** energy + **W** opposing_actuators + optional **S** exclusion
 - **Priority:** P2 / soft P1 RH
 - **Desired:** only one moisture actuator direction at a time
-- **Where:** TODO hard exclusion if needed; teacher energy
+- **Where:** `CostConfig.opposing_actuators` (humidifier×dehumidifier); teacher energy; optional hard exclusion later
 
 ### D008 — CO₂ dose when CO₂ already ≥ target
 - **Situation:** co2_ppm high

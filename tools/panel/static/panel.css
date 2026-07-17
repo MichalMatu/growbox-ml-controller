@@ -1367,9 +1367,14 @@ input[type="checkbox"].field-invalid {
   table-layout: fixed;
   font-size: var(--live-text);
 }
-.live-sensors-split .live-data-table col.sensor-col { width: 30%; }
-.live-sensors-split .live-data-table col.reading-col { width: 35%; }
-.live-sensors-split .live-data-table col.target-col { width: 35%; }
+.live-sensors-split .live-data-table col.sensor-col { width: 28%; }
+.live-sensors-split .live-data-table col.reading-col { width: 24%; }
+.live-sensors-split .live-data-table col.target-col { width: 24%; }
+.live-sensors-split .live-data-table col.delta-col { width: 24%; }
+.live-delta { font-variant-numeric: tabular-nums; font-weight: 600; }
+.live-delta-high { color: var(--danger, #c44); }
+.live-delta-low { color: var(--accent, #3a7bd5); }
+.live-delta-ok { color: var(--muted, #888); opacity: 0.85; }
 .previous-split .live-data-table col.sensor-col { width: 42%; }
 .previous-split .live-data-table col.reading-col { width: 58%; }
 .live-sensors-split .live-data-table th,
