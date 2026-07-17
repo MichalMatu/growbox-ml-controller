@@ -552,29 +552,31 @@ def _force_mono_render(pl: Any) -> None:
     Root cause of the purple scene + double red/blue chamber edges: VTK's
     default interactor binds key ``3`` to *toggle stereo* (RedBlue anaglyph).
     Our live mode also uses ``3`` for fan ON — so every fan press enabled stereo.
+
+    Only StereoRenderOff — never SetStereoTypeTo* (Cocoa logs WARN for
+    CrystalEyes / unsupported stereo type changes on the window).
     """
     try:
         rw = pl.render_window
     except Exception:
         return
     try:
-        rw.StereoRenderOff()
+        if rw.GetStereoRender():
+            rw.StereoRenderOff()
     except Exception:
-        pass
+        try:
+            rw.StereoRenderOff()
+        except Exception:
+            pass
     try:
-        # Keep type defined but never render stereo
-        if hasattr(rw, "SetStereoTypeToCrystalEyes"):
-            rw.SetStereoTypeToCrystalEyes()
-        rw.StereoRenderOff()
-    except Exception:
-        pass
-    try:
-        rw.SetMultiSamples(0)
+        if rw.GetMultiSamples() != 0:
+            rw.SetMultiSamples(0)
     except Exception:
         pass
     try:
         pv_theme = _require_pyvista().global_theme
-        pv_theme.multi_samples = 0
+        if getattr(pv_theme, "multi_samples", None) != 0:
+            pv_theme.multi_samples = 0
     except Exception:
         pass
 
