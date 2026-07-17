@@ -757,13 +757,6 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
     except Exception:
         pass
 
-    print(
-        "twin_view LIVE\n"
-        "  wireframe-only | no T/RH overlay | HOME camera = key 7 or c\n"
-        "  key 3 = fan ON only (VTK stereo toggle disabled)\n"
-        "  purple/red-blue scene → press m (force mono)"
-    )
-
     def action() -> ControlAction:
         return ControlAction(
             heater=state["heater"],
@@ -869,13 +862,6 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
 
     refresh(hard=True)
     _force_mono_render(pl)
-    try:
-        stereo = pl.render_window.GetStereoRender()
-        print(
-            f"  stereo_render={stereo} (must be 0) multi_samples={pl.render_window.GetMultiSamples()}"
-        )
-    except Exception:
-        pass
     pl.show()
 
 
