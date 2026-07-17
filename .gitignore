@@ -1,40 +1,84 @@
-# OS / editor
+# --- OS ---
 .DS_Store
+Thumbs.db
+Desktop.ini
+
+# --- Editors / IDE ---
 .idea/
 .vscode/
 *.swp
+*.swo
 *~
+*.code-workspace
 
-# Python leftovers / local envs
+# --- Secrets & local env ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+
+# --- Logs & caches ---
+*.log
+logs/
+.cache/
+.turbo/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+*.tsbuildinfo
+
+# --- Node / frontend (configurator app) ---
+node_modules/
+dist/
+build/
+out/
+.next/
+.nuxt/
+.svelte-kit/
+.vite/
+coverage/
+playwright-report/
+test-results/
+storybook-static/
+*.local
+
+# Package manager noise
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+
+# --- Python (local tools only; not part of this sparse tree) ---
 .venv/
+venv/
 __pycache__/
 *.py[cod]
 .pytest_cache/
 .ruff_cache/
 *.egg-info/
-build/
+.mypy_cache/
+
+# --- Monorepo ghosts (if working tree was checked out from main) ---
+# These paths are not used on this FE/docs branch; keep them untracked if present.
+/tools/
+/tests/
+/test/
+/src/
+/lib/
+/components/
+/third_party/
+/scripts/
+/config/
+/examples/
+/build/
 sdkconfig
 sdkconfig.old
-
-# Monorepo leftovers (should not be committed on this branch)
-tools/
-tests/
-src/
-lib/
-components/
-third_party/
-test/
-scripts/
-/examples/
-config/
-logs/
-
-# Node / frontend
-node_modules/
-dist/
-.cache/
-*.local
-.env
-.env.*
-
-*.log
+CMakeLists.txt
+Makefile
+pyproject.toml
+requirements*.txt
+.platformio/
+.pio/
