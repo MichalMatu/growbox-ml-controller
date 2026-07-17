@@ -238,12 +238,47 @@ class TwinSnapshot:
     action: ControlAction
 
     def title(self) -> str:
+        """One-line summary (logs / non-GUI)."""
         return (
             f"t={self.elapsed_s:.0f}s  "
             f"T={self.air_temperature_c:.1f}°C  RH={self.air_humidity_pct:.0f}%  "
             f"CO₂={self.co2_ppm:.0f}ppm  "
             f"fan={self.action.fan:.2f}  heater={self.action.heater:.2f}"
         )
+
+    def params_table(self) -> str:
+        """Fixed-width parameter panel for the 3D HUD (upper-right)."""
+        rows: list[tuple[str, str]] = [
+            ("time", f"{self.elapsed_s:.0f} s"),
+            ("air T", f"{self.air_temperature_c:.1f} °C"),
+            ("air RH", f"{self.air_humidity_pct:.0f} %"),
+            ("CO2", f"{self.co2_ppm:.0f} ppm"),
+            ("out T", f"{self.outside_temperature_c:.1f} °C"),
+            ("out RH", f"{self.outside_humidity_pct:.0f} %"),
+            ("out CO2", f"{self.outside_co2_ppm:.0f} ppm"),
+            ("heater", f"{self.action.heater:.2f}"),
+            ("fan", f"{self.action.fan:.2f}"),
+            ("humid", f"{self.action.humidifier:.2f}"),
+            ("fan ACH", f"{self.exchange.fan_ach_proxy:.1f} /h"),
+        ]
+        for index, active in enumerate(self.pot_active):
+            if not active:
+                continue
+            rows.append((f"P{index + 1} soil", f"{self.pot_moisture[index]:.0f} %"))
+            rows.append((f"P{index + 1} soil T", f"{self.pot_temperature[index]:.1f} °C"))
+
+        label_w = max(len(k) for k, _ in rows)
+        value_w = max(len(v) for _, v in rows)
+        inner = label_w + value_w + 3  # " : "
+        top = "┌" + "─" * (inner + 2) + "┐"
+        mid = "├" + "─" * (inner + 2) + "┤"
+        bot = "└" + "─" * (inner + 2) + "┘"
+        head = f"│ {'parameters'.ljust(inner)} │"
+        lines = [top, head, mid]
+        for key, value in rows:
+            lines.append(f"│ {key.ljust(label_w)} : {value.rjust(value_w)} │")
+        lines.append(bot)
+        return "\n".join(lines)
 
 
 def snapshot_from_simulator(

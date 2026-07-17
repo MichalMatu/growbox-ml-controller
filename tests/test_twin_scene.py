@@ -87,6 +87,12 @@ def test_snapshot_from_simulator_smoke():
     assert len(snap.pot_moisture) == 4
     assert snap.exchange.points.ndim == 2
     assert "T=" in snap.title()
+    table = snap.params_table()
+    assert "parameters" in table
+    assert "air T" in table
+    assert "out T" in table
+    assert "heater" in table
+    assert "┌" in table and "└" in table
 
 
 def test_color_maps_monotonic():

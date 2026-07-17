@@ -37,6 +37,10 @@ from .twin_scene import (
     vent_port_centers,
 )
 
+# Single HUD text size (table + legend)
+_HUD_FONT = 14
+_LABEL_FONT = 14
+
 
 def _require_pyvista() -> Any:
     try:
@@ -178,7 +182,7 @@ def render_snapshot(
         pl.add_point_labels(
             [pos],
             [label],
-            font_size=18,
+            font_size=_LABEL_FONT,
             text_color="white",
             point_size=0,
             shape=None,
@@ -191,7 +195,7 @@ def render_snapshot(
         pl.add_point_labels(
             [pos],
             [label],
-            font_size=16,
+            font_size=_LABEL_FONT,
             text_color="white",
             point_size=0,
             shape=None,
@@ -206,18 +210,24 @@ def render_snapshot(
             opacity=0.95,
         )
 
-    caption = title or snap.title()
-    pl.add_text(caption, font_size=16, color="white")
+    # Parameter table (upper right) + short legend (lower left) — same font size
+    pl.add_text(
+        snap.params_table(),
+        position="upper_right",
+        font_size=_HUD_FONT,
+        color="white",
+        font="courier",
+        name="params",
+    )
     pl.add_text(
         (
-            f"outside T={snap.outside_temperature_c:.1f}°C  "
-            f"RH={snap.outside_humidity_pct:.0f}%  |  "
-            f"fan_ACH≈{snap.exchange.fan_ach_proxy:.1f}/h\n"
-            "Round holes: green=INLET blue=OUTLET  |  pot centered if one  |  arrows when fan ON"
+            "keys: s=step  r=reset  1/2 heater  3/4 fan  5/6 humid\n"
+            "green=INLET  blue=OUTLET  |  arrows when fan ON"
         ),
         position="lower_left",
-        font_size=14,
+        font_size=_HUD_FONT,
         color="lightgray",
+        name="help",
     )
     pl.set_background("#1a1f2b")
     pl.camera_position = "iso"
@@ -299,14 +309,6 @@ def run_interactive_live(
             humidifier=state["humidifier"],
         )
 
-    def help_text() -> str:
-        return (
-            f"cmd heater={state['heater']:.2f} fan={state['fan']:.2f} "
-            f"humid={state['humidifier']:.2f}\n"
-            "keys: s=step  r=reset  1/2 heater  3/4 fan  5/6 humid  |  "
-            "arrows = inlet→outlet when fan ON"
-        )
-
     def redraw() -> None:
         snap = snapshot_from_simulator(sim, action=current_action())
         meshes = build_plotter_meshes(pv, snap)
@@ -327,7 +329,7 @@ def run_interactive_live(
             pl.add_point_labels(
                 [pos],
                 [label],
-                font_size=18,
+                font_size=_LABEL_FONT,
                 text_color="white",
                 point_size=0,
                 shape=None,
@@ -340,7 +342,7 @@ def run_interactive_live(
             pl.add_point_labels(
                 [pos],
                 [label],
-                font_size=16,
+                font_size=_LABEL_FONT,
                 text_color="white",
                 point_size=0,
                 shape=None,
@@ -349,13 +351,21 @@ def run_interactive_live(
             )
         if meshes["glyph"].n_points > 0:
             pl.add_mesh(meshes["glyph"], color="#6ec6ff", opacity=0.95, name="exchange")
-        pl.add_text(snap.title(), font_size=16, color="white", name="title")
         pl.add_text(
-            help_text()
-            + f"\noutside T={snap.outside_temperature_c:.1f}°C RH={snap.outside_humidity_pct:.0f}%"
-            " | green/blue rings = INLET/OUTLET | one pot = center",
+            snap.params_table(),
+            position="upper_right",
+            font_size=_HUD_FONT,
+            color="white",
+            font="courier",
+            name="params",
+        )
+        pl.add_text(
+            (
+                "keys: s=step  r=reset  1/2 heater  3/4 fan  5/6 humid\n"
+                "green=INLET  blue=OUTLET  |  arrows when fan ON"
+            ),
             position="lower_left",
-            font_size=14,
+            font_size=_HUD_FONT,
             color="lightgray",
             name="help",
         )
