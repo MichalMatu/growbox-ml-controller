@@ -32,7 +32,9 @@ from .twin_scene import (
 
 _HUD_FONT = 14
 _LABEL_FONT = 14
-_BG = "#12141a"
+# Fusion-like studio gradient (slightly brighter than old flat #12141a)
+_BG_BOTTOM = "#1a1e28"  # cooler, a touch lighter at floor
+_BG_TOP = "#343b4a"  # soft blue-gray wash toward the top
 _WIRE = "#e8e8e8"
 _POT = "#6b5b4b"
 _INLET = "#5cb85c"
@@ -564,9 +566,20 @@ def _clear_vtk_default_keys(pl: Any) -> None:
             pass
 
 
+def _apply_studio_background(pl: Any) -> None:
+    """Soft vertical gradient — similar to Fusion 360 dark studio, not pure black."""
+    try:
+        pl.set_background(_BG_BOTTOM, top=_BG_TOP)
+    except TypeError:
+        # Older PyVista: solid only
+        pl.set_background(_BG_BOTTOM)
+    except Exception:
+        pl.set_background(_BG_BOTTOM)
+
+
 def _configure_plotter(pl: Any) -> None:
     """Stable look: mono only, no scalar bar, no MSAA color fringes."""
-    pl.set_background(_BG)
+    _apply_studio_background(pl)
     _force_mono_render(pl)
     try:
         pl.disable_anti_aliasing()
