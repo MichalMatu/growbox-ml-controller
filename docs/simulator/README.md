@@ -24,6 +24,7 @@ simulator skeleton**. Committed MLP weights are `untrained-placeholder` until th
 | Live deviations + foresight | **done** | `deviations.py`, `foresight.py`; panel Δ column |
 | Open-loop calibration fit | **done** | `calibration.py` + `python -m tools.ml.calibrate_simulator` |
 | Real-box coefficient fit | **pending data** | run protocol on hardware NDJSON / series |
+| Scientific 3D twin view (PyVista) | **done (optional)** | `twin_scene` + `twin_view` — glyphs ≠ CFD |
 
 ## What “ready for skeleton” means
 
@@ -62,6 +63,7 @@ Validation notes: [VALIDATION.md](VALIDATION.md). Calibration: [CALIBRATION.md](
 | [SOURCES.md](SOURCES.md) | Research index and licenses |
 | [DEPENDENCIES.md](DEPENDENCIES.md) | Living catalog: physics / weights / safety priorities |
 | [CALIBRATION.md](CALIBRATION.md) | Open-loop fit of lumped parameters |
+| [TWIN_VIEW.md](TWIN_VIEW.md) | PyVista 3D chamber + exchange glyphs |
 | [../DATA_CONTRACT.md](../DATA_CONTRACT.md) | Contract rules |
 | [../IO_MAP.md](../IO_MAP.md) | Hardware mapping worksheet |
 | [../MODEL_PIPELINE.md](../MODEL_PIPELINE.md) | Dataset → train → export |
@@ -81,4 +83,7 @@ from tools.ml.foresight import inject_state, foresight
 python -m tools.ml.probe_simulator
 python -m tools.ml.calibrate_simulator protocol
 python -m tools.ml.calibrate_simulator demo --out-dir build/calibration-demo
+# optional 3D twin (pip install pyvista / pip install -e '.[twin]')
+python -m tools.ml.twin_view --live
+python -m tools.ml.twin_view --fan 1 --steps 40 --screenshot build/twin.png
 ```
