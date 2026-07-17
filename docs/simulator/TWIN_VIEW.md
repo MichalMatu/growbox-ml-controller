@@ -74,7 +74,7 @@ python -m tools.ml.twin_view --live
 | `0` | camera side |
 | `i` | pure isometric |
 | `m` | force mono (if VTK stereo left purple) |
-| orientation cube (UR) | axis view handles only (no center HOME click) |
+| mouse drag | rotate / pan / zoom (trackball) |
 
 
 ## Honest limits

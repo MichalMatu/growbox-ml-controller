@@ -5,11 +5,10 @@ Minimal stable scene:
   - fixed-color pot + inlet/outlet rings
   - at most two fixed-color fan arrows (visibility toggle only)
   - HUD tables for numbers (temperature lives only in the table)
-  - orientation cross (UR) for axis views; HOME camera via keys 7 / c
+  - mouse trackball rotate/zoom + keyboard camera presets (7/c HOME, 8/9/0/i)
 
 No temperature/humidity geometric overlays. No solid chamber wash.
-No runtime file generation (HOME is keyboard-only — VTK has no reliable
-center-click on the orientation widget).
+No orientation gizmo (VTK camera orientation widget removed — poor UX).
 """
 
 from __future__ import annotations
@@ -39,12 +38,6 @@ _POT = "#6b5b4b"
 _INLET = "#5cb85c"
 _OUTLET = "#5b9bd5"
 _ARROW = "#c8e6f5"
-
-# Camera orientation widget (VTK built-in; we only size/pad/handle diameter)
-_CAM_CUBE_SIZE = 240
-_CAM_CUBE_PAD = 36
-# Fraction of widget size for each axis handle ball (0–1). Larger = easier to click.
-_CAM_HANDLE_DIA = 0.32
 
 
 def _legend_table() -> str:
@@ -400,38 +393,13 @@ def _set_standard_view(pl: Any, name: str) -> None:
     pl.render()
 
 
-def _style_camera_widget(widget: Any) -> None:
-    """Style VTK camera orientation widget (built-in, not a custom HUD).
-
-    Larger handle diameter = bigger colored axis balls (easier to click).
-    """
-    try:
-        rep = widget.GetRepresentation()
-        rep.AnchorToUpperRight()
-        rep.SetSize(_CAM_CUBE_SIZE, _CAM_CUBE_SIZE)
-        rep.SetPadding(_CAM_CUBE_PAD, _CAM_CUBE_PAD)
-        rep.SetNormalizedHandleDia(_CAM_HANDLE_DIA)
-        rep.SetContainerVisibility(False)
-    except Exception:
-        pass
-
-
 def _attach_camera_controls(pl: Any, window_size: tuple[int, int] = (1200, 860)) -> None:
-    """Axis orientation widget + keyboard camera presets (HOME = keys 7 / c)."""
-    _ = window_size  # reserved if layout is tuned later
+    """Mouse trackball + keyboard camera presets only (no orientation gizmo)."""
+    _ = window_size
     try:
         pl.enable_trackball_style()
     except Exception:
         pass
-    try:
-        widget = pl.add_camera_orientation_widget(animate=True)
-        _style_camera_widget(widget)
-    except Exception:
-        try:
-            widget = pl.add_camera_orientation_widget()
-            _style_camera_widget(widget)
-        except Exception:
-            pass
 
     pl.add_key_event("7", lambda: _set_standard_view(pl, "home"))
     pl.add_key_event("c", lambda: _set_standard_view(pl, "home"))
