@@ -1,106 +1,55 @@
-# Agent notes — Growbox ML
+# Agent notes — Growbox hardware configurator (FE branch)
 
-## Priorytet tej linii pracy: konfigurator hardware (web)
+## Ten branch jest sparse
 
-**Cel:** frontendowy edytor setupu growboxa oparty o **kontrakt schema v4**, z eksportem JSON.
-**Nie cel:** twin 3D, trening ML, teacher, symulator live, rozbudowa panelu board — chyba że użytkownik wyraźnie prosi.
+W git na tej linii pracy są głównie:
 
-### SSOT
+- `schemas/environment-controller.json` (kontrakt **v4** — jedyny most do monorepo / board / ML)
+- `docs/` (guide pól + założenia konfiguratora + DATA_CONTRACT)
+- `AGENTS.md`, `README.md`, `LICENSE`, `.gitignore`
+
+**Nie ma tu:** firmware ESP, panel board, simulator, twin PyVista, teacher, train, testów monorepo.
+
+Pełny kod produktu: branch **`main`** (i inne feature branche).  
+**Nigdy** nie merguj tego sparse brancha w całości do `main` — skasowałby produkt.  
+FE dodawaj jako nowy katalog; na `main` wjeżdżaj cherry-pickiem / PR tylko tych plików (+ schema/docs gdy trzeba).
+
+## Cel
+
+Frontendowy edytor setupu growboxa (hardware) + **eksport JSON** zgodny z v4.  
+Bez backendu na start. Framework — do wyboru później.
+
+## SSOT
 
 | Co | Gdzie |
 |----|--------|
 | Pola, min/max, path, outputs | `schemas/environment-controller.json` |
-| Krótkie znaczenie pól (PL) | `docs/SCHEMA_V4_FIELD_GUIDE.md` |
-| Założenia produktu edytora | `docs/HARDWARE_CONFIGURATOR.md` |
-| Kontrakt (skrót) | `docs/DATA_CONTRACT.md` |
+| Znaczenie pól (PL) | `docs/SCHEMA_V4_FIELD_GUIDE.md` |
+| Założenia produktu | `docs/HARDWARE_CONFIGURATOR.md` |
+| Skrót kontraktu | `docs/DATA_CONTRACT.md` |
 
-### Zasady implementacji FE
+## Zasady FE
 
-1. **Identyfikatory i path JSON — angielski** (`air_temperature_c`, `pots[0].irrigation.available`). Etykiety UI mogą być po polsku.
-2. **Mix & match v4:** brak sprzętu = `validity=false` / `available=false` / `pots[N].available=false` — **nie usuwaj slotów** z JSON.
-3. Wyłączony aktuator: `available=false` i zeruj niebezpieczne maxy w eksporcie (zgodnie z kontraktem safety).
-4. **Nie dodawaj** nowych slotów ML (PPFD, EC, pH, …) bez nowej wersji schema.
-5. Framework **nie jest narzucony** — wybór dopiero po mapie ekranów; unikaj ciężkiego stacka bez potrzeby.
-6. **Backend nie jest wymagany** na MVP: export/import pliku JSON wystarczy.
-7. Panel admin (`tools/panel`) = **inne zadanie** (board). Nie mieszaj flow „Połącz z płytką” z edytorem hardware, chyba że użytkownik każe.
-8. Zmiana znaczenia pola w schema = breaking: podnieś `schema_version`, regeneruj artefakty (`tools/schema/generate_environment_schema.py`), nie „cichy rename”.
-9. Kod UI i commit messages — angielski; komunikaty do użytkownika w czacie — po polsku (preferencje repo).
-10. Ewolucja: konfigurator **może napędzać** poprawki pól; najpierw opisz brak w guide/schema PR, potem UI.
+1. Path JSON i identyfikatory — **angielski**; etykiety UI mogą być po polsku.
+2. Mix & match: brak sprzętu = `validity=false` / `available=false` / `pots[N].available=false` — **nie usuwaj slotów**.
+3. Aktuator off → `available=false` + zeruj niebezpieczne maxy w eksporcie.
+4. Bez nowych slotów ML (PPFD, EC, …) bez nowej `schema_version`.
+5. Backend opcjonalny później; MVP = plik JSON.
+6. Panel board / serial — nie na tym branchu.
+7. Commit messages i kod — angielski; czat z użytkownikiem — po polsku.
+8. Konfigurator może napędzać ewolucję pól — najpierw guide/schema, potem UI.
 
-### Proponowane grupy UI (start)
+## Grupy UI (start)
 
 1. Chamber — `environment.*`
-2. Sensors + validity — air / outside / nutrient
-3. Pots 1–4 — available, soil validity, cultivation, irrigation, heat mat, pot targets
-4. Outputs — global actuators + limits
-5. Pseudo — `lights_active`
-6. Targets (climate) — opcjonalnie w MVP
-7. Previous — domyślnie 0 w konfiguratorze „czystego boxa”
+2. Sensors + validity
+3. Pots 1–4
+4. Outputs (global actuators + limits)
+5. Pseudo `lights_active`
+6. Targets / previous — opcjonalnie w MVP
 
-### Out of scope (nie rób bez prośby)
+## Out of scope
 
-- PyVista / `tools/ml/twin`
-- `SequentialEnvironmentSimulator` w UI
-- Teacher / dataset / train w tym FE
-- Nowe dependency ML
-
-### Testy (gdy pojawi się kod FE)
-
-- Export JSON: 4× `pots`, klucze `validity` / `actuators` / `environment` obecne.
-- Donica off → validity gleby false, irrigation/heat_mat available false w eksporcie (lub równoważna reguła udokumentowana).
-- Nie łam `python tools/schema/generate_environment_schema.py --check` przy zmianach schema.
-
----
-
-## Panel UI (`tools/panel/static/`) — układ pól
-
-**Dotyczy panelu board/admin, nie konfiguratora hardware.**
-**Nie układaj parametrów w mini-kartach jeden pod drugim.** To powtarzający się błąd (donice, uprawa, aktuary).
-
-### Zasada
-
-W kartach **Donica N**, **aktuator**, **cel** itp. pola liczbowe / enum idą **w jednym poziomym rzędzie**, tak jak w reszcie panelu:
-
-| Sekcja | Wzorzec (OK) |
-|--------|----------------|
-| Czujniki → Donice | `.pot-card-sensors` — siatka 2 kolumny (Wilg. \| Gleba T) |
-| Cele → Donice | `.compact-row` + `.mini-cell` |
-| Aktuary | `.field-stack` z **poziomym** `flex-direction: row` |
-| Parametry growboxa → Donice | `.compact-row` w `.cultivation-pot-card` |
-
-### Antywzorzec (NIE)
-
-- `field-stack` + `flex-direction: column` wewnątrz `.pot-card` / `.cultivation-pot-card`
-- pełna szerokość `.mini-cell` (`width: 100%`) w karcie, która ma **kilka** parametrów obok siebie
-- osobna pionowa kolumna label+input pod label+input w jednej donicy
-
-Efekt: marnowanie wysokości, brak spójności z Czujnikami i Aktuatorami.
-
-### Przed commitem / po zmianie `form.js` lub `panel.css`
-
-```bash
-.venv/bin/python -m pytest tests/test_panel_layout.py -q
-```
-
-Testy są źródłem prawdy: `tests/test_panel_layout.py`.
-
-### Układ strony
-
-- **Lewa kolumna** — `card-stack`: Sterowanie, **Czujniki**, **Cele**, **Aktuary** (`#form-sections.card-stack`)
-- **Prawa kolumna** — **Na żywo** (tabele czujników + paski aktuatorów + `panel-actions`; **Poprzedni stan** w modalu przez przycisk **Poprzedni**)
-- **Panel modal** (`#modal-backdrop` → `.panel-modal.modal--wide`) — jeden przesuwalny modal; widoki z `panel-actions` pod Na żywo (bez zakładek/stopki w modalu)
-- Donice w parametrach growboxa (modal **Growbox**): **ta sama szerokość** karty co w Czujnikach (`--pot-card-w`), 3 pola w poziomym gridzie
-
-**Antywzorzec układu strony (puste dziury):**
-
-- `.form-grid` z kartami o różnej wysokości obok siebie (np. Czujniki | Cele)
-- `.growbox-params-split` (Obudowa obok Donic) — zostawia pustą przestrzeń
-- siatka 2-kolumnowa na Aktuary (Klimat | Pompy), gdy jedna połowa jest niższa
-
-Nie „optymalizuj” na jeden ekran kosztem pustych pól — lepiej zwarty pionowy stos.
-
-### Pliki panelu
-
-- Render: `tools/panel/static/js/form.js` (`renderZoneCultivationCard`, `renderPotCard`, `renderActuatorGroupCell`, …)
-- Style: `tools/panel/static/panel.css` (`.card-stack`, `.compact-row`, `.pot-card`, `.cultivation-pot-card`)
-- Szkielet: `tools/panel/static/index.html`
+- Odtwarzanie monorepo (ESP, panel, twin, ML) na tym branchu
+- Sim / twin / train / teacher w UI
+- CI ESP/pytest monorepo na tym tree

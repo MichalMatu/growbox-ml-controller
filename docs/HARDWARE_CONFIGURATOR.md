@@ -1,5 +1,11 @@
 # Hardware configurator (web) — założenia
 
+## Branch sparse (FE)
+
+Na tej linii w git trzymamy **tylko**: schema v4, docs konfiguratora, `AGENTS.md`, `README`, `LICENSE`.  
+Firmware / panel / ML / twin są na **`main`**.  
+**Nie** mergować sparse brancha w całości do `main`.
+
 ## Cel produktu
 
 Klient (lub operator) opisuje **swój growbox** zgodnie z kontraktem **v4**:

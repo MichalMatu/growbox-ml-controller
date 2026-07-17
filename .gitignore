@@ -1,67 +1,40 @@
-# ESP-IDF
-sdkconfig
-sdkconfig.old
-managed_components/
-dependencies.lock
-compile_commands.json
-
-# Python
-.venv/
-venv/
-__pycache__/
-*.py[cod]
-.pytest_cache/
-tests/fixtures/panel_screenshots/*.actual.png
-.mypy_cache/
-.ruff_cache/
-.coverage
-htmlcov/
-
-# Generated training and build artifacts (exported C headers stay tracked)
-artifacts/
-build/
-data/
-datasets/
-models/
-tmp/
-*.keras
-*.h5
-*.tflite
-
-# Captures and local device state
-logs/
-captures/
-*.ndjson
-*.log
-.serial-port
-
-# Editors and operating systems
+# OS / editor
 .DS_Store
-.vscode/.browse.c_cpp.db*
-.vscode/c_cpp_properties.json
-.vscode/launch.json
-.vscode/ipch/
+.idea/
+.vscode/
 *.swp
 *~
 
-# PlatformIO build artifacts
-.pio/
+# Python leftovers / local envs
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+sdkconfig
+sdkconfig.old
 
-# Accidental npm tree (panel visual tests use pip playwright, not package.json)
+# Monorepo leftovers (should not be committed on this branch)
+tools/
+tests/
+src/
+lib/
+components/
+third_party/
+test/
+scripts/
+examples/
+config/
+logs/
+
+# Node / frontend
 node_modules/
-
-# Research clones / PDFs (fetch: bash scripts/fetch_third_party.sh)
-third_party/GES/
-third_party/mpcrl-greenhouse/
-third_party/Thermca/
-third_party/thermal-nn/
-third_party/OCHRE/
-third_party/pyBuildingEnergy/
-third_party/papers/
-
-# Secrets and local configuration
+dist/
+.cache/
+*.local
 .env
 .env.*
-!.env.example
-secrets.*
-wifi.*
+
+*.log

@@ -1,1 +1,0 @@
-"""Web control panel for the standalone growbox ML demo."""

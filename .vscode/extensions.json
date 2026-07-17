@@ -1,8 +1,0 @@
-{
-  "recommendations": [
-    "espressif.esp-idf-extension",
-    "Jason2866.esp-decoder",
-    "ms-python.python",
-    "ms-python.vscode-pylance"
-  ]
-}
