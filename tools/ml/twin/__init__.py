@@ -1,11 +1,12 @@
-"""Backward-compatible re-export of ``tools.ml.twin.scene``.
+"""Scientific 3D twin view for the lumped growbox simulator.
 
-Prefer: ``from tools.ml.twin.scene import …`` or ``from tools.ml.twin import …``.
+Public API (geometry is PyVista-free; rendering needs optional ``pyvista``).
 """
 
 from __future__ import annotations
 
-from tools.ml.twin.scene import (
+from .live import render_snapshot, run_interactive_live, run_rollout
+from .scene import (
     BoxGeometry,
     ExchangeField,
     TwinSnapshot,
@@ -27,6 +28,9 @@ __all__ = [
     "pot_centers",
     "pot_layout_positions",
     "pot_radius_height",
+    "render_snapshot",
+    "run_interactive_live",
+    "run_rollout",
     "snapshot_from_simulator",
     "vent_port_centers",
 ]

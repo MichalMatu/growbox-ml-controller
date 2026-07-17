@@ -5,8 +5,16 @@
 | Layer | Role |
 |-------|------|
 | `tools/ml/simulator.py` | Physics (Van Henten + pots) |
-| `tools/ml/twin_scene.py` | Geometry + exchange glyphs (no PyVista import) |
-| `tools/ml/twin_view.py` | PyVista rendering / CLI |
+| `tools/ml/twin/` | Twin package (scene + PyVista render) |
+| `tools/ml/twin/scene.py` | Geometry + exchange glyphs (no PyVista) |
+| `tools/ml/twin/hud.py` | HUD tables |
+| `tools/ml/twin/meshes.py` | Chamber / pots / ports / arrows |
+| `tools/ml/twin/camera.py` | Camera presets + trackball |
+| `tools/ml/twin/plotter.py` | Background, stereo guard, plotter setup |
+| `tools/ml/twin/live.py` | Snapshot / rollout / live loop |
+| `tools/ml/twin/cli.py` | argparse + main |
+| `tools/ml/twin_view.py` | Thin CLI re-export (`python -m tools.ml.twin_view`) |
+| `tools/ml/twin_scene.py` | Thin re-export of `twin.scene` (compat) |
 
 ## What you see
 
