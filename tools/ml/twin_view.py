@@ -242,7 +242,7 @@ def render_snapshot(
     # Parameter table (upper right) + short legend (lower left) — same font size
     pl.add_text(
         snap.params_table(),
-        position="upper_right",
+        position="upper_left",
         font_size=_HUD_FONT,
         color="white",
         font="courier",
@@ -380,7 +380,7 @@ def run_interactive_live(
             pl.add_mesh(meshes["glyph"], color="#6ec6ff", opacity=0.95, name="exchange")
         pl.add_text(
             snap.params_table(),
-            position="upper_right",
+            position="upper_left",
             font_size=_HUD_FONT,
             color="white",
             font="courier",
