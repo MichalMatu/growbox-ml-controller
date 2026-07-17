@@ -35,13 +35,13 @@ from .twin_scene import (
 
 _HUD_FONT = 14
 _LABEL_FONT = 14
-# Radial studio BG: darker center → brighter toward the edges
-_BG_CENTER = (0x1A, 0x1E, 0x28)  # cool dark hub
-_BG_EDGE = (0x58, 0x62, 0x74)  # brighter rim
+# Radial studio BG: darker center → slightly brighter edges (subtle, not washed out)
+_BG_CENTER = (0x1C, 0x20, 0x2A)  # cool dark hub
+_BG_EDGE = (0x32, 0x38, 0x46)  # soft rim — only a mild lift vs center
 # Wide enough for 16:9 / typical twin window (avoids black letterbox bars)
 _BG_RADIAL_W = 1280
 _BG_RADIAL_H = 800
-_BG_RADIAL_VERSION = 2  # bump to regenerate cached PNG
+_BG_RADIAL_VERSION = 3  # bump to regenerate cached PNG
 _WIRE = "#e8e8e8"
 _POT = "#6b5b4b"
 _INLET = "#5cb85c"
@@ -625,7 +625,8 @@ def _ensure_radial_background_png() -> Path:
             r = (nx * nx + ny * ny) ** 0.5 / r_max
             if r > 1.0:
                 r = 1.0
-            t = r * r * (3.0 - 2.0 * r)  # smoothstep
+            # Gentle ease-in: keep center flat longer, only soft lift near rim
+            t = r * r  # quadratic — subtler than smoothstep at mid radii
             i = row + x * 3
             pixels[i] = int(c0[0] + (c1[0] - c0[0]) * t)
             pixels[i + 1] = int(c0[1] + (c1[1] - c0[1]) * t)
@@ -642,7 +643,7 @@ def _apply_studio_background(pl: Any) -> None:
     try:
         pl.set_background(edge)
     except Exception:
-        pl.set_background("#586274")
+        pl.set_background("#323846")
 
     try:
         try:
