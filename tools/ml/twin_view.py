@@ -37,9 +37,38 @@ from .twin_scene import (
     vent_port_centers,
 )
 
-# Single HUD text size (table + legend)
+# Single HUD text size (tables + scene labels)
 _HUD_FONT = 14
 _LABEL_FONT = 14
+
+
+def _legend_table() -> str:
+    """Fixed-width help panel for lower-left (same style as params table)."""
+    rows: list[tuple[str, str]] = [
+        ("s / space", "step +10 s"),
+        ("r", "reset"),
+        ("1 / 2", "heater on / off"),
+        ("3 / 4", "fan on / off"),
+        ("5 / 6", "humid on / off"),
+        ("h / H", "heater ±0.25"),
+        ("f / F", "fan ±0.25"),
+        ("u / U", "humid ±0.25"),
+        ("green ring", "INLET"),
+        ("blue ring", "OUTLET"),
+        ("arrows", "only when fan ON"),
+    ]
+    label_w = max(len(k) for k, _ in rows)
+    value_w = max(len(v) for _, v in rows)
+    inner = label_w + value_w + 3
+    top = "┌" + "─" * (inner + 2) + "┐"
+    mid = "├" + "─" * (inner + 2) + "┤"
+    bot = "└" + "─" * (inner + 2) + "┘"
+    head = f"│ {'controls'.ljust(inner)} │"
+    lines = [top, head, mid]
+    for key, value in rows:
+        lines.append(f"│ {key.ljust(label_w)} : {value.ljust(value_w)} │")
+    lines.append(bot)
+    return "\n".join(lines)
 
 
 def _require_pyvista() -> Any:
@@ -220,13 +249,11 @@ def render_snapshot(
         name="params",
     )
     pl.add_text(
-        (
-            "keys: s=step  r=reset  1/2 heater  3/4 fan  5/6 humid\n"
-            "green=INLET  blue=OUTLET  |  arrows when fan ON"
-        ),
+        _legend_table(),
         position="lower_left",
         font_size=_HUD_FONT,
         color="lightgray",
+        font="courier",
         name="help",
     )
     pl.set_background("#1a1f2b")
@@ -360,13 +387,11 @@ def run_interactive_live(
             name="params",
         )
         pl.add_text(
-            (
-                "keys: s=step  r=reset  1/2 heater  3/4 fan  5/6 humid\n"
-                "green=INLET  blue=OUTLET  |  arrows when fan ON"
-            ),
+            _legend_table(),
             position="lower_left",
             font_size=_HUD_FONT,
             color="lightgray",
+            font="courier",
             name="help",
         )
         if state["first_draw"]:
