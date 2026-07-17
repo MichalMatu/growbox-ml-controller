@@ -1,77 +1,96 @@
-# Hardware configurator (web) — założenia
+# Hardware configurator — product assumptions (golden start)
 
-## Branch sparse (FE)
+## Why this branch exists
 
-Na tej linii w git trzymamy **tylko**: schema v4, docs konfiguratora, `AGENTS.md`, `README`, `LICENSE`.  
-Firmware / panel / ML / twin są na **`main`**.  
-**Nie** mergować sparse brancha w całości do `main`.
+Build a **web editor** so a client describes *their* growbox in **contract v4** language and downloads a JSON file.  
+That file later feeds training / board `load_scenario`. **Not in this phase:** 3D twin, serial, teacher, in-browser ML.
 
-## Cel produktu
+## Sparse tree
 
-Klient (lub operator) opisuje **swój growbox** zgodnie z kontraktem **v4**:
+| On this branch | On `main` (elsewhere) |
+|----------------|------------------------|
+| `schemas/environment-controller.json` | Full product: firmware, panel, sim, train, CI |
+| `docs/*` (this guide set) | Same schema file as SSOT when merged carefully |
+| `AGENTS.md`, `README.md` | — |
 
-- które donice, czujniki i aktuatory są zainstalowane,
-- limity sprzętowe (W, m³/h, g/h, flow…),
-- cele (targets) i ewentualnie stan startowy,
-
-oraz **eksportuje JSON** używalny później jako scenariusz / seed pod trening i board (`load_scenario`).
-
-**Nie jest to** w tej fazie: cyfrowy bliźniak 3D, live serial, teacher, trening ML w przeglądarce.
+**Never merge this sparse branch wholesale into `main`.**  
+Land FE as a new directory (e.g. `web/`) via PR/cherry-pick of *those* files (+ schema/docs if needed).
 
 ## SSOT
 
-| Warstwa | Plik |
-|---------|------|
-| Kontrakt (zakresy, path, kolejność ML) | `schemas/environment-controller.json` |
-| Znaczenie pól pod UI | `docs/SCHEMA_V4_FIELD_GUIDE.md` |
-| Reguły agenta / dev | `Agents.md` |
+| Layer | File |
+|-------|------|
+| Contract paths, min/max/default, 128 features, 15 outputs | `schemas/environment-controller.json` |
+| What each path means (PL) | `docs/SCHEMA_V4_FIELD_GUIDE.md` |
+| Example export | `docs/examples/minimal-single-pot.json` |
+| Agent / implementer rules | `AGENTS.md` |
+| Contract rules (short) | `docs/DATA_CONTRACT.md` |
 
-Schema **v4 nie jest „zamrożona na zawsze”** — konfigurator będzie ujawniał potrzebne poprawki.
-Zmiany breaking → świadoma nowa wersja schema + regeneracja artefaktów board/ML.
+## Two layers in one JSON file
 
-## Scope MVP (ta linia pracy)
+A full scenario JSON mixes layers. The configurator must **not** blur them in the UI:
 
-**In:**
+| Layer | What it is | Configurator MVP |
+|-------|------------|------------------|
+| **A. Hardware** | What is installed + limits | **Primary** — validity, available, max_*, cultivation, control_type on pots |
+| **B. Process seed** | Current/start sensor readings | Optional; use schema defaults or simple “start climate” |
+| **C. Targets** | Setpoints (goals) | Optional climate targets; pot soil targets often with pot card |
+| **D. Previous** | Last commands 0–1 | Default **0** for “clean box” export |
+| **E. Meta** | e.g. `seed` (RNG / scenario id) | Optional number; **not** an ML feature path |
 
-- Frontend edytujący podzbiór / pełnię pól v4 w logicznych grupach UI.
-- Walidacja po stronie FE (min/max, available → zerowanie limitów).
-- Import / export JSON (plik, wklejka, localStorage).
-- Opcjonalnie: wczytanie statycznego schema JSON z `/schemas/...` bez API.
+MVP export = **A solid**, B/C sensible defaults, D zeros, E optional `seed`.
 
-**Out (później lub inne branche):**
+## Scope
 
-- Backend API, auth, baza profili w chmurze.
-- Podłączenie płytki (to zostaje w **panelu admin**).
-- Symulator PyVista / twin 3D.
-- Pipeline train / teacher w tym UI.
+### In (now)
 
-## Panel admin vs konfigurator
+- UI groups: Chamber → Sensors → Pots → Outputs → Pseudo (see field guide).
+- FE validation: min/max from schema; pot off forces soil validity false and irr/mat available false + zero limits.
+- Actuator off: `available=false` and zero dangerous max fields in export.
+- Import / export JSON (file, paste, `localStorage`).
+- Load schema JSON statically (no backend).
 
-| | Panel (`tools/panel`) | Konfigurator hardware |
-|--|----------------------|------------------------|
-| Zadanie | Board live, diagnostyka, load_scenario | Opis setupu sprzętowego |
-| Serial | Tak | Nie (MVP) |
-| Użytkownik | Lab / serwis | Klient / setup |
-| Output | Sterowanie + scenario na board | JSON profilu / scenario |
+### Out (later / other branches)
 
-Współdzielą **język danych v4**, niekoniecznie ten sam ekran ani framework.
+- Backend, auth, cloud profiles.
+- Board serial / admin panel live control.
+- PyVista twin, teacher, training UI.
+
+## Admin panel vs this configurator
+
+| | Board admin panel (`main`) | Hardware configurator (this line) |
+|--|----------------------------|-------------------------------------|
+| Job | Connect MCU, live I/O, load_scenario | Describe installed hardware |
+| Serial | Yes | No (MVP) |
+| User | Lab / service | Client / setup |
+| Output | Live control + scenario on device | JSON file |
+
+Same **v4 vocabulary**, different product surface.
 
 ## Framework
 
-**Nie wybrany na start.** Najpierw model pól i kart UI.
-Dopuszczalne: vanilla (jak panel), Vite, Svelte, React — decyzja po pierwszej mapie ekranów.
+**Not chosen yet.** Prefer the simplest stack that can:
 
-## Kolejność pracy
+1. Render grouped forms from schema (or a thin form map keyed by `path`).
+2. Export/import JSON.
+3. Stay easy to cherry-pick onto `main`.
 
-1. Guide pól + reguły Agents (ten branch / faza).
-2. Szkielet UI grup Chamber / Sensors / Pots / Outputs.
-3. Export JSON zgodny ze shape nominal scenario.
-4. Dopiero potem backend / train / board import.
+Vanilla, Vite+TS, Svelte, React are all fine — decide after first screen map, not before.
 
-## Źródła z innych branchy (opcjonalnie, później)
+## Delivery sequence
 
-- `GrowboxProfile` / `profile_to_payload` — adapter Python pod train.
-- Panel form layout — wzorce kart donic.
-- Twin 3D — **nie** wymagany do konfiguratora.
+1. ~~Field guide + Agents + example JSON~~ (this docs set).  
+2. UI skeleton: Chamber / Sensors / Pots / Outputs.  
+3. Export matches `docs/examples/minimal-single-pot.json` shape (4 pots always).  
+4. Backend / train / board import later.
 
-Nie blokują startu edytora na czystym `main` + schema v4.
+## Evolution
+
+Configurator will **drive** schema cleanups (missing labels, bad defaults, confusing names).  
+Process:
+
+1. Document the gap in the field guide (or issue).  
+2. If contract must change → version bump on `main` + regen.  
+3. Then update FE.
+
+Do not silently invent `actuators.lights` or extra ML slots.

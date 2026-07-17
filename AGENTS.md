@@ -1,55 +1,63 @@
-# Agent notes — Growbox hardware configurator (FE branch)
+# Agent notes — Growbox hardware configurator (FE)
 
-## Ten branch jest sparse
+## Branch is sparse
 
-W git na tej linii pracy są głównie:
+Tracked content is essentially:
 
-- `schemas/environment-controller.json` (kontrakt **v4** — jedyny most do monorepo / board / ML)
-- `docs/` (guide pól + założenia konfiguratora + DATA_CONTRACT)
+- `schemas/environment-controller.json` — **only shared SSOT** with board / ML / `main`
+- `docs/` — contract rules, field guide, product assumptions, **examples/**
 - `AGENTS.md`, `README.md`, `LICENSE`, `.gitignore`
 
-**Nie ma tu:** firmware ESP, panel board, simulator, twin PyVista, teacher, train, testów monorepo.
+**Absent by design:** ESP firmware, board admin panel, simulator, twin, teacher, train, monorepo tests/CI scripts.
 
-Pełny kod produktu: branch **`main`** (i inne feature branche).  
-**Nigdy** nie merguj tego sparse brancha w całości do `main` — skasowałby produkt.  
-FE dodawaj jako nowy katalog; na `main` wjeżdżaj cherry-pickiem / PR tylko tych plików (+ schema/docs gdy trzeba).
+Full product code: checkout **`main`**.
 
-## Cel
+### Merge policy
 
-Frontendowy edytor setupu growboxa (hardware) + **eksport JSON** zgodny z v4.  
-Bez backendu na start. Framework — do wyboru później.
+- **Never** merge this sparse branch wholesale into `main` (would delete the product tree).
+- Land work by adding FE sources (e.g. `web/**`) and PR/cherry-pick **only those paths** (+ docs/schema updates).
+- Do not re-commit monorepo trees (`tools/`, `src/`, `tests/`, …) onto this branch.
 
-## SSOT
+## Goal
 
-| Co | Gdzie |
-|----|--------|
-| Pola, min/max, path, outputs | `schemas/environment-controller.json` |
-| Znaczenie pól (PL) | `docs/SCHEMA_V4_FIELD_GUIDE.md` |
-| Założenia produktu | `docs/HARDWARE_CONFIGURATOR.md` |
-| Skrót kontraktu | `docs/DATA_CONTRACT.md` |
+Web **hardware configurator**: client describes installed growbox gear in **v4** terms → **download JSON**.  
+No backend required for MVP. Framework not mandated yet.
 
-## Zasady FE
+## SSOT (read before coding)
 
-1. Path JSON i identyfikatory — **angielski**; etykiety UI mogą być po polsku.
-2. Mix & match: brak sprzętu = `validity=false` / `available=false` / `pots[N].available=false` — **nie usuwaj slotów**.
-3. Aktuator off → `available=false` + zeruj niebezpieczne maxy w eksporcie.
-4. Bez nowych slotów ML (PPFD, EC, …) bez nowej `schema_version`.
-5. Backend opcjonalny później; MVP = plik JSON.
-6. Panel board / serial — nie na tym branchu.
-7. Commit messages i kod — angielski; czat z użytkownikiem — po polsku.
-8. Konfigurator może napędzać ewolucję pól — najpierw guide/schema, potem UI.
+| Topic | File |
+|-------|------|
+| Paths, min/max/default, 128 features, 15 outputs | `schemas/environment-controller.json` |
+| Path meanings + export rules | `docs/SCHEMA_V4_FIELD_GUIDE.md` |
+| Product layers (hardware vs seed vs previous) | `docs/HARDWARE_CONFIGURATOR.md` |
+| Short contract rules | `docs/DATA_CONTRACT.md` |
+| Golden export shape | `docs/examples/minimal-single-pot.json` |
+| Export checklist | `docs/examples/README.md` |
 
-## Grupy UI (start)
+## Implementation rules
 
-1. Chamber — `environment.*`
-2. Sensors + validity
-3. Pots 1–4
-4. Outputs (global actuators + limits)
-5. Pseudo `lights_active`
-6. Targets / previous — opcjonalnie w MVP
+1. **Paths English** (`pots[0].irrigation.available`). UI copy may be Polish.
+2. **Mix & match:** missing gear → `validity=false` / `available=false` — **never delete slots**; always **4 pots**.
+3. Inactive pot export: soil validity false; irr/mat available false; numeric limits **0**; previous **0**.
+4. Inactive actuator export: `available=false` and zero max power/flow/dose (and efficiency 0 where used).
+5. **No** `actuators.lights` in JSON. Lights schedule = `pseudo.lights_active` only.
+6. **No** global `actuators.*.control_type` — not in v4 feature list. Pot irr/mat: only `"binary"` \| `"pwm"`.
+7. Numbers: clamp to schema min/max for that `path`.
+8. Meta keys allowed: `seed`, `profile_id`, `title` (not ML features).
+9. Prefer form state keyed by **path** string.
+10. Schema change that adds/renames ML slots = **breaking** → do on `main` with version bump + regen; document first.
+11. Code and commit messages: English. User-facing chat: Polish.
+12. Backend / serial / train UI: out of scope unless explicitly requested.
 
-## Out of scope
+## Suggested UI groups
 
-- Odtwarzanie monorepo (ESP, panel, twin, ML) na tym branchu
-- Sim / twin / train / teacher w UI
-- CI ESP/pytest monorepo na tym tree
+1. Chamber — `environment.*`  
+2. Sensors — `sensors.*` + `validity.*`  
+3. Pots 1–4 — full pot object  
+4. Outputs — `actuators.*`  
+5. Pseudo — `lights_active`  
+6. Targets / previous — defaults OK for MVP  
+
+## Definition of done (MVP export)
+
+Export deep-equals structure of `docs/examples/minimal-single-pot.json` (same keys/layers; values may differ) and passes the checklist in `docs/examples/README.md`.

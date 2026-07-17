@@ -1,37 +1,57 @@
-# Data contract
+# Data contract (v4) — short rules
 
-**Source of truth:** [`schemas/environment-controller.json`](../schemas/environment-controller.json) (schema_version **4**)
+> **This sparse FE branch** keeps the contract JSON and docs only.  
+> C++ generation, board runtime, simulator, and CI live on **`main`**.
 
-Field names, order, ranges, and outputs are defined only there. Change the schema → regenerate C++ → retrain → commit generated artifacts together.
+## Source of truth
 
-**Field meanings (UI / configurator):** [`SCHEMA_V4_FIELD_GUIDE.md`](SCHEMA_V4_FIELD_GUIDE.md) — short PL descriptions per path; does not replace min/max in the JSON schema.
+| Artifact | Path |
+|----------|------|
+| Contract (ranges, paths, feature order, 15 outputs) | [`schemas/environment-controller.json`](../schemas/environment-controller.json) (`schema_version` **4**) |
+| Field meanings for UI (PL) | [`SCHEMA_V4_FIELD_GUIDE.md`](SCHEMA_V4_FIELD_GUIDE.md) |
+| Configurator product scope | [`HARDWARE_CONFIGURATOR.md`](HARDWARE_CONFIGURATOR.md) |
+| Example export JSON | [`examples/minimal-single-pot.json`](examples/minimal-single-pot.json) |
 
-**Hardware configurator product notes:** [`HARDWARE_CONFIGURATOR.md`](HARDWARE_CONFIGURATOR.md).
+**Do not invent paths.** If UI needs a field, it must exist as a `path` under `model.features` (or documented meta such as `seed`).
 
-## Domain: pots, not zones
+## Domain
 
-Up to **four pots (donice)** share one growbox air volume. JSON root is `pots` (array index 0..3). Feature names use 1-based labels (`pot_1_*`, `irrigation_pot_1`, …).
+- Up to **four pots** share one chamber air volume.
+- JSON array: `pots[0]` … `pots[3]` (0-based).
+- Feature / UI labels often use **1-based** names (`pot_1_*`, `irrigation_pot_1`).
 
-## Rules
+## Mix & match (never drop slots)
 
-**Mix & match:** fixed slot list; every sensor and actuator is independently enabled. No required bundles.
+| Kind | Installed / on | Missing / off |
+|------|----------------|---------------|
+| Sensor | `validity.<path> = true` + live reading | `validity.<path> = false` — encoder uses default + mask; **slot stays** |
+| Actuator | `actuators.*.available = true` (+ limits) | `available = false` — safety forces command **0**; zero dangerous max limits in export |
+| Pot | `pots[N].available = true` | `false` — pot slot remains; treat soil/irrigation/mat as inactive |
+| Lights schedule | `pseudo.lights_active` true/false | still a fixed pseudo input — not a 15-way ML output |
 
-**Sensors:** each measurement has its own `validity` flag. If false, the encoder substitutes the contract default and the mask tells the model the value is imputed.
+**No required bundles.** Any combination of sensors/actuators/pots is valid.
 
-**Actuators:** each output has its own `available`. When false, zero max capability; safety forces final output to zero.
+## Outputs
 
-**Outputs:** continuous `[0, 1]` per actuator (15 total including irrigation and heat mats per pot).
+- **15 ML outputs**, each continuous command in **`[0, 1]`**:  
+  `heater`, `fan`, `humidifier`, `dehumidifier`, `cooler`, `co2_doser`,  
+  `irrigation_pot_1`…`4`, `nutrient_heater`, `heat_mat_pot_1`…`4`.
+- Configurator sets **availability and limits**, not “remove output from the list”.
+- Lights heat is **non-ML** (`output_scope.non_ml_actuators`); ML sees **`pseudo.lights_active`** only.
 
-**Physics (training only):** lumped growbox thermodynamics live in `tools/ml/simulator.py`, not in the JSON contract.
+## Versioning / hash
 
-**Version:** schema version + hash. `ModelRuntime` rejects a model built for a different hash/dimensions.
+- Contract identity: schema version + hash metadata in the JSON file.
+- **Breaking** change (new ML slot, rename path, change meaning) → new `schema_version`, regenerate board/ML artifacts **on `main`**, retrain.
+- Non-breaking: UI labels, this guide, grouping, client template defaults.
 
-## Regenerate
+## Regenerating C++ / checks
+
+Only on full monorepo (`main`):
 
 ```bash
 python tools/schema/generate_environment_schema.py
-python tools/schema/generate_environment_schema.py --check   # CI
+python tools/schema/generate_environment_schema.py --check
 ```
 
-I/O worksheet: [IO_MAP.md](IO_MAP.md). Full ML inventory: [simulator/IO_INVENTORY.md](simulator/IO_INVENTORY.md).
-Pipeline: [MODEL_PIPELINE.md](MODEL_PIPELINE.md). Simulator research: [simulator/README.md](simulator/README.md).
+Not available on this sparse branch (no `tools/`).

@@ -1,200 +1,288 @@
-# Schema v4 — przewodnik pól (konfigurator)
+# Schema v4 — field guide (configurator)
 
-**Kontrakt:** [`schemas/environment-controller.json`](../schemas/environment-controller.json) (`schema_version` **4**)
-**Cel tego pliku:** krótkie znaczenie każdego **logicznego** slotu pod UI edytora hardware / scenariusz.
-**Nie zastępuje** schema — zakresy `min`/`max`/`default` i kolejność cech ML są tylko w JSON.
+**Contract file:** [`schemas/environment-controller.json`](../schemas/environment-controller.json) (`schema_version` **4**)  
+**Example export:** [`examples/minimal-single-pot.json`](examples/minimal-single-pot.json)  
+**Product scope:** [`HARDWARE_CONFIGURATOR.md`](HARDWARE_CONFIGURATOR.md)
 
-> Opisy po polsku dla UI. Identyfikatory i ścieżki JSON — **po angielsku**, jak w kontrakcie.
+This guide explains **what each JSON path means** for a hardware / scenario editor.  
+It does **not** replace the schema: **min / max / default**, feature **order**, and hash live only in the JSON file.
 
-## Zasady mix & match (v4)
-
-| Typ | Włączone | Wyłączone |
-|-----|----------|-----------|
-| Czujnik | `validity.* = true` + realny odczyt | `validity.* = false` — encoder: default + maska (slot **zostaje**) |
-| Aktuator | `actuators.*.available = true` | `available = false` — safety wymusza wyjście 0; limity max → 0 |
-| Donica | `pots[N].available = true` | `false` — slot donicy zostaje; gleba/pompa/mata nieaktywne w praktyce |
-| Pseudo | np. harmonogram lamp | brak integracji → `pseudo.lights_active = false` |
-
-**Nie usuwamy slotów z kontraktu** — tylko flagi. Nowe pomiary/wyjścia ML = nowa wersja schema (breaking).
-
-## Mapa UI → JSON (grupy konfiguratora)
-
-Proponowany układ ekranów (ewoluuje z edytorem):
-
-1. **Komora** — `environment.*`
-2. **Klimat wewnątrz / na zewnątrz / zbiornik** — sensory + validity
-3. **Donice 1–4** — available, gleba, irygacja, mata, cele gleby
-4. **Wyjścia globalne** — heater, fan, humid, dehum, cooler, CO₂, nutrient heater
-5. **Światło (pseudo)** — `pseudo.lights_active`
-6. **Cele klimatu** — `targets.*` (setpointy, nie pomiary)
-7. **Previous** — ostatnie komendy 0–1 (stan startowy / board), nie „czy mam sprzęt”
+| Rule | Detail |
+|------|--------|
+| Language | Path / identifiers: **English**. UI labels: Polish OK. |
+| Path vs feature name | UI builds objects by **`path`** (e.g. `validity.air_temperature_c`). Encoder also has a flat **`name`** (e.g. `air_temperature_valid`). Prefer **path** in the editor model. |
+| Never drop slots | Off = flag false / available false / zeros — array length and keys stay. |
+| Ranges | Always read from `model.features[]` matching `path`. |
 
 ---
 
-## 1. Environment (parametry komory)
+## Mix & match
 
-Używane głównie w **symulacji / kalibracji**, nie jako feature ML 1:1 w wektorze w ten sam sposób co sensory — ale są w modelu feature list jako skalary środowiska.
+| Kind | ON | OFF |
+|------|----|-----|
+| Sensor | `validity.<sensor_path> = true` | `false` → default value + ML mask; slot remains |
+| Actuator | `actuators.<id>.available = true` + non-zero limits as needed | `available = false` + **zero max power/flow/dose** in export |
+| Pot | `pots[N].available = true` | `false` + force soil validity false, irr/mat available false, limits 0 |
+| Lights schedule | `pseudo.lights_active` | still present; false if no schedule integration |
 
-| Path | Znaczenie |
-|------|-----------|
-| `environment.growbox_volume_m3` | Objętość powietrza komory [m³]. Większa = wolniejsza zmiana klimatu przy tej samej mocy. |
-| `environment.thermal_mass_j_per_k` | Bezwładność cieplna [J/K]. Większa = wolniej grzeje/stygnie. |
-| `environment.heat_loss_w_per_k` | Straty przez ściany [W/K] do otoczenia. |
-| `environment.air_leak_rate_ach` | Nieszczelność [1/h] — naturalna wymiana bez fana. |
+New ML sensor/output = **new schema version** (breaking). Not a silent UI field.
 
 ---
 
-## 2. Sensory powietrza i validity
+## UI screen map → JSON
 
-### Wewnątrz komory
+| # | UI group | Primary paths |
+|---|----------|----------------|
+| 1 | **Chamber** | `environment.*` |
+| 2 | **Sensors** | `sensors.*` + `validity.*` (air, outside, nutrient) |
+| 3 | **Pots 1–4** | `pots[0..3].*` |
+| 4 | **Outputs** | `actuators.*` |
+| 5 | **Lights (pseudo)** | `pseudo.lights_active` |
+| 6 | **Climate targets** (optional MVP) | `targets.*` |
+| 7 | **Previous** (default 0) | `previous.*`, `pots[N].previous.*` |
+| — | **Meta** | `seed`, `profile_id`, `title` (not ML features) |
 
-| Path | Znaczenie |
-|------|-----------|
-| `sensors.air_temperature_c` | Temperatura powietrza w boxie [°C]. |
-| `sensors.air_humidity_pct` | Wilgotność względna w boxie [%]. |
-| `sensors.co2_ppm` | CO₂ w boxie [ppm]. |
-| `validity.air_temperature_c` | Czy czujnik T powietrza jest zainstalowany / wiarygodny. |
-| `validity.air_humidity_pct` | Czy czujnik RH jest zainstalowany. |
-| `validity.co2_ppm` | Czy czujnik CO₂ jest zainstalowany. |
+---
 
-### Zbiornik nawozu
+## Meta (not in `model.features`)
 
-| Path | Znaczenie |
-|------|-----------|
-| `sensors.nutrient_solution_temperature_c` | Temp. roztworu w zbiorniku [°C]. |
-| `validity.nutrient_solution_temperature_c` | Czy czujnik zbiornika jest. |
+| Key | Meaning |
+|-----|---------|
+| `seed` | Scenario / RNG seed for pipelines and board loads. Integer. |
+| `profile_id` | Stable id string for this hardware template. |
+| `title` | Human label. |
 
-### Na zewnątrz / wlot (boundary)
+---
 
-| Path | Znaczenie |
-|------|-----------|
-| `sensors.outside_temperature_c` | Temp. powietrza na wlocie / na zewnątrz [°C]. |
-| `sensors.outside_humidity_pct` | RH na wlocie / na zewnątrz [%]. |
-| `sensors.outside_co2_ppm` | CO₂ na wlocie / na zewnątrz [ppm]. |
-| `validity.outside_*` | Czy dany czujnik zewnętrzny jest. |
+## 1. Chamber — `environment.*`
+
+These **are** ML features (scalars in the 128-vector), not “sim-only hacks”.  
+In the configurator they describe **box physics parameters** the client can set or leave at template defaults.
+
+| Path | Unit | Meaning |
+|------|------|---------|
+| `environment.growbox_volume_m3` | m³ | Chamber air volume. |
+| `environment.thermal_mass_j_per_k` | J/K | Thermal inertia of the setup. |
+| `environment.heat_loss_w_per_k` | W/K | Heat loss to surroundings. |
+| `environment.air_leak_rate_ach` | 1/h | Passiveak / passive air changes without fan. |
+
+---
+
+## 2. Sensors + validity
+
+### Inside air
+
+| Path | Meaning |
+|------|---------|
+| `sensors.air_temperature_c` | Air temperature in the chamber [°C] (process value). |
+| `sensors.air_humidity_pct` | Relative humidity in the chamber [%]. |
+| `sensors.co2_ppm` | CO₂ in the chamber [ppm]. |
+| `validity.air_temperature_c` | Temperature sensor installed / trusted. |
+| `validity.air_humidity_pct` | RH sensor installed. |
+| `validity.co2_ppm` | CO₂ sensor installed. |
+
+### Nutrient tank
+
+| Path | Meaning |
+|------|---------|
+| `sensors.nutrient_solution_temperature_c` | Tank solution temperature [°C]. |
+| `validity.nutrient_solution_temperature_c` | Tank temperature sensor installed. |
+
+### Outside / inlet (boundary)
+
+| Path | Meaning |
+|------|---------|
+| `sensors.outside_temperature_c` | Outside or inlet air temperature [°C]. |
+| `sensors.outside_humidity_pct` | Outside or inlet RH [%]. |
+| `sensors.outside_co2_ppm` | Outside or inlet CO₂ [ppm]. |
+| `validity.outside_temperature_c` | Outside T sensor installed. |
+| `validity.outside_humidity_pct` | Outside RH sensor installed. |
+| `validity.outside_co2_ppm` | Outside CO₂ sensor installed. |
+
+**Hardware UI:** toggles bind to **`validity.*`**.  
+**Process seed UI (optional):** number inputs bind to **`sensors.*`**.
 
 ---
 
 ## 3. Pseudo
 
-| Path | Znaczenie |
-|------|-----------|
-| `pseudo.lights_active` | Czy lampy są włączone wg harmonogramu / readback (nie pomiar PPFD). Wejście ML, nie aktuator 0–1 w wektorze wyjść. |
+| Path | Meaning |
+|------|---------|
+| `pseudo.lights_active` | Lamps on per schedule / readback (**not** PPFD). ML input. **Not** one of the 15 command outputs. |
+
+Do **not** export `actuators.lights` — lights are listed under `output_scope.non_ml_actuators` in the schema.
 
 ---
 
-## 4. Donice `pots[0..3]` (UI: Donica 1–4)
+## 4. Pots — `pots[0..3]` (UI labels Pot 1–4)
 
-Indeks tablicy **0-based**; etykiety UI i feature names często **1-based** (`pot_1_*`).
+- Array index **0-based**.
+- Labels and feature names often **1-based** (`pot_1_*`).
 
-| Path | Znaczenie |
-|------|-----------|
-| `pots[N].available` | Czy donica N jest w użyciu (roślina / strefa aktywna). |
-| `pots[N].sensors.soil_moisture_pct` | Wilgotność podłoża [%] (wartość procesu). |
-| `pots[N].sensors.soil_temperature_c` | Temp. podłoża [°C]. |
-| `pots[N].validity.soil_moisture_pct` | Czy czujnik wilgotności gleby jest na tej donicy. |
-| `pots[N].validity.soil_temperature_c` | Czy czujnik temp. gleby jest. |
-| `pots[N].cultivation.pot_volume_l` | Objętość donicy [L] — parametr uprawy / sim. |
-| `pots[N].cultivation.substrate_water_capacity_ml` | Pojemność wodna podłoża [ml]. |
-| `pots[N].cultivation.transpiration_factor` | Skala parowania/transpiracji (1 = nominal). |
-| `pots[N].targets.soil_moisture_pct` | Cel wilgotności gleby [%] (setpoint). |
-| `pots[N].targets.soil_temperature_c` | Cel temp. gleby [°C]. |
-| `pots[N].irrigation.available` | Czy pompa irygacji na tej donicy jest. |
-| `pots[N].irrigation.flow_ml_s` | Przepływ pompy [ml/s]. |
-| `pots[N].irrigation.maximum_pulse_s` | Max czas impulsu [s]. |
-| `pots[N].irrigation.minimum_interval_s` | Min. odstęp między impulsami [s]. |
-| `pots[N].irrigation.control_type` | Sposób sterowania (np. `binary` / PWM) — meta dla board/UI. |
-| `pots[N].heat_mat.available` | Czy mata grzewcza pod donicą jest. |
-| `pots[N].heat_mat.max_power_w` | Max moc maty [W]. |
-| `pots[N].heat_mat.control_type` | Typ sterowania matą. |
-| `pots[N].previous.irrigation` | Ostatnia komenda irygacji 0–1 (stan startowy). |
-| `pots[N].previous.heat_mat` | Ostatnia komenda maty 0–1. |
+### Always four slots
 
-Gdy `pots[N].available = false`: validity gleby i available pomp/mat w praktyce traktuj jako wyłączone; slot JSON zostaje.
+Export **always** includes four pot objects. Empty slots use the inactive pattern (see example JSON).
 
----
+### Per-pot paths
 
-## 5. Aktuatory globalne `actuators.*`
+| Path | Meaning |
+|------|---------|
+| `pots[N].available` | Pot slot in use (plant / zone active). |
+| `pots[N].sensors.soil_moisture_pct` | Substrate moisture [%] (process). |
+| `pots[N].sensors.soil_temperature_c` | Substrate temperature [°C] (process). |
+| `pots[N].validity.soil_moisture_pct` | Soil moisture probe installed on this pot. |
+| `pots[N].validity.soil_temperature_c` | Soil temperature probe installed. |
+| `pots[N].cultivation.pot_volume_l` | Pot volume [L]. |
+| `pots[N].cultivation.substrate_water_capacity_ml` | Substrate water capacity [ml]. |
+| `pots[N].cultivation.transpiration_factor` | Transpiration scale (1 = nominal). |
+| `pots[N].targets.soil_moisture_pct` | Soil moisture setpoint [%]. |
+| `pots[N].targets.soil_temperature_c` | Soil temperature setpoint [°C]. |
+| `pots[N].irrigation.available` | Irrigation pump installed for this pot. |
+| `pots[N].irrigation.flow_ml_s` | Pump flow [ml/s]. |
+| `pots[N].irrigation.maximum_pulse_s` | Max pulse length [s]. |
+| `pots[N].irrigation.minimum_interval_s` | Min time between pulses [s]. |
+| `pots[N].irrigation.control_type` | **`binary`** or **`pwm`** only (schema enum). |
+| `pots[N].heat_mat.available` | Heat mat under this pot. |
+| `pots[N].heat_mat.max_power_w` | Mat max power [W]. |
+| `pots[N].heat_mat.control_type` | **`binary`** or **`pwm`** only. |
+| `pots[N].previous.irrigation` | Last irrigation command 0–1. |
+| `pots[N].previous.heat_mat` | Last heat-mat command 0–1. |
 
-Wspólne: **`available`** = czy sprzęt jest w setupie.
-Limity (`max_*`) = skalowanie komendy 0–1 na fizyczne jednostki (board + sim).
+### When `pots[N].available === false` (export must)
 
-| Path | Znaczenie |
-|------|-----------|
-| `actuators.heater.available` | Grzałka powietrza. |
-| `actuators.heater.max_power_w` | Max moc [W]. |
-| `actuators.heater.efficiency` | Sprawność 0–1 (ciepło do powietrza). |
-| `actuators.heater.control_type` | np. binary / pwm. |
-| `actuators.fan.available` | Wentylator / wymiana. |
-| `actuators.fan.max_airflow_m3_h` | Max przepływ [m³/h]. |
-| `actuators.fan.minimum_command` | Martwa strefa 0–1 (poniżej = off). |
-| `actuators.fan.control_type` | Zwykle pwm. |
-| `actuators.humidifier.available` | Nawilżacz. |
-| `actuators.humidifier.max_output_g_h` | Max para [g/h]. |
-| `actuators.dehumidifier.available` | Osuszacz. |
-| `actuators.dehumidifier.max_removal_g_h` | Max usuwanie wilgoci [g/h]. |
-| `actuators.cooler.available` | Chłodzenie aktywne. |
-| `actuators.cooler.max_cooling_w` | Max moc chłodzenia [W]. |
-| `actuators.co2_doser.available` | Dozownik CO₂. |
-| `actuators.co2_doser.dose_ppm_per_full_pulse` | Dawka [ppm] przy pełnym impulsie. |
-| `actuators.co2_doser.maximum_pulse_s` | Max czas impulsu [s]. |
-| `actuators.nutrient_heater.available` | Grzałka zbiornika. |
-| `actuators.nutrient_heater.max_power_w` | Max moc [W]. |
-| `actuators.nutrient_heater.efficiency` | Sprawność. |
-
-**Lights:** w kontrakcie to **pseudo / non-ML actuator** (ciepło lamp w sim osobno) — nie dokładaj `actuators.lights` jako slotu ML bez zmiany schema.
+- `validity.soil_moisture_pct` = false  
+- `validity.soil_temperature_c` = false  
+- `irrigation.available` = false; `flow_ml_s` / pulse / interval = **0**  
+- `heat_mat.available` = false; `max_power_w` = **0**  
+- `previous.*` = **0**
 
 ---
 
-## 6. Cele klimatu `targets.*`
+## 5. Global actuators — `actuators.*`
 
-Setpointy dla controllera / teachera — **nie** odczyty czujników.
+| Path | Meaning |
+|------|---------|
+| `actuators.heater.available` | Air heater present. |
+| `actuators.heater.max_power_w` | Max electrical/thermal scale [W]. |
+| `actuators.heater.efficiency` | Fraction of power to air heat [0–1]. |
+| `actuators.fan.available` | Fan / exchange present. |
+| `actuators.fan.max_airflow_m3_h` | Max airflow [m³/h]. |
+| `actuators.fan.minimum_command` | Dead-zone on 0–1 command (below → treat as off). |
+| `actuators.humidifier.available` | Humidifier present. |
+| `actuators.humidifier.max_output_g_h` | Max vapor output [g/h]. |
+| `actuators.dehumidifier.available` | Dehumidifier present. |
+| `actuators.dehumidifier.max_removal_g_h` | Max moisture removal [g/h]. |
+| `actuators.cooler.available` | Active cooling present. |
+| `actuators.cooler.max_cooling_w` | Max cooling power [W]. |
+| `actuators.co2_doser.available` | CO₂ doser present. |
+| `actuators.co2_doser.dose_ppm_per_full_pulse` | ppm per full pulse. |
+| `actuators.co2_doser.maximum_pulse_s` | Max pulse duration [s]. |
+| `actuators.nutrient_heater.available` | Tank heater present. |
+| `actuators.nutrient_heater.max_power_w` | Max power [W]. |
+| `actuators.nutrient_heater.efficiency` | Efficiency [0–1]. |
 
-| Path | Znaczenie |
-|------|-----------|
-| `targets.air_temperature_c` | Cel T powietrza. |
-| `targets.air_humidity_pct` | Cel RH. |
-| `targets.co2_ppm` | Cel CO₂. |
-| `targets.nutrient_solution_temperature_c` | Cel temp. zbiornika. |
+### Important: no global `control_type` in v4 features
 
----
+Unlike pot irrigation/mat, **heater / fan / humidifier / … have no `control_type` path** in `model.features`.  
+Do **not** invent `actuators.heater.control_type` in export. Board policy may still use binary/PWM internally without that contract field.
 
-## 7. Previous (ostatnie komendy)
+### When `available === false` (export must)
 
-| Path | Znaczenie |
-|------|-----------|
-| `previous.heater` … `previous.nutrient_heater` | Ostatnia komenda 0–1 (kontynuacja stanu / cold start). |
-| `pots[N].previous.*` | j.w. per donica. |
-
-W konfiguratorze **sprzętu** często domyślnie 0; w scenariuszu treningowym / board — realny previous.
-
----
-
-## 8. Wyjścia ML (15) — komendy 0–1
-
-Model przewiduje / steruje (nazwy kontraktowe):
-
-`heater`, `fan`, `humidifier`, `dehumidifier`, `cooler`, `co2_doser`,
-`irrigation_pot_1`…`4`, `nutrient_heater`, `heat_mat_pot_1`…`4`.
-
-Konfigurator **nie „usuwa”** wyjścia — ustawia `available` i limity. Safety na boardzie zeruje niedostępne.
-
----
-
-## Poza v4 (nie dodawać w edytorze jako slot ML)
-
-PPFD, temp. liścia, EC/pH, flood, osobne sensory wylotu, stacja pogodowa — roadmap, nie ta wersja kontraktu. Patrz `sensing_scope.explicitly_not_v2` w schema.
+Zero the capability fields (`max_power_w`, `max_airflow_m3_h`, `max_output_g_h`, `max_removal_g_h`, `max_cooling_w`, `dose_ppm_per_full_pulse`, and set `efficiency` to 0 where present).
 
 ---
 
-## Ewolucja pól
+## 6. Climate targets — `targets.*`
 
-- Konfigurator **może ujawnić** braki (złe defaulty, brak etykiety, myląca nazwa).
-- **Breaking** zmiana znaczenia path / nowy slot ML → nowa `schema_version` + regeneracja C++ + retrain.
-- Niełamące: opisy w tym pliku, etykiety UI, grupowanie kart, domyślne wartości w szablonie JSON klienta.
+Setpoints — **not** sensor readings.
 
-## Powiązane
+| Path | Meaning |
+|------|---------|
+| `targets.air_temperature_c` | Desired air temperature. |
+| `targets.air_humidity_pct` | Desired RH. |
+| `targets.co2_ppm` | Desired CO₂. |
+| `targets.nutrient_solution_temperature_c` | Desired tank temperature. |
 
-- [DATA_CONTRACT.md](DATA_CONTRACT.md)
-- [IO_MAP.md](IO_MAP.md)
-- [HARDWARE_CONFIGURATOR.md](HARDWARE_CONFIGURATOR.md) — założenia produktu edytora
+---
+
+## 7. Previous commands — `previous.*`
+
+Last applied commands in **`[0, 1]`** (warm start / board continuity).
+
+| Path |
+|------|
+| `previous.heater` |
+| `previous.fan` |
+| `previous.humidifier` |
+| `previous.dehumidifier` |
+| `previous.cooler` |
+| `previous.co2_doser` |
+| `previous.nutrient_heater` |
+
+Hardware-template export: set all to **0**.  
+(Plus per-pot `pots[N].previous.irrigation` / `heat_mat`.)
+
+---
+
+## 8. Fifteen ML outputs (commands 0–1)
+
+Names used by the model / board decision vector (not nested under `actuators` as paths in the same way — they are **output** slots):
+
+1. `heater`  
+2. `fan`  
+3. `humidifier`  
+4. `dehumidifier`  
+5. `cooler`  
+6. `co2_doser`  
+7. `irrigation_pot_1`  
+8. `irrigation_pot_2`  
+9. `irrigation_pot_3`  
+10. `irrigation_pot_4`  
+11. `nutrient_heater`  
+12. `heat_mat_pot_1`  
+13. `heat_mat_pot_2`  
+14. `heat_mat_pot_3`  
+15. `heat_mat_pot_4`  
+
+Configurator does **not** remove an output. It sets hardware `available` / pot flags so safety keeps that command at 0.
+
+---
+
+## Enums
+
+| Path pattern | Allowed JSON strings | Schema encoding (for ML) |
+|--------------|----------------------|---------------------------|
+| `pots[N].irrigation.control_type` | `"binary"`, `"pwm"` | binary → 0, pwm → 1 |
+| `pots[N].heat_mat.control_type` | `"binary"`, `"pwm"` | same |
+
+---
+
+## Out of contract v4 (do not add as ML fields)
+
+From `sensing_scope.explicitly_not_v2` and product rules:
+
+- PPFD / light intensity as ML feature  
+- Leaf temperature, EC, pH, flood sensor  
+- Separate exhaust-only air sensors, weather station  
+
+Roadmap only — requires a new schema version.
+
+---
+
+## FE implementation checklist
+
+- [ ] Model form state by **path** strings from schema.  
+- [ ] Load min/max/default from `model.features`.  
+- [ ] Always serialize **4 pots**.  
+- [ ] Enforce inactive-pot and inactive-actuator zeroing rules above.  
+- [ ] Compare export to [`examples/minimal-single-pot.json`](examples/minimal-single-pot.json).  
+- [ ] No `actuators.lights`.  
+- [ ] No global actuator `control_type` unless schema gains it later.  
+
+---
+
+## Related on this branch
+
+- [`DATA_CONTRACT.md`](DATA_CONTRACT.md) — short rules  
+- [`HARDWARE_CONFIGURATOR.md`](HARDWARE_CONFIGURATOR.md) — product  
+- [`examples/README.md`](examples/README.md) — export rules  

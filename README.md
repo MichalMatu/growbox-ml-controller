@@ -1,27 +1,39 @@
 # Growbox hardware configurator (FE line)
 
-This branch is a **sparse worktree** for the web hardware configurator.
+Sparse branch: **contract v4 + documentation only** — foundation for the web hardware editor.
 
-## What stays here
+## Tree
 
-| Path | Role |
-|------|------|
-| `schemas/environment-controller.json` | Contract **v4** — single shared SSOT with monorepo / board / ML |
-| `docs/SCHEMA_V4_FIELD_GUIDE.md` | Field meanings (PL) |
-| `docs/HARDWARE_CONFIGURATOR.md` | Product assumptions |
-| `docs/DATA_CONTRACT.md` | Short contract rules |
-| `AGENTS.md` | Rules for FE work on this branch |
-| `LICENSE` | License |
+```text
+schemas/environment-controller.json   # SSOT contract v4
+docs/
+  DATA_CONTRACT.md                    # Short rules
+  HARDWARE_CONFIGURATOR.md            # Product assumptions
+  SCHEMA_V4_FIELD_GUIDE.md            # Every path explained (PL sense / EN path)
+  examples/
+    README.md
+    minimal-single-pot.json           # Golden export shape
+AGENTS.md                             # Rules for implementers / agents
+README.md
+LICENSE
+.gitignore
+```
 
-Everything else from `main` (firmware, panel, simulator, twin, tests, …) is **intentionally absent** on this branch.
+Full monorepo (firmware, board panel, simulator, training) lives on **`main`**.
 
-## Not for wholesale merge into `main`
+## Do not merge this branch as a whole into `main`
 
-Do **not** merge this branch as a replace of `main` — it would delete product code.  
-Ship FE by adding files under e.g. `web/` then PR **those paths** (or cherry-pick) onto `main`.
+That would delete product code.  
+Add frontend under e.g. `web/`, then open a PR that only adds those files (+ docs/schema if needed).
 
-## Next
+## Read order (start here)
 
-1. Scaffold frontend (framework TBD).  
-2. Edit / export JSON shaped by schema v4.  
-3. Backend / train / board later — not here yet.
+1. [`docs/HARDWARE_CONFIGURATOR.md`](docs/HARDWARE_CONFIGURATOR.md) — what we build  
+2. [`docs/DATA_CONTRACT.md`](docs/DATA_CONTRACT.md) — mix & match rules  
+3. [`docs/SCHEMA_V4_FIELD_GUIDE.md`](docs/SCHEMA_V4_FIELD_GUIDE.md) — fields  
+4. [`docs/examples/minimal-single-pot.json`](docs/examples/minimal-single-pot.json) — export target  
+5. [`AGENTS.md`](AGENTS.md) — coding / agent constraints  
+
+## Next engineering step
+
+Scaffold FE (framework TBD) that edits hardware flags/limits and **exports JSON matching the example shape**.
