@@ -46,11 +46,10 @@ def _legend_table() -> str:
         ("1 / 2", "heater on / off"),
         ("3 / 4", "fan on / off"),
         ("5 / 6", "humid on / off"),
-        ("7 / c", "HOME view"),
+        ("7 / i", "ISO"),
         ("8", "TOP"),
         ("9", "FRONT"),
         ("0", "SIDE"),
-        ("i", "ISO"),
         ("green", "INLET"),
         ("blue", "OUTLET"),
     ]
@@ -250,30 +249,17 @@ def _set_arrows(
 
 
 def _set_standard_view(pl: Any, name: str) -> None:
-    if name == "home":
+    if name == "iso":
         pl.view_isometric()
-        pl.reset_camera()
-        try:
-            pl.camera.elevation(18.0)
-            pl.camera.azimuth(-12.0)
-            pl.camera.zoom(1.05)
-        except Exception:
-            pass
-    elif name == "iso":
-        pl.view_isometric()
-        pl.reset_camera()
     elif name == "top":
         pl.view_xy()
-        pl.reset_camera()
     elif name == "front":
         pl.view_xz()
-        pl.reset_camera()
     elif name == "side":
         pl.view_yz()
-        pl.reset_camera()
     else:
-        _set_standard_view(pl, "home")
-        return
+        pl.view_isometric()
+    pl.reset_camera()
     pl.reset_camera_clipping_range()
     pl.render()
 
@@ -303,12 +289,11 @@ def _attach_camera_controls(pl: Any) -> None:
             _style_camera_widget(widget)
         except Exception:
             pass
-    pl.add_key_event("7", lambda: _set_standard_view(pl, "home"))
-    pl.add_key_event("c", lambda: _set_standard_view(pl, "home"))
+    pl.add_key_event("7", lambda: _set_standard_view(pl, "iso"))
+    pl.add_key_event("i", lambda: _set_standard_view(pl, "iso"))
     pl.add_key_event("8", lambda: _set_standard_view(pl, "top"))
     pl.add_key_event("9", lambda: _set_standard_view(pl, "front"))
     pl.add_key_event("0", lambda: _set_standard_view(pl, "side"))
-    pl.add_key_event("i", lambda: _set_standard_view(pl, "iso"))
 
 
 def render_snapshot(
@@ -328,7 +313,7 @@ def render_snapshot(
     _set_hud(pl, snap, legend=True)
     if interactive:
         _attach_camera_controls(pl)
-    _set_standard_view(pl, "home")
+    _set_standard_view(pl, "iso")
     if screenshot is not None:
         path = Path(screenshot)
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -412,7 +397,7 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
             flags["ready"] = True
             _set_hud(pl, snap, legend=True)
             _set_arrows(pl, pv, snap, float(flags["box_len"]), flags)
-            _set_standard_view(pl, "home")
+            _set_standard_view(pl, "iso")
             return
 
         # Soft update: params table + fan arrows only

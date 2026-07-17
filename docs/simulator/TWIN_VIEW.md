@@ -68,11 +68,10 @@ python -m tools.ml.twin_view --live
 | `h` / `H` | heater ±0.25 |
 | `f` / `F` | fan ±0.25 |
 | `u` / `U` | humidifier ±0.25 |
-| `7` / `c` | **HOME** — pot low, slight high 3/4 (product view) |
+| `7` / `i` | camera isometric |
 | `8` | camera top |
 | `9` | camera front |
 | `0` | camera side |
-| `i` | pure isometric |
 | orientation cube (UR) | axis dots; larger spacing, inset from edge |
 
 
