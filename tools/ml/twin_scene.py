@@ -310,28 +310,3 @@ def snapshot_from_simulator(
         elapsed_s=float(simulator.elapsed_s),
         action=action,
     )
-
-
-def temperature_to_rgb(
-    temperature_c: float, t_min: float = 10.0, t_max: float = 35.0
-) -> tuple[float, float, float]:
-    """Map temperature to RGB in [0, 1] (blue → red)."""
-    x = (float(temperature_c) - t_min) / max(1e-6, t_max - t_min)
-    x = min(1.0, max(0.0, x))
-    # blue (cold) → cyan → yellow → red (hot)
-    if x < 0.5:
-        t = x * 2.0
-        return (t, t, 1.0 - 0.3 * t)
-    t = (x - 0.5) * 2.0
-    return (1.0, 1.0 - 0.7 * t, 0.2 * (1.0 - t))
-
-
-def humidity_opacity(humidity_pct: float) -> float:
-    """Map RH% to surface opacity for a soft 'air mass' cue."""
-    return min(0.85, max(0.12, float(humidity_pct) / 100.0 * 0.75 + 0.12))
-
-
-def soil_moisture_to_rgb(moisture_pct: float) -> tuple[float, float, float]:
-    """Dry brown → wet dark blue-green."""
-    x = min(1.0, max(0.0, float(moisture_pct) / 100.0))
-    return (0.45 * (1.0 - x), 0.25 + 0.35 * x, 0.1 + 0.45 * x)

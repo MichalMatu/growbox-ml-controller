@@ -8,13 +8,10 @@ from tools.ml.simulator import ControlAction, SequentialEnvironmentSimulator, de
 from tools.ml.twin_scene import (
     box_from_volume,
     exchange_field,
-    humidity_opacity,
     pot_centers,
     pot_layout_positions,
     pot_radius_height,
     snapshot_from_simulator,
-    soil_moisture_to_rgb,
-    temperature_to_rgb,
 )
 
 
@@ -94,13 +91,3 @@ def test_snapshot_from_simulator_smoke():
     assert "out T" in table
     assert "heater" in table
     assert "┌" in table and "└" in table
-
-
-def test_color_maps_monotonic():
-    cold = temperature_to_rgb(12.0)
-    hot = temperature_to_rgb(32.0)
-    assert hot[0] >= cold[0]
-    assert humidity_opacity(80.0) > humidity_opacity(20.0)
-    wet = soil_moisture_to_rgb(90.0)
-    dry = soil_moisture_to_rgb(10.0)
-    assert wet[2] >= dry[2]
