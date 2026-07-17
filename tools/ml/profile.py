@@ -100,7 +100,7 @@ class SensorsProfile:
     outside_humidity_pct: bool = True
     outside_co2_ppm: bool = True
     nutrient_solution_temperature_c: bool = False
-    lights_active: bool = False  # pseudo / schedule integration
+    lights_active: bool = False  # → pseudo.lights_active + EnvironmentState.lights_active
 
     def as_dict(self) -> dict[str, bool]:
         return asdict(self)
@@ -527,8 +527,8 @@ def profile_to_scenario(
     pots_t = (pot_list[0], pot_list[1], pot_list[2], pot_list[3])
 
     state = deepcopy(initial_state) if initial_state is not None else deepcopy(base.initial_state)
-    # Align pot state length; leave values, mark lights from sensors pseudo
-    state.lights_active = bool(profile.sensors.lights_active and state.lights_active)
+    # Profile sensors.lights_active drives process/pseudo lights schedule (can turn ON).
+    state.lights_active = bool(profile.sensors.lights_active)
 
     return Scenario(
         scenario_id=scenario_id or profile.profile_id,
@@ -640,6 +640,47 @@ def profile_from_simulator(sim: SequentialEnvironmentSimulator) -> GrowboxProfil
     return profile_from_scenario(sim.scenario, profile_id=sim.scenario.scenario_id)
 
 
+def _zero_unavailable_commands(sim: SequentialEnvironmentSimulator) -> None:
+    """Cut lag/residual commands when actuators or pots become unavailable."""
+    from .simulator import ControlAction
+
+    caps = sim.scenario.actuators
+    values = sim.effective_action.as_dict()
+    prev = sim.previous_command.as_dict()
+    if not caps.heater.available:
+        values["heater"] = 0.0
+        prev["heater"] = 0.0
+    if not caps.fan.available:
+        values["fan"] = 0.0
+        prev["fan"] = 0.0
+    if not caps.humidifier.available:
+        values["humidifier"] = 0.0
+        prev["humidifier"] = 0.0
+    if not caps.dehumidifier.available:
+        values["dehumidifier"] = 0.0
+        prev["dehumidifier"] = 0.0
+    if not caps.cooler.available:
+        values["cooler"] = 0.0
+        prev["cooler"] = 0.0
+    if not caps.co2_doser.available:
+        values["co2_doser"] = 0.0
+        prev["co2_doser"] = 0.0
+    if not caps.nutrient_heater.available:
+        values["nutrient_heater"] = 0.0
+        prev["nutrient_heater"] = 0.0
+    irr_names = SequentialEnvironmentSimulator.irrigation_output_names
+    mat_names = SequentialEnvironmentSimulator.heat_mat_output_names
+    for index, pot in enumerate(sim.scenario.pots):
+        if not pot.available or not pot.irrigation.available:
+            values[irr_names[index]] = 0.0
+            prev[irr_names[index]] = 0.0
+        if not pot.available or not pot.heat_mat.available:
+            values[mat_names[index]] = 0.0
+            prev[mat_names[index]] = 0.0
+    sim.effective_action = ControlAction.from_mapping(values)
+    sim.previous_command = ControlAction.from_mapping(prev)
+
+
 def apply_profile_to_simulator(
     sim: SequentialEnvironmentSimulator,
     profile: GrowboxProfile,
@@ -652,6 +693,10 @@ def apply_profile_to_simulator(
     if abs(before.chamber.growbox_volume_m3 - profile.chamber.growbox_volume_m3) > 1e-12:
         changed.add("growbox_volume_m3")
     if before.active_pot_count() != profile.active_pot_count():
+        changed.add("active_pots")
+    b_avail = tuple(bool(p.available) for p in before.pots[:MAX_POTS])
+    a_avail = tuple(bool(p.available) for p in profile.pots[:MAX_POTS])
+    if b_avail != a_avail:
         changed.add("active_pots")
     b_pot = before.shared_pot_template()
     a_pot = profile.shared_pot_template()
@@ -675,11 +720,16 @@ def apply_profile_to_simulator(
     )
     sim.scenario = new_scenario
     if state is not None:
+        # Live twin: schedule/lights follow profile even when preserving climate state.
+        state.lights_active = bool(profile.sensors.lights_active)
         sim.state = state
         # Ensure pot list length
         while len(sim.state.pots) < MAX_POTS:
             sim.state.pots.append(PotState())
         sim.state.pots = sim.state.pots[:MAX_POTS]
+    else:
+        sim.state = deepcopy(new_scenario.initial_state)
+    _zero_unavailable_commands(sim)
     return changed
 
 
@@ -772,9 +822,12 @@ def profile_to_payload(profile: GrowboxProfile, *, seed: int = 101) -> dict[str,
         )
     payload["pots"] = pots_out
 
-    # Overlay global actuators availability + known limits
+    # Overlay global actuators availability + known limits.
+    # lights is a non-ML actuator (schema non_ml_actuators); heat stays in sim LightsConfig only.
     acts = payload.setdefault("actuators", {})
     for key, slot in profile.actuators.items():
+        if key == "lights":
+            continue
         entry = dict(acts.get(key) or {})
         entry["available"] = bool(slot.available)
         for attr, json_key in (
@@ -793,7 +846,7 @@ def profile_to_payload(profile: GrowboxProfile, *, seed: int = 101) -> dict[str,
             if value is not None:
                 entry[json_key] = value
         if not slot.available:
-            # Zero dangerous limits when disabled
+            # Zero dangerous limits when disabled (contract safety)
             for zero_key in (
                 "max_power_w",
                 "max_airflow_m3_h",
@@ -805,6 +858,7 @@ def profile_to_payload(profile: GrowboxProfile, *, seed: int = 101) -> dict[str,
                 if zero_key in entry:
                     entry[zero_key] = 0.0
         acts[key] = entry
+    acts.pop("lights", None)
     payload["actuators"] = acts
     payload["profile_id"] = profile.profile_id
     return payload

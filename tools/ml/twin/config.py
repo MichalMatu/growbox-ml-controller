@@ -111,7 +111,7 @@ CHAMBER_ROWS: tuple[Row, ...] = (
 )
 
 POTS_ROWS: tuple[Row, ...] = (
-    _num("active_pots", "active pots", 1, 1, 1, 4, 0),
+    _num("active_pots", "active pots", 1, 1, 0, 4, 0),
     _num("pot_volume_l", "pot volume", 1, 5, 1, 50, 1, 1.0, " L"),
     _num("substrate_water_capacity_ml", "pot water cap", 100, 500, 200, 15000, 0, 1.0, " ml"),
     _num("transpiration_factor", "transpiration", 0.1, 0.5, 0.0, 5.0, 2),
@@ -286,7 +286,7 @@ def flat_from_profile(profile: GrowboxProfile) -> GrowboxConfig:
         "thermal_mass_j_per_k": float(profile.chamber.thermal_mass_j_per_k),
         "heat_loss_w_per_k": float(profile.chamber.heat_loss_w_per_k),
         "air_leak_rate_ach": float(profile.chamber.air_leak_rate_ach),
-        "active_pots": float(max(1, profile.active_pot_count())),
+        "active_pots": float(max(0, min(4, profile.active_pot_count()))),
         "pot_volume_l": float(pot.pot_volume_l),
         "substrate_water_capacity_ml": float(pot.substrate_water_capacity_ml),
         "transpiration_factor": float(pot.transpiration_factor),
@@ -323,7 +323,7 @@ def flat_from_profile(profile: GrowboxProfile) -> GrowboxConfig:
 
 
 def profile_apply_flat(profile: GrowboxProfile, flat: GrowboxConfig) -> GrowboxProfile:
-    n = max(1, min(4, int(round(flat.get("active_pots")))))
+    n = max(0, min(4, int(round(flat.get("active_pots")))))
     pot_vol = float(flat.get("pot_volume_l"))
     water = float(flat.get("substrate_water_capacity_ml"))
     transp = float(flat.get("transpiration_factor"))
@@ -361,14 +361,15 @@ def profile_apply_flat(profile: GrowboxProfile, flat: GrowboxConfig) -> GrowboxP
                     heat_mat_max_power_w=mat_w,
                     target_soil_moisture_pct=tgt_m,
                     target_soil_temperature_c=tgt_t,
-                    # preserve per-pot toggles from outputs
+                    # preserve per-pot toggles from outputs / sensors
                     irrigation_available=base.irrigation_available if prev.available else True,
-                    heat_mat_available=base.heat_mat_available,
+                    heat_mat_available=base.heat_mat_available if prev.available else False,
                     soil_moisture_valid=base.soil_moisture_valid if prev.available else True,
                     soil_temperature_valid=base.soil_temperature_valid if prev.available else True,
                 )
             )
         else:
+            # Keep per-pot scalar memory but force unavailable (prefix model)
             new_pots.append(PotProfile())
 
     chamber = replace(
@@ -580,6 +581,9 @@ def write_sensor_flag(profile: GrowboxProfile, key: str, value: bool) -> Growbox
         while len(pots) < 4:
             pots.append(PotProfile())
         pot = pots[pot_i]
+        # Inactive pot: do not store ghost validity (read would always show off).
+        if not pot.available:
+            return profile
         if key.endswith("moisture"):
             pots[pot_i] = replace(pot, soil_moisture_valid=bool(value))
         elif key.endswith("temperature"):
@@ -603,6 +607,24 @@ def read_output_flag(profile: GrowboxProfile, key: str) -> bool:
         if 0 <= idx < len(profile.pots):
             return bool(profile.pots[idx].heat_mat_available and profile.pots[idx].available)
     return False
+
+
+def _ensure_prefix_pots_available(pots: list[PotProfile], up_to_idx: int) -> list[PotProfile]:
+    """Prefix model: enabling pot K implies pots 0..K are available."""
+    out = list(pots)
+    while len(out) < 4:
+        out.append(PotProfile())
+    for i in range(max(0, up_to_idx) + 1):
+        pot = out[i]
+        if not pot.available:
+            out[i] = replace(
+                pot,
+                available=True,
+                soil_moisture_valid=True,
+                soil_temperature_valid=True,
+                irrigation_available=True if i == up_to_idx else pot.irrigation_available,
+            )
+    return out
 
 
 def write_output_flag(profile: GrowboxProfile, key: str, value: bool) -> GrowboxProfile:
@@ -629,20 +651,22 @@ def write_output_flag(profile: GrowboxProfile, key: str, value: bool) -> Growbox
         pots = list(profile.pots)
         while len(pots) < 4:
             pots.append(PotProfile())
-        pot = pots[idx]
-        if value and not pot.available:
-            pot = replace(pot, available=True, soil_moisture_valid=True)
-        pots[idx] = replace(pot, irrigation_available=bool(value))
+        if value:
+            pots = _ensure_prefix_pots_available(pots, idx)
+            pots[idx] = replace(pots[idx], irrigation_available=True)
+        else:
+            pots[idx] = replace(pots[idx], irrigation_available=False)
         return replace(profile, pots=pots)
     if key.startswith("heat_mat_pot_"):
         idx = int(key.rsplit("_", 1)[-1]) - 1
         pots = list(profile.pots)
         while len(pots) < 4:
             pots.append(PotProfile())
-        pot = pots[idx]
-        if value and not pot.available:
-            pot = replace(pot, available=True)
-        pots[idx] = replace(pot, heat_mat_available=bool(value))
+        if value:
+            pots = _ensure_prefix_pots_available(pots, idx)
+            pots[idx] = replace(pots[idx], heat_mat_available=True)
+        else:
+            pots[idx] = replace(pots[idx], heat_mat_available=False)
         return replace(profile, pots=pots)
     return profile
 
@@ -752,6 +776,17 @@ def apply_growbox_config(
     return apply_profile_to_simulator(sim, new_profile, preserve_state=True)
 
 
+def _sync_flat_active_pots(editor: ConfigEditor) -> None:
+    """Keep flat bag active_pots in sync after flag writes expand pots."""
+    if editor.profile is None:
+        return
+    n = float(max(0, min(4, editor.profile.active_pot_count())))
+    if editor.values is None:
+        editor.values = flat_from_profile(editor.profile)
+    else:
+        editor.values = editor.values.with_value("active_pots", n)
+
+
 def apply_editor_to_simulator(
     sim: SequentialEnvironmentSimulator,
     editor: ConfigEditor,
@@ -759,6 +794,8 @@ def apply_editor_to_simulator(
     if editor.profile is None:
         return set()
     if editor.values is not None:
+        # Flag toggles call _sync_flat_active_pots first so active_pots is not stale.
+        # Numeric bumps of active_pots must be allowed to shrink (do not re-expand here).
         editor.profile = profile_apply_flat(editor.profile, editor.values)
     changed = apply_profile_to_simulator(sim, editor.profile, preserve_state=True)
     editor.values = flat_from_profile(editor.profile)
@@ -777,6 +814,7 @@ def toggle_flag_at_cursor(editor: ConfigEditor) -> None:
     else:
         cur = read_output_flag(editor.profile, row.key)
         editor.profile = write_output_flag(editor.profile, row.key, not cur)
+    _sync_flat_active_pots(editor)
 
 
 __all__ = [

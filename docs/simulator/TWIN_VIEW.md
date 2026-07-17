@@ -65,6 +65,9 @@ python -m tools.ml.twin_view --steps 20 --heater 1 --interactive
 
 # Live 3D (keyboard only — VTK sliders crash on some macOS builds)
 python -m tools.ml.twin_view --live
+
+# Load a saved GrowboxProfile into live / rollout
+python -m tools.ml.twin_view --live --profile profiles/example-single-pot.json
 ```
 
 ### Menu map (live twin) — variant A
@@ -153,11 +156,13 @@ Keyboard-only. Edits a **GrowboxProfile** (board payload + future training).
 | any | `p` | full exit to RUNTIME |
 
 **Chamber** — volume, thermal mass, heat loss, leak ACH
-**Pots** — active pots, pot volume L, water cap, transpiration, irr flow/pulse/interval, mat max W, soil targets
-**Sensors** — validity toggles (air/out/CO₂/nutrient/lights + P1–P4 soil)
-**Outputs** — available **and limits**: heater W/eff, fan m³/h, humid g/h, dehum, cooler, CO₂ dose/pulse, nutrient heat, lights heat W, irr/mat per pot ON/off
+**Pots** — active pots (0–4, prefix slots), shared pot volume L, water cap, transpiration, irr flow/pulse/interval, mat max W, soil targets
+**Sensors** — validity toggles (air/out/CO₂/nutrient/lights schedule + P1–P4 soil; soil rows no-op when pot inactive)
+**Outputs** — available **and limits**: heater W/eff, fan m³/h + min cmd, humid g/h, dehum, cooler, CO₂ dose/pulse, nutrient heat, lights heat W, irr/mat per pot ON/off
 
 Geometry keys (`volume`, `active pots`, `pot volume`) trigger a hard scene rebuild.
+
+**MVP limits (honest):** shared pot template (same L for all active pots); active pots are prefix `0..N-1` (not arbitrary subsets); no save-to-disk from keyboard (use `save_profile` / edit JSON).
 
 Python API:
 
@@ -166,17 +171,15 @@ from tools.ml.profile import default_profile, load_profile, profile_to_scenario,
 
 profile = load_profile("profiles/example-single-pot.json")
 scenario = profile_to_scenario(profile, seed=0)
-payload = profile_to_payload(profile)  # panel / board shape
+payload = profile_to_payload(profile)  # panel / board shape (no actuators.lights — non-ML)
 ```
-
-Planned next subsections (not in twin keyboard yet): **sensors**, **outputs**.
-
 
 ## Honest limits
 
 1. Single air node → one chamber color, not a T field on a mesh.
 2. Fan glyphs are through-flow heuristics along +X, not measured duct geometry.
-3. For a true digital twin: calibrate scalars first ([CALIBRATION.md](CALIBRATION.md)), then drive this view from live sensors.
+3. Van Henten path uses fan m³/h, heat loss W/K, residual cooler watts, and thermal mass (scaled).
+4. For a true digital twin: calibrate scalars first ([CALIBRATION.md](CALIBRATION.md)), then drive this view from live sensors.
 
 ## Related
 

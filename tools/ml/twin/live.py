@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Any
 
-from ..profile import default_profile, profile_to_scenario
+from ..profile import default_profile, load_profile, profile_to_scenario
 from ..simulator import (
     ControlAction,
     SequentialEnvironmentSimulator,
-    default_scenario_v2,
 )
 from .camera import attach_camera_controls, bind_camera_keys, set_standard_view
 from .config import (
@@ -40,6 +40,8 @@ from .plotter import (
     safe_remove,
 )
 from .scene import TwinSnapshot, snapshot_from_simulator
+
+_LOG = logging.getLogger(__name__)
 
 
 def _clip01(value: float) -> float:
@@ -95,8 +97,13 @@ def run_rollout(
     outside_temperature_c: float | None = None,
     screenshot: Path | None = None,
     interactive: bool = False,
+    profile_path: str | Path | None = None,
 ) -> TwinSnapshot:
-    scenario = default_scenario_v2(seed=seed)
+    if profile_path is not None:
+        profile = load_profile(profile_path)
+    else:
+        profile = default_profile(profile_id="rollout-default", title="Rollout default")
+    scenario = profile_to_scenario(profile, seed=seed)
     sim = SequentialEnvironmentSimulator(scenario, seed=seed)
     if outside_temperature_c is not None:
         sim.state.outside_temperature_c = float(outside_temperature_c)
@@ -107,14 +114,22 @@ def run_rollout(
     return snap
 
 
-def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
+def run_interactive_live(
+    *,
+    seed: int = 0,
+    max_auto_steps: int = 200,
+    profile_path: str | Path | None = None,
+) -> None:
     """Live loop: geometry once; fan toggles arrows; ``p`` edits growbox config."""
     pv = require_pyvista()
     try:
         pv.global_theme.multi_samples = 0
     except Exception:
         pass
-    profile = default_profile(profile_id="live-default", title="Live twin default")
+    if profile_path is not None:
+        profile = load_profile(profile_path)
+    else:
+        profile = default_profile(profile_id="live-default", title="Live twin default")
     sim = SequentialEnvironmentSimulator(profile_to_scenario(profile, seed=seed), seed=seed)
     state = {"heater": 0.0, "fan": 0.0, "humidifier": 0.0, "steps": 0}
     cache: dict[str, Any] = {"arrow_ready": False, "ready": False}
@@ -131,10 +146,8 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
     win = (1200, 860)
     pl = pv.Plotter(window_size=win)
     configure_plotter(pl)
-    try:
-        pl.enable_trackball_style()
-    except Exception:
-        pass
+    # Do not enable_trackball_style here — VTK warns "no current renderer"
+    # until actors exist. Enabled after the first hard refresh below.
 
     def action() -> ControlAction:
         return ControlAction(
@@ -237,6 +250,7 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
         if editor.active:
             return
         force_mono_render(pl)
+        # Keep current hardware scenario; only reset process state / commands.
         sim.reset(seed=seed)
         state["steps"] = 0
         state["heater"] = 0.0
@@ -267,6 +281,7 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
             refresh(hard=False, legend=True)
             force_mono_render(pl)
         except Exception:
+            _LOG.exception("config_back failed")
             force_mono_render(pl)
 
     def config_move(delta: int) -> None:
@@ -284,7 +299,15 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
             refresh(hard=False, legend=True)
             force_mono_render(pl)
         except Exception:
+            _LOG.exception("config_move failed")
             force_mono_render(pl)
+
+    def _apply_editor_and_refresh() -> None:
+        changed = apply_editor_to_simulator(sim, editor)
+        hard = needs_geometry_rebuild(changed)
+        if hard:
+            cache["ready"] = False
+        refresh(hard=hard, legend=True)
 
     def config_enter() -> None:
         if not editor.active:
@@ -296,10 +319,10 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
                 refresh(hard=False, legend=True)
             elif editor.is_flag_at_cursor():
                 toggle_flag_at_cursor(editor)
-                apply_editor_to_simulator(sim, editor)
-                refresh(hard=False, legend=True)
+                _apply_editor_and_refresh()
             force_mono_render(pl)
         except Exception:
+            _LOG.exception("config_enter failed")
             force_mono_render(pl)
 
     def config_bump(direction: int, *, coarse: bool = False) -> None:
@@ -309,8 +332,7 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
             force_mono_render(pl)
             if editor.is_flag_at_cursor():
                 toggle_flag_at_cursor(editor)
-                apply_editor_to_simulator(sim, editor)
-                refresh(hard=False, legend=True)
+                _apply_editor_and_refresh()
             else:
                 cfg = editor.ensure_values(sim)
                 editor.values = bump_growbox_config(
@@ -320,13 +342,10 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
                     coarse=coarse,
                     section=editor.section,
                 )
-                changed = apply_editor_to_simulator(sim, editor)
-                hard = needs_geometry_rebuild(changed)
-                if hard:
-                    cache["ready"] = False
-                refresh(hard=hard, legend=True)
+                _apply_editor_and_refresh()
             force_mono_render(pl)
         except Exception:
+            _LOG.exception("config_bump failed")
             force_mono_render(pl)
 
     # One clear + one full bind (camera keys must be re-added after clear).
@@ -388,5 +407,15 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
     )
 
     refresh(hard=True)
+    # Trackball only after meshes/renderer exist (avoids vtkInteractorStyle WARN).
+    try:
+        pl.enable_trackball_style()
+        ren = getattr(pl, "renderer", None)
+        iren = getattr(pl, "iren", None)
+        style = getattr(iren, "style", None) if iren is not None else None
+        if ren is not None and style is not None and hasattr(style, "SetDefaultRenderer"):
+            style.SetDefaultRenderer(ren)
+    except Exception:
+        _LOG.debug("enable_trackball_style deferred setup failed", exc_info=True)
     force_mono_render(pl)
     pl.show()

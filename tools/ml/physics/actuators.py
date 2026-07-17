@@ -56,24 +56,25 @@ def build_chamber_forcing(
     cooler = _clip01(cooler)
     co2_doser = _clip01(co2_doser)
 
-    # Fan: map 0–1 to S03 vent units. Also used with ACH via airflow/volume elsewhere.
-    u_vent = fan * U_VENT_MAX
+    # Fan: map command × nameplate airflow to ACH, then to S03 vent units.
+    # Reference (default profile): 90 m³/h in 0.8 m³ ≈ 112.5 ACH → u_vent = U_VENT_MAX at fan=1.
+    volume = max(0.05, float(growbox_volume_m3))
+    fan_ach = fan * max(0.0, float(fan_max_airflow_m3_h)) / volume
+    ref_ach = 90.0 / 0.8
+    u_vent = (fan_ach / ref_ach) * U_VENT_MAX if ref_ach > 0.0 else 0.0
+    u_vent = min(u_vent, U_VENT_MAX * 4.0)
 
-    # Heat: prefer SI watts folded into S03 heat channel scale.
+    # Heat: SI watts folded into S03 heat channel; residual cooler applied in simulator.
     heater_w = heater * max(0.0, heater_max_power_w) * _clip01(heater_efficiency)
     lights_w = max(0.0, lights_max_heat_w) if lights_active and lights_integrated else 0.0
     cooler_w = cooler * max(0.0, cooler_max_cooling_w)
-    net_heat_w = max(0.0, heater_w + lights_w - cooler_w)
+    net_heat_w = heater_w + lights_w - cooler_w
     ref = max(1.0, heat_reference_w)
-    u_heat = min(U_HEAT_MAX * 2.0, (net_heat_w / ref) * U_HEAT_MAX)
+    u_heat = min(U_HEAT_MAX * 2.0, (max(0.0, net_heat_w) / ref) * U_HEAT_MAX)
 
     # CO2: S03 continuous supply + our pulse semantics (dose applied in simulator).
-    # Base continuous injection proportional to command; pulse handled separately if needed.
     u_co2 = co2_doser * U_CO2_MAX
-    # Keep pulse magnitude available via dose capability for discrete boost in caller.
     _ = co2_dose_ppm_per_full_pulse
-    _ = fan_max_airflow_m3_h
-    _ = growbox_volume_m3
 
     # Radiation proxy: modest daylight when lights on (S03 d0).
     radiation = 80.0 if lights_active else 15.0

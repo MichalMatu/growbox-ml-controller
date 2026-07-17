@@ -33,13 +33,19 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--screenshot", type=Path, default=None)
     p.add_argument("--interactive", action="store_true")
     p.add_argument("--live", action="store_true")
+    p.add_argument(
+        "--profile",
+        type=Path,
+        default=None,
+        help="GrowboxProfile JSON (profiles/*.json); used for --live and rollout",
+    )
     return p
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     if args.live or (args.interactive and args.steps == 0 and args.screenshot is None):
-        run_interactive_live(seed=args.seed)
+        run_interactive_live(seed=args.seed, profile_path=args.profile)
         return 0
     action = ControlAction(
         heater=float(args.heater),
@@ -53,6 +59,7 @@ def main(argv: list[str] | None = None) -> int:
         outside_temperature_c=args.outside_temperature_c,
         screenshot=args.screenshot,
         interactive=bool(args.interactive),
+        profile_path=args.profile,
     )
     if args.screenshot is None and not args.interactive:
         print(snap.title())
