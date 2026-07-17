@@ -11,81 +11,154 @@ FONT_FAMILY = "courier"
 FONT_SIZE = 12
 FONT_COLOR = "white"
 
+# Section rows: (label, value). Empty label + value used as blank spacer is avoided;
+# section headers are drawn on the mid rule line.
+
 
 def hud_table(title: str, rows: list[tuple[str, str]]) -> str:
-    """Fixed-width box table for HUD panels."""
-    label_w = max(len(k) for k, _ in rows)
-    value_w = max(len(v) for _, v in rows)
-    inner = label_w + value_w + 3
+    """Single-section fixed-width box (legacy / simple panels)."""
+    return hud_sections(title, [("", rows)])
+
+
+def hud_sections(title: str, sections: list[tuple[str, list[tuple[str, str]]]]) -> str:
+    """One box with titled mid-rules between logical groups.
+
+    ``sections``: list of (section_title, rows). Empty section_title = no mid header
+    (only used for the first block under the main title).
+    """
+    all_rows: list[tuple[str, str]] = []
+    for _sec, rows in sections:
+        all_rows.extend(rows)
+    if not all_rows:
+        all_rows = [("", "")]
+    label_w = max((len(k) for k, _ in all_rows), default=1)
+    value_w = max((len(v) for _, v in all_rows), default=1)
+    # Section titles need room on the separator line
+    sec_w = max((len(s) for s, _ in sections if s), default=0)
+    inner = max(label_w + value_w + 3, len(title), sec_w)
     top = "┌" + "─" * (inner + 2) + "┐"
-    mid = "├" + "─" * (inner + 2) + "┤"
     bot = "└" + "─" * (inner + 2) + "┘"
-    lines = [top, f"│ {title.ljust(inner)} │", mid]
-    for key, value in rows:
-        lines.append(f"│ {key.ljust(label_w)} : {value.ljust(value_w)} │")
+    lines = [top, f"│ {title.ljust(inner)} │"]
+    for sec_title, rows in sections:
+        if sec_title:
+            # ├ section ──────┤
+            pad = max(0, inner - len(sec_title) - 1)
+            mid = "├ " + sec_title + " " + "─" * pad + "┤"
+            if len(mid) < len(top):
+                mid = "├" + "─" * (inner + 2) + "┤"
+                # rebuild with title embedded
+                body = f" {sec_title} "
+                dash = max(0, (inner + 2) - len(body))
+                left = dash // 2
+                right = dash - left
+                mid = "├" + "─" * left + body + "─" * right + "┤"
+            lines.append(mid)
+        else:
+            lines.append("├" + "─" * (inner + 2) + "┤")
+        for key, value in rows:
+            lines.append(f"│ {key.ljust(label_w)} : {value.ljust(value_w)} │")
     lines.append(bot)
     return "\n".join(lines)
 
 
 def runtime_controls_table(*, playing: bool = False) -> str:
-    return hud_table(
-        "runtime",
+    """Lower-left: keys only, grouped by role (not mixed with live values)."""
+    return hud_sections(
+        "keys · control",
         [
-            ("mode", "PLAY" if playing else "PAUSE"),
-            ("space", "play / pause"),
-            ("s", "step +10 s"),
-            ("r", "reset + stop"),
-            ("1 / 2", "heater on / off"),
-            ("3 / 4", "fan on / off"),
-            ("5 / 6", "humid on / off"),
-            ("h / H", "heater ±0.25"),
-            ("f / F", "fan ±0.25"),
-            ("u / U", "humid ±0.25"),
-            ("p", "configurator"),
-            ("green", "INLET"),
-            ("blue", "OUTLET"),
+            (
+                "playback",
+                [
+                    ("mode", "PLAY" if playing else "PAUSE"),
+                    ("space", "play / pause"),
+                    ("s", "step +10 s"),
+                    ("r", "reset + stop"),
+                ],
+            ),
+            (
+                "actuators",
+                [
+                    ("1 / 2", "heater on / off"),
+                    ("3 / 4", "fan on / off"),
+                    ("5 / 6", "humid on / off"),
+                    ("h / H", "heater ±0.25"),
+                    ("f / F", "fan ±0.25"),
+                    ("u / U", "humid ±0.25"),
+                ],
+            ),
+            (
+                "menu",
+                [
+                    ("p", "open configurator"),
+                ],
+            ),
         ],
     )
 
 
 def config_root_keys_table() -> str:
-    return hud_table(
-        "config menu",
+    return hud_sections(
+        "keys · config",
         [
-            ("j / k", "select section"),
-            ("Enter / =", "open section"),
-            ("p / Esc", "exit"),
+            (
+                "menu",
+                [
+                    ("j / k", "select section"),
+                    ("Enter / =", "open section"),
+                    ("p / Esc", "exit to runtime"),
+                ],
+            ),
         ],
     )
 
 
 def config_section_keys_table(*, flags: bool) -> str:
     _ = flags
-    return hud_table(
-        "config keys",
+    return hud_sections(
+        "keys · config",
         [
-            ("j / k", "next / prev"),
-            ("- / =", "value or toggle"),
-            ("[ / ]", "coarse step"),
-            ("sp/Enter", "toggle flag"),
-            ("Esc", "back to menu"),
-            ("p", "exit config"),
+            (
+                "edit",
+                [
+                    ("j / k", "next / prev field"),
+                    ("- / =", "value or toggle"),
+                    ("[ / ]", "coarse step"),
+                    ("sp/Enter", "toggle flag"),
+                ],
+            ),
+            (
+                "nav",
+                [
+                    ("Esc", "back to menu"),
+                    ("p", "exit to runtime"),
+                ],
+            ),
         ],
     )
 
 
 def view_controls_table() -> str:
-    return hud_table(
-        "view",
+    """Lower-right: camera / view only (no actuator keys)."""
+    return hud_sections(
+        "keys · view",
         [
-            ("7 / c", "HOME"),
-            ("8", "TOP"),
-            ("9", "FRONT"),
-            ("0", "SIDE"),
-            ("i", "ISO"),
-            ("mouse", "orbit / pan / zoom"),
-            ("m", "force mono"),
-            ("p", "configurator"),
+            (
+                "camera",
+                [
+                    ("7 / c", "HOME"),
+                    ("8", "TOP"),
+                    ("9", "FRONT"),
+                    ("0", "SIDE"),
+                    ("i", "ISO"),
+                    ("mouse", "orbit / pan / zoom"),
+                ],
+            ),
+            (
+                "display",
+                [
+                    ("m", "force mono"),
+                ],
+            ),
         ],
     )
 
@@ -104,7 +177,6 @@ def _set_corner_text(pl: Any, name: str, position: str, text: str) -> None:
             return
         except Exception:
             pass
-    # First create or non-CornerAnnotation fallback
     try:
         from .plotter import safe_remove
 
@@ -128,41 +200,79 @@ def params_status_rows(
     steps: int,
     max_steps: int,
 ) -> list[tuple[str, str]]:
+    """Legacy helper (tests); prefer live_state_panel."""
     return [
         ("run", "PLAY" if playing else "PAUSE"),
         ("steps", f"{int(steps)}/{int(max_steps)}"),
     ]
 
 
-def merge_params_panel(snap: TwinSnapshot, status_rows: list[tuple[str, str]]) -> str:
-    """Parameters table with playback status rows prepended."""
-    # Rebuild with status so column widths stay aligned
-    base = snap.params_table()
-    if not status_rows:
-        return base
-    # Parse is fragile; rebuild from snapshot fields + status
-    rows: list[tuple[str, str]] = list(status_rows)
-    rows.extend(
-        [
-            ("time", f"{snap.elapsed_s:.0f} s"),
-            ("air T", f"{snap.air_temperature_c:.1f} °C"),
-            ("air RH", f"{snap.air_humidity_pct:.0f} %"),
-            ("CO2", f"{snap.co2_ppm:.0f} ppm"),
-            ("out T", f"{snap.outside_temperature_c:.1f} °C"),
-            ("out RH", f"{snap.outside_humidity_pct:.0f} %"),
-            ("out CO2", f"{snap.outside_co2_ppm:.0f} ppm"),
-            ("heater", f"{snap.action.heater:.2f}"),
-            ("fan", f"{snap.action.fan:.2f}"),
-            ("humid", f"{snap.action.humidifier:.2f}"),
-            ("fan ACH", f"{snap.exchange.fan_ach_proxy:.1f} /h"),
-        ]
-    )
+def live_state_panel(
+    snap: TwinSnapshot,
+    *,
+    playing: bool,
+    steps: int,
+    max_steps: int,
+) -> str:
+    """Upper-left live readout: simulation / commands / chamber / outside / pots."""
+    sim_rows = [
+        ("run", "PLAY" if playing else "PAUSE"),
+        ("step", f"{int(steps)}/{int(max_steps)}"),
+        ("t", f"{snap.elapsed_s:.0f} s"),
+    ]
+    cmd_rows = [
+        ("heater", f"{snap.action.heater:.2f}"),
+        ("fan", f"{snap.action.fan:.2f}"),
+        ("humid", f"{snap.action.humidifier:.2f}"),
+    ]
+    chamber_rows = [
+        ("T", f"{snap.air_temperature_c:.1f} °C"),
+        ("RH", f"{snap.air_humidity_pct:.0f} %"),
+        ("CO2", f"{snap.co2_ppm:.0f} ppm"),
+        ("ACH", f"{snap.exchange.fan_ach_proxy:.1f} /h"),
+    ]
+    outside_rows = [
+        ("T", f"{snap.outside_temperature_c:.1f} °C"),
+        ("RH", f"{snap.outside_humidity_pct:.0f} %"),
+        ("CO2", f"{snap.outside_co2_ppm:.0f} ppm"),
+    ]
+    pot_rows: list[tuple[str, str]] = []
     for index, active in enumerate(snap.pot_active):
         if not active:
             continue
-        rows.append((f"P{index + 1} soil", f"{snap.pot_moisture[index]:.0f} %"))
-        rows.append((f"P{index + 1} soil T", f"{snap.pot_temperature[index]:.1f} °C"))
-    return hud_table("parameters", rows)
+        pot_rows.append((f"P{index + 1} θ", f"{snap.pot_moisture[index]:.0f} %"))
+        pot_rows.append((f"P{index + 1} Ts", f"{snap.pot_temperature[index]:.1f} °C"))
+    if not pot_rows:
+        pot_rows = [("(none)", "—")]
+
+    return hud_sections(
+        "live state",
+        [
+            ("simulation", sim_rows),
+            ("commands", cmd_rows),
+            ("chamber", chamber_rows),
+            ("outside", outside_rows),
+            ("pots", pot_rows),
+        ],
+    )
+
+
+def merge_params_panel(snap: TwinSnapshot, status_rows: list[tuple[str, str]]) -> str:
+    """Build live state panel; ``status_rows`` may override run/steps (tests)."""
+    playing = False
+    steps = 0
+    max_steps = 200
+    for key, value in status_rows:
+        if key == "run":
+            playing = str(value).upper().startswith("PLAY")
+        elif key in ("steps", "step") and "/" in str(value):
+            left, _, right = str(value).partition("/")
+            try:
+                steps = int(left.strip())
+                max_steps = int(right.strip())
+            except ValueError:
+                pass
+    return live_state_panel(snap, playing=playing, steps=steps, max_steps=max_steps)
 
 
 def set_hud(
@@ -175,17 +285,11 @@ def set_hud(
     steps: int = 0,
     max_steps: int = 200,
 ) -> None:
-    """Parameters / configurator upper-left; keys lower-left / lower-right.
-
-    Text is updated in place when possible so soft steps do not flash HUD.
-    """
+    """Upper-left: live state or configurator. Lower-left/right: key maps."""
     if config_editor is not None and config_editor.active:
         panel = editor_panel(config_editor)
     else:
-        panel = merge_params_panel(
-            snap,
-            params_status_rows(playing=playing, steps=steps, max_steps=max_steps),
-        )
+        panel = live_state_panel(snap, playing=playing, steps=steps, max_steps=max_steps)
     _set_corner_text(pl, "params", "upper_left", panel)
 
     if not legend:

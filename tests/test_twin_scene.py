@@ -111,12 +111,15 @@ def test_scene_labels_larger_than_hud_font():
 
 
 def test_runtime_controls_show_play_pause():
-    from tools.ml.twin.hud import merge_params_panel, runtime_controls_table
+    from tools.ml.twin.hud import live_state_panel, merge_params_panel, runtime_controls_table
 
     paused = runtime_controls_table(playing=False)
     assert "PAUSE" in paused
     assert "play / pause" in paused
     assert "step +10 s" in paused
+    assert "playback" in paused
+    assert "actuators" in paused
+    assert "INLET" not in paused  # scene legend, not key map
     playing = runtime_controls_table(playing=True)
     assert "PLAY" in playing
 
@@ -124,7 +127,15 @@ def test_runtime_controls_show_play_pause():
     snap = snapshot_from_simulator(sim)
     panel = merge_params_panel(snap, [("run", "PAUSE"), ("steps", "0/200")])
     assert "run" in panel and "PAUSE" in panel
-    assert "air T" in panel
+    assert "simulation" in panel
+    assert "commands" in panel
+    assert "chamber" in panel
+    assert "outside" in panel
+    assert "pots" in panel
+    # Chamber T, not legacy "air T" label
+    assert "T" in panel
+    live = live_state_panel(snap, playing=False, steps=0, max_steps=200)
+    assert "live state" in live
 
 
 def test_growbox_config_section_complete_and_apply():
