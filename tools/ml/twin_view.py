@@ -1,18 +1,20 @@
 """Scientific 3D twin view for the lumped growbox simulator (PyVista).
 
-Minimal stable scene: wireframe chamber, pot, inlet/outlet rings, HUD tables.
-No temperature/humidity color mapping (values live only in the params table).
+Minimal stable scene:
+  - single white wireframe chamber outline (no fill, no T/RH color map)
+  - fixed-color pot + inlet/outlet rings
+  - at most two fixed-color fan arrows (visibility toggle only)
+  - HUD tables for numbers (temperature lives only in the table)
+  - orientation cross (UR) with white HOME center node (logo + click + keys 7/c)
 
-Examples::
-
-  pip install pyvista
-  .venv/bin/python -m tools.ml.twin_view --live
-  .venv/bin/python -m tools.ml.twin_view --steps 20 --fan 1 --screenshot build/twin.png
+No temperature/humidity geometric overlays. No solid chamber wash.
 """
 
 from __future__ import annotations
 
 import argparse
+import struct
+import zlib
 from pathlib import Path
 from typing import Any
 
@@ -36,7 +38,15 @@ _WIRE = "#e8e8e8"
 _POT = "#6b5b4b"
 _INLET = "#5cb85c"
 _OUTLET = "#5b9bd5"
-_ARROW = "#9ad0f0"
+_ARROW = "#c8e6f5"
+
+# Camera orientation cube layout (must match _style_camera_widget)
+_CAM_CUBE_SIZE = 200
+_CAM_CUBE_PAD = 40
+# Small center node only (pixels / normalized window fractions)
+_HOME_DOT_SIZE = 28
+_HOME_LOGO_FRAC = (0.028, 0.039)  # ~34×34 px on 1200×860
+_HOME_PNG = Path(__file__).resolve().parent / "_twin_home_dot.png"
 
 
 def _legend_table() -> str:
@@ -46,7 +56,7 @@ def _legend_table() -> str:
         ("1 / 2", "heater on / off"),
         ("3 / 4", "fan on / off"),
         ("5 / 6", "humid on / off"),
-        ("7 / c", "HOME (center dot)"),
+        ("7 / c", "HOME (white center)"),
         ("8", "TOP"),
         ("9", "FRONT"),
         ("0", "SIDE"),
@@ -86,11 +96,67 @@ def _clip01(value: float) -> float:
     return min(1.0, max(0.0, float(value)))
 
 
+def _clean(mesh: Any) -> Any:
+    """Strip all point/cell arrays so VTK never applies a colormap (purple wash)."""
+    out = mesh.copy(deep=True)
+    try:
+        out.clear_data()
+    except Exception:
+        pass
+    try:
+        out.set_active_scalars(None)
+    except Exception:
+        pass
+    return out
+
+
+def _add_solid(
+    pl: Any,
+    mesh: Any,
+    *,
+    color: str,
+    name: str,
+    style: str = "surface",
+    line_width: float = 1.0,
+    lighting: bool = False,
+) -> Any:
+    """Add mesh with forced flat RGB — never scalars, never edges-as-second-outline."""
+    actor = pl.add_mesh(
+        _clean(mesh),
+        style=style,
+        color=color,
+        line_width=line_width,
+        name=name,
+        lighting=lighting,
+        smooth_shading=False,
+        show_edges=False,
+        show_scalar_bar=False,
+        ambient=1.0 if not lighting else 0.45,
+        diffuse=0.0 if not lighting else 0.55,
+        specular=0.0,
+        render_lines_as_tubes=False,
+    )
+    try:
+        mapper = actor.GetMapper() if hasattr(actor, "GetMapper") else actor.mapper
+        if mapper is not None:
+            mapper.ScalarVisibilityOff()
+    except Exception:
+        pass
+    try:
+        prop = actor.GetProperty() if hasattr(actor, "GetProperty") else actor.prop
+        if prop is not None and hasattr(prop, "EdgeVisibilityOff"):
+            prop.EdgeVisibilityOff()
+    except Exception:
+        pass
+    return actor
+
+
 def build_static_meshes(pv: Any, snap: TwinSnapshot) -> dict[str, Any]:
-    """Geometry that does not depend on fan command (no T/RH coloring)."""
+    """Geometry independent of fan command — no T/RH coloring."""
     sx, sy, sz = snap.box.size_xyz
-    # Single wireframe box only — solid+outline was the double-edge bug.
-    chamber = pv.Cube(center=(0.0, 0.0, 0.5 * sz), x_length=sx, y_length=sy, z_length=sz)
+    # Outline only (line cells). Cube surface + FaceIndex caused multi-color edges.
+    solid = pv.Box(bounds=(-0.5 * sx, 0.5 * sx, -0.5 * sy, 0.5 * sy, 0.0, sz))
+    chamber = solid.outline()
 
     pots: list[Any] = []
     pot_labels: list[tuple[tuple[float, float, float], str]] = []
@@ -155,11 +221,11 @@ def build_arrow_meshes(pv: Any, snap: TwinSnapshot, box_len: float) -> list[Any]
             pv.Arrow(
                 start=tuple(float(v) for v in origin),
                 direction=(1.0, 0.0, 0.0),
-                tip_length=0.3,
-                tip_radius=0.08,
-                tip_resolution=8,
-                shaft_radius=0.035,
-                shaft_resolution=8,
+                tip_length=0.35,
+                tip_radius=0.1,
+                tip_resolution=12,
+                shaft_radius=0.04,
+                shaft_resolution=12,
                 scale=length,
             )
         )
@@ -167,17 +233,18 @@ def build_arrow_meshes(pv: Any, snap: TwinSnapshot, box_len: float) -> list[Any]
 
 
 def _add_static_scene(pl: Any, meshes: dict[str, Any]) -> None:
-    """Wireframe chamber only — never solid fill (avoids double edges + purple wash)."""
-    pl.add_mesh(
+    """Wireframe outline chamber only — no solid fill, no scalar maps."""
+    _add_solid(
+        pl,
         meshes["chamber"],
-        style="wireframe",
         color=_WIRE,
-        line_width=2,
         name="chamber",
-        render_lines_as_tubes=False,
+        style="wireframe",
+        line_width=2.0,
+        lighting=False,
     )
     for i, pot in enumerate(meshes["pots"]):
-        pl.add_mesh(pot, color=_POT, name=f"pot_{i}", smooth_shading=True, show_edges=False)
+        _add_solid(pl, pot, color=_POT, name=f"pot_{i}", lighting=True)
     for i, (pos, label) in enumerate(meshes["pot_labels"]):
         pl.add_point_labels(
             [pos],
@@ -189,8 +256,8 @@ def _add_static_scene(pl: Any, meshes: dict[str, Any]) -> None:
             always_visible=True,
             name=f"pot_label_{i}",
         )
-    pl.add_mesh(meshes["inlet"], color=_INLET, name="inlet", show_edges=False)
-    pl.add_mesh(meshes["outlet"], color=_OUTLET, name="outlet", show_edges=False)
+    _add_solid(pl, meshes["inlet"], color=_INLET, name="inlet", lighting=False)
+    _add_solid(pl, meshes["outlet"], color=_OUTLET, name="outlet", lighting=False)
     for i, (pos, label) in enumerate(meshes["port_labels"]):
         pl.add_point_labels(
             [pos],
@@ -226,45 +293,84 @@ def _set_hud(pl: Any, snap: TwinSnapshot, *, legend: bool) -> None:
         )
 
 
-def _set_arrows(
-    pl: Any, pv: Any, snap: TwinSnapshot, box_len: float, flag: dict[str, bool]
+def _ensure_arrow_actors(
+    pl: Any, pv: Any, snap: TwinSnapshot, box_len: float, cache: dict[str, Any]
 ) -> None:
-    for i in range(4):
-        _safe_remove(pl, f"arrow_{i}")
-    flag["arrows"] = False
-    arrows = build_arrow_meshes(pv, snap, box_len)
-    if not arrows:
+    """Create arrow actors once (hidden); fan toggle only flips visibility.
+
+    remove_actor/add_mesh on every keypress is what produced purple wash +
+    double red/blue outlines on macOS/VTK in interactive sessions.
+    """
+    if cache.get("arrow_ready"):
         return
-    for i, mesh in enumerate(arrows):
-        pl.add_mesh(
-            mesh,
-            color=_ARROW,
-            name=f"arrow_{i}",
-            show_edges=False,
-            smooth_shading=False,
-            ambient=0.9,
-            specular=0.0,
-            show_scalar_bar=False,
+    # Build from a synthetic fan-on snapshot geometry using current port points
+    # if fan is off, still place arrows at vent centers from static meshes.
+    inlet_c = cache.get("inlet_c")
+    outlet_c = cache.get("outlet_c")
+    length = max(0.04, 0.08 * box_len)
+    origins: list[tuple[float, float, float]]
+    if snap.exchange.points.shape[0] >= 2:
+        origins = [tuple(float(v) for v in p) for p in snap.exchange.points[:2]]
+    elif inlet_c is not None and outlet_c is not None:
+        hx = 0.5 * box_len
+        origins = [
+            (float(inlet_c[0]) + 0.02 * hx, float(inlet_c[1]), float(inlet_c[2])),
+            (float(outlet_c[0]) - 0.02 * hx, float(outlet_c[1]), float(outlet_c[2])),
+        ]
+    else:
+        origins = []
+
+    for i, origin in enumerate(origins[:2]):
+        mesh = pv.Arrow(
+            start=origin,
+            direction=(1.0, 0.0, 0.0),
+            tip_length=0.35,
+            tip_radius=0.1,
+            tip_resolution=12,
+            shaft_radius=0.04,
+            shaft_resolution=12,
+            scale=length,
         )
-    flag["arrows"] = True
+        actor = _add_solid(pl, mesh, color=_ARROW, name=f"arrow_{i}", lighting=False)
+        try:
+            actor.SetVisibility(False)
+        except Exception:
+            try:
+                actor.visibility = False
+            except Exception:
+                pass
+    cache["arrow_ready"] = True
+    cache["arrow_count"] = len(origins[:2])
 
 
-# Camera orientation cube layout (must match _style_camera_widget)
-_CAM_CUBE_SIZE = 200
-_CAM_CUBE_PAD = 40
-_HOME_DOT_SIZE = 44
+def _set_arrows_visible(pl: Any, visible: bool, cache: dict[str, Any]) -> None:
+    n = int(cache.get("arrow_count", 2))
+    for i in range(n):
+        actor = None
+        try:
+            actor = pl.actors.get(f"arrow_{i}")
+        except Exception:
+            actor = None
+        if actor is None:
+            continue
+        try:
+            actor.SetVisibility(bool(visible))
+        except Exception:
+            try:
+                actor.visibility = bool(visible)
+            except Exception:
+                pass
 
 
 def _set_standard_view(pl: Any, name: str) -> None:
     """CAD-style camera presets. HOME = default product angle."""
     if name == "home":
-        # Default: slightly far, slightly high, slightly from the side — pot readable.
         pl.view_isometric()
         pl.reset_camera()
         try:
             pl.camera.elevation(22.0)
             pl.camera.azimuth(-18.0)
-            pl.camera.zoom(0.88)  # step back a bit
+            pl.camera.zoom(0.88)
         except Exception:
             b = pl.bounds
             cx = 0.5 * (b[0] + b[1])
@@ -296,16 +402,19 @@ def _set_standard_view(pl: Any, name: str) -> None:
 
 
 def _style_camera_widget(widget: Any) -> None:
-    """Orientation cross: spaced axis dots, inset from edge; keep center container."""
+    """Orientation cross: spaced axis dots. Center HOME is a separate logo (not container).
+
+    VTK's orientation container is a large translucent sphere around the whole
+    widget — painting it opaque white floods the UR corner (not a center dot).
+    """
     try:
         rep = widget.GetRepresentation()
         rep.AnchorToUpperRight()
         rep.SetSize(_CAM_CUBE_SIZE, _CAM_CUBE_SIZE)
         rep.SetPadding(_CAM_CUBE_PAD, _CAM_CUBE_PAD)
-        # Smaller axis tips → more gap between dots on the cross
-        rep.SetNormalizedHandleDia(0.22)
-        # Center sphere of the cross (container) — visual hub for HOME overlay
-        rep.SetContainerVisibility(True)
+        rep.SetNormalizedHandleDia(0.18)
+        # Keep container off — HOME disc is drawn via logo widget at the hub.
+        rep.SetContainerVisibility(False)
     except Exception:
         pass
 
@@ -313,35 +422,102 @@ def _style_camera_widget(widget: Any) -> None:
 def _home_button_position(window_size: tuple[int, int]) -> tuple[float, float]:
     """Pixel position (VTK origin = bottom-left) of HOME at cube center."""
     w, h = window_size
-    # Center of orientation widget minus half button size
     x = w - _CAM_CUBE_PAD - _CAM_CUBE_SIZE / 2.0 - _HOME_DOT_SIZE / 2.0
     y = h - _CAM_CUBE_PAD - _CAM_CUBE_SIZE / 2.0 - _HOME_DOT_SIZE / 2.0
     return (float(x), float(y))
 
 
-def _attach_home_center_button(pl: Any, window_size: tuple[int, int]) -> None:
-    """Central HOME node on the view-cross (click → default camera).
+def _home_logo_position(window_size: tuple[int, int]) -> tuple[float, float]:
+    """Normalized (0–1) bottom-left of logo so its center sits on the cube hub."""
+    w, h = float(window_size[0]), float(window_size[1])
+    cx = w - _CAM_CUBE_PAD - _CAM_CUBE_SIZE / 2.0
+    cy = h - _CAM_CUBE_PAD - _CAM_CUBE_SIZE / 2.0
+    sx, sy = _HOME_LOGO_FRAC
+    return (cx / w - sx / 2.0, cy / h - sy / 2.0)
 
-    VTK orientation widget has no real center action, so we place a circular
-    checkbox button exactly on the cross hub (upper-right).
-    """
+
+def _write_home_dot_png(path: Path, size: int = 64) -> Path:
+    """Minimal white circle PNG (no Pillow dependency)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.is_file() and path.stat().st_size > 50:
+        return path
+
+    # Build raw RGBA
+    raw = bytearray()
+    r0 = size / 2.0 - 0.5
+    for y in range(size):
+        raw.append(0)  # filter None
+        for x in range(size):
+            dx = x - r0
+            dy = y - r0
+            d = (dx * dx + dy * dy) ** 0.5
+            if d <= r0 - 3:
+                raw.extend((245, 245, 245, 255))
+            elif d <= r0 - 1:
+                raw.extend((220, 220, 220, 255))
+            elif d <= r0:
+                raw.extend((80, 90, 110, 255))
+            else:
+                raw.extend((0, 0, 0, 0))
+
+    def chunk(tag: bytes, data: bytes) -> bytes:
+        return (
+            struct.pack(">I", len(data))
+            + tag
+            + data
+            + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
+        )
+
+    ihdr = struct.pack(">IIBBBBB", size, size, 8, 6, 0, 0, 0)
+    png = (
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", ihdr)
+        + chunk(b"IDAT", zlib.compress(bytes(raw), 9))
+        + chunk(b"IEND", b"")
+    )
+    path.write_bytes(png)
+    return path
+
+
+def _attach_home_center(pl: Any, window_size: tuple[int, int]) -> None:
+    """White HOME node on the orientation cross (visible logo + click + keys)."""
 
     def _on_home(_state: bool = True) -> None:
         _set_standard_view(pl, "home")
 
+    # 1) Always-visible small white disc at the cross hub (logo — shows in screenshots)
+    try:
+        png = _write_home_dot_png(_HOME_PNG)
+        pos = _home_logo_position(window_size)
+        pl.add_logo_widget(str(png), position=pos, size=_HOME_LOGO_FRAC)
+    except Exception:
+        pass
+
+    # 2) Clickable checkbox on the same hub (same size as logo; logo is the visual)
     try:
         pl.add_checkbox_button_widget(
             _on_home,
             value=True,
             position=_home_button_position(window_size),
             size=_HOME_DOT_SIZE,
-            border_size=3,
+            border_size=1,
             color_on="#f5f5f5",
             color_off="#f5f5f5",
-            background_color="#3d4658",
+            background_color="#2a3140",
         )
     except Exception:
-        # Still have keyboard HOME
+        pass
+
+    # 3) Text label so HOME is discoverable even if widgets fail
+    try:
+        pl.add_text(
+            "HOME · 7",
+            position="upper_right",
+            font_size=11,
+            color="#f0f0f0",
+            name="home_hint",
+        )
+    except Exception:
         pass
 
 
@@ -359,8 +535,7 @@ def _attach_camera_controls(pl: Any, window_size: tuple[int, int] = (1200, 860))
             _style_camera_widget(widget)
         except Exception:
             pass
-    # Center node of the cross = HOME
-    _attach_home_center_button(pl, window_size)
+    _attach_home_center(pl, window_size)
 
     pl.add_key_event("7", lambda: _set_standard_view(pl, "home"))
     pl.add_key_event("c", lambda: _set_standard_view(pl, "home"))
@@ -368,6 +543,19 @@ def _attach_camera_controls(pl: Any, window_size: tuple[int, int] = (1200, 860))
     pl.add_key_event("8", lambda: _set_standard_view(pl, "top"))
     pl.add_key_event("9", lambda: _set_standard_view(pl, "front"))
     pl.add_key_event("0", lambda: _set_standard_view(pl, "side"))
+
+
+def _configure_plotter(pl: Any) -> None:
+    """Stable look: no scalar bar, no anti-alias color fringes on wireframe."""
+    pl.set_background(_BG)
+    try:
+        pl.disable_anti_aliasing()
+    except Exception:
+        pass
+    try:
+        pl.remove_scalar_bar()
+    except Exception:
+        pass
 
 
 def render_snapshot(
@@ -380,10 +568,15 @@ def render_snapshot(
     pv = _require_pyvista()
     off_screen = screenshot is not None and not interactive
     pl = pv.Plotter(off_screen=off_screen, window_size=window_size)
-    pl.set_background(_BG)
+    _configure_plotter(pl)
     meshes = build_static_meshes(pv, snap)
     _add_static_scene(pl, meshes)
-    _set_arrows(pl, pv, snap, meshes["box_len"], {"arrows": False})
+    cache: dict[str, Any] = {
+        "inlet_c": meshes["inlet_c"],
+        "outlet_c": meshes["outlet_c"],
+    }
+    _ensure_arrow_actors(pl, pv, snap, meshes["box_len"], cache)
+    _set_arrows_visible(pl, snap.action.fan > 0.02, cache)
     _set_hud(pl, snap, legend=True)
     if interactive:
         _attach_camera_controls(pl, window_size)
@@ -423,16 +616,21 @@ def run_rollout(
 
 
 def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
-    """Live loop: build geometry once; only HUD + arrows update on keys."""
+    """Live loop: geometry once; fan only toggles arrow visibility + HUD text."""
     pv = _require_pyvista()
     sim = SequentialEnvironmentSimulator(default_scenario_v2(seed=seed), seed=seed)
     state = {"heater": 0.0, "fan": 0.0, "humidifier": 0.0, "steps": 0}
-    flags = {"arrows": False, "ready": False}
+    cache: dict[str, Any] = {"arrow_ready": False, "ready": False}
 
     win = (1200, 860)
     pl = pv.Plotter(window_size=win)
-    pl.set_background(_BG)
+    _configure_plotter(pl)
     _attach_camera_controls(pl, win)
+
+    print(
+        "twin_view LIVE | wireframe-only | no T/RH overlay | HOME=white center / key 7\n"
+        "  fan ON = two fixed-color arrows (visibility only, no mesh rebuild)"
+    )
 
     def action() -> ControlAction:
         return ControlAction(
@@ -443,17 +641,17 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
 
     def refresh(*, hard: bool = False) -> None:
         snap = snapshot_from_simulator(sim, action=action())
-        if hard or not flags["ready"]:
+        if hard or not cache.get("ready"):
             # Full rebuild only on start/reset — never clear_actors mid-session.
             for name in list(getattr(pl, "actors", {}) or {}):
                 _safe_remove(pl, name)
-            # Named removes for text / labels that may not be in actors dict
             for name in (
                 "chamber",
                 "inlet",
                 "outlet",
                 "params",
                 "help",
+                "home_hint",
                 "pot_0",
                 "pot_1",
                 "pot_2",
@@ -468,16 +666,20 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
                 _safe_remove(pl, name)
             meshes = build_static_meshes(pv, snap)
             _add_static_scene(pl, meshes)
-            flags["box_len"] = meshes["box_len"]
-            flags["ready"] = True
+            cache["box_len"] = meshes["box_len"]
+            cache["inlet_c"] = meshes["inlet_c"]
+            cache["outlet_c"] = meshes["outlet_c"]
+            cache["arrow_ready"] = False
+            cache["ready"] = True
+            _ensure_arrow_actors(pl, pv, snap, float(cache["box_len"]), cache)
+            _set_arrows_visible(pl, snap.action.fan > 0.02, cache)
             _set_hud(pl, snap, legend=True)
-            _set_arrows(pl, pv, snap, float(flags["box_len"]), flags)
             _set_standard_view(pl, "home")
             return
 
-        # Soft update: params table + fan arrows only
+        # Soft update: params table + arrow visibility only (no add/remove mesh)
         _set_hud(pl, snap, legend=False)
-        _set_arrows(pl, pv, snap, float(flags["box_len"]), flags)
+        _set_arrows_visible(pl, snap.action.fan > 0.02, cache)
         pl.render()
 
     def set_cmd(key: str, value: float) -> None:
@@ -501,7 +703,7 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
         state["heater"] = 0.0
         state["fan"] = 0.0
         state["humidifier"] = 0.0
-        flags["ready"] = False
+        cache["ready"] = False
         refresh(hard=True)
 
     pl.add_key_event("s", step_once)
