@@ -25,7 +25,7 @@ components/
 third_party/
 test/
 scripts/
-examples/
+/examples/
 config/
 logs/
 
