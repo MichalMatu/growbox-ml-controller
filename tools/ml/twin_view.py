@@ -5,16 +5,16 @@ Minimal stable scene:
   - fixed-color pot + inlet/outlet rings
   - at most two fixed-color fan arrows (visibility toggle only)
   - HUD tables for numbers (temperature lives only in the table)
-  - orientation cross (UR) with white HOME center node (logo + click + keys 7/c)
+  - orientation cross (UR) for axis views; HOME camera via keys 7 / c
 
 No temperature/humidity geometric overlays. No solid chamber wash.
+No runtime file generation (HOME is keyboard-only — VTK has no reliable
+center-click on the orientation widget).
 """
 
 from __future__ import annotations
 
 import argparse
-import struct
-import zlib
 from pathlib import Path
 from typing import Any
 
@@ -40,13 +40,9 @@ _INLET = "#5cb85c"
 _OUTLET = "#5b9bd5"
 _ARROW = "#c8e6f5"
 
-# Camera orientation cube layout (must match _style_camera_widget)
+# Camera orientation widget (axis handles only — no fake HOME center control)
 _CAM_CUBE_SIZE = 200
 _CAM_CUBE_PAD = 40
-# Small center node only (pixels / normalized window fractions)
-_HOME_DOT_SIZE = 28
-_HOME_LOGO_FRAC = (0.028, 0.039)  # ~34×34 px on 1200×860
-_HOME_PNG = Path(__file__).resolve().parent / "_twin_home_dot.png"
 
 
 def _legend_table() -> str:
@@ -56,7 +52,7 @@ def _legend_table() -> str:
         ("1 / 2", "heater on / off"),
         ("3 / 4", "fan on / off"),
         ("5 / 6", "humid on / off"),
-        ("7 / c", "HOME (white center)"),
+        ("7 / c", "HOME camera"),
         ("8", "TOP"),
         ("9", "FRONT"),
         ("0", "SIDE"),
@@ -403,126 +399,21 @@ def _set_standard_view(pl: Any, name: str) -> None:
 
 
 def _style_camera_widget(widget: Any) -> None:
-    """Orientation cross: spaced axis dots. Center HOME is a separate logo (not container).
-
-    VTK's orientation container is a large translucent sphere around the whole
-    widget — painting it opaque white floods the UR corner (not a center dot).
-    """
+    """Orientation cross: axis handles only (no fake center HOME button)."""
     try:
         rep = widget.GetRepresentation()
         rep.AnchorToUpperRight()
         rep.SetSize(_CAM_CUBE_SIZE, _CAM_CUBE_SIZE)
         rep.SetPadding(_CAM_CUBE_PAD, _CAM_CUBE_PAD)
         rep.SetNormalizedHandleDia(0.18)
-        # Keep container off — HOME disc is drawn via logo widget at the hub.
         rep.SetContainerVisibility(False)
     except Exception:
         pass
 
 
-def _home_button_position(window_size: tuple[int, int]) -> tuple[float, float]:
-    """Pixel position (VTK origin = bottom-left) of HOME at cube center."""
-    w, h = window_size
-    x = w - _CAM_CUBE_PAD - _CAM_CUBE_SIZE / 2.0 - _HOME_DOT_SIZE / 2.0
-    y = h - _CAM_CUBE_PAD - _CAM_CUBE_SIZE / 2.0 - _HOME_DOT_SIZE / 2.0
-    return (float(x), float(y))
-
-
-def _home_logo_position(window_size: tuple[int, int]) -> tuple[float, float]:
-    """Normalized (0–1) bottom-left of logo so its center sits on the cube hub."""
-    w, h = float(window_size[0]), float(window_size[1])
-    cx = w - _CAM_CUBE_PAD - _CAM_CUBE_SIZE / 2.0
-    cy = h - _CAM_CUBE_PAD - _CAM_CUBE_SIZE / 2.0
-    sx, sy = _HOME_LOGO_FRAC
-    return (cx / w - sx / 2.0, cy / h - sy / 2.0)
-
-
-def _write_home_dot_png(path: Path, size: int = 64) -> Path:
-    """Minimal white circle PNG (no Pillow dependency)."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    if path.is_file() and path.stat().st_size > 50:
-        return path
-
-    # Build raw RGBA
-    raw = bytearray()
-    r0 = size / 2.0 - 0.5
-    for y in range(size):
-        raw.append(0)  # filter None
-        for x in range(size):
-            dx = x - r0
-            dy = y - r0
-            d = (dx * dx + dy * dy) ** 0.5
-            if d <= r0 - 3:
-                raw.extend((245, 245, 245, 255))
-            elif d <= r0 - 1:
-                raw.extend((220, 220, 220, 255))
-            elif d <= r0:
-                raw.extend((80, 90, 110, 255))
-            else:
-                raw.extend((0, 0, 0, 0))
-
-    def chunk(tag: bytes, data: bytes) -> bytes:
-        return (
-            struct.pack(">I", len(data))
-            + tag
-            + data
-            + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
-        )
-
-    ihdr = struct.pack(">IIBBBBB", size, size, 8, 6, 0, 0, 0)
-    png = (
-        b"\x89PNG\r\n\x1a\n"
-        + chunk(b"IHDR", ihdr)
-        + chunk(b"IDAT", zlib.compress(bytes(raw), 9))
-        + chunk(b"IEND", b"")
-    )
-    path.write_bytes(png)
-    return path
-
-
-def _attach_home_center(pl: Any, window_size: tuple[int, int]) -> None:
-    """White HOME node on the orientation cross (visible logo + click + keys)."""
-
-    def _on_home(_state: bool = True) -> None:
-        _set_standard_view(pl, "home")
-
-    # 1) Always-visible small white disc at the cross hub (logo — shows in screenshots)
-    try:
-        png = _write_home_dot_png(_HOME_PNG)
-        pos = _home_logo_position(window_size)
-        pl.add_logo_widget(str(png), position=pos, size=_HOME_LOGO_FRAC)
-    except Exception:
-        pass
-
-    # 2) Clickable checkbox on the same hub (same size as logo; logo is the visual)
-    try:
-        pl.add_checkbox_button_widget(
-            _on_home,
-            value=True,
-            position=_home_button_position(window_size),
-            size=_HOME_DOT_SIZE,
-            border_size=1,
-            color_on="#f5f5f5",
-            color_off="#f5f5f5",
-            background_color="#2a3140",
-        )
-    except Exception:
-        pass
-
-    # 3) Text label so HOME is discoverable even if widgets fail
-    try:
-        pl.add_text(
-            "HOME · 7",
-            position="upper_right",
-            font_size=11,
-            color="#f0f0f0",
-            name="home_hint",
-        )
-    except Exception:
-        pass
-
-
 def _attach_camera_controls(pl: Any, window_size: tuple[int, int] = (1200, 860)) -> None:
+    """Axis orientation widget + keyboard camera presets (HOME = keys 7 / c)."""
+    _ = window_size  # reserved if layout is tuned later
     try:
         pl.enable_trackball_style()
     except Exception:
@@ -536,7 +427,6 @@ def _attach_camera_controls(pl: Any, window_size: tuple[int, int] = (1200, 860))
             _style_camera_widget(widget)
         except Exception:
             pass
-    _attach_home_center(pl, window_size)
 
     pl.add_key_event("7", lambda: _set_standard_view(pl, "home"))
     pl.add_key_event("c", lambda: _set_standard_view(pl, "home"))
@@ -757,10 +647,10 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
     _attach_camera_controls(pl, win)
 
     print(
-        "twin_view LIVE | BUILD stereo-fix-v4\n"
-        "  wireframe-only | no T/RH overlay | HOME=white center / key 7\n"
-        "  key 3 = fan ON only (VTK stereo toggle DISABLED)\n"
-        "  if scene goes purple/red-blue: press 4 then check stereo is off"
+        "twin_view LIVE\n"
+        "  wireframe-only | no T/RH overlay | HOME camera = key 7 or c\n"
+        "  key 3 = fan ON only (VTK stereo toggle disabled)\n"
+        "  purple/red-blue scene → press m (force mono)"
     )
 
     def action() -> ControlAction:
@@ -783,7 +673,6 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
                 "outlet",
                 "params",
                 "help",
-                "home_hint",
                 "pot_0",
                 "pot_1",
                 "pot_2",

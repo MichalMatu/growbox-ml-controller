@@ -68,13 +68,13 @@ python -m tools.ml.twin_view --live
 | `h` / `H` | heater ±0.25 |
 | `f` / `F` | fan ±0.25 |
 | `u` / `U` | humidifier ±0.25 |
-| **center white dot (UR)** | **HOME** — default 3/4 high/side/far view |
-| `7` / `c` | HOME (same as center dot) |
+| `7` / `c` | **HOME** camera (default product angle) |
 | `8` | camera top |
 | `9` | camera front |
 | `0` | camera side |
 | `i` | pure isometric |
-| orientation cube (UR) | axis dots around HOME center |
+| `m` | force mono (if VTK stereo left purple) |
+| orientation cube (UR) | axis view handles only (no center HOME click) |
 
 
 ## Honest limits
