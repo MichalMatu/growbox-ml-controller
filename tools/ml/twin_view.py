@@ -354,59 +354,102 @@ def _set_arrows_visible(pl: Any, visible: bool, cache: dict[str, Any]) -> None:
                 pass
 
 
+def _scene_focus(pl: Any) -> tuple[float, float, float, float]:
+    """Return (cx, cy, cz, span) from plotter bounds."""
+    b = pl.bounds
+    cx = 0.5 * (float(b[0]) + float(b[1]))
+    cy = 0.5 * (float(b[2]) + float(b[3]))
+    cz = 0.5 * (float(b[4]) + float(b[5]))
+    span = max(float(b[1]) - float(b[0]), float(b[3]) - float(b[2]), float(b[5]) - float(b[4]), 0.5)
+    return cx, cy, cz, span
+
+
 def _set_standard_view(pl: Any, name: str) -> None:
-    """CAD-style camera presets. HOME = default product angle."""
+    """CAD-style camera presets. HOME = default product angle.
+
+    Always sets absolute camera_position (elevation/azimuth alone is easy to
+    miss if the interactor already moved the camera).
+    """
+    cx, cy, cz, span = _scene_focus(pl)
     if name == "home":
-        pl.view_isometric()
-        pl.reset_camera()
-        try:
-            pl.camera.elevation(22.0)
-            pl.camera.azimuth(-18.0)
-            pl.camera.zoom(0.88)
-        except Exception:
-            b = pl.bounds
-            cx = 0.5 * (b[0] + b[1])
-            cy = 0.5 * (b[2] + b[3])
-            cz = 0.5 * (b[4] + b[5])
-            span = max(b[1] - b[0], b[3] - b[2], b[5] - b[4], 0.5)
-            pl.camera_position = [
-                (cx + 1.7 * span, cy - 1.85 * span, cz + 1.35 * span),
-                (cx, cy, cz - 0.15 * span),
-                (0.0, 0.0, 1.0),
-            ]
+        # Slightly high, slightly from the side, pot readable
+        pl.camera_position = [
+            (cx + 1.7 * span, cy - 1.85 * span, cz + 1.35 * span),
+            (cx, cy, cz - 0.15 * span),
+            (0.0, 0.0, 1.0),
+        ]
     elif name == "iso":
-        pl.view_isometric()
-        pl.reset_camera()
+        pl.camera_position = [
+            (cx + 1.5 * span, cy - 1.5 * span, cz + 1.5 * span),
+            (cx, cy, cz),
+            (0.0, 0.0, 1.0),
+        ]
     elif name == "top":
-        pl.view_xy()
-        pl.reset_camera()
+        pl.camera_position = [
+            (cx, cy, cz + 2.4 * span),
+            (cx, cy, cz),
+            (0.0, 1.0, 0.0),
+        ]
     elif name == "front":
-        pl.view_xz()
-        pl.reset_camera()
+        pl.camera_position = [
+            (cx, cy - 2.4 * span, cz),
+            (cx, cy, cz),
+            (0.0, 0.0, 1.0),
+        ]
     elif name == "side":
-        pl.view_yz()
-        pl.reset_camera()
+        pl.camera_position = [
+            (cx + 2.4 * span, cy, cz),
+            (cx, cy, cz),
+            (0.0, 0.0, 1.0),
+        ]
     else:
         _set_standard_view(pl, "home")
         return
-    pl.reset_camera_clipping_range()
+    try:
+        pl.reset_camera_clipping_range()
+    except Exception:
+        pass
     pl.render()
 
 
+def _bind_camera_keys(pl: Any) -> None:
+    """HOME / view presets. Bind several KeySym aliases (macOS / numpad)."""
+
+    def home() -> None:
+        _set_standard_view(pl, "home")
+
+    def iso() -> None:
+        _set_standard_view(pl, "iso")
+
+    def top() -> None:
+        _set_standard_view(pl, "top")
+
+    def front() -> None:
+        _set_standard_view(pl, "front")
+
+    def side() -> None:
+        _set_standard_view(pl, "side")
+
+    for key in ("7", "KP_7", "c", "C"):
+        pl.add_key_event(key, home)
+    for key in ("i", "I"):
+        pl.add_key_event(key, iso)
+    for key in ("8", "KP_8"):
+        pl.add_key_event(key, top)
+    for key in ("9", "KP_9"):
+        pl.add_key_event(key, front)
+    for key in ("0", "KP_0"):
+        pl.add_key_event(key, side)
+
+
 def _attach_camera_controls(pl: Any, window_size: tuple[int, int] = (1200, 860)) -> None:
-    """Mouse trackball + keyboard camera presets only (no orientation gizmo)."""
+    """Mouse trackball + keyboard camera presets (no orientation gizmo)."""
     _ = window_size
     try:
         pl.enable_trackball_style()
     except Exception:
         pass
-
-    pl.add_key_event("7", lambda: _set_standard_view(pl, "home"))
-    pl.add_key_event("c", lambda: _set_standard_view(pl, "home"))
-    pl.add_key_event("i", lambda: _set_standard_view(pl, "iso"))
-    pl.add_key_event("8", lambda: _set_standard_view(pl, "top"))
-    pl.add_key_event("9", lambda: _set_standard_view(pl, "front"))
-    pl.add_key_event("0", lambda: _set_standard_view(pl, "side"))
+    _bind_camera_keys(pl)
 
 
 def _force_mono_render(pl: Any) -> None:
@@ -467,10 +510,10 @@ def _install_stereo_guard(pl: Any) -> None:
 
 
 def _clear_vtk_default_keys(pl: Any) -> None:
-    """Remove VTK/PyVista default key bindings that conflict with live controls.
+    """Clear per-key PyVista callbacks we will rebind (never wipe all keys).
 
-    Critical: ``3`` = toggle stereo (RedBlue) in vtkRenderWindowInteractor.
-    Also clear ``s``/``r``/``w`` surface-mode bindings we rebind ourselves.
+    Do **not** call ``clear_key_event_callbacks()`` — that drops every binding
+    (including HOME 7/c) and was why camera presets appeared dead in live mode.
     """
     keys = (
         "1",
@@ -480,9 +523,13 @@ def _clear_vtk_default_keys(pl: Any) -> None:
         "5",
         "6",
         "7",
+        "KP_7",
         "8",
+        "KP_8",
         "9",
+        "KP_9",
         "0",
+        "KP_0",
         "s",
         "S",
         "r",
@@ -499,30 +546,21 @@ def _clear_vtk_default_keys(pl: Any) -> None:
         "H",
         "u",
         "U",
+        "m",
+        "M",
         "space",
     )
     iren = getattr(pl, "iren", None)
     if iren is None:
         return
+    clear = getattr(iren, "clear_events_for_key", None)
+    if clear is None:
+        return
     for key in keys:
-        for meth in ("clear_events_for_key", "clear_key_event_callbacks"):
-            fn = getattr(iren, meth, None)
-            if fn is None:
-                continue
-            try:
-                if meth == "clear_events_for_key":
-                    fn(key)
-                else:
-                    fn()
-            except TypeError:
-                try:
-                    fn(key)  # type: ignore[misc]
-                except Exception:
-                    pass
-            except Exception:
-                pass
-            if meth == "clear_key_event_callbacks":
-                return  # cleared all once
+        try:
+            clear(key)
+        except Exception:
+            pass
 
 
 def _configure_plotter(pl: Any) -> None:
@@ -615,9 +653,10 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
     win = (1200, 860)
     pl = pv.Plotter(window_size=win)
     _configure_plotter(pl)
-    # Must clear VTK defaults BEFORE our bindings — key 3 = stereo anaglyph.
-    _clear_vtk_default_keys(pl)
-    _attach_camera_controls(pl, win)
+    try:
+        pl.enable_trackball_style()
+    except Exception:
+        pass
 
     print(
         "twin_view LIVE\n"
@@ -709,8 +748,9 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
         cache["ready"] = False
         refresh(hard=True)
 
-    # Re-clear then bind — order matters vs VTK CharEvent stereo on '3'
+    # One clear + one full bind (camera keys must be re-added after clear).
     _clear_vtk_default_keys(pl)
+    _bind_camera_keys(pl)
     pl.add_key_event("s", step_once)
     pl.add_key_event("space", step_once)
     pl.add_key_event("r", reset_sim)
@@ -726,7 +766,6 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
     pl.add_key_event("F", lambda: bump("fan", -0.25))
     pl.add_key_event("u", lambda: bump("humidifier", 0.25))
     pl.add_key_event("U", lambda: bump("humidifier", -0.25))
-    # Extra: press 'm' to force mono if anything re-enabled stereo
     pl.add_key_event("m", lambda: (_force_mono_render(pl), pl.render()))
 
     refresh(hard=True)
