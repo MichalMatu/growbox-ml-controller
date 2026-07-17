@@ -372,10 +372,11 @@ def _set_standard_view(pl: Any, name: str) -> None:
     """
     cx, cy, cz, span = _scene_focus(pl)
     if name == "home":
-        # Slightly high, slightly from the side, pot readable
+        # Product angle: step back a bit (less zoom), slightly lower framing
+        # (old: 1.7/1.85/1.35 + focal below center → box too high and too tight)
         pl.camera_position = [
-            (cx + 1.7 * span, cy - 1.85 * span, cz + 1.35 * span),
-            (cx, cy, cz - 0.15 * span),
+            (cx + 2.05 * span, cy - 2.2 * span, cz + 1.1 * span),
+            (cx, cy, cz + 0.08 * span),
             (0.0, 0.0, 1.0),
         ]
     elif name == "iso":
