@@ -7,8 +7,10 @@ Examples::
 
   pip install 'growbox-ml-controller-tools[twin]'   # or: pip install pyvista
   python -m tools.ml.twin_view --screenshot build/twin.png
-  python -m tools.ml.twin_view --interactive --steps 0
+  python -m tools.ml.twin_view --live
   python -m tools.ml.twin_view --fan 1 --heater 0 --steps 40 --screenshot build/twin-fan.png
+
+Live mode is keyboard-only (VTK 2D sliders can SIGSEGV on macOS).
 """
 
 from __future__ import annotations
@@ -207,12 +209,26 @@ def run_rollout(
     return snap
 
 
+def _clip01(value: float) -> float:
+    return min(1.0, max(0.0, float(value)))
+
+
 def run_interactive_live(
     *,
     seed: int = 0,
     max_auto_steps: int = 200,
 ) -> None:
-    """Interactive Plotter with sliders (heater / fan) and step button."""
+    """Interactive Plotter — keyboard only (VTK sliders crash on some macOS/VTK builds).
+
+    Keys
+    ----
+    s / space  step sim (10 s)
+    r          reset
+    1 / 2      heater on / off
+    3 / 4      fan on / off
+    5 / 6      humidifier on / off
+    q          close (window)
+    """
     pv = _require_pyvista()
     scenario = default_scenario_v2(seed=seed)
     sim = SequentialEnvironmentSimulator(scenario, seed=seed)
@@ -221,6 +237,7 @@ def run_interactive_live(
         "fan": 0.0,
         "humidifier": 0.0,
         "steps_done": 0,
+        "first_draw": True,
     }
 
     pl = pv.Plotter(window_size=(1200, 860))
@@ -233,10 +250,19 @@ def run_interactive_live(
             humidifier=state["humidifier"],
         )
 
+    def help_text() -> str:
+        return (
+            f"cmd heater={state['heater']:.2f} fan={state['fan']:.2f} "
+            f"humid={state['humidifier']:.2f}\n"
+            "keys: s=step  r=reset  1/2 heater  3/4 fan  5/6 humid  |  "
+            "arrows = lumped exchange (not CFD)"
+        )
+
     def redraw() -> None:
         snap = snapshot_from_simulator(sim, action=current_action())
         meshes = build_plotter_meshes(pv, snap)
-        pl.clear()
+        # clear_actors avoids wiping interactor state (safer than pl.clear() on macOS)
+        pl.clear_actors()
         pl.set_background("#1a1f2b")
         pl.add_mesh(
             meshes["chamber"],
@@ -245,32 +271,25 @@ def run_interactive_live(
             name="chamber",
             smooth_shading=True,
         )
-        pl.add_mesh(meshes["outline"], color="white", line_width=2)
+        pl.add_mesh(meshes["outline"], color="white", line_width=2, name="outline")
         for i, (pot, color) in enumerate(zip(meshes["pots"], meshes["pot_colors"])):
             pl.add_mesh(pot, color=color, name=f"pot_{i}", smooth_shading=True)
         if meshes["glyph"].n_points > 0:
-            pl.add_mesh(meshes["glyph"], color="#6ec6ff", opacity=0.9)
-        pl.add_mesh(meshes["outside"], color=meshes["outside_color"], opacity=0.55)
-        pl.add_text(snap.title(), font_size=9, color="white")
-        pl.add_text(
-            "Sliders: heater / fan / humidifier  |  keys: s=step  r=reset  q=quit\n"
-            "Arrows = lumped air exchange (fan + leak), not CFD",
-            position="lower_left",
-            font_size=8,
-            color="lightgray",
-        )
-        pl.reset_camera()
+            pl.add_mesh(meshes["glyph"], color="#6ec6ff", opacity=0.9, name="exchange")
+        pl.add_mesh(meshes["outside"], color=meshes["outside_color"], opacity=0.55, name="outside")
+        pl.add_text(snap.title(), font_size=9, color="white", name="title")
+        pl.add_text(help_text(), position="lower_left", font_size=8, color="lightgray", name="help")
+        if state["first_draw"]:
+            pl.reset_camera()
+            state["first_draw"] = False
+        pl.render()
 
-    def on_heater(value: float) -> None:
-        state["heater"] = float(value)
+    def bump(key: str, delta: float) -> None:
+        state[key] = _clip01(state[key] + delta)
         redraw()
 
-    def on_fan(value: float) -> None:
-        state["fan"] = float(value)
-        redraw()
-
-    def on_humid(value: float) -> None:
-        state["humidifier"] = float(value)
+    def set_cmd(key: str, value: float) -> None:
+        state[key] = _clip01(value)
         redraw()
 
     def step_once() -> None:
@@ -283,19 +302,25 @@ def run_interactive_live(
     def reset_sim() -> None:
         sim.reset(seed=seed)
         state["steps_done"] = 0
+        state["first_draw"] = True
         redraw()
 
-    pl.add_slider_widget(
-        on_heater, [0.0, 1.0], value=0.0, title="heater", pointa=(0.05, 0.9), pointb=(0.35, 0.9)
-    )
-    pl.add_slider_widget(
-        on_fan, [0.0, 1.0], value=0.0, title="fan", pointa=(0.05, 0.8), pointb=(0.35, 0.8)
-    )
-    pl.add_slider_widget(
-        on_humid, [0.0, 1.0], value=0.0, title="humidifier", pointa=(0.05, 0.7), pointb=(0.35, 0.7)
-    )
+    # No vtkSliderWidget — known SIGSEGV on macOS (GetCell null in SliderRepresentation2D).
     pl.add_key_event("s", step_once)
+    pl.add_key_event("space", step_once)
     pl.add_key_event("r", reset_sim)
+    pl.add_key_event("1", lambda: set_cmd("heater", 1.0))
+    pl.add_key_event("2", lambda: set_cmd("heater", 0.0))
+    pl.add_key_event("3", lambda: set_cmd("fan", 1.0))
+    pl.add_key_event("4", lambda: set_cmd("fan", 0.0))
+    pl.add_key_event("5", lambda: set_cmd("humidifier", 1.0))
+    pl.add_key_event("6", lambda: set_cmd("humidifier", 0.0))
+    pl.add_key_event("h", lambda: bump("heater", 0.25))
+    pl.add_key_event("H", lambda: bump("heater", -0.25))
+    pl.add_key_event("f", lambda: bump("fan", 0.25))
+    pl.add_key_event("F", lambda: bump("fan", -0.25))
+    pl.add_key_event("u", lambda: bump("humidifier", 0.25))
+    pl.add_key_event("U", lambda: bump("humidifier", -0.25))
     redraw()
     pl.show()
 

@@ -42,9 +42,23 @@ python -m tools.ml.twin_view --steps 40 --fan 1 --outside-temperature-c 8 \
 # Interactive window after a rollout
 python -m tools.ml.twin_view --steps 20 --heater 1 --interactive
 
-# Live sliders (heater / fan / humidifier); keys: s=step, r=reset
+# Live 3D (keyboard only — VTK sliders crash on some macOS builds)
 python -m tools.ml.twin_view --live
 ```
+
+### Live keys
+
+| Key | Action |
+|-----|--------|
+| `s` / space | step simulator (10 s) |
+| `r` | reset |
+| `1` / `2` | heater on / off |
+| `3` / `4` | fan on / off |
+| `5` / `6` | humidifier on / off |
+| `h` / `H` | heater ±0.25 |
+| `f` / `F` | fan ±0.25 |
+| `u` / `U` | humidifier ±0.25 |
+
 
 ## Honest limits
 
