@@ -35,11 +35,13 @@ from .twin_scene import (
 
 _HUD_FONT = 14
 _LABEL_FONT = 14
-# Radial studio BG: darker center → brighter toward the edges (Fusion-ish vignette inverted)
+# Radial studio BG: darker center → brighter toward the edges
 _BG_CENTER = (0x1A, 0x1E, 0x28)  # cool dark hub
-_BG_EDGE = (0x52, 0x5C, 0x6E)  # softer, brighter rim
-_BG_RADIAL_SIZE = 512
-_BG_RADIAL_VERSION = 1  # bump to regenerate cached PNG
+_BG_EDGE = (0x58, 0x62, 0x74)  # brighter rim
+# Wide enough for 16:9 / typical twin window (avoids black letterbox bars)
+_BG_RADIAL_W = 1280
+_BG_RADIAL_H = 800
+_BG_RADIAL_VERSION = 2  # bump to regenerate cached PNG
 _WIRE = "#e8e8e8"
 _POT = "#6b5b4b"
 _INLET = "#5cb85c"
@@ -603,57 +605,55 @@ def _write_png_rgb(path: Path, width: int, height: int, rgb: bytes) -> None:
 
 
 def _ensure_radial_background_png() -> Path:
-    """Dark center, brighter outside — circular studio falloff."""
+    """Dark center, brighter outside — elliptical falloff matching window aspect."""
     path = _radial_bg_cache_path()
     if path.is_file() and path.stat().st_size > 200:
         return path
 
-    n = _BG_RADIAL_SIZE
+    w, h = _BG_RADIAL_W, _BG_RADIAL_H
     c0 = _BG_CENTER
     c1 = _BG_EDGE
-    # Distance from center, normalized so image corners ≈ 1.0
-    scale = 2.0**0.5  # corner of unit square
-    pixels = bytearray(n * n * 3)
-    half = (n - 1) * 0.5
-    for y in range(n):
-        ny = (y - half) / half
-        for x in range(n):
-            nx = (x - half) / half
-            r = (nx * nx + ny * ny) ** 0.5 / scale
-            if r < 0.0:
-                r = 0.0
-            elif r > 1.0:
+    half_w = (w - 1) * 0.5
+    half_h = (h - 1) * 0.5
+    r_max = (1.0 + 1.0) ** 0.5  # unit-ellipse corner
+    pixels = bytearray(w * h * 3)
+    for y in range(h):
+        ny = (y - half_h) / half_h
+        row = y * w * 3
+        for x in range(w):
+            nx = (x - half_w) / half_w
+            r = (nx * nx + ny * ny) ** 0.5 / r_max
+            if r > 1.0:
                 r = 1.0
-            # smoothstep for soft Fusion-like falloff
-            t = r * r * (3.0 - 2.0 * r)
-            i = (y * n + x) * 3
+            t = r * r * (3.0 - 2.0 * r)  # smoothstep
+            i = row + x * 3
             pixels[i] = int(c0[0] + (c1[0] - c0[0]) * t)
             pixels[i + 1] = int(c0[1] + (c1[1] - c0[1]) * t)
             pixels[i + 2] = int(c0[2] + (c1[2] - c0[2]) * t)
-    _write_png_rgb(path, n, n, bytes(pixels))
+    _write_png_rgb(path, w, h, bytes(pixels))
     return path
 
 
 def _apply_studio_background(pl: Any) -> None:
     """Circular gradient: darker in the center, brighter toward the edges."""
-    # Base solid (visible if image fails / letterboxing)
+    edge = [c / 255.0 for c in _BG_EDGE]
+    center = [c / 255.0 for c in _BG_CENTER]
+    # Letterbox fill matches rim (never pure black bars)
     try:
-        pl.set_background(
-            [c / 255.0 for c in _BG_CENTER],
-        )
+        pl.set_background(edge)
     except Exception:
-        pl.set_background("#1a1e28")
+        pl.set_background("#586274")
 
     try:
-        png = _ensure_radial_background_png()
-        pl.add_background_image(str(png), scale=1.0, auto_resize=True)
-    except Exception:
-        # Fallback: vertical gradient if background image unavailable
         try:
-            pl.set_background(
-                [c / 255.0 for c in _BG_CENTER],
-                top=[c / 255.0 for c in _BG_EDGE],
-            )
+            pl.remove_background_image()
+        except Exception:
+            pass
+        png = _ensure_radial_background_png()
+        pl.add_background_image(str(png), scale=1.05, auto_resize=True)
+    except Exception:
+        try:
+            pl.set_background(center, top=edge)
         except Exception:
             pass
 
