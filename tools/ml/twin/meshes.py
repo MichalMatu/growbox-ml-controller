@@ -118,8 +118,9 @@ def build_static_meshes(pv: Any, snap: TwinSnapshot) -> dict[str, Any]:
     pots: list[Any] = []
     pot_labels: list[tuple[tuple[float, float, float], str]] = []
     pot_label_indices: list[int] = []
-    radius, height = pot_radius_height(snap.box)
     for index, cx, cy, cz in pot_layout_positions(snap.box, snap.pot_active):
+        pot_vol = float(snap.pot_volume_l[index]) if index < len(snap.pot_volume_l) else 12.0
+        radius, height = pot_radius_height(snap.box, pot_volume_l=pot_vol)
         pots.append(
             pv.Cylinder(
                 center=(cx, cy, cz + 0.5 * height),

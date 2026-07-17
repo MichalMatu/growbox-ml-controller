@@ -1,0 +1,125 @@
+{
+  "profile_id": "example-single-pot",
+  "version": 1,
+  "title": "Example single-pot tent",
+  "description": "Single active pot; heater, fan, humidifier available.",
+  "chamber": {
+    "growbox_volume_m3": 0.8,
+    "thermal_mass_j_per_k": 35000.0,
+    "heat_loss_w_per_k": 7.0,
+    "air_leak_rate_ach": 0.25
+  },
+  "pots": [
+    {
+      "available": true,
+      "pot_volume_l": 12.0,
+      "substrate_water_capacity_ml": 3000.0,
+      "transpiration_factor": 1.0,
+      "soil_moisture_valid": true,
+      "soil_temperature_valid": true,
+      "irrigation_available": true,
+      "irrigation_flow_ml_s": 18.0,
+      "irrigation_maximum_pulse_s": 4.0,
+      "irrigation_minimum_interval_s": 300.0,
+      "heat_mat_available": false,
+      "heat_mat_max_power_w": 25.0,
+      "target_soil_moisture_pct": 52.0,
+      "target_soil_temperature_c": 22.0
+    },
+    {
+      "available": false,
+      "pot_volume_l": 12.0,
+      "substrate_water_capacity_ml": 3000.0,
+      "transpiration_factor": 1.0,
+      "soil_moisture_valid": false,
+      "soil_temperature_valid": false,
+      "irrigation_available": false,
+      "irrigation_flow_ml_s": 18.0,
+      "irrigation_maximum_pulse_s": 4.0,
+      "irrigation_minimum_interval_s": 300.0,
+      "heat_mat_available": false,
+      "heat_mat_max_power_w": 25.0,
+      "target_soil_moisture_pct": 52.0,
+      "target_soil_temperature_c": 22.0
+    },
+    {
+      "available": false,
+      "pot_volume_l": 12.0,
+      "substrate_water_capacity_ml": 3000.0,
+      "transpiration_factor": 1.0,
+      "soil_moisture_valid": false,
+      "soil_temperature_valid": false,
+      "irrigation_available": false,
+      "irrigation_flow_ml_s": 18.0,
+      "irrigation_maximum_pulse_s": 4.0,
+      "irrigation_minimum_interval_s": 300.0,
+      "heat_mat_available": false,
+      "heat_mat_max_power_w": 25.0,
+      "target_soil_moisture_pct": 52.0,
+      "target_soil_temperature_c": 22.0
+    },
+    {
+      "available": false,
+      "pot_volume_l": 12.0,
+      "substrate_water_capacity_ml": 3000.0,
+      "transpiration_factor": 1.0,
+      "soil_moisture_valid": false,
+      "soil_temperature_valid": false,
+      "irrigation_available": false,
+      "irrigation_flow_ml_s": 18.0,
+      "irrigation_maximum_pulse_s": 4.0,
+      "irrigation_minimum_interval_s": 300.0,
+      "heat_mat_available": false,
+      "heat_mat_max_power_w": 25.0,
+      "target_soil_moisture_pct": 52.0,
+      "target_soil_temperature_c": 22.0
+    }
+  ],
+  "sensors": {
+    "air_temperature_c": true,
+    "air_humidity_pct": true,
+    "co2_ppm": true,
+    "outside_temperature_c": true,
+    "outside_humidity_pct": true,
+    "outside_co2_ppm": true,
+    "nutrient_solution_temperature_c": false,
+    "lights_active": false
+  },
+  "actuators": {
+    "heater": {
+      "available": true,
+      "max_power_w": 180.0,
+      "efficiency": 0.92,
+      "control_type": "binary"
+    },
+    "fan": {
+      "available": true,
+      "max_airflow_m3_h": 90.0,
+      "minimum_command": 0.0,
+      "control_type": "pwm"
+    },
+    "humidifier": {
+      "available": true,
+      "max_output_g_h": 110.0,
+      "control_type": "binary"
+    },
+    "dehumidifier": {
+      "available": false,
+      "max_removal_g_h": 80.0
+    },
+    "cooler": {
+      "available": false,
+      "max_cooling_w": 200.0
+    },
+    "co2_doser": {
+      "available": false,
+      "dose_ppm_per_full_pulse": 120.0,
+      "maximum_pulse_s": 3.0
+    },
+    "nutrient_heater": {
+      "available": false,
+      "max_power_w": 150.0,
+      "efficiency": 0.95
+    }
+  }
+}

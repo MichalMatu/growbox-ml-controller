@@ -5,12 +5,24 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from ..profile import default_profile, profile_to_scenario
 from ..simulator import (
     ControlAction,
     SequentialEnvironmentSimulator,
     default_scenario_v2,
 )
 from .camera import attach_camera_controls, bind_camera_keys, set_standard_view
+from .config import (
+    MENU_SECTIONS,
+    ConfigEditor,
+    apply_editor_to_simulator,
+    bump_growbox_config,
+    flat_from_profile,
+    move_cursor,
+    needs_geometry_rebuild,
+    read_growbox_config,
+    toggle_flag_at_cursor,
+)
 from .hud import set_hud
 from .meshes import (
     add_static_scene,
@@ -96,15 +108,25 @@ def run_rollout(
 
 
 def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
-    """Live loop: geometry once; fan only toggles arrow visibility + HUD text."""
+    """Live loop: geometry once; fan toggles arrows; ``p`` edits growbox config."""
     pv = require_pyvista()
     try:
         pv.global_theme.multi_samples = 0
     except Exception:
         pass
-    sim = SequentialEnvironmentSimulator(default_scenario_v2(seed=seed), seed=seed)
+    profile = default_profile(profile_id="live-default", title="Live twin default")
+    sim = SequentialEnvironmentSimulator(profile_to_scenario(profile, seed=seed), seed=seed)
     state = {"heater": 0.0, "fan": 0.0, "humidifier": 0.0, "steps": 0}
     cache: dict[str, Any] = {"arrow_ready": False, "ready": False}
+    editor = ConfigEditor(
+        active=False,
+        level="root",
+        section="chamber",
+        menu_cursor=0,
+        cursor=0,
+        profile=profile,
+        values=flat_from_profile(profile),
+    )
 
     win = (1200, 860)
     pl = pv.Plotter(window_size=win)
@@ -121,11 +143,12 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
             humidifier=state["humidifier"],
         )
 
-    def refresh(*, hard: bool = False) -> None:
+    def refresh(*, hard: bool = False, legend: bool | None = None) -> None:
         force_mono_render(pl)
         snap = snapshot_from_simulator(sim, action=action())
+        show_legend = True if legend is None else legend
         if hard or not cache.get("ready"):
-            # Full rebuild only on start/reset — never clear_actors mid-session.
+            # Full rebuild only on start/reset/geometry config — never clear_actors mid-session.
             for name in list(getattr(pl, "actors", {}) or {}):
                 safe_remove(pl, name)
             for name in (
@@ -162,7 +185,7 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
             cache["ready"] = True
             ensure_arrow_actors(pl, pv, snap, float(cache["box_len"]), cache)
             set_arrows_visible(pl, snap.action.fan > 0.02, cache)
-            set_hud(pl, snap, legend=True)
+            set_hud(pl, snap, legend=True, config_editor=editor)
             set_standard_view(pl, "home")
             force_mono_render(pl)
             return
@@ -178,12 +201,14 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
             if 0 <= index < len(snap.pot_moisture)
         ]
         set_pot_labels(pl, pot_labels)
-        set_hud(pl, snap, legend=False)
+        set_hud(pl, snap, legend=show_legend, config_editor=editor)
         set_arrows_visible(pl, snap.action.fan > 0.02, cache)
         force_mono_render(pl)
         pl.render()
 
     def set_cmd(key: str, value: float) -> None:
+        if editor.active:
+            return
         # Always kill stereo first — VTK may still fire default '3' stereo toggle.
         force_mono_render(pl)
         state[key] = _clip01(value)
@@ -191,12 +216,16 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
         force_mono_render(pl)
 
     def bump(key: str, delta: float) -> None:
+        if editor.active:
+            return
         force_mono_render(pl)
         state[key] = _clip01(state[key] + delta)
         refresh(hard=False)
         force_mono_render(pl)
 
     def step_once() -> None:
+        if editor.active:
+            return
         if state["steps"] >= max_auto_steps:
             return
         force_mono_render(pl)
@@ -205,6 +234,8 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
         refresh(hard=False)
 
     def reset_sim() -> None:
+        if editor.active:
+            return
         force_mono_render(pl)
         sim.reset(seed=seed)
         state["steps"] = 0
@@ -212,13 +243,107 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
         state["fan"] = 0.0
         state["humidifier"] = 0.0
         cache["ready"] = False
+        editor.profile = None
+        editor.values = read_growbox_config(sim)
         refresh(hard=True)
+
+    def toggle_config() -> None:
+        """p always exits fully if open; otherwise opens root menu."""
+        force_mono_render(pl)
+        if editor.active:
+            editor.close()
+            refresh(hard=False, legend=True)
+        else:
+            editor.open_root(sim)
+            refresh(hard=False, legend=True)
+        force_mono_render(pl)
+
+    def config_back() -> None:
+        if not editor.active:
+            return
+        try:
+            force_mono_render(pl)
+            editor.back()
+            refresh(hard=False, legend=True)
+            force_mono_render(pl)
+        except Exception:
+            force_mono_render(pl)
+
+    def config_move(delta: int) -> None:
+        if not editor.active:
+            return
+        try:
+            force_mono_render(pl)
+            editor.ensure_values(sim)
+            if editor.level == "root":
+                editor.menu_cursor = move_cursor(
+                    editor.menu_cursor, delta, n_items=len(MENU_SECTIONS)
+                )
+            elif editor.is_flag_section():
+                editor.cursor = move_cursor(editor.cursor, delta, n_items=len(editor.flags()))
+            else:
+                editor.cursor = move_cursor(editor.cursor, delta, n_items=len(editor.fields()))
+            refresh(hard=False, legend=True)
+            force_mono_render(pl)
+        except Exception:
+            force_mono_render(pl)
+
+    def config_enter() -> None:
+        if not editor.active:
+            return
+        try:
+            force_mono_render(pl)
+            if editor.level == "root":
+                editor.enter_section()
+                refresh(hard=False, legend=True)
+            elif editor.is_flag_section():
+                toggle_flag_at_cursor(editor)
+                apply_editor_to_simulator(sim, editor)
+                refresh(hard=False, legend=True)
+            force_mono_render(pl)
+        except Exception:
+            force_mono_render(pl)
+
+    def config_bump(direction: int, *, coarse: bool = False) -> None:
+        if not editor.active or editor.level != "section":
+            return
+        try:
+            force_mono_render(pl)
+            if editor.is_flag_section():
+                # Any ± toggles ON/off
+                toggle_flag_at_cursor(editor)
+                apply_editor_to_simulator(sim, editor)
+                refresh(hard=False, legend=True)
+            else:
+                cfg = editor.ensure_values(sim)
+                editor.values = bump_growbox_config(
+                    cfg,
+                    editor.cursor,
+                    direction=direction,
+                    coarse=coarse,
+                    section=editor.section,
+                )
+                changed = apply_editor_to_simulator(sim, editor)
+                hard = needs_geometry_rebuild(changed)
+                if hard:
+                    cache["ready"] = False
+                refresh(hard=hard, legend=True)
+            force_mono_render(pl)
+        except Exception:
+            force_mono_render(pl)
 
     # One clear + one full bind (camera keys must be re-added after clear).
     clear_vtk_default_keys(pl)
     bind_camera_keys(pl)
+
+    def space_key() -> None:
+        if editor.active and editor.level == "section" and editor.is_flag_section():
+            config_enter()
+        else:
+            step_once()
+
     pl.add_key_event("s", step_once)
-    pl.add_key_event("space", step_once)
+    pl.add_key_event("space", space_key)
     pl.add_key_event("r", reset_sim)
     pl.add_key_event("1", lambda: set_cmd("heater", 1.0))
     pl.add_key_event("2", lambda: set_cmd("heater", 0.0))
@@ -233,6 +358,37 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
     pl.add_key_event("u", lambda: bump("humidifier", 0.25))
     pl.add_key_event("U", lambda: bump("humidifier", -0.25))
     pl.add_key_event("m", lambda: (force_mono_render(pl), pl.render()))
+
+    # Configurator: root menu → sections (keyboard only).
+    pl.add_key_event("p", toggle_config)
+    pl.add_key_event("P", toggle_config)
+    pl.add_key_event("Escape", config_back)
+    pl.add_key_event("j", lambda: config_move(1))
+    pl.add_key_event("k", lambda: config_move(-1))
+    pl.add_key_event("Down", lambda: config_move(1))
+    pl.add_key_event("Up", lambda: config_move(-1))
+    pl.add_key_event("Return", config_enter)
+    pl.add_key_event("KP_Enter", config_enter)
+    pl.add_key_event("minus", lambda: config_bump(-1))
+    pl.add_key_event(
+        "equal",
+        lambda: (config_enter() if editor.active and editor.level == "root" else config_bump(1)),
+    )
+    pl.add_key_event("-", lambda: config_bump(-1))
+    pl.add_key_event(
+        "=",
+        lambda: (config_enter() if editor.active and editor.level == "root" else config_bump(1)),
+    )
+    pl.add_key_event("plus", lambda: config_bump(1))
+    pl.add_key_event("bracketleft", lambda: config_bump(-1, coarse=True))
+    pl.add_key_event("bracketright", lambda: config_bump(1, coarse=True))
+    pl.add_key_event("[", lambda: config_bump(-1, coarse=True))
+    pl.add_key_event("]", lambda: config_bump(1, coarse=True))
+    pl.add_key_event("Left", lambda: config_bump(-1))
+    pl.add_key_event(
+        "Right",
+        lambda: (config_enter() if editor.active and editor.level == "root" else config_bump(1)),
+    )
 
     refresh(hard=True)
     force_mono_render(pl)

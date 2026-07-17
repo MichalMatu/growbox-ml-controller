@@ -90,21 +90,29 @@ def pot_centers(box: BoxGeometry, n_pots: int = MAX_POTS) -> list[tuple[float, f
     return [(x, y, z) for _i, x, y, z in pot_layout_positions(box, active)]
 
 
-def pot_radius_height(box: BoxGeometry) -> tuple[float, float]:
+def pot_radius_height(
+    box: BoxGeometry,
+    pot_volume_l: float = 12.0,
+) -> tuple[float, float]:
     """Stocky nursery-pot proportions (diameter ≳ height), not a thin tube.
 
-    Roughly a ~12 L pot in a ~0.8 m³ tent: wide cylinder, modest height.
+    Baseline is a ~12 L pot in a ~0.8 m³ tent. Physical pot volume scales the
+    mesh as volume^(1/3) so 6 L / 24 L read as smaller / larger cylinders.
     """
     sx, sy, sz = box.size_xyz
     # Diameter ~30% of shorter floor side — stocky nursery pot, not a pin/tube
     diameter = 0.30 * min(sx, sy)
+    # Scale linear size with cube-root of volume vs 12 L reference pot
+    vol_scale = (max(1.0, float(pot_volume_l)) / 12.0) ** (1.0 / 3.0)
+    diameter *= vol_scale
     radius = 0.5 * diameter
     # Height slightly less than diameter (wide pot look)
     height = 0.88 * diameter
     # Cap so pot never dominates chamber height
     height = min(height, 0.28 * sz)
     radius = min(radius, 0.5 * height / 0.88)
-    return max(0.10, radius), max(0.14, height)
+    # Soft floor so tiny pots stay visible; still shrinks vs default
+    return max(0.06, radius), max(0.08, height)
 
 
 @dataclass(frozen=True)
@@ -218,6 +226,7 @@ class TwinSnapshot:
     pot_moisture: tuple[float, ...]
     pot_temperature: tuple[float, ...]
     pot_active: tuple[bool, ...]
+    pot_volume_l: tuple[float, ...]
     exchange: ExchangeField
     elapsed_s: float
     action: ControlAction
@@ -289,12 +298,14 @@ def snapshot_from_simulator(
     moisture: list[float] = []
     soil_t: list[float] = []
     active: list[bool] = []
+    pot_volumes: list[float] = []
     for index in range(MAX_POTS):
         pot_cfg = scenario.pots[index]
         pot_st = state.pots[index]
         active.append(bool(pot_cfg.available))
         moisture.append(float(pot_st.soil_moisture_pct))
         soil_t.append(float(pot_st.soil_temperature_c))
+        pot_volumes.append(float(pot_cfg.cultivation.pot_volume_l))
     return TwinSnapshot(
         box=box,
         air_temperature_c=state.air_temperature_c,
@@ -306,6 +317,7 @@ def snapshot_from_simulator(
         pot_moisture=tuple(moisture),
         pot_temperature=tuple(soil_t),
         pot_active=tuple(active),
+        pot_volume_l=tuple(pot_volumes),
         exchange=exchange,
         elapsed_s=float(simulator.elapsed_s),
         action=action,

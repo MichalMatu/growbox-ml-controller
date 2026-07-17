@@ -12,6 +12,9 @@
 | `tools/ml/twin/camera.py` | Camera presets + trackball |
 | `tools/ml/twin/plotter.py` | Background, stereo guard, plotter setup |
 | `tools/ml/twin/live.py` | Snapshot / rollout / live loop |
+| `tools/ml/profile.py` | **GrowboxProfile** — hardware profile (chamber/pots/sensors/outputs) |
+| `profiles/*.json` | Saved profiles (example: `example-single-pot.json`) |
+| `tools/ml/twin/config.py` | Twin keyboard editor: subsections **chamber** / **pots** |
 | `tools/ml/twin/cli.py` | argparse + main |
 | `tools/ml/twin_view.py` | Thin CLI re-export (`python -m tools.ml.twin_view`) |
 | `tools/ml/twin_scene.py` | Thin re-export of `twin.scene` (compat) |
@@ -64,6 +67,55 @@ python -m tools.ml.twin_view --steps 20 --heater 1 --interactive
 python -m tools.ml.twin_view --live
 ```
 
+### Menu map (live twin) — variant A
+
+```text
+python -m tools.ml.twin_view --live
+│
+├─ RUNTIME  (default)
+│    p ──────────────────────────────┐
+│                                    ▼
+└─ CONFIGURATOR root  (EN labels)
+     ┌────────────────────────┐
+     │ configurator           │
+     │ > Chamber              │  j/k select
+     │   Pots                 │  Enter / = open
+     │   Sensors              │  Esc / p exit → RUNTIME
+     │   Outputs              │
+     └────────────────────────┘
+              │ Enter
+     ┌────────┼────────┬────────────┐
+     ▼        ▼        ▼            ▼
+  Chamber   Pots    Sensors      Outputs
+  volume    active  air T ON/off heater ON/off
+  thermal   pot L   …            fan …
+  heat loss water   pot soil …   irr pot N …
+  leak ACH          lights       heat mat …
+     │        │        │            │
+     Esc ─────┴────────┴────────────┘ → back to root
+     p → always full exit to RUNTIME
+```
+
+```mermaid
+flowchart TB
+  START["twin --live"] --> RUNTIME
+  RUNTIME -->|"p"| ROOT["configurator root"]
+  ROOT -->|"p"| RUNTIME
+  ROOT -->|"Esc"| RUNTIME
+  ROOT -->|"Enter"| CH[Chamber]
+  ROOT -->|"Enter"| POT[Pots]
+  ROOT -->|"Enter"| SEN[Sensors]
+  ROOT -->|"Enter"| OUT[Outputs]
+  CH -->|"Esc"| ROOT
+  POT -->|"Esc"| ROOT
+  SEN -->|"Esc"| ROOT
+  OUT -->|"Esc"| ROOT
+  CH --> PROF[(GrowboxProfile)]
+  POT --> PROF
+  SEN --> PROF
+  OUT --> PROF
+```
+
 ### Live keys
 
 | Key | Action |
@@ -82,7 +134,42 @@ python -m tools.ml.twin_view --live
 | `0` | camera side |
 | `i` | pure isometric |
 | `m` | force mono (if VTK stereo left purple) |
+| `p` | **configurator** — root menu (Chamber / Pots / Sensors / Outputs) |
 | mouse drag | rotate / pan / zoom (trackball) |
+
+### Configurator (`p`) — variant A
+
+Keyboard-only. Edits a **GrowboxProfile** (board payload + future training).
+
+| Context | Key | Action |
+|---------|-----|--------|
+| root | `j` / `k` | select section |
+| root | `Enter` / `=` / `→` | open section |
+| root | `Esc` / `p` | exit to RUNTIME |
+| section | `j` / `k` | next / prev field |
+| section numeric | `-` / `=` / `[` / `]` | value step |
+| section flags | `-` / `=` / `space` | toggle ON/off |
+| section | `Esc` | back to root menu |
+| any | `p` | full exit to RUNTIME |
+
+**Chamber** — volume, thermal mass, heat loss, leak ACH
+**Pots** — active pots, pot volume L, pot water cap
+**Sensors** — validity toggles (air/out/CO₂/nutrient/lights + P1–P4 soil)
+**Outputs** — available toggles (heater/fan/humid/… + irr/mat per pot)
+
+Geometry keys (`volume`, `active pots`, `pot volume`) trigger a hard scene rebuild.
+
+Python API:
+
+```python
+from tools.ml.profile import default_profile, load_profile, profile_to_scenario, profile_to_payload
+
+profile = load_profile("profiles/example-single-pot.json")
+scenario = profile_to_scenario(profile, seed=0)
+payload = profile_to_payload(profile)  # panel / board shape
+```
+
+Planned next subsections (not in twin keyboard yet): **sensors**, **outputs**.
 
 
 ## Honest limits

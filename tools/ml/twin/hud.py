@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from typing import Any
 
+from .config import ConfigEditor, editor_panel
 from .plotter import safe_remove
 from .scene import TwinSnapshot
 
-# Compact HUD tables (in-scene labels use a larger size in meshes.py)
 FONT_FAMILY = "courier"
 FONT_SIZE = 12
 FONT_COLOR = "white"
@@ -29,7 +29,6 @@ def hud_table(title: str, rows: list[tuple[str, str]]) -> str:
 
 
 def runtime_controls_table() -> str:
-    """Simulation / actuator keys (lower-left)."""
     return hud_table(
         "runtime",
         [
@@ -41,14 +40,48 @@ def runtime_controls_table() -> str:
             ("h / H", "heater ±0.25"),
             ("f / F", "fan ±0.25"),
             ("u / U", "humid ±0.25"),
+            ("p", "configurator"),
             ("green", "INLET"),
             ("blue", "OUTLET"),
         ],
     )
 
 
+def config_root_keys_table() -> str:
+    return hud_table(
+        "config menu",
+        [
+            ("j / k", "select section"),
+            ("Enter / =", "open section"),
+            ("p / Esc", "exit"),
+        ],
+    )
+
+
+def config_section_keys_table(*, flags: bool) -> str:
+    if flags:
+        return hud_table(
+            "config keys",
+            [
+                ("j / k", "next / prev"),
+                ("- / = / sp", "toggle ON/off"),
+                ("Esc", "back to menu"),
+                ("p", "exit config"),
+            ],
+        )
+    return hud_table(
+        "config keys",
+        [
+            ("j / k", "next / prev field"),
+            ("- / =", "value - / +"),
+            ("[ / ]", "coarse - / +"),
+            ("Esc", "back to menu"),
+            ("p", "exit config"),
+        ],
+    )
+
+
 def view_controls_table() -> str:
-    """Camera / view keys only (lower-right)."""
     return hud_table(
         "view",
         [
@@ -59,15 +92,26 @@ def view_controls_table() -> str:
             ("i", "ISO"),
             ("mouse", "orbit / pan / zoom"),
             ("m", "force mono"),
+            ("p", "configurator"),
         ],
     )
 
 
-def set_hud(pl: Any, snap: TwinSnapshot, *, legend: bool) -> None:
-    """Parameters upper-left; runtime keys lower-left; view keys lower-right."""
+def set_hud(
+    pl: Any,
+    snap: TwinSnapshot,
+    *,
+    legend: bool,
+    config_editor: ConfigEditor | None = None,
+) -> None:
+    """Parameters / configurator upper-left; keys lower-left / lower-right."""
     safe_remove(pl, "params")
+    if config_editor is not None and config_editor.active:
+        panel = editor_panel(config_editor)
+    else:
+        panel = snap.params_table()
     pl.add_text(
-        snap.params_table(),
+        panel,
         position="upper_left",
         font_size=FONT_SIZE,
         color=FONT_COLOR,
@@ -78,8 +122,15 @@ def set_hud(pl: Any, snap: TwinSnapshot, *, legend: bool) -> None:
         safe_remove(pl, "help")
         safe_remove(pl, "runtime_keys")
         safe_remove(pl, "view_keys")
+        if config_editor is not None and config_editor.active:
+            if config_editor.level == "root":
+                left = config_root_keys_table()
+            else:
+                left = config_section_keys_table(flags=config_editor.is_flag_section())
+        else:
+            left = runtime_controls_table()
         pl.add_text(
-            runtime_controls_table(),
+            left,
             position="lower_left",
             font_size=FONT_SIZE,
             color=FONT_COLOR,

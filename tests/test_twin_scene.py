@@ -45,6 +45,15 @@ def test_pot_is_stocky_not_thin_tube():
     assert height / (2.0 * radius) < 1.15
 
 
+def test_pot_mesh_scales_with_physical_volume():
+    box = box_from_volume(0.8)
+    r_small, h_small = pot_radius_height(box, pot_volume_l=6.0)
+    r_ref, h_ref = pot_radius_height(box, pot_volume_l=12.0)
+    r_big, h_big = pot_radius_height(box, pot_volume_l=24.0)
+    assert r_small < r_ref < r_big
+    assert h_small < h_ref < h_big
+
+
 def test_fan_drives_inlet_outlet_arrows_not_walls():
     box = box_from_volume(0.8)
     idle = exchange_field(
@@ -99,3 +108,78 @@ def test_scene_labels_larger_than_hud_font():
 
     assert twin_view._SCENE_LABEL_FONT_SIZE > twin_view._FONT_SIZE
     assert twin_view._pot_label_text(0, 42.4) == "P1 θ=42%"
+
+
+def test_growbox_config_section_complete_and_apply():
+    """Full growbox section: env parameters + active pot count."""
+    from tools.ml.twin.config import (
+        GEOMETRY_KEYS,
+        GROWBOX_FIELDS,
+        GrowboxConfig,
+        apply_growbox_config,
+        bump_growbox_config,
+        config_table,
+        needs_geometry_rebuild,
+        read_growbox_config,
+    )
+
+    keys = {f.key for f in GROWBOX_FIELDS}
+    assert keys == {
+        "growbox_volume_m3",
+        "thermal_mass_j_per_k",
+        "heat_loss_w_per_k",
+        "air_leak_rate_ach",
+        "active_pots",
+        "pot_volume_l",
+        "substrate_water_capacity_ml",
+    }
+
+    sim = SequentialEnvironmentSimulator(default_scenario_v2(seed=0), seed=0)
+    before = read_growbox_config(sim)
+    assert before.active_pots == 1
+    assert before.growbox_volume_m3 == 0.8
+    assert before.pot_volume_l == 12.0
+
+    cfg = GrowboxConfig(
+        growbox_volume_m3=1.2,
+        thermal_mass_j_per_k=40_000.0,
+        heat_loss_w_per_k=9.0,
+        air_leak_rate_ach=0.5,
+        active_pots=3,
+        pot_volume_l=18.0,
+        substrate_water_capacity_ml=4500.0,
+    )
+    changed = apply_growbox_config(sim, cfg)
+    assert "growbox_volume_m3" in changed
+    assert "active_pots" in changed
+    assert "pot_volume_l" in changed
+    assert needs_geometry_rebuild(changed)
+    assert GEOMETRY_KEYS == frozenset({"growbox_volume_m3", "active_pots", "pot_volume_l"})
+
+    after = read_growbox_config(sim)
+    assert after.growbox_volume_m3 == 1.2
+    assert after.thermal_mass_j_per_k == 40_000.0
+    assert after.heat_loss_w_per_k == 9.0
+    assert after.air_leak_rate_ach == 0.5
+    assert after.active_pots == 3
+    assert after.pot_volume_l == 18.0
+    assert after.substrate_water_capacity_ml == 4500.0
+    assert [p.available for p in sim.scenario.pots] == [True, True, True, False]
+    assert all(p.cultivation.pot_volume_l == 18.0 for p in sim.scenario.pots if p.available)
+
+    # Bump chamber volume field (index 0) by one fine step
+    bumped = bump_growbox_config(after, 0, direction=1, coarse=False, section="chamber")
+    assert bumped.growbox_volume_m3 == 1.3
+
+    pot_bumped = bump_growbox_config(after, 1, direction=1, coarse=False, section="pots")
+    assert pot_bumped.pot_volume_l == 19.0
+    assert pot_bumped.substrate_water_capacity_ml > after.substrate_water_capacity_ml
+
+    table = config_table(after, cursor=0, section="chamber")
+    assert "config:Chamber" in table
+    assert ">volume" in table
+    assert "1.20 m3" in table
+    pots_table = config_table(after, cursor=0, section="pots")
+    assert "active pots" in pots_table
+    assert "pot volume" in pots_table
+    assert "pot water cap" in pots_table

@@ -25,6 +25,7 @@ simulator skeleton**. Committed MLP weights are `untrained-placeholder` until th
 | Open-loop calibration fit | **done** | `calibration.py` + `python -m tools.ml.calibrate_simulator` |
 | Real-box coefficient fit | **pending data** | run protocol on hardware NDJSON / series |
 | Scientific 3D twin view (PyVista) | **done (optional)** | `tools/ml/twin/` (+ thin `twin_view` / `twin_scene` re-exports) — glyphs ≠ CFD |
+| GrowboxProfile (hardware config) | **done (core)** | `tools/ml/profile.py` + `profiles/*.json` → Scenario + panel payload |
 
 ## What “ready for skeleton” means
 
