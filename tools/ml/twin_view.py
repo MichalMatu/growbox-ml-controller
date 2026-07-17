@@ -53,14 +53,15 @@ def _legend_table() -> str:
         ("h / H", "heater ±0.25"),
         ("f / F", "fan ±0.25"),
         ("u / U", "humid ±0.25"),
-        ("7", "camera ISO"),
+        ("7 / c", "HOME (product)"),
         ("8", "camera TOP"),
         ("9", "camera FRONT"),
         ("0", "camera SIDE"),
+        ("i", "camera ISO"),
         ("green ring", "INLET"),
         ("blue ring", "OUTLET"),
         ("arrows", "1 at inlet + 1 at outlet"),
-        ("cube (R)", "drag faces = view"),
+        ("cube (R)", "view cube · axis dots"),
     ]
     label_w = max(len(k) for k, _ in rows)
     value_w = max(len(v) for _, v in rows)
@@ -312,48 +313,100 @@ def _clip01(value: float) -> float:
 
 
 def _set_standard_view(pl: Any, name: str) -> None:
-    """Apply a CAD-style orthographic/isometric preset and re-fit the box."""
-    if name == "iso":
+    """Apply a CAD-style view preset and re-fit the box."""
+    if name == "home":
+        # Product / Fusion-style home: pot on the floor, slight high 3/4 angle.
         pl.view_isometric()
+        pl.reset_camera()
+        cam = pl.camera
+        # Elevate a bit more than pure iso so the floor + pot read clearly.
+        try:
+            cam.elevation(18.0)
+            cam.azimuth(-12.0)
+            cam.zoom(1.05)
+        except Exception:
+            # Fallback absolute camera if elevation API differs
+            b = pl.bounds
+            cx = 0.5 * (b[0] + b[1])
+            cy = 0.5 * (b[2] + b[3])
+            cz = 0.5 * (b[4] + b[5])
+            span = max(b[1] - b[0], b[3] - b[2], b[5] - b[4], 0.5)
+            pl.camera_position = [
+                (cx + 1.55 * span, cy - 1.65 * span, cz + 1.15 * span),
+                (cx, cy, cz - 0.12 * span),
+                (0.0, 0.0, 1.0),
+            ]
+    elif name == "iso":
+        pl.view_isometric()
+        pl.reset_camera()
     elif name == "top":
         pl.view_xy()
+        pl.reset_camera()
     elif name == "front":
         pl.view_xz()
+        pl.reset_camera()
     elif name == "side":
         pl.view_yz()
+        pl.reset_camera()
     else:
-        pl.view_isometric()
-    pl.reset_camera()
+        _set_standard_view(pl, "home")
+        return
     pl.reset_camera_clipping_range()
     pl.render()
+
+
+def _style_camera_orientation_widget(widget: Any) -> None:
+    """Larger spacing between axis handles; pull widget in from screen edge."""
+    try:
+        rep = widget.GetRepresentation()
+    except Exception:
+        return
+    try:
+        rep.AnchorToUpperRight()
+    except Exception:
+        pass
+    try:
+        # Bigger panel + more padding from window edge (default pad was 10,10)
+        rep.SetSize(200, 200)
+        rep.SetPadding(36, 36)
+    except Exception:
+        pass
+    try:
+        # Smaller handle dots relative to panel → more space between them
+        rep.SetNormalizedHandleDia(0.26)
+    except Exception:
+        pass
 
 
 def _attach_camera_controls(pl: Any) -> None:
     """Fusion-like camera aids: orientation cube (upper-right) + view keys.
 
-    VTK camera orientation widget = clickable/draggable view cube.
-    Keys 7/8/9/0 snap to ISO / TOP / FRONT / SIDE without fighting trackball.
+    - View cube axis dots: click/drag (styled larger spacing, inset from edge).
+    - Keys: 7/c = HOME product view, 8 TOP, 9 FRONT, 0 SIDE, i pure ISO.
     """
     try:
         pl.enable_trackball_style()
     except Exception:
         pass
+    widget = None
     try:
-        # Interactive view cube (upper-right corner of the 3D view)
-        pl.add_camera_orientation_widget(animate=True)
+        widget = pl.add_camera_orientation_widget(animate=True)
     except TypeError:
         try:
-            pl.add_camera_orientation_widget()
+            widget = pl.add_camera_orientation_widget()
         except Exception:
-            # Older / headless builds — keys still work
-            pass
+            widget = None
     except Exception:
-        pass
+        widget = None
+    if widget is not None:
+        _style_camera_orientation_widget(widget)
 
-    pl.add_key_event("7", lambda: _set_standard_view(pl, "iso"))
+    pl.add_key_event("7", lambda: _set_standard_view(pl, "home"))
+    pl.add_key_event("c", lambda: _set_standard_view(pl, "home"))
     pl.add_key_event("8", lambda: _set_standard_view(pl, "top"))
     pl.add_key_event("9", lambda: _set_standard_view(pl, "front"))
     pl.add_key_event("0", lambda: _set_standard_view(pl, "side"))
+    pl.add_key_event("i", lambda: _set_standard_view(pl, "iso"))
 
 
 def run_interactive_live(
@@ -462,7 +515,7 @@ def run_interactive_live(
             name="help",
         )
         if state["first_draw"]:
-            _set_standard_view(pl, "iso")
+            _set_standard_view(pl, "home")
             state["first_draw"] = False
         else:
             pl.render()
