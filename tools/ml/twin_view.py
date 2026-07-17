@@ -40,9 +40,11 @@ _INLET = "#5cb85c"
 _OUTLET = "#5b9bd5"
 _ARROW = "#c8e6f5"
 
-# Camera orientation widget (axis handles only — no fake HOME center control)
-_CAM_CUBE_SIZE = 200
-_CAM_CUBE_PAD = 40
+# Camera orientation widget (VTK built-in; we only size/pad/handle diameter)
+_CAM_CUBE_SIZE = 240
+_CAM_CUBE_PAD = 36
+# Fraction of widget size for each axis handle ball (0–1). Larger = easier to click.
+_CAM_HANDLE_DIA = 0.32
 
 
 def _legend_table() -> str:
@@ -399,13 +401,16 @@ def _set_standard_view(pl: Any, name: str) -> None:
 
 
 def _style_camera_widget(widget: Any) -> None:
-    """Orientation cross: axis handles only (no fake center HOME button)."""
+    """Style VTK camera orientation widget (built-in, not a custom HUD).
+
+    Larger handle diameter = bigger colored axis balls (easier to click).
+    """
     try:
         rep = widget.GetRepresentation()
         rep.AnchorToUpperRight()
         rep.SetSize(_CAM_CUBE_SIZE, _CAM_CUBE_SIZE)
         rep.SetPadding(_CAM_CUBE_PAD, _CAM_CUBE_PAD)
-        rep.SetNormalizedHandleDia(0.18)
+        rep.SetNormalizedHandleDia(_CAM_HANDLE_DIA)
         rep.SetContainerVisibility(False)
     except Exception:
         pass
