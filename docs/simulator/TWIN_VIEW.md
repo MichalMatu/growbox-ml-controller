@@ -13,9 +13,11 @@
 - **Chamber box** — size from `growbox_volume_m3`; color ∝ air **T**; opacity ∝ **RH**
 - **Pots** — up to 4 cylinders; color ∝ **soil moisture**
 - **Outside climate** — only in HUD text (`outside T` / `RH`), no separate mesh
-- **Arrows (glyphs)** — *effective* air exchange from **fan** + **leak ACH**, scaled by climate gap to outside
+- **INLET / OUTLET+FAN** — disks on opposite walls; fan on the **exhaust** port
+- **Arrows** — only when fan is ON: air **in** at inlet, **out** at outlet (not through walls)
 
-Arrows are **illustrative** (lumped ACH / command), not Navier–Stokes streamlines.
+Arrows are **illustrative** (port flow / fan command), not CFD and not wall permeation.
+Real growboxes exchange air through openings, not fabric walls.
 
 ## Install
 

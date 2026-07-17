@@ -88,6 +88,18 @@ class ExchangeField:
     outside_humidity_pct: float
 
 
+def vent_port_centers(
+    box: BoxGeometry,
+) -> tuple[tuple[float, float, float], tuple[float, float, float]]:
+    """Inlet (−X wall) and outlet (+X wall) opening centers (fan on outlet)."""
+    hx, _hy, hz = box.half
+    height = 2.0 * hz
+    z = 0.55 * height  # slightly above mid-height, typical duct height cue
+    inlet = (-hx, 0.0, z)
+    outlet = (hx, 0.0, z)
+    return inlet, outlet
+
+
 def exchange_field(
     box: BoxGeometry,
     *,
@@ -99,17 +111,21 @@ def exchange_field(
     air_temperature_c: float,
     air_humidity_pct: float,
 ) -> ExchangeField:
-    """Build glyph field from fan + leak (not Navier–Stokes).
+    """Build glyphs for **inlet / outlet** air path only (not through walls).
 
-    - Fan: stronger horizontal through-flow along +X (inlet −X → outlet +X).
-    - Leak: weaker vertical / wall exchange proportional to ACH.
-    Magnitude scales with command and |inside − outside| climate gap (visual cue).
+    Hardware model:
+    - sealed walls (no permeation arrows),
+    - inlet opening on −X,
+    - outlet opening on +X with **fan on exhaust**.
+
+    ``air_leak_rate_ach`` is kept in the snapshot for HUD/debug (sim parameter)
+    but is **not** drawn as wall flux — real tents exchange via ports, not fabric.
     """
     fan = min(1.0, max(0.0, float(fan_command)))
     leak = max(0.0, float(air_leak_rate_ach))
     volume = max(0.05, box.volume_m3)
     fan_ach = fan * max(0.0, fan_max_airflow_m3_h) / volume  # 1/h at full map
-    # Climate gap [0, 1] — stronger arrows when driving force is large
+
     t_gap = min(1.0, abs(air_temperature_c - outside_temperature_c) / 15.0)
     rh_gap = min(1.0, abs(air_humidity_pct - outside_humidity_pct) / 50.0)
     gap = 0.35 + 0.65 * max(t_gap, rh_gap)
@@ -121,44 +137,48 @@ def exchange_field(
     mags: list[float] = []
     labels: list[str] = []
 
-    # --- Fan through-flow: 2 layers × mid-line (fewer, larger arrows) ---
-    # World-scale lengths ~0.2–0.45 of box length so glyphs stay readable.
-    fan_scale = 0.35 * box.size_xyz[0] * (0.25 + 0.75 * fan) * gap
-    # Always show a minimum fan cue when command > 0; when off, skip fan arrows.
+    inlet, outlet = vent_port_centers(box)
+    # Flow strength only when fan runs (exhaust pulls air in the inlet).
+    flow = 0.40 * box.size_xyz[0] * (0.30 + 0.70 * fan) * gap
+
     if fan > 0.02:
-        for z_frac in (0.35, 0.65):
-            z = z_frac * height
-            for y_frac in (-0.35, 0.0, 0.35):
-                y = y_frac * hy
-                for x_frac in (-0.7, 0.0, 0.7):
-                    points.append([x_frac * hx, y, z])
-                    vectors.append([fan_scale, 0.0, 0.0])
-                    mags.append(fan_scale)
-                    labels.append("fan")
+        # Inlet: outside → inside (+X)
+        for y_off in (-0.12 * hy, 0.0, 0.12 * hy):
+            for z_off in (-0.08 * height, 0.0, 0.08 * height):
+                points.append([inlet[0] - 0.02 * hx, inlet[1] + y_off, inlet[2] + z_off])
+                vectors.append([flow, 0.0, 0.0])
+                mags.append(flow)
+                labels.append("inlet")
+        # Interior path toward outlet
+        for x_frac in (-0.35, 0.0, 0.35):
+            points.append([x_frac * hx, 0.0, inlet[2]])
+            vectors.append([flow * 0.85, 0.0, 0.0])
+            mags.append(flow * 0.85)
+            labels.append("duct")
+        # Outlet / fan exhaust: inside → outside (+X)
+        for y_off in (-0.12 * hy, 0.0, 0.12 * hy):
+            for z_off in (-0.08 * height, 0.0, 0.08 * height):
+                points.append([outlet[0] + 0.02 * hx, outlet[1] + y_off, outlet[2] + z_off])
+                vectors.append([flow, 0.0, 0.0])
+                mags.append(flow)
+                labels.append("outlet_fan")
 
-    # --- Leak: outward normals on walls (always visible baseline exchange) ---
-    leak_scale = 0.18 * box.size_xyz[0] * max(0.4, min(2.5, leak / 0.25)) * gap
-    wall_samples = [
-        ([0.95 * hx, 0.0, 0.5 * height], [leak_scale, 0.0, 0.0]),
-        ([-0.95 * hx, 0.0, 0.5 * height], [-leak_scale, 0.0, 0.0]),
-        ([0.0, 0.95 * hy, 0.5 * height], [0.0, leak_scale, 0.0]),
-        ([0.0, -0.95 * hy, 0.5 * height], [0.0, -leak_scale, 0.0]),
-        ([0.0, 0.0, 0.95 * height], [0.0, 0.0, leak_scale * 0.7]),
-    ]
-    for pt, vec in wall_samples:
-        points.append(pt)
-        vectors.append(vec)
-        mags.append(float(np.linalg.norm(vec)))
-        labels.append("leak")
+    if not points:
+        pts = np.zeros((0, 3), dtype=np.float64)
+        vecs = np.zeros((0, 3), dtype=np.float64)
+        mags_a = np.zeros((0,), dtype=np.float64)
+        label_t: tuple[str, ...] = ()
+    else:
+        pts = np.asarray(points, dtype=np.float64)
+        vecs = np.asarray(vectors, dtype=np.float64)
+        mags_a = np.asarray(mags, dtype=np.float64)
+        label_t = tuple(labels)
 
-    pts = np.asarray(points, dtype=np.float64)
-    vecs = np.asarray(vectors, dtype=np.float64)
-    mags_a = np.asarray(mags, dtype=np.float64)
     return ExchangeField(
         points=pts,
         vectors=vecs,
         magnitudes=mags_a,
-        labels=tuple(labels),
+        labels=label_t,
         fan_ach_proxy=float(fan_ach),
         leak_ach=float(leak),
         outside_temperature_c=float(outside_temperature_c),

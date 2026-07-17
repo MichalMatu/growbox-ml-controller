@@ -30,7 +30,7 @@ def test_pot_centers_four_on_floor():
     assert all(c[2] == 0.0 for c in centers)
 
 
-def test_fan_increases_exchange_magnitudes():
+def test_fan_drives_inlet_outlet_arrows_not_walls():
     box = box_from_volume(0.8)
     idle = exchange_field(
         box,
@@ -52,13 +52,13 @@ def test_fan_increases_exchange_magnitudes():
         air_temperature_c=28.0,
         air_humidity_pct=70.0,
     )
+    # Sealed walls: no glyphs when fan is off
+    assert idle.points.shape[0] == 0
     assert windy.fan_ach_proxy > idle.fan_ach_proxy
-    # Fan off → only leak arrows; fan on → more vectors and larger mean mag
-    assert windy.points.shape[0] > idle.points.shape[0]
-    assert float(np.mean(windy.magnitudes)) > float(np.mean(idle.magnitudes))
-    assert idle.vectors.shape == idle.points.shape
-    # Leak arrows stay readable (world metres, not pin dots)
-    assert float(np.max(idle.magnitudes)) > 0.05
+    assert windy.points.shape[0] > 0
+    assert float(np.mean(windy.magnitudes)) > 0.05
+    assert "inlet" in windy.labels and "outlet_fan" in windy.labels
+    assert "leak" not in windy.labels
 
 
 def test_snapshot_from_simulator_smoke():

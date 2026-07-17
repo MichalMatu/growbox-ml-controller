@@ -1,7 +1,7 @@
 """Scientific 3D twin view for the lumped growbox simulator (PyVista).
 
-Not a game engine and not CFD — chamber box + pots + exchange glyphs from
-fan / leak / outside driving forces.
+Not a game engine and not CFD — chamber box + pots + inlet/outlet flow glyphs
+(fan on exhaust; no air through walls).
 
 Examples::
 
@@ -34,6 +34,7 @@ from .twin_scene import (
     snapshot_from_simulator,
     soil_moisture_to_rgb,
     temperature_to_rgb,
+    vent_port_centers,
 )
 
 
@@ -92,22 +93,45 @@ def build_plotter_meshes(pv: Any, snap: TwinSnapshot) -> dict[str, Any]:
             )
         )
 
-    # Exchange glyphs — thick arrows; mag already in world metres
-    cloud = pv.PolyData(snap.exchange.points)
-    cloud["vectors"] = snap.exchange.vectors
-    cloud["mag"] = np.maximum(snap.exchange.magnitudes, 1e-6)
-    glyph = cloud.glyph(
-        orient="vectors",
-        scale="mag",
-        factor=1.0,
-        geom=pv.Arrow(
-            tip_length=0.35,
-            tip_radius=0.18,
-            tip_resolution=24,
-            shaft_radius=0.08,
-            shaft_resolution=24,
-        ),
+    # Exchange glyphs — only when fan drives inlet→outlet (ports, not walls)
+    if snap.exchange.points.shape[0] > 0:
+        cloud = pv.PolyData(snap.exchange.points)
+        cloud["vectors"] = snap.exchange.vectors
+        cloud["mag"] = np.maximum(snap.exchange.magnitudes, 1e-6)
+        glyph = cloud.glyph(
+            orient="vectors",
+            scale="mag",
+            factor=1.0,
+            geom=pv.Arrow(
+                tip_length=0.35,
+                tip_radius=0.18,
+                tip_resolution=24,
+                shaft_radius=0.08,
+                shaft_resolution=24,
+            ),
+        )
+    else:
+        glyph = pv.PolyData()
+
+    # Physical openings: inlet (−X) and outlet/fan (+X)
+    inlet_c, outlet_c = vent_port_centers(snap.box)
+    port_r = 0.10 * min(sx, sy)
+    inlet_disk = pv.Disk(center=inlet_c, inner=0.0, outer=port_r, normal=(-1.0, 0.0, 0.0), r_res=24)
+    outlet_disk = pv.Disk(
+        center=outlet_c, inner=0.0, outer=port_r, normal=(1.0, 0.0, 0.0), r_res=24
     )
+    # Small fan body on exhaust (visual cue only)
+    fan_hub = pv.Cylinder(
+        center=(outlet_c[0] + 0.06 * sx, outlet_c[1], outlet_c[2]),
+        direction=(1.0, 0.0, 0.0),
+        radius=port_r * 0.55,
+        height=0.08 * sx,
+        resolution=20,
+    )
+    port_labels = [
+        ((inlet_c[0] - 0.08 * sx, inlet_c[1], inlet_c[2] + 0.12 * sz), "INLET"),
+        ((outlet_c[0] + 0.12 * sx, outlet_c[1], outlet_c[2] + 0.12 * sz), "OUTLET+FAN"),
+    ]
 
     return {
         "chamber": chamber,
@@ -118,6 +142,10 @@ def build_plotter_meshes(pv: Any, snap: TwinSnapshot) -> dict[str, Any]:
         "pot_colors": pot_colors,
         "pot_labels": pot_labels,
         "glyph": glyph,
+        "inlet_disk": inlet_disk,
+        "outlet_disk": outlet_disk,
+        "fan_hub": fan_hub,
+        "port_labels": port_labels,
     }
 
 
@@ -157,6 +185,20 @@ def render_snapshot(
             always_visible=True,
             name=f"pot_label_{i}",
         )
+    pl.add_mesh(meshes["inlet_disk"], color="#4caf50", opacity=0.9, name="inlet")
+    pl.add_mesh(meshes["outlet_disk"], color="#42a5f5", opacity=0.9, name="outlet")
+    pl.add_mesh(meshes["fan_hub"], color="#90caf9", opacity=0.95, name="fan_hub")
+    for i, (pos, label) in enumerate(meshes["port_labels"]):
+        pl.add_point_labels(
+            [pos],
+            [label],
+            font_size=16,
+            text_color="white",
+            point_size=0,
+            shape=None,
+            always_visible=True,
+            name=f"port_label_{i}",
+        )
     if meshes["glyph"].n_points > 0:
         pl.add_mesh(
             meshes["glyph"],
@@ -171,9 +213,8 @@ def render_snapshot(
         (
             f"outside T={snap.outside_temperature_c:.1f}°C  "
             f"RH={snap.outside_humidity_pct:.0f}%  |  "
-            f"exchange: fan_ACH≈{snap.exchange.fan_ach_proxy:.1f}/h  "
-            f"leak={snap.exchange.leak_ach:.2f}/h\n"
-            "Cylinder = pot  |  Cyan arrows = air exchange (not CFD)"
+            f"fan_ACH≈{snap.exchange.fan_ach_proxy:.1f}/h\n"
+            "INLET / OUTLET+FAN only — no air through walls  |  arrows when fan ON"
         ),
         position="lower_left",
         font_size=14,
@@ -264,7 +305,7 @@ def run_interactive_live(
             f"cmd heater={state['heater']:.2f} fan={state['fan']:.2f} "
             f"humid={state['humidifier']:.2f}\n"
             "keys: s=step  r=reset  1/2 heater  3/4 fan  5/6 humid  |  "
-            "arrows = lumped exchange (not CFD)"
+            "arrows = inlet→outlet when fan ON"
         )
 
     def redraw() -> None:
@@ -294,13 +335,27 @@ def run_interactive_live(
                 always_visible=True,
                 name=f"pot_label_{i}",
             )
+        pl.add_mesh(meshes["inlet_disk"], color="#4caf50", opacity=0.9, name="inlet")
+        pl.add_mesh(meshes["outlet_disk"], color="#42a5f5", opacity=0.9, name="outlet")
+        pl.add_mesh(meshes["fan_hub"], color="#90caf9", opacity=0.95, name="fan_hub")
+        for i, (pos, label) in enumerate(meshes["port_labels"]):
+            pl.add_point_labels(
+                [pos],
+                [label],
+                font_size=16,
+                text_color="white",
+                point_size=0,
+                shape=None,
+                always_visible=True,
+                name=f"port_label_{i}",
+            )
         if meshes["glyph"].n_points > 0:
             pl.add_mesh(meshes["glyph"], color="#6ec6ff", opacity=0.95, name="exchange")
         pl.add_text(snap.title(), font_size=16, color="white", name="title")
         pl.add_text(
             help_text()
             + f"\noutside T={snap.outside_temperature_c:.1f}°C RH={snap.outside_humidity_pct:.0f}%"
-            " | cylinder=pot | cyan arrows=exchange",
+            " | green=INLET blue=OUTLET+FAN | arrows only when fan ON",
             position="lower_left",
             font_size=14,
             color="lightgray",
