@@ -115,7 +115,6 @@ def test_growbox_config_section_complete_and_apply():
     from tools.ml.twin.config import (
         GEOMETRY_KEYS,
         GROWBOX_FIELDS,
-        GrowboxConfig,
         apply_growbox_config,
         bump_growbox_config,
         config_table,
@@ -124,7 +123,8 @@ def test_growbox_config_section_complete_and_apply():
     )
 
     keys = {f.key for f in GROWBOX_FIELDS}
-    assert keys == {
+    # Chamber + expanded pot physical/irrigation template
+    assert {
         "growbox_volume_m3",
         "thermal_mass_j_per_k",
         "heat_loss_w_per_k",
@@ -132,7 +132,12 @@ def test_growbox_config_section_complete_and_apply():
         "active_pots",
         "pot_volume_l",
         "substrate_water_capacity_ml",
-    }
+        "transpiration_factor",
+        "irrigation_flow_ml_s",
+        "irrigation_maximum_pulse_s",
+        "irrigation_minimum_interval_s",
+        "heat_mat_max_power_w",
+    }.issubset(keys)
 
     sim = SequentialEnvironmentSimulator(default_scenario_v2(seed=0), seed=0)
     before = read_growbox_config(sim)
@@ -140,14 +145,15 @@ def test_growbox_config_section_complete_and_apply():
     assert before.growbox_volume_m3 == 0.8
     assert before.pot_volume_l == 12.0
 
-    cfg = GrowboxConfig(
-        growbox_volume_m3=1.2,
-        thermal_mass_j_per_k=40_000.0,
-        heat_loss_w_per_k=9.0,
-        air_leak_rate_ach=0.5,
-        active_pots=3,
-        pot_volume_l=18.0,
-        substrate_water_capacity_ml=4500.0,
+    base = read_growbox_config(sim)
+    cfg = (
+        base.with_value("growbox_volume_m3", 1.2)
+        .with_value("thermal_mass_j_per_k", 40_000.0)
+        .with_value("heat_loss_w_per_k", 9.0)
+        .with_value("air_leak_rate_ach", 0.5)
+        .with_value("active_pots", 3)
+        .with_value("pot_volume_l", 18.0)
+        .with_value("substrate_water_capacity_ml", 4500.0)
     )
     changed = apply_growbox_config(sim, cfg)
     assert "growbox_volume_m3" in changed

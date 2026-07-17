@@ -59,22 +59,14 @@ def config_root_keys_table() -> str:
 
 
 def config_section_keys_table(*, flags: bool) -> str:
-    if flags:
-        return hud_table(
-            "config keys",
-            [
-                ("j / k", "next / prev"),
-                ("- / = / sp", "toggle ON/off"),
-                ("Esc", "back to menu"),
-                ("p", "exit config"),
-            ],
-        )
+    _ = flags
     return hud_table(
         "config keys",
         [
-            ("j / k", "next / prev field"),
-            ("- / =", "value - / +"),
-            ("[ / ]", "coarse - / +"),
+            ("j / k", "next / prev"),
+            ("- / =", "value or toggle"),
+            ("[ / ]", "coarse step"),
+            ("sp/Enter", "toggle flag"),
             ("Esc", "back to menu"),
             ("p", "exit config"),
         ],

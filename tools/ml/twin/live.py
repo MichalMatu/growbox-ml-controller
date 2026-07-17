@@ -279,10 +279,8 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
                 editor.menu_cursor = move_cursor(
                     editor.menu_cursor, delta, n_items=len(MENU_SECTIONS)
                 )
-            elif editor.is_flag_section():
-                editor.cursor = move_cursor(editor.cursor, delta, n_items=len(editor.flags()))
             else:
-                editor.cursor = move_cursor(editor.cursor, delta, n_items=len(editor.fields()))
+                editor.cursor = move_cursor(editor.cursor, delta, n_items=len(editor.rows()))
             refresh(hard=False, legend=True)
             force_mono_render(pl)
         except Exception:
@@ -296,7 +294,7 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
             if editor.level == "root":
                 editor.enter_section()
                 refresh(hard=False, legend=True)
-            elif editor.is_flag_section():
+            elif editor.is_flag_at_cursor():
                 toggle_flag_at_cursor(editor)
                 apply_editor_to_simulator(sim, editor)
                 refresh(hard=False, legend=True)
@@ -309,8 +307,7 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
             return
         try:
             force_mono_render(pl)
-            if editor.is_flag_section():
-                # Any ± toggles ON/off
+            if editor.is_flag_at_cursor():
                 toggle_flag_at_cursor(editor)
                 apply_editor_to_simulator(sim, editor)
                 refresh(hard=False, legend=True)
@@ -337,7 +334,7 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
     bind_camera_keys(pl)
 
     def space_key() -> None:
-        if editor.active and editor.level == "section" and editor.is_flag_section():
+        if editor.active and editor.level == "section" and editor.is_flag_at_cursor():
             config_enter()
         else:
             step_once()

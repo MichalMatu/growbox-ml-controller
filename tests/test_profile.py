@@ -15,7 +15,6 @@ from tools.ml.profile import (
 )
 from tools.ml.simulator import SequentialEnvironmentSimulator
 from tools.ml.twin.config import (
-    GrowboxConfig,
     apply_growbox_config,
     read_growbox_config,
 )
@@ -67,14 +66,18 @@ def test_example_profile_file_exists():
 def test_apply_flat_via_profile_updates_sim():
     profile = default_profile()
     sim = SequentialEnvironmentSimulator(profile_to_scenario(profile, seed=0), seed=0)
-    cfg = GrowboxConfig(
-        growbox_volume_m3=1.4,
-        thermal_mass_j_per_k=40_000.0,
-        heat_loss_w_per_k=8.0,
-        air_leak_rate_ach=0.4,
-        active_pots=2,
-        pot_volume_l=20.0,
-        substrate_water_capacity_ml=5_000.0,
+    base = read_growbox_config(sim)
+    cfg = (
+        base.with_value("growbox_volume_m3", 1.4)
+        .with_value("thermal_mass_j_per_k", 40_000.0)
+        .with_value("heat_loss_w_per_k", 8.0)
+        .with_value("air_leak_rate_ach", 0.4)
+        .with_value("active_pots", 2)
+        .with_value("pot_volume_l", 20.0)
+        .with_value("substrate_water_capacity_ml", 5_000.0)
+        .with_value("heater_max_power_w", 220.0)
+        .with_value("fan_max_airflow_m3_h", 150.0)
+        .with_value("irrigation_flow_ml_s", 25.0)
     )
     changed = apply_growbox_config(sim, cfg)
     assert "growbox_volume_m3" in changed
@@ -83,6 +86,11 @@ def test_apply_flat_via_profile_updates_sim():
     assert after.growbox_volume_m3 == 1.4
     assert after.active_pots == 2
     assert after.pot_volume_l == 20.0
+    assert after.get("heater_max_power_w") == 220.0
+    assert after.get("fan_max_airflow_m3_h") == 150.0
+    assert sim.scenario.actuators.heater.max_power_w == 220.0
+    assert sim.scenario.actuators.fan.max_airflow_m3_h == 150.0
+    assert sim.scenario.pots[0].irrigation.flow_ml_s == 25.0
     assert sum(1 for p in sim.scenario.pots if p.available) == 2
 
 

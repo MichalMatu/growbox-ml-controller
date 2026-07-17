@@ -187,6 +187,8 @@ def _default_actuator_map() -> dict[str, ActuatorSlotProfile]:
             available=False, dose_ppm_per_full_pulse=120.0, maximum_pulse_s=3.0
         ),
         "nutrient_heater": ActuatorSlotProfile(available=False, max_power_w=150.0, efficiency=0.95),
+        # max_power_w maps to LightsConfig.max_heat_w (lamp heat into chamber)
+        "lights": ActuatorSlotProfile(available=True, max_power_w=120.0),
     }
 
 
@@ -432,6 +434,7 @@ def _global_actuators_from_profile(profile: GrowboxProfile) -> GlobalActuators:
     cool = act.get("cooler", ActuatorSlotProfile())
     co2 = act.get("co2_doser", ActuatorSlotProfile())
     nut = act.get("nutrient_heater", ActuatorSlotProfile())
+    lights = act.get("lights", ActuatorSlotProfile(available=True, max_power_w=120.0))
     return GlobalActuators(
         heater=heater(),
         fan=fan(),
@@ -478,7 +481,12 @@ def _global_actuators_from_profile(profile: GrowboxProfile) -> GlobalActuators:
                 else defaults.nutrient_heater.efficiency
             ),
         ),
-        lights=LightsConfig(),
+        lights=LightsConfig(
+            integrated=bool(lights.available),
+            max_heat_w=float(
+                lights.max_power_w if lights.max_power_w is not None else defaults.lights.max_heat_w
+            ),
+        ),
     )
 
 
@@ -598,6 +606,10 @@ def profile_from_scenario(scenario: Scenario, *, profile_id: str | None = None) 
             available=caps.nutrient_heater.available,
             max_power_w=caps.nutrient_heater.max_power_w,
             efficiency=caps.nutrient_heater.efficiency,
+        ),
+        "lights": ActuatorSlotProfile(
+            available=bool(caps.lights.integrated),
+            max_power_w=float(caps.lights.max_heat_w),
         ),
     }
     return GrowboxProfile(

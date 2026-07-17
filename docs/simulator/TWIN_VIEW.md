@@ -153,9 +153,9 @@ Keyboard-only. Edits a **GrowboxProfile** (board payload + future training).
 | any | `p` | full exit to RUNTIME |
 
 **Chamber** — volume, thermal mass, heat loss, leak ACH
-**Pots** — active pots, pot volume L, pot water cap
+**Pots** — active pots, pot volume L, water cap, transpiration, irr flow/pulse/interval, mat max W, soil targets
 **Sensors** — validity toggles (air/out/CO₂/nutrient/lights + P1–P4 soil)
-**Outputs** — available toggles (heater/fan/humid/… + irr/mat per pot)
+**Outputs** — available **and limits**: heater W/eff, fan m³/h, humid g/h, dehum, cooler, CO₂ dose/pulse, nutrient heat, lights heat W, irr/mat per pot ON/off
 
 Geometry keys (`volume`, `active pots`, `pot volume`) trigger a hard scene rebuild.
 
