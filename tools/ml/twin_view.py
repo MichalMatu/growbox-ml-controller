@@ -53,9 +53,14 @@ def _legend_table() -> str:
         ("h / H", "heater ±0.25"),
         ("f / F", "fan ±0.25"),
         ("u / U", "humid ±0.25"),
+        ("7", "camera ISO"),
+        ("8", "camera TOP"),
+        ("9", "camera FRONT"),
+        ("0", "camera SIDE"),
         ("green ring", "INLET"),
         ("blue ring", "OUTLET"),
         ("arrows", "only when fan ON"),
+        ("cube (R)", "drag faces = view"),
     ]
     label_w = max(len(k) for k, _ in rows)
     value_w = max(len(v) for _, v in rows)
@@ -259,6 +264,8 @@ def render_snapshot(
     pl.set_background("#1a1f2b")
     pl.camera_position = "iso"
     pl.reset_camera()
+    if interactive:
+        _attach_camera_controls(pl)
 
     if screenshot is not None:
         screenshot = Path(screenshot)
@@ -299,6 +306,51 @@ def _clip01(value: float) -> float:
     return min(1.0, max(0.0, float(value)))
 
 
+def _set_standard_view(pl: Any, name: str) -> None:
+    """Apply a CAD-style orthographic/isometric preset and re-fit the box."""
+    if name == "iso":
+        pl.view_isometric()
+    elif name == "top":
+        pl.view_xy()
+    elif name == "front":
+        pl.view_xz()
+    elif name == "side":
+        pl.view_yz()
+    else:
+        pl.view_isometric()
+    pl.reset_camera()
+    pl.reset_camera_clipping_range()
+    pl.render()
+
+
+def _attach_camera_controls(pl: Any) -> None:
+    """Fusion-like camera aids: orientation cube (upper-right) + view keys.
+
+    VTK camera orientation widget = clickable/draggable view cube.
+    Keys 7/8/9/0 snap to ISO / TOP / FRONT / SIDE without fighting trackball.
+    """
+    try:
+        pl.enable_trackball_style()
+    except Exception:
+        pass
+    try:
+        # Interactive view cube (upper-right corner of the 3D view)
+        pl.add_camera_orientation_widget(animate=True)
+    except TypeError:
+        try:
+            pl.add_camera_orientation_widget()
+        except Exception:
+            # Older / headless builds — keys still work
+            pass
+    except Exception:
+        pass
+
+    pl.add_key_event("7", lambda: _set_standard_view(pl, "iso"))
+    pl.add_key_event("8", lambda: _set_standard_view(pl, "top"))
+    pl.add_key_event("9", lambda: _set_standard_view(pl, "front"))
+    pl.add_key_event("0", lambda: _set_standard_view(pl, "side"))
+
+
 def run_interactive_live(
     *,
     seed: int = 0,
@@ -328,6 +380,7 @@ def run_interactive_live(
 
     pl = pv.Plotter(window_size=(1200, 860))
     pl.set_background("#1a1f2b")
+    _attach_camera_controls(pl)
 
     def current_action() -> ControlAction:
         return ControlAction(
@@ -395,9 +448,10 @@ def run_interactive_live(
             name="help",
         )
         if state["first_draw"]:
-            pl.reset_camera()
+            _set_standard_view(pl, "iso")
             state["first_draw"] = False
-        pl.render()
+        else:
+            pl.render()
 
     def bump(key: str, delta: float) -> None:
         state[key] = _clip01(state[key] + delta)

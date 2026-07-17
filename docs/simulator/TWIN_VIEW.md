@@ -69,6 +69,11 @@ python -m tools.ml.twin_view --live
 | `h` / `H` | heater ±0.25 |
 | `f` / `F` | fan ±0.25 |
 | `u` / `U` | humidifier ±0.25 |
+| `7` | camera isometric |
+| `8` | camera top |
+| `9` | camera front |
+| `0` | camera side |
+| orientation cube (UR) | drag faces like Fusion 360 |
 
 
 ## Honest limits
