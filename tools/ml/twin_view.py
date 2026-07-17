@@ -109,16 +109,6 @@ def build_plotter_meshes(pv: Any, snap: TwinSnapshot) -> dict[str, Any]:
         ),
     )
 
-    # Outside marker slab (climate boundary cue)
-    hx = 0.5 * sx
-    outside = pv.Cube(
-        center=(-hx - 0.12 * sx, 0.0, 0.5 * sz),
-        x_length=0.08 * sx,
-        y_length=0.7 * sy,
-        z_length=0.7 * sz,
-    )
-    outside_color = temperature_to_rgb(snap.outside_temperature_c)
-
     return {
         "chamber": chamber,
         "chamber_color": chamber_color,
@@ -128,8 +118,6 @@ def build_plotter_meshes(pv: Any, snap: TwinSnapshot) -> dict[str, Any]:
         "pot_colors": pot_colors,
         "pot_labels": pot_labels,
         "glyph": glyph,
-        "outside": outside,
-        "outside_color": outside_color,
     }
 
 
@@ -176,28 +164,6 @@ def render_snapshot(
             name="exchange",
             opacity=0.95,
         )
-    pl.add_mesh(
-        meshes["outside"],
-        color=meshes["outside_color"],
-        opacity=0.7,
-        name="outside",
-    )
-    pl.add_point_labels(
-        [
-            (
-                -0.5 * snap.box.size_xyz[0] - 0.12 * snap.box.size_xyz[0],
-                0.0,
-                0.55 * snap.box.size_xyz[2],
-            )
-        ],
-        ["OUTSIDE"],
-        font_size=16,
-        text_color="#9ecbff",
-        point_size=0,
-        shape=None,
-        always_visible=True,
-        name="outside_label",
-    )
 
     caption = title or snap.title()
     pl.add_text(caption, font_size=16, color="white")
@@ -207,7 +173,7 @@ def render_snapshot(
             f"RH={snap.outside_humidity_pct:.0f}%  |  "
             f"exchange: fan_ACH≈{snap.exchange.fan_ach_proxy:.1f}/h  "
             f"leak={snap.exchange.leak_ach:.2f}/h\n"
-            "Green cylinder = pot  |  Blue plate = outside air  |  Cyan arrows = exchange (not CFD)"
+            "Cylinder = pot  |  Cyan arrows = air exchange (not CFD)"
         ),
         position="lower_left",
         font_size=14,
@@ -330,26 +296,11 @@ def run_interactive_live(
             )
         if meshes["glyph"].n_points > 0:
             pl.add_mesh(meshes["glyph"], color="#6ec6ff", opacity=0.95, name="exchange")
-        pl.add_mesh(meshes["outside"], color=meshes["outside_color"], opacity=0.7, name="outside")
-        pl.add_point_labels(
-            [
-                (
-                    -0.5 * snap.box.size_xyz[0] - 0.12 * snap.box.size_xyz[0],
-                    0.0,
-                    0.55 * snap.box.size_xyz[2],
-                )
-            ],
-            ["OUTSIDE"],
-            font_size=16,
-            text_color="#9ecbff",
-            point_size=0,
-            shape=None,
-            always_visible=True,
-            name="outside_label",
-        )
         pl.add_text(snap.title(), font_size=16, color="white", name="title")
         pl.add_text(
-            help_text() + "\nGreen cylinder = pot | Blue plate = outside | Cyan arrows = exchange",
+            help_text()
+            + f"\noutside T={snap.outside_temperature_c:.1f}°C RH={snap.outside_humidity_pct:.0f}%"
+            " | cylinder=pot | cyan arrows=exchange",
             position="lower_left",
             font_size=14,
             color="lightgray",
