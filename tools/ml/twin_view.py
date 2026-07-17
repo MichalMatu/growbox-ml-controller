@@ -59,7 +59,7 @@ def _legend_table() -> str:
         ("0", "camera SIDE"),
         ("green ring", "INLET"),
         ("blue ring", "OUTLET"),
-        ("arrows", "only when fan ON"),
+        ("arrows", "1 at inlet + 1 at outlet"),
         ("cube (R)", "drag faces = view"),
     ]
     label_w = max(len(k) for k, _ in rows)
@@ -127,21 +127,22 @@ def build_plotter_meshes(pv: Any, snap: TwinSnapshot) -> dict[str, Any]:
             )
         )
 
-    # Exchange glyphs — only when fan drives inlet→outlet (ports, not walls)
+    # Two small preview arrows only (inlet + outlet centers) when fan ON.
+    # Thin geometry + solid color (no scalar lighting) avoids purple wash / lag.
     if snap.exchange.points.shape[0] > 0:
         cloud = pv.PolyData(snap.exchange.points)
         cloud["vectors"] = snap.exchange.vectors
-        cloud["mag"] = np.maximum(snap.exchange.magnitudes, 1e-6)
         glyph = cloud.glyph(
             orient="vectors",
-            scale="mag",
+            scale=False,
             factor=1.0,
             geom=pv.Arrow(
-                tip_length=0.35,
-                tip_radius=0.18,
-                tip_resolution=24,
-                shaft_radius=0.08,
-                shaft_resolution=24,
+                tip_length=0.30,
+                tip_radius=0.08,
+                tip_resolution=12,
+                shaft_radius=0.035,
+                shaft_resolution=12,
+                scale=float(np.mean(snap.exchange.magnitudes)),
             ),
         )
     else:
@@ -156,16 +157,16 @@ def build_plotter_meshes(pv: Any, snap: TwinSnapshot) -> dict[str, Any]:
         inner=0.35 * port_r,
         outer=port_r,
         normal=(-1.0, 0.0, 0.0),
-        r_res=48,
-        c_res=48,
+        r_res=24,
+        c_res=24,
     )
     outlet_disk = pv.Disc(
         center=outlet_c,
         inner=0.35 * port_r,
         outer=port_r,
         normal=(1.0, 0.0, 0.0),
-        r_res=48,
-        c_res=48,
+        r_res=24,
+        c_res=24,
     )
     port_labels = [
         ((inlet_c[0] - 0.06 * sx, inlet_c[1], inlet_c[2] + 0.14 * sz), "INLET"),
@@ -239,9 +240,13 @@ def render_snapshot(
     if meshes["glyph"].n_points > 0:
         pl.add_mesh(
             meshes["glyph"],
-            color="#6ec6ff",
+            color="#8fd3f4",
             name="exchange",
-            opacity=0.95,
+            opacity=1.0,
+            smooth_shading=False,
+            ambient=0.7,
+            specular=0.0,
+            show_scalar_bar=False,
         )
 
     # Parameter table (upper right) + short legend (lower left) — same font size
@@ -430,7 +435,16 @@ def run_interactive_live(
                 name=f"port_label_{i}",
             )
         if meshes["glyph"].n_points > 0:
-            pl.add_mesh(meshes["glyph"], color="#6ec6ff", opacity=0.95, name="exchange")
+            pl.add_mesh(
+                meshes["glyph"],
+                color="#8fd3f4",
+                opacity=1.0,
+                name="exchange",
+                smooth_shading=False,
+                ambient=0.7,
+                specular=0.0,
+                show_scalar_bar=False,
+            )
         pl.add_text(
             snap.params_table(),
             position="upper_left",

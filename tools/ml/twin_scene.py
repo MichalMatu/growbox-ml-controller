@@ -159,53 +159,38 @@ def exchange_field(
     volume = max(0.05, box.volume_m3)
     fan_ach = fan * max(0.0, fan_max_airflow_m3_h) / volume  # 1/h at full map
 
-    t_gap = min(1.0, abs(air_temperature_c - outside_temperature_c) / 15.0)
-    rh_gap = min(1.0, abs(air_humidity_pct - outside_humidity_pct) / 50.0)
-    gap = 0.35 + 0.65 * max(t_gap, rh_gap)
+    # Keep unused climate args for API stability / future visual cues.
+    _ = (outside_temperature_c, outside_humidity_pct, air_temperature_c, air_humidity_pct)
 
-    hx, hy, hz = box.half
-    height = 2.0 * hz
-    points: list[list[float]] = []
-    vectors: list[list[float]] = []
-    mags: list[float] = []
-    labels: list[str] = []
-
+    hx, _hy, _hz = box.half
     inlet, outlet = vent_port_centers(box)
-    # Flow strength only when fan runs (exhaust pulls air in the inlet).
-    flow = 0.40 * box.size_xyz[0] * (0.30 + 0.70 * fan) * gap
+    # One small arrow per port only (preview cue — not a flow field).
+    # Fixed short length so glyphs never flood the scene or lag redraw.
+    arrow_len = 0.10 * box.size_xyz[0]
 
     if fan > 0.02:
-        # Inlet: outside → inside (+X)
-        for y_off in (-0.12 * hy, 0.0, 0.12 * hy):
-            for z_off in (-0.08 * height, 0.0, 0.08 * height):
-                points.append([inlet[0] - 0.02 * hx, inlet[1] + y_off, inlet[2] + z_off])
-                vectors.append([flow, 0.0, 0.0])
-                mags.append(flow)
-                labels.append("inlet")
-        # Interior path toward outlet
-        for x_frac in (-0.35, 0.0, 0.35):
-            points.append([x_frac * hx, 0.0, inlet[2]])
-            vectors.append([flow * 0.85, 0.0, 0.0])
-            mags.append(flow * 0.85)
-            labels.append("duct")
-        # Outlet / fan exhaust: inside → outside (+X)
-        for y_off in (-0.12 * hy, 0.0, 0.12 * hy):
-            for z_off in (-0.08 * height, 0.0, 0.08 * height):
-                points.append([outlet[0] + 0.02 * hx, outlet[1] + y_off, outlet[2] + z_off])
-                vectors.append([flow, 0.0, 0.0])
-                mags.append(flow)
-                labels.append("outlet_fan")
-
-    if not points:
+        # Inlet center: into chamber (+X). Outlet center: out of chamber (+X).
+        pts = np.asarray(
+            [
+                [inlet[0] + 0.02 * hx, inlet[1], inlet[2]],
+                [outlet[0] - 0.02 * hx, outlet[1], outlet[2]],
+            ],
+            dtype=np.float64,
+        )
+        vecs = np.asarray(
+            [
+                [arrow_len, 0.0, 0.0],
+                [arrow_len, 0.0, 0.0],
+            ],
+            dtype=np.float64,
+        )
+        mags_a = np.asarray([arrow_len, arrow_len], dtype=np.float64)
+        label_t: tuple[str, ...] = ("inlet", "outlet_fan")
+    else:
         pts = np.zeros((0, 3), dtype=np.float64)
         vecs = np.zeros((0, 3), dtype=np.float64)
         mags_a = np.zeros((0,), dtype=np.float64)
-        label_t: tuple[str, ...] = ()
-    else:
-        pts = np.asarray(points, dtype=np.float64)
-        vecs = np.asarray(vectors, dtype=np.float64)
-        mags_a = np.asarray(mags, dtype=np.float64)
-        label_t = tuple(labels)
+        label_t = ()
 
     return ExchangeField(
         points=pts,

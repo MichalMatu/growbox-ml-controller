@@ -70,12 +70,13 @@ def test_fan_drives_inlet_outlet_arrows_not_walls():
         air_temperature_c=28.0,
         air_humidity_pct=70.0,
     )
-    # Sealed walls: no glyphs when fan is off
+    # Sealed walls: no glyphs when fan is off; fan ON → exactly two small port arrows
     assert idle.points.shape[0] == 0
     assert windy.fan_ach_proxy > idle.fan_ach_proxy
-    assert windy.points.shape[0] > 0
-    assert float(np.mean(windy.magnitudes)) > 0.05
-    assert "inlet" in windy.labels and "outlet_fan" in windy.labels
+    assert windy.points.shape[0] == 2
+    assert float(np.mean(windy.magnitudes)) > 0.02
+    assert float(np.max(windy.magnitudes)) < 0.5 * box.size_xyz[0]
+    assert windy.labels == ("inlet", "outlet_fan")
     assert "leak" not in windy.labels
 
 
