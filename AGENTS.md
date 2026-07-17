@@ -1,7 +1,60 @@
 # Agent notes — Growbox ML
 
+## Priorytet tej linii pracy: konfigurator hardware (web)
+
+**Cel:** frontendowy edytor setupu growboxa oparty o **kontrakt schema v4**, z eksportem JSON.
+**Nie cel:** twin 3D, trening ML, teacher, symulator live, rozbudowa panelu board — chyba że użytkownik wyraźnie prosi.
+
+### SSOT
+
+| Co | Gdzie |
+|----|--------|
+| Pola, min/max, path, outputs | `schemas/environment-controller.json` |
+| Krótkie znaczenie pól (PL) | `docs/SCHEMA_V4_FIELD_GUIDE.md` |
+| Założenia produktu edytora | `docs/HARDWARE_CONFIGURATOR.md` |
+| Kontrakt (skrót) | `docs/DATA_CONTRACT.md` |
+
+### Zasady implementacji FE
+
+1. **Identyfikatory i path JSON — angielski** (`air_temperature_c`, `pots[0].irrigation.available`). Etykiety UI mogą być po polsku.
+2. **Mix & match v4:** brak sprzętu = `validity=false` / `available=false` / `pots[N].available=false` — **nie usuwaj slotów** z JSON.
+3. Wyłączony aktuator: `available=false` i zeruj niebezpieczne maxy w eksporcie (zgodnie z kontraktem safety).
+4. **Nie dodawaj** nowych slotów ML (PPFD, EC, pH, …) bez nowej wersji schema.
+5. Framework **nie jest narzucony** — wybór dopiero po mapie ekranów; unikaj ciężkiego stacka bez potrzeby.
+6. **Backend nie jest wymagany** na MVP: export/import pliku JSON wystarczy.
+7. Panel admin (`tools/panel`) = **inne zadanie** (board). Nie mieszaj flow „Połącz z płytką” z edytorem hardware, chyba że użytkownik każe.
+8. Zmiana znaczenia pola w schema = breaking: podnieś `schema_version`, regeneruj artefakty (`tools/schema/generate_environment_schema.py`), nie „cichy rename”.
+9. Kod UI i commit messages — angielski; komunikaty do użytkownika w czacie — po polsku (preferencje repo).
+10. Ewolucja: konfigurator **może napędzać** poprawki pól; najpierw opisz brak w guide/schema PR, potem UI.
+
+### Proponowane grupy UI (start)
+
+1. Chamber — `environment.*`
+2. Sensors + validity — air / outside / nutrient
+3. Pots 1–4 — available, soil validity, cultivation, irrigation, heat mat, pot targets
+4. Outputs — global actuators + limits
+5. Pseudo — `lights_active`
+6. Targets (climate) — opcjonalnie w MVP
+7. Previous — domyślnie 0 w konfiguratorze „czystego boxa”
+
+### Out of scope (nie rób bez prośby)
+
+- PyVista / `tools/ml/twin`
+- `SequentialEnvironmentSimulator` w UI
+- Teacher / dataset / train w tym FE
+- Nowe dependency ML
+
+### Testy (gdy pojawi się kod FE)
+
+- Export JSON: 4× `pots`, klucze `validity` / `actuators` / `environment` obecne.
+- Donica off → validity gleby false, irrigation/heat_mat available false w eksporcie (lub równoważna reguła udokumentowana).
+- Nie łam `python tools/schema/generate_environment_schema.py --check` przy zmianach schema.
+
+---
+
 ## Panel UI (`tools/panel/static/`) — układ pól
 
+**Dotyczy panelu board/admin, nie konfiguratora hardware.**
 **Nie układaj parametrów w mini-kartach jeden pod drugim.** To powtarzający się błąd (donice, uprawa, aktuary).
 
 ### Zasada

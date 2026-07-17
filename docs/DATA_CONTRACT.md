@@ -4,6 +4,10 @@
 
 Field names, order, ranges, and outputs are defined only there. Change the schema → regenerate C++ → retrain → commit generated artifacts together.
 
+**Field meanings (UI / configurator):** [`SCHEMA_V4_FIELD_GUIDE.md`](SCHEMA_V4_FIELD_GUIDE.md) — short PL descriptions per path; does not replace min/max in the JSON schema.
+
+**Hardware configurator product notes:** [`HARDWARE_CONFIGURATOR.md`](HARDWARE_CONFIGURATOR.md).
+
 ## Domain: pots, not zones
 
 Up to **four pots (donice)** share one growbox air volume. JSON root is `pots` (array index 0..3). Feature names use 1-based labels (`pot_1_*`, `irrigation_pot_1`, …).
