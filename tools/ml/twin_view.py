@@ -33,9 +33,10 @@ from .twin_scene import (
     vent_port_centers,
 )
 
-# Single font for all twin text (HUD + 3D labels) — no size/style mix
+# HUD tables stay compact; in-scene labels (INLET / OUTLET / pots) are larger
 _FONT_FAMILY = "courier"
 _FONT_SIZE = 12
+_SCENE_LABEL_FONT_SIZE = 22
 _FONT_COLOR = "white"
 # Radial studio BG: darker center → slightly brighter edges (subtle, not washed out)
 _BG_CENTER = (0x1C, 0x20, 0x2A)  # cool dark hub
@@ -184,6 +185,7 @@ def build_static_meshes(pv: Any, snap: TwinSnapshot) -> dict[str, Any]:
 
     pots: list[Any] = []
     pot_labels: list[tuple[tuple[float, float, float], str]] = []
+    pot_label_indices: list[int] = []
     radius, height = pot_radius_height(snap.box)
     for index, cx, cy, cz in pot_layout_positions(snap.box, snap.pot_active):
         pots.append(
@@ -196,8 +198,12 @@ def build_static_meshes(pv: Any, snap: TwinSnapshot) -> dict[str, Any]:
             )
         )
         pot_labels.append(
-            ((cx, cy, cz + height + 0.05 * sz), f"P{index + 1} θ={snap.pot_moisture[index]:.0f}%")
+            (
+                (cx, cy, cz + height + 0.05 * sz),
+                _pot_label_text(index, snap.pot_moisture[index]),
+            )
         )
+        pot_label_indices.append(index)
 
     inlet_c, outlet_c = vent_port_centers(snap.box)
     port_r = 0.14 * min(sx, sy)
@@ -225,6 +231,7 @@ def build_static_meshes(pv: Any, snap: TwinSnapshot) -> dict[str, Any]:
         "chamber": chamber,
         "pots": pots,
         "pot_labels": pot_labels,
+        "pot_label_indices": pot_label_indices,
         "inlet": inlet,
         "outlet": outlet,
         "port_labels": port_labels,
@@ -234,26 +241,39 @@ def build_static_meshes(pv: Any, snap: TwinSnapshot) -> dict[str, Any]:
     }
 
 
-def build_arrow_meshes(pv: Any, snap: TwinSnapshot, box_len: float) -> list[Any]:
-    """At most two small arrows (inlet + outlet centers) when fan is on."""
-    if snap.exchange.points.shape[0] < 2 or snap.action.fan <= 0.02:
-        return []
-    length = max(0.04, 0.08 * box_len)
-    arrows: list[Any] = []
-    for origin in snap.exchange.points[:2]:
-        arrows.append(
-            pv.Arrow(
-                start=tuple(float(v) for v in origin),
-                direction=(1.0, 0.0, 0.0),
-                tip_length=0.35,
-                tip_radius=0.1,
-                tip_resolution=12,
-                shaft_radius=0.04,
-                shaft_resolution=12,
-                scale=length,
-            )
-        )
-    return arrows
+def _add_scene_label(
+    pl: Any,
+    pos: tuple[float, float, float],
+    label: str,
+    *,
+    name: str,
+) -> None:
+    """In-chamber point label (larger than HUD tables)."""
+    pl.add_point_labels(
+        [pos],
+        [label],
+        font_size=_SCENE_LABEL_FONT_SIZE,
+        text_color=_FONT_COLOR,
+        point_size=0,
+        shape=None,
+        always_visible=True,
+        name=name,
+    )
+
+
+def _pot_label_text(index: int, moisture_pct: float) -> str:
+    return f"P{index + 1} θ={moisture_pct:.0f}%"
+
+
+def _set_pot_labels(
+    pl: Any,
+    pot_labels: list[tuple[tuple[float, float, float], str]],
+) -> None:
+    """Replace pot moisture labels (soft-safe: remove + re-add text only)."""
+    for i in range(4):
+        _safe_remove(pl, f"pot_label_{i}")
+    for i, (pos, label) in enumerate(pot_labels):
+        _add_scene_label(pl, pos, label, name=f"pot_label_{i}")
 
 
 def _add_static_scene(pl: Any, meshes: dict[str, Any]) -> None:
@@ -269,30 +289,11 @@ def _add_static_scene(pl: Any, meshes: dict[str, Any]) -> None:
     )
     for i, pot in enumerate(meshes["pots"]):
         _add_solid(pl, pot, color=_POT, name=f"pot_{i}", lighting=True)
-    for i, (pos, label) in enumerate(meshes["pot_labels"]):
-        pl.add_point_labels(
-            [pos],
-            [label],
-            font_size=_FONT_SIZE,
-            text_color=_FONT_COLOR,
-            point_size=0,
-            shape=None,
-            always_visible=True,
-            name=f"pot_label_{i}",
-        )
+    _set_pot_labels(pl, meshes["pot_labels"])
     _add_solid(pl, meshes["inlet"], color=_INLET, name="inlet", lighting=False)
     _add_solid(pl, meshes["outlet"], color=_OUTLET, name="outlet", lighting=False)
     for i, (pos, label) in enumerate(meshes["port_labels"]):
-        pl.add_point_labels(
-            [pos],
-            [label],
-            font_size=_FONT_SIZE,
-            text_color=_FONT_COLOR,
-            point_size=0,
-            shape=None,
-            always_visible=True,
-            name=f"port_label_{i}",
-        )
+        _add_scene_label(pl, pos, label, name=f"port_label_{i}")
 
 
 def _set_hud(pl: Any, snap: TwinSnapshot, *, legend: bool) -> None:
@@ -816,6 +817,8 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
                 "pot_3",
                 "pot_label_0",
                 "pot_label_1",
+                "pot_label_2",
+                "pot_label_3",
                 "port_label_0",
                 "port_label_1",
                 "arrow_0",
@@ -827,6 +830,9 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
             cache["box_len"] = meshes["box_len"]
             cache["inlet_c"] = meshes["inlet_c"]
             cache["outlet_c"] = meshes["outlet_c"]
+            # Positions fixed; text rebuilt on soft refresh when moisture changes
+            cache["pot_label_positions"] = [pos for pos, _label in meshes["pot_labels"]]
+            cache["pot_label_indices"] = list(meshes["pot_label_indices"])
             cache["arrow_ready"] = False
             cache["ready"] = True
             _ensure_arrow_actors(pl, pv, snap, float(cache["box_len"]), cache)
@@ -836,7 +842,17 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
             _force_mono_render(pl)
             return
 
-        # Soft update: params table + arrow visibility only (no add/remove mesh)
+        # Soft update: HUD + pot moisture labels + arrow visibility (no mesh rebuild)
+        pot_labels = [
+            (pos, _pot_label_text(index, snap.pot_moisture[index]))
+            for pos, index in zip(
+                cache.get("pot_label_positions", []),
+                cache.get("pot_label_indices", []),
+                strict=False,
+            )
+            if 0 <= index < len(snap.pot_moisture)
+        ]
+        _set_pot_labels(pl, pot_labels)
         _set_hud(pl, snap, legend=False)
         _set_arrows_visible(pl, snap.action.fan > 0.02, cache)
         _force_mono_render(pl)

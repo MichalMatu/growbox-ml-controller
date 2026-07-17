@@ -91,3 +91,11 @@ def test_snapshot_from_simulator_smoke():
     assert "out T" in table
     assert "heater" in table
     assert "┌" in table and "└" in table
+
+
+def test_scene_labels_larger_than_hud_font():
+    """In-chamber labels must stay readable vs compact HUD tables."""
+    from tools.ml import twin_view
+
+    assert twin_view._SCENE_LABEL_FONT_SIZE > twin_view._FONT_SIZE
+    assert twin_view._pot_label_text(0, 42.4) == "P1 θ=42%"
