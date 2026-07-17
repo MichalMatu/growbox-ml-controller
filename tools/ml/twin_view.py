@@ -116,8 +116,9 @@ def build_plotter_meshes(pv: Any, snap: TwinSnapshot) -> dict[str, Any]:
     # Physical openings: inlet (−X) and outlet/fan (+X)
     inlet_c, outlet_c = vent_port_centers(snap.box)
     port_r = 0.10 * min(sx, sy)
-    inlet_disk = pv.Disk(center=inlet_c, inner=0.0, outer=port_r, normal=(-1.0, 0.0, 0.0), r_res=24)
-    outlet_disk = pv.Disk(
+    # PyVista: Disc (British spelling), not Disk.
+    inlet_disk = pv.Disc(center=inlet_c, inner=0.0, outer=port_r, normal=(-1.0, 0.0, 0.0), r_res=24)
+    outlet_disk = pv.Disc(
         center=outlet_c, inner=0.0, outer=port_r, normal=(1.0, 0.0, 0.0), r_res=24
     )
     # Small fan body on exhaust (visual cue only)

@@ -111,15 +111,15 @@ def exchange_field(
     air_temperature_c: float,
     air_humidity_pct: float,
 ) -> ExchangeField:
-    """Build glyphs for **inlet / outlet** air path only (not through walls).
+    """Build glyphs for **inlet / outlet** air path only.
 
     Hardware model:
-    - sealed walls (no permeation arrows),
-    - inlet opening on −X,
-    - outlet opening on +X with **fan on exhaust**.
+    - walls: heat conduction / insulation (no bulk air through fabric),
+    - air mass exchange: only via openings (inlet −X, outlet +X + fan),
+    - small ACH leak in the ODE sim is a lumped seal imperfection — not drawn
+      as wall-normal air arrows (those would look like “air through walls”).
 
-    ``air_leak_rate_ach`` is kept in the snapshot for HUD/debug (sim parameter)
-    but is **not** drawn as wall flux — real tents exchange via ports, not fabric.
+    Thermal conductivity of walls is a separate physics path (T), not glyphs.
     """
     fan = min(1.0, max(0.0, float(fan_command)))
     leak = max(0.0, float(air_leak_rate_ach))

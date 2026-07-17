@@ -16,8 +16,16 @@
 - **INLET / OUTLET+FAN** — disks on opposite walls; fan on the **exhaust** port
 - **Arrows** — only when fan is ON: air **in** at inlet, **out** at outlet (not through walls)
 
-Arrows are **illustrative** (port flow / fan command), not CFD and not wall permeation.
-Real growboxes exchange air through openings, not fabric walls.
+Arrows are **illustrative** (port flow / fan command), not CFD.
+
+**Walls vs ports (physics honesty):**
+
+| Through walls | Through inlet / outlet |
+|---------------|-------------------------|
+| Heat conduction / insulation (`heat_loss`, thermal mass) | **Air** exchange (fan + openings) |
+| No bulk airflow drawn as wall arrows | Arrows only when fan drives ports |
+
+Small seal leaks may exist in the ODE (`air_leak_rate_ach`) but are **not** visualized as “air through walls”.
 
 ## Install
 
