@@ -96,15 +96,15 @@ def pot_radius_height(box: BoxGeometry) -> tuple[float, float]:
     Roughly a ~12 L pot in a ~0.8 m³ tent: wide cylinder, modest height.
     """
     sx, sy, sz = box.size_xyz
-    # Diameter ~22% of shorter floor side → readable pot, not a pin
-    diameter = 0.22 * min(sx, sy)
+    # Diameter ~30% of shorter floor side — stocky nursery pot, not a pin/tube
+    diameter = 0.30 * min(sx, sy)
     radius = 0.5 * diameter
-    # Height slightly less than diameter (bowl/pot look)
-    height = 0.85 * diameter
+    # Height slightly less than diameter (wide pot look)
+    height = 0.88 * diameter
     # Cap so pot never dominates chamber height
-    height = min(height, 0.22 * sz)
-    radius = min(radius, 0.5 * height / 0.85)
-    return max(0.08, radius), max(0.12, height)
+    height = min(height, 0.28 * sz)
+    radius = min(radius, 0.5 * height / 0.88)
+    return max(0.10, radius), max(0.14, height)
 
 
 @dataclass(frozen=True)
