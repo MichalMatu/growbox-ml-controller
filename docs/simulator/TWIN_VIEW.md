@@ -12,7 +12,7 @@
 
 - **Chamber box** — size from `growbox_volume_m3`; color ∝ air **T**; opacity ∝ **RH**
 - **Pots** — up to 4 cylinders; color ∝ **soil moisture**
-- **Outside slab** — color ∝ outside **T**
+- **Outside climate** — only in HUD text (`outside T` / `RH`), no separate mesh
 - **Arrows (glyphs)** — *effective* air exchange from **fan** + **leak ACH**, scaled by climate gap to outside
 
 Arrows are **illustrative** (lumped ACH / command), not Navier–Stokes streamlines.
