@@ -10,6 +10,8 @@ from tools.ml.twin_scene import (
     exchange_field,
     humidity_opacity,
     pot_centers,
+    pot_layout_positions,
+    pot_radius_height,
     snapshot_from_simulator,
     soil_moisture_to_rgb,
     temperature_to_rgb,
@@ -28,6 +30,22 @@ def test_pot_centers_four_on_floor():
     centers = pot_centers(box, 4)
     assert len(centers) == 4
     assert all(c[2] == 0.0 for c in centers)
+
+
+def test_single_active_pot_is_centered():
+    box = box_from_volume(0.8)
+    layout = pot_layout_positions(box, (True, False, False, False))
+    assert len(layout) == 1
+    _idx, x, y, z = layout[0]
+    assert abs(x) < 1e-9 and abs(y) < 1e-9 and abs(z) < 1e-9
+
+
+def test_pot_is_stocky_not_thin_tube():
+    box = box_from_volume(0.8)
+    radius, height = pot_radius_height(box)
+    # Diameter should be >= height (bowl/pot proportions)
+    assert 2.0 * radius >= height * 0.95
+    assert height / (2.0 * radius) < 1.15
 
 
 def test_fan_drives_inlet_outlet_arrows_not_walls():

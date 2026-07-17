@@ -50,28 +50,61 @@ def box_from_volume(volume_m3: float) -> BoxGeometry:
     return BoxGeometry(size_xyz=(scale * ax, scale * ay, scale * az), volume_m3=volume)
 
 
-def pot_centers(box: BoxGeometry, n_pots: int = MAX_POTS) -> list[tuple[float, float, float]]:
-    """Place up to 4 pots on the floor in a 2×2 grid."""
-    n = max(0, min(MAX_POTS, int(n_pots)))
+def pot_layout_positions(
+    box: BoxGeometry,
+    active: tuple[bool, ...] | list[bool],
+) -> list[tuple[int, float, float, float]]:
+    """Floor positions for active pots only.
+
+    - 1 pot → center of chamber
+    - 2 pots → left / right
+    - 3–4 pots → 2×2 grid (first active pots fill slots in order)
+    """
+    indices = [i for i, is_on in enumerate(active[:MAX_POTS]) if is_on]
+    n = len(indices)
+    if n == 0:
+        return []
     hx, hy, _ = box.half
-    # Inset from walls
-    xs = (-0.35 * hx, 0.35 * hx)
-    ys = (-0.35 * hy, 0.35 * hy)
+    if n == 1:
+        return [(indices[0], 0.0, 0.0, 0.0)]
+    if n == 2:
+        return [
+            (indices[0], -0.28 * hx, 0.0, 0.0),
+            (indices[1], 0.28 * hx, 0.0, 0.0),
+        ]
+    # 3 or 4: grid
+    xs = (-0.28 * hx, 0.28 * hx)
+    ys = (-0.28 * hy, 0.28 * hy)
     slots = [
         (xs[0], ys[0], 0.0),
         (xs[1], ys[0], 0.0),
         (xs[0], ys[1], 0.0),
         (xs[1], ys[1], 0.0),
     ]
-    return slots[:n]
+    return [(indices[k], slots[k][0], slots[k][1], slots[k][2]) for k in range(min(n, 4))]
+
+
+def pot_centers(box: BoxGeometry, n_pots: int = MAX_POTS) -> list[tuple[float, float, float]]:
+    """Legacy helper: n floor slots (1 → center). Prefer ``pot_layout_positions``."""
+    active = tuple(i < n_pots for i in range(MAX_POTS))
+    return [(x, y, z) for _i, x, y, z in pot_layout_positions(box, active)]
 
 
 def pot_radius_height(box: BoxGeometry) -> tuple[float, float]:
-    """Pot cylinder size — large enough to read as a plant pot, not a pin."""
-    hx, hy, hz = box.half
-    radius = 0.22 * min(hx, hy)
-    height = 0.28 * (2.0 * hz)
-    return max(0.06, radius), max(0.12, height)
+    """Stocky nursery-pot proportions (diameter ≳ height), not a thin tube.
+
+    Roughly a ~12 L pot in a ~0.8 m³ tent: wide cylinder, modest height.
+    """
+    sx, sy, sz = box.size_xyz
+    # Diameter ~22% of shorter floor side → readable pot, not a pin
+    diameter = 0.22 * min(sx, sy)
+    radius = 0.5 * diameter
+    # Height slightly less than diameter (bowl/pot look)
+    height = 0.85 * diameter
+    # Cap so pot never dominates chamber height
+    height = min(height, 0.22 * sz)
+    radius = min(radius, 0.5 * height / 0.85)
+    return max(0.08, radius), max(0.12, height)
 
 
 @dataclass(frozen=True)

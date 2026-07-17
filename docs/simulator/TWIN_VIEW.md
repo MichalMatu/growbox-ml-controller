@@ -13,8 +13,9 @@
 - **Chamber box** — size from `growbox_volume_m3`; color ∝ air **T**; opacity ∝ **RH**
 - **Pots** — up to 4 cylinders; color ∝ **soil moisture**
 - **Outside climate** — only in HUD text (`outside T` / `RH`), no separate mesh
-- **INLET / OUTLET+FAN** — disks on opposite walls; fan on the **exhaust** port
-- **Arrows** — only when fan is ON: air **in** at inlet, **out** at outlet (not through walls)
+- **INLET / OUTLET** — two **round wall openings** (rings) on opposite faces; no fan tube mesh
+- **Arrows** — only when fan is ON: air **in** at inlet, **out** at outlet
+- **Pots** — stocky cylinder; **one active pot is centered** on the floor
 
 Arrows are **illustrative** (port flow / fan command), not CFD.
 

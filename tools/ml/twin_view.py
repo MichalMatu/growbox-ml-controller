@@ -29,7 +29,7 @@ from .simulator import (
 from .twin_scene import (
     TwinSnapshot,
     humidity_opacity,
-    pot_centers,
+    pot_layout_positions,
     pot_radius_height,
     snapshot_from_simulator,
     soil_moisture_to_rgb,
@@ -71,24 +71,20 @@ def build_plotter_meshes(pv: Any, snap: TwinSnapshot) -> dict[str, Any]:
     pot_colors: list[tuple[float, float, float]] = []
     pot_labels: list[tuple[tuple[float, float, float], str]] = []
     radius, height = pot_radius_height(snap.box)
-    centers = pot_centers(snap.box, n_pots=4)
-    for index, center in enumerate(centers):
-        if not snap.pot_active[index]:
-            continue
-        cx, cy, cz = center
-        # Slightly tapered look: wider base cylinder = pot body
+    for index, cx, cy, cz in pot_layout_positions(snap.box, snap.pot_active):
+        # Stocky pot: wide cylinder (not a thin pipe)
         cyl = pv.Cylinder(
             center=(cx, cy, cz + 0.5 * height),
             direction=(0.0, 0.0, 1.0),
             radius=radius,
             height=height,
-            resolution=32,
+            resolution=40,
         )
         pots.append(cyl)
         pot_colors.append(soil_moisture_to_rgb(snap.pot_moisture[index]))
         pot_labels.append(
             (
-                (cx, cy, cz + height + 0.04 * sz),
+                (cx, cy, cz + height + 0.05 * sz),
                 f"P{index + 1} θ={snap.pot_moisture[index]:.0f}%",
             )
         )
@@ -113,25 +109,29 @@ def build_plotter_meshes(pv: Any, snap: TwinSnapshot) -> dict[str, Any]:
     else:
         glyph = pv.PolyData()
 
-    # Physical openings: inlet (−X) and outlet/fan (+X)
+    # Two round wall openings only (no fan tube) — PyVista: Disc, not Disk.
     inlet_c, outlet_c = vent_port_centers(snap.box)
-    port_r = 0.10 * min(sx, sy)
-    # PyVista: Disc (British spelling), not Disk.
-    inlet_disk = pv.Disc(center=inlet_c, inner=0.0, outer=port_r, normal=(-1.0, 0.0, 0.0), r_res=24)
-    outlet_disk = pv.Disc(
-        center=outlet_c, inner=0.0, outer=port_r, normal=(1.0, 0.0, 0.0), r_res=24
+    port_r = 0.14 * min(sx, sy)
+    # Ring-like hole (inner radius) so it reads as an opening, not a solid cap
+    inlet_disk = pv.Disc(
+        center=inlet_c,
+        inner=0.35 * port_r,
+        outer=port_r,
+        normal=(-1.0, 0.0, 0.0),
+        r_res=48,
+        c_res=48,
     )
-    # Small fan body on exhaust (visual cue only)
-    fan_hub = pv.Cylinder(
-        center=(outlet_c[0] + 0.06 * sx, outlet_c[1], outlet_c[2]),
-        direction=(1.0, 0.0, 0.0),
-        radius=port_r * 0.55,
-        height=0.08 * sx,
-        resolution=20,
+    outlet_disk = pv.Disc(
+        center=outlet_c,
+        inner=0.35 * port_r,
+        outer=port_r,
+        normal=(1.0, 0.0, 0.0),
+        r_res=48,
+        c_res=48,
     )
     port_labels = [
-        ((inlet_c[0] - 0.08 * sx, inlet_c[1], inlet_c[2] + 0.12 * sz), "INLET"),
-        ((outlet_c[0] + 0.12 * sx, outlet_c[1], outlet_c[2] + 0.12 * sz), "OUTLET+FAN"),
+        ((inlet_c[0] - 0.06 * sx, inlet_c[1], inlet_c[2] + 0.14 * sz), "INLET"),
+        ((outlet_c[0] + 0.06 * sx, outlet_c[1], outlet_c[2] + 0.14 * sz), "OUTLET"),
     ]
 
     return {
@@ -145,7 +145,6 @@ def build_plotter_meshes(pv: Any, snap: TwinSnapshot) -> dict[str, Any]:
         "glyph": glyph,
         "inlet_disk": inlet_disk,
         "outlet_disk": outlet_disk,
-        "fan_hub": fan_hub,
         "port_labels": port_labels,
     }
 
@@ -186,9 +185,8 @@ def render_snapshot(
             always_visible=True,
             name=f"pot_label_{i}",
         )
-    pl.add_mesh(meshes["inlet_disk"], color="#4caf50", opacity=0.9, name="inlet")
-    pl.add_mesh(meshes["outlet_disk"], color="#42a5f5", opacity=0.9, name="outlet")
-    pl.add_mesh(meshes["fan_hub"], color="#90caf9", opacity=0.95, name="fan_hub")
+    pl.add_mesh(meshes["inlet_disk"], color="#4caf50", opacity=0.95, name="inlet")
+    pl.add_mesh(meshes["outlet_disk"], color="#42a5f5", opacity=0.95, name="outlet")
     for i, (pos, label) in enumerate(meshes["port_labels"]):
         pl.add_point_labels(
             [pos],
@@ -215,7 +213,7 @@ def render_snapshot(
             f"outside T={snap.outside_temperature_c:.1f}°C  "
             f"RH={snap.outside_humidity_pct:.0f}%  |  "
             f"fan_ACH≈{snap.exchange.fan_ach_proxy:.1f}/h\n"
-            "INLET / OUTLET+FAN only — no air through walls  |  arrows when fan ON"
+            "Round holes: green=INLET blue=OUTLET  |  pot centered if one  |  arrows when fan ON"
         ),
         position="lower_left",
         font_size=14,
@@ -336,9 +334,8 @@ def run_interactive_live(
                 always_visible=True,
                 name=f"pot_label_{i}",
             )
-        pl.add_mesh(meshes["inlet_disk"], color="#4caf50", opacity=0.9, name="inlet")
-        pl.add_mesh(meshes["outlet_disk"], color="#42a5f5", opacity=0.9, name="outlet")
-        pl.add_mesh(meshes["fan_hub"], color="#90caf9", opacity=0.95, name="fan_hub")
+        pl.add_mesh(meshes["inlet_disk"], color="#4caf50", opacity=0.95, name="inlet")
+        pl.add_mesh(meshes["outlet_disk"], color="#42a5f5", opacity=0.95, name="outlet")
         for i, (pos, label) in enumerate(meshes["port_labels"]):
             pl.add_point_labels(
                 [pos],
@@ -356,7 +353,7 @@ def run_interactive_live(
         pl.add_text(
             help_text()
             + f"\noutside T={snap.outside_temperature_c:.1f}°C RH={snap.outside_humidity_pct:.0f}%"
-            " | green=INLET blue=OUTLET+FAN | arrows only when fan ON",
+            " | green/blue rings = INLET/OUTLET | one pot = center",
             position="lower_left",
             font_size=14,
             color="lightgray",
