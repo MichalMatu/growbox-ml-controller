@@ -314,14 +314,47 @@ def run_interactive_live(
             name="chamber",
             smooth_shading=True,
         )
-        pl.add_mesh(meshes["outline"], color="white", line_width=2, name="outline")
+        pl.add_mesh(meshes["outline"], color="white", line_width=3, name="outline")
         for i, (pot, color) in enumerate(zip(meshes["pots"], meshes["pot_colors"])):
             pl.add_mesh(pot, color=color, name=f"pot_{i}", smooth_shading=True)
+        for i, (pos, label) in enumerate(meshes["pot_labels"]):
+            pl.add_point_labels(
+                [pos],
+                [label],
+                font_size=18,
+                text_color="white",
+                point_size=0,
+                shape=None,
+                always_visible=True,
+                name=f"pot_label_{i}",
+            )
         if meshes["glyph"].n_points > 0:
-            pl.add_mesh(meshes["glyph"], color="#6ec6ff", opacity=0.9, name="exchange")
-        pl.add_mesh(meshes["outside"], color=meshes["outside_color"], opacity=0.55, name="outside")
-        pl.add_text(snap.title(), font_size=9, color="white", name="title")
-        pl.add_text(help_text(), position="lower_left", font_size=8, color="lightgray", name="help")
+            pl.add_mesh(meshes["glyph"], color="#6ec6ff", opacity=0.95, name="exchange")
+        pl.add_mesh(meshes["outside"], color=meshes["outside_color"], opacity=0.7, name="outside")
+        pl.add_point_labels(
+            [
+                (
+                    -0.5 * snap.box.size_xyz[0] - 0.12 * snap.box.size_xyz[0],
+                    0.0,
+                    0.55 * snap.box.size_xyz[2],
+                )
+            ],
+            ["OUTSIDE"],
+            font_size=16,
+            text_color="#9ecbff",
+            point_size=0,
+            shape=None,
+            always_visible=True,
+            name="outside_label",
+        )
+        pl.add_text(snap.title(), font_size=16, color="white", name="title")
+        pl.add_text(
+            help_text() + "\nGreen cylinder = pot | Blue plate = outside | Cyan arrows = exchange",
+            position="lower_left",
+            font_size=14,
+            color="lightgray",
+            name="help",
+        )
         if state["first_draw"]:
             pl.reset_camera()
             state["first_draw"] = False
