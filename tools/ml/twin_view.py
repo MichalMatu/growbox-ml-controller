@@ -33,8 +33,10 @@ from .twin_scene import (
     vent_port_centers,
 )
 
-_HUD_FONT = 14
-_LABEL_FONT = 14
+# Single font for all twin text (HUD + 3D labels) — no size/style mix
+_FONT_FAMILY = "courier"
+_FONT_SIZE = 12
+_FONT_COLOR = "white"
 # Radial studio BG: darker center → slightly brighter edges (subtle, not washed out)
 _BG_CENTER = (0x1C, 0x20, 0x2A)  # cool dark hub
 _BG_EDGE = (0x32, 0x38, 0x46)  # soft rim — only a mild lift vs center
@@ -250,8 +252,8 @@ def _add_static_scene(pl: Any, meshes: dict[str, Any]) -> None:
         pl.add_point_labels(
             [pos],
             [label],
-            font_size=_LABEL_FONT,
-            text_color="white",
+            font_size=_FONT_SIZE,
+            text_color=_FONT_COLOR,
             point_size=0,
             shape=None,
             always_visible=True,
@@ -263,8 +265,8 @@ def _add_static_scene(pl: Any, meshes: dict[str, Any]) -> None:
         pl.add_point_labels(
             [pos],
             [label],
-            font_size=_LABEL_FONT,
-            text_color="white",
+            font_size=_FONT_SIZE,
+            text_color=_FONT_COLOR,
             point_size=0,
             shape=None,
             always_visible=True,
@@ -273,13 +275,14 @@ def _add_static_scene(pl: Any, meshes: dict[str, Any]) -> None:
 
 
 def _set_hud(pl: Any, snap: TwinSnapshot, *, legend: bool) -> None:
+    """HUD panels keep current layout; all text uses the same typeface/size/color."""
     _safe_remove(pl, "params")
     pl.add_text(
         snap.params_table(),
         position="upper_left",
-        font_size=_HUD_FONT,
-        color="white",
-        font="courier",
+        font_size=_FONT_SIZE,
+        color=_FONT_COLOR,
+        font=_FONT_FAMILY,
         name="params",
     )
     if legend:
@@ -287,9 +290,9 @@ def _set_hud(pl: Any, snap: TwinSnapshot, *, legend: bool) -> None:
         pl.add_text(
             _legend_table(),
             position="lower_left",
-            font_size=_HUD_FONT,
-            color="#c8c8c8",
-            font="courier",
+            font_size=_FONT_SIZE,
+            color=_FONT_COLOR,
+            font=_FONT_FAMILY,
             name="help",
         )
 
