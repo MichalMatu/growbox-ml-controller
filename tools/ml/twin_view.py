@@ -51,33 +51,54 @@ _OUTLET = "#5b9bd5"
 _ARROW = "#c8e6f5"
 
 
-def _legend_table() -> str:
-    rows: list[tuple[str, str]] = [
-        ("s / space", "step +10 s"),
-        ("r", "reset"),
-        ("1 / 2", "heater on / off"),
-        ("3 / 4", "fan on / off"),
-        ("5 / 6", "humid on / off"),
-        ("7 / c", "HOME camera"),
-        ("8", "TOP"),
-        ("9", "FRONT"),
-        ("0", "SIDE"),
-        ("i", "ISO"),
-        ("m", "force mono (no stereo)"),
-        ("green", "INLET"),
-        ("blue", "OUTLET"),
-    ]
+def _hud_table(title: str, rows: list[tuple[str, str]]) -> str:
+    """Fixed-width box table for HUD panels."""
     label_w = max(len(k) for k, _ in rows)
     value_w = max(len(v) for _, v in rows)
     inner = label_w + value_w + 3
     top = "┌" + "─" * (inner + 2) + "┐"
     mid = "├" + "─" * (inner + 2) + "┤"
     bot = "└" + "─" * (inner + 2) + "┘"
-    lines = [top, f"│ {'controls'.ljust(inner)} │", mid]
+    lines = [top, f"│ {title.ljust(inner)} │", mid]
     for key, value in rows:
         lines.append(f"│ {key.ljust(label_w)} : {value.ljust(value_w)} │")
     lines.append(bot)
     return "\n".join(lines)
+
+
+def _runtime_controls_table() -> str:
+    """Simulation / actuator keys (lower-left)."""
+    return _hud_table(
+        "runtime",
+        [
+            ("s / space", "step +10 s"),
+            ("r", "reset"),
+            ("1 / 2", "heater on / off"),
+            ("3 / 4", "fan on / off"),
+            ("5 / 6", "humid on / off"),
+            ("h / H", "heater ±0.25"),
+            ("f / F", "fan ±0.25"),
+            ("u / U", "humid ±0.25"),
+            ("green", "INLET"),
+            ("blue", "OUTLET"),
+        ],
+    )
+
+
+def _view_controls_table() -> str:
+    """Camera / view keys only (lower-right)."""
+    return _hud_table(
+        "view",
+        [
+            ("7 / c", "HOME"),
+            ("8", "TOP"),
+            ("9", "FRONT"),
+            ("0", "SIDE"),
+            ("i", "ISO"),
+            ("mouse", "orbit / pan / zoom"),
+            ("m", "force mono"),
+        ],
+    )
 
 
 def _require_pyvista() -> Any:
@@ -275,7 +296,7 @@ def _add_static_scene(pl: Any, meshes: dict[str, Any]) -> None:
 
 
 def _set_hud(pl: Any, snap: TwinSnapshot, *, legend: bool) -> None:
-    """HUD panels keep current layout; all text uses the same typeface/size/color."""
+    """Parameters upper-left; runtime keys lower-left; view keys lower-right."""
     _safe_remove(pl, "params")
     pl.add_text(
         snap.params_table(),
@@ -287,13 +308,23 @@ def _set_hud(pl: Any, snap: TwinSnapshot, *, legend: bool) -> None:
     )
     if legend:
         _safe_remove(pl, "help")
+        _safe_remove(pl, "runtime_keys")
+        _safe_remove(pl, "view_keys")
         pl.add_text(
-            _legend_table(),
+            _runtime_controls_table(),
             position="lower_left",
             font_size=_FONT_SIZE,
             color=_FONT_COLOR,
             font=_FONT_FAMILY,
-            name="help",
+            name="runtime_keys",
+        )
+        pl.add_text(
+            _view_controls_table(),
+            position="lower_right",
+            font_size=_FONT_SIZE,
+            color=_FONT_COLOR,
+            font=_FONT_FAMILY,
+            name="view_keys",
         )
 
 
@@ -777,6 +808,8 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
                 "outlet",
                 "params",
                 "help",
+                "runtime_keys",
+                "view_keys",
                 "pot_0",
                 "pot_1",
                 "pot_2",
