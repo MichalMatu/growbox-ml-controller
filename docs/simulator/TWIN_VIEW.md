@@ -123,8 +123,9 @@ flowchart TB
 
 | Key | Action |
 |-----|--------|
-| `s` / space | step simulator (10 s) |
-| `r` | reset |
+| **space** | **play / pause** (auto-step while PLAY) |
+| **s** | single step (+10 s sim time); stays paused or keeps play state |
+| `r` | reset process + stop play |
 | `1` / `2` | heater on / off |
 | `3` / `4` | fan on / off |
 | `5` / `6` | humidifier on / off |

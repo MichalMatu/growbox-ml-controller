@@ -131,8 +131,16 @@ def run_interactive_live(
     else:
         profile = default_profile(profile_id="live-default", title="Live twin default")
     sim = SequentialEnvironmentSimulator(profile_to_scenario(profile, seed=seed), seed=seed)
-    state = {"heater": 0.0, "fan": 0.0, "humidifier": 0.0, "steps": 0}
+    state = {
+        "heater": 0.0,
+        "fan": 0.0,
+        "humidifier": 0.0,
+        "steps": 0,
+        "playing": False,
+    }
     cache: dict[str, Any] = {"arrow_ready": False, "ready": False}
+    # Auto-play period (ms between sim steps of timestep_s each)
+    play_interval_ms = 120
     editor = ConfigEditor(
         active=False,
         level="root",
@@ -198,7 +206,16 @@ def run_interactive_live(
             cache["ready"] = True
             ensure_arrow_actors(pl, pv, snap, float(cache["box_len"]), cache)
             set_arrows_visible(pl, snap.action.fan > 0.02, cache)
-            set_hud(pl, snap, legend=True, config_editor=editor)
+            cache["pot_label_texts"] = None
+            set_hud(
+                pl,
+                snap,
+                legend=True,
+                config_editor=editor,
+                playing=bool(state["playing"]),
+                steps=int(state["steps"]),
+                max_steps=max_auto_steps,
+            )
             set_standard_view(pl, "home")
             force_mono_render(pl)
             return
@@ -213,8 +230,16 @@ def run_interactive_live(
             )
             if 0 <= index < len(snap.pot_moisture)
         ]
-        set_pot_labels(pl, pot_labels)
-        set_hud(pl, snap, legend=show_legend, config_editor=editor)
+        set_pot_labels(pl, pot_labels, cache=cache)
+        set_hud(
+            pl,
+            snap,
+            legend=show_legend,
+            config_editor=editor,
+            playing=bool(state["playing"]),
+            steps=int(state["steps"]),
+            max_steps=max_auto_steps,
+        )
         set_arrows_visible(pl, snap.action.fan > 0.02, cache)
         force_mono_render(pl)
         pl.render()
@@ -236,20 +261,38 @@ def run_interactive_live(
         refresh(hard=False)
         force_mono_render(pl)
 
-    def step_once() -> None:
+    def step_once(*, from_timer: bool = False) -> None:
         if editor.active:
             return
         if state["steps"] >= max_auto_steps:
+            state["playing"] = False
+            if not from_timer:
+                refresh(hard=False)
             return
         force_mono_render(pl)
         sim.step(action(), add_sensor_noise=False)
         state["steps"] += 1
+        if state["steps"] >= max_auto_steps:
+            state["playing"] = False
         refresh(hard=False)
+
+    def set_playing(running: bool) -> None:
+        state["playing"] = bool(running) and not editor.active
+        if state["steps"] >= max_auto_steps:
+            state["playing"] = False
+        refresh(hard=False)
+
+    def toggle_play() -> None:
+        """space: play / pause (media-player style)."""
+        if editor.active:
+            return
+        set_playing(not state["playing"])
 
     def reset_sim() -> None:
         if editor.active:
             return
         force_mono_render(pl)
+        state["playing"] = False
         # Keep current hardware scenario; only reset process state / commands.
         sim.reset(seed=seed)
         state["steps"] = 0
@@ -257,6 +300,7 @@ def run_interactive_live(
         state["fan"] = 0.0
         state["humidifier"] = 0.0
         cache["ready"] = False
+        cache["pot_label_texts"] = None
         editor.profile = None
         editor.values = read_growbox_config(sim)
         refresh(hard=True)
@@ -268,6 +312,8 @@ def run_interactive_live(
             editor.close()
             refresh(hard=False, legend=True)
         else:
+            # Pause while editing hardware — avoids mid-menu steps.
+            state["playing"] = False
             editor.open_root(sim)
             refresh(hard=False, legend=True)
         force_mono_render(pl)
@@ -355,10 +401,24 @@ def run_interactive_live(
     def space_key() -> None:
         if editor.active and editor.level == "section" and editor.is_flag_at_cursor():
             config_enter()
+        elif editor.active:
+            return
         else:
-            step_once()
+            toggle_play()
 
-    pl.add_key_event("s", step_once)
+    def step_key() -> None:
+        if editor.active:
+            return
+        # Manual step always advances once; does not force play.
+        step_once(from_timer=False)
+
+    def on_play_timer(_step: int = 0) -> None:
+        if not state["playing"] or editor.active:
+            return
+        step_once(from_timer=True)
+
+    pl.add_key_event("s", step_key)
+    pl.add_key_event("S", step_key)
     pl.add_key_event("space", space_key)
     pl.add_key_event("r", reset_sim)
     pl.add_key_event("1", lambda: set_cmd("heater", 1.0))
@@ -417,5 +477,16 @@ def run_interactive_live(
             style.SetDefaultRenderer(ren)
     except Exception:
         _LOG.debug("enable_trackball_style deferred setup failed", exc_info=True)
+
+    # Repeating timer for play mode (callback no-ops while paused).
+    try:
+        pl.add_timer_event(
+            max_steps=max(1, int(max_auto_steps) * 50),
+            duration=int(play_interval_ms),
+            callback=on_play_timer,
+        )
+    except Exception:
+        _LOG.exception("add_timer_event failed — play mode unavailable")
+
     force_mono_render(pl)
     pl.show()

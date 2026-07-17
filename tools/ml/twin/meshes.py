@@ -100,12 +100,19 @@ def add_scene_label(
 def set_pot_labels(
     pl: Any,
     pot_labels: list[tuple[tuple[float, float, float], str]],
+    *,
+    cache: dict[str, Any] | None = None,
 ) -> None:
-    """Replace pot moisture labels (soft-safe: remove + re-add text only)."""
+    """Update pot moisture labels; skip rebuild when text unchanged (no flicker)."""
+    texts = tuple(label for _pos, label in pot_labels)
+    if cache is not None and cache.get("pot_label_texts") == texts:
+        return
     for i in range(4):
         safe_remove(pl, f"pot_label_{i}")
     for i, (pos, label) in enumerate(pot_labels):
         add_scene_label(pl, pos, label, name=f"pot_label_{i}")
+    if cache is not None:
+        cache["pot_label_texts"] = texts
 
 
 def build_static_meshes(pv: Any, snap: TwinSnapshot) -> dict[str, Any]:

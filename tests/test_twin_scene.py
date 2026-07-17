@@ -110,6 +110,23 @@ def test_scene_labels_larger_than_hud_font():
     assert twin_view._pot_label_text(0, 42.4) == "P1 θ=42%"
 
 
+def test_runtime_controls_show_play_pause():
+    from tools.ml.twin.hud import merge_params_panel, runtime_controls_table
+
+    paused = runtime_controls_table(playing=False)
+    assert "PAUSE" in paused
+    assert "play / pause" in paused
+    assert "step +10 s" in paused
+    playing = runtime_controls_table(playing=True)
+    assert "PLAY" in playing
+
+    sim = SequentialEnvironmentSimulator(default_scenario_v2(seed=0), seed=0)
+    snap = snapshot_from_simulator(sim)
+    panel = merge_params_panel(snap, [("run", "PAUSE"), ("steps", "0/200")])
+    assert "run" in panel and "PAUSE" in panel
+    assert "air T" in panel
+
+
 def test_growbox_config_section_complete_and_apply():
     """Full growbox section: env parameters + active pot count."""
     from tools.ml.twin.config import (

@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Any
 
 from .config import ConfigEditor, editor_panel
-from .plotter import safe_remove
 from .scene import TwinSnapshot
 
 FONT_FAMILY = "courier"
@@ -28,12 +27,14 @@ def hud_table(title: str, rows: list[tuple[str, str]]) -> str:
     return "\n".join(lines)
 
 
-def runtime_controls_table() -> str:
+def runtime_controls_table(*, playing: bool = False) -> str:
     return hud_table(
         "runtime",
         [
-            ("s / space", "step +10 s"),
-            ("r", "reset"),
+            ("mode", "PLAY" if playing else "PAUSE"),
+            ("space", "play / pause"),
+            ("s", "step +10 s"),
+            ("r", "reset + stop"),
             ("1 / 2", "heater on / off"),
             ("3 / 4", "fan on / off"),
             ("5 / 6", "humid on / off"),
@@ -89,51 +90,114 @@ def view_controls_table() -> str:
     )
 
 
+def _set_corner_text(pl: Any, name: str, position: str, text: str) -> None:
+    """Update corner annotation in place — avoid remove/add flicker each step."""
+    actor = None
+    try:
+        actors = getattr(pl, "actors", None) or {}
+        actor = actors.get(name)
+    except Exception:
+        actor = None
+    if actor is not None and hasattr(actor, "set_text"):
+        try:
+            actor.set_text(position, text)
+            return
+        except Exception:
+            pass
+    # First create or non-CornerAnnotation fallback
+    try:
+        from .plotter import safe_remove
+
+        safe_remove(pl, name)
+    except Exception:
+        pass
+    pl.add_text(
+        text,
+        position=position,
+        font_size=FONT_SIZE,
+        color=FONT_COLOR,
+        font=FONT_FAMILY,
+        name=name,
+        render=False,
+    )
+
+
+def params_status_rows(
+    *,
+    playing: bool,
+    steps: int,
+    max_steps: int,
+) -> list[tuple[str, str]]:
+    return [
+        ("run", "PLAY" if playing else "PAUSE"),
+        ("steps", f"{int(steps)}/{int(max_steps)}"),
+    ]
+
+
+def merge_params_panel(snap: TwinSnapshot, status_rows: list[tuple[str, str]]) -> str:
+    """Parameters table with playback status rows prepended."""
+    # Rebuild with status so column widths stay aligned
+    base = snap.params_table()
+    if not status_rows:
+        return base
+    # Parse is fragile; rebuild from snapshot fields + status
+    rows: list[tuple[str, str]] = list(status_rows)
+    rows.extend(
+        [
+            ("time", f"{snap.elapsed_s:.0f} s"),
+            ("air T", f"{snap.air_temperature_c:.1f} °C"),
+            ("air RH", f"{snap.air_humidity_pct:.0f} %"),
+            ("CO2", f"{snap.co2_ppm:.0f} ppm"),
+            ("out T", f"{snap.outside_temperature_c:.1f} °C"),
+            ("out RH", f"{snap.outside_humidity_pct:.0f} %"),
+            ("out CO2", f"{snap.outside_co2_ppm:.0f} ppm"),
+            ("heater", f"{snap.action.heater:.2f}"),
+            ("fan", f"{snap.action.fan:.2f}"),
+            ("humid", f"{snap.action.humidifier:.2f}"),
+            ("fan ACH", f"{snap.exchange.fan_ach_proxy:.1f} /h"),
+        ]
+    )
+    for index, active in enumerate(snap.pot_active):
+        if not active:
+            continue
+        rows.append((f"P{index + 1} soil", f"{snap.pot_moisture[index]:.0f} %"))
+        rows.append((f"P{index + 1} soil T", f"{snap.pot_temperature[index]:.1f} °C"))
+    return hud_table("parameters", rows)
+
+
 def set_hud(
     pl: Any,
     snap: TwinSnapshot,
     *,
     legend: bool,
     config_editor: ConfigEditor | None = None,
+    playing: bool = False,
+    steps: int = 0,
+    max_steps: int = 200,
 ) -> None:
-    """Parameters / configurator upper-left; keys lower-left / lower-right."""
-    safe_remove(pl, "params")
+    """Parameters / configurator upper-left; keys lower-left / lower-right.
+
+    Text is updated in place when possible so soft steps do not flash HUD.
+    """
     if config_editor is not None and config_editor.active:
         panel = editor_panel(config_editor)
     else:
-        panel = snap.params_table()
-    pl.add_text(
-        panel,
-        position="upper_left",
-        font_size=FONT_SIZE,
-        color=FONT_COLOR,
-        font=FONT_FAMILY,
-        name="params",
-    )
-    if legend:
-        safe_remove(pl, "help")
-        safe_remove(pl, "runtime_keys")
-        safe_remove(pl, "view_keys")
-        if config_editor is not None and config_editor.active:
-            if config_editor.level == "root":
-                left = config_root_keys_table()
-            else:
-                left = config_section_keys_table(flags=config_editor.is_flag_section())
+        panel = merge_params_panel(
+            snap,
+            params_status_rows(playing=playing, steps=steps, max_steps=max_steps),
+        )
+    _set_corner_text(pl, "params", "upper_left", panel)
+
+    if not legend:
+        return
+
+    if config_editor is not None and config_editor.active:
+        if config_editor.level == "root":
+            left = config_root_keys_table()
         else:
-            left = runtime_controls_table()
-        pl.add_text(
-            left,
-            position="lower_left",
-            font_size=FONT_SIZE,
-            color=FONT_COLOR,
-            font=FONT_FAMILY,
-            name="runtime_keys",
-        )
-        pl.add_text(
-            view_controls_table(),
-            position="lower_right",
-            font_size=FONT_SIZE,
-            color=FONT_COLOR,
-            font=FONT_FAMILY,
-            name="view_keys",
-        )
+            left = config_section_keys_table(flags=config_editor.is_flag_section())
+    else:
+        left = runtime_controls_table(playing=playing)
+
+    _set_corner_text(pl, "runtime_keys", "lower_left", left)
+    _set_corner_text(pl, "view_keys", "lower_right", view_controls_table())
