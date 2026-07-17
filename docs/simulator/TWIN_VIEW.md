@@ -10,14 +10,13 @@
 
 ## What you see
 
-- **Chamber box** — size from `growbox_volume_m3`; color ∝ air **T**; opacity ∝ **RH**
-- **Pots** — up to 4 cylinders; color ∝ **soil moisture**
-- **Outside climate** — only in HUD text (`outside T` / `RH`), no separate mesh
-- **INLET / OUTLET** — two **round wall openings** (rings) on opposite faces; no fan tube mesh
-- **Arrows** — only when fan is ON: air **in** at inlet, **out** at outlet
-- **Pots** — stocky cylinder; **one active pot is centered** on the floor
+- **Chamber** — single **white wireframe** only (no solid fill; no T/RH color mapping)
+- **Pots** — fixed brown cylinder; one active pot is **centered**
+- **Climate** — numbers only in the **parameters** HUD table
+- **INLET / OUTLET** — two round rings on opposite walls
+- **Arrows** — at most two small previews when fan is ON (not a flow field)
 
-Arrows are **illustrative** (port flow / fan command), not CFD.
+No temperature/humidity false-color on geometry (removed: it caused purple wash + confusion).
 
 **Walls vs ports (physics honesty):**
 
