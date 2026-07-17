@@ -46,10 +46,11 @@ def _legend_table() -> str:
         ("1 / 2", "heater on / off"),
         ("3 / 4", "fan on / off"),
         ("5 / 6", "humid on / off"),
-        ("7 / i", "ISO"),
+        ("7 / c", "HOME (center dot)"),
         ("8", "TOP"),
         ("9", "FRONT"),
         ("0", "SIDE"),
+        ("i", "ISO"),
         ("green", "INLET"),
         ("blue", "OUTLET"),
     ]
@@ -248,34 +249,103 @@ def _set_arrows(
     flag["arrows"] = True
 
 
+# Camera orientation cube layout (must match _style_camera_widget)
+_CAM_CUBE_SIZE = 200
+_CAM_CUBE_PAD = 40
+_HOME_DOT_SIZE = 44
+
+
 def _set_standard_view(pl: Any, name: str) -> None:
-    if name == "iso":
+    """CAD-style camera presets. HOME = default product angle."""
+    if name == "home":
+        # Default: slightly far, slightly high, slightly from the side — pot readable.
         pl.view_isometric()
+        pl.reset_camera()
+        try:
+            pl.camera.elevation(22.0)
+            pl.camera.azimuth(-18.0)
+            pl.camera.zoom(0.88)  # step back a bit
+        except Exception:
+            b = pl.bounds
+            cx = 0.5 * (b[0] + b[1])
+            cy = 0.5 * (b[2] + b[3])
+            cz = 0.5 * (b[4] + b[5])
+            span = max(b[1] - b[0], b[3] - b[2], b[5] - b[4], 0.5)
+            pl.camera_position = [
+                (cx + 1.7 * span, cy - 1.85 * span, cz + 1.35 * span),
+                (cx, cy, cz - 0.15 * span),
+                (0.0, 0.0, 1.0),
+            ]
+    elif name == "iso":
+        pl.view_isometric()
+        pl.reset_camera()
     elif name == "top":
         pl.view_xy()
+        pl.reset_camera()
     elif name == "front":
         pl.view_xz()
+        pl.reset_camera()
     elif name == "side":
         pl.view_yz()
+        pl.reset_camera()
     else:
-        pl.view_isometric()
-    pl.reset_camera()
+        _set_standard_view(pl, "home")
+        return
     pl.reset_camera_clipping_range()
     pl.render()
 
 
 def _style_camera_widget(widget: Any) -> None:
+    """Orientation cross: spaced axis dots, inset from edge; keep center container."""
     try:
         rep = widget.GetRepresentation()
         rep.AnchorToUpperRight()
-        rep.SetSize(200, 200)
-        rep.SetPadding(36, 36)
-        rep.SetNormalizedHandleDia(0.26)
+        rep.SetSize(_CAM_CUBE_SIZE, _CAM_CUBE_SIZE)
+        rep.SetPadding(_CAM_CUBE_PAD, _CAM_CUBE_PAD)
+        # Smaller axis tips → more gap between dots on the cross
+        rep.SetNormalizedHandleDia(0.22)
+        # Center sphere of the cross (container) — visual hub for HOME overlay
+        rep.SetContainerVisibility(True)
     except Exception:
         pass
 
 
-def _attach_camera_controls(pl: Any) -> None:
+def _home_button_position(window_size: tuple[int, int]) -> tuple[float, float]:
+    """Pixel position (VTK origin = bottom-left) of HOME at cube center."""
+    w, h = window_size
+    # Center of orientation widget minus half button size
+    x = w - _CAM_CUBE_PAD - _CAM_CUBE_SIZE / 2.0 - _HOME_DOT_SIZE / 2.0
+    y = h - _CAM_CUBE_PAD - _CAM_CUBE_SIZE / 2.0 - _HOME_DOT_SIZE / 2.0
+    return (float(x), float(y))
+
+
+def _attach_home_center_button(pl: Any, window_size: tuple[int, int]) -> None:
+    """Central HOME node on the view-cross (click → default camera).
+
+    VTK orientation widget has no real center action, so we place a circular
+    checkbox button exactly on the cross hub (upper-right).
+    """
+
+    def _on_home(_state: bool = True) -> None:
+        _set_standard_view(pl, "home")
+
+    try:
+        pl.add_checkbox_button_widget(
+            _on_home,
+            value=True,
+            position=_home_button_position(window_size),
+            size=_HOME_DOT_SIZE,
+            border_size=3,
+            color_on="#f5f5f5",
+            color_off="#f5f5f5",
+            background_color="#3d4658",
+        )
+    except Exception:
+        # Still have keyboard HOME
+        pass
+
+
+def _attach_camera_controls(pl: Any, window_size: tuple[int, int] = (1200, 860)) -> None:
     try:
         pl.enable_trackball_style()
     except Exception:
@@ -289,7 +359,11 @@ def _attach_camera_controls(pl: Any) -> None:
             _style_camera_widget(widget)
         except Exception:
             pass
-    pl.add_key_event("7", lambda: _set_standard_view(pl, "iso"))
+    # Center node of the cross = HOME
+    _attach_home_center_button(pl, window_size)
+
+    pl.add_key_event("7", lambda: _set_standard_view(pl, "home"))
+    pl.add_key_event("c", lambda: _set_standard_view(pl, "home"))
     pl.add_key_event("i", lambda: _set_standard_view(pl, "iso"))
     pl.add_key_event("8", lambda: _set_standard_view(pl, "top"))
     pl.add_key_event("9", lambda: _set_standard_view(pl, "front"))
@@ -312,8 +386,8 @@ def render_snapshot(
     _set_arrows(pl, pv, snap, meshes["box_len"], {"arrows": False})
     _set_hud(pl, snap, legend=True)
     if interactive:
-        _attach_camera_controls(pl)
-    _set_standard_view(pl, "iso")
+        _attach_camera_controls(pl, window_size)
+    _set_standard_view(pl, "home")
     if screenshot is not None:
         path = Path(screenshot)
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -355,9 +429,10 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
     state = {"heater": 0.0, "fan": 0.0, "humidifier": 0.0, "steps": 0}
     flags = {"arrows": False, "ready": False}
 
-    pl = pv.Plotter(window_size=(1200, 860))
+    win = (1200, 860)
+    pl = pv.Plotter(window_size=win)
     pl.set_background(_BG)
-    _attach_camera_controls(pl)
+    _attach_camera_controls(pl, win)
 
     def action() -> ControlAction:
         return ControlAction(
@@ -397,7 +472,7 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
             flags["ready"] = True
             _set_hud(pl, snap, legend=True)
             _set_arrows(pl, pv, snap, float(flags["box_len"]), flags)
-            _set_standard_view(pl, "iso")
+            _set_standard_view(pl, "home")
             return
 
         # Soft update: params table + fan arrows only
