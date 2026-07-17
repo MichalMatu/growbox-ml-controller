@@ -61,6 +61,7 @@ def _legend_table() -> str:
         ("9", "FRONT"),
         ("0", "SIDE"),
         ("i", "ISO"),
+        ("m", "force mono (no stereo)"),
         ("green", "INLET"),
         ("blue", "OUTLET"),
     ]
@@ -545,9 +546,124 @@ def _attach_camera_controls(pl: Any, window_size: tuple[int, int] = (1200, 860))
     pl.add_key_event("0", lambda: _set_standard_view(pl, "side"))
 
 
+def _force_mono_render(pl: Any) -> None:
+    """Kill red/blue anaglyph stereo and MSAA line fringes (macOS VTK).
+
+    Root cause of the purple scene + double red/blue chamber edges: VTK's
+    default interactor binds key ``3`` to *toggle stereo* (RedBlue anaglyph).
+    Our live mode also uses ``3`` for fan ON — so every fan press enabled stereo.
+    """
+    try:
+        rw = pl.render_window
+    except Exception:
+        return
+    try:
+        rw.StereoRenderOff()
+    except Exception:
+        pass
+    try:
+        # Keep type defined but never render stereo
+        if hasattr(rw, "SetStereoTypeToCrystalEyes"):
+            rw.SetStereoTypeToCrystalEyes()
+        rw.StereoRenderOff()
+    except Exception:
+        pass
+    try:
+        rw.SetMultiSamples(0)
+    except Exception:
+        pass
+    try:
+        pv_theme = _require_pyvista().global_theme
+        pv_theme.multi_samples = 0
+    except Exception:
+        pass
+
+
+def _install_stereo_guard(pl: Any) -> None:
+    """Re-assert mono every frame / key so VTK default '3'=stereo cannot stick."""
+
+    def _on_start(_obj: Any = None, _evt: Any = None) -> None:
+        _force_mono_render(pl)
+
+    try:
+        pl.render_window.AddObserver("StartEvent", _on_start)
+    except Exception:
+        pass
+    # VTK CharEvent handles '3' as stereo toggle *after* some key callbacks.
+    # Kill stereo on every key so fan key never leaves anaglyph on.
+    try:
+        iren = pl.iren.interactor if hasattr(pl, "iren") and pl.iren is not None else None
+        if iren is not None:
+            iren.AddObserver("KeyPressEvent", _on_start)
+            iren.AddObserver("CharEvent", _on_start)
+    except Exception:
+        pass
+    _force_mono_render(pl)
+
+
+def _clear_vtk_default_keys(pl: Any) -> None:
+    """Remove VTK/PyVista default key bindings that conflict with live controls.
+
+    Critical: ``3`` = toggle stereo (RedBlue) in vtkRenderWindowInteractor.
+    Also clear ``s``/``r``/``w`` surface-mode bindings we rebind ourselves.
+    """
+    keys = (
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "0",
+        "s",
+        "S",
+        "r",
+        "R",
+        "w",
+        "W",
+        "c",
+        "C",
+        "i",
+        "I",
+        "f",
+        "F",
+        "h",
+        "H",
+        "u",
+        "U",
+        "space",
+    )
+    iren = getattr(pl, "iren", None)
+    if iren is None:
+        return
+    for key in keys:
+        for meth in ("clear_events_for_key", "clear_key_event_callbacks"):
+            fn = getattr(iren, meth, None)
+            if fn is None:
+                continue
+            try:
+                if meth == "clear_events_for_key":
+                    fn(key)
+                else:
+                    fn()
+            except TypeError:
+                try:
+                    fn(key)  # type: ignore[misc]
+                except Exception:
+                    pass
+            except Exception:
+                pass
+            if meth == "clear_key_event_callbacks":
+                return  # cleared all once
+
+
 def _configure_plotter(pl: Any) -> None:
-    """Stable look: no scalar bar, no anti-alias color fringes on wireframe."""
+    """Stable look: mono only, no scalar bar, no MSAA color fringes."""
     pl.set_background(_BG)
+    _force_mono_render(pl)
     try:
         pl.disable_anti_aliasing()
     except Exception:
@@ -556,6 +672,7 @@ def _configure_plotter(pl: Any) -> None:
         pl.remove_scalar_bar()
     except Exception:
         pass
+    _install_stereo_guard(pl)
 
 
 def render_snapshot(
@@ -566,6 +683,10 @@ def render_snapshot(
     window_size: tuple[int, int] = (1100, 800),
 ) -> None:
     pv = _require_pyvista()
+    try:
+        pv.global_theme.multi_samples = 0
+    except Exception:
+        pass
     off_screen = screenshot is not None and not interactive
     pl = pv.Plotter(off_screen=off_screen, window_size=window_size)
     _configure_plotter(pl)
@@ -618,6 +739,10 @@ def run_rollout(
 def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
     """Live loop: geometry once; fan only toggles arrow visibility + HUD text."""
     pv = _require_pyvista()
+    try:
+        pv.global_theme.multi_samples = 0
+    except Exception:
+        pass
     sim = SequentialEnvironmentSimulator(default_scenario_v2(seed=seed), seed=seed)
     state = {"heater": 0.0, "fan": 0.0, "humidifier": 0.0, "steps": 0}
     cache: dict[str, Any] = {"arrow_ready": False, "ready": False}
@@ -625,11 +750,15 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
     win = (1200, 860)
     pl = pv.Plotter(window_size=win)
     _configure_plotter(pl)
+    # Must clear VTK defaults BEFORE our bindings — key 3 = stereo anaglyph.
+    _clear_vtk_default_keys(pl)
     _attach_camera_controls(pl, win)
 
     print(
-        "twin_view LIVE | wireframe-only | no T/RH overlay | HOME=white center / key 7\n"
-        "  fan ON = two fixed-color arrows (visibility only, no mesh rebuild)"
+        "twin_view LIVE | BUILD stereo-fix-v4\n"
+        "  wireframe-only | no T/RH overlay | HOME=white center / key 7\n"
+        "  key 3 = fan ON only (VTK stereo toggle DISABLED)\n"
+        "  if scene goes purple/red-blue: press 4 then check stereo is off"
     )
 
     def action() -> ControlAction:
@@ -640,6 +769,7 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
         )
 
     def refresh(*, hard: bool = False) -> None:
+        _force_mono_render(pl)
         snap = snapshot_from_simulator(sim, action=action())
         if hard or not cache.get("ready"):
             # Full rebuild only on start/reset — never clear_actors mid-session.
@@ -675,29 +805,38 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
             _set_arrows_visible(pl, snap.action.fan > 0.02, cache)
             _set_hud(pl, snap, legend=True)
             _set_standard_view(pl, "home")
+            _force_mono_render(pl)
             return
 
         # Soft update: params table + arrow visibility only (no add/remove mesh)
         _set_hud(pl, snap, legend=False)
         _set_arrows_visible(pl, snap.action.fan > 0.02, cache)
+        _force_mono_render(pl)
         pl.render()
 
     def set_cmd(key: str, value: float) -> None:
+        # Always kill stereo first — VTK may still fire default '3' stereo toggle.
+        _force_mono_render(pl)
         state[key] = _clip01(value)
         refresh(hard=False)
+        _force_mono_render(pl)
 
     def bump(key: str, delta: float) -> None:
+        _force_mono_render(pl)
         state[key] = _clip01(state[key] + delta)
         refresh(hard=False)
+        _force_mono_render(pl)
 
     def step_once() -> None:
         if state["steps"] >= max_auto_steps:
             return
+        _force_mono_render(pl)
         sim.step(action(), add_sensor_noise=False)
         state["steps"] += 1
         refresh(hard=False)
 
     def reset_sim() -> None:
+        _force_mono_render(pl)
         sim.reset(seed=seed)
         state["steps"] = 0
         state["heater"] = 0.0
@@ -706,6 +845,8 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
         cache["ready"] = False
         refresh(hard=True)
 
+    # Re-clear then bind — order matters vs VTK CharEvent stereo on '3'
+    _clear_vtk_default_keys(pl)
     pl.add_key_event("s", step_once)
     pl.add_key_event("space", step_once)
     pl.add_key_event("r", reset_sim)
@@ -721,8 +862,18 @@ def run_interactive_live(*, seed: int = 0, max_auto_steps: int = 200) -> None:
     pl.add_key_event("F", lambda: bump("fan", -0.25))
     pl.add_key_event("u", lambda: bump("humidifier", 0.25))
     pl.add_key_event("U", lambda: bump("humidifier", -0.25))
+    # Extra: press 'm' to force mono if anything re-enabled stereo
+    pl.add_key_event("m", lambda: (_force_mono_render(pl), pl.render()))
 
     refresh(hard=True)
+    _force_mono_render(pl)
+    try:
+        stereo = pl.render_window.GetStereoRender()
+        print(
+            f"  stereo_render={stereo} (must be 0) multi_samples={pl.render_window.GetMultiSamples()}"
+        )
+    except Exception:
+        pass
     pl.show()
 
 
