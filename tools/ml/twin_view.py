@@ -19,8 +19,6 @@ import argparse
 from pathlib import Path
 from typing import Any
 
-import numpy as np
-
 from .simulator import (
     ControlAction,
     SequentialEnvironmentSimulator,
@@ -28,18 +26,23 @@ from .simulator import (
 )
 from .twin_scene import (
     TwinSnapshot,
-    humidity_opacity,
     pot_layout_positions,
     pot_radius_height,
     snapshot_from_simulator,
     soil_moisture_to_rgb,
-    temperature_to_rgb,
     vent_port_centers,
 )
 
 # Single HUD text size (tables + scene labels)
 _HUD_FONT = 14
 _LABEL_FONT = 14
+
+# Fixed chamber look — do NOT map T→RGB on the translucent cube (causes purple wash
+# under VTK lighting when combined with cyan glyphs / double edges).
+_CHAMBER_COLOR = "#4a5a48"
+_CHAMBER_OPACITY = 0.20
+_ARROW_COLOR = "#7ec8e8"
+_ARROW_LEN_FRAC = 0.09  # of box length — small preview only
 
 
 def _legend_table() -> str:
@@ -100,9 +103,6 @@ def build_plotter_meshes(pv: Any, snap: TwinSnapshot) -> dict[str, Any]:
         y_length=sy,
         z_length=sz,
     )
-    chamber_color = temperature_to_rgb(snap.air_temperature_c)
-    chamber_opacity = humidity_opacity(snap.air_humidity_pct)
-
     # Wireframe outline for walls (always visible)
     outline = chamber.extract_feature_edges(boundary_edges=True, feature_edges=False)
 
@@ -117,7 +117,7 @@ def build_plotter_meshes(pv: Any, snap: TwinSnapshot) -> dict[str, Any]:
             direction=(0.0, 0.0, 1.0),
             radius=radius,
             height=height,
-            resolution=40,
+            resolution=28,
         )
         pots.append(cyl)
         pot_colors.append(soil_moisture_to_rgb(snap.pot_moisture[index]))
@@ -128,26 +128,23 @@ def build_plotter_meshes(pv: Any, snap: TwinSnapshot) -> dict[str, Any]:
             )
         )
 
-    # Two small preview arrows only (inlet + outlet centers) when fan ON.
-    # Thin geometry + solid color (no scalar lighting) avoids purple wash / lag.
-    if snap.exchange.points.shape[0] > 0:
-        cloud = pv.PolyData(snap.exchange.points)
-        cloud["vectors"] = snap.exchange.vectors
-        glyph = cloud.glyph(
-            orient="vectors",
-            scale=False,
-            factor=1.0,
-            geom=pv.Arrow(
-                tip_length=0.30,
-                tip_radius=0.08,
-                tip_resolution=12,
-                shaft_radius=0.035,
-                shaft_resolution=12,
-                scale=float(np.mean(snap.exchange.magnitudes)),
-            ),
-        )
-    else:
-        glyph = pv.PolyData()
+    # Exactly two tiny arrows when fan ON — plain Arrow meshes (no glyph filter / no scalars)
+    arrows: list[Any] = []
+    if snap.exchange.points.shape[0] >= 2:
+        arrow_len = max(0.04, _ARROW_LEN_FRAC * sx)
+        for origin in snap.exchange.points[:2]:
+            arrows.append(
+                pv.Arrow(
+                    start=tuple(origin),
+                    direction=(1.0, 0.0, 0.0),
+                    tip_length=0.28,
+                    tip_radius=0.07,
+                    tip_resolution=8,
+                    shaft_radius=0.03,
+                    shaft_resolution=8,
+                    scale=arrow_len,
+                )
+            )
 
     # Two round wall openings only (no fan tube) — PyVista: Disc, not Disk.
     inlet_c, outlet_c = vent_port_centers(snap.box)
@@ -158,16 +155,16 @@ def build_plotter_meshes(pv: Any, snap: TwinSnapshot) -> dict[str, Any]:
         inner=0.35 * port_r,
         outer=port_r,
         normal=(-1.0, 0.0, 0.0),
-        r_res=24,
-        c_res=24,
+        r_res=20,
+        c_res=20,
     )
     outlet_disk = pv.Disc(
         center=outlet_c,
         inner=0.35 * port_r,
         outer=port_r,
         normal=(1.0, 0.0, 0.0),
-        r_res=24,
-        c_res=24,
+        r_res=20,
+        c_res=20,
     )
     port_labels = [
         ((inlet_c[0] - 0.06 * sx, inlet_c[1], inlet_c[2] + 0.14 * sz), "INLET"),
@@ -176,17 +173,77 @@ def build_plotter_meshes(pv: Any, snap: TwinSnapshot) -> dict[str, Any]:
 
     return {
         "chamber": chamber,
-        "chamber_color": chamber_color,
-        "chamber_opacity": chamber_opacity,
+        "chamber_color": _CHAMBER_COLOR,
+        "chamber_opacity": _CHAMBER_OPACITY,
         "outline": outline,
         "pots": pots,
         "pot_colors": pot_colors,
         "pot_labels": pot_labels,
-        "glyph": glyph,
+        "arrows": arrows,
         "inlet_disk": inlet_disk,
         "outlet_disk": outlet_disk,
         "port_labels": port_labels,
     }
+
+
+def _safe_remove(pl: Any, name: str) -> None:
+    try:
+        pl.remove_actor(name)
+    except Exception:
+        pass
+
+
+def _add_scene_meshes(pl: Any, meshes: dict[str, Any], *, with_arrows: bool) -> None:
+    """Add static-ish scene pieces (no full clear — call after targeted removes)."""
+    pl.add_mesh(
+        meshes["chamber"],
+        color=meshes["chamber_color"],
+        opacity=meshes["chamber_opacity"],
+        name="chamber",
+        smooth_shading=True,
+        show_edges=False,
+    )
+    pl.add_mesh(meshes["outline"], color="white", line_width=2, name="outline")
+    for i, (pot, color) in enumerate(zip(meshes["pots"], meshes["pot_colors"])):
+        pl.add_mesh(pot, color=color, name=f"pot_{i}", smooth_shading=True, show_edges=False)
+    for i, (pos, label) in enumerate(meshes["pot_labels"]):
+        pl.add_point_labels(
+            [pos],
+            [label],
+            font_size=_LABEL_FONT,
+            text_color="white",
+            point_size=0,
+            shape=None,
+            always_visible=True,
+            name=f"pot_label_{i}",
+        )
+    pl.add_mesh(meshes["inlet_disk"], color="#4caf50", opacity=0.95, name="inlet", show_edges=False)
+    pl.add_mesh(
+        meshes["outlet_disk"], color="#42a5f5", opacity=0.95, name="outlet", show_edges=False
+    )
+    for i, (pos, label) in enumerate(meshes["port_labels"]):
+        pl.add_point_labels(
+            [pos],
+            [label],
+            font_size=_LABEL_FONT,
+            text_color="white",
+            point_size=0,
+            shape=None,
+            always_visible=True,
+            name=f"port_label_{i}",
+        )
+    if with_arrows:
+        for i, arrow in enumerate(meshes["arrows"]):
+            pl.add_mesh(
+                arrow,
+                color=_ARROW_COLOR,
+                name=f"arrow_{i}",
+                smooth_shading=False,
+                ambient=0.85,
+                specular=0.0,
+                show_edges=False,
+                show_scalar_bar=False,
+            )
 
 
 def render_snapshot(
@@ -203,54 +260,9 @@ def render_snapshot(
     off_screen = screenshot is not None and not interactive
     pl = pv.Plotter(off_screen=off_screen, window_size=window_size)
     meshes = build_plotter_meshes(pv, snap)
+    _add_scene_meshes(pl, meshes, with_arrows=bool(meshes["arrows"]))
 
-    pl.add_mesh(
-        meshes["chamber"],
-        color=meshes["chamber_color"],
-        opacity=meshes["chamber_opacity"],
-        name="chamber",
-        smooth_shading=True,
-    )
-    pl.add_mesh(meshes["outline"], color="white", line_width=3, name="outline")
-    for i, (pot, color) in enumerate(zip(meshes["pots"], meshes["pot_colors"])):
-        pl.add_mesh(pot, color=color, name=f"pot_{i}", smooth_shading=True)
-    for i, (pos, label) in enumerate(meshes["pot_labels"]):
-        pl.add_point_labels(
-            [pos],
-            [label],
-            font_size=_LABEL_FONT,
-            text_color="white",
-            point_size=0,
-            shape=None,
-            always_visible=True,
-            name=f"pot_label_{i}",
-        )
-    pl.add_mesh(meshes["inlet_disk"], color="#4caf50", opacity=0.95, name="inlet")
-    pl.add_mesh(meshes["outlet_disk"], color="#42a5f5", opacity=0.95, name="outlet")
-    for i, (pos, label) in enumerate(meshes["port_labels"]):
-        pl.add_point_labels(
-            [pos],
-            [label],
-            font_size=_LABEL_FONT,
-            text_color="white",
-            point_size=0,
-            shape=None,
-            always_visible=True,
-            name=f"port_label_{i}",
-        )
-    if meshes["glyph"].n_points > 0:
-        pl.add_mesh(
-            meshes["glyph"],
-            color="#8fd3f4",
-            name="exchange",
-            opacity=1.0,
-            smooth_shading=False,
-            ambient=0.7,
-            specular=0.0,
-            show_scalar_bar=False,
-        )
-
-    # Parameter table (upper right) + short legend (lower left) — same font size
+    # Parameter table (upper left) + controls legend (lower left)
     pl.add_text(
         snap.params_table(),
         position="upper_left",
@@ -439,6 +451,9 @@ def run_interactive_live(
     pl = pv.Plotter(window_size=(1200, 860))
     pl.set_background("#1a1f2b")
     _attach_camera_controls(pl)
+    # Track what is on the plotter so we never clear_actors() (that stacked outlines
+    # and left purple garbage + lag when fan toggled).
+    scene = {"static_built": False, "arrows_on": False, "n_pots": 0}
 
     def current_action() -> ControlAction:
         return ControlAction(
@@ -447,57 +462,36 @@ def run_interactive_live(
             humidifier=state["humidifier"],
         )
 
-    def redraw() -> None:
-        snap = snapshot_from_simulator(sim, action=current_action())
-        meshes = build_plotter_meshes(pv, snap)
-        # clear_actors avoids wiping interactor state (safer than pl.clear() on macOS)
-        pl.clear_actors()
-        pl.set_background("#1a1f2b")
-        pl.add_mesh(
-            meshes["chamber"],
-            color=meshes["chamber_color"],
-            opacity=meshes["chamber_opacity"],
-            name="chamber",
-            smooth_shading=True,
-        )
-        pl.add_mesh(meshes["outline"], color="white", line_width=3, name="outline")
-        for i, (pot, color) in enumerate(zip(meshes["pots"], meshes["pot_colors"])):
-            pl.add_mesh(pot, color=color, name=f"pot_{i}", smooth_shading=True)
-        for i, (pos, label) in enumerate(meshes["pot_labels"]):
-            pl.add_point_labels(
-                [pos],
-                [label],
-                font_size=_LABEL_FONT,
-                text_color="white",
-                point_size=0,
-                shape=None,
-                always_visible=True,
-                name=f"pot_label_{i}",
-            )
-        pl.add_mesh(meshes["inlet_disk"], color="#4caf50", opacity=0.95, name="inlet")
-        pl.add_mesh(meshes["outlet_disk"], color="#42a5f5", opacity=0.95, name="outlet")
-        for i, (pos, label) in enumerate(meshes["port_labels"]):
-            pl.add_point_labels(
-                [pos],
-                [label],
-                font_size=_LABEL_FONT,
-                text_color="white",
-                point_size=0,
-                shape=None,
-                always_visible=True,
-                name=f"port_label_{i}",
-            )
-        if meshes["glyph"].n_points > 0:
-            pl.add_mesh(
-                meshes["glyph"],
-                color="#8fd3f4",
-                opacity=1.0,
-                name="exchange",
-                smooth_shading=False,
-                ambient=0.7,
-                specular=0.0,
-                show_scalar_bar=False,
-            )
+    def _remove_arrows() -> None:
+        for i in range(4):
+            _safe_remove(pl, f"arrow_{i}")
+        scene["arrows_on"] = False
+
+    def _remove_static() -> None:
+        for name in (
+            "chamber",
+            "outline",
+            "inlet",
+            "outlet",
+            "params",
+            "help",
+            "pot_0",
+            "pot_1",
+            "pot_2",
+            "pot_3",
+            "pot_label_0",
+            "pot_label_1",
+            "pot_label_2",
+            "pot_label_3",
+            "port_label_0",
+            "port_label_1",
+        ):
+            _safe_remove(pl, name)
+        _remove_arrows()
+        scene["static_built"] = False
+
+    def _update_hud(snap: TwinSnapshot, *, with_legend: bool = False) -> None:
+        _safe_remove(pl, "params")
         pl.add_text(
             snap.params_table(),
             position="upper_left",
@@ -506,14 +500,72 @@ def run_interactive_live(
             font="courier",
             name="params",
         )
-        pl.add_text(
-            _legend_table(),
-            position="lower_left",
-            font_size=_HUD_FONT,
-            color="lightgray",
-            font="courier",
-            name="help",
-        )
+        if with_legend:
+            _safe_remove(pl, "help")
+            pl.add_text(
+                _legend_table(),
+                position="lower_left",
+                font_size=_HUD_FONT,
+                color="lightgray",
+                font="courier",
+                name="help",
+            )
+
+    def _update_arrows(meshes: dict[str, Any], fan_on: bool) -> None:
+        want = fan_on and bool(meshes["arrows"])
+        if want == scene["arrows_on"] and scene["static_built"]:
+            return
+        _remove_arrows()
+        if want:
+            for i, arrow in enumerate(meshes["arrows"]):
+                pl.add_mesh(
+                    arrow,
+                    color=_ARROW_COLOR,
+                    name=f"arrow_{i}",
+                    smooth_shading=False,
+                    ambient=0.85,
+                    specular=0.0,
+                    show_edges=False,
+                    show_scalar_bar=False,
+                )
+            scene["arrows_on"] = True
+
+    def _update_pot_colors(meshes: dict[str, Any]) -> None:
+        for i, color in enumerate(meshes["pot_colors"]):
+            actor = pl.renderer.actors.get(f"pot_{i}") if hasattr(pl.renderer, "actors") else None
+            # Fallback: plotter.actors mapping in recent PyVista
+            if actor is None:
+                try:
+                    actor = pl.actors.get(f"pot_{i}")
+                except Exception:
+                    actor = None
+            if actor is None:
+                continue
+            try:
+                if isinstance(color, str):
+                    actor.prop.color = color
+                else:
+                    actor.prop.color = color
+            except Exception:
+                pass
+
+    def redraw(*, rebuild_static: bool = False) -> None:
+        snap = snapshot_from_simulator(sim, action=current_action())
+        meshes = build_plotter_meshes(pv, snap)
+        fan_on = current_action().fan > 0.02
+
+        if rebuild_static or not scene["static_built"]:
+            _remove_static()
+            _add_scene_meshes(pl, meshes, with_arrows=False)
+            scene["static_built"] = True
+            scene["n_pots"] = len(meshes["pots"])
+            _update_hud(snap, with_legend=True)
+        else:
+            _update_pot_colors(meshes)
+            _update_hud(snap, with_legend=False)
+
+        _update_arrows(meshes, fan_on)
+
         if state["first_draw"]:
             _set_standard_view(pl, "home")
             state["first_draw"] = False
@@ -522,24 +574,25 @@ def run_interactive_live(
 
     def bump(key: str, delta: float) -> None:
         state[key] = _clip01(state[key] + delta)
-        redraw()
+        # Fan toggles arrows only — never rebuild whole scene
+        redraw(rebuild_static=False)
 
     def set_cmd(key: str, value: float) -> None:
         state[key] = _clip01(value)
-        redraw()
+        redraw(rebuild_static=False)
 
     def step_once() -> None:
         if state["steps_done"] >= max_auto_steps:
             return
         sim.step(current_action(), add_sensor_noise=False)
         state["steps_done"] += 1
-        redraw()
+        redraw(rebuild_static=False)
 
     def reset_sim() -> None:
         sim.reset(seed=seed)
         state["steps_done"] = 0
         state["first_draw"] = True
-        redraw()
+        redraw(rebuild_static=True)
 
     # No vtkSliderWidget — known SIGSEGV on macOS (GetCell null in SliderRepresentation2D).
     pl.add_key_event("s", step_once)
@@ -557,7 +610,7 @@ def run_interactive_live(
     pl.add_key_event("F", lambda: bump("fan", -0.25))
     pl.add_key_event("u", lambda: bump("humidifier", 0.25))
     pl.add_key_event("U", lambda: bump("humidifier", -0.25))
-    redraw()
+    redraw(rebuild_static=True)
     pl.show()
 
 
