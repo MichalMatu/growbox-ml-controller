@@ -67,10 +67,11 @@ def pot_centers(box: BoxGeometry, n_pots: int = MAX_POTS) -> list[tuple[float, f
 
 
 def pot_radius_height(box: BoxGeometry) -> tuple[float, float]:
+    """Pot cylinder size — large enough to read as a plant pot, not a pin."""
     hx, hy, hz = box.half
-    radius = 0.12 * min(hx, hy)
-    height = 0.18 * (2.0 * hz)
-    return max(0.02, radius), max(0.05, height)
+    radius = 0.22 * min(hx, hy)
+    height = 0.28 * (2.0 * hz)
+    return max(0.06, radius), max(0.12, height)
 
 
 @dataclass(frozen=True)
@@ -120,36 +121,29 @@ def exchange_field(
     mags: list[float] = []
     labels: list[str] = []
 
-    # --- Fan through-flow: 3 layers × mid-line samples ---
-    fan_scale = 0.08 * box.size_xyz[0] * (0.15 + 0.85 * fan) * gap
-    for z_frac in (0.25, 0.5, 0.75):
-        z = z_frac * height
-        for y_frac in (-0.4, 0.0, 0.4):
-            y = y_frac * hy
-            # inlet side
-            points.append([-0.85 * hx, y, z])
-            vectors.append([fan_scale, 0.0, 0.0])
-            mags.append(fan_scale)
-            labels.append("fan")
-            # mid
-            points.append([0.0, y, z])
-            vectors.append([fan_scale, 0.0, 0.0])
-            mags.append(fan_scale)
-            labels.append("fan")
-            # outlet
-            points.append([0.85 * hx, y, z])
-            vectors.append([fan_scale, 0.0, 0.0])
-            mags.append(fan_scale)
-            labels.append("fan")
+    # --- Fan through-flow: 2 layers × mid-line (fewer, larger arrows) ---
+    # World-scale lengths ~0.2–0.45 of box length so glyphs stay readable.
+    fan_scale = 0.35 * box.size_xyz[0] * (0.25 + 0.75 * fan) * gap
+    # Always show a minimum fan cue when command > 0; when off, skip fan arrows.
+    if fan > 0.02:
+        for z_frac in (0.35, 0.65):
+            z = z_frac * height
+            for y_frac in (-0.35, 0.0, 0.35):
+                y = y_frac * hy
+                for x_frac in (-0.7, 0.0, 0.7):
+                    points.append([x_frac * hx, y, z])
+                    vectors.append([fan_scale, 0.0, 0.0])
+                    mags.append(fan_scale)
+                    labels.append("fan")
 
-    # --- Leak: small outward normals on walls, scale with leak ACH ---
-    leak_scale = 0.03 * box.size_xyz[0] * min(2.0, leak / 0.25) * gap
+    # --- Leak: outward normals on walls (always visible baseline exchange) ---
+    leak_scale = 0.18 * box.size_xyz[0] * max(0.4, min(2.5, leak / 0.25)) * gap
     wall_samples = [
-        ([hx, 0.0, 0.5 * height], [leak_scale, 0.0, 0.0]),
-        ([-hx, 0.0, 0.5 * height], [-leak_scale, 0.0, 0.0]),
-        ([0.0, hy, 0.5 * height], [0.0, leak_scale, 0.0]),
-        ([0.0, -hy, 0.5 * height], [0.0, -leak_scale, 0.0]),
-        ([0.0, 0.0, height], [0.0, 0.0, leak_scale * 0.6]),
+        ([0.95 * hx, 0.0, 0.5 * height], [leak_scale, 0.0, 0.0]),
+        ([-0.95 * hx, 0.0, 0.5 * height], [-leak_scale, 0.0, 0.0]),
+        ([0.0, 0.95 * hy, 0.5 * height], [0.0, leak_scale, 0.0]),
+        ([0.0, -0.95 * hy, 0.5 * height], [0.0, -leak_scale, 0.0]),
+        ([0.0, 0.0, 0.95 * height], [0.0, 0.0, leak_scale * 0.7]),
     ]
     for pt, vec in wall_samples:
         points.append(pt)

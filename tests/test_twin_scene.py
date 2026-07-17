@@ -53,9 +53,12 @@ def test_fan_increases_exchange_magnitudes():
         air_humidity_pct=70.0,
     )
     assert windy.fan_ach_proxy > idle.fan_ach_proxy
+    # Fan off → only leak arrows; fan on → more vectors and larger mean mag
+    assert windy.points.shape[0] > idle.points.shape[0]
     assert float(np.mean(windy.magnitudes)) > float(np.mean(idle.magnitudes))
-    assert idle.points.shape[0] == windy.points.shape[0]
     assert idle.vectors.shape == idle.points.shape
+    # Leak arrows stay readable (world metres, not pin dots)
+    assert float(np.max(idle.magnitudes)) > 0.05
 
 
 def test_snapshot_from_simulator_smoke():

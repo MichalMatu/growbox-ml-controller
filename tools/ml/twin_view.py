@@ -19,6 +19,8 @@ import argparse
 from pathlib import Path
 from typing import Any
 
+import numpy as np
+
 from .simulator import (
     ControlAction,
     SequentialEnvironmentSimulator,
@@ -66,41 +68,54 @@ def build_plotter_meshes(pv: Any, snap: TwinSnapshot) -> dict[str, Any]:
 
     pots: list[Any] = []
     pot_colors: list[tuple[float, float, float]] = []
+    pot_labels: list[tuple[tuple[float, float, float], str]] = []
     radius, height = pot_radius_height(snap.box)
     centers = pot_centers(snap.box, n_pots=4)
     for index, center in enumerate(centers):
         if not snap.pot_active[index]:
             continue
         cx, cy, cz = center
+        # Slightly tapered look: wider base cylinder = pot body
         cyl = pv.Cylinder(
             center=(cx, cy, cz + 0.5 * height),
             direction=(0.0, 0.0, 1.0),
             radius=radius,
             height=height,
-            resolution=24,
+            resolution=32,
         )
         pots.append(cyl)
         pot_colors.append(soil_moisture_to_rgb(snap.pot_moisture[index]))
+        pot_labels.append(
+            (
+                (cx, cy, cz + height + 0.04 * sz),
+                f"P{index + 1} θ={snap.pot_moisture[index]:.0f}%",
+            )
+        )
 
-    # Exchange glyphs
+    # Exchange glyphs — thick arrows; mag already in world metres
     cloud = pv.PolyData(snap.exchange.points)
     cloud["vectors"] = snap.exchange.vectors
-    cloud["mag"] = snap.exchange.magnitudes
-    # Avoid zero-length arrows when fan off — still show tiny leak glyphs
+    cloud["mag"] = np.maximum(snap.exchange.magnitudes, 1e-6)
     glyph = cloud.glyph(
         orient="vectors",
         scale="mag",
         factor=1.0,
-        geom=pv.Arrow(tip_length=0.35, tip_radius=0.12, shaft_radius=0.04),
+        geom=pv.Arrow(
+            tip_length=0.35,
+            tip_radius=0.18,
+            tip_resolution=24,
+            shaft_radius=0.08,
+            shaft_resolution=24,
+        ),
     )
 
-    # Outside marker slab (thin plate beyond inlet wall)
+    # Outside marker slab (climate boundary cue)
     hx = 0.5 * sx
     outside = pv.Cube(
-        center=(-hx - 0.08 * sx, 0.0, 0.5 * sz),
-        x_length=0.04 * sx,
-        y_length=0.6 * sy,
-        z_length=0.6 * sz,
+        center=(-hx - 0.12 * sx, 0.0, 0.5 * sz),
+        x_length=0.08 * sx,
+        y_length=0.7 * sy,
+        z_length=0.7 * sz,
     )
     outside_color = temperature_to_rgb(snap.outside_temperature_c)
 
@@ -111,6 +126,7 @@ def build_plotter_meshes(pv: Any, snap: TwinSnapshot) -> dict[str, Any]:
         "outline": outline,
         "pots": pots,
         "pot_colors": pot_colors,
+        "pot_labels": pot_labels,
         "glyph": glyph,
         "outside": outside,
         "outside_color": outside_color,
@@ -139,35 +155,62 @@ def render_snapshot(
         name="chamber",
         smooth_shading=True,
     )
-    pl.add_mesh(meshes["outline"], color="white", line_width=2, name="outline")
+    pl.add_mesh(meshes["outline"], color="white", line_width=3, name="outline")
     for i, (pot, color) in enumerate(zip(meshes["pots"], meshes["pot_colors"])):
         pl.add_mesh(pot, color=color, name=f"pot_{i}", smooth_shading=True)
+    for i, (pos, label) in enumerate(meshes["pot_labels"]):
+        pl.add_point_labels(
+            [pos],
+            [label],
+            font_size=18,
+            text_color="white",
+            point_size=0,
+            shape=None,
+            always_visible=True,
+            name=f"pot_label_{i}",
+        )
     if meshes["glyph"].n_points > 0:
         pl.add_mesh(
             meshes["glyph"],
             color="#6ec6ff",
             name="exchange",
-            opacity=0.9,
+            opacity=0.95,
         )
     pl.add_mesh(
         meshes["outside"],
         color=meshes["outside_color"],
-        opacity=0.55,
+        opacity=0.7,
         name="outside",
+    )
+    pl.add_point_labels(
+        [
+            (
+                -0.5 * snap.box.size_xyz[0] - 0.12 * snap.box.size_xyz[0],
+                0.0,
+                0.55 * snap.box.size_xyz[2],
+            )
+        ],
+        ["OUTSIDE"],
+        font_size=16,
+        text_color="#9ecbff",
+        point_size=0,
+        shape=None,
+        always_visible=True,
+        name="outside_label",
     )
 
     caption = title or snap.title()
-    pl.add_text(caption, font_size=9, color="white")
+    pl.add_text(caption, font_size=16, color="white")
     pl.add_text(
         (
             f"outside T={snap.outside_temperature_c:.1f}°C  "
             f"RH={snap.outside_humidity_pct:.0f}%  |  "
             f"exchange: fan_ACH≈{snap.exchange.fan_ach_proxy:.1f}/h  "
             f"leak={snap.exchange.leak_ach:.2f}/h\n"
-            "Lumped model glyphs — not CFD streamlines"
+            "Green cylinder = pot  |  Blue plate = outside air  |  Cyan arrows = exchange (not CFD)"
         ),
         position="lower_left",
-        font_size=8,
+        font_size=14,
         color="lightgray",
     )
     pl.set_background("#1a1f2b")
