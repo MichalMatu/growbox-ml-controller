@@ -14,6 +14,9 @@ No orientation gizmo (VTK camera orientation widget removed — poor UX).
 from __future__ import annotations
 
 import argparse
+import struct
+import tempfile
+import zlib
 from pathlib import Path
 from typing import Any
 
@@ -32,9 +35,11 @@ from .twin_scene import (
 
 _HUD_FONT = 14
 _LABEL_FONT = 14
-# Fusion-like studio gradient (slightly brighter than old flat #12141a)
-_BG_BOTTOM = "#1a1e28"  # cooler, a touch lighter at floor
-_BG_TOP = "#343b4a"  # soft blue-gray wash toward the top
+# Radial studio BG: darker center → brighter toward the edges (Fusion-ish vignette inverted)
+_BG_CENTER = (0x1A, 0x1E, 0x28)  # cool dark hub
+_BG_EDGE = (0x52, 0x5C, 0x6E)  # softer, brighter rim
+_BG_RADIAL_SIZE = 512
+_BG_RADIAL_VERSION = 1  # bump to regenerate cached PNG
 _WIRE = "#e8e8e8"
 _POT = "#6b5b4b"
 _INLET = "#5cb85c"
@@ -566,15 +571,91 @@ def _clear_vtk_default_keys(pl: Any) -> None:
             pass
 
 
+def _radial_bg_cache_path() -> Path:
+    """Temp file only — never write into the package tree."""
+    name = f"growbox_ml_twin_radial_bg_v{_BG_RADIAL_VERSION}.png"
+    return Path(tempfile.gettempdir()) / name
+
+
+def _write_png_rgb(path: Path, width: int, height: int, rgb: bytes) -> None:
+    """Minimal RGB PNG writer (no Pillow dependency)."""
+
+    def chunk(tag: bytes, data: bytes) -> bytes:
+        return (
+            struct.pack(">I", len(data))
+            + tag
+            + data
+            + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
+        )
+
+    raw = bytearray()
+    row = width * 3
+    for y in range(height):
+        raw.append(0)  # filter None
+        raw.extend(rgb[y * row : (y + 1) * row])
+    ihdr = struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)
+    path.write_bytes(
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", ihdr)
+        + chunk(b"IDAT", zlib.compress(bytes(raw), 6))
+        + chunk(b"IEND", b"")
+    )
+
+
+def _ensure_radial_background_png() -> Path:
+    """Dark center, brighter outside — circular studio falloff."""
+    path = _radial_bg_cache_path()
+    if path.is_file() and path.stat().st_size > 200:
+        return path
+
+    n = _BG_RADIAL_SIZE
+    c0 = _BG_CENTER
+    c1 = _BG_EDGE
+    # Distance from center, normalized so image corners ≈ 1.0
+    scale = 2.0**0.5  # corner of unit square
+    pixels = bytearray(n * n * 3)
+    half = (n - 1) * 0.5
+    for y in range(n):
+        ny = (y - half) / half
+        for x in range(n):
+            nx = (x - half) / half
+            r = (nx * nx + ny * ny) ** 0.5 / scale
+            if r < 0.0:
+                r = 0.0
+            elif r > 1.0:
+                r = 1.0
+            # smoothstep for soft Fusion-like falloff
+            t = r * r * (3.0 - 2.0 * r)
+            i = (y * n + x) * 3
+            pixels[i] = int(c0[0] + (c1[0] - c0[0]) * t)
+            pixels[i + 1] = int(c0[1] + (c1[1] - c0[1]) * t)
+            pixels[i + 2] = int(c0[2] + (c1[2] - c0[2]) * t)
+    _write_png_rgb(path, n, n, bytes(pixels))
+    return path
+
+
 def _apply_studio_background(pl: Any) -> None:
-    """Soft vertical gradient — similar to Fusion 360 dark studio, not pure black."""
+    """Circular gradient: darker in the center, brighter toward the edges."""
+    # Base solid (visible if image fails / letterboxing)
     try:
-        pl.set_background(_BG_BOTTOM, top=_BG_TOP)
-    except TypeError:
-        # Older PyVista: solid only
-        pl.set_background(_BG_BOTTOM)
+        pl.set_background(
+            [c / 255.0 for c in _BG_CENTER],
+        )
     except Exception:
-        pl.set_background(_BG_BOTTOM)
+        pl.set_background("#1a1e28")
+
+    try:
+        png = _ensure_radial_background_png()
+        pl.add_background_image(str(png), scale=1.0, auto_resize=True)
+    except Exception:
+        # Fallback: vertical gradient if background image unavailable
+        try:
+            pl.set_background(
+                [c / 255.0 for c in _BG_CENTER],
+                top=[c / 255.0 for c in _BG_EDGE],
+            )
+        except Exception:
+            pass
 
 
 def _configure_plotter(pl: Any) -> None:
