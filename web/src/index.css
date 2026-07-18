@@ -131,6 +131,11 @@
     --chamber-pot-felt: #1a1a1c;
     --chamber-pot-rim: #121214;
     --chamber-pot-soil: #3b2a1f;
+    /* Grow-light fixture (playground props; not v4 actuators.lights) */
+    --chamber-light-housing: #1c1c1f;
+    --chamber-light-emitter: #f2f0e6;
+    --chamber-light-duct: #9aa3ad;
+    --chamber-light-bulb: #ffd89a;
 }
 
 .dark {

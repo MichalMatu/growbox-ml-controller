@@ -14,6 +14,13 @@ import {
   type FeltPotPresetId,
 } from "@/chamber-3d/felt-pot-geometry"
 import { FeltPotGroup } from "@/chamber-3d/felt-pot"
+import { GrowLight } from "@/chamber-3d/grow-light"
+import {
+  getLightPreset,
+  type LightOrientationDeg,
+  type LightPresetId,
+  planLightFit,
+} from "@/chamber-3d/light-geometry"
 import {
   CHAMBER_CANVAS_CLASS,
   resolveChamberSceneColors,
@@ -27,6 +34,13 @@ export type ChamberSceneProps = {
   potPresetId?: FeltPotPresetId
   /** How many pots to try to place (0–4); packing may place fewer. */
   potCount?: number
+  /** Grow-light catalog id (playground only; not v4 actuators.lights). */
+  lightPresetId?: LightPresetId
+  lightOrientationDeg?: LightOrientationDeg
+  /** Gap from inner roof to top of fixture (cm). */
+  lightCeilingGapCm?: number
+  /** Emitter / bulb glow on. */
+  lightOn?: boolean
 }
 
 /** Track actual <html> light/dark class (after ThemeProvider applyTheme). */
@@ -56,6 +70,10 @@ export function ChamberScene({
   heightCm,
   potPresetId = "12l",
   potCount = 0,
+  lightPresetId = "none",
+  lightOrientationDeg = 0,
+  lightCeilingGapCm = 5,
+  lightOn = true,
 }: ChamberSceneProps) {
   const themeClass = useDocumentThemeClass()
   /** Re-read CSS tokens after <html> light/dark class is applied. */
@@ -64,11 +82,35 @@ export function ChamberScene({
     return resolveChamberSceneColors()
   }, [themeClass])
   const potPreset = useMemo(() => getFeltPotPreset(potPresetId), [potPresetId])
+  const lightPreset = useMemo(
+    () => getLightPreset(lightPresetId),
+    [lightPresetId],
+  )
   const maxSideM = Math.max(widthCm, depthCm, heightCm, 100) / 100
   const heightM = Math.max(heightCm, ENCLOSURE_CM_MIN) / 100
   const depthM = Math.max(depthCm, ENCLOSURE_CM_MIN) / 100
   const widthM = Math.max(widthCm, ENCLOSURE_CM_MIN) / 100
   const cameraDistance = maxSideM * 2.05
+
+  const lightPlan = useMemo(
+    () =>
+      planLightFit(
+        widthM,
+        depthM,
+        heightM,
+        lightPreset,
+        lightOrientationDeg,
+        lightCeilingGapCm,
+      ),
+    [
+      widthM,
+      depthM,
+      heightM,
+      lightPreset,
+      lightOrientationDeg,
+      lightCeilingGapCm,
+    ],
+  )
 
   return (
     <Canvas
@@ -170,6 +212,14 @@ export function ChamberScene({
           count={potCount}
           colors={colors}
         />
+        {lightPlan.placement != null ? (
+          <GrowLight
+            preset={lightPreset}
+            placement={lightPlan.placement}
+            colors={colors}
+            lit={lightOn}
+          />
+        ) : null}
       </Suspense>
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>

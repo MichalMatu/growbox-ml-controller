@@ -27,6 +27,14 @@ export const CHAMBER_CSS_VAR = {
   potRim: "--chamber-pot-rim",
   /** Exposed soil disc inside the bag. */
   potSoil: "--chamber-pot-soil",
+  /** Grow-light housing / reflector metal. */
+  lightHousing: "--chamber-light-housing",
+  /** LED board emitter plate. */
+  lightEmitter: "--chamber-light-emitter",
+  /** Cooltube glass-metal duct tint. */
+  lightDuct: "--chamber-light-duct",
+  /** HPS bulb glass. */
+  lightBulb: "--chamber-light-bulb",
 } as const
 
 /**
@@ -56,6 +64,10 @@ export const CHAMBER_SCENE_FALLBACK = {
   potFelt: "#1a1a1c",
   potRim: "#121214",
   potSoil: "#3b2a1f",
+  lightHousing: "#1c1c1f",
+  lightEmitter: "#f2f0e6",
+  lightDuct: "#9aa3ad",
+  lightBulb: "#ffd89a",
 } as const
 
 export type ChamberSceneColors = {
@@ -92,6 +104,16 @@ export const CHAMBER_MATERIAL = {
   potFeltEnvMapIntensity: 0.08,
   potSoilRoughness: 0.95,
   potSoilMetalness: 0,
+  /** Powder-coated light housings / wings / box hoods */
+  lightHousingRoughness: 0.55,
+  lightHousingMetalness: 0.65,
+  lightHousingEnvMapIntensity: 0.45,
+  lightDuctRoughness: 0.28,
+  lightDuctMetalness: 0.75,
+  lightEmitterEmissiveOn: 1.35,
+  lightEmitterEmissiveOff: 0.05,
+  lightBulbEmissiveOn: 1.8,
+  lightBulbEmissiveOff: 0.08,
 } as const
 
 /**
@@ -222,6 +244,26 @@ export function resolveChamberSceneColors(
       rootStyle,
       CHAMBER_CSS_VAR.potSoil,
       CHAMBER_SCENE_FALLBACK.potSoil,
+    ),
+    lightHousing: readCssVar(
+      rootStyle,
+      CHAMBER_CSS_VAR.lightHousing,
+      CHAMBER_SCENE_FALLBACK.lightHousing,
+    ),
+    lightEmitter: readCssVar(
+      rootStyle,
+      CHAMBER_CSS_VAR.lightEmitter,
+      CHAMBER_SCENE_FALLBACK.lightEmitter,
+    ),
+    lightDuct: readCssVar(
+      rootStyle,
+      CHAMBER_CSS_VAR.lightDuct,
+      CHAMBER_SCENE_FALLBACK.lightDuct,
+    ),
+    lightBulb: readCssVar(
+      rootStyle,
+      CHAMBER_CSS_VAR.lightBulb,
+      CHAMBER_SCENE_FALLBACK.lightBulb,
     ),
   }
 }

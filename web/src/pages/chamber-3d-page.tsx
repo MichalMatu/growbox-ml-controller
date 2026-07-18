@@ -2,10 +2,8 @@ import { useMemo, useState } from "react"
 
 import { ChamberScene } from "@/chamber-3d/chamber-scene"
 import {
-  commitEnclosureCm,
   ENCLOSURE_CM_MAX,
   ENCLOSURE_CM_MIN,
-  isLiveEnclosureCm,
   parseEnclosureCmDraft,
 } from "@/chamber-3d/enclosure-cm"
 import {
@@ -18,6 +16,19 @@ import {
   type FeltPotCount,
   type FeltPotPresetId,
 } from "@/chamber-3d/felt-pot-geometry"
+import {
+  DEFAULT_LIGHT_CEILING_GAP_CM,
+  DEFAULT_LIGHT_ORIENTATION_DEG,
+  DEFAULT_LIGHT_PRESET_ID,
+  LIGHT_CEILING_GAP_MIN_CM,
+  LIGHT_PRESETS,
+  clampCeilingGapCm,
+  clampLightOrientationDeg,
+  getLightPreset,
+  planLightFit,
+  type LightOrientationDeg,
+  type LightPresetId,
+} from "@/chamber-3d/light-geometry"
 import {
   AppActionRow,
   AppCanvasFrame,
@@ -56,13 +67,22 @@ type CmFieldProps = {
   label: string
   valueCm: number
   onValueCmChange: (nextCm: number) => void
+  minCm?: number
+  maxCm?: number
 }
 
 /**
  * Draft string while typing; clamp only on blur / Enter.
  * Live 3D updates only when the draft is already within min–max.
  */
-function CmDimensionField({ id, label, valueCm, onValueCmChange }: CmFieldProps) {
+function CmDimensionField({
+  id,
+  label,
+  valueCm,
+  onValueCmChange,
+  minCm = ENCLOSURE_CM_MIN,
+  maxCm = ENCLOSURE_CM_MAX,
+}: CmFieldProps) {
   const [draft, setDraft] = useState(String(valueCm))
   const [syncedCm, setSyncedCm] = useState(valueCm)
 
@@ -72,7 +92,12 @@ function CmDimensionField({ id, label, valueCm, onValueCmChange }: CmFieldProps)
   }
 
   function commit(): void {
-    const next = commitEnclosureCm(draft, valueCm)
+    const parsed = parseEnclosureCmDraft(draft)
+    if (parsed === null) {
+      setDraft(String(valueCm))
+      return
+    }
+    const next = Math.min(maxCm, Math.max(minCm, Math.round(parsed)))
     onValueCmChange(next)
     setDraft(String(next))
   }
@@ -83,15 +108,15 @@ function CmDimensionField({ id, label, valueCm, onValueCmChange }: CmFieldProps)
         id={id}
         type="number"
         inputMode="numeric"
-        min={ENCLOSURE_CM_MIN}
-        max={ENCLOSURE_CM_MAX}
+        min={minCm}
+        max={maxCm}
         step={1}
         value={draft}
         onChange={(event) => {
           const raw = event.target.value
           setDraft(raw)
           const parsed = parseEnclosureCmDraft(raw)
-          if (parsed !== null && isLiveEnclosureCm(parsed)) {
+          if (parsed !== null && parsed >= minCm && parsed <= maxCm) {
             onValueCmChange(Math.round(parsed))
           }
         }}
@@ -118,6 +143,15 @@ export function Chamber3dPage() {
     DEFAULT_FELT_POT_PRESET_ID,
   )
   const [potCount, setPotCount] = useState<FeltPotCount>(DEFAULT_POT_COUNT)
+  const [lightPresetId, setLightPresetId] = useState<LightPresetId>(
+    DEFAULT_LIGHT_PRESET_ID,
+  )
+  const [lightOrientationDeg, setLightOrientationDeg] =
+    useState<LightOrientationDeg>(DEFAULT_LIGHT_ORIENTATION_DEG)
+  const [lightCeilingGapCm, setLightCeilingGapCm] = useState(
+    DEFAULT_LIGHT_CEILING_GAP_CM,
+  )
+  const [lightOn, setLightOn] = useState(true)
 
   const volumeM3 = useMemo(
     () => (widthCm * depthCm * heightCm) / 1_000_000,
@@ -138,6 +172,47 @@ export function Chamber3dPage() {
 
   /** Desired count clamped to what currently fits (keeps higher intent when tent grows). */
   const visiblePotCount = clampFeltPotCount(Math.min(potCount, maxFit))
+
+  const lightPreset = useMemo(
+    () => getLightPreset(lightPresetId),
+    [lightPresetId],
+  )
+
+  /** Derived clamp — no setState during render when tent/fixture shrinks. */
+  const effectiveCeilingGapCm = useMemo(
+    () =>
+      clampCeilingGapCm(
+        lightCeilingGapCm,
+        heightCm / 100,
+        lightPreset.heightCm,
+      ),
+    [lightCeilingGapCm, heightCm, lightPreset.heightCm],
+  )
+
+  const lightPlan = useMemo(
+    () =>
+      planLightFit(
+        widthCm / 100,
+        depthCm / 100,
+        heightCm / 100,
+        lightPreset,
+        lightOrientationDeg,
+        effectiveCeilingGapCm,
+      ),
+    [
+      widthCm,
+      depthCm,
+      heightCm,
+      lightPreset,
+      lightOrientationDeg,
+      effectiveCeilingGapCm,
+    ],
+  )
+
+  const lightSizeLabel =
+    lightPreset.form === "none"
+      ? "—"
+      : `${lightPreset.lengthCm}×${lightPreset.widthCm}×${lightPreset.heightCm} cm`
 
   return (
     <AppPage width="wide">
@@ -251,6 +326,127 @@ export function Chamber3dPage() {
                   </AppFormField>
                 </AppFormGrid>
 
+                <AppFormGrid>
+                  <AppFormField
+                    label="Lampa"
+                    htmlFor="light_preset"
+                    end={
+                      lightPreset.form === "none" ? (
+                        <Badge variant="outline">off</Badge>
+                      ) : lightPlan.fits ? (
+                        <Badge variant="secondary">OK</Badge>
+                      ) : (
+                        <Badge variant="destructive">za duża</Badge>
+                      )
+                    }
+                  >
+                    <Select
+                      value={lightPresetId}
+                      onValueChange={(value) => {
+                        setLightPresetId(value as LightPresetId)
+                      }}
+                    >
+                      <AppSelectTrigger id="light_preset">
+                        <SelectValue placeholder="Model" />
+                      </AppSelectTrigger>
+                      <SelectContent>
+                        {LIGHT_PRESETS.map((preset) => (
+                          <SelectItem key={preset.id} value={preset.id}>
+                            {preset.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </AppFormField>
+
+                  <AppFormField label="Gabaryt" htmlFor="light_size">
+                    <Input
+                      id="light_size"
+                      type="text"
+                      value={lightSizeLabel}
+                      readOnly
+                      disabled
+                    />
+                  </AppFormField>
+                </AppFormGrid>
+
+                <AppFormGrid>
+                  <AppFormField label="Obrót" htmlFor="light_orientation">
+                    <Select
+                      value={String(lightOrientationDeg)}
+                      onValueChange={(value) => {
+                        setLightOrientationDeg(
+                          clampLightOrientationDeg(Number(value)),
+                        )
+                      }}
+                      disabled={lightPreset.form === "none"}
+                    >
+                      <AppSelectTrigger id="light_orientation">
+                        <SelectValue placeholder="Obrót" />
+                      </AppSelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">0° · wzdłuż szer.</SelectItem>
+                        <SelectItem value="90">90° · wzdłuż głęb.</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </AppFormField>
+
+                  <CmDimensionField
+                    id="light_ceiling_gap_cm"
+                    label="Od sufitu (cm)"
+                    valueCm={effectiveCeilingGapCm}
+                    onValueCmChange={(next) => {
+                      setLightCeilingGapCm(
+                        clampCeilingGapCm(
+                          next,
+                          heightCm / 100,
+                          lightPreset.heightCm,
+                        ),
+                      )
+                    }}
+                    minCm={LIGHT_CEILING_GAP_MIN_CM}
+                    maxCm={Math.max(
+                      LIGHT_CEILING_GAP_MIN_CM,
+                      lightPlan.maxCeilingGapCm,
+                    )}
+                  />
+                </AppFormGrid>
+
+                <AppFormGrid>
+                  <AppFormField label="Świeci" htmlFor="light_on">
+                    <Select
+                      value={lightOn ? "on" : "off"}
+                      onValueChange={(value) => {
+                        setLightOn(value === "on")
+                      }}
+                      disabled={
+                        lightPreset.form === "none" || !lightPlan.fits
+                      }
+                    >
+                      <AppSelectTrigger id="light_on">
+                        <SelectValue placeholder="Stan" />
+                      </AppSelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="on">Włączona</SelectItem>
+                        <SelectItem value="off">Wyłączona</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </AppFormField>
+                  <AppFormField label="Max od sufitu" htmlFor="light_gap_max">
+                    <Input
+                      id="light_gap_max"
+                      type="text"
+                      value={
+                        lightPreset.form === "none"
+                          ? "—"
+                          : `${lightPlan.maxCeilingGapCm} cm`
+                      }
+                      readOnly
+                      disabled
+                    />
+                  </AppFormField>
+                </AppFormGrid>
+
                 <AppActionRow align="end">
                   <Button
                     type="button"
@@ -261,6 +457,10 @@ export function Chamber3dPage() {
                       setHeightCm(DEFAULT_HEIGHT_CM)
                       setPotPresetId(DEFAULT_FELT_POT_PRESET_ID)
                       setPotCount(DEFAULT_POT_COUNT)
+                      setLightPresetId(DEFAULT_LIGHT_PRESET_ID)
+                      setLightOrientationDeg(DEFAULT_LIGHT_ORIENTATION_DEG)
+                      setLightCeilingGapCm(DEFAULT_LIGHT_CEILING_GAP_CM)
+                      setLightOn(true)
                     }}
                   >
                     Reset
@@ -278,6 +478,10 @@ export function Chamber3dPage() {
               heightCm={heightCm}
               potPresetId={potPresetId}
               potCount={visiblePotCount}
+              lightPresetId={lightPresetId}
+              lightOrientationDeg={lightOrientationDeg}
+              lightCeilingGapCm={effectiveCeilingGapCm}
+              lightOn={lightOn && lightPlan.fits}
             />
           </AppCanvasFrame>
         }
