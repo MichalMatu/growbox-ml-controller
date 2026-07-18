@@ -263,7 +263,10 @@ export function ChamberScene({
       <OrbitControls
         makeDefault
         target={[0, heightM * 0.42, 0]}
-        maxPolarAngle={Math.PI * 0.49}
+        // Allow looking up at the ceiling (past horizontal); keep a small floor
+        // clamp so the camera does not fully tumble under the ground plane.
+        minPolarAngle={0}
+        maxPolarAngle={Math.PI * 0.92}
         minDistance={0.3}
         maxDistance={maxSideM * 8}
         // Wheel zoom toward the point under the cursor (not scene center).
