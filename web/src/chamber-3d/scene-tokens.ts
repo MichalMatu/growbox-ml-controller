@@ -98,12 +98,17 @@ export const CHAMBER_MATERIAL = {
   zipperRoughness: 0.42,
   zipperMetalness: 0.55,
   zipperEnvMapIntensity: 0.7,
-  /** Nonwoven felt — very matte, no metal */
-  potFeltRoughness: 0.98,
+  /** Nonwoven felt — very matte, no metal; maps from pot-pbr.ts */
+  potFeltRoughness: 0.92,
   potFeltMetalness: 0,
-  potFeltEnvMapIntensity: 0.08,
-  potSoilRoughness: 0.95,
+  potFeltEnvMapIntensity: 0.12,
+  potFeltNormalScale: 1.15,
+  potFeltUvRepeat: 2.4,
+  potSoilRoughness: 0.9,
   potSoilMetalness: 0,
+  potSoilEnvMapIntensity: 0.06,
+  potSoilNormalScale: 1.65,
+  potSoilUvRepeat: 1.8,
   /** Powder-coated light housings / wings / box hoods */
   lightHousingRoughness: 0.55,
   lightHousingMetalness: 0.65,

@@ -1,11 +1,12 @@
 import { useMemo } from "react"
-import { DoubleSide } from "three"
+import { DoubleSide, Vector2 } from "three"
 
 import {
   type FeltPotPreset,
   planFeltPotLayout,
   type PotLayoutPlan,
 } from "@/chamber-3d/felt-pot-geometry"
+import { usePotPbrMaps, type PotPbrMaps } from "@/chamber-3d/pot-pbr"
 import {
   CHAMBER_GEOMETRY,
   CHAMBER_MATERIAL,
@@ -18,24 +19,29 @@ export type FeltPotProps = {
   /** Wall height (meters). */
   heightM: number
   colors: ChamberSceneColors
+  maps: PotPbrMaps
 }
+
+const FELT_NORMAL_SCALE = new Vector2(
+  CHAMBER_MATERIAL.potFeltNormalScale,
+  CHAMBER_MATERIAL.potFeltNormalScale,
+)
+const SOIL_NORMAL_SCALE = new Vector2(
+  CHAMBER_MATERIAL.potSoilNormalScale,
+  CHAMBER_MATERIAL.potSoilNormalScale,
+)
 
 /**
  * Soft fabric / felt grow bag: tapered open wall, stitched rim band, soil disc,
- * and two side loop handles.
- *
- * Geometry is layered so no two surfaces share a plane (body top cap + rim top
- * used to z-fight and shimmer under orbit / shadows).
+ * and two side loop handles. Felt + soil use procedural PBR maps (fiber/grit).
  */
-export function FeltPot({ diameterM, heightM, colors }: FeltPotProps) {
+export function FeltPot({ diameterM, heightM, colors, maps }: FeltPotProps) {
   const bottomR = diameterM / 2
   const topR = bottomR * CHAMBER_GEOMETRY.potTopRadiusScale
   const rimH = Math.max(heightM * CHAMBER_GEOMETRY.potRimHeightScale, 0.008)
   const rimOuterR = topR * (1 + CHAMBER_GEOMETRY.potRimRadiusExtraScale)
-  // Wall stops at the bottom of the rim band (no coplanar top caps).
   const wallHeight = Math.max(heightM - rimH, heightM * 0.85)
   const wallCenterY = wallHeight / 2
-  // Soil clearly below the rim ring.
   const soilY = heightM - rimH - heightM * CHAMBER_GEOMETRY.potSoilInsetScale * 0.5
   const soilR = topR * 0.9
   const segs = CHAMBER_GEOMETRY.potWallSegments
@@ -47,82 +53,88 @@ export function FeltPot({ diameterM, heightM, colors }: FeltPotProps) {
   const feltMat = useMemo(
     () => ({
       color: colors.potFelt,
+      map: maps.felt.map,
+      normalMap: maps.felt.normalMap,
+      normalScale: FELT_NORMAL_SCALE,
+      roughnessMap: maps.felt.roughnessMap,
       roughness: CHAMBER_MATERIAL.potFeltRoughness,
       metalness: CHAMBER_MATERIAL.potFeltMetalness,
       envMapIntensity: CHAMBER_MATERIAL.potFeltEnvMapIntensity,
     }),
-    [colors.potFelt],
+    [colors.potFelt, maps.felt],
   )
   const rimMat = useMemo(
     () => ({
       color: colors.potRim,
+      map: maps.felt.map,
+      normalMap: maps.felt.normalMap,
+      normalScale: FELT_NORMAL_SCALE,
+      roughnessMap: maps.felt.roughnessMap,
       roughness: CHAMBER_MATERIAL.potFeltRoughness,
       metalness: CHAMBER_MATERIAL.potFeltMetalness,
       envMapIntensity: CHAMBER_MATERIAL.potFeltEnvMapIntensity,
     }),
-    [colors.potRim],
+    [colors.potRim, maps.felt],
   )
   const soilMat = useMemo(
     () => ({
       color: colors.potSoil,
+      map: maps.soil.map,
+      normalMap: maps.soil.normalMap,
+      normalScale: SOIL_NORMAL_SCALE,
+      roughnessMap: maps.soil.roughnessMap,
       roughness: CHAMBER_MATERIAL.potSoilRoughness,
       metalness: CHAMBER_MATERIAL.potSoilMetalness,
-      envMapIntensity: 0,
+      envMapIntensity: CHAMBER_MATERIAL.potSoilEnvMapIntensity,
     }),
-    [colors.potSoil],
+    [colors.potSoil, maps.soil],
   )
 
-  // Wall radius at the top of the open cylinder (linear taper).
   const wallTopR = bottomR + (topR - bottomR) * (wallHeight / heightM)
+  const wallSegs = Math.max(segs, 40)
+  const soilSegs = Math.max(segs, 48)
 
   return (
     <group>
-      {/* Open wall only — no top cap (that fought with the rim lid). */}
       <mesh castShadow receiveShadow position={[0, wallCenterY, 0]}>
         <cylinderGeometry
-          args={[wallTopR, bottomR, wallHeight, segs, 1, true]}
+          args={[wallTopR, bottomR, wallHeight, wallSegs, 4, true]}
         />
         <meshStandardMaterial {...feltMat} side={DoubleSide} />
       </mesh>
 
-      {/* Bottom disc (replaces closed cylinder cap). */}
       <mesh
         castShadow
         receiveShadow
         position={[0, 0.001, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
       >
-        <circleGeometry args={[bottomR * 0.98, segs]} />
+        <circleGeometry args={[bottomR * 0.98, wallSegs]} />
         <meshStandardMaterial {...feltMat} />
       </mesh>
 
-      {/*
-        Stitched rim = open band only (no lids). Outer radius > wall so the
-        vertical faces never coplanar; sits on top of the wall edge.
-      */}
       <mesh castShadow position={[0, heightM - rimH / 2, 0]}>
         <cylinderGeometry
-          args={[rimOuterR, rimOuterR, rimH, segs, 1, true]}
+          args={[rimOuterR, rimOuterR, rimH, wallSegs, 1, true]}
         />
         <meshStandardMaterial {...rimMat} side={DoubleSide} />
       </mesh>
-      {/* Thin outer bead on the rim top edge (torus) — single surface, no cap fight. */}
       <mesh
         castShadow
         position={[0, heightM - rimH * 0.15, 0]}
         rotation={[Math.PI / 2, 0, 0]}
       >
-        <torusGeometry args={[rimOuterR * 0.98, rimH * 0.28, 8, segs]} />
+        <torusGeometry args={[rimOuterR * 0.98, rimH * 0.28, 8, wallSegs]} />
         <meshStandardMaterial {...rimMat} />
       </mesh>
 
-      {/* Soil surface — well below rim, slightly smaller than inner wall. */}
       <mesh
         receiveShadow
+        castShadow
         position={[0, Math.max(soilY, wallHeight * 0.7), 0]}
         rotation={[-Math.PI / 2, 0, 0]}
       >
-        <circleGeometry args={[soilR, segs]} />
+        <circleGeometry args={[soilR, soilSegs]} />
         <meshStandardMaterial
           {...soilMat}
           polygonOffset
@@ -131,7 +143,6 @@ export function FeltPot({ diameterM, heightM, colors }: FeltPotProps) {
         />
       </mesh>
 
-      {/* Fabric loop handles on left / right (±X), classic grow-bag look */}
       <HandleLoop
         y={handleY}
         x={topR * 0.98}
@@ -173,14 +184,8 @@ function HandleLoop({
   height: number
   tubeR: number
   yaw: number
-  material: {
-    color: string
-    roughness: number
-    metalness: number
-    envMapIntensity: number
-  }
+  material: Record<string, unknown>
 }) {
-  // Three short segments form a soft rectangular fabric loop.
   const halfW = width / 2
   return (
     <group position={[x, y, z]} rotation={[0, yaw, 0]}>
@@ -211,7 +216,7 @@ export type FeltPotGroupProps = {
 
 /**
  * Places 0–N felt pots on the tent floor according to the packing plan.
- * Only pots that fit are rendered.
+ * Shared procedural felt/soil PBR maps for all instances.
  */
 export function FeltPotGroup({
   widthM,
@@ -221,6 +226,7 @@ export function FeltPotGroup({
   count,
   colors,
 }: FeltPotGroupProps) {
+  const maps = usePotPbrMaps(256)
   const plan: PotLayoutPlan = useMemo(
     () =>
       planFeltPotLayout(
@@ -242,7 +248,12 @@ export function FeltPotGroup({
     <group>
       {plan.positions.map((pos, index) => (
         <group key={index} position={[pos.x, 0, pos.z]}>
-          <FeltPot diameterM={diameterM} heightM={potHeightM} colors={colors} />
+          <FeltPot
+            diameterM={diameterM}
+            heightM={potHeightM}
+            colors={colors}
+            maps={maps}
+          />
         </group>
       ))}
     </group>
