@@ -55,7 +55,9 @@ export function buildZipperRectSegments(
 
 /**
  * Rear-wall (-Z) rectangular zipper on **both** faces of the fabric
- * (interior foil + exterior nylon). Fixed 30×20 cm; empty if tent face is smaller.
+ * (interior foil + exterior nylon). Fixed 30×20 cm.
+ * Only for tent widths in [rearFlapMinTentWidthM, rearFlapMaxTentWidthM];
+ * empty outside that band or if the face cannot fit the flap.
  */
 export function buildRearFlapZippers(
   widthM: number,
@@ -67,7 +69,12 @@ export function buildRearFlapZippers(
   flapHeightM: number = CHAMBER_GEOMETRY.rearFlapHeightM,
   bottomYFromFloorM: number = CHAMBER_GEOMETRY.rearFlapBottomYFromFloorM,
   outlineOffsetM: number = CHAMBER_GEOMETRY.rearFlapOutlineOffsetM,
+  minTentWidthM: number = CHAMBER_GEOMETRY.rearFlapMinTentWidthM,
+  maxTentWidthM: number = CHAMBER_GEOMETRY.rearFlapMaxTentWidthM,
 ): readonly RearFlapZipperSpec[] {
+  // Product rule: rear window only on mid-size tents (60–120 cm wide).
+  if (widthM < minTentWidthM || widthM > maxTentWidthM) return []
+
   const halfD = depthM / 2
   const faceW = Math.max(widthM - 2 * cornerClearanceM, thicknessM)
   const faceH = Math.max(heightM - 2 * cornerClearanceM, thicknessM)

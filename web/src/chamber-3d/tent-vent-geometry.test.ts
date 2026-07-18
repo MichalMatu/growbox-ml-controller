@@ -44,9 +44,16 @@ describe("buildRearFlapZippers", () => {
     expect(exterior.position[2]).toBeCloseTo(-depthM / 2 - offset, 9)
   })
 
-  it("returns empty when the fixed flap does not fit the face", () => {
-    const zippers = buildRearFlapZippers(0.25, 0.25, 0.4)
-    expect(zippers).toEqual([])
+  it("shows the rear window at the 60 cm and 120 cm width edges", () => {
+    expect(buildRearFlapZippers(0.6, 0.8, 1.6)).toHaveLength(2)
+    expect(buildRearFlapZippers(1.2, 1.0, 2.0)).toHaveLength(2)
+  })
+
+  it("hides the rear window below 60 cm or above 120 cm width", () => {
+    expect(buildRearFlapZippers(0.59, 0.8, 1.6)).toEqual([])
+    expect(buildRearFlapZippers(0.4, 0.8, 1.6)).toEqual([])
+    expect(buildRearFlapZippers(1.21, 1.0, 2.0)).toEqual([])
+    expect(buildRearFlapZippers(1.5, 1.0, 2.0)).toEqual([])
   })
 
   it("returns empty when height is too short for 20 cm lift + 20 cm flap", () => {

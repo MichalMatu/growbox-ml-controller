@@ -98,11 +98,15 @@ export const CHAMBER_GEOMETRY = {
   /**
    * Rear mesh-flap rectangular zipper (no cutout) — fixed real-world size.
    * 30 cm wide × 20 cm high, bottom edge 20 cm above the floor.
+   * Shown only when tent width is within [min, max] (typical mid-size tents).
    */
   rearFlapWidthM: 0.3,
   rearFlapHeightM: 0.2,
   /** Bottom edge of the zipper rectangle above the floor (meters). */
   rearFlapBottomYFromFloorM: 0.2,
+  /** Inclusive tent-width band (meters) that gets a rear window. */
+  rearFlapMinTentWidthM: 0.6,
+  rearFlapMaxTentWidthM: 1.2,
   /** Push zipper off the interior foil face to avoid z-fight. */
   rearFlapOutlineOffsetM: 0.003,
   /** Zipper coil radius (~5.5 mm) — thick enough to read on foil. */
