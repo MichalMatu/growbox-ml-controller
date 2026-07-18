@@ -2,6 +2,7 @@ import { Grid, OrbitControls, PerspectiveCamera } from "@react-three/drei"
 import { Canvas } from "@react-three/fiber"
 
 import { Enclosure, type EnclosureDimensions } from "@/chamber-3d/enclosure"
+import { CHAMBER_CANVAS_CLASS, CHAMBER_SCENE } from "@/chamber-3d/scene-tokens"
 
 type ChamberSceneProps = EnclosureDimensions
 
@@ -10,9 +11,9 @@ export function ChamberScene({ widthCm, depthCm, heightCm }: ChamberSceneProps) 
   const cameraDistance = maxSideM * 2.4
 
   return (
-    <Canvas shadows className="h-full w-full touch-none rounded-lg">
-      <color attach="background" args={["#0b1220"]} />
-      <fog attach="fog" args={["#0b1220", maxSideM * 4, maxSideM * 12]} />
+    <Canvas shadows className={CHAMBER_CANVAS_CLASS}>
+      <color attach="background" args={[CHAMBER_SCENE.background]} />
+      <fog attach="fog" args={[CHAMBER_SCENE.fog, maxSideM * 4, maxSideM * 12]} />
 
       <PerspectiveCamera
         makeDefault
@@ -35,17 +36,17 @@ export function ChamberScene({ widthCm, depthCm, heightCm }: ChamberSceneProps) 
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <planeGeometry args={[maxSideM * 6, maxSideM * 6]} />
-        <meshStandardMaterial color="#111827" />
+        <meshStandardMaterial color={CHAMBER_SCENE.floor} />
       </mesh>
 
       <Grid
         args={[maxSideM * 6, maxSideM * 6]}
         cellSize={0.1}
         cellThickness={0.6}
-        cellColor="#1f2937"
+        cellColor={CHAMBER_SCENE.gridCell}
         sectionSize={0.5}
         sectionThickness={1}
-        sectionColor="#374151"
+        sectionColor={CHAMBER_SCENE.gridSection}
         fadeDistance={maxSideM * 5}
         fadeStrength={1.2}
         infiniteGrid

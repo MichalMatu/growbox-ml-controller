@@ -1,6 +1,8 @@
 import { Edges } from "@react-three/drei"
 import { DoubleSide } from "three"
 
+import { CHAMBER_SCENE } from "@/chamber-3d/scene-tokens"
+
 export type EnclosureDimensions = {
   widthCm: number
   depthCm: number
@@ -21,13 +23,13 @@ export function Enclosure({ widthCm, depthCm, heightCm }: EnclosureDimensions) {
       <mesh castShadow receiveShadow>
         <boxGeometry args={[widthM, heightM, depthM]} />
         <meshStandardMaterial
-          color="#4ade80"
+          color={CHAMBER_SCENE.enclosureFill}
           transparent
           opacity={0.18}
           side={DoubleSide}
           depthWrite={false}
         />
-        <Edges threshold={15} color="#22c55e" />
+        <Edges threshold={15} color={CHAMBER_SCENE.enclosureEdge} />
       </mesh>
     </group>
   )

@@ -1,18 +1,24 @@
 import { useId, useState } from "react"
 
-import { getConfigurationFeatureValue } from "@/domain/configuration"
-import { formatUnit, getFeatureLabel } from "@/domain/labels"
-import type { Configuration, FeatureDefinition, JsonValue } from "@/domain/types"
+import {
+  AppControlLabelBlock,
+  AppControlSurface,
+  AppFieldMetaText,
+  AppFieldStack,
+  AppSelectTrigger,
+} from "@/components/app-chrome"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
   SelectItem,
-  SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
+import { getConfigurationFeatureValue } from "@/domain/configuration"
+import { formatUnit, getFeatureLabel } from "@/domain/labels"
+import type { Configuration, FeatureDefinition, JsonValue } from "@/domain/types"
 
 interface FeatureControlProps {
   feature: FeatureDefinition
@@ -33,7 +39,6 @@ function NumberControl({ feature, value, disabled, onValueChange }: NumberContro
   const [draft, setDraft] = useState(String(value))
   const [syncedValue, setSyncedValue] = useState(value)
 
-  // Keep local draft in sync when the parent value changes (e.g. import / clamp).
   if (value !== syncedValue) {
     setSyncedValue(value)
     setDraft(String(value))
@@ -49,7 +54,7 @@ function NumberControl({ feature, value, disabled, onValueChange }: NumberContro
   }
 
   return (
-    <div className="space-y-2">
+    <AppFieldStack>
       <Label htmlFor={id}>{getFeatureLabel(feature)}</Label>
       <Input
         id={id}
@@ -67,7 +72,7 @@ function NumberControl({ feature, value, disabled, onValueChange }: NumberContro
         }}
       />
       <FieldMeta feature={feature} />
-    </div>
+    </AppFieldStack>
   )
 }
 
@@ -76,9 +81,9 @@ function FieldMeta({ feature }: { feature: FeatureDefinition }) {
     feature.type === "number" ? `${feature.minimum}–${feature.maximum}` : formatUnit(feature)
 
   return (
-    <p className="text-xs text-muted-foreground">
+    <AppFieldMetaText>
       {formatUnit(feature)} · {range} · <code>{feature.path}</code>
-    </p>
+    </AppFieldMetaText>
   )
 }
 
@@ -93,11 +98,11 @@ export function FeatureControl({
 
   if (feature.type === "boolean") {
     return (
-      <div className="flex items-start justify-between gap-4 rounded-lg border border-border p-3">
-        <div className="space-y-1">
+      <AppControlSurface variant="row">
+        <AppControlLabelBlock>
           <Label htmlFor={controlId}>{getFeatureLabel(feature)}</Label>
           <FieldMeta feature={feature} />
-        </div>
+        </AppControlLabelBlock>
         <Switch
           id={controlId}
           checked={value === true}
@@ -105,23 +110,23 @@ export function FeatureControl({
           aria-label={getFeatureLabel(feature)}
           onCheckedChange={(checked) => onValueChange(feature.path, checked)}
         />
-      </div>
+      </AppControlSurface>
     )
   }
 
   if (feature.type === "enum") {
     const enumValue = typeof value === "string" ? value : ""
     return (
-      <div className="space-y-2 rounded-lg border border-border p-3">
+      <AppControlSurface variant="stack">
         <Label htmlFor={controlId}>{getFeatureLabel(feature)}</Label>
         <Select
           value={enumValue}
           disabled={disabled}
           onValueChange={(nextValue) => onValueChange(feature.path, nextValue)}
         >
-          <SelectTrigger id={controlId} className="w-full">
+          <AppSelectTrigger id={controlId}>
             <SelectValue placeholder="Wybierz rodzaj" />
-          </SelectTrigger>
+          </AppSelectTrigger>
           <SelectContent>
             {Object.keys(feature.encoding ?? {}).map((option) => (
               <SelectItem key={option} value={option}>
@@ -131,19 +136,19 @@ export function FeatureControl({
           </SelectContent>
         </Select>
         <FieldMeta feature={feature} />
-      </div>
+      </AppControlSurface>
     )
   }
 
   const numberValue = typeof value === "number" ? value : feature.default
   return (
-    <div className="rounded-lg border border-border p-3">
+    <AppControlSurface variant="stack">
       <NumberControl
         feature={feature}
         value={numberValue}
         disabled={disabled}
         onValueChange={(nextValue) => onValueChange(feature.path, nextValue)}
       />
-    </div>
+    </AppControlSurface>
   )
 }

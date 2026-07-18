@@ -1,5 +1,20 @@
 import { useMemo, useRef, useState } from "react"
 
+import {
+  AppActionRow,
+  AppCardBody,
+  AppErrorList,
+  AppFormField,
+  AppHiddenFileInput,
+  AppMutedText,
+  AppPage,
+  AppPageFooter,
+  AppPageHeader,
+  AppSection,
+  AppSectionIntro,
+  AppStack,
+  AppSubsectionTitle,
+} from "@/components/app-chrome"
 import { FeatureControl } from "@/components/feature-control"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -11,7 +26,6 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import {
   buildExportConfiguration,
@@ -121,7 +135,6 @@ export function App() {
     return UI_GROUPS.map((group) => ({
       ...group,
       features: featuresForGroup(group.id).filter((feature) => {
-        // previous.* pot paths are already under pots group match; keep them only in previous.
         if (group.id === "pots" && /^pots\.\d+\.previous\./.test(feature.path)) return false
         return true
       }),
@@ -161,31 +174,28 @@ export function App() {
   }
 
   return (
-    <div className="mx-auto flex min-h-svh w-full max-w-3xl flex-col gap-6 p-6">
-      <header className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-xl font-semibold tracking-tight">
-            Konfigurator sprzętu growbox
-          </h1>
-          <Badge variant="secondary">schema v{schema.schema_version}</Badge>
-          <Badge variant="outline">{featureCount} features</Badge>
-        </div>
-        <p className="text-sm text-muted-foreground leading-relaxed">
-          Opisz zainstalowany sprzęt w kontrakcie v4 i pobierz jeden plik JSON.
-          Brak modułu = <code>available/validity = false</code> i zerowe pola
-          capability — sloty doniczek zawsze zostają (4).
-        </p>
-        <div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => navigate(ROUTES.chamber3d)}
-          >
+    <AppPage width="standard">
+      <AppPageHeader
+        title="Konfigurator sprzętu growbox"
+        badges={
+          <>
+            <Badge variant="secondary">schema v{schema.schema_version}</Badge>
+            <Badge variant="outline">{featureCount} features</Badge>
+          </>
+        }
+        description={
+          <>
+            Opisz zainstalowany sprzęt w kontrakcie v4 i pobierz jeden plik JSON.
+            Brak modułu = <code>available/validity = false</code> i zerowe pola
+            capability — sloty doniczek zawsze zostają (4).
+          </>
+        }
+        actions={
+          <Button type="button" variant="outline" onClick={() => navigate(ROUTES.chamber3d)}>
             Podgląd 3D (osobna strona)
           </Button>
-        </div>
-      </header>
+        }
+      />
 
       <Card>
         <CardHeader>
@@ -194,35 +204,34 @@ export function App() {
             Opcjonalne klucze root spoza ML features (title, profile_id, seed).
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="title">Tytuł</Label>
-            <Input
-              id="title"
-              value={typeof configuration.title === "string" ? configuration.title : ""}
-              onChange={(event) => handleMetadata("title", event.target.value)}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="profile_id">Profile ID</Label>
-            <Input
-              id="profile_id"
-              value={
-                typeof configuration.profile_id === "string" ? configuration.profile_id : ""
-              }
-              onChange={(event) => handleMetadata("profile_id", event.target.value)}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="seed">Seed</Label>
-            <Input
-              id="seed"
-              type="number"
-              step={1}
-              value={typeof configuration.seed === "number" ? configuration.seed : 0}
-              onChange={(event) => handleMetadata("seed", event.target.value)}
-            />
-          </div>
+        <CardContent>
+          <AppCardBody variant="form">
+            <AppFormField label="Tytuł" htmlFor="title">
+              <Input
+                id="title"
+                value={typeof configuration.title === "string" ? configuration.title : ""}
+                onChange={(event) => handleMetadata("title", event.target.value)}
+              />
+            </AppFormField>
+            <AppFormField label="Profile ID" htmlFor="profile_id">
+              <Input
+                id="profile_id"
+                value={
+                  typeof configuration.profile_id === "string" ? configuration.profile_id : ""
+                }
+                onChange={(event) => handleMetadata("profile_id", event.target.value)}
+              />
+            </AppFormField>
+            <AppFormField label="Seed" htmlFor="seed">
+              <Input
+                id="seed"
+                type="number"
+                step={1}
+                value={typeof configuration.seed === "number" ? configuration.seed : 0}
+                onChange={(event) => handleMetadata("seed", event.target.value)}
+              />
+            </AppFormField>
+          </AppCardBody>
         </CardContent>
       </Card>
 
@@ -233,61 +242,50 @@ export function App() {
             Import przyjmuje wyłącznie dokument przechodzący te same reguły co eksport v4.
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" onClick={() => downloadConfiguration(configuration)}>
-              Pobierz JSON
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              Importuj JSON
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => {
-                setConfiguration(createDefaultConfiguration())
-                setImportErrors([])
-                setStatusMessage("Przywrócono domyślną konfigurację.")
-              }}
-            >
-              Reset
-            </Button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="application/json,.json"
-              className="hidden"
-              onChange={(event) => {
-                const file = event.target.files?.[0]
-                event.target.value = ""
-                if (file) void handleImportFile(file)
-              }}
-            />
-          </div>
-          {statusMessage ? (
-            <p className="text-sm text-muted-foreground">{statusMessage}</p>
-          ) : null}
-          {importErrors.length > 0 ? (
-            <ul className="list-disc space-y-1 rounded-lg border border-destructive/40 bg-destructive/5 p-3 pl-6 text-sm text-destructive">
-              {importErrors.map((error) => (
-                <li key={error}>{error}</li>
-              ))}
-            </ul>
-          ) : null}
+        <CardContent>
+          <AppCardBody variant="stack">
+            <AppActionRow>
+              <Button type="button" onClick={() => downloadConfiguration(configuration)}>
+                Pobierz JSON
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                Importuj JSON
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  setConfiguration(createDefaultConfiguration())
+                  setImportErrors([])
+                  setStatusMessage("Przywrócono domyślną konfigurację.")
+                }}
+              >
+                Reset
+              </Button>
+              <AppHiddenFileInput
+                ref={fileInputRef}
+                accept="application/json,.json"
+                onChange={(event) => {
+                  const file = event.target.files?.[0]
+                  event.target.value = ""
+                  if (file) void handleImportFile(file)
+                }}
+              />
+            </AppActionRow>
+            {statusMessage ? <AppMutedText>{statusMessage}</AppMutedText> : null}
+            <AppErrorList errors={importErrors} />
+          </AppCardBody>
         </CardContent>
       </Card>
 
       {grouped.map((group) => (
-        <section key={group.id} className="flex flex-col gap-3">
-          <div>
-            <h2 className="text-lg font-medium">{group.title}</h2>
-            <p className="text-sm text-muted-foreground">{group.description}</p>
-          </div>
-          <div className="flex flex-col gap-3">
+        <AppSection key={group.id}>
+          <AppSectionIntro title={group.title} description={group.description} />
+          <AppStack gap="md">
             {group.features.map((feature, index) => {
               const pot = potTitle(feature.path)
               const actuator = actuatorTitle(feature.path)
@@ -303,17 +301,17 @@ export function App() {
                   actuatorTitle(group.features[index - 1]?.path ?? "") !== actuator)
 
               return (
-                <div key={feature.path} className="flex flex-col gap-2">
+                <AppStack key={feature.path} gap="sm">
                   {showPotDivider ? (
                     <>
                       {index > 0 ? <Separator /> : null}
-                      <h3 className="text-sm font-medium text-foreground">{pot}</h3>
+                      <AppSubsectionTitle>{pot}</AppSubsectionTitle>
                     </>
                   ) : null}
                   {showActuatorDivider ? (
                     <>
                       {index > 0 && !showPotDivider ? <Separator /> : null}
-                      <h3 className="text-sm font-medium text-foreground">{actuator}</h3>
+                      <AppSubsectionTitle>{actuator}</AppSubsectionTitle>
                     </>
                   ) : null}
                   <FeatureControl
@@ -322,18 +320,18 @@ export function App() {
                     disabled={previousFeature}
                     onValueChange={handleFeatureChange}
                   />
-                </div>
+                </AppStack>
               )
             })}
-          </div>
-        </section>
+          </AppStack>
+        </AppSection>
       ))}
 
-      <footer className="pb-8 text-xs text-muted-foreground">
+      <AppPageFooter>
         SSOT: <code>schemas/environment-controller.json</code> · gate:{" "}
         <code>pnpm gate</code>
-      </footer>
-    </div>
+      </AppPageFooter>
+    </AppPage>
   )
 }
 

@@ -158,14 +158,55 @@ Values may differ. Gate enforces this on the golden file; FE tests must enforce 
 
 ## 7. Agent UI rules (hard)
 
+### 7.1 Allowlist (normative — do not freestyle)
+
+Feature pages and product components **compose only**:
+
+| Allowed | Path / rule |
+|---------|-------------|
+| App chrome primitives | `@/components/app-chrome` — catalog in `web/src/ui/allowed-surface.ts` (`ALLOWED_APP_CHROME_EXPORTS`) |
+| shadcn controls | `@/components/ui/*` **without** `className` or `style` overrides |
+| Domain | `@/domain/*` — no styles |
+| R3F color/canvas tokens | `web/src/chamber-3d/scene-tokens.ts` only |
+
+**Forbidden** in feature surfaces (`App.tsx`, `app-router.tsx`, `pages/**`, `components/**` except `ui/` and `app-chrome.tsx`):
+
+- any `className=…` (string, template, **or variable**)
+- any JSX `style=…`
+- `cn(…)`
+- freehand Tailwind / magic spacing / one-off hex in DOM chrome
+- Button `size` other than omitted (`default`) or `icon`
+
+**To change look:** edit `app-chrome.tsx` and/or `components/ui/*` (and update `ALLOWED_APP_CHROME_EXPORTS` if you add a chrome export). Never invent styles in a page file.
+
+**Button roles (same element = same variant):**
+
+| Role | `variant` |
+|------|-----------|
+| Primary action | `default` (omit) |
+| Cross-page nav / secondary | `outline` |
+| Quiet / Reset | `ghost` |
+
+### 7.2 Enforcement (pre-commit sieve)
+
+| Layer | What |
+|-------|------|
+| ESLint | Bans `className` / `style` / `cn` on feature surfaces; Button size lock; R3F string className outside `scene-tokens` |
+| Vitest `ui-consistency.test.ts` | Bidirectional chrome export ↔ allowlist; auto-discovers feature surfaces + `pages/*`; freehand scan; Reset/nav conventions; no hex in chamber scene files |
+| `pnpm --dir web typecheck` | Button CVA only `default` \| `icon` |
+| pre-commit | `web lint` + `web test` (see `.pre-commit-config.yaml`) |
+| pre-push | full `pnpm check` |
+
+### 7.3 Product / layout discipline
+
 1. No freehand global CSS sheet growth (`panel.css` anti-pattern).
-2. Layout = Tailwind utilities only (`flex` / `grid` / `gap-*` / scale spacing).
+2. Layout tokens live in **app-chrome**, not scattered page utilities.
 3. Controls = shadcn/ui only; add missing pieces via shadcn CLI into `components/ui/`.
-4. Theme = Tailwind + shadcn CSS variables; no random one-off hex in JSX.
-5. Prefer vertical stack / wizard steps; no “two uneven columns with empty holes” layout games.
-6. No pixel-nudge-only changes (`mt-[13px]`, `top-px`, magic widths) as the fix — fix structure or shared component.
+4. Theme = Tailwind + shadcn CSS variables; no random one-off hex in feature JSX (3D hex only in `scene-tokens.ts`).
+5. Prefer vertical stack / wizard steps; multi-column only via catalog entries (e.g. `AppPreviewSplit`).
+6. No pixel-nudge-only fixes — extend a chrome primitive.
 7. Domain logic (export, clamp, inactive rules) = pure TS modules + Vitest; components bind state only.
-8. Preview of tent/pots = parametric from numbers; not a library of hundreds of size-specific AI images as the source of truth.
+8. Preview of tent/pots = parametric from numbers; not a library of size-specific AI images as SSOT.
 9. Do not drop pot slots or invent actuator paths to “simplify UI”.
 
 ---
@@ -181,10 +222,15 @@ web/
   src/
     main.tsx
     App.tsx
+    app-router.tsx
     components/ui/      # shadcn only
-    components/         # feature UI
-    lib/                # cn(), helpers
+    components/app-chrome.tsx  # allowed layout primitives
+    components/         # feature UI (no freehand className)
+    pages/              # routes (no freehand className)
+    chamber-3d/         # R3F; colors in scene-tokens.ts
+    ui/allowed-surface.ts  # allowlist catalog
     domain/             # export/import/clamps (tested)
+    lib/                # cn(), helpers
     index.css           # Tailwind entry + shadcn variables only
 ```
 
@@ -269,7 +315,7 @@ Do **not** commit if any of:
 | Contract | Missing feature paths vs schema; not 4 pots |
 | Contract | `actuators.lights` or global `control_type` |
 | Types (web) | `any` / `@ts-ignore` without human-written justification |
-| Styles (web) | New freehand CSS layout system or second UI kit |
+| Styles (web) | Freehand `className`/`style`/`cn` outside app-chrome/ui; second UI kit; Button size sm/xs/lg |
 | Scope | Monorepo product trees reintroduced on this branch |
 | Lockfile | npm/yarn lockfile added; or pnpm lock out of sync after dep change |
 | Secrets | `.env` with secrets committed |

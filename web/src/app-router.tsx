@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react"
 
 import { App } from "@/App"
+import { AppPageLoading } from "@/components/app-chrome"
 import { ROUTES, usePathname } from "@/lib/routing"
 
 /** R3F stays out of the configurator bundle until this route is opened. */
@@ -15,13 +16,7 @@ export function AppRouter() {
 
   if (pathname === ROUTES.chamber3d || pathname.startsWith(`${ROUTES.chamber3d}/`)) {
     return (
-      <Suspense
-        fallback={
-          <div className="flex min-h-svh items-center justify-center p-6 text-sm text-muted-foreground">
-            Ładowanie podglądu 3D…
-          </div>
-        }
-      >
+      <Suspense fallback={<AppPageLoading>Ładowanie podglądu 3D…</AppPageLoading>}>
         <Chamber3dPage />
       </Suspense>
     )
