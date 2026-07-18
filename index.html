@@ -5,6 +5,10 @@
     <link rel="icon" type="image/svg+xml" href="/growbox-ml-controller/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Growbox hardware configurator</title>
+    <script>
+      const r = new URLSearchParams(location.search).get('r')
+      if (r) history.replaceState(null, '', '/growbox-ml-controller' + r)
+    </script>
     <script type="module" crossorigin src="/growbox-ml-controller/assets/index-DsmLyLCN.js"></script>
     <link rel="stylesheet" crossorigin href="/growbox-ml-controller/assets/index-DYbvdicZ.css">
   </head>
