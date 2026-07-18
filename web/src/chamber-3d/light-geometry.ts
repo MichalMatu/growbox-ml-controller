@@ -55,7 +55,7 @@ export const LIGHT_PRESETS: readonly LightPreset[] = [
   {
     id: "led_board_60",
     form: "led_panel",
-    label: "LED panel ~60×60",
+    label: "LED 60×60",
     lengthCm: 60,
     widthCm: 60,
     heightCm: 8,
@@ -65,7 +65,7 @@ export const LIGHT_PRESETS: readonly LightPreset[] = [
   {
     id: "led_board_90",
     form: "led_panel",
-    label: "LED panel ~90×80",
+    label: "LED 90×80",
     lengthCm: 90,
     widthCm: 80,
     heightCm: 9,
@@ -75,7 +75,7 @@ export const LIGHT_PRESETS: readonly LightPreset[] = [
   {
     id: "led_bar_100",
     form: "led_panel",
-    label: "LED bar ~100 cm",
+    label: "LED bar 100 cm",
     lengthCm: 100,
     widthCm: 12,
     heightCm: 6,
@@ -85,7 +85,7 @@ export const LIGHT_PRESETS: readonly LightPreset[] = [
   {
     id: "hps_box_600",
     form: "hps_box",
-    label: "HPS 600 W skrzynka",
+    label: "HPS 600 W",
     lengthCm: 50,
     widthCm: 40,
     heightCm: 22,
@@ -95,7 +95,7 @@ export const LIGHT_PRESETS: readonly LightPreset[] = [
   {
     id: "hps_box_1000",
     form: "hps_box",
-    label: "HPS 1000 W skrzynka",
+    label: "HPS 1000 W",
     lengthCm: 55,
     widthCm: 45,
     heightCm: 25,
@@ -115,7 +115,7 @@ export const LIGHT_PRESETS: readonly LightPreset[] = [
   {
     id: "hps_tube_600",
     form: "hps_cooltube",
-    label: "HPS 600 W cooltube Ø125",
+    label: "HPS 600 W tube Ø125",
     lengthCm: 55,
     widthCm: 18,
     heightCm: 18,
@@ -126,7 +126,7 @@ export const LIGHT_PRESETS: readonly LightPreset[] = [
   {
     id: "hps_tube_1000",
     form: "hps_cooltube",
-    label: "HPS 1000 W cooltube Ø150",
+    label: "HPS 1000 W tube Ø150",
     lengthCm: 60,
     widthCm: 20,
     heightCm: 20,
