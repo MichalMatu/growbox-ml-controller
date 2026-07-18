@@ -1,16 +1,18 @@
 import { useEffect, useMemo } from "react"
-import { PlaneGeometry, Quaternion, Vector2, Vector3 } from "three"
+import { PlaneGeometry, Vector2 } from "three"
 
 import {
   useGrowtentPbrMaps,
+  type ExteriorPbrMaps,
   type GrowtentPbrMaps,
-  type PbrMapBundle,
+  type InteriorPbrMaps,
 } from "@/chamber-3d/fabric-pbr"
 import {
   CHAMBER_GEOMETRY,
   CHAMBER_MATERIAL,
   type ChamberSceneColors,
 } from "@/chamber-3d/scene-tokens"
+import { TentFrame } from "@/chamber-3d/tent-frame"
 
 export type EnclosureDimensions = {
   widthCm: number
@@ -22,7 +24,7 @@ export type EnclosureDimensions = {
 type Vec3 = readonly [number, number, number]
 
 /**
- * Parametric grow tent: open front (+Z), dual-sided PBR fabric
+ * Parametric grow tent: open front (+Z), dual-sided fabric
  * (FreePBR nylon exterior + ambientCG Foil003 interior), black steel frame.
  */
 export function Enclosure({
@@ -38,7 +40,6 @@ export function Enclosure({
   const r = CHAMBER_GEOMETRY.frameRadiusM
   const halfW = widthM / 2
   const halfD = depthM / 2
-
   const pbr = useGrowtentPbrMaps()
 
   return (
@@ -85,66 +86,66 @@ function TentShell({
   pbr: GrowtentPbrMaps
 }) {
   const t = thicknessM
-  // ~1 texture tile per 45 cm of wall (baked into geometry UVs)
-  const uvPerMeter = 100 / 45
+  const uv = CHAMBER_GEOMETRY.uvTilesPerMeter
+
+  const panels: Array<{
+    size: [number, number]
+    position: Vec3
+    rotation: Vec3
+    uvScale: [number, number]
+  }> = [
+    {
+      size: [widthM, depthM],
+      position: [0, t / 2, 0],
+      rotation: [Math.PI / 2, 0, 0],
+      uvScale: [widthM * uv, depthM * uv],
+    },
+    {
+      size: [widthM, depthM],
+      position: [0, heightM - t / 2, 0],
+      rotation: [-Math.PI / 2, 0, 0],
+      uvScale: [widthM * uv, depthM * uv],
+    },
+    {
+      size: [widthM, heightM],
+      position: [0, heightM / 2, -halfD + t / 2],
+      rotation: [0, Math.PI, 0],
+      uvScale: [widthM * uv, heightM * uv],
+    },
+    {
+      size: [depthM, heightM],
+      position: [-halfW + t / 2, heightM / 2, 0],
+      rotation: [0, -Math.PI / 2, 0],
+      uvScale: [depthM * uv, heightM * uv],
+    },
+    {
+      size: [depthM, heightM],
+      position: [halfW - t / 2, heightM / 2, 0],
+      rotation: [0, Math.PI / 2, 0],
+      uvScale: [depthM * uv, heightM * uv],
+    },
+  ]
 
   return (
     <group>
-      <FabricPanel
-        size={[widthM, depthM]}
-        position={[0, t / 2, 0]}
-        rotation={[Math.PI / 2, 0, 0]}
-        thicknessM={t}
-        colors={colors}
-        exteriorMaps={pbr.exterior}
-        interiorMaps={pbr.interior}
-        uvScale={[widthM * uvPerMeter, depthM * uvPerMeter]}
-      />
-      <FabricPanel
-        size={[widthM, depthM]}
-        position={[0, heightM - t / 2, 0]}
-        rotation={[-Math.PI / 2, 0, 0]}
-        thicknessM={t}
-        colors={colors}
-        exteriorMaps={pbr.exterior}
-        interiorMaps={pbr.interior}
-        uvScale={[widthM * uvPerMeter, depthM * uvPerMeter]}
-      />
-      <FabricPanel
-        size={[widthM, heightM]}
-        position={[0, heightM / 2, -halfD + t / 2]}
-        rotation={[0, Math.PI, 0]}
-        thicknessM={t}
-        colors={colors}
-        exteriorMaps={pbr.exterior}
-        interiorMaps={pbr.interior}
-        uvScale={[widthM * uvPerMeter, heightM * uvPerMeter]}
-      />
-      <FabricPanel
-        size={[depthM, heightM]}
-        position={[-halfW + t / 2, heightM / 2, 0]}
-        rotation={[0, -Math.PI / 2, 0]}
-        thicknessM={t}
-        colors={colors}
-        exteriorMaps={pbr.exterior}
-        interiorMaps={pbr.interior}
-        uvScale={[depthM * uvPerMeter, heightM * uvPerMeter]}
-      />
-      <FabricPanel
-        size={[depthM, heightM]}
-        position={[halfW - t / 2, heightM / 2, 0]}
-        rotation={[0, Math.PI / 2, 0]}
-        thicknessM={t}
-        colors={colors}
-        exteriorMaps={pbr.exterior}
-        interiorMaps={pbr.interior}
-        uvScale={[depthM * uvPerMeter, heightM * uvPerMeter]}
-      />
+      {panels.map((panel, index) => (
+        <FabricPanel
+          key={index}
+          size={panel.size}
+          position={panel.position}
+          rotation={panel.rotation}
+          thicknessM={t}
+          colors={colors}
+          exteriorMaps={pbr.exterior}
+          interiorMaps={pbr.interior}
+          uvScale={panel.uvScale}
+        />
+      ))}
     </group>
   )
 }
 
-/** Plane with tiled UVs + uv2 for aoMap (no per-panel texture clones). */
+/** Plane with tiled UVs + uv2 for aoMap (shared maps; no per-panel texture clones). */
 function makeTiledPlane(
   width: number,
   height: number,
@@ -165,7 +166,6 @@ function makeTiledPlane(
 
 /**
  * Dual-plane fabric wall. Local +Z = exterior (nylon), local -Z = interior (foil).
- * Shared PBR maps; tiling is in geometry UVs.
  */
 function FabricPanel({
   size,
@@ -182,8 +182,8 @@ function FabricPanel({
   rotation: Vec3
   thicknessM: number
   colors: ChamberSceneColors
-  exteriorMaps: PbrMapBundle
-  interiorMaps: PbrMapBundle
+  exteriorMaps: ExteriorPbrMaps
+  interiorMaps: InteriorPbrMaps
   uvScale: [number, number]
 }) {
   const halfT = thicknessM / 2
@@ -234,12 +234,11 @@ function FabricPanel({
           normalMap={exteriorMaps.normalMap}
           normalScale={exteriorNormalScale}
           roughnessMap={exteriorMaps.roughnessMap}
-          metalnessMap={exteriorMaps.metalnessMap}
+          metalness={CHAMBER_MATERIAL.exteriorMetalness}
           aoMap={exteriorMaps.aoMap}
           aoMapIntensity={CHAMBER_MATERIAL.exteriorAoIntensity}
           roughness={CHAMBER_MATERIAL.exteriorRoughness}
-          metalness={CHAMBER_MATERIAL.exteriorMetalness}
-          envMapIntensity={0.35}
+          envMapIntensity={CHAMBER_MATERIAL.exteriorEnvMapIntensity}
         />
       </mesh>
       <mesh
@@ -250,8 +249,7 @@ function FabricPanel({
         receiveShadow
       >
         <meshStandardMaterial
-          // white: foil albedo is full PBR color (token tint would muddy metal)
-          color="white"
+          color={colors.interior}
           map={interiorMaps.map}
           normalMap={interiorMaps.normalMap}
           normalScale={interiorNormalScale}
@@ -261,123 +259,9 @@ function FabricPanel({
           aoMapIntensity={CHAMBER_MATERIAL.interiorAoIntensity}
           roughness={CHAMBER_MATERIAL.interiorRoughness}
           metalness={CHAMBER_MATERIAL.interiorMetalness}
-          envMapIntensity={1.8}
+          envMapIntensity={CHAMBER_MATERIAL.interiorEnvMapIntensity}
         />
       </mesh>
     </group>
-  )
-}
-
-function TentFrame({
-  widthM,
-  depthM,
-  heightM,
-  wallThicknessM,
-  radiusM,
-  colors,
-}: {
-  widthM: number
-  depthM: number
-  heightM: number
-  wallThicknessM: number
-  radiusM: number
-  colors: ChamberSceneColors
-}) {
-  const segments = useMemo(() => {
-    const inset = wallThicknessM + radiusM * 1.05
-    const halfW = widthM / 2 - inset
-    const halfD = depthM / 2 - inset
-    const yBottom = wallThicknessM + radiusM
-    const yTop = heightM - wallThicknessM - radiusM
-
-    const bl: Vec3 = [-halfW, yBottom, -halfD]
-    const br: Vec3 = [halfW, yBottom, -halfD]
-    const fl: Vec3 = [-halfW, yBottom, halfD]
-    const fr: Vec3 = [halfW, yBottom, halfD]
-    const tl: Vec3 = [-halfW, yTop, -halfD]
-    const tr: Vec3 = [halfW, yTop, -halfD]
-    const tfl: Vec3 = [-halfW, yTop, halfD]
-    const tfr: Vec3 = [halfW, yTop, halfD]
-
-    return [
-      [bl, tl],
-      [br, tr],
-      [fl, tfl],
-      [fr, tfr],
-      [bl, br],
-      [br, fr],
-      [fr, fl],
-      [fl, bl],
-      [tl, tr],
-      [tr, tfr],
-      [tfr, tfl],
-      [tfl, tl],
-    ] as const satisfies ReadonlyArray<readonly [Vec3, Vec3]>
-  }, [widthM, depthM, heightM, wallThicknessM, radiusM])
-
-  return (
-    <group>
-      {segments.map(([from, to], index) => (
-        <FrameTube
-          key={index}
-          from={from}
-          to={to}
-          radiusM={radiusM}
-          colors={colors}
-        />
-      ))}
-    </group>
-  )
-}
-
-const UP = new Vector3(0, 1, 0)
-
-function FrameTube({
-  from,
-  to,
-  radiusM,
-  colors,
-}: {
-  from: Vec3
-  to: Vec3
-  radiusM: number
-  colors: ChamberSceneColors
-}) {
-  const { position, quaternion, length } = useMemo(() => {
-    const start = new Vector3(from[0], from[1], from[2])
-    const end = new Vector3(to[0], to[1], to[2])
-    const dir = end.clone().sub(start)
-    const lengthM = dir.length()
-    const mid = start.clone().add(end).multiplyScalar(0.5)
-    const quat = new Quaternion()
-    if (lengthM > 1e-8) {
-      quat.setFromUnitVectors(UP, dir.normalize())
-    }
-    return {
-      position: [mid.x, mid.y, mid.z] as Vec3,
-      quaternion: quat,
-      length: lengthM,
-    }
-  }, [from, to])
-
-  if (length < 1e-6) return null
-
-  return (
-    <mesh position={position} quaternion={quaternion} castShadow receiveShadow>
-      <cylinderGeometry
-        args={[
-          radiusM,
-          radiusM,
-          length,
-          CHAMBER_GEOMETRY.frameRadialSegments,
-        ]}
-      />
-      <meshStandardMaterial
-        color={colors.frame}
-        roughness={CHAMBER_MATERIAL.frameRoughness}
-        metalness={CHAMBER_MATERIAL.frameMetalness}
-        envMapIntensity={0.6}
-      />
-    </mesh>
   )
 }

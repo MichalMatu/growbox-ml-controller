@@ -69,25 +69,26 @@ export function ChamberScene({ widthCm, depthCm, heightCm }: ChamberSceneProps) 
         position={[0.15, heightM * 0.5, depthM * 2.6]}
         intensity={1.1}
       />
+      {/* Soft side rims only — black exterior should not catch hard specular */}
       <directionalLight
         position={[-maxSideM * 1.8, maxSideM * 1.6, maxSideM * 0.6]}
-        intensity={0.95}
+        intensity={0.55}
       />
       <directionalLight
         position={[maxSideM * 1.6, maxSideM * 1.3, -maxSideM * 0.8]}
-        intensity={0.65}
+        intensity={0.35}
       />
 
-      {/* Internal grow-lamp style fill — foil needs strong light to read as silver */}
+      {/* Internal fill — bright silver mylar needs strong white bounce */}
       <pointLight
         position={[0, heightM * 0.9, 0]}
-        intensity={4.5}
+        intensity={4.2}
         distance={Math.max(widthM, depthM, heightM) * 3.2}
         decay={2}
       />
       <pointLight
         position={[0, heightM * 0.45, depthM * 0.15]}
-        intensity={1.8}
+        intensity={2.0}
         distance={Math.max(widthM, depthM) * 2}
         decay={2}
       />
@@ -95,7 +96,7 @@ export function ChamberScene({ widthCm, depthCm, heightCm }: ChamberSceneProps) 
         position={[0, heightM * 0.96, depthM * 0.02]}
         angle={0.9}
         penumbra={0.55}
-        intensity={3.2}
+        intensity={2.8}
         distance={heightM * 2.8}
         castShadow
       >
@@ -104,7 +105,7 @@ export function ChamberScene({ widthCm, depthCm, heightCm }: ChamberSceneProps) 
 
       <Suspense fallback={null}>
         {/* Warehouse HDR inside Suspense so PMREM + maps load without racing the canvas */}
-        <Environment preset="warehouse" environmentIntensity={0.75} resolution={128} />
+        <Environment preset="warehouse" environmentIntensity={0.7} resolution={128} />
         <Enclosure
           widthCm={widthCm}
           depthCm={depthCm}

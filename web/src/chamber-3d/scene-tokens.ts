@@ -31,12 +31,15 @@ export const CHAMBER_SCENE_FALLBACK = {
   floor: "#111827",
   gridCell: "#1f2937",
   gridSection: "#374151",
-  /** Outer nylon tent fabric tint (multiplies FreePBR albedo) */
-  exterior: "#3a3a40",
-  /** Soft fill / hemisphere only (foil albedo uses white + PBR maps) */
-  interior: "#b8c2ce",
+  /**
+   * Outer nylon tint (multiplies FreePBR albedo).
+   * Real grow tents: near-black matte canvas (Costway / Mars Hydro style).
+   */
+  exterior: "#0c0c0e",
+  /** Soft fill / hemisphere (foil mesh uses cool silver tint + maps) */
+  interior: "#e8eef4",
   /** Powder-coated steel poles */
-  frame: "#1e1e1e",
+  frame: "#141414",
 } as const
 
 export type ChamberSceneColors = {
@@ -45,18 +48,24 @@ export type ChamberSceneColors = {
 
 /** Non-color material knobs (not CSS colors; still centralized). */
 export const CHAMBER_MATERIAL = {
-  /** FreePBR nylon tent — matte fabric (maps drive detail) */
-  exteriorRoughness: 0.95,
+  /** FreePBR nylon — matte, low normal so weave is subtle, not shiny */
+  exteriorRoughness: 0.98,
   exteriorMetalness: 0,
-  exteriorNormalScale: 0.85,
-  exteriorAoIntensity: 0.85,
-  /** ambientCG Foil003 — reflective foil / mylar stand-in */
-  interiorRoughness: 0.2,
+  exteriorNormalScale: 0.22,
+  exteriorAoIntensity: 0.45,
+  exteriorEnvMapIntensity: 0.05,
+  /**
+   * Foil003 is wrinkled — moderate normal relief (more than flat, less than
+   * crumpled foil bag) + metalness/env high for bright silver mylar.
+   */
+  interiorRoughness: 0.3,
   interiorMetalness: 0.9,
-  interiorNormalScale: 1.15,
-  interiorAoIntensity: 0.55,
-  frameRoughness: 0.42,
-  frameMetalness: 0.55,
+  interiorNormalScale: 0.32,
+  interiorAoIntensity: 0.22,
+  interiorEnvMapIntensity: 1.45,
+  frameRoughness: 0.48,
+  frameMetalness: 0.5,
+  frameEnvMapIntensity: 0.6,
 } as const
 
 /**
@@ -68,8 +77,12 @@ export const CHAMBER_GEOMETRY = {
   wallThicknessM: 0.016,
   /** Steel tube outer radius (meters) ~ 3.6 cm diameter — readable on foil */
   frameRadiusM: 0.018,
+  /** Multiplier on radius when computing frame inset from walls. */
+  frameInsetRadiusFactor: 1.05,
   /** Radial segments for frame cylinders. */
   frameRadialSegments: 12,
+  /** Texture tiles per scene-meter (foil / nylon density). */
+  uvTilesPerMeter: 100 / 58,
 } as const
 
 /** DOM class on the R3F Canvas element (fill parent AppCanvasFrame viewport). */

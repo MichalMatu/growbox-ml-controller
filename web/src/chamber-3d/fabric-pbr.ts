@@ -2,6 +2,8 @@
  * Grow-tent PBR maps (static assets under public/textures/growtent/).
  * Interior: ambientCG Foil003 (CC0). Exterior: FreePBR nylon tent fabric.
  * See public/textures/growtent/ATTRIBUTION.md
+ *
+ * Only maps actually bound on materials are loaded (no dead metalness on nylon).
  */
 
 import { useMemo } from "react"
@@ -17,23 +19,22 @@ import {
 
 /** Public paths (Vite serves `web/public` at `/`). */
 export const GROWTENT_TEXTURE_URLS = {
-  foil: {
+  interior: {
     map: "/textures/growtent/foil_color.jpg",
     normalMap: "/textures/growtent/foil_normal.jpg",
     roughnessMap: "/textures/growtent/foil_rough.jpg",
     metalnessMap: "/textures/growtent/foil_metal.jpg",
     aoMap: "/textures/growtent/foil_ao.jpg",
   },
-  nylon: {
+  exterior: {
     map: "/textures/growtent/nylon_color.jpg",
     normalMap: "/textures/growtent/nylon_normal.jpg",
     roughnessMap: "/textures/growtent/nylon_rough.jpg",
-    metalnessMap: "/textures/growtent/nylon_metal.jpg",
     aoMap: "/textures/growtent/nylon_ao.jpg",
   },
 } as const
 
-export type PbrMapBundle = {
+export type InteriorPbrMaps = {
   map: Texture
   normalMap: Texture
   roughnessMap: Texture
@@ -41,13 +42,20 @@ export type PbrMapBundle = {
   aoMap: Texture
 }
 
+export type ExteriorPbrMaps = {
+  map: Texture
+  normalMap: Texture
+  roughnessMap: Texture
+  aoMap: Texture
+}
+
 export type GrowtentPbrMaps = {
-  interior: PbrMapBundle
-  exterior: PbrMapBundle
+  interior: InteriorPbrMaps
+  exterior: ExteriorPbrMaps
 }
 
-function configureColorMap(texture: Texture): void {
-  texture.colorSpace = SRGBColorSpace
+function configureTexture(texture: Texture, isColor: boolean): void {
+  texture.colorSpace = isColor ? SRGBColorSpace : NoColorSpace
   texture.wrapS = RepeatWrapping
   texture.wrapT = RepeatWrapping
   texture.repeat.set(1, 1)
@@ -57,53 +65,34 @@ function configureColorMap(texture: Texture): void {
   texture.needsUpdate = true
 }
 
-function configureDataMap(texture: Texture): void {
-  texture.colorSpace = NoColorSpace
-  texture.wrapS = RepeatWrapping
-  texture.wrapT = RepeatWrapping
-  texture.repeat.set(1, 1)
-  texture.magFilter = LinearFilter
-  texture.minFilter = LinearMipmapLinearFilter
-  texture.anisotropy = 8
-  texture.needsUpdate = true
+function configureInterior(maps: InteriorPbrMaps): void {
+  configureTexture(maps.map, true)
+  configureTexture(maps.normalMap, false)
+  configureTexture(maps.roughnessMap, false)
+  configureTexture(maps.metalnessMap, false)
+  configureTexture(maps.aoMap, false)
+}
+
+function configureExterior(maps: ExteriorPbrMaps): void {
+  configureTexture(maps.map, true)
+  configureTexture(maps.normalMap, false)
+  configureTexture(maps.roughnessMap, false)
+  configureTexture(maps.aoMap, false)
 }
 
 /**
- * Load all growtent PBR maps once (must be under Suspense / Canvas).
+ * Load growtent PBR maps once (must be under Suspense / Canvas).
  * Shared across panels — UV tiling lives on geometry, not texture.repeat.
  */
 export function useGrowtentPbrMaps(): GrowtentPbrMaps {
-  const foil = useTexture({
-    map: GROWTENT_TEXTURE_URLS.foil.map,
-    normalMap: GROWTENT_TEXTURE_URLS.foil.normalMap,
-    roughnessMap: GROWTENT_TEXTURE_URLS.foil.roughnessMap,
-    metalnessMap: GROWTENT_TEXTURE_URLS.foil.metalnessMap,
-    aoMap: GROWTENT_TEXTURE_URLS.foil.aoMap,
-  })
-  const nylon = useTexture({
-    map: GROWTENT_TEXTURE_URLS.nylon.map,
-    normalMap: GROWTENT_TEXTURE_URLS.nylon.normalMap,
-    roughnessMap: GROWTENT_TEXTURE_URLS.nylon.roughnessMap,
-    metalnessMap: GROWTENT_TEXTURE_URLS.nylon.metalnessMap,
-    aoMap: GROWTENT_TEXTURE_URLS.nylon.aoMap,
-  })
+  const interior = useTexture({ ...GROWTENT_TEXTURE_URLS.interior })
+  const exterior = useTexture({ ...GROWTENT_TEXTURE_URLS.exterior })
 
   return useMemo(() => {
-    configureColorMap(foil.map)
-    configureDataMap(foil.normalMap)
-    configureDataMap(foil.roughnessMap)
-    configureDataMap(foil.metalnessMap)
-    configureDataMap(foil.aoMap)
-
-    configureColorMap(nylon.map)
-    configureDataMap(nylon.normalMap)
-    configureDataMap(nylon.roughnessMap)
-    configureDataMap(nylon.metalnessMap)
-    configureDataMap(nylon.aoMap)
-
-    return {
-      interior: foil as PbrMapBundle,
-      exterior: nylon as PbrMapBundle,
-    }
-  }, [foil, nylon])
+    const interiorMaps = interior as InteriorPbrMaps
+    const exteriorMaps = exterior as ExteriorPbrMaps
+    configureInterior(interiorMaps)
+    configureExterior(exteriorMaps)
+    return { interior: interiorMaps, exterior: exteriorMaps }
+  }, [interior, exterior])
 }

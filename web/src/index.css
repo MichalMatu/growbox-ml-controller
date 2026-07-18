@@ -95,10 +95,10 @@
     --chamber-floor: #111827;
     --chamber-grid-cell: #1f2937;
     --chamber-grid-section: #374151;
-    /* Grow tent: 600D oxford exterior, diamond mylar, steel frame */
-    --chamber-exterior: #3a3a40;
-    --chamber-interior: #b8c2ce;
-    --chamber-frame: #1e1e1e;
+    /* Grow tent: matte black nylon exterior, soft foil interior, steel frame */
+    --chamber-exterior: #0c0c0e;
+    --chamber-interior: #e8eef4;
+    --chamber-frame: #141414;
 }
 
 .dark {
