@@ -6,61 +6,38 @@ import {
   CHAMBER_MATERIAL,
   type ChamberSceneColors,
 } from "@/chamber-3d/scene-tokens"
-
-type Vec3 = readonly [number, number, number]
+import {
+  buildFrameSegments,
+  computeFrameCornerBox,
+  type Vec3,
+} from "@/chamber-3d/tent-frame-geometry"
 
 export type TentFrameProps = {
   widthM: number
   depthM: number
   heightM: number
-  wallThicknessM: number
   radiusM: number
   colors: ChamberSceneColors
 }
 
 /**
- * Black steel tube cage: 4 uprights + top/bottom rectangles.
- * Centers sit just inside fabric lining (symmetric inset).
+ * Black steel tube cage (R3F). Geometry: `tent-frame-geometry.ts`.
+ * Outer-pocket inset on all axes; axis-aligned edges → 90° joints.
  */
 export function TentFrame({
   widthM,
   depthM,
   heightM,
-  wallThicknessM,
   radiusM,
   colors,
 }: TentFrameProps) {
-  const segments = useMemo(() => {
-    const inset = wallThicknessM + radiusM * CHAMBER_GEOMETRY.frameInsetRadiusFactor
-    const halfW = widthM / 2 - inset
-    const halfD = depthM / 2 - inset
-    const yBottom = wallThicknessM + radiusM
-    const yTop = heightM - wallThicknessM - radiusM
-
-    const bl: Vec3 = [-halfW, yBottom, -halfD]
-    const br: Vec3 = [halfW, yBottom, -halfD]
-    const fl: Vec3 = [-halfW, yBottom, halfD]
-    const fr: Vec3 = [halfW, yBottom, halfD]
-    const tl: Vec3 = [-halfW, yTop, -halfD]
-    const tr: Vec3 = [halfW, yTop, -halfD]
-    const tfl: Vec3 = [-halfW, yTop, halfD]
-    const tfr: Vec3 = [halfW, yTop, halfD]
-
-    return [
-      [bl, tl],
-      [br, tr],
-      [fl, tfl],
-      [fr, tfr],
-      [bl, br],
-      [br, fr],
-      [fr, fl],
-      [fl, bl],
-      [tl, tr],
-      [tr, tfr],
-      [tfr, tfl],
-      [tfl, tl],
-    ] as const satisfies ReadonlyArray<readonly [Vec3, Vec3]>
-  }, [widthM, depthM, heightM, wallThicknessM, radiusM])
+  const segments = useMemo(
+    () =>
+      buildFrameSegments(
+        computeFrameCornerBox(widthM, depthM, heightM, radiusM),
+      ),
+    [widthM, depthM, heightM, radiusM],
+  )
 
   return (
     <group>

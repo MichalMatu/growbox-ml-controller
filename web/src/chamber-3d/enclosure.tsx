@@ -4,7 +4,6 @@ import { PlaneGeometry, Vector2 } from "three"
 import {
   useGrowtentPbrMaps,
   type ExteriorPbrMaps,
-  type GrowtentPbrMaps,
   type InteriorPbrMaps,
 } from "@/chamber-3d/fabric-pbr"
 import {
@@ -13,6 +12,8 @@ import {
   type ChamberSceneColors,
 } from "@/chamber-3d/scene-tokens"
 import { TentFrame } from "@/chamber-3d/tent-frame"
+import type { Vec3 } from "@/chamber-3d/tent-frame-geometry"
+import { buildShellPanels } from "@/chamber-3d/tent-shell-geometry"
 
 export type EnclosureDimensions = {
   widthCm: number
@@ -21,7 +22,15 @@ export type EnclosureDimensions = {
   colors: ChamberSceneColors
 }
 
-type Vec3 = readonly [number, number, number]
+/** Module-level normal scales (shared; not recreated per panel). */
+const EXTERIOR_NORMAL_SCALE = new Vector2(
+  CHAMBER_MATERIAL.exteriorNormalScale,
+  CHAMBER_MATERIAL.exteriorNormalScale,
+)
+const INTERIOR_NORMAL_SCALE = new Vector2(
+  CHAMBER_MATERIAL.interiorNormalScale,
+  CHAMBER_MATERIAL.interiorNormalScale,
+)
 
 /**
  * Parametric grow tent: open front (+Z), dual-sided fabric
@@ -36,10 +45,8 @@ export function Enclosure({
   const widthM = Math.max(widthCm, 1) / 100
   const depthM = Math.max(depthCm, 1) / 100
   const heightM = Math.max(heightCm, 1) / 100
-  const t = CHAMBER_GEOMETRY.wallThicknessM
-  const r = CHAMBER_GEOMETRY.frameRadiusM
-  const halfW = widthM / 2
-  const halfD = depthM / 2
+  const thicknessM = CHAMBER_GEOMETRY.wallThicknessM
+  const radiusM = CHAMBER_GEOMETRY.frameRadiusM
   const pbr = useGrowtentPbrMaps()
 
   return (
@@ -48,18 +55,16 @@ export function Enclosure({
         widthM={widthM}
         depthM={depthM}
         heightM={heightM}
-        thicknessM={t}
-        halfW={halfW}
-        halfD={halfD}
+        thicknessM={thicknessM}
         colors={colors}
-        pbr={pbr}
+        exteriorMaps={pbr.exterior}
+        interiorMaps={pbr.interior}
       />
       <TentFrame
         widthM={widthM}
         depthM={depthM}
         heightM={heightM}
-        wallThicknessM={t}
-        radiusM={r}
+        radiusM={radiusM}
         colors={colors}
       />
     </group>
@@ -71,60 +76,22 @@ function TentShell({
   depthM,
   heightM,
   thicknessM,
-  halfW,
-  halfD,
   colors,
-  pbr,
+  exteriorMaps,
+  interiorMaps,
 }: {
   widthM: number
   depthM: number
   heightM: number
   thicknessM: number
-  halfW: number
-  halfD: number
   colors: ChamberSceneColors
-  pbr: GrowtentPbrMaps
+  exteriorMaps: ExteriorPbrMaps
+  interiorMaps: InteriorPbrMaps
 }) {
-  const t = thicknessM
-  const uv = CHAMBER_GEOMETRY.uvTilesPerMeter
-
-  const panels: Array<{
-    size: [number, number]
-    position: Vec3
-    rotation: Vec3
-    uvScale: [number, number]
-  }> = [
-    {
-      size: [widthM, depthM],
-      position: [0, t / 2, 0],
-      rotation: [Math.PI / 2, 0, 0],
-      uvScale: [widthM * uv, depthM * uv],
-    },
-    {
-      size: [widthM, depthM],
-      position: [0, heightM - t / 2, 0],
-      rotation: [-Math.PI / 2, 0, 0],
-      uvScale: [widthM * uv, depthM * uv],
-    },
-    {
-      size: [widthM, heightM],
-      position: [0, heightM / 2, -halfD + t / 2],
-      rotation: [0, Math.PI, 0],
-      uvScale: [widthM * uv, heightM * uv],
-    },
-    {
-      size: [depthM, heightM],
-      position: [-halfW + t / 2, heightM / 2, 0],
-      rotation: [0, -Math.PI / 2, 0],
-      uvScale: [depthM * uv, heightM * uv],
-    },
-    {
-      size: [depthM, heightM],
-      position: [halfW - t / 2, heightM / 2, 0],
-      rotation: [0, Math.PI / 2, 0],
-      uvScale: [depthM * uv, heightM * uv],
-    },
-  ]
+  const panels = useMemo(
+    () => buildShellPanels(widthM, depthM, heightM, thicknessM),
+    [widthM, depthM, heightM, thicknessM],
+  )
 
   return (
     <group>
@@ -134,10 +101,10 @@ function TentShell({
           size={panel.size}
           position={panel.position}
           rotation={panel.rotation}
-          thicknessM={t}
+          thicknessM={thicknessM}
           colors={colors}
-          exteriorMaps={pbr.exterior}
-          interiorMaps={pbr.interior}
+          exteriorMaps={exteriorMaps}
+          interiorMaps={interiorMaps}
           uvScale={panel.uvScale}
         />
       ))}
@@ -177,14 +144,14 @@ function FabricPanel({
   interiorMaps,
   uvScale,
 }: {
-  size: [number, number]
+  size: readonly [number, number]
   position: Vec3
   rotation: Vec3
   thicknessM: number
   colors: ChamberSceneColors
   exteriorMaps: ExteriorPbrMaps
   interiorMaps: InteriorPbrMaps
-  uvScale: [number, number]
+  uvScale: readonly [number, number]
 }) {
   const halfT = thicknessM / 2
   const sizeW = size[0]
@@ -203,23 +170,6 @@ function FabricPanel({
     }
   }, [geometry])
 
-  const exteriorNormalScale = useMemo(
-    () =>
-      new Vector2(
-        CHAMBER_MATERIAL.exteriorNormalScale,
-        CHAMBER_MATERIAL.exteriorNormalScale,
-      ),
-    [],
-  )
-  const interiorNormalScale = useMemo(
-    () =>
-      new Vector2(
-        CHAMBER_MATERIAL.interiorNormalScale,
-        CHAMBER_MATERIAL.interiorNormalScale,
-      ),
-    [],
-  )
-
   return (
     <group position={position} rotation={rotation}>
       <mesh
@@ -232,7 +182,7 @@ function FabricPanel({
           color={colors.exterior}
           map={exteriorMaps.map}
           normalMap={exteriorMaps.normalMap}
-          normalScale={exteriorNormalScale}
+          normalScale={EXTERIOR_NORMAL_SCALE}
           roughnessMap={exteriorMaps.roughnessMap}
           metalness={CHAMBER_MATERIAL.exteriorMetalness}
           aoMap={exteriorMaps.aoMap}
@@ -252,7 +202,7 @@ function FabricPanel({
           color={colors.interior}
           map={interiorMaps.map}
           normalMap={interiorMaps.normalMap}
-          normalScale={interiorNormalScale}
+          normalScale={INTERIOR_NORMAL_SCALE}
           roughnessMap={interiorMaps.roughnessMap}
           metalnessMap={interiorMaps.metalnessMap}
           aoMap={interiorMaps.aoMap}

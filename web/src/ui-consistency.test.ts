@@ -73,7 +73,7 @@ function listFeatureSurfaces(): string[] {
     .map(rel)
     .filter((r) => r.endsWith(".ts") || r.endsWith(".tsx"))
     .filter((r) => !isStyleOwner(r) && !isNonUi(r))
-    .filter((r) => !r.startsWith("chamber-3d/") || r.endsWith("scene-tokens.ts"))
+    // R3F modules are not feature Tailwind surfaces; only scene-tokens is style-adjacent.
     .filter((r) => !r.startsWith("chamber-3d/") || r.endsWith("scene-tokens.ts"))
 }
 

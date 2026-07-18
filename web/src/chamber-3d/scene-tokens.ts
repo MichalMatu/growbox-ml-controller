@@ -70,15 +70,19 @@ export const CHAMBER_MATERIAL = {
 
 /**
  * Parametric shell / frame sizes in scene meters.
- * Walls sit on the outer envelope; frame poles sit just inside the fabric.
+ * Walls sit on the outer envelope. Frame: tube center = radius + eps from
+ * every outer face (same inset on X/Y/Z → orthogonal 90° cage).
  */
 export const CHAMBER_GEOMETRY = {
   /** Fabric panel thickness (meters). */
   wallThicknessM: 0.016,
   /** Steel tube outer radius (meters) ~ 3.6 cm diameter — readable on foil */
   frameRadiusM: 0.018,
-  /** Multiplier on radius when computing frame inset from walls. */
-  frameInsetRadiusFactor: 1.05,
+  /**
+   * Sub-mm clearance so tube skin does not z-fight fabric planes.
+   * Not a visible design gap (≈0.5 mm).
+   */
+  frameContactEpsilonM: 0.0005,
   /** Radial segments for frame cylinders. */
   frameRadialSegments: 12,
   /** Texture tiles per scene-meter (foil / nylon density). */
@@ -142,6 +146,3 @@ export function resolveChamberSceneColors(
     frame: readCssVar(rootStyle, CHAMBER_CSS_VAR.frame, CHAMBER_SCENE_FALLBACK.frame),
   }
 }
-
-/** @deprecated Use resolveChamberSceneColors() — kept as fallback alias for static imports. */
-export const CHAMBER_SCENE = CHAMBER_SCENE_FALLBACK
