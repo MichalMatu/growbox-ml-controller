@@ -18,7 +18,8 @@ import { cn } from "@/lib/utils"
 
 const PAGE_WIDTH_CLASS = {
   standard: "max-w-3xl",
-  wide: "max-w-5xl",
+  /** Preview / 3D pages — width from --width-page-wide in index.css */
+  wide: "app-page-wide",
 } as const
 
 export type AppPageWidth = keyof typeof PAGE_WIDTH_CLASS
@@ -35,7 +36,7 @@ export function AppPage({
   return (
     <div
       className={cn(
-        "mx-auto flex min-h-svh w-full flex-col gap-6 p-6",
+        "mx-auto flex min-h-svh w-full min-w-0 flex-col gap-6 p-6",
         PAGE_WIDTH_CLASS[width],
       )}
     >
@@ -235,6 +236,7 @@ export function AppSelectTrigger(props: ComponentProps<typeof SelectTrigger>) {
 /**
  * Side panel + main preview (wide pages only).
  * Layout lengths come from CSS tokens (--width-preview-sidebar); see index.css.
+ * Sidebar and main are wrapped so long content cannot blow out the grid track.
  */
 export function AppPreviewSplit({
   sidebar,
@@ -245,8 +247,8 @@ export function AppPreviewSplit({
 }) {
   return (
     <div className="app-preview-split">
-      {sidebar}
-      {main}
+      <div className="app-preview-split-sidebar">{sidebar}</div>
+      <div className="app-preview-split-main">{main}</div>
     </div>
   )
 }

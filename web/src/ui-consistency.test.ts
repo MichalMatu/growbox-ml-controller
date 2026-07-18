@@ -232,7 +232,7 @@ describe("UI allowlist — enforcement sieve", () => {
 
     const navPairs = [
       { file: "App.tsx", label: "Podgląd 3D" },
-      { file: "pages/chamber-3d-page.tsx", label: "Wróć do konfiguratora" },
+      { file: "pages/chamber-3d-page.tsx", label: "Wróć" },
     ]
     for (const { file, label } of navPairs) {
       const text = readRel(file)

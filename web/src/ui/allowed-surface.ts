@@ -71,6 +71,7 @@ export const HEX_LITERAL_ALLOWLIST = [
 /** CSS custom properties that must exist for product layout + chamber 3D. */
 export const REQUIRED_CSS_TOKENS = [
   "--width-preview-sidebar",
+  "--width-page-wide",
   "--height-canvas-frame",
   "--chamber-bg",
   "--chamber-fog",

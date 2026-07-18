@@ -83,8 +83,9 @@
     --sidebar-ring: oklch(0.708 0 0);
 
     /* Product layout tokens (app-chrome; no magic lengths in TSX) */
-    --width-preview-sidebar: 16rem;
+    --width-preview-sidebar: 18rem;
     --height-canvas-frame: min(70vh, 36rem);
+    --width-page-wide: 80rem;
 
     /*
      * Chamber 3D scene tokens (R3F reads via chamber-3d/scene-tokens.ts).
@@ -155,23 +156,59 @@
 
 /* Named chrome layouts — tokenized; feature code never invents these classes. */
 @layer components {
+  .app-page-wide {
+    max-width: var(--width-page-wide);
+  }
+
+  /*
+   * Sidebar + preview. Critical: minmax(0, …) + min-width:0 so long form
+   * labels / selects cannot expand the track and crush the canvas column.
+   */
   .app-preview-split {
-    @apply grid gap-6;
-    grid-template-columns: 1fr;
+    display: grid;
+    gap: 1.5rem;
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
   }
 
   @media (min-width: 1024px) {
     .app-preview-split {
-      grid-template-columns: minmax(0, var(--width-preview-sidebar)) minmax(0, 1fr);
+      grid-template-columns:
+        var(--width-preview-sidebar)
+        minmax(0, 1fr);
     }
+  }
+
+  .app-preview-split-sidebar {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .app-preview-split-main {
+    min-width: 0;
+    width: 100%;
   }
 
   .app-canvas-frame {
     @apply overflow-hidden rounded-xl bg-card text-card-foreground ring-1 ring-foreground/10;
+    min-width: 0;
+    width: 100%;
   }
 
   .app-canvas-frame-viewport {
+    position: relative;
     width: 100%;
     height: var(--height-canvas-frame);
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  /* R3F Canvas must fill the tokenized viewport, not its intrinsic buffer size */
+  .app-canvas-frame-viewport > * {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
   }
 }
