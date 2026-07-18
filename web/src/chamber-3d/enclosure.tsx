@@ -6,6 +6,7 @@ import {
   type ExteriorPbrMaps,
   type InteriorPbrMaps,
 } from "@/chamber-3d/fabric-pbr"
+import { ENCLOSURE_CM_MIN } from "@/chamber-3d/enclosure-cm"
 import {
   CHAMBER_GEOMETRY,
   CHAMBER_MATERIAL,
@@ -42,9 +43,10 @@ export function Enclosure({
   heightCm,
   colors,
 }: EnclosureDimensions) {
-  const widthM = Math.max(widthCm, 1) / 100
-  const depthM = Math.max(depthCm, 1) / 100
-  const heightM = Math.max(heightCm, 1) / 100
+  // UI enforces min cm; floor here so bad props never collapse the mesh.
+  const widthM = Math.max(widthCm, ENCLOSURE_CM_MIN) / 100
+  const depthM = Math.max(depthCm, ENCLOSURE_CM_MIN) / 100
+  const heightM = Math.max(heightCm, ENCLOSURE_CM_MIN) / 100
   const thicknessM = CHAMBER_GEOMETRY.wallThicknessM
   const radiusM = CHAMBER_GEOMETRY.frameRadiusM
   const pbr = useGrowtentPbrMaps()

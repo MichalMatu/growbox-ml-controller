@@ -8,6 +8,7 @@ import {
 import { Canvas } from "@react-three/fiber"
 
 import { Enclosure } from "@/chamber-3d/enclosure"
+import { ENCLOSURE_CM_MIN } from "@/chamber-3d/enclosure-cm"
 import {
   CHAMBER_CANVAS_CLASS,
   resolveChamberSceneColors,
@@ -22,9 +23,9 @@ export type ChamberSceneProps = {
 export function ChamberScene({ widthCm, depthCm, heightCm }: ChamberSceneProps) {
   const colors = useMemo(() => resolveChamberSceneColors(), [])
   const maxSideM = Math.max(widthCm, depthCm, heightCm, 100) / 100
-  const heightM = Math.max(heightCm, 1) / 100
-  const depthM = Math.max(depthCm, 1) / 100
-  const widthM = Math.max(widthCm, 1) / 100
+  const heightM = Math.max(heightCm, ENCLOSURE_CM_MIN) / 100
+  const depthM = Math.max(depthCm, ENCLOSURE_CM_MIN) / 100
+  const widthM = Math.max(widthCm, ENCLOSURE_CM_MIN) / 100
   const cameraDistance = maxSideM * 2.05
 
   return (
