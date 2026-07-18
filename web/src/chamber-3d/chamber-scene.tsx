@@ -112,6 +112,11 @@ export function ChamberScene({
     ],
   )
 
+  /** Grow light ON: dim studio fill so fixture contribution is obvious. */
+  const growLit =
+    lightOn && lightPlan.placement != null && lightPreset.form !== "none"
+  const studioScale = growLit ? 0.28 : 1
+
   return (
     <Canvas
       shadows
@@ -141,17 +146,17 @@ export function ChamberScene({
         far={100}
       />
 
-      <ambientLight intensity={0.75} />
+      <ambientLight intensity={0.75 * studioScale} />
       <hemisphereLight
         color={colors.interior}
         groundColor={colors.floor}
-        intensity={0.55}
+        intensity={0.55 * studioScale}
       />
 
       <directionalLight
         castShadow
         position={[maxSideM * 1.6, maxSideM * 2.8, maxSideM * 2]}
-        intensity={1.55}
+        intensity={1.55 * studioScale}
         shadow-mapSize-width={1024}
         shadow-mapSize-height={1024}
         shadow-camera-far={maxSideM * 12}
@@ -159,28 +164,28 @@ export function ChamberScene({
       />
       <directionalLight
         position={[0.15, heightM * 0.5, depthM * 2.6]}
-        intensity={1.1}
+        intensity={1.1 * studioScale}
       />
       {/* Soft side rims only — black exterior should not catch hard specular */}
       <directionalLight
         position={[-maxSideM * 1.8, maxSideM * 1.6, maxSideM * 0.6]}
-        intensity={0.55}
+        intensity={0.55 * studioScale}
       />
       <directionalLight
         position={[maxSideM * 1.6, maxSideM * 1.3, -maxSideM * 0.8]}
-        intensity={0.35}
+        intensity={0.35 * studioScale}
       />
 
-      {/* Internal fill — bright silver mylar needs strong white bounce */}
+      {/* Internal fill — scaled down when grow fixture lights the tent */}
       <pointLight
         position={[0, heightM * 0.9, 0]}
-        intensity={4.2}
+        intensity={4.2 * studioScale}
         distance={Math.max(widthM, depthM, heightM) * 3.2}
         decay={2}
       />
       <pointLight
         position={[0, heightM * 0.45, depthM * 0.15]}
-        intensity={2.0}
+        intensity={2.0 * studioScale}
         distance={Math.max(widthM, depthM) * 2}
         decay={2}
       />
@@ -188,7 +193,7 @@ export function ChamberScene({
         position={[0, heightM * 0.96, depthM * 0.02]}
         angle={0.9}
         penumbra={0.55}
-        intensity={2.8}
+        intensity={2.8 * studioScale}
         distance={heightM * 2.8}
         castShadow
       >

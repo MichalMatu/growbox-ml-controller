@@ -110,10 +110,20 @@ export const CHAMBER_MATERIAL = {
   lightHousingEnvMapIntensity: 0.45,
   lightDuctRoughness: 0.28,
   lightDuctMetalness: 0.75,
-  lightEmitterEmissiveOn: 1.35,
-  lightEmitterEmissiveOff: 0.05,
-  lightBulbEmissiveOn: 1.8,
-  lightBulbEmissiveOff: 0.08,
+  lightEmitterEmissiveOn: 2.4,
+  lightEmitterEmissiveOff: 0.04,
+  lightBulbEmissiveOn: 3.2,
+  lightBulbEmissiveOff: 0.06,
+  /** Scene lights attached to fixtures (only when lit). */
+  ledDiodePitchM: 0.028,
+  ledDiodeMaxAxis: 14,
+  ledDiodeRadiusScale: 0.32,
+  ledPanelFillIntensity: 3.2,
+  ledPanelSpotIntensity: 18,
+  hpsPointIntensity: 28,
+  hpsSpotIntensity: 42,
+  hpsFillIntensity: 6,
+  lightOffSceneIntensity: 0,
 } as const
 
 /**
