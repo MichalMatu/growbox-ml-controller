@@ -170,14 +170,15 @@ export const CHAMBER_GEOMETRY = {
   rearFlapZipperPullM: [0.022, 0.014, 0.01] as const,
   /**
    * Felt pot mesh proportions (relative to diameter / height).
-   * Soft bag: slight top taper, thick stitched rim, loop handles.
+   * Soft bag: slight top taper, stitched rim overlapping full-height wall,
+   * soil radius must match wall radius at soilY (see felt-pot.tsx layout).
    * Layers must not share coplanar faces (rim/body/soil) — causes z-fight shimmer.
    */
   potTopRadiusScale: 0.96,
   potRimHeightScale: 0.06,
-  /** Rim sits outside the wall by this fraction of diameter. */
+  /** Rim outer radius as fraction beyond wall top radius. */
   potRimRadiusExtraScale: 0.025,
-  /** Soil disc below the rim bottom (fraction of height). */
+  /** Extra drop of soil surface below the rim lip (fraction of height). */
   potSoilInsetScale: 0.08,
   potWallSegments: 28,
   potHandleRadiusScale: 0.018,
