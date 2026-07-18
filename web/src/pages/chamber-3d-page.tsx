@@ -21,11 +21,14 @@ import {
   DEFAULT_LIGHT_ORIENTATION_DEG,
   DEFAULT_LIGHT_PRESET_ID,
   LIGHT_CEILING_GAP_MIN_CM,
+  LIGHT_ORIENTATIONS_DEG,
   LIGHT_PRESETS,
   clampCeilingGapCm,
   clampLightOrientationDeg,
   getLightPreset,
+  listFittingOrientations,
   planLightFit,
+  resolveLightOrientationDeg,
   type LightOrientationDeg,
   type LightPresetId,
 } from "@/chamber-3d/light-geometry"
@@ -189,9 +192,22 @@ export function Chamber3dPage() {
     [lightCeilingGapCm, heightCm, lightPreset.heightCm],
   )
 
-  const lightPlan = useMemo(
+  const fittingOrientations = useMemo(
     () =>
-      planLightFit(
+      listFittingOrientations(
+        widthCm / 100,
+        depthCm / 100,
+        heightCm / 100,
+        lightPreset,
+        effectiveCeilingGapCm,
+      ),
+    [widthCm, depthCm, heightCm, lightPreset, effectiveCeilingGapCm],
+  )
+
+  /** If current yaw does not fit but another does, snap to a valid one. */
+  const effectiveLightOrientationDeg = useMemo(
+    () =>
+      resolveLightOrientationDeg(
         widthCm / 100,
         depthCm / 100,
         heightCm / 100,
@@ -205,6 +221,26 @@ export function Chamber3dPage() {
       heightCm,
       lightPreset,
       lightOrientationDeg,
+      effectiveCeilingGapCm,
+    ],
+  )
+
+  const lightPlan = useMemo(
+    () =>
+      planLightFit(
+        widthCm / 100,
+        depthCm / 100,
+        heightCm / 100,
+        lightPreset,
+        effectiveLightOrientationDeg,
+        effectiveCeilingGapCm,
+      ),
+    [
+      widthCm,
+      depthCm,
+      heightCm,
+      lightPreset,
+      effectiveLightOrientationDeg,
       effectiveCeilingGapCm,
     ],
   )
@@ -373,7 +409,7 @@ export function Chamber3dPage() {
                 <AppFormGrid>
                   <AppFormField label="Obrót" htmlFor="light_orientation">
                     <Select
-                      value={String(lightOrientationDeg)}
+                      value={String(effectiveLightOrientationDeg)}
                       onValueChange={(value) => {
                         setLightOrientationDeg(
                           clampLightOrientationDeg(Number(value)),
@@ -385,8 +421,26 @@ export function Chamber3dPage() {
                         <SelectValue placeholder="Obrót" />
                       </AppSelectTrigger>
                       <SelectContent>
-                        <SelectItem value="0">0° · wzdłuż szer.</SelectItem>
-                        <SelectItem value="90">90° · wzdłuż głęb.</SelectItem>
+                        {LIGHT_ORIENTATIONS_DEG.map((deg) => {
+                          const fitsYaw =
+                            lightPreset.form === "none" ||
+                            fittingOrientations.includes(deg)
+                          const label =
+                            deg === 0
+                              ? "0° · wzdłuż szer."
+                              : "90° · wzdłuż głęb."
+                          return (
+                            <SelectItem
+                              key={deg}
+                              value={String(deg)}
+                              disabled={!fitsYaw && fittingOrientations.length > 0}
+                            >
+                              {fitsYaw
+                                ? label
+                                : `${label} (nie mieści)`}
+                            </SelectItem>
+                          )
+                        })}
                       </SelectContent>
                     </Select>
                   </AppFormField>
@@ -479,7 +533,7 @@ export function Chamber3dPage() {
               potPresetId={potPresetId}
               potCount={visiblePotCount}
               lightPresetId={lightPresetId}
-              lightOrientationDeg={lightOrientationDeg}
+              lightOrientationDeg={effectiveLightOrientationDeg}
               lightCeilingGapCm={effectiveCeilingGapCm}
               lightOn={lightOn && lightPlan.fits}
             />

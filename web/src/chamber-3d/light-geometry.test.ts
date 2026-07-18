@@ -6,9 +6,11 @@ import {
   LIGHT_FLOOR_CLEARANCE_MIN_CM,
   clampCeilingGapCm,
   getLightPreset,
+  listFittingOrientations,
   maxCeilingGapCm,
   orientedFootprintCm,
   planLightFit,
+  resolveLightOrientationDeg,
 } from "@/chamber-3d/light-geometry"
 
 describe("light-geometry", () => {
@@ -70,5 +72,19 @@ describe("light-geometry", () => {
     const plan = planLightFit(1.2, 1.2, 0.5, preset, 0, LIGHT_CEILING_GAP_MIN_CM)
     expect(plan.fitsVertical).toBe(false)
     expect(LIGHT_FLOOR_CLEARANCE_MIN_CM).toBe(40)
+  })
+
+  it("90×80 LED fits 120×90 tent in only one orientation", () => {
+    const preset = getLightPreset("led_board_90")
+    // length×width = 90×80; tent W×D = 120×90
+    const at0 = planLightFit(1.2, 0.9, 1.6, preset, 0, 5)
+    const at90 = planLightFit(1.2, 0.9, 1.6, preset, 90, 5)
+    const fitting = listFittingOrientations(1.2, 0.9, 1.6, preset, 5)
+
+    expect(at0.fitsHorizontal).toBe(true)
+    expect(at90.fitsHorizontal).toBe(false)
+    expect(fitting).toEqual([0])
+    expect(resolveLightOrientationDeg(1.2, 0.9, 1.6, preset, 90, 5)).toBe(0)
+    expect(resolveLightOrientationDeg(1.2, 0.9, 1.6, preset, 0, 5)).toBe(0)
   })
 })

@@ -144,8 +144,14 @@ export const DEFAULT_LIGHT_CEILING_GAP_CM = 5
 export const LIGHT_CEILING_GAP_MIN_CM = 2
 /** Keep fixture bottom at least this far above floor (cm). */
 export const LIGHT_FLOOR_CLEARANCE_MIN_CM = 40
-/** Side margin from walls/frame so body is not jammed (m). */
-export const LIGHT_WALL_MARGIN_M = 0.03
+/**
+ * Extra side clearance beyond fabric + one pole radius (meters).
+ * Hanging fixtures need less margin than floor pots — keep tight so a
+ * 90×80 cm board can still fit a 120×90 cm tent in the correct orientation.
+ */
+export const LIGHT_WALL_MARGIN_M = 0.01
+
+export const LIGHT_ORIENTATIONS_DEG: readonly LightOrientationDeg[] = [0, 90]
 
 export type OrientedFootprintCm = {
   readonly extentXCm: number
@@ -172,6 +178,8 @@ export type LightFitResult = {
   readonly ceilingGapCm: number
   readonly maxCeilingGapCm: number
   readonly placement: LightPlacementM | null
+  /** Orientations that pass horizontal+vertical fit for this tent/fixture. */
+  readonly fittingOrientations: readonly LightOrientationDeg[]
 }
 
 export function getLightPreset(id: LightPresetId): LightPreset {
@@ -206,16 +214,25 @@ export function orientedFootprintCm(
   return { extentXCm: preset.lengthCm, extentZCm: preset.widthCm }
 }
 
-/** Inner clear span after wall + frame + light margin (meters). */
+/**
+ * Horizontal inset: fabric thickness + one pole radius + small air gap.
+ * (Not full pot-style double pole + 4 cm — that rejected valid 90×80-in-120×90 cases.)
+ */
+export function lightSideInsetM(): number {
+  return (
+    CHAMBER_GEOMETRY.wallThicknessM +
+    CHAMBER_GEOMETRY.frameRadiusM +
+    LIGHT_WALL_MARGIN_M
+  )
+}
+
+/** Inner clear span after wall/frame/light margin (meters). */
 export function usableLightVolumeM(
   widthM: number,
   depthM: number,
   heightM: number,
 ): { widthM: number; depthM: number; heightM: number } {
-  const sideInset =
-    CHAMBER_GEOMETRY.wallThicknessM +
-    CHAMBER_GEOMETRY.frameRadiusM * 2 +
-    LIGHT_WALL_MARGIN_M
+  const sideInset = lightSideInsetM()
   const verticalInset =
     CHAMBER_GEOMETRY.wallThicknessM + CHAMBER_GEOMETRY.frameRadiusM * 2
   return {
@@ -223,6 +240,84 @@ export function usableLightVolumeM(
     depthM: Math.max(0, depthM - 2 * sideInset),
     heightM: Math.max(0, heightM - 2 * verticalInset),
   }
+}
+
+function horizontalFits(
+  usableWidthCm: number,
+  usableDepthCm: number,
+  preset: LightPreset,
+  orientationDeg: LightOrientationDeg,
+): boolean {
+  if (preset.form === "none") return true
+  const footprint = orientedFootprintCm(preset, orientationDeg)
+  return (
+    footprint.extentXCm <= usableWidthCm + 1e-6 &&
+    footprint.extentZCm <= usableDepthCm + 1e-6
+  )
+}
+
+function verticalFits(
+  usableHeightCm: number,
+  bodyHeightCm: number,
+  gapCm: number,
+  maxGapCm: number,
+): boolean {
+  if (bodyHeightCm <= 0) return true
+  return (
+    bodyHeightCm + LIGHT_FLOOR_CLEARANCE_MIN_CM + gapCm <= usableHeightCm + 1e-6 &&
+    maxGapCm >= LIGHT_CEILING_GAP_MIN_CM
+  )
+}
+
+/**
+ * Orientations where the fixture AABB fits the tent (horizontal + vertical).
+ * Order: prefer 0°, then 90°.
+ */
+export function listFittingOrientations(
+  widthM: number,
+  depthM: number,
+  heightM: number,
+  preset: LightPreset,
+  ceilingGapCm: number = DEFAULT_LIGHT_CEILING_GAP_CM,
+): LightOrientationDeg[] {
+  if (preset.form === "none") return [...LIGHT_ORIENTATIONS_DEG]
+
+  const volume = usableLightVolumeM(widthM, depthM, heightM)
+  const usableWidthCm = volume.widthM * 100
+  const usableDepthCm = volume.depthM * 100
+  const usableHeightCm = volume.heightM * 100
+  const gap = clampCeilingGapCm(ceilingGapCm, heightM, preset.heightCm)
+  const maxGap = maxCeilingGapCm(heightM, preset.heightCm)
+  const vOk = verticalFits(usableHeightCm, preset.heightCm, gap, maxGap)
+  if (!vOk) return []
+
+  return LIGHT_ORIENTATIONS_DEG.filter((deg) =>
+    horizontalFits(usableWidthCm, usableDepthCm, preset, deg),
+  )
+}
+
+/**
+ * Keep the user's orientation when it fits; otherwise pick the first that does.
+ * If none fit, return the requested orientation (caller shows “za duża”).
+ */
+export function resolveLightOrientationDeg(
+  widthM: number,
+  depthM: number,
+  heightM: number,
+  preset: LightPreset,
+  requested: LightOrientationDeg,
+  ceilingGapCm: number = DEFAULT_LIGHT_CEILING_GAP_CM,
+): LightOrientationDeg {
+  const fitting = listFittingOrientations(
+    widthM,
+    depthM,
+    heightM,
+    preset,
+    ceilingGapCm,
+  )
+  if (fitting.length === 0) return requested
+  if (fitting.includes(requested)) return requested
+  return fitting[0]!
 }
 
 /**
@@ -302,6 +397,14 @@ export function planLightFit(
   const usableDepthCm = volume.depthM * 100
   const usableHeightCm = volume.heightM * 100
 
+  const fittingOrientations = listFittingOrientations(
+    widthM,
+    depthM,
+    heightM,
+    preset,
+    ceilingGapCm,
+  )
+
   if (preset.form === "none") {
     return {
       fits: true,
@@ -313,18 +416,24 @@ export function planLightFit(
       ceilingGapCm: LIGHT_CEILING_GAP_MIN_CM,
       maxCeilingGapCm: LIGHT_CEILING_GAP_MIN_CM,
       placement: null,
+      fittingOrientations,
     }
   }
 
   const gap = clampCeilingGapCm(ceilingGapCm, heightM, preset.heightCm)
   const maxGap = maxCeilingGapCm(heightM, preset.heightCm)
-  const footprint = orientedFootprintCm(preset, orientationDeg)
-  const fitsHorizontal =
-    footprint.extentXCm <= usableWidthCm + 1e-6 &&
-    footprint.extentZCm <= usableDepthCm + 1e-6
-  const fitsVertical =
-    preset.heightCm + LIGHT_FLOOR_CLEARANCE_MIN_CM + gap <= usableHeightCm + 1e-6 &&
-    maxGap >= LIGHT_CEILING_GAP_MIN_CM
+  const fitsHorizontal = horizontalFits(
+    usableWidthCm,
+    usableDepthCm,
+    preset,
+    orientationDeg,
+  )
+  const fitsVertical = verticalFits(
+    usableHeightCm,
+    preset.heightCm,
+    gap,
+    maxGap,
+  )
 
   const fits = fitsHorizontal && fitsVertical
   const placement = fits
@@ -341,5 +450,6 @@ export function planLightFit(
     ceilingGapCm: gap,
     maxCeilingGapCm: maxGap,
     placement,
+    fittingOrientations,
   }
 }
