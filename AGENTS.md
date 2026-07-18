@@ -218,6 +218,8 @@ node gate/check-contract.mjs && pnpm --dir web gate
 
 **Recommended:** run `pnpm gate` before **every** commit on this branch.
 
+Git hooks (optional but expected on developer machines): [`.pre-commit-config.yaml`](.pre-commit-config.yaml) runs contract + web typecheck/lint/test on **pre-commit**, and full `pnpm check` on **pre-push**. Install with `pre-commit install`. This is the FE-line config — not the monorepo firmware hooks from `main`.
+
 Root gate verifies at least:
 
 - `schema_version === 4`, 128 features, 15 outputs, and the pinned v4 model signature (order, names, paths, types, ranges, defaults, enum encoding)

@@ -1,0 +1,64 @@
+# Sparse FE branch quality hooks.
+# Install once: pre-commit install
+# Manual: pre-commit run --all-files
+#
+# This branch does NOT use main's firmware/ruff/clang gate.
+# Normative checks: pnpm gate / pnpm check (see AGENTS.md).
+
+default_install_hook_types: [pre-commit, pre-push]
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^(pnpm-lock\.yaml|web/pnpm-lock\.yaml)$
+      - id: end-of-file-fixer
+        exclude: ^(pnpm-lock\.yaml|web/pnpm-lock\.yaml)$
+      - id: check-merge-conflict
+      - id: check-yaml
+        exclude: ^(pnpm-lock\.yaml|web/pnpm-lock\.yaml)$
+      - id: check-json
+        # TypeScript configs are JSONC (comments allowed).
+        exclude: (^|/)tsconfig(.*)?\.json$
+      - id: detect-private-key
+
+  - repo: local
+    hooks:
+      - id: contract-tests
+        name: contract regression tests (pnpm test:contract)
+        entry: pnpm test:contract
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: web-typecheck
+        name: web typecheck
+        entry: pnpm --dir web typecheck
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+        files: ^(web/|schemas/)
+
+      - id: web-lint
+        name: web lint
+        entry: pnpm --dir web lint
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+        files: ^web/
+
+      - id: web-test
+        name: web domain tests (vitest)
+        entry: pnpm --dir web test
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+        files: ^(web/|schemas/|docs/examples/)
+
+      - id: full-gate-push
+        name: full quality gate (pnpm check)
+        entry: pnpm check
+        language: system
+        pass_filenames: false
+        stages: [pre-push]

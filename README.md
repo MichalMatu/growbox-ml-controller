@@ -78,6 +78,23 @@ pnpm check
 
 `pnpm gate` must exit 0. Domain import/export rules are covered by Vitest under `web/src/domain/`.
 
+### Git hooks (pre-commit)
+
+This branch ships [`.pre-commit-config.yaml`](.pre-commit-config.yaml) for the **web/FE line** (not main’s firmware gate).
+
+```bash
+# once per clone
+pre-commit install
+
+# manual
+pre-commit run --all-files
+```
+
+| When | What runs |
+|------|-----------|
+| `git commit` | hygiene + `pnpm test:contract` + web typecheck/lint/test |
+| `git push` | full `pnpm check` (contract + web gate including build) |
+
 ## Next engineering step
 
 UX polish (wizard steps, enclosure dimensions helper), keep schema import as SSOT, never invent ML paths.
