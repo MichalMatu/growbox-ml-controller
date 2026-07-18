@@ -140,7 +140,7 @@ export default defineConfig([
         {
           selector: "Literal[value=/(?:70vh|16rem|h-\\[|minmax\\()/]",
           message:
-            "No magic layout lengths in app-chrome. Use CSS tokens (--height-canvas-frame, --width-preview-sidebar) and named classes in index.css.",
+            "No magic layout lengths in app-chrome. Use CSS tokens (--height-canvas-frame, --width-preview-sidebar-min) and named classes in index.css.",
         },
       ],
     },

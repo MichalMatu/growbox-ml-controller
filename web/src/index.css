@@ -83,14 +83,25 @@
     --sidebar-ring: oklch(0.708 0 0);
 
     /* Product layout tokens (app-chrome; no magic lengths in TSX) */
-    --width-preview-sidebar: 18rem;
     /**
-     * Canvas height when preview is stacked (narrow viewports only).
-     * On lg+ the frame stretches to the sidebar card height — no vh coupling
-     * (vh made the 3D pane shrink independently of the form when resizing).
+     * Wide preview pages fill the window (only AppPage padding as gutters).
+     * Soft ceiling only on absurd ultra-ultrawides so stage does not span meters.
+     */
+    --width-page-wide: 120rem;
+    /**
+     * Settings column (lg+ grid): wider floor + 1fr share (takes space from stage).
+     * Stage column is 2fr — still larger, but free width is split, not all-to-canvas.
+     */
+    --width-preview-sidebar-min: 28rem;
+    /**
+     * 3D stage height (independent of form):
+     * clamp(min, remaining viewport, max) — tracks window, capped on tall displays.
+     * --page-chrome-y must stay in sync with AppPage vertical padding (p-6 × 2).
      */
     --height-canvas-frame: 24rem;
-    --width-page-wide: 80rem;
+    --height-canvas-frame-min: 24rem;
+    --height-canvas-frame-max: 56rem;
+    --page-chrome-y: 3rem;
 
     /*
      * Chamber 3D scene tokens (R3F reads via chamber-3d/scene-tokens.ts).
@@ -166,11 +177,11 @@
   }
 
   /*
-   * Sidebar + preview.
+   * Sidebar + preview (controls + stage).
    * - min-width:0 so long form labels cannot crush the canvas column
-   * - stretch (default grid) so on lg+ the 3D frame matches sidebar card height
-   * - no viewport-height (vh) on the canvas: that shrank the pane on window resize
-   *   independently of the left form
+   * - stacked: canvas uses --height-canvas-frame floor
+   * - lg+: heights decoupled — sidebar = content, canvas = viewport clamp
+   *   (not matching form height; not unbounded on huge monitors)
    */
   .app-preview-split {
     display: grid;
@@ -183,9 +194,12 @@
 
   @media (min-width: 1024px) {
     .app-preview-split {
+      /* Left wider + 1fr; right 2fr (stage still preferred, but not exclusive growth) */
       grid-template-columns:
-        var(--width-preview-sidebar)
-        minmax(0, 1fr);
+        minmax(var(--width-preview-sidebar-min), 1fr)
+        minmax(0, 2fr);
+      /* Form stays short; stage height comes from main, not row stretch */
+      align-items: start;
     }
   }
 
@@ -197,7 +211,7 @@
   }
 
   .app-preview-split-sidebar > * {
-    flex: 1 1 auto;
+    flex: 0 0 auto;
     min-height: 0;
   }
 
@@ -207,6 +221,21 @@
     display: flex;
     flex-direction: column;
     min-height: 0;
+  }
+
+  @media (min-width: 1024px) {
+    .app-preview-split-main {
+      /*
+       * Preferred: nearly full window minus page padding.
+       * Floor: usable on short laptop windows.
+       * Ceiling: avoid a multi-thousand-px WebGL surface on 40"+ displays.
+       */
+      height: clamp(
+        var(--height-canvas-frame-min),
+        calc(100dvh - var(--page-chrome-y)),
+        var(--height-canvas-frame-max)
+      );
+    }
   }
 
   .app-canvas-frame {
@@ -230,7 +259,6 @@
     overflow: hidden;
   }
 
-  /* Side-by-side: fill the row height set by the sidebar card (no fixed rem box). */
   @media (min-width: 1024px) {
     .app-canvas-frame-viewport {
       min-height: 0;

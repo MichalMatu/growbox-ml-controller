@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils"
 
 const PAGE_WIDTH_CLASS = {
   standard: "max-w-3xl",
-  /** Preview / 3D pages — width from --width-page-wide in index.css */
+  /** Preview / 3D — near full window; soft max via --width-page-wide */
   wide: "app-page-wide",
 } as const
 
@@ -285,8 +285,7 @@ export function AppSelectTrigger(props: ComponentProps<typeof SelectTrigger>) {
 
 /**
  * Side panel + main preview (wide pages only).
- * Layout lengths come from CSS tokens (--width-preview-sidebar); see index.css.
- * Sidebar and main are wrapped so long content cannot blow out the grid track.
+ * index.css: sidebar minmax(min, 1fr) + stage 2fr; viewport-clamped stage height.
  */
 export function AppPreviewSplit({
   sidebar,
@@ -305,8 +304,9 @@ export function AppPreviewSplit({
 
 /**
  * Flush media/canvas surface.
- * Height comes from CSS (index.css): stacked → --height-canvas-frame;
- * side-by-side with AppPreviewSplit → stretch to match the sidebar column.
+ * Height from CSS tokens (index.css):
+ * - stacked → --height-canvas-frame floor
+ * - side-by-side → clamp(min, remaining viewport, max); independent of sidebar
  */
 export function AppCanvasFrame({ children }: { children: ReactNode }) {
   return (
