@@ -17,20 +17,22 @@ import {
   type Texture,
 } from "three"
 
+const base = import.meta.env.BASE_URL.replace(/\/$/, "")
+
 /** Public paths (Vite serves `web/public` at `/`). */
 export const GROWTENT_TEXTURE_URLS = {
   interior: {
-    map: "/textures/growtent/foil_color.jpg",
-    normalMap: "/textures/growtent/foil_normal.jpg",
-    roughnessMap: "/textures/growtent/foil_rough.jpg",
-    metalnessMap: "/textures/growtent/foil_metal.jpg",
-    aoMap: "/textures/growtent/foil_ao.jpg",
+    map: `${base}/textures/growtent/foil_color.jpg`,
+    normalMap: `${base}/textures/growtent/foil_normal.jpg`,
+    roughnessMap: `${base}/textures/growtent/foil_rough.jpg`,
+    metalnessMap: `${base}/textures/growtent/foil_metal.jpg`,
+    aoMap: `${base}/textures/growtent/foil_ao.jpg`,
   },
   exterior: {
-    map: "/textures/growtent/nylon_color.jpg",
-    normalMap: "/textures/growtent/nylon_normal.jpg",
-    roughnessMap: "/textures/growtent/nylon_rough.jpg",
-    aoMap: "/textures/growtent/nylon_ao.jpg",
+    map: `${base}/textures/growtent/nylon_color.jpg`,
+    normalMap: `${base}/textures/growtent/nylon_normal.jpg`,
+    roughnessMap: `${base}/textures/growtent/nylon_rough.jpg`,
+    aoMap: `${base}/textures/growtent/nylon_ao.jpg`,
   },
 } as const
 
