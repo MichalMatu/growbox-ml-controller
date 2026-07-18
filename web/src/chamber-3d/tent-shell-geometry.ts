@@ -15,7 +15,8 @@ export type ShellPanelSpec = {
 /**
  * Open-front grow-tent shell: floor, ceiling, back, left, right.
  * No front panel (+Z is the doorway). Panels sit on the outer envelope;
- * dual-plane fabric (±thickness/2) is applied by the renderer.
+ * face size is reduced by `cornerClearanceM` on every edge so fabric does
+ * not overhang the steel corner pockets (frame tubes + corner spheres).
  */
 export function buildShellPanels(
   widthM: number,
@@ -23,47 +24,54 @@ export function buildShellPanels(
   heightM: number,
   thicknessM: number = CHAMBER_GEOMETRY.wallThicknessM,
   uvTilesPerMeter: number = CHAMBER_GEOMETRY.uvTilesPerMeter,
+  cornerClearanceM: number = CHAMBER_GEOMETRY.frameRadiusM,
 ): readonly ShellPanelSpec[] {
   const halfW = widthM / 2
   const halfD = depthM / 2
   const t = thicknessM
+  const c = cornerClearanceM
   const uv = uvTilesPerMeter
+
+  // Leave a frame pocket at each orthotope edge (min size = thickness).
+  const faceW = Math.max(widthM - 2 * c, t)
+  const faceD = Math.max(depthM - 2 * c, t)
+  const faceH = Math.max(heightM - 2 * c, t)
 
   return [
     // floor
     {
-      size: [widthM, depthM],
+      size: [faceW, faceD],
       position: [0, t / 2, 0],
       rotation: [Math.PI / 2, 0, 0],
-      uvScale: [widthM * uv, depthM * uv],
+      uvScale: [faceW * uv, faceD * uv],
     },
     // ceiling
     {
-      size: [widthM, depthM],
+      size: [faceW, faceD],
       position: [0, heightM - t / 2, 0],
       rotation: [-Math.PI / 2, 0, 0],
-      uvScale: [widthM * uv, depthM * uv],
+      uvScale: [faceW * uv, faceD * uv],
     },
     // back (-Z)
     {
-      size: [widthM, heightM],
+      size: [faceW, faceH],
       position: [0, heightM / 2, -halfD + t / 2],
       rotation: [0, Math.PI, 0],
-      uvScale: [widthM * uv, heightM * uv],
+      uvScale: [faceW * uv, faceH * uv],
     },
     // left (-X)
     {
-      size: [depthM, heightM],
+      size: [faceD, faceH],
       position: [-halfW + t / 2, heightM / 2, 0],
       rotation: [0, -Math.PI / 2, 0],
-      uvScale: [depthM * uv, heightM * uv],
+      uvScale: [faceD * uv, faceH * uv],
     },
     // right (+X)
     {
-      size: [depthM, heightM],
+      size: [faceD, faceH],
       position: [halfW - t / 2, heightM / 2, 0],
       rotation: [0, Math.PI / 2, 0],
-      uvScale: [depthM * uv, heightM * uv],
+      uvScale: [faceD * uv, faceH * uv],
     },
   ]
 }

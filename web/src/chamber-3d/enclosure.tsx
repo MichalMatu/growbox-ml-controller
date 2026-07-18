@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from "react"
-import { PlaneGeometry, Vector2 } from "three"
+import { BoxGeometry, MeshStandardMaterial, Vector2 } from "three"
 
 import {
   useGrowtentPbrMaps,
@@ -114,18 +114,29 @@ function TentShell({
   )
 }
 
-/** Plane with tiled UVs + uv2 for aoMap (shared maps; no per-panel texture clones). */
-function makeTiledPlane(
+/**
+ * Solid fabric slab. Dual planes left an open edge gap where the silver
+ * interior foil read as a white triangle / canopy at corners.
+ * Box faces: +Z exterior nylon, -Z interior foil, rim faces matte exterior.
+ */
+function makeFabricBoxGeometry(
   width: number,
   height: number,
+  thickness: number,
   repeatU: number,
   repeatV: number,
-): PlaneGeometry {
-  const geometry = new PlaneGeometry(width, height)
+): BoxGeometry {
+  const geometry = new BoxGeometry(width, height, thickness)
   const uv = geometry.getAttribute("uv")
   if (uv) {
-    for (let i = 0; i < uv.count; i += 1) {
-      uv.setXY(i, uv.getX(i) * repeatU, uv.getY(i) * repeatV)
+    // BoxGeometry face order: +X, -X, +Y, -Y, +Z, -Z (4 verts each).
+    // Tile the large faces (+Z exterior, -Z interior). Rim faces stay 0–1.
+    for (const face of [4, 5]) {
+      const base = face * 4
+      for (let i = 0; i < 4; i += 1) {
+        const idx = base + i
+        uv.setXY(idx, uv.getX(idx) * repeatU, uv.getY(idx) * repeatV)
+      }
     }
     uv.needsUpdate = true
     geometry.setAttribute("uv2", uv.clone())
@@ -134,7 +145,7 @@ function makeTiledPlane(
 }
 
 /**
- * Dual-plane fabric wall. Local +Z = exterior (nylon), local -Z = interior (foil).
+ * Solid dual-sided fabric wall. Local +Z = exterior (nylon), local -Z = interior (foil).
  */
 function FabricPanel({
   size,
@@ -155,16 +166,51 @@ function FabricPanel({
   interiorMaps: InteriorPbrMaps
   uvScale: readonly [number, number]
 }) {
-  const halfT = thicknessM / 2
   const sizeW = size[0]
   const sizeH = size[1]
   const uvU = uvScale[0]
   const uvV = uvScale[1]
 
   const geometry = useMemo(
-    () => makeTiledPlane(sizeW, sizeH, uvU, uvV),
-    [sizeW, sizeH, uvU, uvV],
+    () => makeFabricBoxGeometry(sizeW, sizeH, thicknessM, uvU, uvV),
+    [sizeW, sizeH, thicknessM, uvU, uvV],
   )
+
+  const faceMaterials = useMemo(() => {
+    const rim = new MeshStandardMaterial({
+      color: colors.exterior,
+      roughness: CHAMBER_MATERIAL.exteriorRoughness,
+      metalness: CHAMBER_MATERIAL.exteriorMetalness,
+      envMapIntensity: CHAMBER_MATERIAL.exteriorEnvMapIntensity,
+    })
+    const exterior = new MeshStandardMaterial({
+      color: colors.exterior,
+      map: exteriorMaps.map,
+      normalMap: exteriorMaps.normalMap,
+      normalScale: EXTERIOR_NORMAL_SCALE,
+      roughnessMap: exteriorMaps.roughnessMap,
+      metalness: CHAMBER_MATERIAL.exteriorMetalness,
+      aoMap: exteriorMaps.aoMap,
+      aoMapIntensity: CHAMBER_MATERIAL.exteriorAoIntensity,
+      roughness: CHAMBER_MATERIAL.exteriorRoughness,
+      envMapIntensity: CHAMBER_MATERIAL.exteriorEnvMapIntensity,
+    })
+    const interior = new MeshStandardMaterial({
+      color: colors.interior,
+      map: interiorMaps.map,
+      normalMap: interiorMaps.normalMap,
+      normalScale: INTERIOR_NORMAL_SCALE,
+      roughnessMap: interiorMaps.roughnessMap,
+      metalnessMap: interiorMaps.metalnessMap,
+      aoMap: interiorMaps.aoMap,
+      aoMapIntensity: CHAMBER_MATERIAL.interiorAoIntensity,
+      roughness: CHAMBER_MATERIAL.interiorRoughness,
+      metalness: CHAMBER_MATERIAL.interiorMetalness,
+      envMapIntensity: CHAMBER_MATERIAL.interiorEnvMapIntensity,
+    })
+    // Box face order: +X, -X, +Y, -Y, +Z, -Z
+    return [rim, rim, rim, rim, exterior, interior]
+  }, [colors.exterior, colors.interior, exteriorMaps, interiorMaps])
 
   useEffect(() => {
     return () => {
@@ -172,48 +218,26 @@ function FabricPanel({
     }
   }, [geometry])
 
+  useEffect(() => {
+    return () => {
+      const seen = new Set<MeshStandardMaterial>()
+      for (const mat of faceMaterials) {
+        if (!seen.has(mat)) {
+          seen.add(mat)
+          mat.dispose()
+        }
+      }
+    }
+  }, [faceMaterials])
+
   return (
     <group position={position} rotation={rotation}>
       <mesh
         geometry={geometry}
-        position={[0, 0, halfT]}
+        material={faceMaterials}
         castShadow
         receiveShadow
-      >
-        <meshStandardMaterial
-          color={colors.exterior}
-          map={exteriorMaps.map}
-          normalMap={exteriorMaps.normalMap}
-          normalScale={EXTERIOR_NORMAL_SCALE}
-          roughnessMap={exteriorMaps.roughnessMap}
-          metalness={CHAMBER_MATERIAL.exteriorMetalness}
-          aoMap={exteriorMaps.aoMap}
-          aoMapIntensity={CHAMBER_MATERIAL.exteriorAoIntensity}
-          roughness={CHAMBER_MATERIAL.exteriorRoughness}
-          envMapIntensity={CHAMBER_MATERIAL.exteriorEnvMapIntensity}
-        />
-      </mesh>
-      <mesh
-        geometry={geometry}
-        position={[0, 0, -halfT]}
-        rotation={[0, Math.PI, 0]}
-        castShadow
-        receiveShadow
-      >
-        <meshStandardMaterial
-          color={colors.interior}
-          map={interiorMaps.map}
-          normalMap={interiorMaps.normalMap}
-          normalScale={INTERIOR_NORMAL_SCALE}
-          roughnessMap={interiorMaps.roughnessMap}
-          metalnessMap={interiorMaps.metalnessMap}
-          aoMap={interiorMaps.aoMap}
-          aoMapIntensity={CHAMBER_MATERIAL.interiorAoIntensity}
-          roughness={CHAMBER_MATERIAL.interiorRoughness}
-          metalness={CHAMBER_MATERIAL.interiorMetalness}
-          envMapIntensity={CHAMBER_MATERIAL.interiorEnvMapIntensity}
-        />
-      </mesh>
+      />
     </group>
   )
 }

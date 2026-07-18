@@ -7,6 +7,7 @@ import {
   type ChamberSceneColors,
 } from "@/chamber-3d/scene-tokens"
 import {
+  buildFrameCorners,
   buildFrameSegments,
   computeFrameCornerBox,
   type Vec3,
@@ -23,6 +24,7 @@ export type TentFrameProps = {
 /**
  * Black steel tube cage (R3F). Geometry: `tent-frame-geometry.ts`.
  * Outer-pocket inset on all axes; axis-aligned edges → 90° joints.
+ * Corner spheres fill the gap where three cylinder ends would leave a hole.
  */
 export function TentFrame({
   widthM,
@@ -31,24 +33,45 @@ export function TentFrame({
   radiusM,
   colors,
 }: TentFrameProps) {
-  const segments = useMemo(
-    () =>
-      buildFrameSegments(
-        computeFrameCornerBox(widthM, depthM, heightM, radiusM),
-      ),
+  const box = useMemo(
+    () => computeFrameCornerBox(widthM, depthM, heightM, radiusM),
     [widthM, depthM, heightM, radiusM],
   )
+  const segments = useMemo(() => buildFrameSegments(box), [box])
+  const corners = useMemo(() => buildFrameCorners(box), [box])
 
   return (
     <group>
       {segments.map(([from, to], index) => (
         <FrameTube
-          key={index}
+          key={`tube-${index}`}
           from={from}
           to={to}
           radiusM={radiusM}
           colors={colors}
         />
+      ))}
+      {corners.map((corner, index) => (
+        <mesh
+          key={`corner-${index}`}
+          position={corner}
+          castShadow
+          receiveShadow
+        >
+          <sphereGeometry
+            args={[
+              radiusM,
+              CHAMBER_GEOMETRY.frameRadialSegments,
+              CHAMBER_GEOMETRY.frameRadialSegments,
+            ]}
+          />
+          <meshStandardMaterial
+            color={colors.frame}
+            roughness={CHAMBER_MATERIAL.frameRoughness}
+            metalness={CHAMBER_MATERIAL.frameMetalness}
+            envMapIntensity={CHAMBER_MATERIAL.frameEnvMapIntensity}
+          />
+        </mesh>
       ))}
     </group>
   )

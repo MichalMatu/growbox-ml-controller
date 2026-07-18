@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { CHAMBER_GEOMETRY } from "@/chamber-3d/scene-tokens"
 import {
+  buildFrameCorners,
   buildFrameSegments,
   computeFrameCornerBox,
 } from "@/chamber-3d/tent-frame-geometry"
@@ -65,6 +66,16 @@ describe("computeFrameCornerBox", () => {
     expect(box.xR).toBeGreaterThan(box.xL)
     expect(box.yTop).toBeGreaterThan(box.yBottom)
     expect(box.zFront).toBeGreaterThan(box.zBack)
+  })
+})
+
+describe("buildFrameCorners", () => {
+  it("returns the 8 orthotope corners used by tube ends and spheres", () => {
+    const box = computeFrameCornerBox(1.2, 1.0, 2.0, 0.018)
+    const corners = buildFrameCorners(box)
+    expect(corners).toHaveLength(8)
+    expect(corners[0]).toEqual([box.xL, box.yBottom, box.zBack])
+    expect(corners[7]).toEqual([box.xR, box.yTop, box.zFront])
   })
 })
 

@@ -34,20 +34,37 @@ export function computeFrameCornerBox(
   }
 }
 
+/** Eight orthotope corner points (tube centerline intersections). */
+export type FrameCorners = readonly [
+  Vec3,
+  Vec3,
+  Vec3,
+  Vec3,
+  Vec3,
+  Vec3,
+  Vec3,
+  Vec3,
+]
+
+export function buildFrameCorners(box: FrameCornerBox): FrameCorners {
+  const { xL, xR, yBottom, yTop, zBack, zFront } = box
+  return [
+    [xL, yBottom, zBack],
+    [xR, yBottom, zBack],
+    [xL, yBottom, zFront],
+    [xR, yBottom, zFront],
+    [xL, yTop, zBack],
+    [xR, yTop, zBack],
+    [xL, yTop, zFront],
+    [xR, yTop, zFront],
+  ]
+}
+
 /** Build the 12 edge segments of the rectangular frame cage. */
 export function buildFrameSegments(
   box: FrameCornerBox,
 ): ReadonlyArray<readonly [Vec3, Vec3]> {
-  const { xL, xR, yBottom, yTop, zBack, zFront } = box
-
-  const bl: Vec3 = [xL, yBottom, zBack]
-  const br: Vec3 = [xR, yBottom, zBack]
-  const fl: Vec3 = [xL, yBottom, zFront]
-  const fr: Vec3 = [xR, yBottom, zFront]
-  const tl: Vec3 = [xL, yTop, zBack]
-  const tr: Vec3 = [xR, yTop, zBack]
-  const tfl: Vec3 = [xL, yTop, zFront]
-  const tfr: Vec3 = [xR, yTop, zFront]
+  const [bl, br, fl, fr, tl, tr, tfl, tfr] = buildFrameCorners(box)
 
   return [
     // uprights (parallel to +Y)
