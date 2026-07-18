@@ -298,9 +298,7 @@ export function Chamber3dPage() {
                       disabled
                     />
                   </AppFormField>
-                </AppFormGrid>
 
-                <AppFormGrid>
                   <AppFormField label="Donica" htmlFor="pot_size">
                     <Select
                       value={potPresetId}
@@ -360,9 +358,7 @@ export function Chamber3dPage() {
                       </SelectContent>
                     </Select>
                   </AppFormField>
-                </AppFormGrid>
 
-                <AppFormGrid>
                   <AppFormField
                     label="Lampa"
                     htmlFor="light_preset"
@@ -404,9 +400,7 @@ export function Chamber3dPage() {
                       disabled
                     />
                   </AppFormField>
-                </AppFormGrid>
 
-                <AppFormGrid>
                   <AppFormField label="Obrót" htmlFor="light_orientation">
                     <Select
                       value={String(effectiveLightOrientationDeg)}
@@ -464,9 +458,7 @@ export function Chamber3dPage() {
                       lightPlan.maxCeilingGapCm,
                     )}
                   />
-                </AppFormGrid>
 
-                <AppFormGrid>
                   <AppFormField label="Świeci" htmlFor="light_on">
                     <Select
                       value={lightOn ? "on" : "off"}

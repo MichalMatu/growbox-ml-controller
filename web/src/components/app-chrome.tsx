@@ -174,6 +174,7 @@ export function AppCardBody({
 /**
  * Compact multi-column field layout (e.g. W×D / H×volume).
  * Children should be AppFormField (or equivalent); cells get min-width:0.
+ * items-start keeps peer columns top-aligned when content height differs.
  */
 export function AppFormGrid({
   columns = 2,
@@ -185,7 +186,7 @@ export function AppFormGrid({
   return (
     <div
       className={cn(
-        "grid min-w-0 gap-3",
+        "grid min-w-0 items-start gap-x-3 gap-y-3",
         columns === 2 && "grid-cols-2",
         "*:min-w-0",
       )}
@@ -195,6 +196,11 @@ export function AppFormGrid({
   )
 }
 
+/**
+ * One form cell: fixed-height label row + control.
+ * Always the same label-row structure (with or without `end`) so a Badge on
+ * one column cannot shift that column’s input below its peer.
+ */
 export function AppFormField({
   label,
   htmlFor,
@@ -209,15 +215,11 @@ export function AppFormField({
 }) {
   return (
     <div className="grid min-w-0 gap-2">
-      {end != null ? (
-        <div className="flex min-w-0 items-center justify-between gap-2">
-          <Label htmlFor={htmlFor}>{label}</Label>
-          {end}
-        </div>
-      ) : (
+      <div className="flex h-5 min-w-0 items-center justify-between gap-2">
         <Label htmlFor={htmlFor}>{label}</Label>
-      )}
-      {children}
+        {end != null ? end : null}
+      </div>
+      <div className="min-w-0">{children}</div>
     </div>
   )
 }
