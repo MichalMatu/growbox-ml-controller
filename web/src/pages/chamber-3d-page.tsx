@@ -211,7 +211,19 @@ export function Chamber3dPage() {
                   </Select>
                 </AppFormField>
 
-                <AppFormField label="Liczba" htmlFor="pot_count">
+                <AppFormField
+                  label="Liczba"
+                  htmlFor="pot_count"
+                  end={
+                    maxFit === 0 && potCount > 0 ? (
+                      <Badge variant="destructive">0/{maxFit}</Badge>
+                    ) : (
+                      <Badge variant="secondary">
+                        {potPlan.fittedCount}/{maxFit}
+                      </Badge>
+                    )
+                  }
+                >
                   <Select
                     value={String(visiblePotCount)}
                     onValueChange={(value) => {
@@ -238,15 +250,7 @@ export function Chamber3dPage() {
                   </Select>
                 </AppFormField>
 
-                {maxFit === 0 && potCount > 0 ? (
-                  <Badge variant="destructive">Nie mieści się</Badge>
-                ) : (
-                  <Badge variant="secondary">
-                    {potPlan.fittedCount}/{maxFit}
-                  </Badge>
-                )}
-
-                <AppActionRow>
+                <AppActionRow align="end">
                   <Button
                     type="button"
                     variant="ghost"

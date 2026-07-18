@@ -134,8 +134,24 @@ export function AppStack({
   return <div className={cn("flex flex-col", gapClass)}>{children}</div>
 }
 
-export function AppActionRow({ children }: { children: ReactNode }) {
-  return <div className="flex flex-wrap gap-2">{children}</div>
+export function AppActionRow({
+  children,
+  align = "start",
+}: {
+  children: ReactNode
+  /** Secondary form actions often sit end (e.g. Reset bottom-right). */
+  align?: "start" | "end"
+}) {
+  return (
+    <div
+      className={cn(
+        "flex flex-wrap gap-2",
+        align === "end" ? "justify-end" : "justify-start",
+      )}
+    >
+      {children}
+    </div>
+  )
 }
 
 /** Card body: form fields grid or vertical action stack. */
@@ -158,15 +174,25 @@ export function AppCardBody({
 export function AppFormField({
   label,
   htmlFor,
+  end,
   children,
 }: {
   label: ReactNode
   htmlFor: string
+  /** Optional trailing control on the label row (e.g. compact Badge). */
+  end?: ReactNode
   children: ReactNode
 }) {
   return (
     <div className="grid gap-2">
-      <Label htmlFor={htmlFor}>{label}</Label>
+      {end != null ? (
+        <div className="flex items-center justify-between gap-2">
+          <Label htmlFor={htmlFor}>{label}</Label>
+          {end}
+        </div>
+      ) : (
+        <Label htmlFor={htmlFor}>{label}</Label>
+      )}
       {children}
     </div>
   )
@@ -255,7 +281,8 @@ export function AppPreviewSplit({
 
 /**
  * Flush media/canvas surface.
- * Height: --height-canvas-frame (index.css); no arbitrary Tailwind in TSX.
+ * Height comes from CSS (index.css): stacked → --height-canvas-frame;
+ * side-by-side with AppPreviewSplit → stretch to match the sidebar column.
  */
 export function AppCanvasFrame({ children }: { children: ReactNode }) {
   return (
