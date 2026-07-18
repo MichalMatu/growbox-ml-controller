@@ -139,6 +139,8 @@ export function ChamberScene({ widthCm, depthCm, heightCm }: ChamberSceneProps) 
         maxPolarAngle={Math.PI * 0.49}
         minDistance={0.3}
         maxDistance={maxSideM * 8}
+        // Wheel zoom toward the point under the cursor (not scene center).
+        zoomToCursor
       />
     </Canvas>
   )
