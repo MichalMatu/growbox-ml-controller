@@ -44,12 +44,13 @@ test-results/
 storybook-static/
 *.local
 
-# Package manager noise
+# Package manager logs/cache — this repo is pnpm-only (see AGENTS.md)
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 .pnpm-store/
+# Do not ignore package-lock.json or yarn.lock: the gate must expose and reject them.
 
 # --- Python (local tools only; not part of this sparse tree) ---
 .venv/
@@ -74,6 +75,8 @@ __pycache__/
 /config/
 /examples/
 /build/
+# Note: /gate/, root package.json, and pnpm-lock.yaml ARE tracked (root golden gate).
+# Do not ignore them.
 sdkconfig
 sdkconfig.old
 CMakeLists.txt

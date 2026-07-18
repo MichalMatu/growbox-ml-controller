@@ -1,18 +1,22 @@
 # Schema v4 — field guide (configurator)
 
-**Contract file:** [`schemas/environment-controller.json`](../schemas/environment-controller.json) (`schema_version` **4**)  
-**Example export:** [`examples/minimal-single-pot.json`](examples/minimal-single-pot.json)  
+**Contract file:** [`schemas/environment-controller.json`](../schemas/environment-controller.json) (`schema_version` **4**)
+**Example export:** [`examples/minimal-single-pot.json`](examples/minimal-single-pot.json)
 **Product scope:** [`HARDWARE_CONFIGURATOR.md`](HARDWARE_CONFIGURATOR.md)
+**Normative law (stack, gate, export):** [`AGENTS.md`](../AGENTS.md) — wins on conflict.
 
-This guide explains **what each JSON path means** for a hardware / scenario editor.  
+This guide explains **what each JSON path means** for a hardware / scenario editor.
 It does **not** replace the schema: **min / max / default**, feature **order**, and hash live only in the JSON file.
+Machine check of schema + golden example: **`pnpm gate`** at repo root.
 
 | Rule | Detail |
 |------|--------|
 | Language | Path / identifiers: **English**. UI labels: Polish OK. |
-| Path vs feature name | UI builds objects by **`path`** (e.g. `validity.air_temperature_c`). Encoder also has a flat **`name`** (e.g. `air_temperature_valid`). Prefer **path** in the editor model. |
-| Never drop slots | Off = flag false / available false / zeros — array length and keys stay. |
+| Path form | Schema path uses dots + numeric pot index: `pots.0.available`. Export JSON uses arrays: `pots[0].available`. |
+| Path vs feature name | Editor uses **`path`**. Flat **`name`** (e.g. `air_temperature_valid`) is encoder/ML side. Prefer **path** in UI model. |
+| Never drop slots | Off = flag false / available false / zeros per `AGENTS.md` — array length and keys stay. |
 | Ranges | Always read from `model.features[]` matching `path`. |
+| Meta root keys | `seed`, `profile_id`, `title`, optional `enclosure` only — not ML features. |
 
 ---
 
@@ -21,8 +25,9 @@ It does **not** replace the schema: **min / max / default**, feature **order**, 
 | Kind | ON | OFF |
 |------|----|-----|
 | Sensor | `validity.<sensor_path> = true` | `false` → default value + ML mask; slot remains |
-| Actuator | `actuators.<id>.available = true` + non-zero limits as needed | `available = false` + **zero max power/flow/dose** in export |
-| Pot | `pots[N].available = true` | `false` + force soil validity false, irr/mat available false, limits 0 |
+| Global actuator | `actuators.<id>.available = true` + non-zero limits as needed | `available = false` + **zero max power/flow/dose/efficiency** in export |
+| Pot module | `pots[N].irrigation` / `heat_mat` available | unavailable module keeps its object but zeroes its capability fields |
+| Pot | `pots[N].available = true` | `false` + force soil validity false, irr/mat unavailable, limits 0 |
 | Lights schedule | `pseudo.lights_active` | still present; false if no schedule integration |
 
 New ML sensor/output = **new schema version** (breaking). Not a silent UI field.
@@ -46,17 +51,20 @@ New ML sensor/output = **new schema version** (breaking). Not a silent UI field.
 
 ## Meta (not in `model.features`)
 
+Root-level keys only (not nested under a `meta` object unless product later standardizes that — **current golden uses root keys**):
+
 | Key | Meaning |
 |-----|---------|
 | `seed` | Scenario / RNG seed for pipelines and board loads. Integer. |
 | `profile_id` | Stable id string for this hardware template. |
 | `title` | Human label. |
+| `enclosure` | Optional UX object with exactly positive numeric `width_cm`, `depth_cm`, `height_cm`. Not ML. Its volume (`width × depth × height / 1_000_000`) must equal `environment.growbox_volume_m3`. |
 
 ---
 
 ## 1. Chamber — `environment.*`
 
-These **are** ML features (scalars in the 128-vector), not “sim-only hacks”.  
+These **are** ML features (scalars in the 128-vector), not “sim-only hacks”.
 In the configurator they describe **box physics parameters** the client can set or leave at template defaults.
 
 | Path | Unit | Meaning |
@@ -64,7 +72,7 @@ In the configurator they describe **box physics parameters** the client can set 
 | `environment.growbox_volume_m3` | m³ | Chamber air volume. |
 | `environment.thermal_mass_j_per_k` | J/K | Thermal inertia of the setup. |
 | `environment.heat_loss_w_per_k` | W/K | Heat loss to surroundings. |
-| `environment.air_leak_rate_ach` | 1/h | Passiveak / passive air changes without fan. |
+| `environment.air_leak_rate_ach` | 1/h | Passive air changes without fan. |
 
 ---
 
@@ -99,7 +107,7 @@ In the configurator they describe **box physics parameters** the client can set 
 | `validity.outside_humidity_pct` | Outside RH sensor installed. |
 | `validity.outside_co2_ppm` | Outside CO₂ sensor installed. |
 
-**Hardware UI:** toggles bind to **`validity.*`**.  
+**Hardware UI:** toggles bind to **`validity.*`**.
 **Process seed UI (optional):** number inputs bind to **`sensors.*`**.
 
 ---
@@ -150,11 +158,13 @@ Export **always** includes four pot objects. Empty slots use the inactive patter
 
 ### When `pots[N].available === false` (export must)
 
-- `validity.soil_moisture_pct` = false  
-- `validity.soil_temperature_c` = false  
-- `irrigation.available` = false; `flow_ml_s` / pulse / interval = **0**  
-- `heat_mat.available` = false; `max_power_w` = **0**  
-- `previous.*` = **0**
+- `validity.soil_moisture_pct` = false
+- `validity.soil_temperature_c` = false
+- `irrigation.available` = false; `flow_ml_s` / `maximum_pulse_s` / `minimum_interval_s` = **0**
+- `heat_mat.available` = false; `max_power_w` = **0**
+- `previous.irrigation` / `previous.heat_mat` = **0**
+- `control_type` keys **stay** (`"binary"` \| `"pwm"`)
+- `cultivation.*` **may** remain non-zero (do not require zero volume/capacity)
 
 ---
 
@@ -183,7 +193,7 @@ Export **always** includes four pot objects. Empty slots use the inactive patter
 
 ### Important: no global `control_type` in v4 features
 
-Unlike pot irrigation/mat, **heater / fan / humidifier / … have no `control_type` path** in `model.features`.  
+Unlike pot irrigation/mat, **heater / fan / humidifier / … have no `control_type` path** in `model.features`.
 Do **not** invent `actuators.heater.control_type` in export. Board policy may still use binary/PWM internally without that contract field.
 
 ### When `available === false` (export must)
@@ -219,8 +229,7 @@ Last applied commands in **`[0, 1]`** (warm start / board continuity).
 | `previous.co2_doser` |
 | `previous.nutrient_heater` |
 
-Hardware-template export: set all to **0**.  
-(Plus per-pot `pots[N].previous.irrigation` / `heat_mat`.)
+Hardware-template export: set all to **0**, including per-pot `pots[N].previous.irrigation` / `heat_mat` for active and inactive pots alike.
 
 ---
 
@@ -228,21 +237,21 @@ Hardware-template export: set all to **0**.
 
 Names used by the model / board decision vector (not nested under `actuators` as paths in the same way — they are **output** slots):
 
-1. `heater`  
-2. `fan`  
-3. `humidifier`  
-4. `dehumidifier`  
-5. `cooler`  
-6. `co2_doser`  
-7. `irrigation_pot_1`  
-8. `irrigation_pot_2`  
-9. `irrigation_pot_3`  
-10. `irrigation_pot_4`  
-11. `nutrient_heater`  
-12. `heat_mat_pot_1`  
-13. `heat_mat_pot_2`  
-14. `heat_mat_pot_3`  
-15. `heat_mat_pot_4`  
+1. `heater`
+2. `fan`
+3. `humidifier`
+4. `dehumidifier`
+5. `cooler`
+6. `co2_doser`
+7. `irrigation_pot_1`
+8. `irrigation_pot_2`
+9. `irrigation_pot_3`
+10. `irrigation_pot_4`
+11. `nutrient_heater`
+12. `heat_mat_pot_1`
+13. `heat_mat_pot_2`
+14. `heat_mat_pot_3`
+15. `heat_mat_pot_4`
 
 Configurator does **not** remove an output. It sets hardware `available` / pot flags so safety keeps that command at 0.
 
@@ -261,9 +270,9 @@ Configurator does **not** remove an output. It sets hardware `available` / pot f
 
 From `sensing_scope.explicitly_not_v2` and product rules:
 
-- PPFD / light intensity as ML feature  
-- Leaf temperature, EC, pH, flood sensor  
-- Separate exhaust-only air sensors, weather station  
+- PPFD / light intensity as ML feature
+- Leaf temperature, EC, pH, flood sensor
+- Separate exhaust-only air sensors, weather station
 
 Roadmap only — requires a new schema version.
 
@@ -271,18 +280,22 @@ Roadmap only — requires a new schema version.
 
 ## FE implementation checklist
 
-- [ ] Model form state by **path** strings from schema.  
-- [ ] Load min/max/default from `model.features`.  
-- [ ] Always serialize **4 pots**.  
-- [ ] Enforce inactive-pot and inactive-actuator zeroing rules above.  
-- [ ] Compare export to [`examples/minimal-single-pot.json`](examples/minimal-single-pot.json).  
-- [ ] No `actuators.lights`.  
-- [ ] No global actuator `control_type` unless schema gains it later.  
+- [ ] Model form state by schema **path** (or typed object that serializes 1:1).
+- [ ] Import the shared schema; do not copy it into `web/`.
+- [ ] Load min/max/default from `model.features`.
+- [ ] Always serialize **4 pots**.
+- [ ] Enforce unavailable pot-module, inactive-pot, inactive-actuator, and all-previous-zero rules (`AGENTS.md` §6).
+- [ ] Structure-match [`examples/minimal-single-pot.json`](examples/minimal-single-pot.json).
+- [ ] Reject invalid imports rather than retaining unknown fields or adding legacy-shape fallbacks.
+- [ ] No `actuators.lights`.
+- [ ] No global actuator `control_type`.
+- [ ] `pnpm gate` green at repo root; `pnpm test:contract` green after gate edits; after scaffold, web gate green too.
 
 ---
 
 ## Related on this branch
 
-- [`DATA_CONTRACT.md`](DATA_CONTRACT.md) — short rules  
-- [`HARDWARE_CONFIGURATOR.md`](HARDWARE_CONFIGURATOR.md) — product  
-- [`examples/README.md`](examples/README.md) — export rules  
+- [`../AGENTS.md`](../AGENTS.md) — stack, gate, export law
+- [`DATA_CONTRACT.md`](DATA_CONTRACT.md) — short rules
+- [`HARDWARE_CONFIGURATOR.md`](HARDWARE_CONFIGURATOR.md) — product
+- [`examples/README.md`](examples/README.md) — export rules + gate

@@ -1,60 +1,69 @@
-# Hardware configurator — product assumptions (golden start)
+# Hardware configurator — product assumptions
+
+Normative stack, gate, and export law: **[`AGENTS.md`](../AGENTS.md)**.
+If this file conflicts with `AGENTS.md`, **`AGENTS.md` wins**.
 
 ## Why this branch exists
 
-Build a **web editor** so a client describes *their* growbox in **contract v4** language and downloads a JSON file.  
-That file later feeds training / board `load_scenario`. **Not in this phase:** 3D twin, serial, teacher, in-browser ML.
+Build a **web editor** so a client describes *their* growbox in **contract v4** language and downloads a JSON file.
+That file later feeds training / board `load_scenario`.
+
+**Not in this phase:** 3D twin, serial, teacher, in-browser ML, backend auth.
 
 ## Sparse tree
 
 | On this branch | On `main` (elsewhere) |
 |----------------|------------------------|
 | `schemas/environment-controller.json` | Full product: firmware, panel, sim, train, CI |
-| `docs/*` (this guide set) | Same schema file as SSOT when merged carefully |
-| `AGENTS.md`, `README.md` | — |
+| `docs/*` | Same schema file as SSOT when updated carefully |
+| `gate/`, root `package.json`, `pnpm-lock.yaml` | — |
+| `AGENTS.md`, `README.md`, `.gitignore`, `LICENSE` | — |
+| `web/**` (later) | Land via PR of those paths only |
 
-**Never merge this sparse branch wholesale into `main`.**  
-Land FE as a new directory (e.g. `web/`) via PR/cherry-pick of *those* files (+ schema/docs if needed).
+**Never merge this sparse branch wholesale into `main`.**
 
 ## SSOT
 
 | Layer | File |
 |-------|------|
 | Contract paths, min/max/default, 128 features, 15 outputs | `schemas/environment-controller.json` |
-| What each path means (PL) | `docs/SCHEMA_V4_FIELD_GUIDE.md` |
-| Example export | `docs/examples/minimal-single-pot.json` |
-| Agent / implementer rules | `AGENTS.md` |
-| Contract rules (short) | `docs/DATA_CONTRACT.md` |
+| Path meanings | `docs/SCHEMA_V4_FIELD_GUIDE.md` |
+| Golden export | `docs/examples/minimal-single-pot.json` |
+| Agent / stack / gate law | `AGENTS.md` |
+| Short contract rules | `docs/DATA_CONTRACT.md` |
 
-## Two layers in one JSON file
+## Layers in one JSON file
 
-A full scenario JSON mixes layers. The configurator must **not** blur them in the UI:
+Do **not** blur layers in the UI.
 
 | Layer | What it is | Configurator MVP |
 |-------|------------|------------------|
-| **A. Hardware** | What is installed + limits | **Primary** — validity, available, max_*, cultivation, control_type on pots |
-| **B. Process seed** | Current/start sensor readings | Optional; use schema defaults or simple “start climate” |
-| **C. Targets** | Setpoints (goals) | Optional climate targets; pot soil targets often with pot card |
-| **D. Previous** | Last commands 0–1 | Default **0** for “clean box” export |
-| **E. Meta** | e.g. `seed` (RNG / scenario id) | Optional number; **not** an ML feature path |
+| **A. Hardware** | Installed gear + limits | **Primary** — `validity`, `available`, max_*, cultivation, pot `control_type` |
+| **B. Process seed** | Start sensor readings | Optional; schema defaults or simple start climate |
+| **C. Targets** | Setpoints | Optional climate targets; pot soil targets with pot card |
+| **D. Previous** | Last commands 0–1 | **0** for clean hardware-template export |
+| **E. Meta (root)** | `seed`, `profile_id`, `title`, optional `enclosure` | Not ML features; see `AGENTS.md` |
 
-MVP export = **A solid**, B/C sensible defaults, D zeros, E optional `seed`.
+MVP export = **A solid**, B/C sensible defaults, D all zeros, E as needed (`enclosure` only if UX stores W×D×H).
+
+**Volume rule:** ML uses `environment.growbox_volume_m3` only. If optional root `enclosure` is present, it has exactly `width_cm`, `depth_cm`, `height_cm` and FE derives `width_cm * depth_cm * height_cm / 1_000_000`; export must contain that same m³ value. Never invent `environment.width_cm` without a schema version bump.
 
 ## Scope
 
-### In (now)
+### In
 
-- UI groups: Chamber → Sensors → Pots → Outputs → Pseudo (see field guide).
-- FE validation: min/max from schema; pot off forces soil validity false and irr/mat available false + zero limits.
-- Actuator off: `available=false` and zero dangerous max fields in export.
-- Import / export JSON (file, paste, `localStorage`).
-- Load schema JSON statically (no backend).
+- UI groups: Chamber → Sensors → Pots → Outputs → Pseudo (field guide).
+- FE validation from schema min/max; unavailable pot-module / actuator zeroing rules (`AGENTS.md`).
+- Import / export JSON (file, paste, `localStorage`), with reject-on-invalid v4 import and no legacy migration/fallback.
+- Load the shared schema statically from `../schemas` (no copied schema, no backend).
+- Root checks: `pnpm gate` (contract + golden) and `pnpm test:contract` after gate edits.
 
-### Out (later / other branches)
+### Out (unless human expands scope)
 
 - Backend, auth, cloud profiles.
 - Board serial / admin panel live control.
 - PyVista twin, teacher, training UI.
+- Scaffold of `web/` before explicit order.
 
 ## Admin panel vs this configurator
 
@@ -67,30 +76,35 @@ MVP export = **A solid**, B/C sensible defaults, D zeros, E optional `seed`.
 
 Same **v4 vocabulary**, different product surface.
 
-## Framework
+## Framework (locked)
 
-**Not chosen yet.** Prefer the simplest stack that can:
+See **`AGENTS.md` §3**. Short form:
 
-1. Render grouped forms from schema (or a thin form map keyed by `path`).
-2. Export/import JSON.
-3. Stay easy to cherry-pick onto `main`.
+- **pnpm only** (`pnpm@11.10.0`)
+- React + TypeScript + Vite in **`web/`**
+- Tailwind + shadcn/ui
+- Vitest for domain/export
+- Root gate now; web gate at scaffold
 
-Vanilla, Vite+TS, Svelte, React are all fine — decide after first screen map, not before.
+The scaffold commits its generated pnpm lockfile and does not mix Tailwind major-version setup styles.
+
+Do not reopen stack without editing `AGENTS.md` by human decision.
 
 ## Delivery sequence
 
-1. ~~Field guide + Agents + example JSON~~ (this docs set).  
-2. UI skeleton: Chamber / Sensors / Pots / Outputs.  
-3. Export matches `docs/examples/minimal-single-pot.json` shape (4 pots always).  
-4. Backend / train / board import later.
+1. ~~Field guide + Agents + example JSON~~
+2. ~~Lock FE stack + root `pnpm gate` + regression tests~~
+3. Scaffold `web/` (locked stack) + web `pnpm gate` + extend root gate
+4. UI: Chamber / Sensors / Pots / Outputs
+5. Export matches golden **structure** (see `AGENTS.md` §6)
+6. Backend / train / board import later
 
 ## Evolution
 
-Configurator will **drive** schema cleanups (missing labels, bad defaults, confusing names).  
-Process:
+Configurator may expose schema gaps (labels, defaults, names). Process:
 
-1. Document the gap in the field guide (or issue).  
-2. If contract must change → version bump on `main` + regen.  
-3. Then update FE.
+1. Document the gap in the field guide (or issue).
+2. Contract change → version bump on `main` + regen.
+3. Then update FE + golden + gate.
 
 Do not silently invent `actuators.lights` or extra ML slots.
