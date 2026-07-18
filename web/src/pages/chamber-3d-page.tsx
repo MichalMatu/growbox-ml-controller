@@ -81,7 +81,8 @@ export function Chamber3dPage() {
             <CardHeader>
               <CardTitle>Wymiary komory</CardTitle>
               <CardDescription>
-                UX-only (jak opcjonalny root <code>enclosure</code>). Tom = W·D·H / 1e6 m³.
+                UX-only (jak opcjonalny root <code>enclosure</code>). Tom = W·D·H /
+                1e6 m³. PBR: FreePBR nylon + ambientCG Foil003, stelaż.
               </CardDescription>
             </CardHeader>
             <CardContent>

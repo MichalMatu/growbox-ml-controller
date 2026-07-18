@@ -77,8 +77,9 @@ export const REQUIRED_CSS_TOKENS = [
   "--chamber-floor",
   "--chamber-grid-cell",
   "--chamber-grid-section",
-  "--chamber-enclosure-fill",
-  "--chamber-enclosure-edge",
+  "--chamber-exterior",
+  "--chamber-interior",
+  "--chamber-frame",
 ] as const
 
 /** Non-UI modules that may exist under src without chrome imports. */

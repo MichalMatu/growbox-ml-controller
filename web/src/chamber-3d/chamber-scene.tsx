@@ -1,5 +1,10 @@
-import { useMemo } from "react"
-import { Grid, OrbitControls, PerspectiveCamera } from "@react-three/drei"
+import { Suspense, useMemo } from "react"
+import {
+  Environment,
+  Grid,
+  OrbitControls,
+  PerspectiveCamera,
+} from "@react-three/drei"
 import { Canvas } from "@react-three/fiber"
 
 import { Enclosure } from "@/chamber-3d/enclosure"
@@ -17,46 +22,106 @@ export type ChamberSceneProps = {
 export function ChamberScene({ widthCm, depthCm, heightCm }: ChamberSceneProps) {
   const colors = useMemo(() => resolveChamberSceneColors(), [])
   const maxSideM = Math.max(widthCm, depthCm, heightCm, 100) / 100
-  const cameraDistance = maxSideM * 2.4
+  const heightM = Math.max(heightCm, 1) / 100
+  const depthM = Math.max(depthCm, 1) / 100
+  const widthM = Math.max(widthCm, 1) / 100
+  const cameraDistance = maxSideM * 2.05
 
   return (
-    <Canvas shadows className={CHAMBER_CANVAS_CLASS}>
+    <Canvas
+      shadows
+      className={CHAMBER_CANVAS_CLASS}
+      gl={{ antialias: true, powerPreference: "high-performance" }}
+      dpr={[1, 1.75]}
+    >
       <color attach="background" args={[colors.background]} />
-      <fog attach="fog" args={[colors.fog, maxSideM * 4, maxSideM * 12]} />
+      <fog attach="fog" args={[colors.fog, maxSideM * 5.5, maxSideM * 15]} />
 
       <PerspectiveCamera
         makeDefault
-        position={[cameraDistance * 0.75, cameraDistance * 0.55, cameraDistance * 0.9]}
-        fov={45}
+        position={[
+          cameraDistance * 0.55,
+          cameraDistance * 0.4,
+          cameraDistance * 0.98,
+        ]}
+        fov={38}
         near={0.01}
         far={100}
       />
 
-      <ambientLight intensity={0.45} />
-      <directionalLight
-        castShadow
-        position={[maxSideM * 1.5, maxSideM * 2.2, maxSideM * 1.2]}
-        intensity={1.15}
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
+      <ambientLight intensity={0.75} />
+      <hemisphereLight
+        color={colors.interior}
+        groundColor={colors.floor}
+        intensity={0.55}
       />
 
-      <Enclosure
-        widthCm={widthCm}
-        depthCm={depthCm}
-        heightCm={heightCm}
-        colors={colors}
+      <directionalLight
+        castShadow
+        position={[maxSideM * 1.6, maxSideM * 2.8, maxSideM * 2]}
+        intensity={1.55}
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+        shadow-camera-far={maxSideM * 12}
+        shadow-bias={-0.0002}
       />
+      <directionalLight
+        position={[0.15, heightM * 0.5, depthM * 2.6]}
+        intensity={1.1}
+      />
+      <directionalLight
+        position={[-maxSideM * 1.8, maxSideM * 1.6, maxSideM * 0.6]}
+        intensity={0.95}
+      />
+      <directionalLight
+        position={[maxSideM * 1.6, maxSideM * 1.3, -maxSideM * 0.8]}
+        intensity={0.65}
+      />
+
+      {/* Internal grow-lamp style fill — foil needs strong light to read as silver */}
+      <pointLight
+        position={[0, heightM * 0.9, 0]}
+        intensity={4.5}
+        distance={Math.max(widthM, depthM, heightM) * 3.2}
+        decay={2}
+      />
+      <pointLight
+        position={[0, heightM * 0.45, depthM * 0.15]}
+        intensity={1.8}
+        distance={Math.max(widthM, depthM) * 2}
+        decay={2}
+      />
+      <spotLight
+        position={[0, heightM * 0.96, depthM * 0.02]}
+        angle={0.9}
+        penumbra={0.55}
+        intensity={3.2}
+        distance={heightM * 2.8}
+        castShadow
+      >
+        <object3D attach="target" position={[0, 0, 0]} />
+      </spotLight>
+
+      <Suspense fallback={null}>
+        {/* Warehouse HDR inside Suspense so PMREM + maps load without racing the canvas */}
+        <Environment preset="warehouse" environmentIntensity={0.75} resolution={128} />
+        <Enclosure
+          widthCm={widthCm}
+          depthCm={depthCm}
+          heightCm={heightCm}
+          colors={colors}
+        />
+      </Suspense>
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <planeGeometry args={[maxSideM * 6, maxSideM * 6]} />
-        <meshStandardMaterial color={colors.floor} />
+        <meshStandardMaterial color={colors.floor} roughness={0.9} metalness={0.04} />
       </mesh>
 
       <Grid
         args={[maxSideM * 6, maxSideM * 6]}
         cellSize={0.1}
-        cellThickness={0.6}
+        cellThickness={0.5}
         cellColor={colors.gridCell}
         sectionSize={0.5}
         sectionThickness={1}
@@ -69,7 +134,7 @@ export function ChamberScene({ widthCm, depthCm, heightCm }: ChamberSceneProps) 
 
       <OrbitControls
         makeDefault
-        target={[0, (heightCm / 100) * 0.4, 0]}
+        target={[0, heightM * 0.42, 0]}
         maxPolarAngle={Math.PI * 0.49}
         minDistance={0.3}
         maxDistance={maxSideM * 8}
