@@ -185,20 +185,6 @@ export function ChamberScene({
     ],
   )
 
-  /** Fixture installed (fits) — not the same as “Świeci”. */
-  const hasGrowFixture =
-    lightPlan.placement != null && lightPreset.form !== "none"
-  const growLit = lightOn && hasGrowFixture
-  /** Exterior studio fill: full / mounted-off / residual when grow-lit. */
-  const studioScale = growLit
-    ? CHAMBER_MATERIAL.studioScaleGrowLit
-    : hasGrowFixture
-      ? CHAMBER_MATERIAL.studioScaleFixtureOff
-      : CHAMBER_MATERIAL.studioScaleEmpty
-  const toneMappingExposure = growLit
-    ? CHAMBER_MATERIAL.toneMappingExposureGrowLit
-    : CHAMBER_MATERIAL.toneMappingExposureStudio
-
   return (
     <Canvas
       shadows
@@ -214,7 +200,7 @@ export function ChamberScene({
       }}
       dpr={[1, 1.75]}
     >
-      <RendererToneMapping exposure={toneMappingExposure} />
+      <RendererToneMapping exposure={CHAMBER_MATERIAL.toneMappingExposure} />
       <CameraLayers />
       <fog attach="fog" args={[colors.fog, maxSideM * 5.5, maxSideM * 15]} />
 
@@ -230,88 +216,58 @@ export function ChamberScene({
         far={100}
       />
 
-      <ambientLight ref={studioLightRef} intensity={0.75 * studioScale} />
+      {/*
+        Constant bright room. Studio never dims when grow turns on (that used
+        to darken the exterior pad: stage layer gets studio only).
+        All positions are outside the tent AABB — no interior ceiling key.
+      */}
+      <ambientLight
+        ref={studioLightRef}
+        intensity={CHAMBER_MATERIAL.studioAmbientIntensity}
+      />
       <hemisphereLight
         ref={studioLightRef}
         color={colors.interior}
         groundColor={colors.floor}
-        intensity={0.55 * studioScale}
+        intensity={CHAMBER_MATERIAL.studioHemisphereIntensity}
       />
-
       <directionalLight
         ref={studioLightRef}
         castShadow
-        position={[maxSideM * 1.6, maxSideM * 2.8, maxSideM * 2]}
-        intensity={1.55 * studioScale}
+        position={[maxSideM * 2.2, maxSideM * 3.2, maxSideM * 2.4]}
+        intensity={CHAMBER_MATERIAL.studioKeyIntensity}
         shadow-mapSize-width={1024}
         shadow-mapSize-height={1024}
-        shadow-camera-far={maxSideM * 12}
+        shadow-camera-far={maxSideM * 14}
         shadow-bias={-0.0002}
       />
+      {/* In front of open door — not under the fabric roof */}
       <directionalLight
         ref={studioLightRef}
-        position={[0.15, heightM * 0.5, depthM * 2.6]}
-        intensity={1.1 * studioScale}
-      />
-      {/* Soft side rims only — black exterior should not catch hard specular */}
-      <directionalLight
-        ref={studioLightRef}
-        position={[-maxSideM * 1.8, maxSideM * 1.6, maxSideM * 0.6]}
-        intensity={0.55 * studioScale}
+        position={[0, heightM * 0.9, maxSideM * 3.0]}
+        intensity={CHAMBER_MATERIAL.studioFrontIntensity}
       />
       <directionalLight
         ref={studioLightRef}
-        position={[maxSideM * 1.6, maxSideM * 1.3, -maxSideM * 0.8]}
-        intensity={0.35 * studioScale}
+        position={[0, maxSideM * 3.8, maxSideM * 0.5]}
+        intensity={CHAMBER_MATERIAL.studioTopIntensity}
       />
-
-      {/*
-        Ceiling / upper-panel studio lights (point + spot from tent roof).
-        Omit entirely when a grow fixture is installed — they fight the lamp
-        and look like a second light from the top panel.
-      */}
-      {!hasGrowFixture ? (
-        <>
-          <pointLight
-            ref={studioLightRef}
-            position={[0, heightM * 0.9, 0]}
-            intensity={4.2}
-            distance={Math.max(widthM, depthM, heightM) * 3.2}
-            decay={2}
-          />
-          <pointLight
-            ref={studioLightRef}
-            position={[0, heightM * 0.45, depthM * 0.15]}
-            intensity={2.0}
-            distance={Math.max(widthM, depthM) * 2}
-            decay={2}
-          />
-          <spotLight
-            ref={studioLightRef}
-            position={[0, heightM * 0.96, depthM * 0.02]}
-            angle={0.9}
-            penumbra={0.55}
-            intensity={2.8}
-            distance={heightM * 2.8}
-            castShadow
-          >
-            <object3D attach="target" position={[0, 0, 0]} />
-          </spotLight>
-        </>
-      ) : null}
+      <directionalLight
+        ref={studioLightRef}
+        position={[-maxSideM * 2.2, maxSideM * 1.9, maxSideM * 0.7]}
+        intensity={CHAMBER_MATERIAL.studioRimLeftIntensity}
+      />
+      <directionalLight
+        ref={studioLightRef}
+        position={[maxSideM * 2.0, maxSideM * 1.6, -maxSideM * 1.0]}
+        intensity={CHAMBER_MATERIAL.studioRimRightIntensity}
+      />
 
       <Suspense fallback={null}>
-        {/* Warehouse HDR inside Suspense so PMREM + maps load without racing the canvas */}
         <Environment
           preset="warehouse"
-          environmentIntensity={
-            growLit
-              ? CHAMBER_MATERIAL.environmentIntensityGrowLit
-              : hasGrowFixture
-                ? CHAMBER_MATERIAL.environmentIntensityFixtureOff
-                : CHAMBER_MATERIAL.environmentIntensityEmpty
-          }
-          resolution={128}
+          environmentIntensity={CHAMBER_MATERIAL.environmentIntensity}
+          resolution={256}
         />
         <Enclosure
           widthCm={widthCm}

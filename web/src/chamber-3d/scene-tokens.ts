@@ -175,23 +175,22 @@ export const CHAMBER_MATERIAL = {
   hpsFormScaleCooltube: 0.72,
   lightOffSceneIntensity: 0,
   /**
-   * Exterior studio fill multipliers (ambient / hemisphere / directionals).
-   * Grow-lit keeps substantial neutral fill so the box stays as readable as the
-   * empty showroom; fixture adds directed key, not the only light in the tent.
+   * Room studio (always on, same whether grow fixture is ON or OFF).
+   * Lights sit outside the tent; grow point/spot only add interior key when lit.
+   * Do not scale these down when grow-lit — that made the exterior pad go dark
+   * (stage layer receives only studio, never grow lights).
    */
-  studioScaleEmpty: 1,
-  studioScaleFixtureOff: 0.55,
-  studioScaleGrowLit: 0.52,
-  /** Warehouse HDR strength — keep env up when lit so mylar mirrors stay silver. */
-  environmentIntensityEmpty: 0.7,
-  environmentIntensityFixtureOff: 0.5,
-  environmentIntensityGrowLit: 0.62,
-  /**
-   * WebGLRenderer filmic grade (ACESFilmicToneMapping in chamber-scene).
-   * Mild ON/OFF delta; brighter fixtures use ACES compression, not a dark grade.
-   */
-  toneMappingExposureStudio: 1,
-  toneMappingExposureGrowLit: 0.92,
+  studioAmbientIntensity: 0.95,
+  studioHemisphereIntensity: 0.65,
+  studioKeyIntensity: 1.75,
+  studioFrontIntensity: 1.25,
+  studioTopIntensity: 1.35,
+  studioRimLeftIntensity: 0.65,
+  studioRimRightIntensity: 0.45,
+  /** Warehouse HDR for the whole stage (constant room brightness). */
+  environmentIntensity: 1.05,
+  /** ACES exposure — constant; room does not change ISO when the lamp toggles. */
+  toneMappingExposure: 1,
 } as const
 
 /**
