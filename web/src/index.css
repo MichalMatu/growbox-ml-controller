@@ -130,7 +130,11 @@
     /* Felt grow bag + soil surface (playground props) */
     --chamber-pot-felt: #1a1a1c;
     --chamber-pot-rim: #121214;
-    --chamber-pot-soil: #3b2a1f;
+    /*
+     * Soil material tint — white so absolute black-soil albedo map is SSOT
+     * (Three.js dirt pattern: color in CanvasTexture, material color white).
+     */
+    --chamber-pot-soil: #ffffff;
     /* Grow-light fixture (playground props; not v4 actuators.lights) */
     --chamber-light-housing: #1c1c1f;
     --chamber-light-emitter: #f2f0e6;

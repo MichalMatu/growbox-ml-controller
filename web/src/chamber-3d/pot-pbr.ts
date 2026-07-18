@@ -1,6 +1,10 @@
 /**
  * Procedural PBR maps for felt grow bags + soil (no external assets).
- * Generates albedo / normal / roughness once; materials tint albedo via color.
+ *
+ * Felt: grayscale albedo × material.color (charcoal).
+ * Soil: absolute-color dirt map × white material (proven Three.js canvas-dirt
+ * pattern). toneMapped is disabled on the soil material so ACES + cool
+ * studio fill cannot wash black-brown into gray sand.
  */
 
 import { useMemo } from "react"
@@ -114,7 +118,6 @@ function canvasFromRgba(size: number, data: Uint8ClampedArray): HTMLCanvasElemen
   canvas.height = size
   const ctx = canvas.getContext("2d")
   if (!ctx) throw new Error("2d canvas unavailable for pot PBR")
-  // Copy into a fresh buffer so ImageData accepts ArrayBuffer (not SharedArrayBuffer).
   const pixels = new Uint8ClampedArray(data.length)
   pixels.set(data)
   ctx.putImageData(new ImageData(pixels, size, size), 0, 0)
@@ -130,7 +133,6 @@ function buildFeltMaps(size: number): PotSurfaceMaps {
     for (let x = 0; x < size; x++) {
       const u = x / size
       const v = y / size
-      // Nonwoven felt: fine fiber flecks + soft low-frequency undulation
       const fibers = fbm(u * 48, v * 48, 5)
       const weave = fbm(u * 12 + 3.1, v * 12 - 1.7, 3)
       const fleck = hash2(x * 0.37, y * 0.91)
@@ -138,7 +140,6 @@ function buildFeltMaps(size: number): PotSurfaceMaps {
         fibers * 0.55 + weave * 0.35 + (fleck > 0.92 ? 0.25 : fleck * 0.08)
       heights[y * size + x] = h
 
-      // Multiplier map (grayscale) so material.color tints the bag
       const lum = 0.62 + fibers * 0.28 + weave * 0.12 - (fleck > 0.94 ? 0.18 : 0)
       const c = Math.max(0, Math.min(255, Math.round(lum * 255)))
       const ai = (y * size + x) * 4
@@ -166,6 +167,68 @@ function buildFeltMaps(size: number): PotSurfaceMaps {
   return { map, normalMap, roughnessMap }
 }
 
+/**
+ * Horticultural perlite flecks — sparse scatter matching real potting-mix photos.
+ */
+function perliteCoverage(x: number, y: number, size: number): number {
+  let coverage = 0
+  coverage = Math.max(coverage, grainField(x, y, size, 12, 0.88, 0.8, 2.4))
+  coverage = Math.max(coverage, grainField(x, y, size, 18, 0.92, 1.3, 3.4))
+  coverage = Math.max(coverage, grainField(x, y, size, 5.5, 0.94, 0.4, 1.1))
+  return Math.min(1, coverage)
+}
+
+/** One scale of random soft discs in a sparse cell grid. */
+function grainField(
+  x: number,
+  y: number,
+  size: number,
+  cellPx: number,
+  densityThreshold: number,
+  minRadiusPx: number,
+  maxRadiusPx: number,
+): number {
+  const scale = size / 256
+  const cell = Math.max(2, Math.round(cellPx * scale))
+  const cx = Math.floor(x / cell)
+  const cy = Math.floor(y / cell)
+  let best = 0
+  for (let oy = -1; oy <= 1; oy++) {
+    for (let ox = -1; ox <= 1; ox++) {
+      const ix = cx + ox
+      const iy = cy + oy
+      const spawn = hash2(ix * 19.7 + 2.3, iy * 23.1 - 1.1)
+      if (spawn < densityThreshold) continue
+      const jx = hash2(ix * 41.3, iy * 17.9)
+      const jy = hash2(ix * 7.1 + 0.4, iy * 13.7)
+      const px = (ix + jx) * cell
+      const py = (iy + jy) * cell
+      const radius =
+        (minRadiusPx +
+          hash2(ix * 2.2, iy * 3.7) * (maxRadiusPx - minRadiusPx)) *
+        scale
+      const d = Math.hypot(x - px, y - py)
+      if (d >= radius) continue
+      const t = 1 - d / radius
+      const ragged =
+        0.65 + 0.35 * hash2(Math.floor(x * 0.9), Math.floor(y * 0.9))
+      const strength = t * t * (0.7 + spawn * 0.3) * ragged
+      if (strength > best) best = strength
+    }
+  }
+  return best
+}
+
+/**
+ * Black potting-mix albedo (absolute RGB in the map).
+ *
+ * Pattern from common Three.js procedural dirt (CanvasTexture + StandardMaterial):
+ * solid base fill + darker flecks; material.color stays white so the map is SSOT.
+ * Adapted for black grow-bag soil + white perlite (not Material-brown sand).
+ *
+ * RGB numbers only here (hex literals forbidden outside scene-tokens / CSS).
+ * Base ~ (22,14,10) black-brown; dark pores; sparse off-white perlite.
+ */
 function buildSoilMaps(size: number): PotSurfaceMaps {
   const heights = new Float32Array(size * size)
   const albedo = new Uint8ClampedArray(size * size * 4)
@@ -175,39 +238,49 @@ function buildSoilMaps(size: number): PotSurfaceMaps {
     for (let x = 0; x < size; x++) {
       const u = x / size
       const v = y / size
-      // Soil: clumpy low freq + fine grit + occasional pebbles
       const clump = fbm(u * 6, v * 6, 4)
-      const grit = fbm(u * 40, v * 40, 3)
-      const pebble = hash2(x * 1.9, y * 2.3)
-      const pebbleMask = pebble > 0.97 ? 1 : 0
+      const mid = fbm(u * 18 + 1.2, v * 18 - 0.7, 3)
+      const grit = fbm(u * 50, v * 50, 2)
+      const jitter = hash2(x * 1.7, y * 2.3)
+      const perlite = perliteCoverage(x, y, size)
+
       const h =
-        clump * 0.55 + grit * 0.35 + pebbleMask * 0.45 + hash2(x, y) * 0.08
+        clump * 0.5 + mid * 0.28 + grit * 0.14 + perlite * 0.4 + jitter * 0.05
       heights[y * size + x] = h
 
-      // Brownish variation (rgb numbers — multiplies / replaces flat soil tint)
-      const baseR = 48
-      const baseG = 32
-      const baseB = 18
-      const shade = 0.55 + clump * 0.45 + grit * 0.2 - pebbleMask * 0.25
-      const r = Math.max(
-        0,
-        Math.min(255, Math.round((baseR + grit * 35 + pebbleMask * 40) * shade)),
-      )
-      const g = Math.max(
-        0,
-        Math.min(255, Math.round((baseG + grit * 22 + pebbleMask * 25) * shade)),
-      )
-      const b = Math.max(
-        0,
-        Math.min(255, Math.round((baseB + grit * 12 + pebbleMask * 18) * shade)),
-      )
+      // Absolute black potting soil (warm black-brown, not gray/sand).
+      // MeshBasicMaterial shows these values as authored — keep them dark.
+      let r = 14 + clump * 12 + mid * 5
+      let g = 9 + clump * 7 + mid * 3
+      let b = 6 + clump * 3 + mid * 1.5
+
+      if (jitter < 0.1) {
+        // darker wet pockets
+        const wet = (0.1 - jitter) / 0.1
+        r *= 1 - wet * 0.5
+        g *= 1 - wet * 0.5
+        b *= 1 - wet * 0.5
+      }
+
+      // White perlite flecks (photo-accurate grow mix)
+      if (perlite > 0.06) {
+        const p = Math.min(0.9, perlite)
+        const pr = 210 + hash2(x + 2, y) * 35
+        const pg = 206 + hash2(x, y + 3) * 32
+        const pb = 198 + hash2(x + 1, y + 1) * 28
+        r = r * (1 - p) + pr * p
+        g = g * (1 - p) + pg * p
+        b = b * (1 - p) + pb * p
+      }
+
       const ai = (y * size + x) * 4
-      albedo[ai] = r
-      albedo[ai + 1] = g
-      albedo[ai + 2] = b
+      albedo[ai] = Math.max(0, Math.min(255, Math.round(r)))
+      albedo[ai + 1] = Math.max(0, Math.min(255, Math.round(g)))
+      albedo[ai + 2] = Math.max(0, Math.min(255, Math.round(b)))
       albedo[ai + 3] = 255
 
-      const roughV = 0.75 + grit * 0.2 + pebbleMask * 0.1
+      // Matte soil (gist dirt uses ~0.8; we stay fully rough)
+      const roughV = 0.92 + grit * 0.06 - perlite * 0.05
       const rv = Math.max(0, Math.min(255, Math.round(roughV * 255)))
       rough[ai] = rv
       rough[ai + 1] = rv
@@ -216,7 +289,7 @@ function buildSoilMaps(size: number): PotSurfaceMaps {
     }
   }
 
-  const normal = heightToNormal(heights, size, 6.5)
+  const normal = heightToNormal(heights, size, 4.0)
   const map = new CanvasTexture(canvasFromRgba(size, albedo))
   const normalMap = new CanvasTexture(canvasFromRgba(size, normal))
   const roughnessMap = new CanvasTexture(canvasFromRgba(size, rough))

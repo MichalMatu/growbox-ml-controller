@@ -25,7 +25,9 @@ export const CHAMBER_CSS_VAR = {
   potFelt: "--chamber-pot-felt",
   /** Stitched top rim / handles. */
   potRim: "--chamber-pot-rim",
-  /** Exposed soil disc inside the bag. */
+  /**
+   * Soil material tint (white — absolute black potting mix lives in pot-pbr map).
+   */
   potSoil: "--chamber-pot-soil",
   /** Grow-light housing / reflector metal. */
   lightHousing: "--chamber-light-housing",
@@ -63,7 +65,8 @@ export const CHAMBER_SCENE_FALLBACK = {
   /** Charcoal nonwoven felt (real grow bags are near-black) */
   potFelt: "#1a1a1c",
   potRim: "#121214",
-  potSoil: "#3b2a1f",
+  /** White tint — absolute black soil color is baked into pot-pbr albedo. */
+  potSoil: "#ffffff",
   lightHousing: "#1c1c1f",
   lightEmitter: "#f2f0e6",
   lightDuct: "#9aa3ad",
@@ -104,10 +107,15 @@ export const CHAMBER_MATERIAL = {
   potFeltEnvMapIntensity: 0.12,
   potFeltNormalScale: 1.15,
   potFeltUvRepeat: 2.4,
-  potSoilRoughness: 0.9,
+  /**
+   * Black potting mix (absolute albedo map).
+   * envMapIntensity 0 + toneMapped false on mesh — stops cool HDR/ACES gray wash.
+   * roughness ~1 matches common Three.js dirt materials.
+   */
+  potSoilRoughness: 1,
   potSoilMetalness: 0,
-  potSoilEnvMapIntensity: 0.06,
-  potSoilNormalScale: 1.65,
+  potSoilEnvMapIntensity: 0,
+  potSoilNormalScale: 1.0,
   potSoilUvRepeat: 1.8,
   /** Powder-coated light housings / wings / box hoods */
   lightHousingRoughness: 0.55,
@@ -178,8 +186,11 @@ export const CHAMBER_GEOMETRY = {
   potRimHeightScale: 0.06,
   /** Rim outer radius as fraction beyond wall top radius. */
   potRimRadiusExtraScale: 0.025,
-  /** Extra drop of soil surface below the rim lip (fraction of height). */
-  potSoilInsetScale: 0.08,
+  /**
+   * Drop of soil surface below the rim lip (fraction of height).
+   * Keep large enough that the bag mouth reads open (not a flush lid).
+   */
+  potSoilInsetScale: 0.16,
   potWallSegments: 28,
   potHandleRadiusScale: 0.018,
   potHandleWidthScale: 0.28,
