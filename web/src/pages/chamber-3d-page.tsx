@@ -9,6 +9,17 @@ import {
   parseEnclosureCmDraft,
 } from "@/chamber-3d/enclosure-cm"
 import {
+  DEFAULT_FELT_POT_PRESET_ID,
+  FELT_POT_COUNT_MAX,
+  FELT_POT_PRESETS,
+  clampFeltPotCount,
+  getFeltPotPreset,
+  maxPotsThatFit,
+  planFeltPotLayout,
+  type FeltPotCount,
+  type FeltPotPresetId,
+} from "@/chamber-3d/felt-pot-geometry"
+import {
   AppActionRow,
   AppCanvasFrame,
   AppCardBody,
@@ -18,6 +29,8 @@ import {
   AppPageFooter,
   AppPageHeader,
   AppPreviewSplit,
+  AppSelectTrigger,
+  AppStack,
 } from "@/components/app-chrome"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -29,11 +42,18 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select"
 import { navigate, ROUTES } from "@/lib/routing"
 
 const DEFAULT_WIDTH_CM = 80
 const DEFAULT_DEPTH_CM = 80
 const DEFAULT_HEIGHT_CM = 160
+const DEFAULT_POT_COUNT: FeltPotCount = 1
 
 type CmFieldProps = {
   id: string
@@ -98,11 +118,44 @@ export function Chamber3dPage() {
   const [widthCm, setWidthCm] = useState(DEFAULT_WIDTH_CM)
   const [depthCm, setDepthCm] = useState(DEFAULT_DEPTH_CM)
   const [heightCm, setHeightCm] = useState(DEFAULT_HEIGHT_CM)
+  const [potPresetId, setPotPresetId] = useState<FeltPotPresetId>(
+    DEFAULT_FELT_POT_PRESET_ID,
+  )
+  const [potCount, setPotCount] = useState<FeltPotCount>(DEFAULT_POT_COUNT)
 
   const volumeM3 = useMemo(
     () => (widthCm * depthCm * heightCm) / 1_000_000,
     [widthCm, depthCm, heightCm],
   )
+
+  const potPreset = useMemo(() => getFeltPotPreset(potPresetId), [potPresetId])
+  const footprint = useMemo(
+    () => ({ diameterCm: potPreset.diameterCm, heightCm: potPreset.heightCm }),
+    [potPreset.diameterCm, potPreset.heightCm],
+  )
+
+  const maxFit = useMemo(
+    () =>
+      maxPotsThatFit(widthCm / 100, depthCm / 100, heightCm / 100, footprint),
+    [widthCm, depthCm, heightCm, footprint],
+  )
+
+  /** Desired count clamped to what currently fits (keeps higher intent when tent grows). */
+  const visiblePotCount = clampFeltPotCount(Math.min(potCount, maxFit))
+
+  const potPlan = useMemo(
+    () =>
+      planFeltPotLayout(
+        widthCm / 100,
+        depthCm / 100,
+        heightCm / 100,
+        footprint,
+        visiblePotCount,
+      ),
+    [widthCm, depthCm, heightCm, footprint, visiblePotCount],
+  )
+
+  const potAspect = (potPreset.diameterCm / potPreset.heightCm).toFixed(2)
 
   return (
     <AppPage width="wide">
@@ -117,8 +170,10 @@ export function Chamber3dPage() {
         description={
           <>
             Parametryczna namiotówka (W × D × H w cm, min {ENCLOSURE_CM_MIN}). Tylne okienko
-            (zamek 30×20 cm) tylko przy szerokości 60–120 cm. Ta strona nie zapisuje do JSON
-            v4 — tylko eksperyment wizualny. Orbit: przeciągnij, zoom: scroll.
+            (zamek 30×20 cm) tylko przy szerokości 60–120 cm. Donice filcowe: rozmiar z
+            katalogu + liczba 0–{FELT_POT_COUNT_MAX}, tylko te które mieszczą się na podłodze.
+            Ta strona nie zapisuje do JSON v4 — tylko eksperyment wizualny. Orbit: przeciągnij,
+            zoom: scroll.
           </>
         }
         actions={
@@ -134,51 +189,142 @@ export function Chamber3dPage() {
 
       <AppPreviewSplit
         sidebar={
-          <Card>
-            <CardHeader>
-              <CardTitle>Wymiary komory</CardTitle>
-              <CardDescription>
-                UX-only (jak opcjonalny root <code>enclosure</code>). Zakres{" "}
-                {ENCLOSURE_CM_MIN}–{ENCLOSURE_CM_MAX} cm. Tom = W·D·H / 1e6 m³.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <AppCardBody variant="form">
-                <CmDimensionField
-                  id="width_cm"
-                  label="Szerokość (cm)"
-                  valueCm={widthCm}
-                  onValueCmChange={setWidthCm}
-                />
-                <CmDimensionField
-                  id="depth_cm"
-                  label="Głębokość (cm)"
-                  valueCm={depthCm}
-                  onValueCmChange={setDepthCm}
-                />
-                <CmDimensionField
-                  id="height_cm"
-                  label="Wysokość (cm)"
-                  valueCm={heightCm}
-                  onValueCmChange={setHeightCm}
-                />
-                <AppMutedText>Objętość: {volumeM3.toFixed(4)} m³</AppMutedText>
-                <AppActionRow>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => {
-                      setWidthCm(DEFAULT_WIDTH_CM)
-                      setDepthCm(DEFAULT_DEPTH_CM)
-                      setHeightCm(DEFAULT_HEIGHT_CM)
-                    }}
-                  >
-                    Reset
-                  </Button>
-                </AppActionRow>
-              </AppCardBody>
-            </CardContent>
-          </Card>
+          <AppStack gap="lg">
+            <Card>
+              <CardHeader>
+                <CardTitle>Wymiary komory</CardTitle>
+                <CardDescription>
+                  UX-only (jak opcjonalny root <code>enclosure</code>). Zakres{" "}
+                  {ENCLOSURE_CM_MIN}–{ENCLOSURE_CM_MAX} cm. Tom = W·D·H / 1e6 m³.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <AppCardBody variant="form">
+                  <CmDimensionField
+                    id="width_cm"
+                    label="Szerokość (cm)"
+                    valueCm={widthCm}
+                    onValueCmChange={setWidthCm}
+                  />
+                  <CmDimensionField
+                    id="depth_cm"
+                    label="Głębokość (cm)"
+                    valueCm={depthCm}
+                    onValueCmChange={setDepthCm}
+                  />
+                  <CmDimensionField
+                    id="height_cm"
+                    label="Wysokość (cm)"
+                    valueCm={heightCm}
+                    onValueCmChange={setHeightCm}
+                  />
+                  <AppMutedText>Objętość: {volumeM3.toFixed(4)} m³</AppMutedText>
+                </AppCardBody>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Donice filcowe</CardTitle>
+                <CardDescription>
+                  Proporcje z typowych grow bagów (średnica × wysokość ≈ 1:1). Maks.{" "}
+                  {FELT_POT_COUNT_MAX} — jak sloty w kontrakcie v4. Układ tylko jeśli
+                  średnica + margines mieści się w użytecznej podłodze.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <AppCardBody variant="form">
+                  <AppFormField label="Rozmiar donicy" htmlFor="pot_size">
+                    <Select
+                      value={potPresetId}
+                      onValueChange={(value) => {
+                        setPotPresetId(value as FeltPotPresetId)
+                      }}
+                    >
+                      <AppSelectTrigger id="pot_size">
+                        <SelectValue placeholder="Wybierz rozmiar" />
+                      </AppSelectTrigger>
+                      <SelectContent>
+                        {FELT_POT_PRESETS.map((preset) => (
+                          <SelectItem key={preset.id} value={preset.id}>
+                            {preset.label} · Ø{preset.diameterCm}×H{preset.heightCm} cm
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </AppFormField>
+
+                  <AppFormField label="Liczba donic" htmlFor="pot_count">
+                    <Select
+                      value={String(visiblePotCount)}
+                      onValueChange={(value) => {
+                        setPotCount(clampFeltPotCount(Number(value)))
+                      }}
+                    >
+                      <AppSelectTrigger id="pot_count">
+                        <SelectValue placeholder="Liczba" />
+                      </AppSelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: FELT_POT_COUNT_MAX + 1 }, (_, n) => {
+                          const fits = n <= maxFit
+                          return (
+                            <SelectItem
+                              key={n}
+                              value={String(n)}
+                              disabled={n > 0 && !fits}
+                            >
+                              {n === 0
+                                ? "0 — ukryj"
+                                : fits
+                                  ? `${n}`
+                                  : `${n} — nie mieści się`}
+                            </SelectItem>
+                          )
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </AppFormField>
+
+                  <AppMutedText>
+                    Ø {potPreset.diameterCm} cm × H {potPreset.heightCm} cm · D/H ={" "}
+                    {potAspect} · {potPreset.volumeL} L
+                  </AppMutedText>
+                  <AppMutedText>
+                    Podłoga użyteczna ≈ {potPlan.usableWidthCm.toFixed(0)}×
+                    {potPlan.usableDepthCm.toFixed(0)} cm · max mieści się: {maxFit}
+                  </AppMutedText>
+
+                  {visiblePotCount === 0 && potCount === 0 ? (
+                    <Badge variant="outline">Donice ukryte</Badge>
+                  ) : maxFit === 0 ? (
+                    <Badge variant="destructive">
+                      Nie mieści się (Ø lub wysokość)
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary">
+                      Pokazano {potPlan.fittedCount} · max {maxFit}
+                    </Badge>
+                  )}
+
+                  <AppActionRow>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => {
+                        setWidthCm(DEFAULT_WIDTH_CM)
+                        setDepthCm(DEFAULT_DEPTH_CM)
+                        setHeightCm(DEFAULT_HEIGHT_CM)
+                        setPotPresetId(DEFAULT_FELT_POT_PRESET_ID)
+                        setPotCount(DEFAULT_POT_COUNT)
+                      }}
+                    >
+                      Reset
+                    </Button>
+                  </AppActionRow>
+                </AppCardBody>
+              </CardContent>
+            </Card>
+          </AppStack>
         }
         main={
           <AppCanvasFrame>
@@ -186,6 +332,8 @@ export function Chamber3dPage() {
               widthCm={widthCm}
               depthCm={depthCm}
               heightCm={heightCm}
+              potPresetId={potPresetId}
+              potCount={visiblePotCount}
             />
           </AppCanvasFrame>
         }

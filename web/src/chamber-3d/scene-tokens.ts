@@ -21,6 +21,12 @@ export const CHAMBER_CSS_VAR = {
   frame: "--chamber-frame",
   /** Plastic zipper track on the rear mesh flap (must read on black nylon). */
   zipper: "--chamber-zipper",
+  /** Nonwoven felt grow bag body. */
+  potFelt: "--chamber-pot-felt",
+  /** Stitched top rim / handles. */
+  potRim: "--chamber-pot-rim",
+  /** Exposed soil disc inside the bag. */
+  potSoil: "--chamber-pot-soil",
 } as const
 
 /**
@@ -44,6 +50,10 @@ export const CHAMBER_SCENE_FALLBACK = {
   frame: "#141414",
   /** Black plastic zipper coil — reads on silver foil from inside */
   zipper: "#121214",
+  /** Charcoal nonwoven felt (real grow bags are near-black) */
+  potFelt: "#1a1a1c",
+  potRim: "#121214",
+  potSoil: "#3b2a1f",
 } as const
 
 export type ChamberSceneColors = {
@@ -74,6 +84,12 @@ export const CHAMBER_MATERIAL = {
   zipperRoughness: 0.42,
   zipperMetalness: 0.55,
   zipperEnvMapIntensity: 0.7,
+  /** Nonwoven felt — very matte, no metal */
+  potFeltRoughness: 0.98,
+  potFeltMetalness: 0,
+  potFeltEnvMapIntensity: 0.08,
+  potSoilRoughness: 0.95,
+  potSoilMetalness: 0,
 } as const
 
 /**
@@ -113,6 +129,21 @@ export const CHAMBER_GEOMETRY = {
   rearFlapZipperRadiusM: 0.0055,
   /** Zipper pull tab size (width, height, depth) in meters. */
   rearFlapZipperPullM: [0.022, 0.014, 0.01] as const,
+  /**
+   * Felt pot mesh proportions (relative to diameter / height).
+   * Soft bag: slight top taper, thick stitched rim, loop handles.
+   * Layers must not share coplanar faces (rim/body/soil) — causes z-fight shimmer.
+   */
+  potTopRadiusScale: 0.96,
+  potRimHeightScale: 0.06,
+  /** Rim sits outside the wall by this fraction of diameter. */
+  potRimRadiusExtraScale: 0.025,
+  /** Soil disc below the rim bottom (fraction of height). */
+  potSoilInsetScale: 0.08,
+  potWallSegments: 28,
+  potHandleRadiusScale: 0.018,
+  potHandleWidthScale: 0.28,
+  potHandleHeightScale: 0.1,
 } as const
 
 /** DOM class on the R3F Canvas element (fill parent AppCanvasFrame viewport). */
@@ -174,6 +205,21 @@ export function resolveChamberSceneColors(
       rootStyle,
       CHAMBER_CSS_VAR.zipper,
       CHAMBER_SCENE_FALLBACK.zipper,
+    ),
+    potFelt: readCssVar(
+      rootStyle,
+      CHAMBER_CSS_VAR.potFelt,
+      CHAMBER_SCENE_FALLBACK.potFelt,
+    ),
+    potRim: readCssVar(
+      rootStyle,
+      CHAMBER_CSS_VAR.potRim,
+      CHAMBER_SCENE_FALLBACK.potRim,
+    ),
+    potSoil: readCssVar(
+      rootStyle,
+      CHAMBER_CSS_VAR.potSoil,
+      CHAMBER_SCENE_FALLBACK.potSoil,
     ),
   }
 }

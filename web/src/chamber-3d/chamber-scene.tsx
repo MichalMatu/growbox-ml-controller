@@ -10,6 +10,11 @@ import { Canvas } from "@react-three/fiber"
 import { Enclosure } from "@/chamber-3d/enclosure"
 import { ENCLOSURE_CM_MIN } from "@/chamber-3d/enclosure-cm"
 import {
+  getFeltPotPreset,
+  type FeltPotPresetId,
+} from "@/chamber-3d/felt-pot-geometry"
+import { FeltPotGroup } from "@/chamber-3d/felt-pot"
+import {
   CHAMBER_CANVAS_CLASS,
   resolveChamberSceneColors,
 } from "@/chamber-3d/scene-tokens"
@@ -18,10 +23,21 @@ export type ChamberSceneProps = {
   widthCm: number
   depthCm: number
   heightCm: number
+  /** Felt pot catalog id (playground only). */
+  potPresetId?: FeltPotPresetId
+  /** How many pots to try to place (0–4); packing may place fewer. */
+  potCount?: number
 }
 
-export function ChamberScene({ widthCm, depthCm, heightCm }: ChamberSceneProps) {
+export function ChamberScene({
+  widthCm,
+  depthCm,
+  heightCm,
+  potPresetId = "12l",
+  potCount = 0,
+}: ChamberSceneProps) {
   const colors = useMemo(() => resolveChamberSceneColors(), [])
+  const potPreset = useMemo(() => getFeltPotPreset(potPresetId), [potPresetId])
   const maxSideM = Math.max(widthCm, depthCm, heightCm, 100) / 100
   const heightM = Math.max(heightCm, ENCLOSURE_CM_MIN) / 100
   const depthM = Math.max(depthCm, ENCLOSURE_CM_MIN) / 100
@@ -111,6 +127,14 @@ export function ChamberScene({ widthCm, depthCm, heightCm }: ChamberSceneProps) 
           widthCm={widthCm}
           depthCm={depthCm}
           heightCm={heightCm}
+          colors={colors}
+        />
+        <FeltPotGroup
+          widthM={widthM}
+          depthM={depthM}
+          heightM={heightM}
+          preset={potPreset}
+          count={potCount}
           colors={colors}
         />
       </Suspense>
