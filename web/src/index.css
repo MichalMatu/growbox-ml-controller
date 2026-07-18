@@ -291,7 +291,7 @@
     min-width: 0;
     min-height: var(--height-canvas-frame);
     overflow: hidden;
-    /* Soft studio gradient; WebGL canvas is transparent so CSS shows through */
+    /* Soft photostudio gradient; WebGL canvas is transparent so CSS shows through */
     background: var(--chamber-bg-gradient);
   }
 
@@ -309,5 +309,15 @@
     height: 100% !important;
     flex: 1 1 auto;
     min-height: 0;
+  }
+
+  /* Subtle vignette overlay on the canvas for depth and cinematic feel */
+  .app-canvas-frame-viewport::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.18) 100%);
+    z-index: 1;
   }
 }

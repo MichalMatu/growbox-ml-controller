@@ -100,14 +100,17 @@ export const CHAMBER_MATERIAL = {
   exteriorAoIntensity: 0.45,
   exteriorEnvMapIntensity: 0.05,
   /**
-   * Foil003 mylar — low roughness + high metal/env so walls read as mirror
-   * liner, not matte painted silver. Normal kept moderate (wrinkle, not dust).
+   * Foil003 mylar — very low roughness + high metal/env so walls read as
+   * mirror liner, not matte painted silver. Normal kept moderate (wrinkle).
+   * Photorealistic pass: even lower roughness for sharper reflections,
+   * higher env map intensity for mirror-like foil.
    */
-  interiorRoughness: 0.16,
-  interiorMetalness: 0.96,
-  interiorNormalScale: 0.26,
-  interiorAoIntensity: 0.16,
-  interiorEnvMapIntensity: 1.95,
+  interiorRoughness: 0.12,
+  interiorMetalness: 0.98,
+  interiorNormalScale: 0.22,
+  interiorAoIntensity: 0.12,
+  interiorEnvMapIntensity: 2.4,
+
   frameRoughness: 0.48,
   frameMetalness: 0.5,
   frameEnvMapIntensity: 0.6,
@@ -178,19 +181,29 @@ export const CHAMBER_MATERIAL = {
    * Room studio (always on, same whether grow fixture is ON or OFF).
    * Lights sit outside the tent; grow point/spot only add interior key when lit.
    * Do not scale these down when grow-lit — that made the exterior pad go dark
-   * (stage layer receives only studio, never grow lights).
+   * (stage layer receives only studio, never grow lamps).
+   *
+   * Photorealistic pass: softer ambient, stronger key with better fill balance,
+   * higher environment intensity for mirror-like foil reflections.
    */
-  studioAmbientIntensity: 0.95,
-  studioHemisphereIntensity: 0.65,
-  studioKeyIntensity: 1.75,
-  studioFrontIntensity: 1.25,
-  studioTopIntensity: 1.35,
-  studioRimLeftIntensity: 0.65,
-  studioRimRightIntensity: 0.45,
+  studioAmbientIntensity: 0.55,
+  studioHemisphereIntensity: 0.45,
+  studioKeyIntensity: 2.2,
+  studioFrontIntensity: 1.6,
+  studioTopIntensity: 1.0,
+  studioRimLeftIntensity: 0.8,
+  studioRimRightIntensity: 0.6,
   /** Warehouse HDR for the whole stage (constant room brightness). */
-  environmentIntensity: 1.05,
+  environmentIntensity: 1.6,
   /** ACES exposure — constant; room does not change ISO when the lamp toggles. */
-  toneMappingExposure: 1,
+  toneMappingExposure: 1.0,
+  /**
+   * Floor material — matte concrete / epoxy studio floor.
+   * Low metalness + high roughness for natural, non-shiny surface.
+   */
+  floorRoughness: 0.75,
+  floorMetalness: 0.02,
+  floorEnvMapIntensity: 0.15,
 } as const
 
 /**
