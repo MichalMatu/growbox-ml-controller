@@ -37,6 +37,7 @@ export const ALLOWED_APP_CHROME_EXPORTS = [
   "AppStack",
   "AppActionRow",
   "AppCardBody",
+  "AppFormGrid",
   "AppFormField",
   "AppControlSurface",
   "AppControlLabelBlock",

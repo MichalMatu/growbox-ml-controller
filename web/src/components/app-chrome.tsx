@@ -171,6 +171,30 @@ export function AppCardBody({
 
 // --- Form controls ----------------------------------------------------------
 
+/**
+ * Compact multi-column field layout (e.g. W×D / H×volume).
+ * Children should be AppFormField (or equivalent); cells get min-width:0.
+ */
+export function AppFormGrid({
+  columns = 2,
+  children,
+}: {
+  columns?: 2
+  children: ReactNode
+}) {
+  return (
+    <div
+      className={cn(
+        "grid min-w-0 gap-3",
+        columns === 2 && "grid-cols-2",
+        "*:min-w-0",
+      )}
+    >
+      {children}
+    </div>
+  )
+}
+
 export function AppFormField({
   label,
   htmlFor,
@@ -184,9 +208,9 @@ export function AppFormField({
   children: ReactNode
 }) {
   return (
-    <div className="grid gap-2">
+    <div className="grid min-w-0 gap-2">
       {end != null ? (
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center justify-between gap-2">
           <Label htmlFor={htmlFor}>{label}</Label>
           {end}
         </div>
