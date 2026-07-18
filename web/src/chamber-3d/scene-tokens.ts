@@ -23,7 +23,7 @@ export const CHAMBER_CSS_VAR = {
   zipper: "--chamber-zipper",
   /** Nonwoven felt grow bag body. */
   potFelt: "--chamber-pot-felt",
-  /** Stitched top rim / handles. */
+  /** Stitched top rim bead. */
   potRim: "--chamber-pot-rim",
   /**
    * Soil material tint (white — absolute black potting mix lives in pot-pbr map).
@@ -195,9 +195,6 @@ export const CHAMBER_GEOMETRY = {
    */
   potSoilInsetScale: 0.16,
   potWallSegments: 28,
-  potHandleRadiusScale: 0.018,
-  potHandleWidthScale: 0.28,
-  potHandleHeightScale: 0.1,
 } as const
 
 /** DOM class on the R3F Canvas element (fill parent AppCanvasFrame viewport). */

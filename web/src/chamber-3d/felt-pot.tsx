@@ -29,7 +29,7 @@ const FELT_NORMAL_SCALE = new Vector2(
 
 /**
  * Soft fabric / felt grow bag: open top (no lid/cover), stitched rim bead,
- * recessed soil surface, side loop handles.
+ * recessed soil surface. No side handles (real fabric pots are plain bags).
  *
  * Layout (Y up, base at 0):
  *   wall:  open cylinder [0, heightM] — never a top cap / lid
@@ -65,10 +65,6 @@ export function FeltPot({ diameterM, heightM, colors, maps }: FeltPotProps) {
   // Slightly under wall radius avoids z-fight at the soil–wall join.
   const soilR = wallRAtSoil * 0.988
   const segs = CHAMBER_GEOMETRY.potWallSegments
-  const handleR = diameterM * CHAMBER_GEOMETRY.potHandleRadiusScale
-  const handleW = diameterM * CHAMBER_GEOMETRY.potHandleWidthScale
-  const handleH = heightM * CHAMBER_GEOMETRY.potHandleHeightScale
-  const handleY = rimCenterY
 
   const feltMat = useMemo(
     () => ({
@@ -172,65 +168,6 @@ export function FeltPot({ diameterM, heightM, colors, maps }: FeltPotProps) {
           polygonOffsetFactor={1}
           polygonOffsetUnits={1}
         />
-      </mesh>
-
-      <HandleLoop
-        y={handleY}
-        x={topR * 0.98}
-        z={0}
-        width={handleW}
-        height={handleH}
-        tubeR={handleR}
-        yaw={Math.PI / 2}
-        material={rimMat}
-      />
-      <HandleLoop
-        y={handleY}
-        x={-topR * 0.98}
-        z={0}
-        width={handleW}
-        height={handleH}
-        tubeR={handleR}
-        yaw={-Math.PI / 2}
-        material={rimMat}
-      />
-    </group>
-  )
-}
-
-function HandleLoop({
-  x,
-  y,
-  z,
-  width,
-  height,
-  tubeR,
-  yaw,
-  material,
-}: {
-  x: number
-  y: number
-  z: number
-  width: number
-  height: number
-  tubeR: number
-  yaw: number
-  material: Record<string, unknown>
-}) {
-  const halfW = width / 2
-  return (
-    <group position={[x, y, z]} rotation={[0, yaw, 0]}>
-      <mesh castShadow position={[0, height / 2, 0]}>
-        <boxGeometry args={[width, tubeR * 2, tubeR * 2]} />
-        <meshStandardMaterial {...material} />
-      </mesh>
-      <mesh castShadow position={[-halfW, height / 4, 0]}>
-        <boxGeometry args={[tubeR * 2, height / 2, tubeR * 2]} />
-        <meshStandardMaterial {...material} />
-      </mesh>
-      <mesh castShadow position={[halfW, height / 4, 0]}>
-        <boxGeometry args={[tubeR * 2, height / 2, tubeR * 2]} />
-        <meshStandardMaterial {...material} />
       </mesh>
     </group>
   )
