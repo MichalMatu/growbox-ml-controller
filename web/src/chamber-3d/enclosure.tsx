@@ -1,5 +1,11 @@
 import { useEffect, useMemo } from "react"
-import { BoxGeometry, MeshStandardMaterial, Vector2 } from "three"
+import {
+  BoxGeometry,
+  MeshStandardMaterial,
+  Quaternion,
+  Vector2,
+  Vector3,
+} from "three"
 
 import {
   useGrowtentPbrMaps,
@@ -15,6 +21,10 @@ import {
 import { TentFrame } from "@/chamber-3d/tent-frame"
 import type { Vec3 } from "@/chamber-3d/tent-frame-geometry"
 import { buildShellPanels } from "@/chamber-3d/tent-shell-geometry"
+import {
+  buildRearFlapZippers,
+  type RearFlapZipperSpec,
+} from "@/chamber-3d/tent-vent-geometry"
 
 export type EnclosureDimensions = {
   widthCm: number
@@ -62,6 +72,13 @@ export function Enclosure({
         exteriorMaps={pbr.exterior}
         interiorMaps={pbr.interior}
       />
+      <RearFlapZipper
+        widthM={widthM}
+        depthM={depthM}
+        heightM={heightM}
+        thicknessM={thicknessM}
+        colors={colors}
+      />
       <TentFrame
         widthM={widthM}
         depthM={depthM}
@@ -70,6 +87,120 @@ export function Enclosure({
         colors={colors}
       />
     </group>
+  )
+}
+
+const ZIPPER_UP = new Vector3(0, 1, 0)
+
+/**
+ * Dual-sided rectangular black zipper on the rear wall (closed loop).
+ * Interior face (foil) + exterior face (nylon) — same track, both sides.
+ */
+function RearFlapZipper({
+  widthM,
+  depthM,
+  heightM,
+  thicknessM,
+  colors,
+}: {
+  widthM: number
+  depthM: number
+  heightM: number
+  thicknessM: number
+  colors: ChamberSceneColors
+}) {
+  const specs = useMemo(
+    () => buildRearFlapZippers(widthM, depthM, heightM, thicknessM),
+    [widthM, depthM, heightM, thicknessM],
+  )
+
+  if (specs.length === 0) return null
+
+  return (
+    <group>
+      {specs.map((spec) => (
+        <RearFlapZipperMesh key={spec.face} spec={spec} colors={colors} />
+      ))}
+    </group>
+  )
+}
+
+function RearFlapZipperMesh({
+  spec,
+  colors,
+}: {
+  spec: RearFlapZipperSpec
+  colors: ChamberSceneColors
+}) {
+  const radiusM = CHAMBER_GEOMETRY.rearFlapZipperRadiusM
+  const pull = CHAMBER_GEOMETRY.rearFlapZipperPullM
+
+  return (
+    <group position={spec.position} rotation={spec.rotation}>
+      {spec.localSegments.map(([from, to], index) => (
+        <ZipperCoil
+          key={index}
+          from={from}
+          to={to}
+          radiusM={radiusM}
+          color={colors.zipper}
+        />
+      ))}
+      <mesh position={spec.pullLocal} castShadow>
+        <boxGeometry args={[pull[0], pull[1], pull[2]]} />
+        <meshStandardMaterial
+          color={colors.zipper}
+          roughness={CHAMBER_MATERIAL.zipperRoughness}
+          metalness={CHAMBER_MATERIAL.zipperMetalness}
+          envMapIntensity={CHAMBER_MATERIAL.zipperEnvMapIntensity}
+        />
+      </mesh>
+    </group>
+  )
+}
+
+function ZipperCoil({
+  from,
+  to,
+  radiusM,
+  color,
+}: {
+  from: Vec3
+  to: Vec3
+  radiusM: number
+  color: string
+}) {
+  const { position, quaternion, length } = useMemo(() => {
+    const start = new Vector3(from[0], from[1], from[2])
+    const end = new Vector3(to[0], to[1], to[2])
+    const dir = end.clone().sub(start)
+    const lengthM = dir.length()
+    const mid = start.clone().add(end).multiplyScalar(0.5)
+    const quat = new Quaternion()
+    if (lengthM > 1e-8) {
+      quat.setFromUnitVectors(ZIPPER_UP, dir.normalize())
+    }
+    return {
+      position: [mid.x, mid.y, mid.z] as Vec3,
+      quaternion: quat,
+      length: lengthM,
+    }
+  }, [from, to])
+
+  if (length < 1e-6) return null
+
+  return (
+    <mesh position={position} quaternion={quaternion} castShadow>
+      <cylinderGeometry
+        args={[radiusM, radiusM, length, CHAMBER_GEOMETRY.frameRadialSegments]}
+      />
+      <meshStandardMaterial
+        color={color}
+        roughness={CHAMBER_MATERIAL.zipperRoughness}
+        metalness={CHAMBER_MATERIAL.zipperMetalness}
+        envMapIntensity={CHAMBER_MATERIAL.zipperEnvMapIntensity}
+      />
+    </mesh>
   )
 }
 

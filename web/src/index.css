@@ -99,6 +99,8 @@
     --chamber-exterior: #0c0c0e;
     --chamber-interior: #e8eef4;
     --chamber-frame: #141414;
+    /* Black plastic zipper — readable on silver foil from inside */
+    --chamber-zipper: #121214;
 }
 
 .dark {

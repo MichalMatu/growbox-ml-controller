@@ -19,6 +19,8 @@ export const CHAMBER_CSS_VAR = {
   exterior: "--chamber-exterior",
   interior: "--chamber-interior",
   frame: "--chamber-frame",
+  /** Plastic zipper track on side mesh flaps (must read on black nylon). */
+  zipper: "--chamber-zipper",
 } as const
 
 /**
@@ -40,6 +42,8 @@ export const CHAMBER_SCENE_FALLBACK = {
   interior: "#e8eef4",
   /** Powder-coated steel poles */
   frame: "#141414",
+  /** Black plastic zipper coil — reads on silver foil from inside */
+  zipper: "#121214",
 } as const
 
 export type ChamberSceneColors = {
@@ -66,6 +70,10 @@ export const CHAMBER_MATERIAL = {
   frameRoughness: 0.48,
   frameMetalness: 0.5,
   frameEnvMapIntensity: 0.6,
+  /** Black plastic zipper — slight sheen so coil edges catch light indoors */
+  zipperRoughness: 0.42,
+  zipperMetalness: 0.55,
+  zipperEnvMapIntensity: 0.7,
 } as const
 
 /**
@@ -87,6 +95,20 @@ export const CHAMBER_GEOMETRY = {
   frameRadialSegments: 12,
   /** Texture tiles per scene-meter (foil / nylon density). */
   uvTilesPerMeter: 100 / 58,
+  /**
+   * Rear mesh-flap rectangular zipper (no cutout) — fixed real-world size.
+   * 30 cm wide × 20 cm high, bottom edge 20 cm above the floor.
+   */
+  rearFlapWidthM: 0.3,
+  rearFlapHeightM: 0.2,
+  /** Bottom edge of the zipper rectangle above the floor (meters). */
+  rearFlapBottomYFromFloorM: 0.2,
+  /** Push zipper off the interior foil face to avoid z-fight. */
+  rearFlapOutlineOffsetM: 0.003,
+  /** Zipper coil radius (~5.5 mm) — thick enough to read on foil. */
+  rearFlapZipperRadiusM: 0.0055,
+  /** Zipper pull tab size (width, height, depth) in meters. */
+  rearFlapZipperPullM: [0.022, 0.014, 0.01] as const,
 } as const
 
 /** DOM class on the R3F Canvas element (fill parent AppCanvasFrame viewport). */
@@ -144,5 +166,10 @@ export function resolveChamberSceneColors(
       CHAMBER_SCENE_FALLBACK.interior,
     ),
     frame: readCssVar(rootStyle, CHAMBER_CSS_VAR.frame, CHAMBER_SCENE_FALLBACK.frame),
+    zipper: readCssVar(
+      rootStyle,
+      CHAMBER_CSS_VAR.zipper,
+      CHAMBER_SCENE_FALLBACK.zipper,
+    ),
   }
 }

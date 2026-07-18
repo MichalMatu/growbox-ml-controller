@@ -80,6 +80,7 @@ export const REQUIRED_CSS_TOKENS = [
   "--chamber-exterior",
   "--chamber-interior",
   "--chamber-frame",
+  "--chamber-zipper",
 ] as const
 
 /** Non-UI modules that may exist under src without chrome imports. */
