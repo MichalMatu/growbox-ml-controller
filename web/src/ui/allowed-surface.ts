@@ -1,5 +1,5 @@
 /**
- * Explicit allowlist of feature-UI surfaces.
+ * Explicit allowlist of feature-UI surfaces + design-token policy.
  *
  * Agents / humans building pages may ONLY compose from:
  * 1. Named component exports of `@/components/app-chrome` (see ALLOWED_APP_CHROME_EXPORTS)
@@ -11,12 +11,13 @@
  * - any `style=…`
  * - `cn("…")` / freehand Tailwind
  * - one-off Button sizes (only omit size, or `icon` for icon-only)
+ * - magic hex / arbitrary `-[…]` lengths (use CSS tokens in index.css)
  *
- * Style owners (may contain Tailwind):
- * - `src/components/app-chrome.tsx`
- * - `src/components/ui/**`
- * - `src/index.css`
- * - `src/chamber-3d/scene-tokens.ts` (R3F materials / canvas DOM class only)
+ * Style / token owners:
+ * - `src/index.css` — CSS variables SSOT (including --chamber-*, layout)
+ * - `src/components/app-chrome.tsx` — layout primitives (no arbitrary values)
+ * - `src/components/ui/**` — shadcn (vendor; prefer tokens)
+ * - `src/chamber-3d/scene-tokens.ts` — R3F CSS-var bridge + hex fallbacks only
  *
  * Enforced by: eslint.config.js + src/ui-consistency.test.ts (pre-commit web lint/test).
  */
@@ -51,14 +52,33 @@ export const ALLOWED_APP_CHROME_EXPORTS = [
 export type AllowedAppChromeExport = (typeof ALLOWED_APP_CHROME_EXPORTS)[number]
 
 /**
- * Relative paths under `src/` that are style owners (freehand Tailwind OK).
- * Everything else with UI is a feature surface.
+ * Relative paths under `src/` that may own Tailwind/CSS (not feature freehand).
+ * Hex is still restricted: only index.css + scene-tokens fallbacks.
  */
 export const STYLE_OWNER_PATH_PREFIXES = [
   "components/app-chrome.tsx",
   "components/ui/",
   "index.css",
   "chamber-3d/scene-tokens.ts",
+] as const
+
+/** Files allowed to contain hex color literals (#rrggbb). */
+export const HEX_LITERAL_ALLOWLIST = [
+  "index.css",
+  "chamber-3d/scene-tokens.ts",
+] as const
+
+/** CSS custom properties that must exist for product layout + chamber 3D. */
+export const REQUIRED_CSS_TOKENS = [
+  "--width-preview-sidebar",
+  "--height-canvas-frame",
+  "--chamber-bg",
+  "--chamber-fog",
+  "--chamber-floor",
+  "--chamber-grid-cell",
+  "--chamber-grid-section",
+  "--chamber-enclosure-fill",
+  "--chamber-enclosure-edge",
 ] as const
 
 /** Non-UI modules that may exist under src without chrome imports. */

@@ -167,17 +167,19 @@ Feature pages and product components **compose only**:
 | App chrome primitives | `@/components/app-chrome` — catalog in `web/src/ui/allowed-surface.ts` (`ALLOWED_APP_CHROME_EXPORTS`) |
 | shadcn controls | `@/components/ui/*` **without** `className` or `style` overrides |
 | Domain | `@/domain/*` — no styles |
-| R3F color/canvas tokens | `web/src/chamber-3d/scene-tokens.ts` only |
+| Design tokens (CSS) | `web/src/index.css` (`--chamber-*`, `--width-preview-sidebar`, `--height-canvas-frame`, …) |
+| R3F color bridge | `web/src/chamber-3d/scene-tokens.ts` — reads CSS vars; hex fallbacks only there |
 
 **Forbidden** in feature surfaces (`App.tsx`, `app-router.tsx`, `pages/**`, `components/**` except `ui/` and `app-chrome.tsx`):
 
 - any `className=…` (string, template, **or variable**)
 - any JSX `style=…`
 - `cn(…)`
-- freehand Tailwind / magic spacing / one-off hex in DOM chrome
+- freehand Tailwind / magic spacing / one-off hex in DOM chrome or R3F scene files
+- Tailwind arbitrary values (`-[…]`, `70vh`, raw `16rem`) in `app-chrome` — use CSS tokens + named classes
 - Button `size` other than omitted (`default`) or `icon`
 
-**To change look:** edit `app-chrome.tsx` and/or `components/ui/*` (and update `ALLOWED_APP_CHROME_EXPORTS` if you add a chrome export). Never invent styles in a page file.
+**To change look:** edit `index.css` tokens, `app-chrome.tsx`, and/or `components/ui/*` (and update `ALLOWED_APP_CHROME_EXPORTS` if you add a chrome export). Never invent styles in a page file. Hex only in `index.css` + `scene-tokens` fallbacks.
 
 **Button roles (same element = same variant):**
 
@@ -191,8 +193,8 @@ Feature pages and product components **compose only**:
 
 | Layer | What |
 |-------|------|
-| ESLint | Bans `className` / `style` / `cn` on feature surfaces; Button size lock; R3F string className outside `scene-tokens` |
-| Vitest `ui-consistency.test.ts` | Bidirectional chrome export ↔ allowlist; auto-discovers feature surfaces + `pages/*`; freehand scan; Reset/nav conventions; no hex in chamber scene files |
+| ESLint | Bans `className` / `style` / `cn` on feature surfaces; Button size lock; hex/magic lengths in chrome & R3F scene files |
+| Vitest `ui-consistency.test.ts` | Bidirectional chrome export ↔ allowlist; CSS token presence; hex only in allowlist; no arbitrary TW in chrome; freehand scan; Reset/nav |
 | `pnpm --dir web typecheck` | Button CVA only `default` \| `icon` |
 | pre-commit | `web lint` + `web test` (see `.pre-commit-config.yaml`) |
 | pre-push | full `pnpm check` |

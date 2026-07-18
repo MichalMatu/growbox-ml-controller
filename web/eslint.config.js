@@ -97,7 +97,7 @@ export default defineConfig([
       "no-restricted-syntax": ["error", ...featureSurfaceRestrictedSyntax],
     },
   },
-  // chamber-3d scene files: no freehand DOM className/style except via scene-tokens
+  // chamber-3d scene files: no freehand DOM className/style; colors via resolveChamberSceneColors
   {
     files: ["src/chamber-3d/**/*.{ts,tsx}"],
     ignores: ["src/chamber-3d/scene-tokens.ts"],
@@ -118,6 +118,29 @@ export default defineConfig([
         {
           selector: "JSXAttribute[name.name='style']",
           message: "No inline style in chamber-3d; use scene-tokens or materials.",
+        },
+        {
+          selector: "Literal[value=/^#(?:[0-9a-fA-F]{3,8})$/]",
+          message:
+            "No hex colors in chamber scene files. Use resolveChamberSceneColors() / CSS --chamber-* tokens.",
+        },
+      ],
+    },
+  },
+  // app-chrome: no hex; lengths via CSS tokens / named classes only
+  {
+    files: ["src/components/app-chrome.tsx"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "Literal[value=/^#(?:[0-9a-fA-F]{3,8})$/]",
+          message: "No hex in app-chrome. Use theme CSS variables / index.css tokens.",
+        },
+        {
+          selector: "Literal[value=/(?:70vh|16rem|h-\\[|minmax\\()/]",
+          message:
+            "No magic layout lengths in app-chrome. Use CSS tokens (--height-canvas-frame, --width-preview-sidebar) and named classes in index.css.",
         },
       ],
     },

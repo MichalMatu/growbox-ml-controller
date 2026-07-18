@@ -1,19 +1,28 @@
 import { Edges } from "@react-three/drei"
 import { DoubleSide } from "three"
 
-import { CHAMBER_SCENE } from "@/chamber-3d/scene-tokens"
+import {
+  CHAMBER_MATERIAL,
+  type ChamberSceneColors,
+} from "@/chamber-3d/scene-tokens"
 
 export type EnclosureDimensions = {
   widthCm: number
   depthCm: number
   heightCm: number
+  colors: ChamberSceneColors
 }
 
 /**
  * Parametric grow tent shell. Schema units are cm; scene units are meters.
- * Not wired to the configurator export — preview-only playground.
+ * Colors come from resolveChamberSceneColors() (CSS tokens).
  */
-export function Enclosure({ widthCm, depthCm, heightCm }: EnclosureDimensions) {
+export function Enclosure({
+  widthCm,
+  depthCm,
+  heightCm,
+  colors,
+}: EnclosureDimensions) {
   const widthM = Math.max(widthCm, 1) / 100
   const depthM = Math.max(depthCm, 1) / 100
   const heightM = Math.max(heightCm, 1) / 100
@@ -23,13 +32,13 @@ export function Enclosure({ widthCm, depthCm, heightCm }: EnclosureDimensions) {
       <mesh castShadow receiveShadow>
         <boxGeometry args={[widthM, heightM, depthM]} />
         <meshStandardMaterial
-          color={CHAMBER_SCENE.enclosureFill}
+          color={colors.enclosureFill}
           transparent
-          opacity={0.18}
+          opacity={CHAMBER_MATERIAL.enclosureOpacity}
           side={DoubleSide}
           depthWrite={false}
         />
-        <Edges threshold={15} color={CHAMBER_SCENE.enclosureEdge} />
+        <Edges threshold={15} color={colors.enclosureEdge} />
       </mesh>
     </group>
   )

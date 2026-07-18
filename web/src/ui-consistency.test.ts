@@ -6,17 +6,28 @@ import { describe, expect, it } from "vitest"
 import {
   ALLOWED_APP_CHROME_EXPORTS,
   BUTTON_ROLE_CONVENTIONS,
+  HEX_LITERAL_ALLOWLIST,
   NON_UI_PATH_PREFIXES,
+  REQUIRED_CSS_TOKENS,
   STYLE_OWNER_PATH_PREFIXES,
 } from "@/ui/allowed-surface"
+import {
+  CHAMBER_CSS_VAR,
+  CHAMBER_SCENE_FALLBACK,
+} from "@/chamber-3d/scene-tokens"
 
 const srcRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)))
 const buttonSource = readFileSync(path.join(srcRoot, "components/ui/button.tsx"), "utf8")
 const chromeSource = readFileSync(path.join(srcRoot, "components/app-chrome.tsx"), "utf8")
+const cssSource = readFileSync(path.join(srcRoot, "index.css"), "utf8")
 const sceneTokensSource = readFileSync(
   path.join(srcRoot, "chamber-3d", "scene-tokens.ts"),
   "utf8",
 )
+
+const HEX_RE = /#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\b/g
+/** Tailwind arbitrary value markers (magic lengths/colors in class strings). */
+const ARBITRARY_TW_RE = /[a-z0-9]-\[/i
 
 function walkSourceFiles(dir: string): string[] {
   const out: string[] = []
@@ -28,7 +39,9 @@ function walkSourceFiles(dir: string): string[] {
       out.push(...walkSourceFiles(full))
       continue
     }
-    if (name.endsWith(".tsx") || name.endsWith(".ts")) out.push(full)
+    if (name.endsWith(".tsx") || name.endsWith(".ts") || name.endsWith(".css")) {
+      out.push(full)
+    }
   }
   return out
 }
@@ -48,13 +61,19 @@ function isNonUi(relativePath: string): boolean {
   return NON_UI_PATH_PREFIXES.some((prefix) => relativePath.startsWith(prefix))
 }
 
+function isHexAllowlisted(relativePath: string): boolean {
+  return HEX_LITERAL_ALLOWLIST.some(
+    (prefix) => relativePath === prefix || relativePath.startsWith(prefix),
+  )
+}
+
 /** Feature / product UI modules that must not freehand styles. */
 function listFeatureSurfaces(): string[] {
   return walkSourceFiles(srcRoot)
     .map(rel)
+    .filter((r) => r.endsWith(".ts") || r.endsWith(".tsx"))
     .filter((r) => !isStyleOwner(r) && !isNonUi(r))
-    .filter((r) => !r.startsWith("chamber-3d/") || r === "chamber-3d/scene-tokens.ts")
-    // chamber-3d scene implementations are checked separately for hex/class
+    .filter((r) => !r.startsWith("chamber-3d/") || r.endsWith("scene-tokens.ts"))
     .filter((r) => !r.startsWith("chamber-3d/") || r.endsWith("scene-tokens.ts"))
 }
 
@@ -70,7 +89,6 @@ function readRel(relativePath: string): string {
 
 function freehandStyleHits(source: string): string[] {
   const hits: string[] = []
-  // JSX attributes only (not `const style = document.createElement(...)`).
   if (/\bclassName\s*=/.test(source)) hits.push("className=")
   if (/<[^>]*\bstyle\s*=/.test(source)) hits.push("style=")
   if (/\bcn\s*\(/.test(source)) hits.push("cn(")
@@ -104,17 +122,65 @@ describe("UI allowlist — design rules", () => {
     expect(actual, "app-chrome exports vs ALLOWED_APP_CHROME_EXPORTS").toEqual(allowed)
   })
 
-  it("scene-tokens owns chamber canvas class and color hexes", () => {
+  it("index.css declares required layout + chamber CSS tokens", () => {
+    for (const token of REQUIRED_CSS_TOKENS) {
+      expect(cssSource.includes(token), `index.css missing ${token}`).toBe(true)
+    }
+    expect(cssSource).toMatch(/\.app-preview-split/)
+    expect(cssSource).toMatch(/\.app-canvas-frame/)
+    expect(cssSource).toMatch(/\.app-canvas-frame-viewport/)
+  })
+
+  it("chamber fallbacks match CSS var names and appear in index.css", () => {
+    for (const [key, cssVar] of Object.entries(CHAMBER_CSS_VAR)) {
+      expect(cssSource.includes(cssVar), `CSS missing ${cssVar} for ${key}`).toBe(true)
+      const fallback = CHAMBER_SCENE_FALLBACK[key as keyof typeof CHAMBER_SCENE_FALLBACK]
+      expect(cssSource.includes(fallback), `CSS should include fallback ${fallback}`).toBe(true)
+    }
+  })
+
+  it("scene-tokens owns canvas class and resolves CSS vars", () => {
     expect(sceneTokensSource).toMatch(/export const CHAMBER_CANVAS_CLASS/)
-    expect(sceneTokensSource).toMatch(/export const CHAMBER_SCENE/)
+    expect(sceneTokensSource).toMatch(/export function resolveChamberSceneColors/)
+    expect(sceneTokensSource).toMatch(/export const CHAMBER_CSS_VAR/)
     for (const file of listChamberSceneFiles()) {
       const text = readRel(file)
-      const hexLiterals = text.match(/#[0-9a-fA-F]{3,8}/g) ?? []
-      expect(hexLiterals, `${file} must not hardcode hex; use CHAMBER_SCENE`).toEqual([])
+      const hexLiterals = text.match(HEX_RE) ?? []
+      expect(hexLiterals, `${file} must not hardcode hex`).toEqual([])
       if (/\bclassName\s*=\s*["'`]/.test(text)) {
         expect.fail(`${file} has string className; use CHAMBER_CANVAS_CLASS`)
       }
     }
+  })
+
+  it("hex literals only in allowlisted token files", () => {
+    const offenders: string[] = []
+    for (const file of walkSourceFiles(srcRoot)) {
+      const r = rel(file)
+      if (isHexAllowlisted(r)) continue
+      if (r.endsWith(".test.ts") || r.endsWith(".test.tsx")) continue
+      const text = readFileSync(file, "utf8")
+      const hits = text.match(HEX_RE)
+      if (hits && hits.length > 0) {
+        offenders.push(`${r}: ${hits.join(", ")}`)
+      }
+    }
+    expect(offenders).toEqual([])
+  })
+
+  it("app-chrome has no Tailwind arbitrary values (-[…])", () => {
+    // class strings with magic arbitrary values are banned; named CSS classes are OK
+    const classStrings = [...chromeSource.matchAll(/className=\{?["'`]([^"'`]+)["'`]/g)].map(
+      (m) => m[1] ?? "",
+    )
+    const plainStrings = [...chromeSource.matchAll(/["'`]([^"'`]*-[^\s"'`]*\[[^"'`]+)["'`]/g)].map(
+      (m) => m[0],
+    )
+    const offenders = [...classStrings, ...plainStrings].filter((s) => ARBITRARY_TW_RE.test(s))
+    expect(offenders, "app-chrome must not use arbitrary Tailwind -[...]").toEqual([])
+    // Explicit check for the old magic frame height
+    expect(chromeSource.includes("70vh")).toBe(false)
+    expect(chromeSource.includes("16rem")).toBe(false)
   })
 })
 
@@ -181,7 +247,7 @@ describe("UI allowlist — enforcement sieve", () => {
   it("no text Button size overrides outside ui/", () => {
     const files = walkSourceFiles(srcRoot).filter((file) => {
       const r = rel(file)
-      return !r.startsWith("components/ui/") && !r.endsWith(".test.ts")
+      return !r.startsWith("components/ui/") && !r.endsWith(".test.ts") && r.endsWith(".tsx")
     })
 
     const sizeOnButton =

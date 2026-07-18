@@ -1,19 +1,28 @@
+import { useMemo } from "react"
 import { Grid, OrbitControls, PerspectiveCamera } from "@react-three/drei"
 import { Canvas } from "@react-three/fiber"
 
-import { Enclosure, type EnclosureDimensions } from "@/chamber-3d/enclosure"
-import { CHAMBER_CANVAS_CLASS, CHAMBER_SCENE } from "@/chamber-3d/scene-tokens"
+import { Enclosure } from "@/chamber-3d/enclosure"
+import {
+  CHAMBER_CANVAS_CLASS,
+  resolveChamberSceneColors,
+} from "@/chamber-3d/scene-tokens"
 
-type ChamberSceneProps = EnclosureDimensions
+export type ChamberSceneProps = {
+  widthCm: number
+  depthCm: number
+  heightCm: number
+}
 
 export function ChamberScene({ widthCm, depthCm, heightCm }: ChamberSceneProps) {
+  const colors = useMemo(() => resolveChamberSceneColors(), [])
   const maxSideM = Math.max(widthCm, depthCm, heightCm, 100) / 100
   const cameraDistance = maxSideM * 2.4
 
   return (
     <Canvas shadows className={CHAMBER_CANVAS_CLASS}>
-      <color attach="background" args={[CHAMBER_SCENE.background]} />
-      <fog attach="fog" args={[CHAMBER_SCENE.fog, maxSideM * 4, maxSideM * 12]} />
+      <color attach="background" args={[colors.background]} />
+      <fog attach="fog" args={[colors.fog, maxSideM * 4, maxSideM * 12]} />
 
       <PerspectiveCamera
         makeDefault
@@ -32,21 +41,26 @@ export function ChamberScene({ widthCm, depthCm, heightCm }: ChamberSceneProps) 
         shadow-mapSize-height={1024}
       />
 
-      <Enclosure widthCm={widthCm} depthCm={depthCm} heightCm={heightCm} />
+      <Enclosure
+        widthCm={widthCm}
+        depthCm={depthCm}
+        heightCm={heightCm}
+        colors={colors}
+      />
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <planeGeometry args={[maxSideM * 6, maxSideM * 6]} />
-        <meshStandardMaterial color={CHAMBER_SCENE.floor} />
+        <meshStandardMaterial color={colors.floor} />
       </mesh>
 
       <Grid
         args={[maxSideM * 6, maxSideM * 6]}
         cellSize={0.1}
         cellThickness={0.6}
-        cellColor={CHAMBER_SCENE.gridCell}
+        cellColor={colors.gridCell}
         sectionSize={0.5}
         sectionThickness={1}
-        sectionColor={CHAMBER_SCENE.gridSection}
+        sectionColor={colors.gridSection}
         fadeDistance={maxSideM * 5}
         fadeStrength={1.2}
         infiniteGrid

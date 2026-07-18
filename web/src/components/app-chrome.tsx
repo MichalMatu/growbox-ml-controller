@@ -232,7 +232,10 @@ export function AppSelectTrigger(props: ComponentProps<typeof SelectTrigger>) {
 
 // --- Preview / media layouts ------------------------------------------------
 
-/** Side panel + main preview (wide pages only). */
+/**
+ * Side panel + main preview (wide pages only).
+ * Layout lengths come from CSS tokens (--width-preview-sidebar); see index.css.
+ */
 export function AppPreviewSplit({
   sidebar,
   main,
@@ -241,18 +244,21 @@ export function AppPreviewSplit({
   main: ReactNode
 }) {
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)]">
+    <div className="app-preview-split">
       {sidebar}
       {main}
     </div>
   )
 }
 
-/** Card chrome for a flush media/canvas surface. */
+/**
+ * Flush media/canvas surface.
+ * Height: --height-canvas-frame (index.css); no arbitrary Tailwind in TSX.
+ */
 export function AppCanvasFrame({ children }: { children: ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-xl bg-card text-card-foreground ring-1 ring-foreground/10">
-      <div className="h-[min(70vh,36rem)] w-full">{children}</div>
+    <div className="app-canvas-frame">
+      <div className="app-canvas-frame-viewport">{children}</div>
     </div>
   )
 }
