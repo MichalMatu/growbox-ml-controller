@@ -112,10 +112,12 @@ export function ChamberScene({
     ],
   )
 
-  /** Grow light ON: dim studio fill so fixture contribution is obvious. */
-  const growLit =
-    lightOn && lightPlan.placement != null && lightPreset.form !== "none"
-  const studioScale = growLit ? 0.28 : 1
+  /** Fixture installed (fits) — not the same as “Świeci”. */
+  const hasGrowFixture =
+    lightPlan.placement != null && lightPreset.form !== "none"
+  const growLit = lightOn && hasGrowFixture
+  /** Dim exterior studio when fixture is lit; keep mild fill when only present/off. */
+  const studioScale = growLit ? 0.22 : hasGrowFixture ? 0.55 : 1
 
   return (
     <Canvas
@@ -176,33 +178,45 @@ export function ChamberScene({
         intensity={0.35 * studioScale}
       />
 
-      {/* Internal fill — scaled down when grow fixture lights the tent */}
-      <pointLight
-        position={[0, heightM * 0.9, 0]}
-        intensity={4.2 * studioScale}
-        distance={Math.max(widthM, depthM, heightM) * 3.2}
-        decay={2}
-      />
-      <pointLight
-        position={[0, heightM * 0.45, depthM * 0.15]}
-        intensity={2.0 * studioScale}
-        distance={Math.max(widthM, depthM) * 2}
-        decay={2}
-      />
-      <spotLight
-        position={[0, heightM * 0.96, depthM * 0.02]}
-        angle={0.9}
-        penumbra={0.55}
-        intensity={2.8 * studioScale}
-        distance={heightM * 2.8}
-        castShadow
-      >
-        <object3D attach="target" position={[0, 0, 0]} />
-      </spotLight>
+      {/*
+        Ceiling / upper-panel studio lights (point + spot from tent roof).
+        Omit entirely when a grow fixture is installed — they fight the lamp
+        and look like a second light from the top panel.
+      */}
+      {!hasGrowFixture ? (
+        <>
+          <pointLight
+            position={[0, heightM * 0.9, 0]}
+            intensity={4.2}
+            distance={Math.max(widthM, depthM, heightM) * 3.2}
+            decay={2}
+          />
+          <pointLight
+            position={[0, heightM * 0.45, depthM * 0.15]}
+            intensity={2.0}
+            distance={Math.max(widthM, depthM) * 2}
+            decay={2}
+          />
+          <spotLight
+            position={[0, heightM * 0.96, depthM * 0.02]}
+            angle={0.9}
+            penumbra={0.55}
+            intensity={2.8}
+            distance={heightM * 2.8}
+            castShadow
+          >
+            <object3D attach="target" position={[0, 0, 0]} />
+          </spotLight>
+        </>
+      ) : null}
 
       <Suspense fallback={null}>
         {/* Warehouse HDR inside Suspense so PMREM + maps load without racing the canvas */}
-        <Environment preset="warehouse" environmentIntensity={0.7} resolution={128} />
+        <Environment
+          preset="warehouse"
+          environmentIntensity={hasGrowFixture ? 0.35 : 0.7}
+          resolution={128}
+        />
         <Enclosure
           widthCm={widthCm}
           depthCm={depthCm}
