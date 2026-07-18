@@ -26,7 +26,6 @@ import {
   AppFormField,
   AppMutedText,
   AppPage,
-  AppPageFooter,
   AppPageHeader,
   AppPreviewSplit,
   AppSelectTrigger,
@@ -37,7 +36,6 @@ import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -167,15 +165,6 @@ export function Chamber3dPage() {
             <Badge variant="outline">oddzielone od konfiguratora</Badge>
           </>
         }
-        description={
-          <>
-            Parametryczna namiotówka (W × D × H w cm, min {ENCLOSURE_CM_MIN}). Tylne okienko
-            (zamek 30×20 cm) tylko przy szerokości 60–120 cm. Donice filcowe: rozmiar z
-            katalogu + liczba 0–{FELT_POT_COUNT_MAX}, tylko te które mieszczą się na podłodze.
-            Ta strona nie zapisuje do JSON v4 — tylko eksperyment wizualny. Orbit: przeciągnij,
-            zoom: scroll.
-          </>
-        }
         actions={
           <Button
             type="button"
@@ -193,10 +182,6 @@ export function Chamber3dPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Wymiary komory</CardTitle>
-                <CardDescription>
-                  UX-only (jak opcjonalny root <code>enclosure</code>). Zakres{" "}
-                  {ENCLOSURE_CM_MIN}–{ENCLOSURE_CM_MAX} cm. Tom = W·D·H / 1e6 m³.
-                </CardDescription>
               </CardHeader>
               <CardContent>
                 <AppCardBody variant="form">
@@ -226,11 +211,6 @@ export function Chamber3dPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Donice filcowe</CardTitle>
-                <CardDescription>
-                  Proporcje z typowych grow bagów (średnica × wysokość ≈ 1:1). Maks.{" "}
-                  {FELT_POT_COUNT_MAX} — jak sloty w kontrakcie v4. Układ tylko jeśli
-                  średnica + margines mieści się w użytecznej podłodze.
-                </CardDescription>
               </CardHeader>
               <CardContent>
                 <AppCardBody variant="form">
@@ -338,10 +318,6 @@ export function Chamber3dPage() {
           </AppCanvasFrame>
         }
       />
-
-      <AppPageFooter>
-        Podgląd 3D · bez zapisu do JSON · shell: <code>AppPage</code>
-      </AppPageFooter>
     </AppPage>
   )
 }
