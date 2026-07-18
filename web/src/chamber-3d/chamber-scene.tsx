@@ -1,11 +1,26 @@
-import { Suspense, useEffect, useMemo, useState } from "react"
+import {
+  Suspense,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react"
 import {
   Environment,
   Grid,
   OrbitControls,
   PerspectiveCamera,
 } from "@react-three/drei"
-import { Canvas } from "@react-three/fiber"
+import { Canvas, useStore } from "@react-three/fiber"
+import {
+  ACESFilmicToneMapping,
+  SRGBColorSpace,
+  type Group,
+  type Light,
+  type Object3D,
+} from "three"
 
 import { Enclosure } from "@/chamber-3d/enclosure"
 import { ENCLOSURE_CM_MIN } from "@/chamber-3d/enclosure-cm"
@@ -23,8 +38,66 @@ import {
 } from "@/chamber-3d/light-geometry"
 import {
   CHAMBER_CANVAS_CLASS,
+  CHAMBER_LAYER,
+  CHAMBER_MATERIAL,
   resolveChamberSceneColors,
 } from "@/chamber-3d/scene-tokens"
+
+/**
+ * ACES filmic grade + exposure. Read the R3F store (not useThree selector) so
+ * WebGLRenderer can be updated without react-hooks/immutability violations.
+ */
+function RendererToneMapping({ exposure }: { exposure: number }) {
+  const store = useStore()
+  useLayoutEffect(() => {
+    const { gl } = store.getState()
+    gl.toneMapping = ACESFilmicToneMapping
+    gl.toneMappingExposure = exposure
+    gl.outputColorSpace = SRGBColorSpace
+  }, [store, exposure])
+  return null
+}
+
+function applyLayers(object: Object3D, layers: readonly number[]): void {
+  object.layers.disableAll()
+  for (const layer of layers) {
+    object.layers.enable(layer)
+  }
+}
+
+/** Camera must see content (0) + exterior stage floor/grid (1). */
+function CameraLayers() {
+  const store = useStore()
+  useLayoutEffect(() => {
+    const { camera } = store.getState()
+    camera.layers.enable(CHAMBER_LAYER.content)
+    camera.layers.enable(CHAMBER_LAYER.stage)
+  }, [store])
+  return null
+}
+
+/**
+ * Studio lights hit tent content AND the exterior pad.
+ * Grow fixture lights stay on layer 0 only (Three default) — they never
+ * illuminate the stage floor, so no circular bleed around the tent.
+ */
+function studioLightRef(light: Light | null): void {
+  if (!light) return
+  applyLayers(light, [CHAMBER_LAYER.content, CHAMBER_LAYER.stage])
+}
+
+/** Floor + grid: stage layer only — invisible to grow fixture lights. */
+function StageOnly({ children }: { children: ReactNode }) {
+  const ref = useRef<Group>(null)
+  useLayoutEffect(() => {
+    const root = ref.current
+    if (!root) return
+    root.traverse((obj) => {
+      applyLayers(obj, [CHAMBER_LAYER.stage])
+    })
+  })
+  return <group ref={ref}>{children}</group>
+}
 
 export type ChamberSceneProps = {
   widthCm: number
@@ -116,8 +189,15 @@ export function ChamberScene({
   const hasGrowFixture =
     lightPlan.placement != null && lightPreset.form !== "none"
   const growLit = lightOn && hasGrowFixture
-  /** Dim exterior studio when fixture is lit; keep mild fill when only present/off. */
-  const studioScale = growLit ? 0.22 : hasGrowFixture ? 0.55 : 1
+  /** Exterior studio fill: full / mounted-off / residual when grow-lit. */
+  const studioScale = growLit
+    ? CHAMBER_MATERIAL.studioScaleGrowLit
+    : hasGrowFixture
+      ? CHAMBER_MATERIAL.studioScaleFixtureOff
+      : CHAMBER_MATERIAL.studioScaleEmpty
+  const toneMappingExposure = growLit
+    ? CHAMBER_MATERIAL.toneMappingExposureGrowLit
+    : CHAMBER_MATERIAL.toneMappingExposureStudio
 
   return (
     <Canvas
@@ -134,6 +214,8 @@ export function ChamberScene({
       }}
       dpr={[1, 1.75]}
     >
+      <RendererToneMapping exposure={toneMappingExposure} />
+      <CameraLayers />
       <fog attach="fog" args={[colors.fog, maxSideM * 5.5, maxSideM * 15]} />
 
       <PerspectiveCamera
@@ -148,14 +230,16 @@ export function ChamberScene({
         far={100}
       />
 
-      <ambientLight intensity={0.75 * studioScale} />
+      <ambientLight ref={studioLightRef} intensity={0.75 * studioScale} />
       <hemisphereLight
+        ref={studioLightRef}
         color={colors.interior}
         groundColor={colors.floor}
         intensity={0.55 * studioScale}
       />
 
       <directionalLight
+        ref={studioLightRef}
         castShadow
         position={[maxSideM * 1.6, maxSideM * 2.8, maxSideM * 2]}
         intensity={1.55 * studioScale}
@@ -165,15 +249,18 @@ export function ChamberScene({
         shadow-bias={-0.0002}
       />
       <directionalLight
+        ref={studioLightRef}
         position={[0.15, heightM * 0.5, depthM * 2.6]}
         intensity={1.1 * studioScale}
       />
       {/* Soft side rims only — black exterior should not catch hard specular */}
       <directionalLight
+        ref={studioLightRef}
         position={[-maxSideM * 1.8, maxSideM * 1.6, maxSideM * 0.6]}
         intensity={0.55 * studioScale}
       />
       <directionalLight
+        ref={studioLightRef}
         position={[maxSideM * 1.6, maxSideM * 1.3, -maxSideM * 0.8]}
         intensity={0.35 * studioScale}
       />
@@ -186,18 +273,21 @@ export function ChamberScene({
       {!hasGrowFixture ? (
         <>
           <pointLight
+            ref={studioLightRef}
             position={[0, heightM * 0.9, 0]}
             intensity={4.2}
             distance={Math.max(widthM, depthM, heightM) * 3.2}
             decay={2}
           />
           <pointLight
+            ref={studioLightRef}
             position={[0, heightM * 0.45, depthM * 0.15]}
             intensity={2.0}
             distance={Math.max(widthM, depthM) * 2}
             decay={2}
           />
           <spotLight
+            ref={studioLightRef}
             position={[0, heightM * 0.96, depthM * 0.02]}
             angle={0.9}
             penumbra={0.55}
@@ -214,7 +304,13 @@ export function ChamberScene({
         {/* Warehouse HDR inside Suspense so PMREM + maps load without racing the canvas */}
         <Environment
           preset="warehouse"
-          environmentIntensity={hasGrowFixture ? 0.35 : 0.7}
+          environmentIntensity={
+            growLit
+              ? CHAMBER_MATERIAL.environmentIntensityGrowLit
+              : hasGrowFixture
+                ? CHAMBER_MATERIAL.environmentIntensityFixtureOff
+                : CHAMBER_MATERIAL.environmentIntensityEmpty
+          }
           resolution={128}
         />
         <Enclosure
@@ -237,28 +333,42 @@ export function ChamberScene({
             placement={lightPlan.placement}
             colors={colors}
             lit={lightOn}
+            tentWidthM={widthM}
+            tentDepthM={depthM}
+            tentHeightM={heightM}
           />
         ) : null}
       </Suspense>
 
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
-        <planeGeometry args={[maxSideM * 6, maxSideM * 6]} />
-        <meshStandardMaterial color={colors.floor} roughness={0.9} metalness={0.04} />
-      </mesh>
+      {/*
+        Stage pad is layer-isolated from grow fixture lights (see CHAMBER_LAYER).
+        Without this, every point/spot paints a bright circle through the walls
+        onto the continuous floor plane — Three.js lights ignore occlusion.
+      */}
+      <StageOnly>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+          <planeGeometry args={[maxSideM * 6, maxSideM * 6]} />
+          <meshStandardMaterial
+            color={colors.floor}
+            roughness={0.9}
+            metalness={0.04}
+          />
+        </mesh>
 
-      <Grid
-        args={[maxSideM * 6, maxSideM * 6]}
-        cellSize={0.1}
-        cellThickness={0.5}
-        cellColor={colors.gridCell}
-        sectionSize={0.5}
-        sectionThickness={1}
-        sectionColor={colors.gridSection}
-        fadeDistance={maxSideM * 5}
-        fadeStrength={1.2}
-        infiniteGrid
-        position={[0, 0.001, 0]}
-      />
+        <Grid
+          args={[maxSideM * 6, maxSideM * 6]}
+          cellSize={0.1}
+          cellThickness={0.5}
+          cellColor={colors.gridCell}
+          sectionSize={0.5}
+          sectionThickness={1}
+          sectionColor={colors.gridSection}
+          fadeDistance={maxSideM * 5}
+          fadeStrength={1.2}
+          infiniteGrid
+          position={[0, 0.001, 0]}
+        />
+      </StageOnly>
 
       <OrbitControls
         makeDefault

@@ -37,6 +37,9 @@ export const CHAMBER_CSS_VAR = {
   lightDuct: "--chamber-light-duct",
   /** HPS bulb glass. */
   lightBulb: "--chamber-light-bulb",
+  /** Desaturated scene light tints (point/spot; not mesh emissive). */
+  lightLedScene: "--chamber-light-led-scene",
+  lightHpsScene: "--chamber-light-hps-scene",
 } as const
 
 /**
@@ -56,8 +59,12 @@ export const CHAMBER_SCENE_FALLBACK = {
    * Real grow tents: near-black matte canvas (Costway / Mars Hydro style).
    */
   exterior: "#0c0c0e",
-  /** Soft fill / hemisphere (foil mesh uses cool silver tint + maps) */
-  interior: "#e8eef4",
+  /**
+   * Interior foil tint (multiplies Foil003 albedo).
+   * Near-neutral silver — avoid warm/cream so colored grow lights do not
+   * milk the mylar into a pastel haze.
+   */
+  interior: "#f2f4f7",
   /** Powder-coated steel poles */
   frame: "#141414",
   /** Black plastic zipper coil — reads on silver foil from inside */
@@ -68,9 +75,16 @@ export const CHAMBER_SCENE_FALLBACK = {
   /** White tint — absolute black soil color is baked into pot-pbr albedo. */
   potSoil: "#ffffff",
   lightHousing: "#1c1c1f",
+  /** Mesh emitter / bulb albedo + emissive (can stay slightly tinted). */
   lightEmitter: "#f2f0e6",
   lightDuct: "#9aa3ad",
   lightBulb: "#ffd89a",
+  /**
+   * Scene light colors (point/spot only). Desaturated vs mesh emissive so
+   * specular mylar keeps silver mirror sheen instead of lamp-colored milk.
+   */
+  lightLedScene: "#f5f6f4",
+  lightHpsScene: "#ffe9c8",
 } as const
 
 export type ChamberSceneColors = {
@@ -86,14 +100,14 @@ export const CHAMBER_MATERIAL = {
   exteriorAoIntensity: 0.45,
   exteriorEnvMapIntensity: 0.05,
   /**
-   * Foil003 is wrinkled — moderate normal relief (more than flat, less than
-   * crumpled foil bag) + metalness/env high for bright silver mylar.
+   * Foil003 mylar — low roughness + high metal/env so walls read as mirror
+   * liner, not matte painted silver. Normal kept moderate (wrinkle, not dust).
    */
-  interiorRoughness: 0.3,
-  interiorMetalness: 0.9,
-  interiorNormalScale: 0.32,
-  interiorAoIntensity: 0.22,
-  interiorEnvMapIntensity: 1.45,
+  interiorRoughness: 0.16,
+  interiorMetalness: 0.96,
+  interiorNormalScale: 0.26,
+  interiorAoIntensity: 0.16,
+  interiorEnvMapIntensity: 1.95,
   frameRoughness: 0.48,
   frameMetalness: 0.5,
   frameEnvMapIntensity: 0.6,
@@ -126,20 +140,58 @@ export const CHAMBER_MATERIAL = {
   lightHousingEnvMapIntensity: 0.45,
   lightDuctRoughness: 0.28,
   lightDuctMetalness: 0.75,
-  lightEmitterEmissiveOn: 2.4,
+  /** Emitter glow is visual only (not scene light); keep below fixture intensity. */
+  lightEmitterEmissiveOn: 1.7,
   lightEmitterEmissiveOff: 0.04,
-  lightBulbEmissiveOn: 3.2,
+  lightBulbEmissiveOn: 2.1,
   lightBulbEmissiveOff: 0.06,
-  /** Scene lights attached to fixtures (only when lit). */
+  /**
+   * Scene lights on fixtures (only when lit).
+   * Base intensities are for reference wattage (LED 200 W / HPS 600 W), then
+   * scaled by sqrt(powerW / ref) so 1000 W reads stronger than 600 W without
+   * blowing the foil. Form efficiency: box > wing > cooltube; LED is soft/wide.
+   */
   ledDiodePitchM: 0.028,
   ledDiodeMaxAxis: 14,
   ledDiodeRadiusScale: 0.32,
-  ledPanelFillIntensity: 3.2,
-  ledPanelSpotIntensity: 18,
-  hpsPointIntensity: 28,
-  hpsSpotIntensity: 42,
-  hpsFillIntensity: 6,
+  ledPowerRefW: 200,
+  hpsPowerRefW: 600,
+  /**
+   * LED: most energy in a broad spot (less milky multi-point wash on mylar).
+   * Fill is a low residual under the board only.
+   */
+  ledPanelFillIntensity: 8,
+  ledPanelSpotIntensity: 58,
+  /**
+   * HPS: hard warm key from bulb + spot; fill stays small so tent walls do not
+   * pick up orange milk — power hierarchy lives in spot/point, not fill.
+   */
+  hpsPointIntensity: 24,
+  hpsSpotIntensity: 48,
+  hpsFillIntensity: 4,
+  /** Form efficiency vs open box hood (character, not fake watts). */
+  hpsFormScaleBox: 1,
+  hpsFormScaleWing: 0.88,
+  hpsFormScaleCooltube: 0.72,
   lightOffSceneIntensity: 0,
+  /**
+   * Exterior studio fill multipliers (ambient / hemisphere / directionals).
+   * Grow-lit keeps substantial neutral fill so the box stays as readable as the
+   * empty showroom; fixture adds directed key, not the only light in the tent.
+   */
+  studioScaleEmpty: 1,
+  studioScaleFixtureOff: 0.55,
+  studioScaleGrowLit: 0.52,
+  /** Warehouse HDR strength — keep env up when lit so mylar mirrors stay silver. */
+  environmentIntensityEmpty: 0.7,
+  environmentIntensityFixtureOff: 0.5,
+  environmentIntensityGrowLit: 0.62,
+  /**
+   * WebGLRenderer filmic grade (ACESFilmicToneMapping in chamber-scene).
+   * Mild ON/OFF delta; brighter fixtures use ACES compression, not a dark grade.
+   */
+  toneMappingExposureStudio: 1,
+  toneMappingExposureGrowLit: 0.92,
 } as const
 
 /**
@@ -199,6 +251,19 @@ export const CHAMBER_GEOMETRY = {
 
 /** DOM class on the R3F Canvas element (fill parent AppCanvasFrame viewport). */
 export const CHAMBER_CANVAS_CLASS = "h-full w-full touch-none"
+
+/**
+ * Three.js render / light layers for the chamber playground.
+ * Grow fixture lights stay on `content` only so they cannot paint a circular
+ * spill on the exterior stage floor (Three.js lights ignore mesh occlusion).
+ * Studio lights hit both layers; the camera sees both.
+ */
+export const CHAMBER_LAYER = {
+  /** Tent shell, pots, fixtures + grow point/spot lights. */
+  content: 0,
+  /** Exterior floor + grid only (studio fill, never grow lamps). */
+  stage: 1,
+} as const
 
 function readCssVar(
   style: CSSStyleDeclaration,
@@ -291,6 +356,16 @@ export function resolveChamberSceneColors(
       rootStyle,
       CHAMBER_CSS_VAR.lightBulb,
       CHAMBER_SCENE_FALLBACK.lightBulb,
+    ),
+    lightLedScene: readCssVar(
+      rootStyle,
+      CHAMBER_CSS_VAR.lightLedScene,
+      CHAMBER_SCENE_FALLBACK.lightLedScene,
+    ),
+    lightHpsScene: readCssVar(
+      rootStyle,
+      CHAMBER_CSS_VAR.lightHpsScene,
+      CHAMBER_SCENE_FALLBACK.lightHpsScene,
     ),
   }
 }

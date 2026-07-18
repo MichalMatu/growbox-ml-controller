@@ -123,7 +123,8 @@
     --chamber-grid-section: #374151;
     /* Grow tent: matte black nylon exterior, soft foil interior, steel frame */
     --chamber-exterior: #0c0c0e;
-    --chamber-interior: #e8eef4;
+    /* Neutral silver mylar tint — avoid cream so lamp color does not milk foil */
+    --chamber-interior: #f2f4f7;
     --chamber-frame: #141414;
     /* Black plastic zipper — readable on silver foil from inside */
     --chamber-zipper: #121214;
@@ -140,6 +141,9 @@
     --chamber-light-emitter: #f2f0e6;
     --chamber-light-duct: #9aa3ad;
     --chamber-light-bulb: #ffd89a;
+    /* Scene lights only — desaturated so foil keeps mirror silver */
+    --chamber-light-led-scene: #f5f6f4;
+    --chamber-light-hps-scene: #ffe9c8;
 }
 
 .dark {

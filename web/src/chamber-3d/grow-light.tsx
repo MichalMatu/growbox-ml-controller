@@ -2,6 +2,7 @@ import { useLayoutEffect, useMemo, useRef } from "react"
 import { DoubleSide, Object3D, type InstancedMesh } from "three"
 
 import {
+  type LightForm,
   type LightPlacementM,
   type LightPreset,
 } from "@/chamber-3d/light-geometry"
@@ -16,9 +17,55 @@ export type GrowLightProps = {
   colors: ChamberSceneColors
   /** When true, diodes/bulb glow and real scene lights turn on. */
   lit?: boolean
+  /** Tent AABB (meters) — clamps light distance to the interior volume. */
+  tentWidthM: number
+  tentDepthM: number
+  tentHeightM: number
+}
+
+/**
+ * Max useful reach from a ceiling fixture to the far interior corner.
+ * Prevents multi-meter fixture “reach” spheres that light the stage pad
+ * (layers also isolate the pad; distance keeps falloff natural inside).
+ */
+function interiorLightReachM(
+  tentWidthM: number,
+  tentDepthM: number,
+  lightWorldY: number,
+): number {
+  const halfW = tentWidthM * 0.5
+  const halfD = tentDepthM * 0.5
+  const toFarCorner = Math.hypot(halfW, halfD, Math.max(lightWorldY, 0.15))
+  return toFarCorner * 1.1
 }
 
 const _diodeDummy = new Object3D()
+
+/**
+ * Soft power curve so 1000 W reads stronger than 600 W without blowing foil.
+ * Reference watts live in CHAMBER_MATERIAL (LED 200 / HPS 600).
+ */
+function fixturePowerScale(preset: LightPreset): number {
+  if (preset.form === "none" || preset.powerW <= 0) return 0
+  const refW =
+    preset.form === "led_panel"
+      ? CHAMBER_MATERIAL.ledPowerRefW
+      : CHAMBER_MATERIAL.hpsPowerRefW
+  return Math.sqrt(preset.powerW / refW)
+}
+
+function hpsFormScale(form: LightForm): number {
+  switch (form) {
+    case "hps_box":
+      return CHAMBER_MATERIAL.hpsFormScaleBox
+    case "hps_wing":
+      return CHAMBER_MATERIAL.hpsFormScaleWing
+    case "hps_cooltube":
+      return CHAMBER_MATERIAL.hpsFormScaleCooltube
+    default:
+      return 1
+  }
+}
 
 /**
  * Parametric grow-light fixture from catalog AABB.
@@ -31,12 +78,28 @@ export function GrowLight({
   placement,
   colors,
   lit = true,
+  tentWidthM,
+  tentDepthM,
+  tentHeightM,
 }: GrowLightProps) {
   if (preset.form === "none") return null
 
   const lengthM = preset.lengthCm / 100
   const widthM = preset.widthCm / 100
   const heightM = preset.heightCm / 100
+  const powerScale = fixturePowerScale(preset)
+  const formScale = hpsFormScale(preset.form)
+  // Emitter sits near the bottom of the AABB; world Y ≈ placement.y - body/2.
+  const emitterWorldY = Math.max(
+    0.12,
+    placement.y - heightM * 0.35,
+  )
+  const maxReachM = interiorLightReachM(
+    tentWidthM,
+    tentDepthM,
+    emitterWorldY,
+  )
+  void tentHeightM
 
   return (
     <group
@@ -50,6 +113,8 @@ export function GrowLight({
           heightM={heightM}
           colors={colors}
           lit={lit}
+          powerScale={powerScale}
+          maxReachM={maxReachM}
         />
       ) : null}
       {preset.form === "hps_box" ? (
@@ -59,6 +124,8 @@ export function GrowLight({
           heightM={heightM}
           colors={colors}
           lit={lit}
+          powerScale={powerScale * formScale}
+          maxReachM={maxReachM}
         />
       ) : null}
       {preset.form === "hps_wing" ? (
@@ -68,6 +135,8 @@ export function GrowLight({
           heightM={heightM}
           colors={colors}
           lit={lit}
+          powerScale={powerScale * formScale}
+          maxReachM={maxReachM}
         />
       ) : null}
       {preset.form === "hps_cooltube" ? (
@@ -78,6 +147,8 @@ export function GrowLight({
           ductDiameterCm={preset.ductDiameterCm ?? 12.5}
           colors={colors}
           lit={lit}
+          powerScale={powerScale * formScale}
+          maxReachM={maxReachM}
         />
       ) : null}
     </group>
@@ -93,14 +164,14 @@ function useLightMaterials(colors: ChamberSceneColors, lit: boolean) {
         metalness: CHAMBER_MATERIAL.lightHousingMetalness,
         envMapIntensity: CHAMBER_MATERIAL.lightHousingEnvMapIntensity,
       },
-      /** Specular mylar / polished aluminium inside HPS reflectors */
+      /** Specular aluminium inside HPS reflectors — no warm emissive wash. */
       reflector: {
         color: colors.lightDuct,
-        roughness: lit ? 0.14 : 0.35,
-        metalness: lit ? 0.92 : 0.7,
-        envMapIntensity: lit ? 1.55 : 0.55,
+        roughness: lit ? 0.12 : 0.35,
+        metalness: lit ? 0.95 : 0.7,
+        envMapIntensity: lit ? 1.7 : 0.55,
         emissive: colors.lightBulb,
-        emissiveIntensity: lit ? 0.12 : 0,
+        emissiveIntensity: lit ? 0.03 : 0,
       },
       board: {
         color: colors.lightHousing,
@@ -137,8 +208,9 @@ function useLightMaterials(colors: ChamberSceneColors, lit: boolean) {
   )
 }
 
-function sceneIntensity(lit: boolean, on: number): number {
-  return lit ? on : CHAMBER_MATERIAL.lightOffSceneIntensity
+function sceneIntensity(lit: boolean, on: number, powerScale: number): number {
+  if (!lit) return CHAMBER_MATERIAL.lightOffSceneIntensity
+  return on * powerScale
 }
 
 function LedPanelMesh({
@@ -147,12 +219,16 @@ function LedPanelMesh({
   heightM,
   colors,
   lit,
+  powerScale,
+  maxReachM,
 }: {
   lengthM: number
   widthM: number
   heightM: number
   colors: ChamberSceneColors
   lit: boolean
+  powerScale: number
+  maxReachM: number
 }) {
   const mats = useLightMaterials(colors, lit)
   const bodyH = heightM * 0.72
@@ -209,7 +285,7 @@ function LedPanelMesh({
     mesh.count = positions.length
   }, [diodeGrid])
 
-  /** A few fill points under the panel (not one per diode — GPU budget). */
+  /** Sparse local fill only — bulk light is the broad spot (less milky mylar). */
   const fillLights = useMemo(() => {
     const insetX = lengthM * 0.28
     const insetZ = widthM * 0.28
@@ -223,11 +299,16 @@ function LedPanelMesh({
   }, [lengthM, widthM])
 
   const fillEach =
-    sceneIntensity(lit, CHAMBER_MATERIAL.ledPanelFillIntensity) /
+    sceneIntensity(lit, CHAMBER_MATERIAL.ledPanelFillIntensity, powerScale) /
     fillLights.length
-  const spotI = sceneIntensity(lit, CHAMBER_MATERIAL.ledPanelSpotIntensity)
+  const spotI = sceneIntensity(
+    lit,
+    CHAMBER_MATERIAL.ledPanelSpotIntensity,
+    powerScale,
+  )
   const lightY = diodeY - 0.02
-  const reach = Math.max(lengthM, widthM, 0.6) * 4
+  const reach = maxReachM
+  const sceneColor = colors.lightLedScene
 
   return (
     <group>
@@ -257,26 +338,25 @@ function LedPanelMesh({
         <meshStandardMaterial {...mats.diode} />
       </instancedMesh>
 
-      {/* Soft multi-point fill from the whole panel face */}
       {fillLights.map((p, i) => (
         <pointLight
           key={i}
           position={[p.x, lightY, p.z]}
           intensity={fillEach}
-          distance={reach}
+          distance={reach * 0.7}
           decay={2}
-          color={colors.lightEmitter}
+          color={sceneColor}
         />
       ))}
-      {/* Broad downward wash so canopy / pots read clearly when ON */}
+      {/* Broad downward wash — main canopy / wall key */}
       <spotLight
         position={[0, lightY, 0]}
-        angle={1.05}
-        penumbra={0.65}
+        angle={1.15}
+        penumbra={0.7}
         intensity={spotI}
-        distance={reach * 1.2}
+        distance={reach}
         decay={2}
-        color={colors.lightEmitter}
+        color={sceneColor}
         castShadow={lit}
       >
         <object3D attach="target" position={[0, lightY - 1.5, 0]} />
@@ -291,12 +371,16 @@ function HpsBoxMesh({
   heightM,
   colors,
   lit,
+  powerScale,
+  maxReachM,
 }: {
   lengthM: number
   widthM: number
   heightM: number
   colors: ChamberSceneColors
   lit: boolean
+  powerScale: number
+  maxReachM: number
 }) {
   const mats = useLightMaterials(colors, lit)
   const wall = Math.min(lengthM, widthM, heightM) * 0.08
@@ -308,10 +392,23 @@ function HpsBoxMesh({
   const bulbLen = Math.min(lengthM, widthM) * 0.55
   const bulbR = Math.min(lengthM, widthM) * 0.08
   const bulbY = cavityCenterY + cavityH * 0.1
-  const pointI = sceneIntensity(lit, CHAMBER_MATERIAL.hpsPointIntensity)
-  const spotI = sceneIntensity(lit, CHAMBER_MATERIAL.hpsSpotIntensity)
-  const fillI = sceneIntensity(lit, CHAMBER_MATERIAL.hpsFillIntensity)
-  const reach = Math.max(lengthM, widthM, heightM) * 5
+  const pointI = sceneIntensity(
+    lit,
+    CHAMBER_MATERIAL.hpsPointIntensity,
+    powerScale,
+  )
+  const spotI = sceneIntensity(
+    lit,
+    CHAMBER_MATERIAL.hpsSpotIntensity,
+    powerScale,
+  )
+  const fillI = sceneIntensity(
+    lit,
+    CHAMBER_MATERIAL.hpsFillIntensity,
+    powerScale,
+  )
+  const reach = maxReachM
+  const sceneColor = colors.lightHpsScene
 
   return (
     <group>
@@ -380,28 +477,28 @@ function HpsBoxMesh({
         intensity={pointI}
         distance={reach}
         decay={2}
-        color={colors.lightBulb}
+        color={sceneColor}
         castShadow={lit}
       />
       <spotLight
         position={[0, bulbY - bulbR * 0.2, 0]}
-        angle={0.85}
-        penumbra={0.45}
+        angle={0.9}
+        penumbra={0.4}
         intensity={spotI}
         distance={reach}
         decay={2}
-        color={colors.lightBulb}
+        color={sceneColor}
         castShadow={lit}
       >
         <object3D attach="target" position={[0, bulbY - 1.5, 0]} />
       </spotLight>
-      {/* Soft bounce fill under the hood (reflector “glow”) */}
+      {/* Tight residual under hood — short range, less wall milk */}
       <pointLight
         position={[0, cavityCenterY - cavityH * 0.35, 0]}
         intensity={fillI}
-        distance={reach * 0.7}
+        distance={reach * 0.45}
         decay={2}
-        color={colors.lightEmitter}
+        color={sceneColor}
       />
     </group>
   )
@@ -413,12 +510,16 @@ function HpsWingMesh({
   heightM,
   colors,
   lit,
+  powerScale,
+  maxReachM,
 }: {
   lengthM: number
   widthM: number
   heightM: number
   colors: ChamberSceneColors
   lit: boolean
+  powerScale: number
+  maxReachM: number
 }) {
   const mats = useLightMaterials(colors, lit)
   const spineW = Math.min(widthM * 0.22, 0.08)
@@ -431,10 +532,23 @@ function HpsWingMesh({
   const bulbR = Math.min(lengthM, widthM) * 0.07
   const bulbLen = lengthM * 0.5
   const bulbY = wingY - heightM * 0.05
-  const pointI = sceneIntensity(lit, CHAMBER_MATERIAL.hpsPointIntensity)
-  const spotI = sceneIntensity(lit, CHAMBER_MATERIAL.hpsSpotIntensity * 0.9)
-  const fillI = sceneIntensity(lit, CHAMBER_MATERIAL.hpsFillIntensity)
-  const reach = Math.max(lengthM, widthM) * 5
+  const pointI = sceneIntensity(
+    lit,
+    CHAMBER_MATERIAL.hpsPointIntensity,
+    powerScale,
+  )
+  const spotI = sceneIntensity(
+    lit,
+    CHAMBER_MATERIAL.hpsSpotIntensity,
+    powerScale,
+  )
+  const fillI = sceneIntensity(
+    lit,
+    CHAMBER_MATERIAL.hpsFillIntensity,
+    powerScale,
+  )
+  const reach = maxReachM
+  const sceneColor = colors.lightHpsScene
 
   return (
     <group>
@@ -475,26 +589,26 @@ function HpsWingMesh({
         intensity={pointI}
         distance={reach}
         decay={2}
-        color={colors.lightBulb}
+        color={sceneColor}
         castShadow={lit}
       />
       <spotLight
         position={[0, bulbY, 0]}
-        angle={1.0}
+        angle={1.05}
         penumbra={0.55}
         intensity={spotI}
         distance={reach}
         decay={2}
-        color={colors.lightBulb}
+        color={sceneColor}
       >
         <object3D attach="target" position={[0, bulbY - 1.5, 0]} />
       </spotLight>
       <pointLight
         position={[0, bulbY - 0.08, 0]}
         intensity={fillI}
-        distance={reach * 0.65}
+        distance={reach * 0.4}
         decay={2}
-        color={colors.lightEmitter}
+        color={sceneColor}
       />
     </group>
   )
@@ -507,6 +621,8 @@ function HpsCooltubeMesh({
   ductDiameterCm,
   colors,
   lit,
+  powerScale,
+  maxReachM,
 }: {
   lengthM: number
   widthM: number
@@ -514,15 +630,31 @@ function HpsCooltubeMesh({
   ductDiameterCm: number
   colors: ChamberSceneColors
   lit: boolean
+  powerScale: number
+  maxReachM: number
 }) {
   const mats = useLightMaterials(colors, lit)
   const tubeR = Math.min(widthM, heightM) * 0.42
   const tubeLen = lengthM * 0.72
   const ductR = ductDiameterCm / 100 / 2
   const flangeLen = lengthM * 0.12
-  const pointI = sceneIntensity(lit, CHAMBER_MATERIAL.hpsPointIntensity * 0.85)
-  const spotI = sceneIntensity(lit, CHAMBER_MATERIAL.hpsSpotIntensity * 0.75)
-  const reach = Math.max(lengthM, widthM, heightM) * 5
+  const pointI = sceneIntensity(
+    lit,
+    CHAMBER_MATERIAL.hpsPointIntensity,
+    powerScale,
+  )
+  const spotI = sceneIntensity(
+    lit,
+    CHAMBER_MATERIAL.hpsSpotIntensity,
+    powerScale,
+  )
+  const fillI = sceneIntensity(
+    lit,
+    CHAMBER_MATERIAL.hpsFillIntensity * 0.7,
+    powerScale,
+  )
+  const reach = maxReachM
+  const sceneColor = colors.lightHpsScene
 
   return (
     <group>
@@ -535,7 +667,7 @@ function HpsCooltubeMesh({
           roughness={0.12}
           metalness={0.25}
           emissive={colors.lightBulb}
-          emissiveIntensity={lit ? 0.2 : 0}
+          emissiveIntensity={lit ? 0.12 : 0}
         />
       </mesh>
       <mesh
@@ -561,13 +693,12 @@ function HpsCooltubeMesh({
         <meshStandardMaterial {...mats.bulb} />
       </mesh>
 
-      {/* Single source inside the tube */}
       <pointLight
         position={[0, 0, 0]}
         intensity={pointI}
         distance={reach}
         decay={2}
-        color={colors.lightBulb}
+        color={sceneColor}
         castShadow={lit}
       />
       <spotLight
@@ -577,10 +708,17 @@ function HpsCooltubeMesh({
         intensity={spotI}
         distance={reach}
         decay={2}
-        color={colors.lightBulb}
+        color={sceneColor}
       >
         <object3D attach="target" position={[0, -1.5, 0]} />
       </spotLight>
+      <pointLight
+        position={[0, -tubeR * 0.35, 0]}
+        intensity={fillI}
+        distance={reach * 0.4}
+        decay={2}
+        color={sceneColor}
+      />
     </group>
   )
 }
