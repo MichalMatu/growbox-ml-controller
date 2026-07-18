@@ -95,6 +95,17 @@ pre-commit run --all-files
 | `git commit` | hygiene + `pnpm test:contract` + web typecheck/lint/test |
 | `git push` | full `pnpm check` (contract + web gate including build) |
 
+## 3D playground
+
+Optional visual experiment (not export SSOT):
+
+```bash
+pnpm --dir web dev
+# open http://127.0.0.1:5173/chamber-3d
+```
+
+Parametric grow tent (W×D×H cm). Code: `web/src/chamber-3d/`. Product notes: [`docs/HARDWARE_CONFIGURATOR.md`](docs/HARDWARE_CONFIGURATOR.md) § Chamber 3D playground.
+
 ## Next engineering step
 
-UX polish (wizard steps, enclosure dimensions helper), keep schema import as SSOT, never invent ML paths.
+UX polish (wizard steps, optional root `enclosure` wired to export volume), keep schema import as SSOT, never invent ML paths.

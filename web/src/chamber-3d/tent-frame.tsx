@@ -1,6 +1,6 @@
 import { useMemo } from "react"
-import { Quaternion, Vector3 } from "three"
 
+import { orientSegmentBetween } from "@/chamber-3d/segment-mesh"
 import {
   CHAMBER_GEOMETRY,
   CHAMBER_MATERIAL,
@@ -77,8 +77,6 @@ export function TentFrame({
   )
 }
 
-const UP = new Vector3(0, 1, 0)
-
 function FrameTube({
   from,
   to,
@@ -90,22 +88,10 @@ function FrameTube({
   radiusM: number
   colors: ChamberSceneColors
 }) {
-  const { position, quaternion, length } = useMemo(() => {
-    const start = new Vector3(from[0], from[1], from[2])
-    const end = new Vector3(to[0], to[1], to[2])
-    const dir = end.clone().sub(start)
-    const lengthM = dir.length()
-    const mid = start.clone().add(end).multiplyScalar(0.5)
-    const quat = new Quaternion()
-    if (lengthM > 1e-8) {
-      quat.setFromUnitVectors(UP, dir.normalize())
-    }
-    return {
-      position: [mid.x, mid.y, mid.z] as Vec3,
-      quaternion: quat,
-      length: lengthM,
-    }
-  }, [from, to])
+  const { position, quaternion, length } = useMemo(
+    () => orientSegmentBetween(from, to),
+    [from, to],
+  )
 
   if (length < 1e-6) return null
 

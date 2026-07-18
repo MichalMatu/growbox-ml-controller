@@ -1,11 +1,5 @@
 import { useEffect, useMemo } from "react"
-import {
-  BoxGeometry,
-  MeshStandardMaterial,
-  Quaternion,
-  Vector2,
-  Vector3,
-} from "three"
+import { BoxGeometry, MeshStandardMaterial, Vector2 } from "three"
 
 import {
   useGrowtentPbrMaps,
@@ -18,6 +12,7 @@ import {
   CHAMBER_MATERIAL,
   type ChamberSceneColors,
 } from "@/chamber-3d/scene-tokens"
+import { orientSegmentBetween } from "@/chamber-3d/segment-mesh"
 import { TentFrame } from "@/chamber-3d/tent-frame"
 import type { Vec3 } from "@/chamber-3d/tent-frame-geometry"
 import { buildShellPanels } from "@/chamber-3d/tent-shell-geometry"
@@ -90,11 +85,10 @@ export function Enclosure({
   )
 }
 
-const ZIPPER_UP = new Vector3(0, 1, 0)
-
 /**
  * Dual-sided rectangular black zipper on the rear wall (closed loop).
  * Interior face (foil) + exterior face (nylon) — same track, both sides.
+ * Hidden outside the mid-size width band (see CHAMBER_GEOMETRY rearFlap*).
  */
 function RearFlapZipper({
   widthM,
@@ -135,6 +129,23 @@ function RearFlapZipperMesh({
   const radiusM = CHAMBER_GEOMETRY.rearFlapZipperRadiusM
   const pull = CHAMBER_GEOMETRY.rearFlapZipperPullM
 
+  // One material per face (4 coils + pull) — avoid per-segment allocations.
+  const material = useMemo(() => {
+    const mat = new MeshStandardMaterial({
+      color: colors.zipper,
+      roughness: CHAMBER_MATERIAL.zipperRoughness,
+      metalness: CHAMBER_MATERIAL.zipperMetalness,
+      envMapIntensity: CHAMBER_MATERIAL.zipperEnvMapIntensity,
+    })
+    return mat
+  }, [colors.zipper])
+
+  useEffect(() => {
+    return () => {
+      material.dispose()
+    }
+  }, [material])
+
   return (
     <group position={spec.position} rotation={spec.rotation}>
       {spec.localSegments.map(([from, to], index) => (
@@ -143,17 +154,11 @@ function RearFlapZipperMesh({
           from={from}
           to={to}
           radiusM={radiusM}
-          color={colors.zipper}
+          material={material}
         />
       ))}
-      <mesh position={spec.pullLocal} castShadow>
+      <mesh position={spec.pullLocal} castShadow material={material}>
         <boxGeometry args={[pull[0], pull[1], pull[2]]} />
-        <meshStandardMaterial
-          color={colors.zipper}
-          roughness={CHAMBER_MATERIAL.zipperRoughness}
-          metalness={CHAMBER_MATERIAL.zipperMetalness}
-          envMapIntensity={CHAMBER_MATERIAL.zipperEnvMapIntensity}
-        />
       </mesh>
     </group>
   )
@@ -163,42 +168,29 @@ function ZipperCoil({
   from,
   to,
   radiusM,
-  color,
+  material,
 }: {
   from: Vec3
   to: Vec3
   radiusM: number
-  color: string
+  material: MeshStandardMaterial
 }) {
-  const { position, quaternion, length } = useMemo(() => {
-    const start = new Vector3(from[0], from[1], from[2])
-    const end = new Vector3(to[0], to[1], to[2])
-    const dir = end.clone().sub(start)
-    const lengthM = dir.length()
-    const mid = start.clone().add(end).multiplyScalar(0.5)
-    const quat = new Quaternion()
-    if (lengthM > 1e-8) {
-      quat.setFromUnitVectors(ZIPPER_UP, dir.normalize())
-    }
-    return {
-      position: [mid.x, mid.y, mid.z] as Vec3,
-      quaternion: quat,
-      length: lengthM,
-    }
-  }, [from, to])
+  const { position, quaternion, length } = useMemo(
+    () => orientSegmentBetween(from, to),
+    [from, to],
+  )
 
   if (length < 1e-6) return null
 
   return (
-    <mesh position={position} quaternion={quaternion} castShadow>
+    <mesh
+      position={position}
+      quaternion={quaternion}
+      castShadow
+      material={material}
+    >
       <cylinderGeometry
         args={[radiusM, radiusM, length, CHAMBER_GEOMETRY.frameRadialSegments]}
-      />
-      <meshStandardMaterial
-        color={color}
-        roughness={CHAMBER_MATERIAL.zipperRoughness}
-        metalness={CHAMBER_MATERIAL.zipperMetalness}
-        envMapIntensity={CHAMBER_MATERIAL.zipperEnvMapIntensity}
       />
     </mesh>
   )
@@ -246,8 +238,7 @@ function TentShell({
 }
 
 /**
- * Solid fabric slab. Dual planes left an open edge gap where the silver
- * interior foil read as a white triangle / canopy at corners.
+ * Solid fabric slab (not dual planes — open edges used to show white foil gaps).
  * Box faces: +Z exterior nylon, -Z interior foil, rim faces matte exterior.
  */
 function makeFabricBoxGeometry(

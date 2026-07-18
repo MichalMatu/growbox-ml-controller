@@ -19,7 +19,7 @@ export const CHAMBER_CSS_VAR = {
   exterior: "--chamber-exterior",
   interior: "--chamber-interior",
   frame: "--chamber-frame",
-  /** Plastic zipper track on side mesh flaps (must read on black nylon). */
+  /** Plastic zipper track on the rear mesh flap (must read on black nylon). */
   zipper: "--chamber-zipper",
 } as const
 

@@ -53,7 +53,7 @@ Web **hardware configurator**: client describes installed growbox gear in **v4**
 | CSS | **Tailwind CSS** (major version = whatever **official shadcn/ui Vite+React+TS init** installs at scaffold time; do not mix v3 config file setup with v4 CSS-first setup) |
 | Components | **shadcn/ui** (Radix) copied into `web/src/components/ui/` |
 | Domain tests | **Vitest** under `web/` |
-| 3D (later only) | React Three Fiber + drei — **not** day-0 scaffold |
+| 3D playground | React Three Fiber + drei under `web/src/chamber-3d/` — route **`/chamber-3d`**, lazy-loaded, not the PyVista twin |
 | SSR / meta-framework | **Forbidden for MVP** (no Next.js, no Remix) |
 
 ### Stack non-goals (hard ban)
@@ -228,8 +228,8 @@ web/
     components/ui/      # shadcn only
     components/app-chrome.tsx  # allowed layout primitives
     components/         # feature UI (no freehand className)
-    pages/              # routes (no freehand className)
-    chamber-3d/         # R3F; colors in scene-tokens.ts
+    pages/              # routes incl. chamber-3d-page (no freehand className)
+    chamber-3d/         # R3F playground; colors/geometry knobs in scene-tokens.ts
     ui/allowed-surface.ts  # allowlist catalog
     domain/             # export/import/clamps (tested)
     lib/                # cn(), helpers
@@ -357,5 +357,6 @@ Never commit: `node_modules/`, `dist/`, secrets, monorepo ghosts.
 | `web/` app | **Yes** — Vite + React + TS + Tailwind + shadcn MVP shell |
 | Web typecheck/lint/test/build gate | **Yes** — `pnpm --dir web gate` |
 | Domain Vitest (import/export/inactive) | **Yes** — `web/src/domain/*.test.ts` |
+| R3F `/chamber-3d` playground | **Yes** — parametric open-front tent, PBR nylon/foil, steel frame, dual-sided rear zipper (fixed 30×20 cm, bottom 20 cm, width band 60–120 cm only). **Does not write v4 JSON.** |
 
-**Next product steps:** polish UX groups (wizard steps), optional enclosure UX fields, richer Polish copy; keep export contract and gate green.
+**Next product steps:** polish configurator UX groups (wizard steps), optional root `enclosure` fields wired to export volume, richer Polish copy; keep export contract and gate green. Optional 3D: more vents/cutouts, mesh panels — still playground-only until product says otherwise.

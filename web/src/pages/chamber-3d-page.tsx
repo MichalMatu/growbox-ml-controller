@@ -116,9 +116,9 @@ export function Chamber3dPage() {
         }
         description={
           <>
-            Parametryczna namiotówka (W × D × H w cm, min {ENCLOSURE_CM_MIN}). Ta strona nie
-            zapisuje do JSON v4 — tylko eksperyment wizualny. Orbit: przeciągnij, zoom:
-            scroll.
+            Parametryczna namiotówka (W × D × H w cm, min {ENCLOSURE_CM_MIN}). Tylne okienko
+            (zamek 30×20 cm) tylko przy szerokości 60–120 cm. Ta strona nie zapisuje do JSON
+            v4 — tylko eksperyment wizualny. Orbit: przeciągnij, zoom: scroll.
           </>
         }
         actions={
