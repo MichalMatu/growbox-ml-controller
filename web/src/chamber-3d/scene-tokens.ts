@@ -62,9 +62,9 @@ export const CHAMBER_SCENE_FALLBACK = {
   frame: "#141414",
   /** Black plastic zipper coil — reads on silver foil from inside */
   zipper: "#121214",
-  /** Charcoal nonwoven felt (real grow bags are near-black) */
-  potFelt: "#1a1a1c",
-  potRim: "#121214",
+  /** Charcoal nonwoven felt (real grow bags are near-black matte) */
+  potFelt: "#141416",
+  potRim: "#0e0e10",
   /** White tint — absolute black soil color is baked into pot-pbr albedo. */
   potSoil: "#ffffff",
   lightHousing: "#1c1c1f",
@@ -101,12 +101,15 @@ export const CHAMBER_MATERIAL = {
   zipperRoughness: 0.42,
   zipperMetalness: 0.55,
   zipperEnvMapIntensity: 0.7,
-  /** Nonwoven felt — very matte, no metal; maps from pot-pbr.ts */
-  potFeltRoughness: 0.92,
+  /**
+   * Nonwoven felt grow bag — fully matte dielectric (fabric PBR defaults).
+   * High roughness + near-zero env so it never looks plastic/shiny.
+   */
+  potFeltRoughness: 1,
   potFeltMetalness: 0,
-  potFeltEnvMapIntensity: 0.12,
-  potFeltNormalScale: 1.15,
-  potFeltUvRepeat: 2.4,
+  potFeltEnvMapIntensity: 0.04,
+  potFeltNormalScale: 0.65,
+  potFeltUvRepeat: 3.2,
   /**
    * Black potting mix (absolute albedo map).
    * envMapIntensity 0 + toneMapped false on mesh — stops cool HDR/ACES gray wash.

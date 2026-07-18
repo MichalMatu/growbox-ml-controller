@@ -124,6 +124,14 @@ function canvasFromRgba(size: number, data: Uint8ClampedArray): HTMLCanvasElemen
   return canvas
 }
 
+/**
+ * Nonwoven felt / fabric grow-bag surface (procedural).
+ *
+ * Real needle-punched grow bags: matte charcoal, random fibers (not a loom weave),
+ * soft low-frequency undulation, very high roughness, almost no env response.
+ * Material.color (potFelt) multiplies this grayscale albedo — same pattern as
+ * common Three.js fabric materials (map detail × solid cloth tint).
+ */
 function buildFeltMaps(size: number): PotSurfaceMaps {
   const heights = new Float32Array(size * size)
   const albedo = new Uint8ClampedArray(size * size * 4)
@@ -133,14 +141,38 @@ function buildFeltMaps(size: number): PotSurfaceMaps {
     for (let x = 0; x < size; x++) {
       const u = x / size
       const v = y / size
-      const fibers = fbm(u * 48, v * 48, 5)
-      const weave = fbm(u * 12 + 3.1, v * 12 - 1.7, 3)
-      const fleck = hash2(x * 0.37, y * 0.91)
+
+      // Needle-punched felt: multi-direction fine fibers (not a regular weave grid)
+      const fiberA = fbm(u * 72 + 0.3, v * 28 - 1.1, 4)
+      const fiberB = fbm(u * 30 - 2.0, v * 68 + 0.7, 4)
+      const fiberC = fbm(u * 90, v * 90, 3)
+      const fibers = fiberA * 0.4 + fiberB * 0.4 + fiberC * 0.2
+
+      // Soft bag undulation (large, gentle)
+      const undulation = fbm(u * 4.5 + 1.2, v * 4.5 - 0.8, 3)
+
+      // Sparse darker needle denser spots / lint
+      const fleck = hash2(x * 0.41, y * 0.87)
+      const dense = fleck > 0.93 ? (fleck - 0.93) / 0.07 : 0
+      // Tiny bright lint picks (very subtle on black felt)
+      const lint = fleck < 0.04 ? (0.04 - fleck) / 0.04 : 0
+
       const h =
-        fibers * 0.55 + weave * 0.35 + (fleck > 0.92 ? 0.25 : fleck * 0.08)
+        fibers * 0.55 +
+        undulation * 0.28 +
+        dense * 0.2 +
+        lint * 0.12 +
+        hash2(x, y) * 0.05
       heights[y * size + x] = h
 
-      const lum = 0.62 + fibers * 0.28 + weave * 0.12 - (fleck > 0.94 ? 0.18 : 0)
+      // Grayscale multiplier for charcoal potFelt color.
+      // Keep mid-high so bag stays near-black, not mid-gray plastic.
+      const lum =
+        0.72 +
+        fibers * 0.14 +
+        undulation * 0.08 -
+        dense * 0.22 +
+        lint * 0.1
       const c = Math.max(0, Math.min(255, Math.round(lum * 255)))
       const ai = (y * size + x) * 4
       albedo[ai] = c
@@ -148,7 +180,8 @@ function buildFeltMaps(size: number): PotSurfaceMaps {
       albedo[ai + 2] = c
       albedo[ai + 3] = 255
 
-      const r = 0.88 + fibers * 0.1 + (fleck > 0.9 ? 0.05 : 0)
+      // Felt is almost fully rough — only tiny variance
+      const r = 0.96 + fibers * 0.03 - dense * 0.02 + lint * 0.01
       const rv = Math.max(0, Math.min(255, Math.round(r * 255)))
       rough[ai] = rv
       rough[ai + 1] = rv
@@ -157,7 +190,8 @@ function buildFeltMaps(size: number): PotSurfaceMaps {
     }
   }
 
-  const normal = heightToNormal(heights, size, 4.2)
+  // Mild normals — strong relief reads as rubber, not soft felt
+  const normal = heightToNormal(heights, size, 2.8)
   const map = new CanvasTexture(canvasFromRgba(size, albedo))
   const normalMap = new CanvasTexture(canvasFromRgba(size, normal))
   const roughnessMap = new CanvasTexture(canvasFromRgba(size, rough))

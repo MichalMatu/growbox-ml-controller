@@ -127,9 +127,9 @@
     --chamber-frame: #141414;
     /* Black plastic zipper — readable on silver foil from inside */
     --chamber-zipper: #121214;
-    /* Felt grow bag + soil surface (playground props) */
-    --chamber-pot-felt: #1a1a1c;
-    --chamber-pot-rim: #121214;
+    /* Felt grow bag — charcoal nonwoven (matte black bag, not plastic gray) */
+    --chamber-pot-felt: #141416;
+    --chamber-pot-rim: #0e0e10;
     /*
      * Soil material tint — white so absolute black-soil albedo map is SSOT
      * (Three.js dirt pattern: color in CanvasTexture, material color white).
