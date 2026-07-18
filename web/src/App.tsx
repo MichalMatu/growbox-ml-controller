@@ -23,6 +23,7 @@ import {
 import { getActuatorLabel } from "@/domain/labels"
 import { schema } from "@/domain/schema"
 import type { Configuration, FeatureDefinition, JsonValue } from "@/domain/types"
+import { navigate, ROUTES } from "@/lib/routing"
 
 const UI_GROUPS: Array<{ id: string; title: string; description: string; match: (path: string) => boolean }> =
   [
@@ -174,6 +175,16 @@ export function App() {
           Brak modułu = <code>available/validity = false</code> i zerowe pola
           capability — sloty doniczek zawsze zostają (4).
         </p>
+        <div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(ROUTES.chamber3d)}
+          >
+            Podgląd 3D (osobna strona)
+          </Button>
+        </div>
       </header>
 
       <Card>

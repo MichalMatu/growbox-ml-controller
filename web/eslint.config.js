@@ -26,4 +26,11 @@ export default defineConfig([
       "react-refresh/only-export-components": "off",
     },
   },
+  {
+    files: ["src/lib/routing.ts"],
+    rules: {
+      // routing helpers + hook share one module for the SPA shell
+      "react-refresh/only-export-components": "off",
+    },
+  },
 ])
