@@ -1,4 +1,4 @@
-import { Suspense, useMemo } from "react"
+import { Suspense, useEffect, useMemo, useState } from "react"
 import {
   Environment,
   Grid,
@@ -29,6 +29,27 @@ export type ChamberSceneProps = {
   potCount?: number
 }
 
+/** Track actual <html> light/dark class (after ThemeProvider applyTheme). */
+function useDocumentThemeClass(): "light" | "dark" {
+  const [themeClass, setThemeClass] = useState<"light" | "dark">(() => {
+    if (typeof document === "undefined") return "dark"
+    return document.documentElement.classList.contains("dark") ? "dark" : "light"
+  })
+
+  useEffect(() => {
+    const root = document.documentElement
+    const sync = () => {
+      setThemeClass(root.classList.contains("dark") ? "dark" : "light")
+    }
+    sync()
+    const observer = new MutationObserver(sync)
+    observer.observe(root, { attributes: true, attributeFilter: ["class"] })
+    return () => observer.disconnect()
+  }, [])
+
+  return themeClass
+}
+
 export function ChamberScene({
   widthCm,
   depthCm,
@@ -36,7 +57,12 @@ export function ChamberScene({
   potPresetId = "12l",
   potCount = 0,
 }: ChamberSceneProps) {
-  const colors = useMemo(() => resolveChamberSceneColors(), [])
+  const themeClass = useDocumentThemeClass()
+  /** Re-read CSS tokens after <html> light/dark class is applied. */
+  const colors = useMemo(() => {
+    void themeClass
+    return resolveChamberSceneColors()
+  }, [themeClass])
   const potPreset = useMemo(() => getFeltPotPreset(potPresetId), [potPresetId])
   const maxSideM = Math.max(widthCm, depthCm, heightCm, 100) / 100
   const heightM = Math.max(heightCm, ENCLOSURE_CM_MIN) / 100
@@ -48,10 +74,17 @@ export function ChamberScene({
     <Canvas
       shadows
       className={CHAMBER_CANVAS_CLASS}
-      gl={{ antialias: true, powerPreference: "high-performance" }}
+      gl={{
+        antialias: true,
+        alpha: true,
+        powerPreference: "high-performance",
+      }}
+      onCreated={({ gl }) => {
+        /* Transparent clear so CSS --chamber-bg-gradient shows through */
+        gl.setClearColor(0x000000, 0)
+      }}
       dpr={[1, 1.75]}
     >
-      <color attach="background" args={[colors.background]} />
       <fog attach="fog" args={[colors.fog, maxSideM * 5.5, maxSideM * 15]} />
 
       <PerspectiveCamera

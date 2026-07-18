@@ -104,11 +104,20 @@
     --page-chrome-y: 3rem;
 
     /*
-     * Chamber 3D scene tokens (R3F reads via chamber-3d/scene-tokens.ts).
-     * Hex kept here as SSOT; JS fallbacks in scene-tokens must match.
+     * Chamber 3D scene tokens (R3F fog/floor via scene-tokens.ts; stage fill is CSS).
+     * Light: soft cool-gray gradient (not pure white). Dark: navy studio.
+     * JS fallbacks match dark stage (app default theme).
      */
-    --chamber-bg: #0b1220;
-    --chamber-fog: #0b1220;
+    --chamber-bg: #a8b8cc;
+    --chamber-fog: #a8b8cc;
+    --chamber-bg-top: #c5d0e0;
+    --chamber-bg-bottom: #8a9bb0;
+    --chamber-bg-gradient: linear-gradient(
+      165deg,
+      var(--chamber-bg-top) 0%,
+      var(--chamber-bg) 48%,
+      var(--chamber-bg-bottom) 100%
+    );
     --chamber-floor: #111827;
     --chamber-grid-cell: #1f2937;
     --chamber-grid-section: #374151;
@@ -125,6 +134,18 @@
 }
 
 .dark {
+    /* Stage backdrop — navy studio (matches CHAMBER_SCENE_FALLBACK) */
+    --chamber-bg: #0b1220;
+    --chamber-fog: #0b1220;
+    --chamber-bg-top: #141c30;
+    --chamber-bg-bottom: #060910;
+    --chamber-bg-gradient: linear-gradient(
+      165deg,
+      var(--chamber-bg-top) 0%,
+      var(--chamber-bg) 48%,
+      var(--chamber-bg-bottom) 100%
+    );
+
     --background: oklch(0.145 0 0);
     --foreground: oklch(0.985 0 0);
     --card: oklch(0.205 0 0);
@@ -257,6 +278,8 @@
     min-width: 0;
     min-height: var(--height-canvas-frame);
     overflow: hidden;
+    /* Soft studio gradient; WebGL canvas is transparent so CSS shows through */
+    background: var(--chamber-bg-gradient);
   }
 
   @media (min-width: 1024px) {

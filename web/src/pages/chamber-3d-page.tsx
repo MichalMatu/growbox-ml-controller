@@ -28,6 +28,7 @@ import {
   AppPreviewSplit,
   AppSelectTrigger,
 } from "@/components/app-chrome"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -160,23 +161,23 @@ export function Chamber3dPage() {
                 <AppFormGrid>
                   <CmDimensionField
                     id="width_cm"
-                    label="Szer. (cm)"
+                    label="Szerokość (cm)"
                     valueCm={widthCm}
                     onValueCmChange={setWidthCm}
                   />
                   <CmDimensionField
                     id="depth_cm"
-                    label="Głęb. (cm)"
+                    label="Głębokość (cm)"
                     valueCm={depthCm}
                     onValueCmChange={setDepthCm}
                   />
                   <CmDimensionField
                     id="height_cm"
-                    label="Wys. (cm)"
+                    label="Wysokość (cm)"
                     valueCm={heightCm}
                     onValueCmChange={setHeightCm}
                   />
-                  <AppFormField label="Obj. (m³)" htmlFor="volume_m3">
+                  <AppFormField label="Objętość (m³)" htmlFor="volume_m3">
                     <Input
                       id="volume_m3"
                       type="text"
@@ -210,7 +211,19 @@ export function Chamber3dPage() {
                     </Select>
                   </AppFormField>
 
-                  <AppFormField label="Liczba" htmlFor="pot_count">
+                  <AppFormField
+                    label="Liczba"
+                    htmlFor="pot_count"
+                    end={
+                      maxFit === 0 && potCount > 0 ? (
+                        <Badge variant="destructive">0/{maxFit}</Badge>
+                      ) : (
+                        <Badge variant="secondary">
+                          {visiblePotCount}/{maxFit}
+                        </Badge>
+                      )
+                    }
+                  >
                     <Select
                       value={String(visiblePotCount)}
                       onValueChange={(value) => {

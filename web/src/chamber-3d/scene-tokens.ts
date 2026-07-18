@@ -31,7 +31,9 @@ export const CHAMBER_CSS_VAR = {
 
 /**
  * Fallbacks when `document` is unavailable.
- * Values MUST match the corresponding --chamber-* declarations in index.css.
+ * Stage bg/fog match `.dark` navy (app default). Light uses softer grays in :root CSS;
+ * visible stage fill is CSS --chamber-bg-gradient (canvas is transparent).
+ * Other keys match shared --chamber-* declarations in index.css.
  */
 export const CHAMBER_SCENE_FALLBACK = {
   background: "#0b1220",
