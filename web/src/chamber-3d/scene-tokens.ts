@@ -93,12 +93,12 @@ export type ChamberSceneColors = {
 
 /** Non-color material knobs (not CSS colors; still centralized). */
 export const CHAMBER_MATERIAL = {
-  /** FreePBR nylon — matte, low normal so weave is subtle, not shiny */
-  exteriorRoughness: 0.98,
+  /** Oxford 600D twill weave — fully matte, strong diagonal texture */
+  exteriorRoughness: 0.96,
   exteriorMetalness: 0,
-  exteriorNormalScale: 0.22,
-  exteriorAoIntensity: 0.45,
-  exteriorEnvMapIntensity: 0.05,
+  exteriorNormalScale: 0.78,
+  exteriorAoIntensity: 0.55,
+  exteriorEnvMapIntensity: 0.03,
   /**
    * Foil003 mylar — very low roughness + high metal/env so walls read as
    * mirror liner, not matte painted silver. Normal kept moderate (wrinkle).
