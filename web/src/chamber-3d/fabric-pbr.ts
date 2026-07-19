@@ -1,8 +1,9 @@
 /**
- * Grow-tent PBR maps (static assets + procedural).
- * Interior: ambientCG Foil003 (CC0) — static JPGs.
- * Exterior: procedural oxford twill weave — 600D fabric, replaces FreePBR nylon.
+ * Grow-tent PBR maps (static assets under public/textures/growtent/).
+ * Interior: ambientCG Foil003 (CC0). Exterior: FreePBR nylon tent fabric.
  * See public/textures/growtent/ATTRIBUTION.md
+ *
+ * Only maps actually bound on materials are loaded (no dead metalness on nylon).
  */
 
 import { useMemo } from "react"
@@ -16,20 +17,23 @@ import {
   type Texture,
 } from "three"
 
-import {
-  useOxfordPbrMaps,
-  type OxfordPbrMaps,
-} from "@/chamber-3d/oxford-pbr"
-
 const base = import.meta.env.BASE_URL.replace(/\/$/, "")
 
-/** Static PBR paths for interior foil (ambientCG Foil003, CC0). */
-const FOIL_TEXTURE_URLS = {
-  map: `${base}/textures/growtent/foil_color.jpg`,
-  normalMap: `${base}/textures/growtent/foil_normal.jpg`,
-  roughnessMap: `${base}/textures/growtent/foil_rough.jpg`,
-  metalnessMap: `${base}/textures/growtent/foil_metal.jpg`,
-  aoMap: `${base}/textures/growtent/foil_ao.jpg`,
+/** Public paths (Vite serves `web/public` at `/`). */
+export const GROWTENT_TEXTURE_URLS = {
+  interior: {
+    map: `${base}/textures/growtent/foil_color.jpg`,
+    normalMap: `${base}/textures/growtent/foil_normal.jpg`,
+    roughnessMap: `${base}/textures/growtent/foil_rough.jpg`,
+    metalnessMap: `${base}/textures/growtent/foil_metal.jpg`,
+    aoMap: `${base}/textures/growtent/foil_ao.jpg`,
+  },
+  exterior: {
+    map: `${base}/textures/growtent/nylon_color.jpg`,
+    normalMap: `${base}/textures/growtent/nylon_normal.jpg`,
+    roughnessMap: `${base}/textures/growtent/nylon_rough.jpg`,
+    aoMap: `${base}/textures/growtent/nylon_ao.jpg`,
+  },
 } as const
 
 export type InteriorPbrMaps = {
@@ -40,8 +44,12 @@ export type InteriorPbrMaps = {
   aoMap: Texture
 }
 
-/** Exterior = procedural oxford fabric (replaces old FreePBR nylon). */
-export type ExteriorPbrMaps = OxfordPbrMaps
+export type ExteriorPbrMaps = {
+  map: Texture
+  normalMap: Texture
+  roughnessMap: Texture
+  aoMap: Texture
+}
 
 export type GrowtentPbrMaps = {
   interior: InteriorPbrMaps
@@ -59,7 +67,7 @@ function configureTexture(texture: Texture, isColor: boolean): void {
   texture.needsUpdate = true
 }
 
-function configureFoil(maps: InteriorPbrMaps): void {
+function configureInterior(maps: InteriorPbrMaps): void {
   configureTexture(maps.map, true)
   configureTexture(maps.normalMap, false)
   configureTexture(maps.roughnessMap, false)
@@ -67,17 +75,26 @@ function configureFoil(maps: InteriorPbrMaps): void {
   configureTexture(maps.aoMap, false)
 }
 
+function configureExterior(maps: ExteriorPbrMaps): void {
+  configureTexture(maps.map, true)
+  configureTexture(maps.normalMap, false)
+  configureTexture(maps.roughnessMap, false)
+  configureTexture(maps.aoMap, false)
+}
+
 /**
  * Load growtent PBR maps once (must be under Suspense / Canvas).
- * Interior = Foil003 JPGs. Exterior = procedural oxford twill weave.
+ * Shared across panels — UV tiling lives on geometry, not texture.repeat.
  */
 export function useGrowtentPbrMaps(): GrowtentPbrMaps {
-  const foil = useTexture({ ...FOIL_TEXTURE_URLS })
-  const oxford = useOxfordPbrMaps(512)
+  const interior = useTexture({ ...GROWTENT_TEXTURE_URLS.interior })
+  const exterior = useTexture({ ...GROWTENT_TEXTURE_URLS.exterior })
 
   return useMemo(() => {
-    const interiorMaps = foil as InteriorPbrMaps
-    configureFoil(interiorMaps)
-    return { interior: interiorMaps, exterior: oxford }
-  }, [foil, oxford])
+    const interiorMaps = interior as InteriorPbrMaps
+    const exteriorMaps = exterior as ExteriorPbrMaps
+    configureInterior(interiorMaps)
+    configureExterior(exteriorMaps)
+    return { interior: interiorMaps, exterior: exteriorMaps }
+  }, [interior, exterior])
 }

@@ -68,7 +68,6 @@ export const HEX_LITERAL_ALLOWLIST = [
   "index.css",
   "chamber-3d/scene-tokens.ts",
   "chamber-3d/performance-overlay.tsx",
-  "chamber-3d/oxford-pbr.ts",
 ] as const
 
 /** CSS custom properties that must exist for product layout + chamber 3D. */

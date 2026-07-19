@@ -79,10 +79,7 @@ function listFeatureSurfaces(): string[] {
 
 function listChamberSceneFiles(): string[] {
   return walkSourceFiles(path.join(srcRoot, "chamber-3d")).filter(
-    (f) =>
-      !f.endsWith("performance-overlay.tsx") &&
-      !f.endsWith("oxford-pbr.ts") &&
-      !f.endsWith("pot-pbr.ts"),
+    (f) => !f.endsWith("performance-overlay.tsx"),
   )
     .map(rel)
     .filter((r) => r !== "chamber-3d/scene-tokens.ts")
