@@ -248,14 +248,20 @@ function makeFabricBoxGeometry(
   repeatU: number,
   repeatV: number,
 ): BoxGeometry {
-  const geometry = new BoxGeometry(width, height, thickness)
+  // Subdivide large fabric panels so specular highlights (especially on
+  // metallic foil) interpolate smoothly instead of breaking on the single
+  // diagonal edge of a 2-triangle face.
+  const segAcross = Math.max(1, Math.round(width * 4))
+  const segAlong = Math.max(1, Math.round(height * 4))
+  const geometry = new BoxGeometry(width, height, thickness, segAcross, segAlong)
   const uv = geometry.getAttribute("uv")
   if (uv) {
-    // BoxGeometry face order: +X, -X, +Y, -Y, +Z, -Z (4 verts each).
-    // Tile the large faces (+Z exterior, -Z interior). Rim faces stay 0–1.
+    // With subdivision, each face has (segAcross+1)*(segAlong+1) vertices.
+    // Tile faces 4 (+Z exterior) and 5 (-Z interior). Rims stay 0–1.
+    const vertsPerFace = (segAcross + 1) * (segAlong + 1)
     for (const face of [4, 5]) {
-      const base = face * 4
-      for (let i = 0; i < 4; i += 1) {
+      const base = face * vertsPerFace
+      for (let i = 0; i < vertsPerFace; i++) {
         const idx = base + i
         uv.setXY(idx, uv.getX(idx) * repeatU, uv.getY(idx) * repeatV)
       }
