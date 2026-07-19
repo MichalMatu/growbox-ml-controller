@@ -62,6 +62,8 @@ export function ChamberCanvas({
       }}
       onCreated={({ gl }) => {
         gl.setClearColor(0x000000, 0)
+        // THREE r185: PCFSoftShadowMap is deprecated; use explicit PCFShadowMap
+        gl.shadowMap.type = 0 // PCFShadowMap (BasicFiltering)
       }}
       dpr={[dprMin, dprMax]}
     >
