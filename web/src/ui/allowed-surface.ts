@@ -67,6 +67,7 @@ export const STYLE_OWNER_PATH_PREFIXES = [
 export const HEX_LITERAL_ALLOWLIST = [
   "index.css",
   "chamber-3d/scene-tokens.ts",
+  "chamber-3d/performance-overlay.tsx",
 ] as const
 
 /** CSS custom properties that must exist for product layout + chamber 3D. */

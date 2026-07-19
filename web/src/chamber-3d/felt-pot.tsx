@@ -6,6 +6,7 @@ import {
   planFeltPotLayout,
   type PotLayoutPlan,
 } from "@/chamber-3d/felt-pot-geometry"
+import { useChamberPerformance } from "@/chamber-3d/performance-context"
 import { usePotPbrMaps, type PotPbrMaps } from "@/chamber-3d/pot-pbr"
 import {
   CHAMBER_GEOMETRY,
@@ -40,6 +41,8 @@ const FELT_NORMAL_SCALE = new Vector2(
  * any horizontal felt mesh that spans the pot opening.
  */
 export function FeltPot({ diameterM, heightM, colors, maps }: FeltPotProps) {
+  const { config } = useChamberPerformance()
+  const segs = config.potWallSegments
   const bottomR = diameterM / 2
   const topR = bottomR * CHAMBER_GEOMETRY.potTopRadiusScale
   const rimH = Math.max(heightM * CHAMBER_GEOMETRY.potRimHeightScale, 0.008)
@@ -64,7 +67,6 @@ export function FeltPot({ diameterM, heightM, colors, maps }: FeltPotProps) {
   const wallRAtSoil = bottomR + (wallTopR - bottomR) * wallTaper
   // Slightly under wall radius avoids z-fight at the soil–wall join.
   const soilR = wallRAtSoil * 0.988
-  const segs = CHAMBER_GEOMETRY.potWallSegments
 
   const feltMat = useMemo(
     () => ({
@@ -194,7 +196,8 @@ export function FeltPotGroup({
   count,
   colors,
 }: FeltPotGroupProps) {
-  const maps = usePotPbrMaps(384)
+  const { config } = useChamberPerformance()
+  const maps = usePotPbrMaps(config.potPbrSize)
   const plan: PotLayoutPlan = useMemo(
     () =>
       planFeltPotLayout(

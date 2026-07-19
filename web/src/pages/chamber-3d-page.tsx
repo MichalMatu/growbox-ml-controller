@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react"
 
-import { ChamberScene } from "@/chamber-3d/chamber-scene"
+import { ChamberCanvas } from "@/chamber-3d/chamber-scene"
+import { ChamberPerformanceProvider } from "@/chamber-3d/performance-context"
+import { PerformanceOverlay } from "@/chamber-3d/performance-overlay"
 import {
   ENCLOSURE_CM_MAX,
   ENCLOSURE_CM_MIN,
@@ -518,17 +520,20 @@ export function Chamber3dPage() {
         }
         main={
           <AppCanvasFrame>
-            <ChamberScene
-              widthCm={widthCm}
-              depthCm={depthCm}
-              heightCm={heightCm}
-              potPresetId={potPresetId}
-              potCount={visiblePotCount}
-              lightPresetId={lightPresetId}
-              lightOrientationDeg={effectiveLightOrientationDeg}
-              lightCeilingGapCm={effectiveCeilingGapCm}
-              lightOn={lightOn && lightPlan.fits}
-            />
+            <ChamberPerformanceProvider>
+              <PerformanceOverlay />
+              <ChamberCanvas
+                widthCm={widthCm}
+                depthCm={depthCm}
+                heightCm={heightCm}
+                potPresetId={potPresetId}
+                potCount={visiblePotCount}
+                lightPresetId={lightPresetId}
+                lightOrientationDeg={effectiveLightOrientationDeg}
+                lightCeilingGapCm={effectiveCeilingGapCm}
+                lightOn={lightOn && lightPlan.fits}
+              />
+            </ChamberPerformanceProvider>
           </AppCanvasFrame>
         }
       />

@@ -6,6 +6,7 @@ import {
   type LightPlacementM,
   type LightPreset,
 } from "@/chamber-3d/light-geometry"
+import { useChamberPerformance } from "@/chamber-3d/performance-context"
 import {
   CHAMBER_MATERIAL,
   type ChamberSceneColors,
@@ -82,6 +83,8 @@ export function GrowLight({
   tentDepthM,
   tentHeightM,
 }: GrowLightProps) {
+  const { config } = useChamberPerformance()
+
   if (preset.form === "none") return null
 
   const lengthM = preset.lengthCm / 100
@@ -113,6 +116,7 @@ export function GrowLight({
           heightM={heightM}
           colors={colors}
           lit={lit}
+          fixtureShadows={config.fixtureShadows}
           powerScale={powerScale}
           maxReachM={maxReachM}
         />
@@ -124,6 +128,7 @@ export function GrowLight({
           heightM={heightM}
           colors={colors}
           lit={lit}
+          fixtureShadows={config.fixtureShadows}
           powerScale={powerScale * formScale}
           maxReachM={maxReachM}
         />
@@ -135,6 +140,7 @@ export function GrowLight({
           heightM={heightM}
           colors={colors}
           lit={lit}
+          fixtureShadows={config.fixtureShadows}
           powerScale={powerScale * formScale}
           maxReachM={maxReachM}
         />
@@ -147,6 +153,7 @@ export function GrowLight({
           ductDiameterCm={preset.ductDiameterCm ?? 12.5}
           colors={colors}
           lit={lit}
+          fixtureShadows={config.fixtureShadows}
           powerScale={powerScale * formScale}
           maxReachM={maxReachM}
         />
@@ -219,6 +226,7 @@ function LedPanelMesh({
   heightM,
   colors,
   lit,
+  fixtureShadows,
   powerScale,
   maxReachM,
 }: {
@@ -227,9 +235,11 @@ function LedPanelMesh({
   heightM: number
   colors: ChamberSceneColors
   lit: boolean
+  fixtureShadows: boolean
   powerScale: number
   maxReachM: number
 }) {
+  const castSpotShadow = lit && fixtureShadows
   const mats = useLightMaterials(colors, lit)
   const bodyH = heightM * 0.72
   const plateH = heightM * 0.18
@@ -357,7 +367,7 @@ function LedPanelMesh({
         distance={reach}
         decay={2}
         color={sceneColor}
-        castShadow={lit}
+        castShadow={castSpotShadow}
       >
         <object3D attach="target" position={[0, lightY - 1.5, 0]} />
       </spotLight>
@@ -371,6 +381,7 @@ function HpsBoxMesh({
   heightM,
   colors,
   lit,
+  fixtureShadows,
   powerScale,
   maxReachM,
 }: {
@@ -379,9 +390,11 @@ function HpsBoxMesh({
   heightM: number
   colors: ChamberSceneColors
   lit: boolean
+  fixtureShadows: boolean
   powerScale: number
   maxReachM: number
 }) {
+  const castShadow = lit && fixtureShadows
   const mats = useLightMaterials(colors, lit)
   const wall = Math.min(lengthM, widthM, heightM) * 0.08
   const cavityH = heightM * 0.55
@@ -478,7 +491,7 @@ function HpsBoxMesh({
         distance={reach}
         decay={2}
         color={sceneColor}
-        castShadow={lit}
+        castShadow={castShadow}
       />
       <spotLight
         position={[0, bulbY - bulbR * 0.2, 0]}
@@ -488,7 +501,7 @@ function HpsBoxMesh({
         distance={reach}
         decay={2}
         color={sceneColor}
-        castShadow={lit}
+        castShadow={castShadow}
       >
         <object3D attach="target" position={[0, bulbY - 1.5, 0]} />
       </spotLight>
@@ -510,6 +523,7 @@ function HpsWingMesh({
   heightM,
   colors,
   lit,
+  fixtureShadows,
   powerScale,
   maxReachM,
 }: {
@@ -518,9 +532,11 @@ function HpsWingMesh({
   heightM: number
   colors: ChamberSceneColors
   lit: boolean
+  fixtureShadows: boolean
   powerScale: number
   maxReachM: number
 }) {
+  const castShadow = lit && fixtureShadows
   const mats = useLightMaterials(colors, lit)
   const spineW = Math.min(widthM * 0.22, 0.08)
   const spineH = heightM * 0.55
@@ -590,7 +606,7 @@ function HpsWingMesh({
         distance={reach}
         decay={2}
         color={sceneColor}
-        castShadow={lit}
+        castShadow={castShadow}
       />
       <spotLight
         position={[0, bulbY, 0]}
@@ -621,6 +637,7 @@ function HpsCooltubeMesh({
   ductDiameterCm,
   colors,
   lit,
+  fixtureShadows,
   powerScale,
   maxReachM,
 }: {
@@ -630,9 +647,11 @@ function HpsCooltubeMesh({
   ductDiameterCm: number
   colors: ChamberSceneColors
   lit: boolean
+  fixtureShadows: boolean
   powerScale: number
   maxReachM: number
 }) {
+  const castShadow = lit && fixtureShadows
   const mats = useLightMaterials(colors, lit)
   const tubeR = Math.min(widthM, heightM) * 0.42
   const tubeLen = lengthM * 0.72
@@ -699,7 +718,7 @@ function HpsCooltubeMesh({
         distance={reach}
         decay={2}
         color={sceneColor}
-        castShadow={lit}
+        castShadow={castShadow}
       />
       <spotLight
         position={[0, -tubeR * 0.15, 0]}
