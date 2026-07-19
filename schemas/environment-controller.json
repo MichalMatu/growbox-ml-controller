@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Growbox Environment Controller Contract (pots, 4 max)",
+  "title": "Growbox Environment Controller Contract (pots, 9 max)",
   "schema_id": "environment-controller",
-  "schema_version": 4,
+  "schema_version": 5,
   "status": "active",
   "io_status": "definitive",
   "sensing_status": "definitive",
-  "draft_note": "v4 renames zones to pots (4 donice in one chamber). 15 ML outputs, 128 features. Single active contract; v1–v3 retired.",
+  "draft_note": "v5 extends pots from 4 to 9 donice. 25 ML outputs, 228 features. Single active contract; v1–v4 retired.",
   "sensing_scope": {
     "physical_slots": 15,
     "pseudo_inputs": [
@@ -34,7 +34,17 @@
         "soil_moisture_pot_3_pct",
         "soil_temperature_pot_3_c",
         "soil_moisture_pot_4_pct",
-        "soil_temperature_pot_4_c"
+        "soil_temperature_pot_4_c",
+        "soil_moisture_pot_5_pct",
+        "soil_temperature_pot_5_c",
+        "soil_moisture_pot_6_pct",
+        "soil_temperature_pot_6_c",
+        "soil_moisture_pot_7_pct",
+        "soil_temperature_pot_7_c",
+        "soil_moisture_pot_8_pct",
+        "soil_temperature_pot_8_c",
+        "soil_moisture_pot_9_pct",
+        "soil_temperature_pot_9_c"
       ]
     },
     "explicitly_not_v2": [
@@ -45,7 +55,10 @@
       "flood_sensor",
       "exhaust_air_sensors",
       "weather_station"
-    ]
+    ],
+    "sensing_scope": {
+      "simulator_note": "Up to 9 pot slots; training scenarios randomize active count 0-9."
+    }
   },
   "configuration_model": {
     "mix_and_match": true,
@@ -53,7 +66,7 @@
     "actuator_off": "actuators.<slot>.available = false",
     "pot_off": "pots[N].available = false",
     "no_required_bundles": true,
-    "simulator_note": "Up to 4 pot slots; training scenarios randomize active count 0-4 and per-slot validity/irrigation — not always four pots."
+    "simulator_note": "Up to 9 pot slots; training scenarios randomize active count 0-9 and per-slot validity/irrigation."
   },
   "hash": {
     "algorithm": "sha256",
@@ -278,10 +291,190 @@
       "pot_4_heat_mat_available",
       "pot_4_heat_mat_max_power_w",
       "pot_4_heat_mat_control_type"
+    ],
+    "pots.4": [
+      "pot_5_available"
+    ],
+    "pots.4.sensors": [
+      "soil_moisture_pot_5_pct",
+      "soil_temperature_pot_5_c"
+    ],
+    "pots.4.validity": [
+      "soil_moisture_pot_5_valid",
+      "soil_temperature_pot_5_valid"
+    ],
+    "pots.4.cultivation": [
+      "pot_5_pot_volume_l",
+      "pot_5_substrate_water_capacity_ml",
+      "pot_5_transpiration_factor"
+    ],
+    "pots.4.targets": [
+      "pot_5_target_soil_moisture_pct",
+      "pot_5_target_soil_temperature_c"
+    ],
+    "pots.4.irrigation": [
+      "pot_5_irrigation_available",
+      "pot_5_irrigation_flow_ml_s",
+      "pot_5_irrigation_maximum_pulse_s",
+      "pot_5_irrigation_minimum_interval_s",
+      "pot_5_irrigation_control_type"
+    ],
+    "pots.4.heat_mat": [
+      "pot_5_heat_mat_available",
+      "pot_5_heat_mat_max_power_w",
+      "pot_5_heat_mat_control_type"
+    ],
+    "pots.4.previous": [
+      "pot_5_previous_irrigation",
+      "pot_5_previous_heat_mat"
+    ],
+    "pots.5": [
+      "pot_6_available"
+    ],
+    "pots.5.sensors": [
+      "soil_moisture_pot_6_pct",
+      "soil_temperature_pot_6_c"
+    ],
+    "pots.5.validity": [
+      "soil_moisture_pot_6_valid",
+      "soil_temperature_pot_6_valid"
+    ],
+    "pots.5.cultivation": [
+      "pot_6_pot_volume_l",
+      "pot_6_substrate_water_capacity_ml",
+      "pot_6_transpiration_factor"
+    ],
+    "pots.5.targets": [
+      "pot_6_target_soil_moisture_pct",
+      "pot_6_target_soil_temperature_c"
+    ],
+    "pots.5.irrigation": [
+      "pot_6_irrigation_available",
+      "pot_6_irrigation_flow_ml_s",
+      "pot_6_irrigation_maximum_pulse_s",
+      "pot_6_irrigation_minimum_interval_s",
+      "pot_6_irrigation_control_type"
+    ],
+    "pots.5.heat_mat": [
+      "pot_6_heat_mat_available",
+      "pot_6_heat_mat_max_power_w",
+      "pot_6_heat_mat_control_type"
+    ],
+    "pots.5.previous": [
+      "pot_6_previous_irrigation",
+      "pot_6_previous_heat_mat"
+    ],
+    "pots.6": [
+      "pot_7_available"
+    ],
+    "pots.6.sensors": [
+      "soil_moisture_pot_7_pct",
+      "soil_temperature_pot_7_c"
+    ],
+    "pots.6.validity": [
+      "soil_moisture_pot_7_valid",
+      "soil_temperature_pot_7_valid"
+    ],
+    "pots.6.cultivation": [
+      "pot_7_pot_volume_l",
+      "pot_7_substrate_water_capacity_ml",
+      "pot_7_transpiration_factor"
+    ],
+    "pots.6.targets": [
+      "pot_7_target_soil_moisture_pct",
+      "pot_7_target_soil_temperature_c"
+    ],
+    "pots.6.irrigation": [
+      "pot_7_irrigation_available",
+      "pot_7_irrigation_flow_ml_s",
+      "pot_7_irrigation_maximum_pulse_s",
+      "pot_7_irrigation_minimum_interval_s",
+      "pot_7_irrigation_control_type"
+    ],
+    "pots.6.heat_mat": [
+      "pot_7_heat_mat_available",
+      "pot_7_heat_mat_max_power_w",
+      "pot_7_heat_mat_control_type"
+    ],
+    "pots.6.previous": [
+      "pot_7_previous_irrigation",
+      "pot_7_previous_heat_mat"
+    ],
+    "pots.7": [
+      "pot_8_available"
+    ],
+    "pots.7.sensors": [
+      "soil_moisture_pot_8_pct",
+      "soil_temperature_pot_8_c"
+    ],
+    "pots.7.validity": [
+      "soil_moisture_pot_8_valid",
+      "soil_temperature_pot_8_valid"
+    ],
+    "pots.7.cultivation": [
+      "pot_8_pot_volume_l",
+      "pot_8_substrate_water_capacity_ml",
+      "pot_8_transpiration_factor"
+    ],
+    "pots.7.targets": [
+      "pot_8_target_soil_moisture_pct",
+      "pot_8_target_soil_temperature_c"
+    ],
+    "pots.7.irrigation": [
+      "pot_8_irrigation_available",
+      "pot_8_irrigation_flow_ml_s",
+      "pot_8_irrigation_maximum_pulse_s",
+      "pot_8_irrigation_minimum_interval_s",
+      "pot_8_irrigation_control_type"
+    ],
+    "pots.7.heat_mat": [
+      "pot_8_heat_mat_available",
+      "pot_8_heat_mat_max_power_w",
+      "pot_8_heat_mat_control_type"
+    ],
+    "pots.7.previous": [
+      "pot_8_previous_irrigation",
+      "pot_8_previous_heat_mat"
+    ],
+    "pots.8": [
+      "pot_9_available"
+    ],
+    "pots.8.sensors": [
+      "soil_moisture_pot_9_pct",
+      "soil_temperature_pot_9_c"
+    ],
+    "pots.8.validity": [
+      "soil_moisture_pot_9_valid",
+      "soil_temperature_pot_9_valid"
+    ],
+    "pots.8.cultivation": [
+      "pot_9_pot_volume_l",
+      "pot_9_substrate_water_capacity_ml",
+      "pot_9_transpiration_factor"
+    ],
+    "pots.8.targets": [
+      "pot_9_target_soil_moisture_pct",
+      "pot_9_target_soil_temperature_c"
+    ],
+    "pots.8.irrigation": [
+      "pot_9_irrigation_available",
+      "pot_9_irrigation_flow_ml_s",
+      "pot_9_irrigation_maximum_pulse_s",
+      "pot_9_irrigation_minimum_interval_s",
+      "pot_9_irrigation_control_type"
+    ],
+    "pots.8.heat_mat": [
+      "pot_9_heat_mat_available",
+      "pot_9_heat_mat_max_power_w",
+      "pot_9_heat_mat_control_type"
+    ],
+    "pots.8.previous": [
+      "pot_9_previous_irrigation",
+      "pot_9_previous_heat_mat"
     ]
   },
   "output_scope": {
-    "ml_output_count": 15,
+    "ml_output_count": 25,
     "non_ml_actuators": [
       "lights"
     ],
@@ -305,315 +498,315 @@
         "path": "sensors.air_temperature_c",
         "type": "number",
         "unit": "degC",
-        "minimum": -20.0,
-        "maximum": 60.0,
-        "default": 24.0
+        "minimum": -20,
+        "maximum": 60,
+        "default": 24
       },
       {
         "name": "air_humidity_pct",
         "path": "sensors.air_humidity_pct",
         "type": "number",
         "unit": "percent",
-        "minimum": 0.0,
-        "maximum": 100.0,
-        "default": 60.0
+        "minimum": 0,
+        "maximum": 100,
+        "default": 60
       },
       {
         "name": "co2_ppm",
         "path": "sensors.co2_ppm",
         "type": "number",
         "unit": "ppm",
-        "minimum": 0.0,
-        "maximum": 5000.0,
-        "default": 850.0
+        "minimum": 0,
+        "maximum": 5000,
+        "default": 850
       },
       {
         "name": "air_temperature_valid",
         "path": "validity.air_temperature_c",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "air_humidity_valid",
         "path": "validity.air_humidity_pct",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "co2_valid",
         "path": "validity.co2_ppm",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "nutrient_solution_temperature_c",
         "path": "sensors.nutrient_solution_temperature_c",
         "type": "number",
         "unit": "degC",
-        "minimum": 0.0,
-        "maximum": 50.0,
-        "default": 20.0
+        "minimum": 0,
+        "maximum": 50,
+        "default": 20
       },
       {
         "name": "nutrient_solution_temperature_valid",
         "path": "validity.nutrient_solution_temperature_c",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "outside_temperature_c",
         "path": "sensors.outside_temperature_c",
         "type": "number",
         "unit": "degC",
-        "minimum": -40.0,
-        "maximum": 60.0,
-        "default": 20.0
+        "minimum": -40,
+        "maximum": 60,
+        "default": 20
       },
       {
         "name": "outside_humidity_pct",
         "path": "sensors.outside_humidity_pct",
         "type": "number",
         "unit": "percent",
-        "minimum": 0.0,
-        "maximum": 100.0,
-        "default": 50.0
+        "minimum": 0,
+        "maximum": 100,
+        "default": 50
       },
       {
         "name": "outside_co2_ppm",
         "path": "sensors.outside_co2_ppm",
         "type": "number",
         "unit": "ppm",
-        "minimum": 0.0,
-        "maximum": 5000.0,
-        "default": 420.0
+        "minimum": 0,
+        "maximum": 5000,
+        "default": 420
       },
       {
         "name": "outside_temperature_valid",
         "path": "validity.outside_temperature_c",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "outside_humidity_valid",
         "path": "validity.outside_humidity_pct",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "outside_co2_valid",
         "path": "validity.outside_co2_ppm",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "pot_1_available",
         "path": "pots.0.available",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "soil_moisture_pot_1_pct",
         "path": "pots.0.sensors.soil_moisture_pct",
         "type": "number",
         "unit": "percent",
-        "minimum": 0.0,
-        "maximum": 100.0,
-        "default": 50.0
+        "minimum": 0,
+        "maximum": 100,
+        "default": 50
       },
       {
         "name": "soil_temperature_pot_1_c",
         "path": "pots.0.sensors.soil_temperature_c",
         "type": "number",
         "unit": "degC",
-        "minimum": -10.0,
-        "maximum": 50.0,
-        "default": 20.0
+        "minimum": -10,
+        "maximum": 50,
+        "default": 20
       },
       {
         "name": "soil_moisture_pot_1_valid",
         "path": "pots.0.validity.soil_moisture_pct",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "soil_temperature_pot_1_valid",
         "path": "pots.0.validity.soil_temperature_c",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "pot_2_available",
         "path": "pots.1.available",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "soil_moisture_pot_2_pct",
         "path": "pots.1.sensors.soil_moisture_pct",
         "type": "number",
         "unit": "percent",
-        "minimum": 0.0,
-        "maximum": 100.0,
-        "default": 50.0
+        "minimum": 0,
+        "maximum": 100,
+        "default": 50
       },
       {
         "name": "soil_temperature_pot_2_c",
         "path": "pots.1.sensors.soil_temperature_c",
         "type": "number",
         "unit": "degC",
-        "minimum": -10.0,
-        "maximum": 50.0,
-        "default": 20.0
+        "minimum": -10,
+        "maximum": 50,
+        "default": 20
       },
       {
         "name": "soil_moisture_pot_2_valid",
         "path": "pots.1.validity.soil_moisture_pct",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "soil_temperature_pot_2_valid",
         "path": "pots.1.validity.soil_temperature_c",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "pot_3_available",
         "path": "pots.2.available",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "soil_moisture_pot_3_pct",
         "path": "pots.2.sensors.soil_moisture_pct",
         "type": "number",
         "unit": "percent",
-        "minimum": 0.0,
-        "maximum": 100.0,
-        "default": 50.0
+        "minimum": 0,
+        "maximum": 100,
+        "default": 50
       },
       {
         "name": "soil_temperature_pot_3_c",
         "path": "pots.2.sensors.soil_temperature_c",
         "type": "number",
         "unit": "degC",
-        "minimum": -10.0,
-        "maximum": 50.0,
-        "default": 20.0
+        "minimum": -10,
+        "maximum": 50,
+        "default": 20
       },
       {
         "name": "soil_moisture_pot_3_valid",
         "path": "pots.2.validity.soil_moisture_pct",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "soil_temperature_pot_3_valid",
         "path": "pots.2.validity.soil_temperature_c",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "pot_4_available",
         "path": "pots.3.available",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "soil_moisture_pot_4_pct",
         "path": "pots.3.sensors.soil_moisture_pct",
         "type": "number",
         "unit": "percent",
-        "minimum": 0.0,
-        "maximum": 100.0,
-        "default": 50.0
+        "minimum": 0,
+        "maximum": 100,
+        "default": 50
       },
       {
         "name": "soil_temperature_pot_4_c",
         "path": "pots.3.sensors.soil_temperature_c",
         "type": "number",
         "unit": "degC",
-        "minimum": -10.0,
-        "maximum": 50.0,
-        "default": 20.0
+        "minimum": -10,
+        "maximum": 50,
+        "default": 20
       },
       {
         "name": "soil_moisture_pot_4_valid",
         "path": "pots.3.validity.soil_moisture_pct",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "soil_temperature_pot_4_valid",
         "path": "pots.3.validity.soil_temperature_c",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "lights_active",
         "path": "pseudo.lights_active",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "growbox_volume_m3",
@@ -621,296 +814,296 @@
         "type": "number",
         "unit": "m3",
         "minimum": 0.05,
-        "maximum": 100.0,
-        "default": 1.0
+        "maximum": 100,
+        "default": 1
       },
       {
         "name": "thermal_mass_j_per_k",
         "path": "environment.thermal_mass_j_per_k",
         "type": "number",
         "unit": "J/K",
-        "minimum": 1000.0,
-        "maximum": 10000000.0,
-        "default": 100000.0
+        "minimum": 1000,
+        "maximum": 10000000,
+        "default": 100000
       },
       {
         "name": "heat_loss_w_per_k",
         "path": "environment.heat_loss_w_per_k",
         "type": "number",
         "unit": "W/K",
-        "minimum": 0.0,
-        "maximum": 5000.0,
-        "default": 30.0
+        "minimum": 0,
+        "maximum": 5000,
+        "default": 30
       },
       {
         "name": "air_leak_rate_ach",
         "path": "environment.air_leak_rate_ach",
         "type": "number",
         "unit": "1/h",
-        "minimum": 0.0,
-        "maximum": 20.0,
-        "default": 1.0
+        "minimum": 0,
+        "maximum": 20,
+        "default": 1
       },
       {
         "name": "heater_available",
         "path": "actuators.heater.available",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "heater_max_power_w",
         "path": "actuators.heater.max_power_w",
         "type": "number",
         "unit": "W",
-        "minimum": 0.0,
-        "maximum": 10000.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 10000,
+        "default": 0
       },
       {
         "name": "heater_efficiency",
         "path": "actuators.heater.efficiency",
         "type": "number",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "fan_available",
         "path": "actuators.fan.available",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "fan_max_airflow_m3_h",
         "path": "actuators.fan.max_airflow_m3_h",
         "type": "number",
         "unit": "m3/h",
-        "minimum": 0.0,
-        "maximum": 10000.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 10000,
+        "default": 0
       },
       {
         "name": "fan_minimum_command",
         "path": "actuators.fan.minimum_command",
         "type": "number",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "humidifier_available",
         "path": "actuators.humidifier.available",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "humidifier_max_output_g_h",
         "path": "actuators.humidifier.max_output_g_h",
         "type": "number",
         "unit": "g/h",
-        "minimum": 0.0,
-        "maximum": 10000.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 10000,
+        "default": 0
       },
       {
         "name": "dehumidifier_available",
         "path": "actuators.dehumidifier.available",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "dehumidifier_max_removal_g_h",
         "path": "actuators.dehumidifier.max_removal_g_h",
         "type": "number",
         "unit": "g/h",
-        "minimum": 0.0,
-        "maximum": 10000.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 10000,
+        "default": 0
       },
       {
         "name": "cooler_available",
         "path": "actuators.cooler.available",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "cooler_max_cooling_w",
         "path": "actuators.cooler.max_cooling_w",
         "type": "number",
         "unit": "W",
-        "minimum": 0.0,
-        "maximum": 10000.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 10000,
+        "default": 0
       },
       {
         "name": "co2_doser_available",
         "path": "actuators.co2_doser.available",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "co2_doser_dose_ppm_per_full_pulse",
         "path": "actuators.co2_doser.dose_ppm_per_full_pulse",
         "type": "number",
         "unit": "ppm",
-        "minimum": 0.0,
-        "maximum": 1000.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1000,
+        "default": 0
       },
       {
         "name": "co2_doser_maximum_pulse_s",
         "path": "actuators.co2_doser.maximum_pulse_s",
         "type": "number",
         "unit": "s",
-        "minimum": 0.0,
-        "maximum": 60.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 60,
+        "default": 0
       },
       {
         "name": "nutrient_heater_available",
         "path": "actuators.nutrient_heater.available",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "nutrient_heater_max_power_w",
         "path": "actuators.nutrient_heater.max_power_w",
         "type": "number",
         "unit": "W",
-        "minimum": 0.0,
-        "maximum": 5000.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 5000,
+        "default": 0
       },
       {
         "name": "nutrient_heater_efficiency",
         "path": "actuators.nutrient_heater.efficiency",
         "type": "number",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "target_air_temperature_c",
         "path": "targets.air_temperature_c",
         "type": "number",
         "unit": "degC",
-        "minimum": -20.0,
-        "maximum": 60.0,
-        "default": 25.0
+        "minimum": -20,
+        "maximum": 60,
+        "default": 25
       },
       {
         "name": "target_air_humidity_pct",
         "path": "targets.air_humidity_pct",
         "type": "number",
         "unit": "percent",
-        "minimum": 0.0,
-        "maximum": 100.0,
-        "default": 65.0
+        "minimum": 0,
+        "maximum": 100,
+        "default": 65
       },
       {
         "name": "target_co2_ppm",
         "path": "targets.co2_ppm",
         "type": "number",
         "unit": "ppm",
-        "minimum": 0.0,
-        "maximum": 5000.0,
-        "default": 850.0
+        "minimum": 0,
+        "maximum": 5000,
+        "default": 850
       },
       {
         "name": "target_nutrient_solution_temperature_c",
         "path": "targets.nutrient_solution_temperature_c",
         "type": "number",
         "unit": "degC",
-        "minimum": 0.0,
-        "maximum": 50.0,
-        "default": 20.0
+        "minimum": 0,
+        "maximum": 50,
+        "default": 20
       },
       {
         "name": "previous_heater",
         "path": "previous.heater",
         "type": "number",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "previous_fan",
         "path": "previous.fan",
         "type": "number",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "previous_humidifier",
         "path": "previous.humidifier",
         "type": "number",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "previous_dehumidifier",
         "path": "previous.dehumidifier",
         "type": "number",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "previous_cooler",
         "path": "previous.cooler",
         "type": "number",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "previous_co2_doser",
         "path": "previous.co2_doser",
         "type": "number",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "previous_nutrient_heater",
         "path": "previous.nutrient_heater",
         "type": "number",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "pot_1_pot_volume_l",
@@ -918,92 +1111,92 @@
         "type": "number",
         "unit": "L",
         "minimum": 0.1,
-        "maximum": 100.0,
-        "default": 10.0
+        "maximum": 100,
+        "default": 10
       },
       {
         "name": "pot_1_substrate_water_capacity_ml",
         "path": "pots.0.cultivation.substrate_water_capacity_ml",
         "type": "number",
         "unit": "mL",
-        "minimum": 10.0,
-        "maximum": 100000.0,
-        "default": 3000.0
+        "minimum": 10,
+        "maximum": 100000,
+        "default": 3000
       },
       {
         "name": "pot_1_transpiration_factor",
         "path": "pots.0.cultivation.transpiration_factor",
         "type": "number",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 10.0,
-        "default": 1.0
+        "minimum": 0,
+        "maximum": 10,
+        "default": 1
       },
       {
         "name": "pot_1_target_soil_moisture_pct",
         "path": "pots.0.targets.soil_moisture_pct",
         "type": "number",
         "unit": "percent",
-        "minimum": 0.0,
-        "maximum": 100.0,
-        "default": 50.0
+        "minimum": 0,
+        "maximum": 100,
+        "default": 50
       },
       {
         "name": "pot_1_target_soil_temperature_c",
         "path": "pots.0.targets.soil_temperature_c",
         "type": "number",
         "unit": "degC",
-        "minimum": -10.0,
-        "maximum": 50.0,
-        "default": 20.0
+        "minimum": -10,
+        "maximum": 50,
+        "default": 20
       },
       {
         "name": "pot_1_irrigation_available",
         "path": "pots.0.irrigation.available",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "pot_1_irrigation_flow_ml_s",
         "path": "pots.0.irrigation.flow_ml_s",
         "type": "number",
         "unit": "mL/s",
-        "minimum": 0.0,
-        "maximum": 1000.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1000,
+        "default": 0
       },
       {
         "name": "pot_1_irrigation_maximum_pulse_s",
         "path": "pots.0.irrigation.maximum_pulse_s",
         "type": "number",
         "unit": "s",
-        "minimum": 0.0,
-        "maximum": 600.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 600,
+        "default": 0
       },
       {
         "name": "pot_1_irrigation_minimum_interval_s",
         "path": "pots.0.irrigation.minimum_interval_s",
         "type": "number",
         "unit": "s",
-        "minimum": 0.0,
-        "maximum": 86400.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 86400,
+        "default": 0
       },
       {
         "name": "pot_1_irrigation_control_type",
         "path": "pots.0.irrigation.control_type",
         "type": "enum",
         "unit": "enum",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0,
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0,
         "encoding": {
-          "binary": 0.0,
-          "pwm": 1.0
+          "binary": 0,
+          "pwm": 1
         }
       },
       {
@@ -1011,30 +1204,30 @@
         "path": "pots.0.heat_mat.available",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "pot_1_heat_mat_max_power_w",
         "path": "pots.0.heat_mat.max_power_w",
         "type": "number",
         "unit": "W",
-        "minimum": 0.0,
-        "maximum": 500.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 500,
+        "default": 0
       },
       {
         "name": "pot_1_heat_mat_control_type",
         "path": "pots.0.heat_mat.control_type",
         "type": "enum",
         "unit": "enum",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0,
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0,
         "encoding": {
-          "binary": 0.0,
-          "pwm": 1.0
+          "binary": 0,
+          "pwm": 1
         }
       },
       {
@@ -1042,18 +1235,18 @@
         "path": "pots.0.previous.irrigation",
         "type": "number",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "pot_1_previous_heat_mat",
         "path": "pots.0.previous.heat_mat",
         "type": "number",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "pot_2_pot_volume_l",
@@ -1061,92 +1254,92 @@
         "type": "number",
         "unit": "L",
         "minimum": 0.1,
-        "maximum": 100.0,
-        "default": 10.0
+        "maximum": 100,
+        "default": 10
       },
       {
         "name": "pot_2_substrate_water_capacity_ml",
         "path": "pots.1.cultivation.substrate_water_capacity_ml",
         "type": "number",
         "unit": "mL",
-        "minimum": 10.0,
-        "maximum": 100000.0,
-        "default": 3000.0
+        "minimum": 10,
+        "maximum": 100000,
+        "default": 3000
       },
       {
         "name": "pot_2_transpiration_factor",
         "path": "pots.1.cultivation.transpiration_factor",
         "type": "number",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 10.0,
-        "default": 1.0
+        "minimum": 0,
+        "maximum": 10,
+        "default": 1
       },
       {
         "name": "pot_2_target_soil_moisture_pct",
         "path": "pots.1.targets.soil_moisture_pct",
         "type": "number",
         "unit": "percent",
-        "minimum": 0.0,
-        "maximum": 100.0,
-        "default": 50.0
+        "minimum": 0,
+        "maximum": 100,
+        "default": 50
       },
       {
         "name": "pot_2_target_soil_temperature_c",
         "path": "pots.1.targets.soil_temperature_c",
         "type": "number",
         "unit": "degC",
-        "minimum": -10.0,
-        "maximum": 50.0,
-        "default": 20.0
+        "minimum": -10,
+        "maximum": 50,
+        "default": 20
       },
       {
         "name": "pot_2_irrigation_available",
         "path": "pots.1.irrigation.available",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "pot_2_irrigation_flow_ml_s",
         "path": "pots.1.irrigation.flow_ml_s",
         "type": "number",
         "unit": "mL/s",
-        "minimum": 0.0,
-        "maximum": 1000.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1000,
+        "default": 0
       },
       {
         "name": "pot_2_irrigation_maximum_pulse_s",
         "path": "pots.1.irrigation.maximum_pulse_s",
         "type": "number",
         "unit": "s",
-        "minimum": 0.0,
-        "maximum": 600.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 600,
+        "default": 0
       },
       {
         "name": "pot_2_irrigation_minimum_interval_s",
         "path": "pots.1.irrigation.minimum_interval_s",
         "type": "number",
         "unit": "s",
-        "minimum": 0.0,
-        "maximum": 86400.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 86400,
+        "default": 0
       },
       {
         "name": "pot_2_irrigation_control_type",
         "path": "pots.1.irrigation.control_type",
         "type": "enum",
         "unit": "enum",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0,
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0,
         "encoding": {
-          "binary": 0.0,
-          "pwm": 1.0
+          "binary": 0,
+          "pwm": 1
         }
       },
       {
@@ -1154,30 +1347,30 @@
         "path": "pots.1.heat_mat.available",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "pot_2_heat_mat_max_power_w",
         "path": "pots.1.heat_mat.max_power_w",
         "type": "number",
         "unit": "W",
-        "minimum": 0.0,
-        "maximum": 500.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 500,
+        "default": 0
       },
       {
         "name": "pot_2_heat_mat_control_type",
         "path": "pots.1.heat_mat.control_type",
         "type": "enum",
         "unit": "enum",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0,
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0,
         "encoding": {
-          "binary": 0.0,
-          "pwm": 1.0
+          "binary": 0,
+          "pwm": 1
         }
       },
       {
@@ -1185,18 +1378,18 @@
         "path": "pots.1.previous.irrigation",
         "type": "number",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "pot_2_previous_heat_mat",
         "path": "pots.1.previous.heat_mat",
         "type": "number",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "pot_3_pot_volume_l",
@@ -1204,92 +1397,92 @@
         "type": "number",
         "unit": "L",
         "minimum": 0.1,
-        "maximum": 100.0,
-        "default": 10.0
+        "maximum": 100,
+        "default": 10
       },
       {
         "name": "pot_3_substrate_water_capacity_ml",
         "path": "pots.2.cultivation.substrate_water_capacity_ml",
         "type": "number",
         "unit": "mL",
-        "minimum": 10.0,
-        "maximum": 100000.0,
-        "default": 3000.0
+        "minimum": 10,
+        "maximum": 100000,
+        "default": 3000
       },
       {
         "name": "pot_3_transpiration_factor",
         "path": "pots.2.cultivation.transpiration_factor",
         "type": "number",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 10.0,
-        "default": 1.0
+        "minimum": 0,
+        "maximum": 10,
+        "default": 1
       },
       {
         "name": "pot_3_target_soil_moisture_pct",
         "path": "pots.2.targets.soil_moisture_pct",
         "type": "number",
         "unit": "percent",
-        "minimum": 0.0,
-        "maximum": 100.0,
-        "default": 50.0
+        "minimum": 0,
+        "maximum": 100,
+        "default": 50
       },
       {
         "name": "pot_3_target_soil_temperature_c",
         "path": "pots.2.targets.soil_temperature_c",
         "type": "number",
         "unit": "degC",
-        "minimum": -10.0,
-        "maximum": 50.0,
-        "default": 20.0
+        "minimum": -10,
+        "maximum": 50,
+        "default": 20
       },
       {
         "name": "pot_3_irrigation_available",
         "path": "pots.2.irrigation.available",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "pot_3_irrigation_flow_ml_s",
         "path": "pots.2.irrigation.flow_ml_s",
         "type": "number",
         "unit": "mL/s",
-        "minimum": 0.0,
-        "maximum": 1000.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1000,
+        "default": 0
       },
       {
         "name": "pot_3_irrigation_maximum_pulse_s",
         "path": "pots.2.irrigation.maximum_pulse_s",
         "type": "number",
         "unit": "s",
-        "minimum": 0.0,
-        "maximum": 600.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 600,
+        "default": 0
       },
       {
         "name": "pot_3_irrigation_minimum_interval_s",
         "path": "pots.2.irrigation.minimum_interval_s",
         "type": "number",
         "unit": "s",
-        "minimum": 0.0,
-        "maximum": 86400.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 86400,
+        "default": 0
       },
       {
         "name": "pot_3_irrigation_control_type",
         "path": "pots.2.irrigation.control_type",
         "type": "enum",
         "unit": "enum",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0,
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0,
         "encoding": {
-          "binary": 0.0,
-          "pwm": 1.0
+          "binary": 0,
+          "pwm": 1
         }
       },
       {
@@ -1297,30 +1490,30 @@
         "path": "pots.2.heat_mat.available",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "pot_3_heat_mat_max_power_w",
         "path": "pots.2.heat_mat.max_power_w",
         "type": "number",
         "unit": "W",
-        "minimum": 0.0,
-        "maximum": 500.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 500,
+        "default": 0
       },
       {
         "name": "pot_3_heat_mat_control_type",
         "path": "pots.2.heat_mat.control_type",
         "type": "enum",
         "unit": "enum",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0,
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0,
         "encoding": {
-          "binary": 0.0,
-          "pwm": 1.0
+          "binary": 0,
+          "pwm": 1
         }
       },
       {
@@ -1328,18 +1521,18 @@
         "path": "pots.2.previous.irrigation",
         "type": "number",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "pot_3_previous_heat_mat",
         "path": "pots.2.previous.heat_mat",
         "type": "number",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "pot_4_pot_volume_l",
@@ -1347,92 +1540,92 @@
         "type": "number",
         "unit": "L",
         "minimum": 0.1,
-        "maximum": 100.0,
-        "default": 10.0
+        "maximum": 100,
+        "default": 10
       },
       {
         "name": "pot_4_substrate_water_capacity_ml",
         "path": "pots.3.cultivation.substrate_water_capacity_ml",
         "type": "number",
         "unit": "mL",
-        "minimum": 10.0,
-        "maximum": 100000.0,
-        "default": 3000.0
+        "minimum": 10,
+        "maximum": 100000,
+        "default": 3000
       },
       {
         "name": "pot_4_transpiration_factor",
         "path": "pots.3.cultivation.transpiration_factor",
         "type": "number",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 10.0,
-        "default": 1.0
+        "minimum": 0,
+        "maximum": 10,
+        "default": 1
       },
       {
         "name": "pot_4_target_soil_moisture_pct",
         "path": "pots.3.targets.soil_moisture_pct",
         "type": "number",
         "unit": "percent",
-        "minimum": 0.0,
-        "maximum": 100.0,
-        "default": 50.0
+        "minimum": 0,
+        "maximum": 100,
+        "default": 50
       },
       {
         "name": "pot_4_target_soil_temperature_c",
         "path": "pots.3.targets.soil_temperature_c",
         "type": "number",
         "unit": "degC",
-        "minimum": -10.0,
-        "maximum": 50.0,
-        "default": 20.0
+        "minimum": -10,
+        "maximum": 50,
+        "default": 20
       },
       {
         "name": "pot_4_irrigation_available",
         "path": "pots.3.irrigation.available",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "pot_4_irrigation_flow_ml_s",
         "path": "pots.3.irrigation.flow_ml_s",
         "type": "number",
         "unit": "mL/s",
-        "minimum": 0.0,
-        "maximum": 1000.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1000,
+        "default": 0
       },
       {
         "name": "pot_4_irrigation_maximum_pulse_s",
         "path": "pots.3.irrigation.maximum_pulse_s",
         "type": "number",
         "unit": "s",
-        "minimum": 0.0,
-        "maximum": 600.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 600,
+        "default": 0
       },
       {
         "name": "pot_4_irrigation_minimum_interval_s",
         "path": "pots.3.irrigation.minimum_interval_s",
         "type": "number",
         "unit": "s",
-        "minimum": 0.0,
-        "maximum": 86400.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 86400,
+        "default": 0
       },
       {
         "name": "pot_4_irrigation_control_type",
         "path": "pots.3.irrigation.control_type",
         "type": "enum",
         "unit": "enum",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0,
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0,
         "encoding": {
-          "binary": 0.0,
-          "pwm": 1.0
+          "binary": 0,
+          "pwm": 1
         }
       },
       {
@@ -1440,30 +1633,30 @@
         "path": "pots.3.heat_mat.available",
         "type": "boolean",
         "unit": "mask",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "pot_4_heat_mat_max_power_w",
         "path": "pots.3.heat_mat.max_power_w",
         "type": "number",
         "unit": "W",
-        "minimum": 0.0,
-        "maximum": 500.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 500,
+        "default": 0
       },
       {
         "name": "pot_4_heat_mat_control_type",
         "path": "pots.3.heat_mat.control_type",
         "type": "enum",
         "unit": "enum",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0,
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0,
         "encoding": {
-          "binary": 0.0,
-          "pwm": 1.0
+          "binary": 0,
+          "pwm": 1
         }
       },
       {
@@ -1471,147 +1664,1157 @@
         "path": "pots.3.previous.irrigation",
         "type": "number",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "pot_4_previous_heat_mat",
         "path": "pots.3.previous.heat_mat",
         "type": "number",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "pot_5_available",
+        "path": "pots.4.available",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "soil_moisture_pot_5_pct",
+        "path": "pots.4.sensors.soil_moisture_pct",
+        "type": "number",
+        "unit": "percent",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 50
+      },
+      {
+        "name": "soil_temperature_pot_5_c",
+        "path": "pots.4.sensors.soil_temperature_c",
+        "type": "number",
+        "unit": "degC",
+        "minimum": -10,
+        "maximum": 50,
+        "default": 20
+      },
+      {
+        "name": "soil_moisture_pot_5_valid",
+        "path": "pots.4.validity.soil_moisture_pct",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "soil_temperature_pot_5_valid",
+        "path": "pots.4.validity.soil_temperature_c",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "pot_5_pot_volume_l",
+        "path": "pots.4.cultivation.pot_volume_l",
+        "type": "number",
+        "unit": "L",
+        "minimum": 0.1,
+        "maximum": 100,
+        "default": 10
+      },
+      {
+        "name": "pot_5_substrate_water_capacity_ml",
+        "path": "pots.4.cultivation.substrate_water_capacity_ml",
+        "type": "number",
+        "unit": "mL",
+        "minimum": 10,
+        "maximum": 100000,
+        "default": 3000
+      },
+      {
+        "name": "pot_5_transpiration_factor",
+        "path": "pots.4.cultivation.transpiration_factor",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0,
+        "maximum": 10,
+        "default": 1
+      },
+      {
+        "name": "pot_5_target_soil_moisture_pct",
+        "path": "pots.4.targets.soil_moisture_pct",
+        "type": "number",
+        "unit": "percent",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 50
+      },
+      {
+        "name": "pot_5_target_soil_temperature_c",
+        "path": "pots.4.targets.soil_temperature_c",
+        "type": "number",
+        "unit": "degC",
+        "minimum": -10,
+        "maximum": 50,
+        "default": 20
+      },
+      {
+        "name": "pot_5_irrigation_available",
+        "path": "pots.4.irrigation.available",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "pot_5_irrigation_flow_ml_s",
+        "path": "pots.4.irrigation.flow_ml_s",
+        "type": "number",
+        "unit": "mL/s",
+        "minimum": 0,
+        "maximum": 1000,
+        "default": 0
+      },
+      {
+        "name": "pot_5_irrigation_maximum_pulse_s",
+        "path": "pots.4.irrigation.maximum_pulse_s",
+        "type": "number",
+        "unit": "s",
+        "minimum": 0,
+        "maximum": 600,
+        "default": 0
+      },
+      {
+        "name": "pot_5_irrigation_minimum_interval_s",
+        "path": "pots.4.irrigation.minimum_interval_s",
+        "type": "number",
+        "unit": "s",
+        "minimum": 0,
+        "maximum": 86400,
+        "default": 0
+      },
+      {
+        "name": "pot_5_irrigation_control_type",
+        "path": "pots.4.irrigation.control_type",
+        "type": "enum",
+        "unit": "enum",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0,
+        "encoding": {
+          "binary": 0,
+          "pwm": 1
+        }
+      },
+      {
+        "name": "pot_5_heat_mat_available",
+        "path": "pots.4.heat_mat.available",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "pot_5_heat_mat_max_power_w",
+        "path": "pots.4.heat_mat.max_power_w",
+        "type": "number",
+        "unit": "W",
+        "minimum": 0,
+        "maximum": 500,
+        "default": 0
+      },
+      {
+        "name": "pot_5_heat_mat_control_type",
+        "path": "pots.4.heat_mat.control_type",
+        "type": "enum",
+        "unit": "enum",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0,
+        "encoding": {
+          "binary": 0,
+          "pwm": 1
+        }
+      },
+      {
+        "name": "pot_5_previous_irrigation",
+        "path": "pots.4.previous.irrigation",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "pot_5_previous_heat_mat",
+        "path": "pots.4.previous.heat_mat",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "pot_6_available",
+        "path": "pots.5.available",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "soil_moisture_pot_6_pct",
+        "path": "pots.5.sensors.soil_moisture_pct",
+        "type": "number",
+        "unit": "percent",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 50
+      },
+      {
+        "name": "soil_temperature_pot_6_c",
+        "path": "pots.5.sensors.soil_temperature_c",
+        "type": "number",
+        "unit": "degC",
+        "minimum": -10,
+        "maximum": 50,
+        "default": 20
+      },
+      {
+        "name": "soil_moisture_pot_6_valid",
+        "path": "pots.5.validity.soil_moisture_pct",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "soil_temperature_pot_6_valid",
+        "path": "pots.5.validity.soil_temperature_c",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "pot_6_pot_volume_l",
+        "path": "pots.5.cultivation.pot_volume_l",
+        "type": "number",
+        "unit": "L",
+        "minimum": 0.1,
+        "maximum": 100,
+        "default": 10
+      },
+      {
+        "name": "pot_6_substrate_water_capacity_ml",
+        "path": "pots.5.cultivation.substrate_water_capacity_ml",
+        "type": "number",
+        "unit": "mL",
+        "minimum": 10,
+        "maximum": 100000,
+        "default": 3000
+      },
+      {
+        "name": "pot_6_transpiration_factor",
+        "path": "pots.5.cultivation.transpiration_factor",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0,
+        "maximum": 10,
+        "default": 1
+      },
+      {
+        "name": "pot_6_target_soil_moisture_pct",
+        "path": "pots.5.targets.soil_moisture_pct",
+        "type": "number",
+        "unit": "percent",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 50
+      },
+      {
+        "name": "pot_6_target_soil_temperature_c",
+        "path": "pots.5.targets.soil_temperature_c",
+        "type": "number",
+        "unit": "degC",
+        "minimum": -10,
+        "maximum": 50,
+        "default": 20
+      },
+      {
+        "name": "pot_6_irrigation_available",
+        "path": "pots.5.irrigation.available",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "pot_6_irrigation_flow_ml_s",
+        "path": "pots.5.irrigation.flow_ml_s",
+        "type": "number",
+        "unit": "mL/s",
+        "minimum": 0,
+        "maximum": 1000,
+        "default": 0
+      },
+      {
+        "name": "pot_6_irrigation_maximum_pulse_s",
+        "path": "pots.5.irrigation.maximum_pulse_s",
+        "type": "number",
+        "unit": "s",
+        "minimum": 0,
+        "maximum": 600,
+        "default": 0
+      },
+      {
+        "name": "pot_6_irrigation_minimum_interval_s",
+        "path": "pots.5.irrigation.minimum_interval_s",
+        "type": "number",
+        "unit": "s",
+        "minimum": 0,
+        "maximum": 86400,
+        "default": 0
+      },
+      {
+        "name": "pot_6_irrigation_control_type",
+        "path": "pots.5.irrigation.control_type",
+        "type": "enum",
+        "unit": "enum",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0,
+        "encoding": {
+          "binary": 0,
+          "pwm": 1
+        }
+      },
+      {
+        "name": "pot_6_heat_mat_available",
+        "path": "pots.5.heat_mat.available",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "pot_6_heat_mat_max_power_w",
+        "path": "pots.5.heat_mat.max_power_w",
+        "type": "number",
+        "unit": "W",
+        "minimum": 0,
+        "maximum": 500,
+        "default": 0
+      },
+      {
+        "name": "pot_6_heat_mat_control_type",
+        "path": "pots.5.heat_mat.control_type",
+        "type": "enum",
+        "unit": "enum",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0,
+        "encoding": {
+          "binary": 0,
+          "pwm": 1
+        }
+      },
+      {
+        "name": "pot_6_previous_irrigation",
+        "path": "pots.5.previous.irrigation",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "pot_6_previous_heat_mat",
+        "path": "pots.5.previous.heat_mat",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "pot_7_available",
+        "path": "pots.6.available",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "soil_moisture_pot_7_pct",
+        "path": "pots.6.sensors.soil_moisture_pct",
+        "type": "number",
+        "unit": "percent",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 50
+      },
+      {
+        "name": "soil_temperature_pot_7_c",
+        "path": "pots.6.sensors.soil_temperature_c",
+        "type": "number",
+        "unit": "degC",
+        "minimum": -10,
+        "maximum": 50,
+        "default": 20
+      },
+      {
+        "name": "soil_moisture_pot_7_valid",
+        "path": "pots.6.validity.soil_moisture_pct",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "soil_temperature_pot_7_valid",
+        "path": "pots.6.validity.soil_temperature_c",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "pot_7_pot_volume_l",
+        "path": "pots.6.cultivation.pot_volume_l",
+        "type": "number",
+        "unit": "L",
+        "minimum": 0.1,
+        "maximum": 100,
+        "default": 10
+      },
+      {
+        "name": "pot_7_substrate_water_capacity_ml",
+        "path": "pots.6.cultivation.substrate_water_capacity_ml",
+        "type": "number",
+        "unit": "mL",
+        "minimum": 10,
+        "maximum": 100000,
+        "default": 3000
+      },
+      {
+        "name": "pot_7_transpiration_factor",
+        "path": "pots.6.cultivation.transpiration_factor",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0,
+        "maximum": 10,
+        "default": 1
+      },
+      {
+        "name": "pot_7_target_soil_moisture_pct",
+        "path": "pots.6.targets.soil_moisture_pct",
+        "type": "number",
+        "unit": "percent",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 50
+      },
+      {
+        "name": "pot_7_target_soil_temperature_c",
+        "path": "pots.6.targets.soil_temperature_c",
+        "type": "number",
+        "unit": "degC",
+        "minimum": -10,
+        "maximum": 50,
+        "default": 20
+      },
+      {
+        "name": "pot_7_irrigation_available",
+        "path": "pots.6.irrigation.available",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "pot_7_irrigation_flow_ml_s",
+        "path": "pots.6.irrigation.flow_ml_s",
+        "type": "number",
+        "unit": "mL/s",
+        "minimum": 0,
+        "maximum": 1000,
+        "default": 0
+      },
+      {
+        "name": "pot_7_irrigation_maximum_pulse_s",
+        "path": "pots.6.irrigation.maximum_pulse_s",
+        "type": "number",
+        "unit": "s",
+        "minimum": 0,
+        "maximum": 600,
+        "default": 0
+      },
+      {
+        "name": "pot_7_irrigation_minimum_interval_s",
+        "path": "pots.6.irrigation.minimum_interval_s",
+        "type": "number",
+        "unit": "s",
+        "minimum": 0,
+        "maximum": 86400,
+        "default": 0
+      },
+      {
+        "name": "pot_7_irrigation_control_type",
+        "path": "pots.6.irrigation.control_type",
+        "type": "enum",
+        "unit": "enum",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0,
+        "encoding": {
+          "binary": 0,
+          "pwm": 1
+        }
+      },
+      {
+        "name": "pot_7_heat_mat_available",
+        "path": "pots.6.heat_mat.available",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "pot_7_heat_mat_max_power_w",
+        "path": "pots.6.heat_mat.max_power_w",
+        "type": "number",
+        "unit": "W",
+        "minimum": 0,
+        "maximum": 500,
+        "default": 0
+      },
+      {
+        "name": "pot_7_heat_mat_control_type",
+        "path": "pots.6.heat_mat.control_type",
+        "type": "enum",
+        "unit": "enum",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0,
+        "encoding": {
+          "binary": 0,
+          "pwm": 1
+        }
+      },
+      {
+        "name": "pot_7_previous_irrigation",
+        "path": "pots.6.previous.irrigation",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "pot_7_previous_heat_mat",
+        "path": "pots.6.previous.heat_mat",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "pot_8_available",
+        "path": "pots.7.available",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "soil_moisture_pot_8_pct",
+        "path": "pots.7.sensors.soil_moisture_pct",
+        "type": "number",
+        "unit": "percent",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 50
+      },
+      {
+        "name": "soil_temperature_pot_8_c",
+        "path": "pots.7.sensors.soil_temperature_c",
+        "type": "number",
+        "unit": "degC",
+        "minimum": -10,
+        "maximum": 50,
+        "default": 20
+      },
+      {
+        "name": "soil_moisture_pot_8_valid",
+        "path": "pots.7.validity.soil_moisture_pct",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "soil_temperature_pot_8_valid",
+        "path": "pots.7.validity.soil_temperature_c",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "pot_8_pot_volume_l",
+        "path": "pots.7.cultivation.pot_volume_l",
+        "type": "number",
+        "unit": "L",
+        "minimum": 0.1,
+        "maximum": 100,
+        "default": 10
+      },
+      {
+        "name": "pot_8_substrate_water_capacity_ml",
+        "path": "pots.7.cultivation.substrate_water_capacity_ml",
+        "type": "number",
+        "unit": "mL",
+        "minimum": 10,
+        "maximum": 100000,
+        "default": 3000
+      },
+      {
+        "name": "pot_8_transpiration_factor",
+        "path": "pots.7.cultivation.transpiration_factor",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0,
+        "maximum": 10,
+        "default": 1
+      },
+      {
+        "name": "pot_8_target_soil_moisture_pct",
+        "path": "pots.7.targets.soil_moisture_pct",
+        "type": "number",
+        "unit": "percent",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 50
+      },
+      {
+        "name": "pot_8_target_soil_temperature_c",
+        "path": "pots.7.targets.soil_temperature_c",
+        "type": "number",
+        "unit": "degC",
+        "minimum": -10,
+        "maximum": 50,
+        "default": 20
+      },
+      {
+        "name": "pot_8_irrigation_available",
+        "path": "pots.7.irrigation.available",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "pot_8_irrigation_flow_ml_s",
+        "path": "pots.7.irrigation.flow_ml_s",
+        "type": "number",
+        "unit": "mL/s",
+        "minimum": 0,
+        "maximum": 1000,
+        "default": 0
+      },
+      {
+        "name": "pot_8_irrigation_maximum_pulse_s",
+        "path": "pots.7.irrigation.maximum_pulse_s",
+        "type": "number",
+        "unit": "s",
+        "minimum": 0,
+        "maximum": 600,
+        "default": 0
+      },
+      {
+        "name": "pot_8_irrigation_minimum_interval_s",
+        "path": "pots.7.irrigation.minimum_interval_s",
+        "type": "number",
+        "unit": "s",
+        "minimum": 0,
+        "maximum": 86400,
+        "default": 0
+      },
+      {
+        "name": "pot_8_irrigation_control_type",
+        "path": "pots.7.irrigation.control_type",
+        "type": "enum",
+        "unit": "enum",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0,
+        "encoding": {
+          "binary": 0,
+          "pwm": 1
+        }
+      },
+      {
+        "name": "pot_8_heat_mat_available",
+        "path": "pots.7.heat_mat.available",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "pot_8_heat_mat_max_power_w",
+        "path": "pots.7.heat_mat.max_power_w",
+        "type": "number",
+        "unit": "W",
+        "minimum": 0,
+        "maximum": 500,
+        "default": 0
+      },
+      {
+        "name": "pot_8_heat_mat_control_type",
+        "path": "pots.7.heat_mat.control_type",
+        "type": "enum",
+        "unit": "enum",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0,
+        "encoding": {
+          "binary": 0,
+          "pwm": 1
+        }
+      },
+      {
+        "name": "pot_8_previous_irrigation",
+        "path": "pots.7.previous.irrigation",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "pot_8_previous_heat_mat",
+        "path": "pots.7.previous.heat_mat",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "pot_9_available",
+        "path": "pots.8.available",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "soil_moisture_pot_9_pct",
+        "path": "pots.8.sensors.soil_moisture_pct",
+        "type": "number",
+        "unit": "percent",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 50
+      },
+      {
+        "name": "soil_temperature_pot_9_c",
+        "path": "pots.8.sensors.soil_temperature_c",
+        "type": "number",
+        "unit": "degC",
+        "minimum": -10,
+        "maximum": 50,
+        "default": 20
+      },
+      {
+        "name": "soil_moisture_pot_9_valid",
+        "path": "pots.8.validity.soil_moisture_pct",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "soil_temperature_pot_9_valid",
+        "path": "pots.8.validity.soil_temperature_c",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "pot_9_pot_volume_l",
+        "path": "pots.8.cultivation.pot_volume_l",
+        "type": "number",
+        "unit": "L",
+        "minimum": 0.1,
+        "maximum": 100,
+        "default": 10
+      },
+      {
+        "name": "pot_9_substrate_water_capacity_ml",
+        "path": "pots.8.cultivation.substrate_water_capacity_ml",
+        "type": "number",
+        "unit": "mL",
+        "minimum": 10,
+        "maximum": 100000,
+        "default": 3000
+      },
+      {
+        "name": "pot_9_transpiration_factor",
+        "path": "pots.8.cultivation.transpiration_factor",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0,
+        "maximum": 10,
+        "default": 1
+      },
+      {
+        "name": "pot_9_target_soil_moisture_pct",
+        "path": "pots.8.targets.soil_moisture_pct",
+        "type": "number",
+        "unit": "percent",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 50
+      },
+      {
+        "name": "pot_9_target_soil_temperature_c",
+        "path": "pots.8.targets.soil_temperature_c",
+        "type": "number",
+        "unit": "degC",
+        "minimum": -10,
+        "maximum": 50,
+        "default": 20
+      },
+      {
+        "name": "pot_9_irrigation_available",
+        "path": "pots.8.irrigation.available",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "pot_9_irrigation_flow_ml_s",
+        "path": "pots.8.irrigation.flow_ml_s",
+        "type": "number",
+        "unit": "mL/s",
+        "minimum": 0,
+        "maximum": 1000,
+        "default": 0
+      },
+      {
+        "name": "pot_9_irrigation_maximum_pulse_s",
+        "path": "pots.8.irrigation.maximum_pulse_s",
+        "type": "number",
+        "unit": "s",
+        "minimum": 0,
+        "maximum": 600,
+        "default": 0
+      },
+      {
+        "name": "pot_9_irrigation_minimum_interval_s",
+        "path": "pots.8.irrigation.minimum_interval_s",
+        "type": "number",
+        "unit": "s",
+        "minimum": 0,
+        "maximum": 86400,
+        "default": 0
+      },
+      {
+        "name": "pot_9_irrigation_control_type",
+        "path": "pots.8.irrigation.control_type",
+        "type": "enum",
+        "unit": "enum",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0,
+        "encoding": {
+          "binary": 0,
+          "pwm": 1
+        }
+      },
+      {
+        "name": "pot_9_heat_mat_available",
+        "path": "pots.8.heat_mat.available",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "pot_9_heat_mat_max_power_w",
+        "path": "pots.8.heat_mat.max_power_w",
+        "type": "number",
+        "unit": "W",
+        "minimum": 0,
+        "maximum": 500,
+        "default": 0
+      },
+      {
+        "name": "pot_9_heat_mat_control_type",
+        "path": "pots.8.heat_mat.control_type",
+        "type": "enum",
+        "unit": "enum",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0,
+        "encoding": {
+          "binary": 0,
+          "pwm": 1
+        }
+      },
+      {
+        "name": "pot_9_previous_irrigation",
+        "path": "pots.8.previous.irrigation",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "pot_9_previous_heat_mat",
+        "path": "pots.8.previous.heat_mat",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       }
     ],
     "outputs": [
       {
         "name": "heater",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "fan",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "humidifier",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "dehumidifier",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "cooler",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "co2_doser",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "irrigation_pot_1",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "irrigation_pot_2",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "irrigation_pot_3",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "irrigation_pot_4",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "nutrient_heater",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "heat_mat_pot_1",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "heat_mat_pot_2",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "heat_mat_pot_3",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       },
       {
         "name": "heat_mat_pot_4",
         "unit": "ratio",
-        "minimum": 0.0,
-        "maximum": 1.0,
-        "default": 0.0
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "irrigation_pot_5",
+        "unit": "ratio",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "heat_mat_pot_5",
+        "unit": "ratio",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "irrigation_pot_6",
+        "unit": "ratio",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "heat_mat_pot_6",
+        "unit": "ratio",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "irrigation_pot_7",
+        "unit": "ratio",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "heat_mat_pot_7",
+        "unit": "ratio",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "irrigation_pot_8",
+        "unit": "ratio",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "heat_mat_pot_8",
+        "unit": "ratio",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "irrigation_pot_9",
+        "unit": "ratio",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
+      },
+      {
+        "name": "heat_mat_pot_9",
+        "unit": "ratio",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0
       }
     ]
   },
   "availability_rule": "When an actuator is unavailable, available is false, its maximum capability is zero, and its final safe output is zero.",
   "safety_defaults": {
-    "maximum_air_temperature_c": 35.0,
-    "alarm_air_temperature_c": 32.0,
+    "maximum_air_temperature_c": 35,
+    "alarm_air_temperature_c": 32,
     "alarm_minimum_fan": 0.6,
     "binary_threshold": 0.5,
-    "heater_minimum_on_s": 30.0,
-    "heater_minimum_off_s": 30.0,
-    "humidifier_minimum_on_s": 15.0,
-    "humidifier_minimum_off_s": 15.0,
-    "dehumidifier_minimum_on_s": 15.0,
-    "dehumidifier_minimum_off_s": 15.0,
-    "cooler_minimum_on_s": 30.0,
-    "cooler_minimum_off_s": 30.0,
-    "co2_doser_minimum_interval_s": 60.0,
-    "co2_doser_maximum_pulse_s": 5.0,
+    "heater_minimum_on_s": 30,
+    "heater_minimum_off_s": 30,
+    "humidifier_minimum_on_s": 15,
+    "humidifier_minimum_off_s": 15,
+    "dehumidifier_minimum_on_s": 15,
+    "dehumidifier_minimum_off_s": 15,
+    "cooler_minimum_on_s": 30,
+    "cooler_minimum_off_s": 30,
+    "co2_doser_minimum_interval_s": 60,
+    "co2_doser_maximum_pulse_s": 5,
     "fan_venting_co2_threshold": 0.5,
-    "maximum_nutrient_soil_delta_c": 8.0,
-    "minimum_nutrient_solution_temperature_c": 15.0
+    "maximum_nutrient_soil_delta_c": 8,
+    "minimum_nutrient_solution_temperature_c": 15
   },
   "group_sections": [
     {
@@ -1985,6 +3188,306 @@
       "features": [
         "pot_4_previous_irrigation",
         "pot_4_previous_heat_mat"
+      ]
+    },
+    {
+      "path": "pots.4",
+      "features": [
+        "pot_5_available"
+      ]
+    },
+    {
+      "path": "pots.4.sensors",
+      "features": [
+        "soil_moisture_pot_5_pct",
+        "soil_temperature_pot_5_c"
+      ]
+    },
+    {
+      "path": "pots.4.validity",
+      "features": [
+        "soil_moisture_pot_5_valid",
+        "soil_temperature_pot_5_valid"
+      ]
+    },
+    {
+      "path": "pots.4.cultivation",
+      "features": [
+        "pot_5_pot_volume_l",
+        "pot_5_substrate_water_capacity_ml",
+        "pot_5_transpiration_factor"
+      ]
+    },
+    {
+      "path": "pots.4.targets",
+      "features": [
+        "pot_5_target_soil_moisture_pct",
+        "pot_5_target_soil_temperature_c"
+      ]
+    },
+    {
+      "path": "pots.4.irrigation",
+      "features": [
+        "pot_5_irrigation_available",
+        "pot_5_irrigation_flow_ml_s",
+        "pot_5_irrigation_maximum_pulse_s",
+        "pot_5_irrigation_minimum_interval_s",
+        "pot_5_irrigation_control_type"
+      ]
+    },
+    {
+      "path": "pots.4.heat_mat",
+      "features": [
+        "pot_5_heat_mat_available",
+        "pot_5_heat_mat_max_power_w",
+        "pot_5_heat_mat_control_type"
+      ]
+    },
+    {
+      "path": "pots.4.previous",
+      "features": [
+        "pot_5_previous_irrigation",
+        "pot_5_previous_heat_mat"
+      ]
+    },
+    {
+      "path": "pots.5",
+      "features": [
+        "pot_6_available"
+      ]
+    },
+    {
+      "path": "pots.5.sensors",
+      "features": [
+        "soil_moisture_pot_6_pct",
+        "soil_temperature_pot_6_c"
+      ]
+    },
+    {
+      "path": "pots.5.validity",
+      "features": [
+        "soil_moisture_pot_6_valid",
+        "soil_temperature_pot_6_valid"
+      ]
+    },
+    {
+      "path": "pots.5.cultivation",
+      "features": [
+        "pot_6_pot_volume_l",
+        "pot_6_substrate_water_capacity_ml",
+        "pot_6_transpiration_factor"
+      ]
+    },
+    {
+      "path": "pots.5.targets",
+      "features": [
+        "pot_6_target_soil_moisture_pct",
+        "pot_6_target_soil_temperature_c"
+      ]
+    },
+    {
+      "path": "pots.5.irrigation",
+      "features": [
+        "pot_6_irrigation_available",
+        "pot_6_irrigation_flow_ml_s",
+        "pot_6_irrigation_maximum_pulse_s",
+        "pot_6_irrigation_minimum_interval_s",
+        "pot_6_irrigation_control_type"
+      ]
+    },
+    {
+      "path": "pots.5.heat_mat",
+      "features": [
+        "pot_6_heat_mat_available",
+        "pot_6_heat_mat_max_power_w",
+        "pot_6_heat_mat_control_type"
+      ]
+    },
+    {
+      "path": "pots.5.previous",
+      "features": [
+        "pot_6_previous_irrigation",
+        "pot_6_previous_heat_mat"
+      ]
+    },
+    {
+      "path": "pots.6",
+      "features": [
+        "pot_7_available"
+      ]
+    },
+    {
+      "path": "pots.6.sensors",
+      "features": [
+        "soil_moisture_pot_7_pct",
+        "soil_temperature_pot_7_c"
+      ]
+    },
+    {
+      "path": "pots.6.validity",
+      "features": [
+        "soil_moisture_pot_7_valid",
+        "soil_temperature_pot_7_valid"
+      ]
+    },
+    {
+      "path": "pots.6.cultivation",
+      "features": [
+        "pot_7_pot_volume_l",
+        "pot_7_substrate_water_capacity_ml",
+        "pot_7_transpiration_factor"
+      ]
+    },
+    {
+      "path": "pots.6.targets",
+      "features": [
+        "pot_7_target_soil_moisture_pct",
+        "pot_7_target_soil_temperature_c"
+      ]
+    },
+    {
+      "path": "pots.6.irrigation",
+      "features": [
+        "pot_7_irrigation_available",
+        "pot_7_irrigation_flow_ml_s",
+        "pot_7_irrigation_maximum_pulse_s",
+        "pot_7_irrigation_minimum_interval_s",
+        "pot_7_irrigation_control_type"
+      ]
+    },
+    {
+      "path": "pots.6.heat_mat",
+      "features": [
+        "pot_7_heat_mat_available",
+        "pot_7_heat_mat_max_power_w",
+        "pot_7_heat_mat_control_type"
+      ]
+    },
+    {
+      "path": "pots.6.previous",
+      "features": [
+        "pot_7_previous_irrigation",
+        "pot_7_previous_heat_mat"
+      ]
+    },
+    {
+      "path": "pots.7",
+      "features": [
+        "pot_8_available"
+      ]
+    },
+    {
+      "path": "pots.7.sensors",
+      "features": [
+        "soil_moisture_pot_8_pct",
+        "soil_temperature_pot_8_c"
+      ]
+    },
+    {
+      "path": "pots.7.validity",
+      "features": [
+        "soil_moisture_pot_8_valid",
+        "soil_temperature_pot_8_valid"
+      ]
+    },
+    {
+      "path": "pots.7.cultivation",
+      "features": [
+        "pot_8_pot_volume_l",
+        "pot_8_substrate_water_capacity_ml",
+        "pot_8_transpiration_factor"
+      ]
+    },
+    {
+      "path": "pots.7.targets",
+      "features": [
+        "pot_8_target_soil_moisture_pct",
+        "pot_8_target_soil_temperature_c"
+      ]
+    },
+    {
+      "path": "pots.7.irrigation",
+      "features": [
+        "pot_8_irrigation_available",
+        "pot_8_irrigation_flow_ml_s",
+        "pot_8_irrigation_maximum_pulse_s",
+        "pot_8_irrigation_minimum_interval_s",
+        "pot_8_irrigation_control_type"
+      ]
+    },
+    {
+      "path": "pots.7.heat_mat",
+      "features": [
+        "pot_8_heat_mat_available",
+        "pot_8_heat_mat_max_power_w",
+        "pot_8_heat_mat_control_type"
+      ]
+    },
+    {
+      "path": "pots.7.previous",
+      "features": [
+        "pot_8_previous_irrigation",
+        "pot_8_previous_heat_mat"
+      ]
+    },
+    {
+      "path": "pots.8",
+      "features": [
+        "pot_9_available"
+      ]
+    },
+    {
+      "path": "pots.8.sensors",
+      "features": [
+        "soil_moisture_pot_9_pct",
+        "soil_temperature_pot_9_c"
+      ]
+    },
+    {
+      "path": "pots.8.validity",
+      "features": [
+        "soil_moisture_pot_9_valid",
+        "soil_temperature_pot_9_valid"
+      ]
+    },
+    {
+      "path": "pots.8.cultivation",
+      "features": [
+        "pot_9_pot_volume_l",
+        "pot_9_substrate_water_capacity_ml",
+        "pot_9_transpiration_factor"
+      ]
+    },
+    {
+      "path": "pots.8.targets",
+      "features": [
+        "pot_9_target_soil_moisture_pct",
+        "pot_9_target_soil_temperature_c"
+      ]
+    },
+    {
+      "path": "pots.8.irrigation",
+      "features": [
+        "pot_9_irrigation_available",
+        "pot_9_irrigation_flow_ml_s",
+        "pot_9_irrigation_maximum_pulse_s",
+        "pot_9_irrigation_minimum_interval_s",
+        "pot_9_irrigation_control_type"
+      ]
+    },
+    {
+      "path": "pots.8.heat_mat",
+      "features": [
+        "pot_9_heat_mat_available",
+        "pot_9_heat_mat_max_power_w",
+        "pot_9_heat_mat_control_type"
+      ]
+    },
+    {
+      "path": "pots.8.previous",
+      "features": [
+        "pot_9_previous_irrigation",
+        "pot_9_previous_heat_mat"
       ]
     }
   ]

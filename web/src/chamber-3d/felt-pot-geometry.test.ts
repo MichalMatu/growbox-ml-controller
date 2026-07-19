@@ -31,12 +31,12 @@ describe("felt pot presets", () => {
 })
 
 describe("clampFeltPotCount", () => {
-  it("clamps to 0–4", () => {
+  it("clamps to 0–9", () => {
     expect(clampFeltPotCount(-1)).toBe(0)
     expect(clampFeltPotCount(0)).toBe(0)
     expect(clampFeltPotCount(2.4)).toBe(2)
-    expect(clampFeltPotCount(4)).toBe(4)
-    expect(clampFeltPotCount(9)).toBe(FELT_POT_COUNT_MAX)
+    expect(clampFeltPotCount(9)).toBe(9)
+    expect(clampFeltPotCount(12)).toBe(FELT_POT_COUNT_MAX)
     expect(clampFeltPotCount(Number.NaN)).toBe(0)
   })
 })
@@ -59,6 +59,15 @@ describe("floor packing", () => {
     expect(plan.fits).toBe(true)
     expect(plan.fittedCount).toBe(4)
     expect(plan.positions).toHaveLength(4)
+  })
+
+  it("120×120×200 cm tent fits nine 12 L pots (3×3 grid)", () => {
+    const max = maxPotsThatFit(1.2, 1.2, 2.0, pot12)
+    expect(max).toBe(9)
+    const plan = planFeltPotLayout(1.2, 1.2, 2.0, pot12, 9)
+    expect(plan.fits).toBe(true)
+    expect(plan.fittedCount).toBe(9)
+    expect(plan.positions).toHaveLength(9)
   })
 
   it("tiny floor fits at most one small pot", () => {

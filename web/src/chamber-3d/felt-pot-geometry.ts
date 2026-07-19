@@ -53,11 +53,11 @@ export const FELT_POT_PRESETS: readonly FeltPotPreset[] = [
 
 export const DEFAULT_FELT_POT_PRESET_ID: FeltPotPresetId = "12l"
 
-/** Contract / product: at most four pot slots. */
-export const FELT_POT_COUNT_MAX = 4
+/** Contract / product: at most nine pot slots. */
+export const FELT_POT_COUNT_MAX = 9
 export const FELT_POT_COUNT_MIN = 0
 
-export type FeltPotCount = 0 | 1 | 2 | 3 | 4
+export type FeltPotCount = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 
 export type PotFootprintCm = {
   readonly diameterCm: number
@@ -72,13 +72,13 @@ export type PotPositionM = {
 }
 
 export type PotLayoutPlan = {
-  /** Requested count after clamp to 0–4. */
+  /** Requested count after clamp to 0–9. */
   readonly requestedCount: FeltPotCount
   /** How many pots actually fit on the floor. */
   readonly fittedCount: FeltPotCount
   /** True when every requested pot has a placement. */
   readonly fits: boolean
-  /** Max pots of this size that fit (0–4). */
+  /** Max pots of this size that fit (0–9). */
   readonly maxFit: FeltPotCount
   /** Centers for the pots that fit (length === fittedCount). */
   readonly positions: readonly PotPositionM[]
@@ -149,8 +149,8 @@ export function maxCellsAlong(spanM: number, diameterM: number): number {
 }
 
 /**
- * Maximum number of equal circular pots (0–4) that pack on the floor.
- * Tries axis-aligned grids: 1×1, 1×2 / 2×1, 1×3 / 3×1, 2×2, 1×4 / 4×1.
+ * Maximum number of equal circular pots (0–9) that pack on the floor.
+ * Tries axis-aligned grids: 1×1 through 3×3, plus 1×N / N×1 up to 9.
  */
 export function maxPotsThatFit(
   widthM: number,
@@ -168,6 +168,11 @@ export function maxPotsThatFit(
   if (cols === 0 || rows === 0) return 0
 
   const capacity = cols * rows
+  if (capacity >= 9) return 9
+  if (capacity >= 8) return 8
+  if (capacity >= 7) return 7
+  if (capacity >= 6) return 6
+  if (capacity >= 5) return 5
   if (capacity >= 4) return 4
   if (capacity >= 3) return 3
   if (capacity >= 2) return 2

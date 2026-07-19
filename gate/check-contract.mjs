@@ -50,6 +50,16 @@ const EXPECTED_OUTPUT_NAMES = [
   "heat_mat_pot_2",
   "heat_mat_pot_3",
   "heat_mat_pot_4",
+  "irrigation_pot_5",
+  "heat_mat_pot_5",
+  "irrigation_pot_6",
+  "heat_mat_pot_6",
+  "irrigation_pot_7",
+  "heat_mat_pot_7",
+  "irrigation_pot_8",
+  "heat_mat_pot_8",
+  "irrigation_pot_9",
+  "heat_mat_pot_9",
 ];
 
 /*
@@ -58,7 +68,7 @@ const EXPECTED_OUTPUT_NAMES = [
  * encodings. A v4 model change must not silently reach the frontend.
  */
 export const EXPECTED_V4_MODEL_SIGNATURE =
-  "19d4f47d05a299a309db1a684d1eb5350c351c97e653c2b4f525f59c009ea125";
+  "09a6bed70b4194c28f20578fa9b9cb9450b6e8e93b622532d7c43139bf84128d";
 
 const REQUIRED_WEB_DEPENDENCIES = [
   "react",
@@ -279,8 +289,8 @@ function validateSchema(schema) {
   if (schema.schema_id !== "environment-controller") {
     push(errors, `schema_id must be "environment-controller" (got ${JSON.stringify(schema.schema_id)})`);
   }
-  if (schema.schema_version !== 4) {
-    push(errors, `schema_version must be 4 (got ${JSON.stringify(schema.schema_version)})`);
+  if (schema.schema_version !== 5) {
+    push(errors, `schema_version must be 5 (got ${JSON.stringify(schema.schema_version)})`);
   }
   if (
     schema.status !== "active" ||
@@ -296,11 +306,11 @@ function validateSchema(schema) {
 
   const features = schema.model.features;
   const outputs = schema.model.outputs;
-  if (!Array.isArray(features) || features.length !== 128) {
-    push(errors, `model.features must be an array of length 128 (got ${features?.length})`);
+  if (!Array.isArray(features) || features.length !== 228) {
+    push(errors, `model.features must be an array of length 228 (got ${features?.length})`);
   }
-  if (!Array.isArray(outputs) || outputs.length !== 15) {
-    push(errors, `model.outputs must be an array of length 15 (got ${outputs?.length})`);
+  if (!Array.isArray(outputs) || outputs.length !== 25) {
+    push(errors, `model.outputs must be an array of length 25 (got ${outputs?.length})`);
   }
 
   if (!Array.isArray(features) || !Array.isArray(outputs)) {
@@ -346,8 +356,8 @@ function validateSchema(schema) {
   }
 
   const nonMlActuators = schema.output_scope?.non_ml_actuators;
-  if (schema.output_scope?.ml_output_count !== 15) {
-    push(errors, "output_scope.ml_output_count must be 15");
+  if (schema.output_scope?.ml_output_count !== 25) {
+    push(errors, "output_scope.ml_output_count must be 25");
   }
   if (!Array.isArray(nonMlActuators) || nonMlActuators.length !== 1 || nonMlActuators[0] !== "lights") {
     push(errors, "output_scope.non_ml_actuators must be exactly [\"lights\"]");

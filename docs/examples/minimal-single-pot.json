@@ -4,18 +4,18 @@
   "title": "Minimal single pot (hardware template)",
   "environment": {
     "growbox_volume_m3": 0.8,
-    "thermal_mass_j_per_k": 35000.0,
-    "heat_loss_w_per_k": 7.0,
+    "thermal_mass_j_per_k": 35000,
+    "heat_loss_w_per_k": 7,
     "air_leak_rate_ach": 0.25
   },
   "sensors": {
-    "air_temperature_c": 22.0,
-    "air_humidity_pct": 55.0,
-    "co2_ppm": 800.0,
-    "nutrient_solution_temperature_c": 20.0,
-    "outside_temperature_c": 18.0,
-    "outside_humidity_pct": 50.0,
-    "outside_co2_ppm": 420.0
+    "air_temperature_c": 22,
+    "air_humidity_pct": 55,
+    "co2_ppm": 800,
+    "nutrient_solution_temperature_c": 20,
+    "outside_temperature_c": 18,
+    "outside_humidity_pct": 50,
+    "outside_co2_ppm": 420
   },
   "validity": {
     "air_temperature_c": true,
@@ -33,195 +33,375 @@
     {
       "available": true,
       "sensors": {
-        "soil_moisture_pct": 44.0,
-        "soil_temperature_c": 22.0
+        "soil_moisture_pct": 44,
+        "soil_temperature_c": 22
       },
       "validity": {
         "soil_moisture_pct": true,
         "soil_temperature_c": true
       },
       "cultivation": {
-        "pot_volume_l": 12.0,
-        "substrate_water_capacity_ml": 3000.0,
-        "transpiration_factor": 1.0
+        "pot_volume_l": 12,
+        "substrate_water_capacity_ml": 3000,
+        "transpiration_factor": 1
       },
       "targets": {
-        "soil_moisture_pct": 52.0,
-        "soil_temperature_c": 22.0
+        "soil_moisture_pct": 52,
+        "soil_temperature_c": 22
       },
       "irrigation": {
         "available": true,
-        "flow_ml_s": 18.0,
-        "maximum_pulse_s": 4.0,
-        "minimum_interval_s": 300.0,
+        "flow_ml_s": 18,
+        "maximum_pulse_s": 4,
+        "minimum_interval_s": 300,
         "control_type": "binary"
       },
       "heat_mat": {
         "available": false,
-        "max_power_w": 0.0,
+        "max_power_w": 0,
         "control_type": "binary"
       },
       "previous": {
-        "irrigation": 0.0,
-        "heat_mat": 0.0
+        "irrigation": 0,
+        "heat_mat": 0
       }
     },
     {
       "available": false,
       "sensors": {
-        "soil_moisture_pct": 50.0,
-        "soil_temperature_c": 20.0
+        "soil_moisture_pct": 50,
+        "soil_temperature_c": 20
       },
       "validity": {
         "soil_moisture_pct": false,
         "soil_temperature_c": false
       },
       "cultivation": {
-        "pot_volume_l": 10.0,
-        "substrate_water_capacity_ml": 3000.0,
-        "transpiration_factor": 1.0
+        "pot_volume_l": 10,
+        "substrate_water_capacity_ml": 3000,
+        "transpiration_factor": 1
       },
       "targets": {
-        "soil_moisture_pct": 50.0,
-        "soil_temperature_c": 20.0
+        "soil_moisture_pct": 50,
+        "soil_temperature_c": 20
       },
       "irrigation": {
         "available": false,
-        "flow_ml_s": 0.0,
-        "maximum_pulse_s": 0.0,
-        "minimum_interval_s": 0.0,
+        "flow_ml_s": 0,
+        "maximum_pulse_s": 0,
+        "minimum_interval_s": 0,
         "control_type": "binary"
       },
       "heat_mat": {
         "available": false,
-        "max_power_w": 0.0,
+        "max_power_w": 0,
         "control_type": "binary"
       },
       "previous": {
-        "irrigation": 0.0,
-        "heat_mat": 0.0
+        "irrigation": 0,
+        "heat_mat": 0
       }
     },
     {
       "available": false,
       "sensors": {
-        "soil_moisture_pct": 50.0,
-        "soil_temperature_c": 20.0
+        "soil_moisture_pct": 50,
+        "soil_temperature_c": 20
       },
       "validity": {
         "soil_moisture_pct": false,
         "soil_temperature_c": false
       },
       "cultivation": {
-        "pot_volume_l": 10.0,
-        "substrate_water_capacity_ml": 3000.0,
-        "transpiration_factor": 1.0
+        "pot_volume_l": 10,
+        "substrate_water_capacity_ml": 3000,
+        "transpiration_factor": 1
       },
       "targets": {
-        "soil_moisture_pct": 50.0,
-        "soil_temperature_c": 20.0
+        "soil_moisture_pct": 50,
+        "soil_temperature_c": 20
       },
       "irrigation": {
         "available": false,
-        "flow_ml_s": 0.0,
-        "maximum_pulse_s": 0.0,
-        "minimum_interval_s": 0.0,
+        "flow_ml_s": 0,
+        "maximum_pulse_s": 0,
+        "minimum_interval_s": 0,
         "control_type": "binary"
       },
       "heat_mat": {
         "available": false,
-        "max_power_w": 0.0,
+        "max_power_w": 0,
         "control_type": "binary"
       },
       "previous": {
-        "irrigation": 0.0,
-        "heat_mat": 0.0
+        "irrigation": 0,
+        "heat_mat": 0
       }
     },
     {
       "available": false,
       "sensors": {
-        "soil_moisture_pct": 50.0,
-        "soil_temperature_c": 20.0
+        "soil_moisture_pct": 50,
+        "soil_temperature_c": 20
       },
       "validity": {
         "soil_moisture_pct": false,
         "soil_temperature_c": false
       },
       "cultivation": {
-        "pot_volume_l": 10.0,
-        "substrate_water_capacity_ml": 3000.0,
-        "transpiration_factor": 1.0
+        "pot_volume_l": 10,
+        "substrate_water_capacity_ml": 3000,
+        "transpiration_factor": 1
       },
       "targets": {
-        "soil_moisture_pct": 50.0,
-        "soil_temperature_c": 20.0
+        "soil_moisture_pct": 50,
+        "soil_temperature_c": 20
       },
       "irrigation": {
         "available": false,
-        "flow_ml_s": 0.0,
-        "maximum_pulse_s": 0.0,
-        "minimum_interval_s": 0.0,
+        "flow_ml_s": 0,
+        "maximum_pulse_s": 0,
+        "minimum_interval_s": 0,
         "control_type": "binary"
       },
       "heat_mat": {
         "available": false,
-        "max_power_w": 0.0,
+        "max_power_w": 0,
         "control_type": "binary"
       },
       "previous": {
-        "irrigation": 0.0,
-        "heat_mat": 0.0
+        "irrigation": 0,
+        "heat_mat": 0
+      }
+    },
+    {
+      "available": false,
+      "sensors": {
+        "soil_moisture_pct": 50,
+        "soil_temperature_c": 20
+      },
+      "validity": {
+        "soil_moisture_pct": false,
+        "soil_temperature_c": false
+      },
+      "cultivation": {
+        "pot_volume_l": 10,
+        "substrate_water_capacity_ml": 3000,
+        "transpiration_factor": 1
+      },
+      "targets": {
+        "soil_moisture_pct": 50,
+        "soil_temperature_c": 20
+      },
+      "irrigation": {
+        "available": false,
+        "flow_ml_s": 0,
+        "maximum_pulse_s": 0,
+        "minimum_interval_s": 0,
+        "control_type": "binary"
+      },
+      "heat_mat": {
+        "available": false,
+        "max_power_w": 0,
+        "control_type": "binary"
+      },
+      "previous": {
+        "irrigation": 0,
+        "heat_mat": 0
+      }
+    },
+    {
+      "available": false,
+      "sensors": {
+        "soil_moisture_pct": 50,
+        "soil_temperature_c": 20
+      },
+      "validity": {
+        "soil_moisture_pct": false,
+        "soil_temperature_c": false
+      },
+      "cultivation": {
+        "pot_volume_l": 10,
+        "substrate_water_capacity_ml": 3000,
+        "transpiration_factor": 1
+      },
+      "targets": {
+        "soil_moisture_pct": 50,
+        "soil_temperature_c": 20
+      },
+      "irrigation": {
+        "available": false,
+        "flow_ml_s": 0,
+        "maximum_pulse_s": 0,
+        "minimum_interval_s": 0,
+        "control_type": "binary"
+      },
+      "heat_mat": {
+        "available": false,
+        "max_power_w": 0,
+        "control_type": "binary"
+      },
+      "previous": {
+        "irrigation": 0,
+        "heat_mat": 0
+      }
+    },
+    {
+      "available": false,
+      "sensors": {
+        "soil_moisture_pct": 50,
+        "soil_temperature_c": 20
+      },
+      "validity": {
+        "soil_moisture_pct": false,
+        "soil_temperature_c": false
+      },
+      "cultivation": {
+        "pot_volume_l": 10,
+        "substrate_water_capacity_ml": 3000,
+        "transpiration_factor": 1
+      },
+      "targets": {
+        "soil_moisture_pct": 50,
+        "soil_temperature_c": 20
+      },
+      "irrigation": {
+        "available": false,
+        "flow_ml_s": 0,
+        "maximum_pulse_s": 0,
+        "minimum_interval_s": 0,
+        "control_type": "binary"
+      },
+      "heat_mat": {
+        "available": false,
+        "max_power_w": 0,
+        "control_type": "binary"
+      },
+      "previous": {
+        "irrigation": 0,
+        "heat_mat": 0
+      }
+    },
+    {
+      "available": false,
+      "sensors": {
+        "soil_moisture_pct": 50,
+        "soil_temperature_c": 20
+      },
+      "validity": {
+        "soil_moisture_pct": false,
+        "soil_temperature_c": false
+      },
+      "cultivation": {
+        "pot_volume_l": 10,
+        "substrate_water_capacity_ml": 3000,
+        "transpiration_factor": 1
+      },
+      "targets": {
+        "soil_moisture_pct": 50,
+        "soil_temperature_c": 20
+      },
+      "irrigation": {
+        "available": false,
+        "flow_ml_s": 0,
+        "maximum_pulse_s": 0,
+        "minimum_interval_s": 0,
+        "control_type": "binary"
+      },
+      "heat_mat": {
+        "available": false,
+        "max_power_w": 0,
+        "control_type": "binary"
+      },
+      "previous": {
+        "irrigation": 0,
+        "heat_mat": 0
+      }
+    },
+    {
+      "available": false,
+      "sensors": {
+        "soil_moisture_pct": 50,
+        "soil_temperature_c": 20
+      },
+      "validity": {
+        "soil_moisture_pct": false,
+        "soil_temperature_c": false
+      },
+      "cultivation": {
+        "pot_volume_l": 10,
+        "substrate_water_capacity_ml": 3000,
+        "transpiration_factor": 1
+      },
+      "targets": {
+        "soil_moisture_pct": 50,
+        "soil_temperature_c": 20
+      },
+      "irrigation": {
+        "available": false,
+        "flow_ml_s": 0,
+        "maximum_pulse_s": 0,
+        "minimum_interval_s": 0,
+        "control_type": "binary"
+      },
+      "heat_mat": {
+        "available": false,
+        "max_power_w": 0,
+        "control_type": "binary"
+      },
+      "previous": {
+        "irrigation": 0,
+        "heat_mat": 0
       }
     }
   ],
   "actuators": {
     "heater": {
       "available": true,
-      "max_power_w": 180.0,
+      "max_power_w": 180,
       "efficiency": 0.92
     },
     "fan": {
       "available": true,
-      "max_airflow_m3_h": 90.0,
-      "minimum_command": 0.0
+      "max_airflow_m3_h": 90,
+      "minimum_command": 0
     },
     "humidifier": {
       "available": true,
-      "max_output_g_h": 110.0
+      "max_output_g_h": 110
     },
     "dehumidifier": {
       "available": false,
-      "max_removal_g_h": 0.0
+      "max_removal_g_h": 0
     },
     "cooler": {
       "available": false,
-      "max_cooling_w": 0.0
+      "max_cooling_w": 0
     },
     "co2_doser": {
       "available": false,
-      "dose_ppm_per_full_pulse": 0.0,
-      "maximum_pulse_s": 0.0
+      "dose_ppm_per_full_pulse": 0,
+      "maximum_pulse_s": 0
     },
     "nutrient_heater": {
       "available": false,
-      "max_power_w": 0.0,
-      "efficiency": 0.0
+      "max_power_w": 0,
+      "efficiency": 0
     }
   },
   "targets": {
-    "air_temperature_c": 25.0,
-    "air_humidity_pct": 65.0,
-    "co2_ppm": 850.0,
-    "nutrient_solution_temperature_c": 20.0
+    "air_temperature_c": 25,
+    "air_humidity_pct": 65,
+    "co2_ppm": 850,
+    "nutrient_solution_temperature_c": 20
   },
   "previous": {
-    "heater": 0.0,
-    "fan": 0.0,
-    "humidifier": 0.0,
-    "dehumidifier": 0.0,
-    "cooler": 0.0,
-    "co2_doser": 0.0,
-    "nutrient_heater": 0.0
+    "heater": 0,
+    "fan": 0,
+    "humidifier": 0,
+    "dehumidifier": 0,
+    "cooler": 0,
+    "co2_doser": 0,
+    "nutrient_heater": 0
   }
 }

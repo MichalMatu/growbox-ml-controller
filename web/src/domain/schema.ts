@@ -25,7 +25,7 @@ function isFeatureDefinition(value: unknown): value is FeatureDefinition {
 }
 
 function isControllerSchema(value: unknown): value is ControllerSchema {
-  if (!isRecord(value) || value.schema_version !== 4 || !isRecord(value.model)) {
+  if (!isRecord(value) || value.schema_version !== 5 || !isRecord(value.model)) {
     return false
   }
 
@@ -33,14 +33,25 @@ function isControllerSchema(value: unknown): value is ControllerSchema {
 }
 
 if (!isControllerSchema(rawSchema)) {
-  throw new Error("The shared environment-controller schema is not a valid v4 controller schema.")
+  throw new Error("The shared environment-controller schema is not a valid v5 controller schema.")
 }
 
 export const schema: ControllerSchema = rawSchema
 
-if (schema.model.features.length !== 128 || schema.model.outputs.length !== 15) {
-  throw new Error("The shared v4 schema must contain 128 features and 15 outputs.")
+if (schema.model.features.length !== 228 || schema.model.outputs.length !== 25) {
+  throw new Error("The shared v5 schema must contain 228 features and 25 outputs.")
 }
+
+/** Number of pot slots derived from schema feature paths. */
+export const POT_COUNT = Math.max(
+  ...schema.model.features
+    .filter((f) => /^pots\.\d+\./.test(f.path))
+    .map((f) => {
+      const m = f.path.match(/^pots\.(\d+)\./)
+      return m ? parseInt(m[1], 10) + 1 : 0
+    }),
+  0,
+)
 
 const featureIndex = new Map(schema.model.features.map((feature) => [feature.path, feature]))
 

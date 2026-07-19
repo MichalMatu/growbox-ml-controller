@@ -1,4 +1,4 @@
-import { getFeature, getInitialFeatureValue, isAllowedEnumValue, schema } from "./schema"
+import { getFeature, getInitialFeatureValue, isAllowedEnumValue, POT_COUNT, schema } from "./schema"
 import {
   copyConfiguration,
   getValueAtPath,
@@ -26,6 +26,8 @@ const CONTRACT_ROOT_KEYS = [
 ] as const
 
 const ROOT_META_KEYS = new Set(["seed", "profile_id", "title", "enclosure"])
+
+export { POT_COUNT }
 
 export type EditableMetadataKey = "title" | "profile_id" | "seed"
 
@@ -110,7 +112,7 @@ function enforceSafetyInvariants(configuration: Configuration): Configuration {
     }
   }
 
-  for (let index = 0; index < 4; index += 1) {
+  for (let index = 0; index < POT_COUNT; index += 1) {
     const prefix = `pots.${index}`
     const irrigationPrefix = `${prefix}.irrigation`
     const heatMatPrefix = `${prefix}.heat_mat`
@@ -336,7 +338,7 @@ function validateSafetyInvariants(configuration: Configuration, errors: string[]
     }
   }
 
-  for (let index = 0; index < 4; index += 1) {
+  for (let index = 0; index < POT_COUNT; index += 1) {
     const prefix = `pots.${index}`
     const displayPrefix = `pots[${index}]`
     const irrigationPrefix = `${prefix}.irrigation`

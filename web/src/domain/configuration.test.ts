@@ -13,7 +13,7 @@ import {
   validateImportedConfiguration,
 } from "./configuration"
 import { getValueAtPath, setValueAtPath } from "./paths"
-import { schema } from "./schema"
+import { POT_COUNT, schema } from "./schema"
 import type { Configuration, JsonValue } from "./types"
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../../..")
@@ -29,7 +29,7 @@ describe("default and golden export shape", () => {
   it("builds a default configuration covering every v4 feature path", () => {
     const configuration = createDefaultConfiguration()
     expect(Array.isArray(configuration.pots)).toBe(true)
-    expect((configuration.pots as unknown[]).length).toBe(4)
+    expect((configuration.pots as unknown[]).length).toBe(POT_COUNT)
 
     for (const feature of schema.model.features) {
       expect(getValueAtPath(configuration, feature.path)).toBeDefined()
