@@ -87,7 +87,7 @@ export function Enclosure({
           depth below Y=0, preventing PCF edge bleeding (bright line) at the
           base of the 2 mm thick tent walls. */}
       <mesh position={[0, -0.05, 0]} castShadow renderOrder={-1}>
-        <boxGeometry args={[widthM, 0.1, depthM]} />
+        <boxGeometry args={[widthM + 0.02, 0.1, depthM + 0.02]} />
         <meshBasicMaterial colorWrite={false} depthWrite={false} />
       </mesh>
     </group>

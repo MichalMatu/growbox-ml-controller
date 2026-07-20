@@ -106,6 +106,7 @@ export function ChamberCanvas({
           shadow-camera-bottom={-maxSideM * 2.5}
           shadow-bias={-0.0001}
           shadow-normalBias={0}
+          shadow-radius={4}
         />
       )}
       {config.studioLightCount >= 3 && (
