@@ -30,51 +30,55 @@ export function buildShellPanels(
   const t = thicknessM
   const uv = uvTilesPerMeter
 
-  // To prevent z-fighting (visible jagged edges at corners), we build
-  // the walls as a perfectly butted non-overlapping box.
-  // - Floor/Ceiling: full width and depth.
-  // - Left/Right: sit between floor and ceiling (height - 2*t), full depth.
-  // - Back: sits between all four (width - 2*t, height - 2*t).
+  // UWAGA: Materiały growboxu NIE MOGĄ przepuszczać światła.
+  // Aby usunąć przenikanie światła z dolnej części growboxa (light leak na szwach),
+  // ściany boczne muszą schodzić poniżej poziomu podłogi (bleed).
+  // Jednocześnie, aby uniknąć Z-fightingu (zbugowanego przenikania tekstur na krawędziach),
+  // podłoga jest schowana wewnątrz, oddzielona od ścian o 1 milimetr (eps).
+
+  const bleed = 0.02
+  const eps = 0.001
+  const wallH = heightM - t + bleed
+  const wallY = (heightM - t - bleed) / 2
 
   const faceW = Math.max(widthM, t)
   const faceD = Math.max(depthM, t)
-  const faceH = Math.max(heightM, t)
 
   return [
-    // floor
+    // floor - tucked inside walls with 1mm gap to prevent internal Z-fighting
     {
-      size: [faceW, faceD],
-      position: [0, t / 2, 0],
+      size: [faceW - 2 * t - 2 * eps, faceD - t - eps],
+      position: [0, t / 2, t / 2 + eps / 2],
       rotation: [Math.PI / 2, 0, 0],
-      uvScale: [faceW * uv, faceD * uv],
+      uvScale: [(faceW - 2 * t) * uv, (faceD - t) * uv],
     },
-    // ceiling
+    // ceiling - full width/depth lid
     {
       size: [faceW, faceD],
       position: [0, heightM - t / 2, 0],
       rotation: [-Math.PI / 2, 0, 0],
       uvScale: [faceW * uv, faceD * uv],
     },
-    // back (-Z) - tucked between left, right, floor, ceiling
+    // back (-Z) - tucked between left/right, extends below 0
     {
-      size: [faceW - 2 * t, faceH - 2 * t],
-      position: [0, heightM / 2, -halfD + t / 2],
+      size: [faceW - 2 * t, wallH],
+      position: [0, wallY, -halfD + t / 2],
       rotation: [0, Math.PI, 0],
-      uvScale: [(faceW - 2 * t) * uv, (faceH - 2 * t) * uv],
+      uvScale: [(faceW - 2 * t) * uv, wallH * uv],
     },
-    // left (-X) - tucked between floor and ceiling
+    // left (-X) - extends below 0
     {
-      size: [faceD, faceH - 2 * t],
-      position: [-halfW + t / 2, heightM / 2, 0],
+      size: [faceD, wallH],
+      position: [-halfW + t / 2, wallY, 0],
       rotation: [0, -Math.PI / 2, 0],
-      uvScale: [faceD * uv, (faceH - 2 * t) * uv],
+      uvScale: [faceD * uv, wallH * uv],
     },
-    // right (+X) - tucked between floor and ceiling
+    // right (+X) - extends below 0
     {
-      size: [faceD, faceH - 2 * t],
-      position: [halfW - t / 2, heightM / 2, 0],
+      size: [faceD, wallH],
+      position: [halfW - t / 2, wallY, 0],
       rotation: [0, Math.PI / 2, 0],
-      uvScale: [faceD * uv, (faceH - 2 * t) * uv],
+      uvScale: [faceD * uv, wallH * uv],
     },
   ]
 }

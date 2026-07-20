@@ -19,11 +19,14 @@ describe("buildShellPanels", () => {
     expect(ceiling?.position[1]).toBeCloseTo(heightM - t / 2, 9)
   })
 
-  it("keeps left/right/back centers properly inset and heights trimmed by floor/ceiling", () => {
+  it("keeps left/right/back centers properly inset and heights trimmed by ceiling and extended downwards", () => {
     const widthM = 1.2
     const depthM = 1.0
     const heightM = 2.0
     const t = CHAMBER_GEOMETRY.wallThicknessM
+    const bleed = 0.02
+    const wallY = (heightM - t - bleed) / 2
+
     const panels = buildShellPanels(widthM, depthM, heightM, t)
     const back = panels[2]
     const left = panels[3]
@@ -31,30 +34,32 @@ describe("buildShellPanels", () => {
     expect(back?.position[2]).toBeCloseTo(-depthM / 2 + t / 2, 9)
     expect(left?.position[0]).toBeCloseTo(-widthM / 2 + t / 2, 9)
     expect(right?.position[0]).toBeCloseTo(widthM / 2 - t / 2, 9)
-    // Centers are at exactly H/2 because walls sit between t and H-t
-    expect(left?.position[1]).toBeCloseTo(heightM / 2, 9)
-    expect(right?.position[1]).toBeCloseTo(heightM / 2, 9)
-    expect(back?.position[1]).toBeCloseTo(heightM / 2, 9)
+    // Centers are lower because they extend 2cm down
+    expect(left?.position[1]).toBeCloseTo(wallY, 9)
+    expect(right?.position[1]).toBeCloseTo(wallY, 9)
+    expect(back?.position[1]).toBeCloseTo(wallY, 9)
   })
 
-  it("trims wall face sizes to perfectly butt against each other without overlapping", () => {
+  it("trims wall face sizes to perfectly butt against each other and tucks floor inside with 1mm gap", () => {
     const widthM = 1.2
     const depthM = 1.0
     const heightM = 2.0
     const t = CHAMBER_GEOMETRY.wallThicknessM
+    const bleed = 0.02
+    const eps = 0.001
     const panels = buildShellPanels(widthM, depthM, heightM, t)
     const floor = panels[0]
     const back = panels[2]
     const left = panels[3]
 
-    // Floor and ceiling are full size
-    expect(floor?.size[0]).toBeCloseTo(widthM, 9)
-    expect(floor?.size[1]).toBeCloseTo(depthM, 9)
-    // Back wall is tucked inside left/right walls and floor/ceiling
+    // Floor is tucked inside walls with eps gap
+    expect(floor?.size[0]).toBeCloseTo(widthM - 2 * t - 2 * eps, 9)
+    expect(floor?.size[1]).toBeCloseTo(depthM - t - eps, 9)
+    // Back wall is tucked inside left/right walls
     expect(back?.size[0]).toBeCloseTo(widthM - 2 * t, 9)
-    expect(back?.size[1]).toBeCloseTo(heightM - 2 * t, 9)
-    // Left wall is tucked between floor and ceiling
+    expect(back?.size[1]).toBeCloseTo(heightM - t + bleed, 9)
+    // Left wall spans full depth
     expect(left?.size[0]).toBeCloseTo(depthM, 9) // Full depth
-    expect(left?.size[1]).toBeCloseTo(heightM - 2 * t, 9)
+    expect(left?.size[1]).toBeCloseTo(heightM - t + bleed, 9)
   })
 })
