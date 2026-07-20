@@ -154,9 +154,9 @@ export const CHAMBER_MATERIAL = {
   lightDuctRoughness: 0.28,
   lightDuctMetalness: 0.75,
   /** Emitter glow is visual only (not scene light); keep below fixture intensity. */
-  lightEmitterEmissiveOn: 1.7,
+  lightEmitterEmissiveOn: 4.5,
   lightEmitterEmissiveOff: 0.04,
-  lightBulbEmissiveOn: 2.1,
+  lightBulbEmissiveOn: 6.0,
   lightBulbEmissiveOff: 0.06,
   /**
    * Scene lights on fixtures (only when lit).
@@ -173,19 +173,19 @@ export const CHAMBER_MATERIAL = {
    * LED: most energy in a broad spot (less milky multi-point wash on mylar).
    * Fill is a low residual under the board only.
    */
-  ledPanelFillIntensity: 8,
-  ledPanelSpotIntensity: 58,
+  ledPanelFillIntensity: 20,
+  ledPanelSpotIntensity: 140,
   /**
    * HPS: hard warm key from bulb + spot; fill stays small so tent walls do not
    * pick up orange milk — power hierarchy lives in spot/point, not fill.
    */
-  hpsPointIntensity: 24,
-  hpsSpotIntensity: 48,
-  hpsFillIntensity: 4,
+  hpsPointIntensity: 60,
+  hpsSpotIntensity: 120,
+  hpsFillIntensity: 10,
   /** Form efficiency vs open box hood (character, not fake watts). */
-  hpsFormScaleBox: 1,
-  hpsFormScaleWing: 0.88,
-  hpsFormScaleCooltube: 0.72,
+  hpsFormScaleBox: 1.0,
+  hpsFormScaleWing: 0.85,
+  hpsFormScaleCooltube: 0.65,
   lightOffSceneIntensity: 0,
   /**
    * Room studio (always on, same whether grow fixture is ON or OFF).

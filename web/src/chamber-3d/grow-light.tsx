@@ -52,7 +52,9 @@ function fixturePowerScale(preset: LightPreset): number {
     preset.form === "led_panel"
       ? CHAMBER_MATERIAL.ledPowerRefW
       : CHAMBER_MATERIAL.hpsPowerRefW
-  return Math.sqrt(preset.powerW / refW)
+  // Use linear power scaling instead of Math.sqrt so wattage differences (e.g. 600W vs 1000W)
+  // are strongly visible and realistic in the 3D scene without artificial compression.
+  return preset.powerW / refW
 }
 
 function hpsFormScale(form: LightForm): number {
@@ -362,12 +364,12 @@ function LedPanelMesh({
         angle={1.15}
         penumbra={0.7}
         intensity={spotI}
-        distance={reach}
+        distance={0}
         decay={2}
         color={sceneColor}
         castShadow={castSpotShadow}
         shadow-camera-near={0.02}
-        shadow-camera-far={reach * 1.15}
+        shadow-camera-far={8}
         shadow-bias={-0.00025}
       >
         <object3D attach="target" position={[0, lightY - 1.5, 0]} />
@@ -489,12 +491,12 @@ function HpsBoxMesh({
       <pointLight
         position={[0, bulbY, 0]}
         intensity={pointI}
-        distance={reach}
+        distance={0}
         decay={2}
         color={sceneColor}
         castShadow={castShadow}
         shadow-camera-near={0.02}
-        shadow-camera-far={Math.max(reach * 1.2, 3.0)}
+        shadow-camera-far={8}
         shadow-bias={-0.0003}
       />
       <spotLight
@@ -502,12 +504,12 @@ function HpsBoxMesh({
         angle={0.9}
         penumbra={0.4}
         intensity={spotI}
-        distance={reach}
+        distance={0}
         decay={2}
         color={sceneColor}
         castShadow={castShadow}
         shadow-camera-near={0.02}
-        shadow-camera-far={Math.max(reach * 1.2, 3.0)}
+        shadow-camera-far={8}
         shadow-bias={-0.0003}
       >
         <object3D attach="target" position={[0, bulbY - 1.5, 0]} />
@@ -610,12 +612,12 @@ function HpsWingMesh({
       <pointLight
         position={[0, bulbY, 0]}
         intensity={pointI}
-        distance={reach}
+        distance={0}
         decay={2}
         color={sceneColor}
         castShadow={castShadow}
         shadow-camera-near={0.02}
-        shadow-camera-far={Math.max(reach * 1.2, 3.0)}
+        shadow-camera-far={8}
         shadow-bias={-0.0003}
       />
       <spotLight
@@ -623,12 +625,12 @@ function HpsWingMesh({
         angle={1.25}
         penumbra={0.7}
         intensity={spotI}
-        distance={reach}
+        distance={0}
         decay={2}
         color={sceneColor}
         castShadow={castShadow}
         shadow-camera-near={0.02}
-        shadow-camera-far={Math.max(reach * 1.2, 3.0)}
+        shadow-camera-far={8}
         shadow-bias={-0.0003}
       >
         <object3D attach="target" position={[0, bulbY - 1.5, 0]} />
@@ -729,12 +731,12 @@ function HpsCooltubeMesh({
       <pointLight
         position={[0, 0, 0]}
         intensity={pointI}
-        distance={reach}
+        distance={0}
         decay={2}
         color={sceneColor}
         castShadow={castShadow}
         shadow-camera-near={0.02}
-        shadow-camera-far={Math.max(reach * 1.2, 3.0)}
+        shadow-camera-far={8}
         shadow-bias={-0.0003}
       />
       <spotLight
@@ -742,12 +744,12 @@ function HpsCooltubeMesh({
         angle={0.95}
         penumbra={0.5}
         intensity={spotI}
-        distance={reach}
+        distance={0}
         decay={2}
         color={sceneColor}
         castShadow={castShadow}
         shadow-camera-near={0.02}
-        shadow-camera-far={Math.max(reach * 1.2, 3.0)}
+        shadow-camera-far={8}
         shadow-bias={-0.0003}
       >
         <object3D attach="target" position={[0, -1.5, 0]} />
