@@ -174,11 +174,9 @@ function useLightMaterials(colors: ChamberSceneColors, lit: boolean) {
       /** Specular aluminium inside HPS reflectors — no warm emissive wash. */
       reflector: {
         color: colors.lightDuct,
-        roughness: lit ? 0.12 : 0.35,
-        metalness: lit ? 0.95 : 0.7,
-        envMapIntensity: lit ? 1.7 : 0.55,
-        emissive: colors.lightBulb,
-        emissiveIntensity: lit ? 0.03 : 0,
+        roughness: 0.2,
+        metalness: 0.9,
+        envMapIntensity: 0.8,
       },
       board: {
         color: colors.lightHousing,
@@ -480,7 +478,7 @@ function HpsBoxMesh({
         rotation={[0, 0, Math.PI / 2]}
         castShadow={false}
       >
-        <cylinderGeometry args={[bulbR, bulbR, bulbLen, 16]} />
+        <capsuleGeometry args={[bulbR, Math.max(0, bulbLen - bulbR * 2), 4, 16]} />
         <meshStandardMaterial {...mats.bulb} />
       </mesh>
       <mesh position={[0, topY - heightM * 0.02, 0]} castShadow>
@@ -605,7 +603,7 @@ function HpsWingMesh({
         rotation={[0, 0, Math.PI / 2]}
         castShadow={false}
       >
-        <cylinderGeometry args={[bulbR, bulbR, bulbLen, 16]} />
+        <capsuleGeometry args={[bulbR, Math.max(0, bulbLen - bulbR * 2), 4, 16]} />
         <meshStandardMaterial {...mats.bulb} />
       </mesh>
 
@@ -722,8 +720,8 @@ function HpsCooltubeMesh({
         <meshStandardMaterial {...mats.duct} />
       </mesh>
       <mesh rotation={[0, 0, Math.PI / 2]} castShadow={false}>
-        <cylinderGeometry
-          args={[tubeR * 0.28, tubeR * 0.28, tubeLen * 0.45, 14]}
+        <capsuleGeometry
+          args={[tubeR * 0.28, Math.max(0, tubeLen * 0.45 - tubeR * 0.56), 4, 14]}
         />
         <meshStandardMaterial {...mats.bulb} />
       </mesh>
