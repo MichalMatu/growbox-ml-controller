@@ -165,7 +165,7 @@ export const CHAMBER_MATERIAL = {
    * blowing the foil. Form efficiency: box > wing > cooltube; LED is soft/wide.
    */
   ledDiodePitchM: 0.028,
-  ledDiodeMaxAxis: 14,
+  ledDiodeMaxAxis: 64,
   ledDiodeRadiusScale: 0.32,
   ledPowerRefW: 200,
   hpsPowerRefW: 600,

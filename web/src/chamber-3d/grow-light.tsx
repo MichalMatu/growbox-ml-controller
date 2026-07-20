@@ -120,7 +120,6 @@ export function GrowLight({
           lit={lit}
           fixtureShadows={config.fixtureShadows}
           powerScale={powerScale}
-          maxReachM={maxReachM}
         />
       ) : null}
       {preset.form === "hps_box" ? (
@@ -228,7 +227,6 @@ function LedPanelMesh({
   lit,
   fixtureShadows,
   powerScale,
-  maxReachM,
 }: {
   lengthM: number
   widthM: number
@@ -237,7 +235,6 @@ function LedPanelMesh({
   lit: boolean
   fixtureShadows: boolean
   powerScale: number
-  maxReachM: number
 }) {
   const castSpotShadow = lit && fixtureShadows
   const mats = useLightMaterials(colors, lit)
@@ -295,29 +292,17 @@ function LedPanelMesh({
     mesh.count = positions.length
   }, [diodeGrid])
 
-  /** Sparse local fill only — bulk light is the broad spot (less milky mylar). */
-  const fillLights = useMemo(() => {
-    const insetX = lengthM * 0.28
-    const insetZ = widthM * 0.28
-    return [
-      { x: 0, z: 0 },
-      { x: -insetX, z: -insetZ },
-      { x: insetX, z: -insetZ },
-      { x: -insetX, z: insetZ },
-      { x: insetX, z: insetZ },
-    ] as const
-  }, [lengthM, widthM])
-
-  const fillEach =
-    sceneIntensity(lit, CHAMBER_MATERIAL.ledPanelFillIntensity, powerScale) /
-    fillLights.length
+  const fillI = sceneIntensity(
+    lit,
+    CHAMBER_MATERIAL.ledPanelFillIntensity,
+    powerScale,
+  )
   const spotI = sceneIntensity(
     lit,
     CHAMBER_MATERIAL.ledPanelSpotIntensity,
     powerScale,
   )
   const lightY = diodeY - 0.02
-  const reach = maxReachM
   const sceneColor = colors.lightLedScene
 
   return (
@@ -348,16 +333,17 @@ function LedPanelMesh({
         <meshStandardMaterial {...mats.diode} />
       </instancedMesh>
 
-      {fillLights.map((p, i) => (
-        <pointLight
-          key={i}
-          position={[p.x, lightY, p.z]}
-          intensity={fillEach}
-          distance={Math.min(reach * 0.18, 0.22)}
-          decay={2}
-          color={sceneColor}
-        />
-      ))}
+      <pointLight
+        position={[0, lightY - 0.1, 0]}
+        intensity={fillI}
+        distance={0}
+        decay={2}
+        color={sceneColor}
+        castShadow={castSpotShadow}
+        shadow-camera-near={0.02}
+        shadow-camera-far={8}
+        shadow-bias={-0.0003}
+      />
       {/* Broad downward wash — main canopy / wall key */}
       <spotLight
         position={[0, lightY, 0]}
