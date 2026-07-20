@@ -15,8 +15,8 @@ export type ShellPanelSpec = {
 /**
  * Open-front grow-tent shell: floor, ceiling, back, left, right.
  * No front panel (+Z is the doorway). Panels sit on the outer envelope;
- * face size is reduced by `cornerClearanceM` on every edge so fabric does
- * not overhang the steel corner pockets (frame tubes + corner spheres).
+ * face sizes are extended to exactly meet or overlap at the corners
+ * to ensure a perfect light seal against shadow map bias.
  */
 export function buildShellPanels(
   widthM: number,
