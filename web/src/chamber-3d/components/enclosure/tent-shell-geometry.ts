@@ -36,7 +36,7 @@ export function buildShellPanels(
   // Jednocześnie, aby uniknąć Z-fightingu (zbugowanego przenikania tekstur na krawędziach),
   // podłoga jest schowana wewnątrz, oddzielona od ścian o 1 milimetr (eps).
 
-  const bleed = 0.02
+  const bleed = 0.0
   const eps = 0.001
   const wallH = heightM - t + bleed
   const wallY = (heightM - t - bleed) / 2

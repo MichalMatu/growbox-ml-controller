@@ -24,7 +24,7 @@ describe("buildShellPanels", () => {
     const depthM = 1.0
     const heightM = 2.0
     const t = CHAMBER_GEOMETRY.wallThicknessM
-    const bleed = 0.02
+    const bleed = 0.0
     const wallY = (heightM - t - bleed) / 2
 
     const panels = buildShellPanels(widthM, depthM, heightM, t)
@@ -34,7 +34,6 @@ describe("buildShellPanels", () => {
     expect(back?.position[2]).toBeCloseTo(-depthM / 2 + t / 2, 9)
     expect(left?.position[0]).toBeCloseTo(-widthM / 2 + t / 2, 9)
     expect(right?.position[0]).toBeCloseTo(widthM / 2 - t / 2, 9)
-    // Centers are lower because they extend 2cm down
     expect(left?.position[1]).toBeCloseTo(wallY, 9)
     expect(right?.position[1]).toBeCloseTo(wallY, 9)
     expect(back?.position[1]).toBeCloseTo(wallY, 9)
@@ -45,7 +44,7 @@ describe("buildShellPanels", () => {
     const depthM = 1.0
     const heightM = 2.0
     const t = CHAMBER_GEOMETRY.wallThicknessM
-    const bleed = 0.02
+    const bleed = 0.0
     const eps = 0.001
     const panels = buildShellPanels(widthM, depthM, heightM, t)
     const floor = panels[0]

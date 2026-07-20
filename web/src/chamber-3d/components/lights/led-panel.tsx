@@ -119,18 +119,24 @@ export function LedPanelMesh({
         <meshStandardMaterial {...mats.diode} />
       </instancedMesh>
 
-      <pointLight
-        position={[0, lightY - 0.1, 0]}
+      {/* Wide downward fill — replaces pointLight so it casts shadows but doesn't shine up */}
+      <spotLight
+        position={[0, lightY - 0.05, 0]}
+        angle={1.4}
+        penumbra={1.0}
         intensity={fillI}
         distance={0}
         decay={2}
         color={sceneColor}
         castShadow={castSpotShadow}
-        shadow-mapSize={[2048, 2048]}
+        shadow-mapSize={[1024, 1024]}
         shadow-camera-near={0.02}
         shadow-camera-far={8}
-        shadow-bias={-0.0003}
-      />
+        shadow-bias={-0.0001}
+        shadow-normalBias={0}
+      >
+        <object3D attach="target" position={[0, lightY - 1.5, 0]} />
+      </spotLight>
       {/* Broad downward wash — main canopy / wall key */}
       <spotLight
         position={[0, lightY, 0]}
@@ -144,7 +150,9 @@ export function LedPanelMesh({
         shadow-mapSize={[2048, 2048]}
         shadow-camera-near={0.02}
         shadow-camera-far={8}
-        shadow-bias={-0.00025}
+        shadow-bias={-0.0001}
+        shadow-normalBias={0}
+        shadow-radius={8}
       >
         <object3D attach="target" position={[0, lightY - 1.5, 0]} />
       </spotLight>
