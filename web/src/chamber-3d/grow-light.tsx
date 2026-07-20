@@ -340,6 +340,7 @@ function LedPanelMesh({
         decay={2}
         color={sceneColor}
         castShadow={castSpotShadow}
+        shadow-mapSize={[2048, 2048]}
         shadow-camera-near={0.02}
         shadow-camera-far={8}
         shadow-bias={-0.0003}
@@ -354,6 +355,7 @@ function LedPanelMesh({
         decay={2}
         color={sceneColor}
         castShadow={castSpotShadow}
+        shadow-mapSize={[2048, 2048]}
         shadow-camera-near={0.02}
         shadow-camera-far={8}
         shadow-bias={-0.00025}
@@ -481,6 +483,7 @@ function HpsBoxMesh({
         decay={2}
         color={sceneColor}
         castShadow={castShadow}
+        shadow-mapSize={[2048, 2048]}
         shadow-camera-near={0.02}
         shadow-camera-far={8}
         shadow-bias={-0.0003}
@@ -494,6 +497,7 @@ function HpsBoxMesh({
         decay={2}
         color={sceneColor}
         castShadow={castShadow}
+        shadow-mapSize={[2048, 2048]}
         shadow-camera-near={0.02}
         shadow-camera-far={8}
         shadow-bias={-0.0003}
@@ -602,6 +606,7 @@ function HpsWingMesh({
         decay={2}
         color={sceneColor}
         castShadow={castShadow}
+        shadow-mapSize={[2048, 2048]}
         shadow-camera-near={0.02}
         shadow-camera-far={8}
         shadow-bias={-0.0003}
@@ -615,6 +620,7 @@ function HpsWingMesh({
         decay={2}
         color={sceneColor}
         castShadow={castShadow}
+        shadow-mapSize={[2048, 2048]}
         shadow-camera-near={0.02}
         shadow-camera-far={8}
         shadow-bias={-0.0003}
@@ -721,6 +727,7 @@ function HpsCooltubeMesh({
         decay={2}
         color={sceneColor}
         castShadow={castShadow}
+        shadow-mapSize={[2048, 2048]}
         shadow-camera-near={0.02}
         shadow-camera-far={8}
         shadow-bias={-0.0003}
@@ -734,6 +741,7 @@ function HpsCooltubeMesh({
         decay={2}
         color={sceneColor}
         castShadow={castShadow}
+        shadow-mapSize={[2048, 2048]}
         shadow-camera-near={0.02}
         shadow-camera-far={8}
         shadow-bias={-0.0003}

@@ -31,26 +31,25 @@ describe("buildShellPanels", () => {
     expect(back?.position[2]).toBeCloseTo(-depthM / 2 + t / 2, 9)
     expect(left?.position[0]).toBeCloseTo(-widthM / 2 + t / 2, 9)
     expect(right?.position[0]).toBeCloseTo(widthM / 2 - t / 2, 9)
-    expect(left?.position[1]).toBeCloseTo(heightM / 2, 9)
-    expect(right?.position[1]).toBeCloseTo(heightM / 2, 9)
+    expect(left?.position[1]).toBeCloseTo((heightM - t) / 2, 9)
+    expect(right?.position[1]).toBeCloseTo((heightM - t) / 2, 9)
   })
 
-  it("shrinks face sizes by 2× frame radius so fabric leaves corner pockets", () => {
+  it("extends wall face sizes to perfectly seal corners and overlap floor", () => {
     const widthM = 1.2
     const depthM = 1.0
     const heightM = 2.0
     const t = CHAMBER_GEOMETRY.wallThicknessM
-    const r = CHAMBER_GEOMETRY.frameRadiusM
     const panels = buildShellPanels(widthM, depthM, heightM, t)
     const floor = panels[0]
     const back = panels[2]
     const left = panels[3]
 
-    expect(floor?.size[0]).toBeCloseTo(widthM - 2 * r, 9)
-    expect(floor?.size[1]).toBeCloseTo(depthM - 2 * r, 9)
-    expect(back?.size[0]).toBeCloseTo(widthM - 2 * r, 9)
-    expect(back?.size[1]).toBeCloseTo(heightM - 2 * r, 9)
-    expect(left?.size[0]).toBeCloseTo(depthM - 2 * r, 9)
-    expect(left?.size[1]).toBeCloseTo(heightM - 2 * r, 9)
+    expect(floor?.size[0]).toBeCloseTo(widthM, 9)
+    expect(floor?.size[1]).toBeCloseTo(depthM, 9)
+    expect(back?.size[0]).toBeCloseTo(widthM, 9)
+    expect(back?.size[1]).toBeCloseTo(heightM + t, 9)
+    expect(left?.size[0]).toBeCloseTo(depthM, 9)
+    expect(left?.size[1]).toBeCloseTo(heightM + t, 9)
   })
 })

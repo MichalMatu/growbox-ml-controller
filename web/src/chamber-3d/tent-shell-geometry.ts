@@ -24,18 +24,17 @@ export function buildShellPanels(
   heightM: number,
   thicknessM: number = CHAMBER_GEOMETRY.wallThicknessM,
   uvTilesPerMeter: number = CHAMBER_GEOMETRY.uvTilesPerMeter,
-  cornerClearanceM: number = CHAMBER_GEOMETRY.frameRadiusM,
 ): readonly ShellPanelSpec[] {
   const halfW = widthM / 2
   const halfD = depthM / 2
   const t = thicknessM
-  const c = cornerClearanceM
   const uv = uvTilesPerMeter
 
-  // Leave a frame pocket at each orthotope edge (min size = thickness).
-  const faceW = Math.max(widthM - 2 * c, t)
-  const faceD = Math.max(depthM - 2 * c, t)
-  const faceH = Math.max(heightM - 2 * c, t)
+  // Extend panels fully to the mathematical outer corners to completely seal
+  // against light bleeding. The frame is inset and will stay safely inside.
+  const faceW = Math.max(widthM, t)
+  const faceD = Math.max(depthM, t)
+  const faceH = Math.max(heightM, t)
 
   return [
     // floor
@@ -54,24 +53,24 @@ export function buildShellPanels(
     },
     // back (-Z)
     {
-      size: [faceW, faceH],
-      position: [0, heightM / 2, -halfD + t / 2],
+      size: [faceW, faceH + t],
+      position: [0, (heightM - t) / 2, -halfD + t / 2],
       rotation: [0, Math.PI, 0],
-      uvScale: [faceW * uv, faceH * uv],
+      uvScale: [faceW * uv, (faceH + t) * uv],
     },
     // left (-X)
     {
-      size: [faceD, faceH],
-      position: [-halfW + t / 2, heightM / 2, 0],
+      size: [faceD, faceH + t],
+      position: [-halfW + t / 2, (heightM - t) / 2, 0],
       rotation: [0, -Math.PI / 2, 0],
-      uvScale: [faceD * uv, faceH * uv],
+      uvScale: [faceD * uv, (faceH + t) * uv],
     },
     // right (+X)
     {
-      size: [faceD, faceH],
-      position: [halfW - t / 2, heightM / 2, 0],
+      size: [faceD, faceH + t],
+      position: [halfW - t / 2, (heightM - t) / 2, 0],
       rotation: [0, Math.PI / 2, 0],
-      uvScale: [faceD * uv, faceH * uv],
+      uvScale: [faceD * uv, (faceH + t) * uv],
     },
   ]
 }
