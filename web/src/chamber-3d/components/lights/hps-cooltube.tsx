@@ -1,3 +1,4 @@
+import { DoubleSide } from "three"
 import { CHAMBER_MATERIAL, type ChamberSceneColors } from "@/chamber-3d/core/scene-tokens"
 import { sceneIntensity, useLightMaterials } from "./light-materials"
 
@@ -49,7 +50,7 @@ export function HpsCooltubeMesh({
   return (
     <group>
       <mesh rotation={[0, 0, Math.PI / 2]} castShadow={false} receiveShadow>
-        <cylinderGeometry args={[tubeR, tubeR, tubeLen, 24]} />
+        <cylinderGeometry args={[tubeR, tubeR, tubeLen, 24, 1, true]} />
         <meshStandardMaterial
           {...mats.duct}
           transparent
@@ -58,23 +59,24 @@ export function HpsCooltubeMesh({
           metalness={0.25}
           emissive={colors.lightBulb}
           emissiveIntensity={lit ? 0.12 : 0}
+          side={DoubleSide}
         />
       </mesh>
       <mesh
         position={[tubeLen / 2 + flangeLen / 2, 0, 0]}
         rotation={[0, 0, Math.PI / 2]}
-        castShadow
+        castShadow={false}
       >
-        <cylinderGeometry args={[ductR, ductR, flangeLen, 20]} />
-        <meshStandardMaterial {...mats.duct} />
+        <cylinderGeometry args={[ductR, ductR, flangeLen, 20, 1, true]} />
+        <meshStandardMaterial {...mats.duct} side={DoubleSide} />
       </mesh>
       <mesh
         position={[-tubeLen / 2 - flangeLen / 2, 0, 0]}
         rotation={[0, 0, Math.PI / 2]}
-        castShadow
+        castShadow={false}
       >
-        <cylinderGeometry args={[ductR, ductR, flangeLen, 20]} />
-        <meshStandardMaterial {...mats.duct} />
+        <cylinderGeometry args={[ductR, ductR, flangeLen, 20, 1, true]} />
+        <meshStandardMaterial {...mats.duct} side={DoubleSide} />
       </mesh>
       <mesh rotation={[0, 0, Math.PI / 2]} castShadow={false}>
         <capsuleGeometry

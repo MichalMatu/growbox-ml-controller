@@ -65,8 +65,9 @@ export function ChamberCanvas({
       }}
       onCreated={({ gl }) => {
         gl.setClearColor(0x000000, 0)
-        // THREE r185: PCFSoftShadowMap deprecated → use PCFShadowMap (1)
-        gl.shadowMap.type = 1 // PCFShadowMap
+        // PCFSoftShadowMap (2) supports shadow-radius for per-light blur.
+        // PCFShadowMap (1) ignores shadow-radius entirely.
+        gl.shadowMap.type = 2 // PCFSoftShadowMap
       }}
       dpr={[dprMin, dprMax]}
     >
