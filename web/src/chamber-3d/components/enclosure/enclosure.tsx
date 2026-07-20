@@ -20,12 +20,15 @@ import {
   buildRearFlapZippers,
   type RearFlapZipperSpec,
 } from "@/chamber-3d/components/enclosure/tent-vent-geometry"
+import { TentRuler } from "@/chamber-3d/components/enclosure/back-wall-ruler"
 
 export type EnclosureDimensions = {
   widthCm: number
   depthCm: number
   heightCm: number
   colors: ChamberSceneColors
+  /** Show ruler inside the tent when room walls are absent (Studio). */
+  showInteriorRuler?: boolean
 }
 
 /** Module-level normal scales (shared; not recreated per panel). */
@@ -47,6 +50,7 @@ export function Enclosure({
   depthCm,
   heightCm,
   colors,
+  showInteriorRuler = false,
 }: EnclosureDimensions) {
   // UI enforces min cm; floor here so bad props never collapse the mesh.
   const widthM = Math.max(widthCm, ENCLOSURE_CM_MIN) / 100
@@ -81,6 +85,15 @@ export function Enclosure({
         radiusM={radiusM}
         colors={colors}
       />
+      {showInteriorRuler ? (
+        <TentRuler
+          widthM={widthM}
+          depthM={depthM}
+          heightM={heightM}
+          thicknessM={thicknessM}
+          colors={colors}
+        />
+      ) : null}
     </group>
   )
 }

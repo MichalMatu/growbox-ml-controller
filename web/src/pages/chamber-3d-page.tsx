@@ -66,6 +66,7 @@ import { navigate, ROUTES } from "@/lib/routing"
 const DEFAULT_WIDTH_CM = 80
 const DEFAULT_DEPTH_CM = 80
 const DEFAULT_HEIGHT_CM = 160
+const DEFAULT_WALL_HEIGHT_CM = 260
 const DEFAULT_POT_COUNT: FeltPotCount = 1
 
 type CmFieldProps = {
@@ -158,7 +159,8 @@ export function Chamber3dPage() {
     DEFAULT_LIGHT_CEILING_GAP_CM,
   )
   const [lightOn, setLightOn] = useState(true)
-  const [roomLayout, setRoomLayout] = useState<RoomLayout>("none")
+  const [roomLayout, setRoomLayout] = useState<RoomLayout>("flat")
+  const [wallHeightCm, setWallHeightCm] = useState(DEFAULT_WALL_HEIGHT_CM)
 
   const volumeM3 = useMemo(
     () => (widthCm * depthCm * heightCm) / 1_000_000,
@@ -291,6 +293,7 @@ export function Chamber3dPage() {
                     label="Wysokość (cm)"
                     valueCm={heightCm}
                     onValueCmChange={setHeightCm}
+                    maxCm={240}
                   />
                   <AppFormField label="Objętość (m³)" htmlFor="volume_m3">
                     <Input
@@ -513,6 +516,14 @@ export function Chamber3dPage() {
                       </SelectContent>
                     </Select>
                   </AppFormField>
+
+                  <CmDimensionField
+                    id="wall_height_cm"
+                    label="Wys. ściany (cm)"
+                    valueCm={wallHeightCm}
+                    onValueCmChange={setWallHeightCm}
+                    maxCm={260}
+                  />
                 </AppFormGrid>
 
                 <AppActionRow align="end">
@@ -529,6 +540,7 @@ export function Chamber3dPage() {
                       setLightOrientationDeg(DEFAULT_LIGHT_ORIENTATION_DEG)
                       setLightCeilingGapCm(DEFAULT_LIGHT_CEILING_GAP_CM)
                       setLightOn(true)
+                      setWallHeightCm(DEFAULT_WALL_HEIGHT_CM)
                     }}
                   >
                     Reset
@@ -553,6 +565,7 @@ export function Chamber3dPage() {
                 lightCeilingGapCm={effectiveCeilingGapCm}
                 lightOn={lightOn && lightPlan.fits}
                 roomLayout={roomLayout}
+                wallHeightCm={wallHeightCm}
               />
             </ChamberPerformanceProvider>
           </AppCanvasFrame>

@@ -26,6 +26,7 @@ export function ChamberCanvas({
   lightCeilingGapCm = 5,
   lightOn = true,
   roomLayout = "none",
+  wallHeightCm = 300,
 }: ChamberSceneProps) {
   const { config } = useChamberPerformance()
   const themeClass = useDocumentThemeClass()
@@ -151,12 +152,14 @@ export function ChamberCanvas({
             depth: depthM / 2,
             height: heightM,
           }}
+          wallHeightM={Math.max(wallHeightCm, ENCLOSURE_CM_MIN) / 100}
         />
         <Enclosure
           widthCm={widthCm}
           depthCm={depthCm}
           heightCm={heightCm}
           colors={colors}
+          showInteriorRuler={roomLayout === "none"}
         />
         <FeltPotGroup
           widthM={widthM}
@@ -284,6 +287,8 @@ export type ChamberSceneProps = {
   lightCeilingGapCm?: number
   lightOn?: boolean
   roomLayout?: RoomLayout
+  /** Room wall height in cm (40–500). Defaults to standard 300 cm. */
+  wallHeightCm?: number
 }
 
 function useDocumentThemeClass(): "light" | "dark" {
