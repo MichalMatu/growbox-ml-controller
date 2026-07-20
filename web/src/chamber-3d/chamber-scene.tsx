@@ -65,8 +65,8 @@ export function ChamberCanvas({
       }}
       onCreated={({ gl }) => {
         gl.setClearColor(0x000000, 0)
-        // THREE r185: PCFSoftShadowMap is deprecated; use explicit PCFShadowMap
-        gl.shadowMap.type = 0 // PCFShadowMap (BasicFiltering)
+        // THREE r185: PCFSoftShadowMap deprecated → use PCFShadowMap (1)
+        gl.shadowMap.type = 1 // PCFShadowMap
       }}
       dpr={[dprMin, dprMax]}
     >
@@ -98,8 +98,13 @@ export function ChamberCanvas({
           intensity={CHAMBER_MATERIAL.studioKeyIntensity}
           shadow-mapSize-width={config.shadowMapSize}
           shadow-mapSize-height={config.shadowMapSize}
+          shadow-camera-near={0.01}
           shadow-camera-far={maxSideM * 14}
-          shadow-bias={-0.0002}
+          shadow-camera-left={-maxSideM * 2.5}
+          shadow-camera-right={maxSideM * 2.5}
+          shadow-camera-top={maxSideM * 2.5}
+          shadow-camera-bottom={-maxSideM * 2.5}
+          shadow-bias={-0.0004}
         />
       )}
       {config.studioLightCount >= 3 && (

@@ -353,7 +353,7 @@ function LedPanelMesh({
           key={i}
           position={[p.x, lightY, p.z]}
           intensity={fillEach}
-          distance={reach * 0.7}
+          distance={Math.min(reach * 0.18, 0.22)}
           decay={2}
           color={sceneColor}
         />
@@ -368,6 +368,9 @@ function LedPanelMesh({
         decay={2}
         color={sceneColor}
         castShadow={castSpotShadow}
+        shadow-camera-near={0.02}
+        shadow-camera-far={reach * 1.15}
+        shadow-bias={-0.00025}
       >
         <object3D attach="target" position={[0, lightY - 1.5, 0]} />
       </spotLight>
@@ -492,6 +495,9 @@ function HpsBoxMesh({
         decay={2}
         color={sceneColor}
         castShadow={castShadow}
+        shadow-camera-near={0.01}
+        shadow-camera-far={reach * 1.2}
+        shadow-bias={-0.0004}
       />
       <spotLight
         position={[0, bulbY - bulbR * 0.2, 0]}
@@ -502,6 +508,9 @@ function HpsBoxMesh({
         decay={2}
         color={sceneColor}
         castShadow={castShadow}
+        shadow-camera-near={0.01}
+        shadow-camera-far={reach * 1.2}
+        shadow-bias={-0.0004}
       >
         <object3D attach="target" position={[0, bulbY - 1.5, 0]} />
       </spotLight>
@@ -509,7 +518,7 @@ function HpsBoxMesh({
       <pointLight
         position={[0, cavityCenterY - cavityH * 0.35, 0]}
         intensity={fillI}
-        distance={reach * 0.45}
+        distance={Math.min(reach * 0.18, 0.22)}
         decay={2}
         color={sceneColor}
       />
@@ -607,6 +616,9 @@ function HpsWingMesh({
         decay={2}
         color={sceneColor}
         castShadow={castShadow}
+        shadow-camera-near={0.01}
+        shadow-camera-far={reach * 1.2}
+        shadow-bias={-0.0004}
       />
       <spotLight
         position={[0, bulbY, 0]}
@@ -622,7 +634,7 @@ function HpsWingMesh({
       <pointLight
         position={[0, bulbY - 0.08, 0]}
         intensity={fillI}
-        distance={reach * 0.4}
+        distance={Math.min(reach * 0.18, 0.22)}
         decay={2}
         color={sceneColor}
       />
@@ -719,6 +731,9 @@ function HpsCooltubeMesh({
         decay={2}
         color={sceneColor}
         castShadow={castShadow}
+        shadow-camera-near={0.01}
+        shadow-camera-far={reach * 1.2}
+        shadow-bias={-0.0004}
       />
       <spotLight
         position={[0, -tubeR * 0.15, 0]}
