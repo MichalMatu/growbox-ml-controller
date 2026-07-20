@@ -4,7 +4,7 @@ import { BoxGeometry, MeshStandardMaterial } from "three"
 import {
   CHAMBER_MATERIAL,
   type ChamberSceneColors,
-} from "@/chamber-3d/scene-tokens"
+} from "@/chamber-3d/core/scene-tokens"
 
 export type RoomLayout = "none" | "flat" | "corner"
 

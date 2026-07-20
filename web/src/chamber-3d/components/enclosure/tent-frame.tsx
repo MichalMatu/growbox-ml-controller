@@ -1,18 +1,18 @@
 import { useEffect, useMemo } from "react"
 import { MeshStandardMaterial } from "three"
 
-import { useChamberPerformance } from "@/chamber-3d/performance-context"
-import { orientSegmentBetween } from "@/chamber-3d/segment-mesh"
+import { useChamberPerformance } from "@/chamber-3d/performance/performance-context"
+import { orientSegmentBetween } from "@/chamber-3d/utils/segment-mesh"
 import {
   CHAMBER_MATERIAL,
   type ChamberSceneColors,
-} from "@/chamber-3d/scene-tokens"
+} from "@/chamber-3d/core/scene-tokens"
 import {
   buildFrameCorners,
   buildFrameSegments,
   computeFrameCornerBox,
   type Vec3,
-} from "@/chamber-3d/tent-frame-geometry"
+} from "@/chamber-3d/components/enclosure/tent-frame-geometry"
 
 export type TentFrameProps = {
   widthM: number

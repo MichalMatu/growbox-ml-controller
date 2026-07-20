@@ -18,7 +18,7 @@ import {
   type Texture,
 } from "three"
 
-import { CHAMBER_MATERIAL } from "@/chamber-3d/scene-tokens"
+import { CHAMBER_MATERIAL } from "@/chamber-3d/core/scene-tokens"
 
 export type PotSurfaceMaps = {
   map: Texture

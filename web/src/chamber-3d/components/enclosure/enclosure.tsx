@@ -5,21 +5,21 @@ import {
   useGrowtentPbrMaps,
   type ExteriorPbrMaps,
   type InteriorPbrMaps,
-} from "@/chamber-3d/fabric-pbr"
-import { ENCLOSURE_CM_MIN } from "@/chamber-3d/enclosure-cm"
+} from "@/chamber-3d/materials/fabric-pbr"
+import { ENCLOSURE_CM_MIN } from "@/chamber-3d/components/enclosure/enclosure-cm"
 import {
   CHAMBER_GEOMETRY,
   CHAMBER_MATERIAL,
   type ChamberSceneColors,
-} from "@/chamber-3d/scene-tokens"
-import { orientSegmentBetween } from "@/chamber-3d/segment-mesh"
-import { TentFrame } from "@/chamber-3d/tent-frame"
-import type { Vec3 } from "@/chamber-3d/tent-frame-geometry"
-import { buildShellPanels } from "@/chamber-3d/tent-shell-geometry"
+} from "@/chamber-3d/core/scene-tokens"
+import { orientSegmentBetween } from "@/chamber-3d/utils/segment-mesh"
+import { TentFrame } from "@/chamber-3d/components/enclosure/tent-frame"
+import type { Vec3 } from "@/chamber-3d/components/enclosure/tent-frame-geometry"
+import { buildShellPanels } from "@/chamber-3d/components/enclosure/tent-shell-geometry"
 import {
   buildRearFlapZippers,
   type RearFlapZipperSpec,
-} from "@/chamber-3d/tent-vent-geometry"
+} from "@/chamber-3d/components/enclosure/tent-vent-geometry"
 
 export type EnclosureDimensions = {
   widthCm: number

@@ -56,9 +56,9 @@ export default defineConfig([
       "src/lib/routing.ts",
       "src/components/app-chrome.tsx",
       "src/ui/allowed-surface.ts",
-      "src/chamber-3d/scene-tokens.ts",
-      "src/chamber-3d/performance-tier.ts",
-      "src/chamber-3d/performance-context.tsx",
+      "src/chamber-3d/core/scene-tokens.ts",
+      "src/chamber-3d/performance/performance-tier.ts",
+      "src/chamber-3d/performance/performance-context.tsx",
     ],
     rules: {
       "react-refresh/only-export-components": "off",
@@ -102,7 +102,7 @@ export default defineConfig([
   // chamber-3d scene files: no freehand DOM className/style; colors via resolveChamberSceneColors
   {
     files: ["src/chamber-3d/**/*.{ts,tsx}"],
-    ignores: ["src/chamber-3d/scene-tokens.ts", "src/chamber-3d/performance-overlay.tsx"],
+    ignores: ["src/chamber-3d/core/scene-tokens.ts", "src/chamber-3d/performance/performance-overlay.tsx"],
     rules: {
       "no-restricted-syntax": [
         "error",

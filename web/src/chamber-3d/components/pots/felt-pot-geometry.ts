@@ -1,4 +1,4 @@
-import { CHAMBER_GEOMETRY } from "@/chamber-3d/scene-tokens"
+import { CHAMBER_GEOMETRY } from "@/chamber-3d/core/scene-tokens"
 
 /**
  * Felt / fabric grow-bag sizes for the chamber playground.

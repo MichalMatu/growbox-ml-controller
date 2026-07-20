@@ -60,14 +60,14 @@ export const STYLE_OWNER_PATH_PREFIXES = [
   "components/app-chrome.tsx",
   "components/ui/",
   "index.css",
-  "chamber-3d/scene-tokens.ts",
+  "chamber-3d/core/scene-tokens.ts",
 ] as const
 
 /** Files allowed to contain hex color literals (#rrggbb). */
 export const HEX_LITERAL_ALLOWLIST = [
   "index.css",
-  "chamber-3d/scene-tokens.ts",
-  "chamber-3d/performance-overlay.tsx",
+  "chamber-3d/core/scene-tokens.ts",
+  "chamber-3d/performance/performance-overlay.tsx",
 ] as const
 
 /** CSS custom properties that must exist for product layout + chamber 3D. */

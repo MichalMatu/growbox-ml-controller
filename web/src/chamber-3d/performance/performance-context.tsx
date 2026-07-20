@@ -24,7 +24,7 @@ import {
   setManualTier,
   type PerformanceConfig,
   type PerformanceTier,
-} from "@/chamber-3d/performance-tier"
+} from "@/chamber-3d/performance/performance-tier"
 
 export type ChamberPerformanceCtx = {
   tier: PerformanceTier

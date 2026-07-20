@@ -3,13 +3,13 @@ import { useCallback, useSyncExternalStore } from "react"
 import {
   getFpsSnapshot,
   subscribeToFps,
-} from "@/chamber-3d/fps-bridge"
-import { useChamberPerformance } from "@/chamber-3d/performance-context"
+} from "@/chamber-3d/core/fps-bridge"
+import { useChamberPerformance } from "@/chamber-3d/performance/performance-context"
 import {
   classifyFps,
   getTierLabel,
   type PerformanceTier,
-} from "@/chamber-3d/performance-tier"
+} from "@/chamber-3d/performance/performance-tier"
 
 const TIERS: PerformanceTier[] = ["ultra", "high", "medium", "low"]
 

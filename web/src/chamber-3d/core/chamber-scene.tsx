@@ -3,16 +3,16 @@ import { Environment, Grid, OrbitControls, PerspectiveCamera } from "@react-thre
 import { Canvas, useFrame, useStore } from "@react-three/fiber"
 import { ACESFilmicToneMapping, SRGBColorSpace } from "three"
 
-import { reportFps } from "@/chamber-3d/fps-bridge"
-import { Enclosure } from "@/chamber-3d/enclosure"
-import { ENCLOSURE_CM_MIN } from "@/chamber-3d/enclosure-cm"
-import { getFeltPotPreset, type FeltPotPresetId } from "@/chamber-3d/felt-pot-geometry"
-import { FeltPotGroup } from "@/chamber-3d/felt-pot"
-import { GrowLight } from "@/chamber-3d/grow-light"
-import { getLightPreset, type LightOrientationDeg, type LightPresetId, planLightFit } from "@/chamber-3d/light-geometry"
-import { ChamberPerformanceProvider, useChamberPerformance } from "@/chamber-3d/performance-context"
-import { Room, type RoomLayout } from "@/chamber-3d/room"
-import { CHAMBER_CANVAS_CLASS, CHAMBER_MATERIAL, resolveChamberSceneColors } from "@/chamber-3d/scene-tokens"
+import { reportFps } from "@/chamber-3d/core/fps-bridge"
+import { Enclosure } from "@/chamber-3d/components/enclosure/enclosure"
+import { ENCLOSURE_CM_MIN } from "@/chamber-3d/components/enclosure/enclosure-cm"
+import { getFeltPotPreset, type FeltPotPresetId } from "@/chamber-3d/components/pots/felt-pot-geometry"
+import { FeltPotGroup } from "@/chamber-3d/components/pots/felt-pot"
+import { GrowLight } from "@/chamber-3d/components/lights"
+import { getLightPreset, type LightOrientationDeg, type LightPresetId, planLightFit } from "@/chamber-3d/components/lights/light-geometry"
+import { ChamberPerformanceProvider, useChamberPerformance } from "@/chamber-3d/performance/performance-context"
+import { Room, type RoomLayout } from "@/chamber-3d/environment/room"
+import { CHAMBER_CANVAS_CLASS, CHAMBER_MATERIAL, resolveChamberSceneColors } from "@/chamber-3d/core/scene-tokens"
 
 /** Internal scene — expects a ChamberPerformanceProvider ancestor. */
 export function ChamberCanvas({

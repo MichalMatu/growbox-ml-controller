@@ -5,14 +5,14 @@ import {
   type FeltPotPreset,
   planFeltPotLayout,
   type PotLayoutPlan,
-} from "@/chamber-3d/felt-pot-geometry"
-import { useChamberPerformance } from "@/chamber-3d/performance-context"
-import { usePotPbrMaps, type PotPbrMaps } from "@/chamber-3d/pot-pbr"
+} from "@/chamber-3d/components/pots/felt-pot-geometry"
+import { useChamberPerformance } from "@/chamber-3d/performance/performance-context"
+import { usePotPbrMaps, type PotPbrMaps } from "@/chamber-3d/materials/pot-pbr"
 import {
   CHAMBER_GEOMETRY,
   CHAMBER_MATERIAL,
   type ChamberSceneColors,
-} from "@/chamber-3d/scene-tokens"
+} from "@/chamber-3d/core/scene-tokens"
 
 export type FeltPotProps = {
   /** Outer diameter (meters). */

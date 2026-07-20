@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { orientSegmentBetween } from "@/chamber-3d/segment-mesh"
+import { orientSegmentBetween } from "@/chamber-3d/utils/segment-mesh"
 
 describe("orientSegmentBetween", () => {
   it("places a unit Y segment at the midpoint with full length", () => {

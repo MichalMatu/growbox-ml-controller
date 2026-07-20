@@ -11,7 +11,7 @@ import {
   maxPotsThatFit,
   planFeltPotLayout,
   usableFloorM,
-} from "@/chamber-3d/felt-pot-geometry"
+} from "@/chamber-3d/components/pots/felt-pot-geometry"
 
 describe("felt pot presets", () => {
   it("keeps mid-size bags near square (D/H in 0.75–1.25)", () => {

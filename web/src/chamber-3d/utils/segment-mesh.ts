@@ -1,6 +1,6 @@
 import { Quaternion, Vector3 } from "three"
 
-import type { Vec3 } from "@/chamber-3d/tent-frame-geometry"
+import type { Vec3 } from "@/chamber-3d/components/enclosure/tent-frame-geometry"
 
 const UP = new Vector3(0, 1, 0)
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
-import { CHAMBER_GEOMETRY } from "@/chamber-3d/scene-tokens"
-import { buildShellPanels } from "@/chamber-3d/tent-shell-geometry"
+import { CHAMBER_GEOMETRY } from "@/chamber-3d/core/scene-tokens"
+import { buildShellPanels } from "@/chamber-3d/components/enclosure/tent-shell-geometry"
 
 describe("buildShellPanels", () => {
   it("emits five open-front panels (no +Z doorway wall)", () => {

@@ -11,7 +11,7 @@ import {
   orientedFootprintCm,
   planLightFit,
   resolveLightOrientationDeg,
-} from "@/chamber-3d/light-geometry"
+} from "@/chamber-3d/components/lights/light-geometry"
 
 describe("light-geometry", () => {
   it("swaps footprint axes at 90° orientation", () => {

@@ -7,7 +7,7 @@ import {
   ENCLOSURE_CM_MIN,
   isLiveEnclosureCm,
   parseEnclosureCmDraft,
-} from "@/chamber-3d/enclosure-cm"
+} from "@/chamber-3d/components/enclosure/enclosure-cm"
 
 describe("enclosure cm bounds", () => {
   it("clamps to 40–500", () => {

@@ -1,4 +1,4 @@
-import { CHAMBER_GEOMETRY } from "@/chamber-3d/scene-tokens"
+import { CHAMBER_GEOMETRY } from "@/chamber-3d/core/scene-tokens"
 
 export type Vec3 = readonly [number, number, number]
 

@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest"
 
-import { CHAMBER_GEOMETRY } from "@/chamber-3d/scene-tokens"
+import { CHAMBER_GEOMETRY } from "@/chamber-3d/core/scene-tokens"
 import {
   buildFrameCorners,
   buildFrameSegments,
   computeFrameCornerBox,
-} from "@/chamber-3d/tent-frame-geometry"
+} from "@/chamber-3d/components/enclosure/tent-frame-geometry"
 
 function almostEqual(a: number, b: number, eps = 1e-9): boolean {
   return Math.abs(a - b) <= eps

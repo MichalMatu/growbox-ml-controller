@@ -1,14 +1,14 @@
 import { useMemo, useState } from "react"
 
-import { ChamberCanvas } from "@/chamber-3d/chamber-scene"
-import { ChamberPerformanceProvider } from "@/chamber-3d/performance-context"
-import { PerformanceOverlay } from "@/chamber-3d/performance-overlay"
-import { type RoomLayout } from "@/chamber-3d/room"
+import { ChamberCanvas } from "@/chamber-3d/core/chamber-scene"
+import { ChamberPerformanceProvider } from "@/chamber-3d/performance/performance-context"
+import { PerformanceOverlay } from "@/chamber-3d/performance/performance-overlay"
+import { type RoomLayout } from "@/chamber-3d/environment/room"
 import {
   ENCLOSURE_CM_MAX,
   ENCLOSURE_CM_MIN,
   parseEnclosureCmDraft,
-} from "@/chamber-3d/enclosure-cm"
+} from "@/chamber-3d/components/enclosure/enclosure-cm"
 import {
   DEFAULT_FELT_POT_PRESET_ID,
   FELT_POT_COUNT_MAX,
@@ -18,7 +18,7 @@ import {
   maxPotsThatFit,
   type FeltPotCount,
   type FeltPotPresetId,
-} from "@/chamber-3d/felt-pot-geometry"
+} from "@/chamber-3d/components/pots/felt-pot-geometry"
 import {
   DEFAULT_LIGHT_CEILING_GAP_CM,
   DEFAULT_LIGHT_ORIENTATION_DEG,
@@ -34,7 +34,7 @@ import {
   resolveLightOrientationDeg,
   type LightOrientationDeg,
   type LightPresetId,
-} from "@/chamber-3d/light-geometry"
+} from "@/chamber-3d/components/lights/light-geometry"
 import {
   AppActionRow,
   AppCanvasFrame,

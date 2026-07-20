@@ -1,4 +1,4 @@
-import { CHAMBER_GEOMETRY } from "@/chamber-3d/scene-tokens"
+import { CHAMBER_GEOMETRY } from "@/chamber-3d/core/scene-tokens"
 
 /**
  * Grow-light catalog for the chamber playground (not v4 ML features).

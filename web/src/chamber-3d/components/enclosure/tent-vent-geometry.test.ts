@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest"
 
-import { CHAMBER_GEOMETRY } from "@/chamber-3d/scene-tokens"
+import { CHAMBER_GEOMETRY } from "@/chamber-3d/core/scene-tokens"
 import {
   buildRearFlapZippers,
   buildZipperRectSegments,
-} from "@/chamber-3d/tent-vent-geometry"
+} from "@/chamber-3d/components/enclosure/tent-vent-geometry"
 
 describe("buildZipperRectSegments", () => {
   it("forms a closed rectangle including the top rail", () => {

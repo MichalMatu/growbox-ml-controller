@@ -14,14 +14,14 @@ import {
 import {
   CHAMBER_CSS_VAR,
   CHAMBER_SCENE_FALLBACK,
-} from "@/chamber-3d/scene-tokens"
+} from "@/chamber-3d/core/scene-tokens"
 
 const srcRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)))
 const buttonSource = readFileSync(path.join(srcRoot, "components/ui/button.tsx"), "utf8")
 const chromeSource = readFileSync(path.join(srcRoot, "components/app-chrome.tsx"), "utf8")
 const cssSource = readFileSync(path.join(srcRoot, "index.css"), "utf8")
 const sceneTokensSource = readFileSync(
-  path.join(srcRoot, "chamber-3d", "scene-tokens.ts"),
+  path.join(srcRoot, "chamber-3d", "core", "scene-tokens.ts"),
   "utf8",
 )
 
@@ -82,7 +82,7 @@ function listChamberSceneFiles(): string[] {
     (f) => !f.endsWith("performance-overlay.tsx"),
   )
     .map(rel)
-    .filter((r) => r !== "chamber-3d/scene-tokens.ts")
+    .filter((r) => r !== "chamber-3d/core/scene-tokens.ts")
 }
 
 function readRel(relativePath: string): string {

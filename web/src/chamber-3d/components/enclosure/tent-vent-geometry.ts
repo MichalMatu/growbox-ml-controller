@@ -1,5 +1,5 @@
-import { CHAMBER_GEOMETRY } from "@/chamber-3d/scene-tokens"
-import type { Vec3 } from "@/chamber-3d/tent-frame-geometry"
+import { CHAMBER_GEOMETRY } from "@/chamber-3d/core/scene-tokens"
+import type { Vec3 } from "@/chamber-3d/components/enclosure/tent-frame-geometry"
 
 /** One continuous zipper segment in the flap's local XY plane (Z = 0). */
 export type ZipperSegment = readonly [Vec3, Vec3]
