@@ -232,8 +232,8 @@ export const CHAMBER_MATERIAL = {
  * every outer face (same inset on X/Y/Z → orthogonal 90° cage).
  */
 export const CHAMBER_GEOMETRY = {
-  /** Fabric panel thickness (meters). */
-  wallThicknessM: 0.016,
+  /** Fabric panel thickness (meters). 2mm matches real grow tent fabric. */
+  wallThicknessM: 0.002,
   /** Steel tube outer radius (meters) ~ 3.6 cm diameter — readable on foil */
   frameRadiusM: 0.018,
   /**

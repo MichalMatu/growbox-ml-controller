@@ -30,8 +30,12 @@ export function buildShellPanels(
   const t = thicknessM
   const uv = uvTilesPerMeter
 
-  // Extend panels fully to the mathematical outer corners to completely seal
-  // against light bleeding. The frame is inset and will stay safely inside.
+  // To prevent z-fighting (visible jagged edges at corners), we build
+  // the walls as a perfectly butted non-overlapping box.
+  // - Floor/Ceiling: full width and depth.
+  // - Left/Right: sit between floor and ceiling (height - 2*t), full depth.
+  // - Back: sits between all four (width - 2*t, height - 2*t).
+
   const faceW = Math.max(widthM, t)
   const faceD = Math.max(depthM, t)
   const faceH = Math.max(heightM, t)
@@ -51,26 +55,26 @@ export function buildShellPanels(
       rotation: [-Math.PI / 2, 0, 0],
       uvScale: [faceW * uv, faceD * uv],
     },
-    // back (-Z)
+    // back (-Z) - tucked between left, right, floor, ceiling
     {
-      size: [faceW, faceH + t],
-      position: [0, (heightM - t) / 2, -halfD + t / 2],
+      size: [faceW - 2 * t, faceH - 2 * t],
+      position: [0, heightM / 2, -halfD + t / 2],
       rotation: [0, Math.PI, 0],
-      uvScale: [faceW * uv, (faceH + t) * uv],
+      uvScale: [(faceW - 2 * t) * uv, (faceH - 2 * t) * uv],
     },
-    // left (-X)
+    // left (-X) - tucked between floor and ceiling
     {
-      size: [faceD, faceH + t],
-      position: [-halfW + t / 2, (heightM - t) / 2, 0],
+      size: [faceD, faceH - 2 * t],
+      position: [-halfW + t / 2, heightM / 2, 0],
       rotation: [0, -Math.PI / 2, 0],
-      uvScale: [faceD * uv, (faceH + t) * uv],
+      uvScale: [faceD * uv, (faceH - 2 * t) * uv],
     },
-    // right (+X)
+    // right (+X) - tucked between floor and ceiling
     {
-      size: [faceD, faceH + t],
-      position: [halfW - t / 2, (heightM - t) / 2, 0],
+      size: [faceD, faceH - 2 * t],
+      position: [halfW - t / 2, heightM / 2, 0],
       rotation: [0, Math.PI / 2, 0],
-      uvScale: [faceD * uv, (faceH + t) * uv],
+      uvScale: [faceD * uv, (faceH - 2 * t) * uv],
     },
   ]
 }

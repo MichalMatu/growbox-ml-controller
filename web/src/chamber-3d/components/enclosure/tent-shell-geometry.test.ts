@@ -19,7 +19,7 @@ describe("buildShellPanels", () => {
     expect(ceiling?.position[1]).toBeCloseTo(heightM - t / 2, 9)
   })
 
-  it("keeps left/right/back centers inset by half wall thickness", () => {
+  it("keeps left/right/back centers properly inset and heights trimmed by floor/ceiling", () => {
     const widthM = 1.2
     const depthM = 1.0
     const heightM = 2.0
@@ -31,11 +31,13 @@ describe("buildShellPanels", () => {
     expect(back?.position[2]).toBeCloseTo(-depthM / 2 + t / 2, 9)
     expect(left?.position[0]).toBeCloseTo(-widthM / 2 + t / 2, 9)
     expect(right?.position[0]).toBeCloseTo(widthM / 2 - t / 2, 9)
-    expect(left?.position[1]).toBeCloseTo((heightM - t) / 2, 9)
-    expect(right?.position[1]).toBeCloseTo((heightM - t) / 2, 9)
+    // Centers are at exactly H/2 because walls sit between t and H-t
+    expect(left?.position[1]).toBeCloseTo(heightM / 2, 9)
+    expect(right?.position[1]).toBeCloseTo(heightM / 2, 9)
+    expect(back?.position[1]).toBeCloseTo(heightM / 2, 9)
   })
 
-  it("extends wall face sizes to perfectly seal corners and overlap floor", () => {
+  it("trims wall face sizes to perfectly butt against each other without overlapping", () => {
     const widthM = 1.2
     const depthM = 1.0
     const heightM = 2.0
@@ -45,11 +47,14 @@ describe("buildShellPanels", () => {
     const back = panels[2]
     const left = panels[3]
 
+    // Floor and ceiling are full size
     expect(floor?.size[0]).toBeCloseTo(widthM, 9)
     expect(floor?.size[1]).toBeCloseTo(depthM, 9)
-    expect(back?.size[0]).toBeCloseTo(widthM, 9)
-    expect(back?.size[1]).toBeCloseTo(heightM + t, 9)
-    expect(left?.size[0]).toBeCloseTo(depthM, 9)
-    expect(left?.size[1]).toBeCloseTo(heightM + t, 9)
+    // Back wall is tucked inside left/right walls and floor/ceiling
+    expect(back?.size[0]).toBeCloseTo(widthM - 2 * t, 9)
+    expect(back?.size[1]).toBeCloseTo(heightM - 2 * t, 9)
+    // Left wall is tucked between floor and ceiling
+    expect(left?.size[0]).toBeCloseTo(depthM, 9) // Full depth
+    expect(left?.size[1]).toBeCloseTo(heightM - 2 * t, 9)
   })
 })
