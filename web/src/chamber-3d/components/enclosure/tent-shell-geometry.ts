@@ -32,12 +32,12 @@ export function buildShellPanels(
 
   // UWAGA: Materiały growboxu NIE MOGĄ przepuszczać światła.
   // Aby usunąć przenikanie światła z dolnej części growboxa (light leak na szwach),
-  // ściany boczne muszą schodzić poniżej poziomu podłogi (bleed).
-  // Jednocześnie, aby uniknąć Z-fightingu (zbugowanego przenikania tekstur na krawędziach),
-  // podłoga jest schowana wewnątrz, oddzielona od ścian o 1 milimetr (eps).
+  // ściany boczne muszą schodzić poniżej poziomu podłogi (bleed = 5mm, ukryte przez rurki ramy 18mm).
+  // Podłoga zachodzi na ściany o 1mm (eps < 0) zamykając szczeliny od wewnątrz.
+  // Przy grubości ścianki 2mm, 1mm przenikania mieści się wewnątrz ściany.
 
   const bleed = 0.0
-  const eps = 0.001
+  const eps = -0.001
   const wallH = heightM - t + bleed
   const wallY = (heightM - t - bleed) / 2
 

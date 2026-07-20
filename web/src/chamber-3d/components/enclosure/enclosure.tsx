@@ -81,6 +81,15 @@ export function Enclosure({
         radiusM={radiusM}
         colors={colors}
       />
+      {/* Shadow-only proxy beneath tent floor.
+          Invisible in the color pass (colorWrite=false) but writes depth
+          into shadow maps (castShadow). This provides continuous shadow-map
+          depth below Y=0, preventing PCF edge bleeding (bright line) at the
+          base of the 2 mm thick tent walls. */}
+      <mesh position={[0, -0.05, 0]} castShadow renderOrder={-1}>
+        <boxGeometry args={[widthM, 0.1, depthM]} />
+        <meshBasicMaterial colorWrite={false} depthWrite={false} />
+      </mesh>
     </group>
   )
 }

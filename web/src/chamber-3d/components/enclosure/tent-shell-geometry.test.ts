@@ -45,13 +45,13 @@ describe("buildShellPanels", () => {
     const heightM = 2.0
     const t = CHAMBER_GEOMETRY.wallThicknessM
     const bleed = 0.0
-    const eps = 0.001
+    const eps = -0.001
     const panels = buildShellPanels(widthM, depthM, heightM, t)
     const floor = panels[0]
     const back = panels[2]
     const left = panels[3]
 
-    // Floor is tucked inside walls with eps gap
+    // Floor is tucked inside walls with eps gap (negative eps means overlap)
     expect(floor?.size[0]).toBeCloseTo(widthM - 2 * t - 2 * eps, 9)
     expect(floor?.size[1]).toBeCloseTo(depthM - t - eps, 9)
     // Back wall is tucked inside left/right walls

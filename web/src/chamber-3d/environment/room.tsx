@@ -109,7 +109,7 @@ function Floor({ c }: { c: ChamberSceneColors }) {
   )
   useEffect(() => { return () => m.dispose() }, [m])
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow castShadow material={m}>
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow material={m}>
       <planeGeometry args={[12, 12]} />
     </mesh>
   )

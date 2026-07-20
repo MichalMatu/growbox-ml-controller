@@ -121,8 +121,8 @@ export function LedPanelMesh({
 
       {/* Wide downward fill — replaces pointLight so it casts shadows but doesn't shine up */}
       <spotLight
-        position={[0, lightY - 0.05, 0]}
-        angle={1.4}
+        position={[0, lightY, 0]}
+        angle={1.15}
         penumbra={1.0}
         intensity={fillI}
         distance={0}
@@ -152,7 +152,6 @@ export function LedPanelMesh({
         shadow-camera-far={8}
         shadow-bias={-0.0001}
         shadow-normalBias={0}
-        shadow-radius={8}
       >
         <object3D attach="target" position={[0, lightY - 1.5, 0]} />
       </spotLight>

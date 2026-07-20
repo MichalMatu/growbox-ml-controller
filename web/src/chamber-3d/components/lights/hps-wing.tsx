@@ -95,7 +95,7 @@ export function HpsWingMesh({
         shadow-mapSize={[2048, 2048]}
         shadow-camera-near={0.02}
         shadow-camera-far={8}
-        shadow-bias={-0.0003}
+        shadow-bias={-0.0001}
       />
       <spotLight
         position={[0, bulbY, 0]}
@@ -109,7 +109,7 @@ export function HpsWingMesh({
         shadow-mapSize={[2048, 2048]}
         shadow-camera-near={0.02}
         shadow-camera-far={8}
-        shadow-bias={-0.0003}
+        shadow-bias={-0.0001}
       >
         <object3D attach="target" position={[0, bulbY - 1.5, 0]} />
       </spotLight>

@@ -93,7 +93,7 @@ export function HpsCooltubeMesh({
         shadow-mapSize={[2048, 2048]}
         shadow-camera-near={0.02}
         shadow-camera-far={8}
-        shadow-bias={-0.0003}
+        shadow-bias={-0.0001}
       />
       <spotLight
         position={[0, -tubeR * 0.15, 0]}
@@ -107,7 +107,7 @@ export function HpsCooltubeMesh({
         shadow-mapSize={[2048, 2048]}
         shadow-camera-near={0.02}
         shadow-camera-far={8}
-        shadow-bias={-0.0003}
+        shadow-bias={-0.0001}
       >
         <object3D attach="target" position={[0, -1.5, 0]} />
       </spotLight>
