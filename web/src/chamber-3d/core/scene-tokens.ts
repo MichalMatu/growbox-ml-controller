@@ -121,13 +121,14 @@ export const CHAMBER_MATERIAL = {
   interiorAoIntensity: 0.12,
   interiorEnvMapIntensity: 2.4,
 
-  frameRoughness: 0.48,
-  frameMetalness: 0.5,
-  frameEnvMapIntensity: 0.6,
-  /** Black plastic zipper — slight sheen so coil edges catch light indoors */
-  zipperRoughness: 0.42,
-  zipperMetalness: 0.55,
-  zipperEnvMapIntensity: 0.7,
+  /** Black powder-coated steel frame — fully dielectric, no env reflections → stays black. */
+  frameRoughness: 0.85,
+  frameMetalness: 0.0,
+  frameEnvMapIntensity: 0.0,
+  /** Black plastic zipper — fully matte dielectric */
+  zipperRoughness: 0.8,
+  zipperMetalness: 0.0,
+  zipperEnvMapIntensity: 0.0,
   /**
    * Nonwoven felt grow bag — fully matte dielectric (fabric PBR defaults).
    * High roughness + near-zero env so it never looks plastic/shiny.

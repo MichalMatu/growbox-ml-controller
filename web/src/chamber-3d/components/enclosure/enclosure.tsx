@@ -129,23 +129,6 @@ function RearFlapZipperMesh({
   const radiusM = CHAMBER_GEOMETRY.rearFlapZipperRadiusM
   const pull = CHAMBER_GEOMETRY.rearFlapZipperPullM
 
-  // One material per face (4 coils + pull) — avoid per-segment allocations.
-  const material = useMemo(() => {
-    const mat = new MeshStandardMaterial({
-      color: colors.zipper,
-      roughness: CHAMBER_MATERIAL.zipperRoughness,
-      metalness: CHAMBER_MATERIAL.zipperMetalness,
-      envMapIntensity: CHAMBER_MATERIAL.zipperEnvMapIntensity,
-    })
-    return mat
-  }, [colors.zipper])
-
-  useEffect(() => {
-    return () => {
-      material.dispose()
-    }
-  }, [material])
-
   return (
     <group position={spec.position} rotation={spec.rotation}>
       {spec.localSegments.map(([from, to], index) => (
@@ -154,11 +137,12 @@ function RearFlapZipperMesh({
           from={from}
           to={to}
           radiusM={radiusM}
-          material={material}
+          color={colors.zipper}
         />
       ))}
-      <mesh position={spec.pullLocal} castShadow material={material}>
+      <mesh position={spec.pullLocal} castShadow>
         <boxGeometry args={[pull[0], pull[1], pull[2]]} />
+        <meshLambertMaterial color={colors.zipper} />
       </mesh>
     </group>
   )
@@ -168,12 +152,12 @@ function ZipperCoil({
   from,
   to,
   radiusM,
-  material,
+  color,
 }: {
   from: Vec3
   to: Vec3
   radiusM: number
-  material: MeshStandardMaterial
+  color: string
 }) {
   const { position, quaternion, length } = useMemo(
     () => orientSegmentBetween(from, to),
@@ -187,11 +171,11 @@ function ZipperCoil({
       position={position}
       quaternion={quaternion}
       castShadow
-      material={material}
     >
       <cylinderGeometry
         args={[radiusM, radiusM, length, CHAMBER_GEOMETRY.frameRadialSegments]}
       />
+      <meshLambertMaterial color={color} />
     </mesh>
   )
 }
