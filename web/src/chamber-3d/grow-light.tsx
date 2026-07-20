@@ -478,7 +478,7 @@ function HpsBoxMesh({
       <mesh
         position={[0, bulbY, 0]}
         rotation={[0, 0, Math.PI / 2]}
-        castShadow
+        castShadow={false}
       >
         <cylinderGeometry args={[bulbR, bulbR, bulbLen, 16]} />
         <meshStandardMaterial {...mats.bulb} />
@@ -495,6 +495,9 @@ function HpsBoxMesh({
         decay={2}
         color={sceneColor}
         castShadow={castShadow}
+        shadow-camera-near={0.02}
+        shadow-camera-far={Math.max(reach * 1.2, 3.0)}
+        shadow-bias={-0.0003}
       />
       <spotLight
         position={[0, bulbY - bulbR * 0.2, 0]}
@@ -505,6 +508,9 @@ function HpsBoxMesh({
         decay={2}
         color={sceneColor}
         castShadow={castShadow}
+        shadow-camera-near={0.02}
+        shadow-camera-far={Math.max(reach * 1.2, 3.0)}
+        shadow-bias={-0.0003}
       >
         <object3D attach="target" position={[0, bulbY - 1.5, 0]} />
       </spotLight>
@@ -550,7 +556,7 @@ function HpsWingMesh({
   const wingY = spineY - spineH * 0.15
   const bulbR = Math.min(lengthM, widthM) * 0.07
   const bulbLen = lengthM * 0.5
-  const bulbY = wingY - heightM * 0.05
+  const bulbY = wingY - bulbR * 0.8
   const pointI = sceneIntensity(
     lit,
     CHAMBER_MATERIAL.hpsPointIntensity,
@@ -578,7 +584,7 @@ function HpsWingMesh({
       {/* Wings as reflectors */}
       <mesh
         position={[0, wingY, spineW / 2 + wingSpan / 2]}
-        rotation={[0.18, 0, 0]}
+        rotation={[0.12, 0, 0]}
         castShadow
         receiveShadow
       >
@@ -587,7 +593,7 @@ function HpsWingMesh({
       </mesh>
       <mesh
         position={[0, wingY, -spineW / 2 - wingSpan / 2]}
-        rotation={[-0.18, 0, 0]}
+        rotation={[-0.12, 0, 0]}
         castShadow
         receiveShadow
       >
@@ -597,7 +603,7 @@ function HpsWingMesh({
       <mesh
         position={[0, bulbY, 0]}
         rotation={[0, 0, Math.PI / 2]}
-        castShadow
+        castShadow={false}
       >
         <cylinderGeometry args={[bulbR, bulbR, bulbLen, 16]} />
         <meshStandardMaterial {...mats.bulb} />
@@ -616,8 +622,8 @@ function HpsWingMesh({
       />
       <spotLight
         position={[0, bulbY, 0]}
-        angle={1.05}
-        penumbra={0.55}
+        angle={1.25}
+        penumbra={0.7}
         intensity={spotI}
         distance={reach}
         decay={2}
@@ -687,7 +693,7 @@ function HpsCooltubeMesh({
 
   return (
     <group>
-      <mesh rotation={[0, 0, Math.PI / 2]} castShadow receiveShadow>
+      <mesh rotation={[0, 0, Math.PI / 2]} castShadow={false} receiveShadow>
         <cylinderGeometry args={[tubeR, tubeR, tubeLen, 24]} />
         <meshStandardMaterial
           {...mats.duct}
@@ -715,7 +721,7 @@ function HpsCooltubeMesh({
         <cylinderGeometry args={[ductR, ductR, flangeLen, 20]} />
         <meshStandardMaterial {...mats.duct} />
       </mesh>
-      <mesh rotation={[0, 0, Math.PI / 2]} castShadow>
+      <mesh rotation={[0, 0, Math.PI / 2]} castShadow={false}>
         <cylinderGeometry
           args={[tubeR * 0.28, tubeR * 0.28, tubeLen * 0.45, 14]}
         />
