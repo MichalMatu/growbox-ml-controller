@@ -3,6 +3,7 @@ import { useMemo, useState } from "react"
 import { ChamberCanvas } from "@/chamber-3d/chamber-scene"
 import { ChamberPerformanceProvider } from "@/chamber-3d/performance-context"
 import { PerformanceOverlay } from "@/chamber-3d/performance-overlay"
+import { type RoomLayout } from "@/chamber-3d/room"
 import {
   ENCLOSURE_CM_MAX,
   ENCLOSURE_CM_MIN,
@@ -157,6 +158,7 @@ export function Chamber3dPage() {
     DEFAULT_LIGHT_CEILING_GAP_CM,
   )
   const [lightOn, setLightOn] = useState(true)
+  const [roomLayout, setRoomLayout] = useState<RoomLayout>("none")
 
   const volumeM3 = useMemo(
     () => (widthCm * depthCm * heightCm) / 1_000_000,
@@ -493,6 +495,24 @@ export function Chamber3dPage() {
                       disabled
                     />
                   </AppFormField>
+
+                  <AppFormField label="Tło sceny" htmlFor="room_layout">
+                    <Select
+                      value={roomLayout}
+                      onValueChange={(value) => {
+                        setRoomLayout(value as RoomLayout)
+                      }}
+                    >
+                      <AppSelectTrigger id="room_layout">
+                        <SelectValue placeholder="Tło" />
+                      </AppSelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Studio (bez ścian)</SelectItem>
+                        <SelectItem value="flat">Przy ścianie</SelectItem>
+                        <SelectItem value="corner">W rogu</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </AppFormField>
                 </AppFormGrid>
 
                 <AppActionRow align="end">
@@ -532,6 +552,7 @@ export function Chamber3dPage() {
                 lightOrientationDeg={effectiveLightOrientationDeg}
                 lightCeilingGapCm={effectiveCeilingGapCm}
                 lightOn={lightOn && lightPlan.fits}
+                roomLayout={roomLayout}
               />
             </ChamberPerformanceProvider>
           </AppCanvasFrame>

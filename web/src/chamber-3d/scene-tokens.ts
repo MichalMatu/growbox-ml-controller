@@ -40,6 +40,10 @@ export const CHAMBER_CSS_VAR = {
   /** Desaturated scene light tints (point/spot; not mesh emissive). */
   lightLedScene: "--chamber-light-led-scene",
   lightHpsScene: "--chamber-light-hps-scene",
+  /** Room context — matte painted drywall / plaster walls and floor. */
+  roomWall: "--chamber-room-wall",
+  roomFloor: "--chamber-room-floor",
+  roomBaseboard: "--chamber-room-baseboard",
 } as const
 
 /**
@@ -85,6 +89,12 @@ export const CHAMBER_SCENE_FALLBACK = {
    */
   lightLedScene: "#f5f6f4",
   lightHpsScene: "#ffe9c8",
+  /** Room drywall — warm off-white plaster in light theme. */
+  roomWall: "#e8e4dc",
+  /** Room floor — light wood / tile tint. */
+  roomFloor: "#c4b5a5",
+  /** Room baseboard — slightly lighter than wall for subtle separation. */
+  roomBaseboard: "#d0ccc6",
 } as const
 
 export type ChamberSceneColors = {
@@ -204,6 +214,15 @@ export const CHAMBER_MATERIAL = {
   floorRoughness: 0.75,
   floorMetalness: 0.02,
   floorEnvMapIntensity: 0.15,
+  /** Room drywall — matte painted plaster, near-zero metalness. */
+  roomWallRoughness: 0.88,
+  roomWallMetalness: 0,
+  /** Room floor — slightly smoother than wall, subtle wood/tile sheen. */
+  roomFloorRoughness: 0.65,
+  roomFloorMetalness: 0.03,
+  /** Baseboard — painted wood/MDF, satin finish. */
+  roomBaseboardRoughness: 0.55,
+  roomBaseboardMetalness: 0.05,
 } as const
 
 /**
@@ -378,6 +397,21 @@ export function resolveChamberSceneColors(
       rootStyle,
       CHAMBER_CSS_VAR.lightHpsScene,
       CHAMBER_SCENE_FALLBACK.lightHpsScene,
+    ),
+    roomWall: readCssVar(
+      rootStyle,
+      CHAMBER_CSS_VAR.roomWall,
+      CHAMBER_SCENE_FALLBACK.roomWall,
+    ),
+    roomFloor: readCssVar(
+      rootStyle,
+      CHAMBER_CSS_VAR.roomFloor,
+      CHAMBER_SCENE_FALLBACK.roomFloor,
+    ),
+    roomBaseboard: readCssVar(
+      rootStyle,
+      CHAMBER_CSS_VAR.roomBaseboard,
+      CHAMBER_SCENE_FALLBACK.roomBaseboard,
     ),
   }
 }

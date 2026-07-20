@@ -83,21 +83,8 @@
     --sidebar-ring: oklch(0.708 0 0);
 
     /* Product layout tokens (app-chrome; no magic lengths in TSX) */
-    /**
-     * Wide preview pages fill the window (only AppPage padding as gutters).
-     * Soft ceiling only on absurd ultra-ultrawides so stage does not span meters.
-     */
     --width-page-wide: 120rem;
-    /**
-     * Settings column (lg+ grid): wider floor + 1fr share (takes space from stage).
-     * Stage column is 2fr — still larger, but free width is split, not all-to-canvas.
-     */
     --width-preview-sidebar-min: 28rem;
-    /**
-     * 3D stage height (independent of form):
-     * clamp(min, remaining viewport, max) — tracks window, capped on tall displays.
-     * --page-chrome-y must stay in sync with AppPage vertical padding (p-6 × 2).
-     */
     --height-canvas-frame: 24rem;
     --height-canvas-frame-min: 24rem;
     --height-canvas-frame-max: 56rem;
@@ -106,7 +93,6 @@
     /*
      * Chamber 3D scene tokens (R3F fog/floor via scene-tokens.ts; stage fill is CSS).
      * Light: soft cool-gray gradient (not pure white). Dark: navy studio.
-     * JS fallbacks match dark stage (app default theme).
      */
     --chamber-bg: #a8b8cc;
     --chamber-fog: #a8b8cc;
@@ -123,18 +109,11 @@
     --chamber-grid-section: #374151;
     /* Grow tent: matte black nylon exterior, soft foil interior, steel frame */
     --chamber-exterior: #0c0c0e;
-    /* Neutral silver mylar tint — avoid cream so lamp color does not milk foil */
     --chamber-interior: #f2f4f7;
     --chamber-frame: #141414;
-    /* Black plastic zipper — readable on silver foil from inside */
     --chamber-zipper: #121214;
-    /* Felt grow bag — charcoal nonwoven (matte black bag, not plastic gray) */
     --chamber-pot-felt: #141416;
     --chamber-pot-rim: #0e0e10;
-    /*
-     * Soil material tint — white so absolute black-soil albedo map is SSOT
-     * (Three.js dirt pattern: color in CanvasTexture, material color white).
-     */
     --chamber-pot-soil: #ffffff;
     /* Grow-light fixture (playground props; not v4 actuators.lights) */
     --chamber-light-housing: #1c1c1f;
@@ -144,6 +123,10 @@
     /* Scene lights only — desaturated so foil keeps mirror silver */
     --chamber-light-led-scene: #f5f6f4;
     --chamber-light-hps-scene: #ffe9c8;
+    /* Room walls — matte painted drywall / plaster */
+    --chamber-room-wall: #e8e4dc;
+    --chamber-room-floor: #c4b5a5;
+    --chamber-room-baseboard: #d0ccc6;
 }
 
 .dark {
@@ -190,6 +173,11 @@
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.556 0 0);
+
+    /* Room context — darker, moodier tones for dark theme */
+    --chamber-room-wall: #3a3530;
+    --chamber-room-floor: #2a2520;
+    --chamber-room-baseboard: #333028;
 }
 
 @layer base {
@@ -210,13 +198,6 @@
     max-width: var(--width-page-wide);
   }
 
-  /*
-   * Sidebar + preview (controls + stage).
-   * - min-width:0 so long form labels cannot crush the canvas column
-   * - stacked: canvas uses --height-canvas-frame floor
-   * - lg+: heights decoupled — sidebar = content, canvas = viewport clamp
-   *   (not matching form height; not unbounded on huge monitors)
-   */
   .app-preview-split {
     display: grid;
     gap: 1.5rem;
@@ -228,11 +209,9 @@
 
   @media (min-width: 1024px) {
     .app-preview-split {
-      /* Left wider + 1fr; right 2fr (stage still preferred, but not exclusive growth) */
       grid-template-columns:
         minmax(var(--width-preview-sidebar-min), 1fr)
         minmax(0, 2fr);
-      /* Form stays short; stage height comes from main, not row stretch */
       align-items: start;
     }
   }
@@ -259,11 +238,6 @@
 
   @media (min-width: 1024px) {
     .app-preview-split-main {
-      /*
-       * Preferred: nearly full window minus page padding.
-       * Floor: usable on short laptop windows.
-       * Ceiling: avoid a multi-thousand-px WebGL surface on 40"+ displays.
-       */
       height: clamp(
         var(--height-canvas-frame-min),
         calc(100dvh - var(--page-chrome-y)),
@@ -291,7 +265,6 @@
     min-width: 0;
     min-height: var(--height-canvas-frame);
     overflow: hidden;
-    /* Soft photostudio gradient; WebGL canvas is transparent so CSS shows through */
     background: var(--chamber-bg-gradient);
   }
 
@@ -302,7 +275,6 @@
     }
   }
 
-  /* R3F Canvas must fill the tokenized viewport, not its intrinsic buffer size */
   .app-canvas-frame-viewport > * {
     display: block !important;
     width: 100% !important;
@@ -311,7 +283,6 @@
     min-height: 0;
   }
 
-  /* Subtle vignette overlay on the canvas for depth and cinematic feel */
   .app-canvas-frame-viewport::after {
     content: '';
     position: absolute;

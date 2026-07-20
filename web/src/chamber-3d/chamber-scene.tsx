@@ -11,6 +11,7 @@ import { FeltPotGroup } from "@/chamber-3d/felt-pot"
 import { GrowLight } from "@/chamber-3d/grow-light"
 import { getLightPreset, type LightOrientationDeg, type LightPresetId, planLightFit } from "@/chamber-3d/light-geometry"
 import { ChamberPerformanceProvider, useChamberPerformance } from "@/chamber-3d/performance-context"
+import { Room, type RoomLayout } from "@/chamber-3d/room"
 import { CHAMBER_CANVAS_CLASS, CHAMBER_MATERIAL, resolveChamberSceneColors } from "@/chamber-3d/scene-tokens"
 
 /** Internal scene — expects a ChamberPerformanceProvider ancestor. */
@@ -24,6 +25,7 @@ export function ChamberCanvas({
   lightOrientationDeg = 0,
   lightCeilingGapCm = 5,
   lightOn = true,
+  roomLayout = "none",
 }: ChamberSceneProps) {
   const { config } = useChamberPerformance()
   const themeClass = useDocumentThemeClass()
@@ -33,6 +35,7 @@ export function ChamberCanvas({
   }, [themeClass])
   const potPreset = useMemo(() => getFeltPotPreset(potPresetId), [potPresetId])
   const lightPreset = useMemo(() => getLightPreset(lightPresetId), [lightPresetId])
+  const roomActive = roomLayout !== "none"
   const maxSideM = Math.max(widthCm, depthCm, heightCm, 100) / 100
   const heightM = Math.max(heightCm, ENCLOSURE_CM_MIN) / 100
   const depthM = Math.max(depthCm, ENCLOSURE_CM_MIN) / 100
@@ -132,6 +135,15 @@ export function ChamberCanvas({
             resolution={config.environmentResolution}
           />
         )}
+        <Room
+          layout={roomLayout}
+          colors={colors}
+          tentHalfM={{
+            width: widthM / 2,
+            depth: depthM / 2,
+            height: heightM,
+          }}
+        />
         <Enclosure
           widthCm={widthCm}
           depthCm={depthCm}
@@ -159,18 +171,20 @@ export function ChamberCanvas({
         ) : null}
       </Suspense>
 
-      {/* Stage floor — always rendered, shadows only when shadows enabled */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
-        <planeGeometry args={[maxSideM * 6, maxSideM * 6]} />
-        <meshStandardMaterial
-          color={colors.floor}
-          roughness={CHAMBER_MATERIAL.floorRoughness}
-          metalness={CHAMBER_MATERIAL.floorMetalness}
-          envMapIntensity={config.environmentMap ? CHAMBER_MATERIAL.floorEnvMapIntensity : 0}
-        />
-      </mesh>
+      {/* Stage floor — hidden when room provides architectural context */}
+      {!roomActive && (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+          <planeGeometry args={[maxSideM * 6, maxSideM * 6]} />
+          <meshStandardMaterial
+            color={colors.floor}
+            roughness={CHAMBER_MATERIAL.floorRoughness}
+            metalness={CHAMBER_MATERIAL.floorMetalness}
+            envMapIntensity={config.environmentMap ? CHAMBER_MATERIAL.floorEnvMapIntensity : 0}
+          />
+        </mesh>
+      )}
 
-      {config.floorGrid && (
+      {config.floorGrid && !roomActive && (
         <Grid
           args={[maxSideM * 6, maxSideM * 6]}
           cellSize={0.1}
@@ -261,6 +275,7 @@ export type ChamberSceneProps = {
   lightOrientationDeg?: LightOrientationDeg
   lightCeilingGapCm?: number
   lightOn?: boolean
+  roomLayout?: RoomLayout
 }
 
 function useDocumentThemeClass(): "light" | "dark" {

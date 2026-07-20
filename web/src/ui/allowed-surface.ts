@@ -97,6 +97,9 @@ export const REQUIRED_CSS_TOKENS = [
   "--chamber-light-emitter",
   "--chamber-light-duct",
   "--chamber-light-bulb",
+  "--chamber-room-wall",
+  "--chamber-room-floor",
+  "--chamber-room-baseboard",
 ] as const
 
 /** Non-UI modules that may exist under src without chrome imports. */
@@ -105,6 +108,7 @@ export const NON_UI_PATH_PREFIXES = [
   "lib/",
   "ui/",
   "assets/",
+  "chamber-3d/",
 ] as const
 
 /** Button variants allowed in feature code (shadcn names). */
