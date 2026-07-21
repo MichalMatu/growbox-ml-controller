@@ -343,6 +343,73 @@ export function createPotPbrMaps(size: number = 256): PotPbrMaps {
   }
 }
 
+// -----------------------------------------------------------------------
+//  Injection-moulded PP (plastic) surface — procedural flow-marks texture
+// -----------------------------------------------------------------------
+
+export type PlasticPbrMaps = {
+  plastic: PotSurfaceMaps
+  soil: PotSurfaceMaps
+}
+
+/**
+ * Subtle flow-line pattern typical of injection-moulded polypropylene
+ * (striations from melt front, no weave/fibers). Uses the same canvas
+ * pipeline as felt — no external assets.
+ */
+function buildPlasticMaps(size: number): PotSurfaceMaps {
+  const heights = new Float32Array(size * size)
+  const albedo = new Uint8ClampedArray(size * size * 4)
+  const rough = new Uint8ClampedArray(size * size * 4)
+
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const u = x / size
+      const v = y / size
+
+      // Injection flow lines — faint horizontal / radial streaks
+      const flow = Math.sin(v * 120) * 0.04 + Math.sin(v * 47 + u * 24) * 0.03
+      const speckle = hash2(x * 0.7, y * 0.7) * 0.02
+      const undulation = fbm(u * 3, v * 3, 3) * 0.03
+      const h = Math.max(0, Math.min(1, 0.5 + flow + speckle + undulation))
+      heights[y * size + x] = h
+
+      // Mid-gray plastic base (material.color multiplies this)
+      const lum = 0.7 + flow * 0.6 + speckle * 0.4
+      const c = Math.max(0, Math.min(255, Math.round(lum * 255)))
+      const ai = (y * size + x) * 4
+      albedo[ai] = c
+      albedo[ai + 1] = c
+      albedo[ai + 2] = c
+      albedo[ai + 3] = 255
+
+      // Smooth moulded surface — low roughness
+      const rv = Math.max(0, Math.min(255, Math.round((0.45 + flow * 0.3 + undulation * 0.1) * 255)))
+      rough[ai] = rv
+      rough[ai + 1] = rv
+      rough[ai + 2] = rv
+      rough[ai + 3] = 255
+    }
+  }
+
+  const normal = heightToNormal(heights, size, 1.2)
+  const map = new CanvasTexture(canvasFromRgba(size, albedo))
+  const normalMap = new CanvasTexture(canvasFromRgba(size, normal))
+  const roughnessMap = new CanvasTexture(canvasFromRgba(size, rough))
+  const repeat = CHAMBER_MATERIAL.plasticUvRepeat ?? 2.0
+  configureMap(map, true, repeat)
+  configureMap(normalMap, false, repeat)
+  configureMap(roughnessMap, false, repeat)
+  return { map, normalMap, roughnessMap }
+}
+
+export function createPlasticPbrMaps(size: number = 256): PlasticPbrMaps {
+  return {
+    plastic: buildPlasticMaps(size),
+    soil: buildSoilMaps(size),
+  }
+}
+
 /** Stable maps for the session (regenerate only if size changes). */
 export function usePotPbrMaps(size: number = 256): PotPbrMaps {
   return useMemo(() => createPotPbrMaps(size), [size])
