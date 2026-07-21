@@ -177,13 +177,14 @@ export function SquarePot({ sideM, heightM, colors, maps }: SquarePotProps) {
         <meshStandardMaterial {...plasticMat} />
       </mesh>
 
-      {/* Rim — open frame at the top. Thin box straddling the lip. */}
-      <mesh castShadow position={[0, rimCenterY, 0]}>
-        <boxGeometry
-          args={[rimOuterHalf * 2 + rimWidth * 2, rimH, rimOuterHalf * 2 + rimWidth * 2, wallSegs, 1, wallSegs]}
-        />
-        <meshStandardMaterial {...rimMat} side={DoubleSide} />
-      </mesh>
+      {/* Rim — open frame at the top (4 panels, no top/bottom face). */}
+      <WallPanels
+        halfSide={rimOuterHalf}
+        wallHeight={rimH}
+        wallCenterY={rimCenterY}
+        wallSegs={wallSegs}
+        materialProps={rimMat}
+      />
 
       {/* Soil surface: recessed plane. */}
       <mesh
