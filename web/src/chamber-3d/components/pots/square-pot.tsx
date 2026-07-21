@@ -116,8 +116,8 @@ export function SquarePot({ sideM, heightM, colors, maps }: SquarePotProps) {
     heightM * 0.82,
   )
 
-  // Inner liner — slightly smaller than outer walls, up to soil level.
-  const linerInset = Math.max(sideM * 0.012, 0.0025)
+  // Inner liner — inset enough to avoid z-fight with outer walls.
+  const linerInset = Math.max(sideM * 0.03, 0.006)
   const linerHalf = Math.max(halfSide - linerInset, halfSide * 0.94)
   const linerHeight = Math.max(soilY - 0.003, heightM * 0.35)
   const linerCenterY = linerHeight / 2
