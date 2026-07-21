@@ -185,7 +185,7 @@ export function SquarePot({ sideM, heightM, colors, maps }: SquarePotProps) {
         position={[0, soilY, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
       >
-        <planeGeometry args={[linerHalf * 2 * 0.985, linerHalf * 2 * 0.985]} />
+        <planeGeometry args={[halfSide * 2 * 0.995, halfSide * 2 * 0.995]} />
         <meshBasicMaterial
           map={maps.soil.map}
           color={colors.potSoil}
