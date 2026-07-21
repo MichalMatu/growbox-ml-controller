@@ -99,12 +99,12 @@ export function SquarePot({ sideM, heightM, colors, maps }: SquarePotProps) {
   const rimH = Math.max(heightM * CHAMBER_GEOMETRY.potRimHeightScale, 0.008)
   const rimWidth = sideM * CHAMBER_GEOMETRY.potRimRadiusExtraScale
 
-  // Wall runs full height so texture reaches the lip (under the rim).
-  const wallHeight = heightM
-  const wallCenterY = wallHeight / 2
-
   // Rim sits on top of the wall.
   const rimCenterY = heightM - rimH * 0.65
+
+  // Wall stops just below the rim so the collar sits above it.
+  const wallHeight = Math.max(rimCenterY - rimH * 0.35, heightM * 0.5)
+  const wallCenterY = wallHeight / 2
 
   // Soil recessed under the open lip.
   const soilInset = Math.max(
