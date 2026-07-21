@@ -98,7 +98,6 @@ export function SquarePot({ sideM, heightM, colors, maps }: SquarePotProps) {
   const halfSide = sideM / 2
   const rimH = Math.max(heightM * CHAMBER_GEOMETRY.potRimHeightScale, 0.008)
   const rimWidth = sideM * CHAMBER_GEOMETRY.potRimRadiusExtraScale
-  const rimOuterHalf = halfSide + rimWidth
 
   // Wall runs full height so texture reaches the lip (under the rim).
   const wallHeight = heightM
@@ -177,14 +176,37 @@ export function SquarePot({ sideM, heightM, colors, maps }: SquarePotProps) {
         <meshStandardMaterial {...plasticMat} />
       </mesh>
 
-      {/* Rim — open frame at the top (4 panels, no top/bottom face). */}
-      <WallPanels
-        halfSide={rimOuterHalf}
-        wallHeight={rimH}
-        wallCenterY={rimCenterY}
-        wallSegs={wallSegs}
-        materialProps={rimMat}
-      />
+      {/* Rim — four thin box beams forming a solid lip / collar.
+          Each beam has full thickness (rimWidth) so the rim reads as a
+          thick injection-moulded collar, not a flat transparent panel. */}
+      {/* Front (+Z) */}
+      <mesh castShadow position={[0, rimCenterY, halfSide + rimWidth / 2]}>
+        <boxGeometry
+          args={[sideM + rimWidth * 2, rimH, rimWidth, wallSegs, 1, 1]}
+        />
+        <meshStandardMaterial {...rimMat} />
+      </mesh>
+      {/* Back (-Z) */}
+      <mesh castShadow position={[0, rimCenterY, -halfSide - rimWidth / 2]}>
+        <boxGeometry
+          args={[sideM + rimWidth * 2, rimH, rimWidth, wallSegs, 1, 1]}
+        />
+        <meshStandardMaterial {...rimMat} />
+      </mesh>
+      {/* Right (+X) */}
+      <mesh castShadow position={[halfSide + rimWidth / 2, rimCenterY, 0]}>
+        <boxGeometry
+          args={[rimWidth, rimH, sideM, 1, 1, wallSegs]}
+        />
+        <meshStandardMaterial {...rimMat} />
+      </mesh>
+      {/* Left (-X) */}
+      <mesh castShadow position={[-halfSide - rimWidth / 2, rimCenterY, 0]}>
+        <boxGeometry
+          args={[rimWidth, rimH, sideM, 1, 1, wallSegs]}
+        />
+        <meshStandardMaterial {...rimMat} />
+      </mesh>
 
       {/* Soil surface: recessed plane. */}
       <mesh
