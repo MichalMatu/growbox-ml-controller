@@ -142,37 +142,42 @@ function buildFeltMaps(size: number): PotSurfaceMaps {
       const u = x / size
       const v = y / size
 
-      // Needle-punched felt: multi-direction fine fibers (not a regular weave grid)
-      const fiberA = fbm(u * 72 + 0.3, v * 28 - 1.1, 4)
-      const fiberB = fbm(u * 30 - 2.0, v * 68 + 0.7, 4)
-      const fiberC = fbm(u * 90, v * 90, 3)
-      const fibers = fiberA * 0.4 + fiberB * 0.4 + fiberC * 0.2
+      // Needle-punched felt: multi-direction fine fibers, 5-octave FBM for richer detail
+      const fiberA = fbm(u * 96 + 0.3, v * 36 - 1.1, 5)
+      const fiberB = fbm(u * 40 - 2.0, v * 82 + 0.7, 5)
+      const fiberC = fbm(u * 110, v * 110, 4)
+      const fiberD = fbm(u * 56 + 3.1, v * 56 - 2.4, 4)
+      const fibers = fiberA * 0.3 + fiberB * 0.3 + fiberC * 0.25 + fiberD * 0.15
 
-      // Soft bag undulation (large, gentle)
-      const undulation = fbm(u * 4.5 + 1.2, v * 4.5 - 0.8, 3)
+      // Soft bag undulation (large, gentle) — deeper waviness
+      const undulation = fbm(u * 3.8 + 1.2, v * 3.8 - 0.8, 4)
 
-      // Sparse darker needle denser spots / lint
+      // Denser needle spots / lint (wider range for more fabric character)
       const fleck = hash2(x * 0.41, y * 0.87)
-      const dense = fleck > 0.93 ? (fleck - 0.93) / 0.07 : 0
-      // Tiny bright lint picks (very subtle on black felt)
-      const lint = fleck < 0.04 ? (0.04 - fleck) / 0.04 : 0
+      const dense = fleck > 0.91 ? (fleck - 0.91) / 0.09 : 0
+      // Tiny bright lint picks
+      const lint = fleck < 0.06 ? (0.06 - fleck) / 0.06 : 0
+      // Micro-fiber streaking along one direction (simulates carding)
+      const carding = fbm(v * 28 + u * 4, u * 28 + v * 4, 4) * 0.06
 
       const h =
-        fibers * 0.55 +
-        undulation * 0.28 +
-        dense * 0.2 +
-        lint * 0.12 +
-        hash2(x, y) * 0.05
+        fibers * 0.48 +
+        undulation * 0.24 +
+        dense * 0.18 +
+        lint * 0.08 +
+        carding * 0.06 +
+        hash2(x, y) * 0.04
       heights[y * size + x] = h
 
       // Grayscale multiplier for charcoal potFelt color.
-      // Keep mid-high so bag stays near-black, not mid-gray plastic.
+      // Keep mid-high so bag stays near-black.
       const lum =
-        0.72 +
-        fibers * 0.14 +
-        undulation * 0.08 -
-        dense * 0.22 +
-        lint * 0.1
+        0.68 +
+        fibers * 0.12 +
+        undulation * 0.07 +
+        carding * 0.04 -
+        dense * 0.18 +
+        lint * 0.08
       const c = Math.max(0, Math.min(255, Math.round(lum * 255)))
       const ai = (y * size + x) * 4
       albedo[ai] = c
@@ -180,8 +185,8 @@ function buildFeltMaps(size: number): PotSurfaceMaps {
       albedo[ai + 2] = c
       albedo[ai + 3] = 255
 
-      // Felt is almost fully rough — only tiny variance
-      const r = 0.96 + fibers * 0.03 - dense * 0.02 + lint * 0.01
+      // Felt is almost fully rough — richer micro-variance
+      const r = 0.93 + fibers * 0.05 + carding * 0.02 - dense * 0.03 + lint * 0.02
       const rv = Math.max(0, Math.min(255, Math.round(r * 255)))
       rough[ai] = rv
       rough[ai + 1] = rv
@@ -206,9 +211,14 @@ function buildFeltMaps(size: number): PotSurfaceMaps {
  */
 function perliteCoverage(x: number, y: number, size: number): number {
   let coverage = 0
-  coverage = Math.max(coverage, grainField(x, y, size, 12, 0.88, 0.8, 2.4))
-  coverage = Math.max(coverage, grainField(x, y, size, 18, 0.92, 1.3, 3.4))
-  coverage = Math.max(coverage, grainField(x, y, size, 5.5, 0.94, 0.4, 1.1))
+  // Large perlite chunks (2-4 px diameter after scale)
+  coverage = Math.max(coverage, grainField(x, y, size, 14, 0.86, 0.9, 2.8))
+  // Medium perlite grains
+  coverage = Math.max(coverage, grainField(x, y, size, 20, 0.90, 1.4, 3.8))
+  // Small perlite / vermiculite specks
+  coverage = Math.max(coverage, grainField(x, y, size, 6, 0.93, 0.3, 1.3))
+  // Micro-fines (dust-sized bright particles)
+  coverage = Math.max(coverage, grainField(x, y, size, 3, 0.96, 0.15, 0.55))
   return Math.min(1, coverage)
 }
 
@@ -336,7 +346,7 @@ function buildSoilMaps(size: number): PotSurfaceMaps {
 /**
  * Build felt + soil CanvasTextures (browser only). Call under Canvas / Suspense.
  */
-export function createPotPbrMaps(size: number = 256): PotPbrMaps {
+export function createPotPbrMaps(size: number = CHAMBER_MATERIAL.potPbrDefaultSize): PotPbrMaps {
   return {
     felt: buildFeltMaps(size),
     soil: buildSoilMaps(size),
@@ -367,15 +377,23 @@ function buildPlasticMaps(size: number): PotSurfaceMaps {
       const u = x / size
       const v = y / size
 
-      // Injection flow lines — faint horizontal / radial streaks
-      const flow = Math.sin(v * 120) * 0.04 + Math.sin(v * 47 + u * 24) * 0.03
-      const speckle = hash2(x * 0.7, y * 0.7) * 0.02
-      const undulation = fbm(u * 3, v * 3, 3) * 0.03
-      const h = Math.max(0, Math.min(1, 0.5 + flow + speckle + undulation))
+      // Injection flow lines — richer pattern with radial + swirl marks
+      const flow =
+        Math.sin(v * 120) * 0.03 +
+        Math.sin(v * 47 + u * 24) * 0.025 +
+        Math.sin(v * 200 + u * 60) * 0.015 +
+        Math.sin(u * 80 + v * 15) * 0.018
+
+      // Micro-porosity / matte texture from mould surface
+      const microPores = fbm(u * 60 + 2.1, v * 60 - 1.3, 4) * 0.025
+      const speckle = hash2(x * 0.7, y * 0.7) * 0.015
+      const undulation = fbm(u * 3, v * 3, 3) * 0.025
+
+      const h = Math.max(0, Math.min(1, 0.5 + flow + microPores + speckle + undulation))
       heights[y * size + x] = h
 
       // Mid-gray plastic base (material.color multiplies this)
-      const lum = 0.7 + flow * 0.6 + speckle * 0.4
+      const lum = 0.7 + flow * 0.5 + microPores * 0.3 + speckle * 0.3
       const c = Math.max(0, Math.min(255, Math.round(lum * 255)))
       const ai = (y * size + x) * 4
       albedo[ai] = c
@@ -383,8 +401,14 @@ function buildPlasticMaps(size: number): PotSurfaceMaps {
       albedo[ai + 2] = c
       albedo[ai + 3] = 255
 
-      // Smooth moulded surface — low roughness
-      const rv = Math.max(0, Math.min(255, Math.round((0.45 + flow * 0.3 + undulation * 0.1) * 255)))
+      // Semi-gloss moulded surface — micro-variance from pores
+      const rv = Math.max(
+        0,
+        Math.min(
+          255,
+          Math.round((0.42 + flow * 0.25 + microPores * 0.15 + undulation * 0.08) * 255),
+        ),
+      )
       rough[ai] = rv
       rough[ai + 1] = rv
       rough[ai + 2] = rv
@@ -403,7 +427,7 @@ function buildPlasticMaps(size: number): PotSurfaceMaps {
   return { map, normalMap, roughnessMap }
 }
 
-export function createPlasticPbrMaps(size: number = 256): PlasticPbrMaps {
+export function createPlasticPbrMaps(size: number = CHAMBER_MATERIAL.potPbrDefaultSize): PlasticPbrMaps {
   return {
     plastic: buildPlasticMaps(size),
     soil: buildSoilMaps(size),
@@ -411,6 +435,6 @@ export function createPlasticPbrMaps(size: number = 256): PlasticPbrMaps {
 }
 
 /** Stable maps for the session (regenerate only if size changes). */
-export function usePotPbrMaps(size: number = 256): PotPbrMaps {
+export function usePotPbrMaps(size: number = CHAMBER_MATERIAL.potPbrDefaultSize): PotPbrMaps {
   return useMemo(() => createPotPbrMaps(size), [size])
 }

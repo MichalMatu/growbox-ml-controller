@@ -56,14 +56,14 @@ function WallBoxes({
         {wallBoxGeom(side, wallHeight, WALL_M, wallSegs)}
         <meshStandardMaterial {...materialProps} />
       </mesh>
-      {/* +X (right) */}
+      {/* +X (right) — full depth, overlaps front/back walls for seamless corners */}
       <mesh castShadow receiveShadow position={[halfSide, wallCenterY, 0]}>
-        {wallBoxGeom(WALL_M, wallHeight, side - WALL_M * 2, wallSegs)}
+        {wallBoxGeom(WALL_M, wallHeight, side, wallSegs)}
         <meshStandardMaterial {...materialProps} />
       </mesh>
       {/* -X (left) */}
       <mesh castShadow receiveShadow position={[-halfSide, wallCenterY, 0]}>
-        {wallBoxGeom(WALL_M, wallHeight, side - WALL_M * 2, wallSegs)}
+        {wallBoxGeom(WALL_M, wallHeight, side, wallSegs)}
         <meshStandardMaterial {...materialProps} />
       </mesh>
     </group>

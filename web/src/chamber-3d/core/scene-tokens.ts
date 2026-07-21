@@ -138,10 +138,12 @@ export const CHAMBER_MATERIAL = {
   potFeltEnvMapIntensity: 0.04,
   potFeltNormalScale: 0.65,
   potFeltUvRepeat: 3.2,
-  /** Injection-moulded PP plastic pot (smooth, slight gloss for realism). */
-  plasticRoughness: 0.42,
-  plasticMetalness: 0.06,
-  plasticEnvMapIntensity: 0.35,
+  /** Default procedural texture resolution (px). Higher = crisper detail. */
+  potPbrDefaultSize: 512,
+  /** Injection-moulded PP plastic pot — fully matte, zero gloss. */
+  plasticRoughness: 0.92,
+  plasticMetalness: 0.0,
+  plasticEnvMapIntensity: 0.0,
   plasticUvRepeat: 2.0,
   /**
    * Black potting mix (absolute albedo map).
