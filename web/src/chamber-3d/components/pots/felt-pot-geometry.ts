@@ -10,6 +10,8 @@ import { CHAMBER_GEOMETRY } from "@/chamber-3d/core/scene-tokens"
  * Typical ratio for mid-size bags: diameter ≈ height (0.85–1.15).
  * Smaller bags trend slightly taller; larger bags slightly wider.
  */
+export type PotType = "felt" | "square"
+
 export type FeltPotPresetId =
   | "7l"
   | "11l"

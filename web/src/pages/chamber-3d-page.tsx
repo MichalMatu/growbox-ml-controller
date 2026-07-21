@@ -10,7 +10,6 @@ import {
   parseEnclosureCmDraft,
 } from "@/chamber-3d/components/enclosure/enclosure-cm"
 import {
-  DEFAULT_FELT_POT_PRESET_ID,
   FELT_POT_COUNT_MAX,
   FELT_POT_PRESETS,
   clampFeltPotCount,
@@ -18,7 +17,14 @@ import {
   maxPotsThatFit,
   type FeltPotCount,
   type FeltPotPresetId,
+  type PotType,
 } from "@/chamber-3d/components/pots/felt-pot-geometry"
+import {
+  SQUARE_POT_PRESETS,
+  getSquarePotPreset,
+  maxSquarePotsThatFit,
+  type SquarePotPresetId,
+} from "@/chamber-3d/components/pots/square-pot-geometry"
 import {
   DEFAULT_LIGHT_CEILING_GAP_CM,
   DEFAULT_LIGHT_ORIENTATION_DEG,
@@ -58,7 +64,9 @@ import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectValue,
 } from "@/components/ui/select"
 import { navigate, ROUTES } from "@/lib/routing"
@@ -68,6 +76,21 @@ const DEFAULT_DEPTH_CM = 80
 const DEFAULT_HEIGHT_CM = 160
 const DEFAULT_WALL_HEIGHT_CM = 260
 const DEFAULT_POT_COUNT: FeltPotCount = 1
+
+/** Composite key encoding pot type + preset id, e.g. "felt/12l". */
+type PotKey = `${PotType}/${FeltPotPresetId | SquarePotPresetId}`
+const DEFAULT_POT_KEY: PotKey = "felt/12l"
+
+function parsePotKey(key: string): { type: PotType; presetId: FeltPotPresetId | SquarePotPresetId } | null {
+  const parts = key.split("/")
+  if (parts.length !== 2) return null
+  const type = parts[0]
+  if (type !== "felt" && type !== "square") return null
+  const presetId = parts[1]
+  // Valid preset ids: 7l, 11l, 12l, 15l, 19l, 26l, 38l
+  if (!["7l", "11l", "12l", "15l", "19l", "26l", "38l"].includes(presetId)) return null
+  return { type: type as PotType, presetId: presetId as FeltPotPresetId | SquarePotPresetId }
+}
 
 type CmFieldProps = {
   id: string
@@ -146,9 +169,7 @@ export function Chamber3dPage() {
   const [widthCm, setWidthCm] = useState(DEFAULT_WIDTH_CM)
   const [depthCm, setDepthCm] = useState(DEFAULT_DEPTH_CM)
   const [heightCm, setHeightCm] = useState(DEFAULT_HEIGHT_CM)
-  const [potPresetId, setPotPresetId] = useState<FeltPotPresetId>(
-    DEFAULT_FELT_POT_PRESET_ID,
-  )
+  const [potKey, setPotKey] = useState<PotKey>(DEFAULT_POT_KEY)
   const [potCount, setPotCount] = useState<FeltPotCount>(DEFAULT_POT_COUNT)
   const [lightPresetId, setLightPresetId] = useState<LightPresetId>(
     DEFAULT_LIGHT_PRESET_ID,
@@ -167,17 +188,28 @@ export function Chamber3dPage() {
     [widthCm, depthCm, heightCm],
   )
 
-  const potPreset = useMemo(() => getFeltPotPreset(potPresetId), [potPresetId])
-  const footprint = useMemo(
-    () => ({ diameterCm: potPreset.diameterCm, heightCm: potPreset.heightCm }),
-    [potPreset.diameterCm, potPreset.heightCm],
-  )
+  const potKeyParsed = useMemo(() => parsePotKey(potKey) ?? parsePotKey(DEFAULT_POT_KEY)!, [potKey])
+  const potType = potKeyParsed.type
+  const potPresetId = potKeyParsed.presetId
 
-  const maxFit = useMemo(
-    () =>
-      maxPotsThatFit(widthCm / 100, depthCm / 100, heightCm / 100, footprint),
-    [widthCm, depthCm, heightCm, footprint],
-  )
+  const potPreset = useMemo(() => getFeltPotPreset(potPresetId as FeltPotPresetId), [potPresetId])
+  const squarePotPreset = useMemo(() => getSquarePotPreset(potPresetId as SquarePotPresetId), [potPresetId])
+
+  const maxFit = useMemo(() => {
+    const w = widthCm / 100
+    const d = depthCm / 100
+    const h = heightCm / 100
+    if (potType === "square") {
+      return maxSquarePotsThatFit(w, d, h, {
+        sideCm: squarePotPreset.sideCm,
+        heightCm: squarePotPreset.heightCm,
+      })
+    }
+    return maxPotsThatFit(w, d, h, {
+      diameterCm: potPreset.diameterCm,
+      heightCm: potPreset.heightCm,
+    })
+  }, [widthCm, depthCm, heightCm, potType, potPreset.diameterCm, potPreset.heightCm, squarePotPreset.sideCm, squarePotPreset.heightCm])
 
   /** Desired count clamped to what currently fits (keeps higher intent when tent grows). */
   const visiblePotCount = clampFeltPotCount(Math.min(potCount, maxFit))
@@ -308,21 +340,31 @@ export function Chamber3dPage() {
 
                   <AppFormField label="Donica" htmlFor="pot_size">
                     <Select
-                      value={potPresetId}
+                      value={potKey}
                       onValueChange={(value) => {
-                        setPotPresetId(value as FeltPotPresetId)
+                        setPotKey(value as PotKey)
                       }}
                     >
                       <AppSelectTrigger id="pot_size">
                         <SelectValue placeholder="Rozmiar" />
                       </AppSelectTrigger>
                       <SelectContent>
-                        {FELT_POT_PRESETS.map((preset) => (
-                          <SelectItem key={preset.id} value={preset.id}>
-                            {preset.volumeL} L · {preset.diameterCm}×
-                            {preset.heightCm}
-                          </SelectItem>
-                        ))}
+                        <SelectGroup>
+                          <SelectLabel>Okrągła (filcowa)</SelectLabel>
+                          {FELT_POT_PRESETS.map((preset) => (
+                            <SelectItem key={`felt/${preset.id}`} value={`felt/${preset.id}`}>
+                              {preset.volumeL} L · ⌀{preset.diameterCm}×{preset.heightCm}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                        <SelectGroup>
+                          <SelectLabel>Kwadratowa (plastikowa)</SelectLabel>
+                          {SQUARE_POT_PRESETS.map((preset) => (
+                            <SelectItem key={`square/${preset.id}`} value={`square/${preset.id}`}>
+                              {preset.volumeL} L · {preset.sideCm}×{preset.sideCm}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
                       </SelectContent>
                     </Select>
                   </AppFormField>
@@ -534,7 +576,7 @@ export function Chamber3dPage() {
                       setWidthCm(DEFAULT_WIDTH_CM)
                       setDepthCm(DEFAULT_DEPTH_CM)
                       setHeightCm(DEFAULT_HEIGHT_CM)
-                      setPotPresetId(DEFAULT_FELT_POT_PRESET_ID)
+                      setPotKey(DEFAULT_POT_KEY)
                       setPotCount(DEFAULT_POT_COUNT)
                       setLightPresetId(DEFAULT_LIGHT_PRESET_ID)
                       setLightOrientationDeg(DEFAULT_LIGHT_ORIENTATION_DEG)
@@ -558,6 +600,7 @@ export function Chamber3dPage() {
                 widthCm={widthCm}
                 depthCm={depthCm}
                 heightCm={heightCm}
+                potType={potType}
                 potPresetId={potPresetId}
                 potCount={visiblePotCount}
                 lightPresetId={lightPresetId}

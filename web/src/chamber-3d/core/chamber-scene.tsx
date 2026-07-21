@@ -6,8 +6,10 @@ import { ACESFilmicToneMapping, SRGBColorSpace } from "three"
 import { reportFps } from "@/chamber-3d/core/fps-bridge"
 import { Enclosure } from "@/chamber-3d/components/enclosure/enclosure"
 import { ENCLOSURE_CM_MIN } from "@/chamber-3d/components/enclosure/enclosure-cm"
-import { getFeltPotPreset, type FeltPotPresetId } from "@/chamber-3d/components/pots/felt-pot-geometry"
+import { getFeltPotPreset, type FeltPotPresetId, type PotType } from "@/chamber-3d/components/pots/felt-pot-geometry"
 import { FeltPotGroup } from "@/chamber-3d/components/pots/felt-pot"
+import { getSquarePotPreset, type SquarePotPresetId } from "@/chamber-3d/components/pots/square-pot-geometry"
+import { SquarePotGroup } from "@/chamber-3d/components/pots/square-pot"
 import { GrowLight } from "@/chamber-3d/components/lights"
 import { getLightPreset, type LightOrientationDeg, type LightPresetId, planLightFit } from "@/chamber-3d/components/lights/light-geometry"
 import { ChamberPerformanceProvider, useChamberPerformance } from "@/chamber-3d/performance/performance-context"
@@ -19,6 +21,7 @@ export function ChamberCanvas({
   widthCm,
   depthCm,
   heightCm,
+  potType = "felt",
   potPresetId = "12l",
   potCount = 0,
   lightPresetId = "none",
@@ -34,7 +37,8 @@ export function ChamberCanvas({
     void themeClass
     return resolveChamberSceneColors()
   }, [themeClass])
-  const potPreset = useMemo(() => getFeltPotPreset(potPresetId), [potPresetId])
+  const potPreset = useMemo(() => getFeltPotPreset(potPresetId as FeltPotPresetId), [potPresetId])
+  const squarePotPreset = useMemo(() => getSquarePotPreset(potPresetId as SquarePotPresetId), [potPresetId])
   const lightPreset = useMemo(() => getLightPreset(lightPresetId), [lightPresetId])
   const roomActive = roomLayout !== "none"
   const maxSideM = Math.max(widthCm, depthCm, heightCm, 100) / 100
@@ -161,14 +165,25 @@ export function ChamberCanvas({
           colors={colors}
           showInteriorRuler={roomLayout === "none"}
         />
-        <FeltPotGroup
-          widthM={widthM}
-          depthM={depthM}
-          heightM={heightM}
-          preset={potPreset}
-          count={potCount}
-          colors={colors}
-        />
+        {potType === "square" ? (
+          <SquarePotGroup
+            widthM={widthM}
+            depthM={depthM}
+            heightM={heightM}
+            preset={squarePotPreset}
+            count={potCount}
+            colors={colors}
+          />
+        ) : (
+          <FeltPotGroup
+            widthM={widthM}
+            depthM={depthM}
+            heightM={heightM}
+            preset={potPreset}
+            count={potCount}
+            colors={colors}
+          />
+        )}
         {lightPlan.placement != null ? (
           <GrowLight
             preset={lightPreset}
@@ -280,6 +295,7 @@ export type ChamberSceneProps = {
   widthCm: number
   depthCm: number
   heightCm: number
+  potType?: PotType
   potPresetId?: FeltPotPresetId
   potCount?: number
   lightPresetId?: LightPresetId
