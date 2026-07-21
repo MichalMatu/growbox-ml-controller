@@ -26,11 +26,72 @@ export type SquarePotProps = {
 /**
  * Rigid square / rectangular plastic grow pot.
  *
+ * Walls are built from four PlaneGeometry panels (open box: no bottom / top
+ * face) the same way the felt pot cylinder is open-ended.  A separate bottom
+ * plane is placed just above Y=0 so it never z-fights the growbox floor.
+ *
  * Layout (Y up, base at 0):
- *   wall:  open box (no top face)
- *   rim:   flat ring at the top opening
+ *   wall:  four side planes (no bottom, no top)
+ *   rim:   thin open box frame at the top opening
  *   soil:  recessed surface below the rim
  */
+function wallPanelGeom(width: number, height: number, segments: number) {
+  return (
+    <planeGeometry args={[width, height, segments, 1]} />
+  )
+}
+
+type Panel = {
+  position: [number, number, number]
+  rotation: [number, number, number]
+  wallWidth: number
+  wallHeight: number
+  segments: number
+}
+
+function WallPanels({
+  halfSide,
+  wallHeight,
+  wallCenterY,
+  wallSegs,
+  materialProps,
+}: {
+  halfSide: number
+  wallHeight: number
+  wallCenterY: number
+  wallSegs: number
+  materialProps: Record<string, unknown>
+}) {
+  const side = halfSide * 2
+  const panels: Panel[] = [
+    // +Z (front)
+    { position: [0, wallCenterY, halfSide], rotation: [0, 0, 0], wallWidth: side, wallHeight, segments: wallSegs },
+    // -Z (back)
+    { position: [0, wallCenterY, -halfSide], rotation: [0, Math.PI, 0], wallWidth: side, wallHeight, segments: wallSegs },
+    // +X (right)
+    { position: [halfSide, wallCenterY, 0], rotation: [0, Math.PI / 2, 0], wallWidth: side, wallHeight, segments: wallSegs },
+    // -X (left)
+    { position: [-halfSide, wallCenterY, 0], rotation: [0, -Math.PI / 2, 0], wallWidth: side, wallHeight, segments: wallSegs },
+  ]
+
+  return (
+    <group>
+      {panels.map((panel, i) => (
+        <mesh
+          key={i}
+          castShadow
+          receiveShadow
+          position={panel.position}
+          rotation={panel.rotation}
+        >
+          {wallPanelGeom(panel.wallWidth, panel.wallHeight, panel.segments)}
+          <meshStandardMaterial {...materialProps} side={DoubleSide} />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
 export function SquarePot({ sideM, heightM, colors, maps }: SquarePotProps) {
   const { config } = useChamberPerformance()
 
@@ -87,19 +148,25 @@ export function SquarePot({ sideM, heightM, colors, maps }: SquarePotProps) {
 
   return (
     <group>
-      {/* Outer wall — open box (no top face). */}
-      <mesh castShadow receiveShadow position={[0, wallCenterY, 0]}>
-        <boxGeometry args={[sideM, wallHeight, sideM, wallSegs, 1, wallSegs]} />
-        <meshStandardMaterial {...plasticMat} side={DoubleSide} />
-      </mesh>
+      {/* Outer walls — four side panels, no bottom face, no top face. */}
+      <WallPanels
+        halfSide={halfSide}
+        wallHeight={wallHeight}
+        wallCenterY={wallCenterY}
+        wallSegs={wallSegs}
+        materialProps={plasticMat}
+      />
 
-      {/* Inner liner below soil — open box without top face. */}
-      <mesh position={[0, linerCenterY, 0]}>
-        <boxGeometry args={[linerHalf * 2, linerHeight, linerHalf * 2, wallSegs, 1, wallSegs]} />
-        <meshStandardMaterial {...plasticMat} side={DoubleSide} />
-      </mesh>
+      {/* Inner liner below soil — four side panels, no bottom face. */}
+      <WallPanels
+        halfSide={linerHalf}
+        wallHeight={linerHeight}
+        wallCenterY={linerCenterY}
+        wallSegs={wallSegs}
+        materialProps={plasticMat}
+      />
 
-      {/* Bottom floor. */}
+      {/* Bottom floor — slightly above Y=0, avoids z-fight with growbox floor. */}
       <mesh
         castShadow
         receiveShadow
@@ -110,8 +177,7 @@ export function SquarePot({ sideM, heightM, colors, maps }: SquarePotProps) {
         <meshStandardMaterial {...plasticMat} />
       </mesh>
 
-      {/* Rim — open frame at the top. */}
-      {/* Rim band: four thin boxes around the top edge */}
+      {/* Rim — open frame at the top. Thin box straddling the lip. */}
       <mesh castShadow position={[0, rimCenterY, 0]}>
         <boxGeometry
           args={[rimOuterHalf * 2 + rimWidth * 2, rimH, rimOuterHalf * 2 + rimWidth * 2, wallSegs, 1, wallSegs]}
