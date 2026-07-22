@@ -52,7 +52,6 @@ import {
   FAN_PRESETS,
   clampFanCeilingGapCm,
   clampFanOrientationDeg,
-  computeFanCeilingGapForLight,
   computeLightCeilingGapForFan,
   getFanPreset,
   listFittingFanOrientations,
@@ -249,19 +248,8 @@ export function Chamber3dPage() {
   const fanPreset = useMemo(() => getFanPreset(fanPresetId), [fanPresetId])
 
   const effectiveFanCeilingGapCm = useMemo(
-    () => {
-      const base = clampFanCeilingGapCm(fanCeilingGapCm, heightCm / 100, fanPreset.bodyDiameterCm, potMaxHeightCm)
-      // Also clamp from above by light position — fan cannot descend below the light
-      const limitFromLight = computeFanCeilingGapForLight(
-        heightCm / 100,
-        lightCeilingGapCm,
-        lightPreset.heightCm,
-        fanPreset.bodyDiameterCm,
-      )
-      if (limitFromLight != null && base > limitFromLight) return limitFromLight
-      return base
-    },
-    [fanCeilingGapCm, heightCm, fanPreset.bodyDiameterCm, potMaxHeightCm, lightCeilingGapCm, lightPreset.heightCm],
+    () => clampFanCeilingGapCm(fanCeilingGapCm, heightCm / 100, fanPreset.bodyDiameterCm, potMaxHeightCm),
+    [fanCeilingGapCm, heightCm, fanPreset.bodyDiameterCm, potMaxHeightCm],
   )
 
   const fanOnlyPlan = useMemo(
@@ -613,7 +601,7 @@ export function Chamber3dPage() {
                       valueCm={lightCeilingGapCm}
                       onValueCmChange={(next) => {
                         setLightCeilingGapCm(
-                          clampCeilingGapCm(next, heightCm / 100, lightPreset.heightCm),
+                          clampCeilingGapCm(next, heightCm / 100, lightPreset.heightCm, potMaxHeightCm),
                         )
                       }}
                       minCm={LIGHT_CEILING_GAP_MIN_CM}
@@ -712,7 +700,7 @@ export function Chamber3dPage() {
                       valueCm={fanCeilingGapCm}
                       onValueCmChange={(next) => {
                         setFanCeilingGapCm(
-                          clampFanCeilingGapCm(next, heightCm / 100, fanPreset.bodyDiameterCm),
+                          clampFanCeilingGapCm(next, heightCm / 100, fanPreset.bodyDiameterCm, potMaxHeightCm),
                         )
                       }}
                       minCm={FAN_CEILING_GAP_MIN_CM}
