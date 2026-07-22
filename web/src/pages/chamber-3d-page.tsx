@@ -251,6 +251,55 @@ export function Chamber3dPage() {
     [fanCeilingGapCm, heightCm, fanPreset.bodyDiameterCm, potMaxHeightCm],
   )
 
+  const effectiveCeilingGapCm = useMemo(
+    () => clampCeilingGapCm(lightCeilingGapCm, heightCm / 100, lightPreset.heightCm, potMaxHeightCm),
+    [lightCeilingGapCm, heightCm, lightPreset.heightCm, potMaxHeightCm],
+  )
+
+  const fittingOrientations = useMemo(
+    () =>
+      listFittingOrientations(
+        widthCm / 100,
+        depthCm / 100,
+        heightCm / 100,
+        lightPreset,
+        effectiveCeilingGapCm,
+      ),
+    [widthCm, depthCm, heightCm, lightPreset, effectiveCeilingGapCm],
+  )
+
+  const effectiveLightOrientationDeg = useMemo(
+    () =>
+      resolveLightOrientationDeg(
+        widthCm / 100,
+        depthCm / 100,
+        heightCm / 100,
+        lightPreset,
+        lightOrientationDeg,
+        effectiveCeilingGapCm,
+      ),
+    [widthCm, depthCm, heightCm, lightPreset, lightOrientationDeg, effectiveCeilingGapCm],
+  )
+
+  const fanFittingOrientations = useMemo(
+    () =>
+      listFittingFanOrientations(
+        widthCm / 100,
+        depthCm / 100,
+        heightCm / 100,
+        fanPreset,
+        baseFanGap,
+      ),
+    [widthCm, depthCm, heightCm, fanPreset, baseFanGap],
+  )
+
+  const effectiveFanOrientationDeg = useMemo(() => {
+    if (fanPreset.form === "none") return fanOrientationDeg
+    if (fanFittingOrientations.length === 0) return fanOrientationDeg
+    if (fanFittingOrientations.includes(fanOrientationDeg)) return fanOrientationDeg
+    return fanFittingOrientations[0]!
+  }, [fanPreset.form, fanFittingOrientations, fanOrientationDeg])
+
   const fanOnlyPlan = useMemo(
     () =>
       planFanFit(
@@ -258,13 +307,13 @@ export function Chamber3dPage() {
         depthCm / 100,
         heightCm / 100,
         fanPreset,
-        fanOrientationDeg,
+        effectiveFanOrientationDeg,
         baseFanGap,
         null,
         fanPosition,
         potMaxHeightCm,
       ),
-    [widthCm, depthCm, heightCm, fanPreset, fanOrientationDeg, baseFanGap, fanPosition, potMaxHeightCm],
+    [widthCm, depthCm, heightCm, fanPreset, effectiveFanOrientationDeg, baseFanGap, fanPosition, potMaxHeightCm],
   )
 
   const baseLightPlan = useMemo(
@@ -274,11 +323,11 @@ export function Chamber3dPage() {
         depthCm / 100,
         heightCm / 100,
         lightPreset,
-        lightOrientationDeg,
+        effectiveLightOrientationDeg,
         clampCeilingGapCm(lightCeilingGapCm, heightCm / 100, lightPreset.heightCm, potMaxHeightCm),
         potMaxHeightCm,
       ),
-    [widthCm, depthCm, heightCm, lightPreset, lightOrientationDeg, lightCeilingGapCm, potMaxHeightCm],
+    [widthCm, depthCm, heightCm, lightPreset, effectiveLightOrientationDeg, lightCeilingGapCm, potMaxHeightCm],
   )
 
   const hasHorizontalOverlap = useMemo(() => {
@@ -334,11 +383,11 @@ export function Chamber3dPage() {
         depthCm / 100,
         heightCm / 100,
         lightPreset,
-        lightOrientationDeg,
+        effectiveLightOrientationDeg,
         effectiveLightCeilingGapCm,
         potMaxHeightCm,
       ),
-    [widthCm, depthCm, heightCm, lightPreset, lightOrientationDeg, effectiveLightCeilingGapCm, potMaxHeightCm],
+    [widthCm, depthCm, heightCm, lightPreset, effectiveLightOrientationDeg, effectiveLightCeilingGapCm, potMaxHeightCm],
   )
 
   const lightAABB: LightAABB | null = useMemo(() => {
@@ -361,65 +410,14 @@ export function Chamber3dPage() {
         depthCm / 100,
         heightCm / 100,
         fanPreset,
-        fanOrientationDeg,
+        effectiveFanOrientationDeg,
         effectiveFanCeilingGapCm,
         lightAABB,
         fanPosition,
         potMaxHeightCm,
       ),
-    [widthCm, depthCm, heightCm, fanPreset, fanOrientationDeg, effectiveFanCeilingGapCm, lightAABB, fanPosition, potMaxHeightCm],
+    [widthCm, depthCm, heightCm, fanPreset, effectiveFanOrientationDeg, effectiveFanCeilingGapCm, lightAABB, fanPosition, potMaxHeightCm],
   )
-
-  // ---- Derived values for light UI ----
-  const effectiveCeilingGapCm = useMemo(
-    () => clampCeilingGapCm(lightCeilingGapCm, heightCm / 100, lightPreset.heightCm, potMaxHeightCm),
-    [lightCeilingGapCm, heightCm, lightPreset.heightCm, potMaxHeightCm],
-  )
-
-  const fittingOrientations = useMemo(
-    () =>
-      listFittingOrientations(
-        widthCm / 100,
-        depthCm / 100,
-        heightCm / 100,
-        lightPreset,
-        effectiveCeilingGapCm,
-      ),
-    [widthCm, depthCm, heightCm, lightPreset, effectiveCeilingGapCm],
-  )
-
-  const effectiveLightOrientationDeg = useMemo(
-    () =>
-      resolveLightOrientationDeg(
-        widthCm / 100,
-        depthCm / 100,
-        heightCm / 100,
-        lightPreset,
-        lightOrientationDeg,
-        effectiveCeilingGapCm,
-      ),
-    [widthCm, depthCm, heightCm, lightPreset, lightOrientationDeg, effectiveCeilingGapCm],
-  )
-
-  // ---- Derived values for fan UI ----
-  const fanFittingOrientations = useMemo(
-    () =>
-      listFittingFanOrientations(
-        widthCm / 100,
-        depthCm / 100,
-        heightCm / 100,
-        fanPreset,
-        effectiveFanCeilingGapCm,
-      ),
-    [widthCm, depthCm, heightCm, fanPreset, effectiveFanCeilingGapCm],
-  )
-
-  const effectiveFanOrientationDeg = useMemo(() => {
-    if (fanPreset.form === "none") return fanOrientationDeg
-    if (fanFittingOrientations.length === 0) return fanOrientationDeg
-    if (fanFittingOrientations.includes(fanOrientationDeg)) return fanOrientationDeg
-    return fanFittingOrientations[0]!
-  }, [fanPreset.form, fanFittingOrientations, fanOrientationDeg])
 
   /** Scalone ustawienie pozycji i orientacji wentylatora. */
   type FanPlacementKey = `${FanPosition}/${FanOrientationDeg}`
