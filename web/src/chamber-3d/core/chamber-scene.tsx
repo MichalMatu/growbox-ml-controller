@@ -107,6 +107,7 @@ export function ChamberCanvas({
       }}
       onCreated={({ gl }) => {
         gl.setClearColor(0x000000, 0)
+        gl.shadowMap.type = 3 // VSMShadowMap for ultra smooth edges
       }}
       dpr={[dprMin, dprMax]}
     >
@@ -140,10 +141,10 @@ export function ChamberCanvas({
           shadow-mapSize-height={config.shadowMapSize}
           shadow-camera-near={0.01}
           shadow-camera-far={maxSideM * 14}
-          shadow-camera-left={-maxSideM * 2.5}
-          shadow-camera-right={maxSideM * 2.5}
-          shadow-camera-top={maxSideM * 2.5}
-          shadow-camera-bottom={-maxSideM * 2.5}
+          shadow-camera-left={-maxSideM * 1.2}
+          shadow-camera-right={maxSideM * 1.2}
+          shadow-camera-top={maxSideM * 1.2}
+          shadow-camera-bottom={-maxSideM * 1.2}
           shadow-bias={-0.0001}
           shadow-normalBias={0}
           shadow-radius={4}
