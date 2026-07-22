@@ -147,7 +147,7 @@ export const CHAMBER_MATERIAL = {
   potFeltNormalScale: 0.65,
   potFeltUvRepeat: 3.2,
   /** Default procedural texture resolution (px). Higher = crisper detail. */
-  potPbrDefaultSize: 512,
+  potPbrDefaultSize: 256,
   /** Injection-moulded PP plastic pot — fully matte, zero gloss. */
   plasticRoughness: 0.92,
   plasticMetalness: 0.0,
