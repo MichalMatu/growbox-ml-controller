@@ -149,8 +149,8 @@ export const FAN_WALL_MARGIN_M = 0.02
 export const FAN_ORIENTATIONS_DEG: readonly FanOrientationDeg[] = [0, 90]
 
 /** Predefined fan mounting positions – all in the rear half of the tent (realistic vent locations). */
-export type FanPosition = "rear-left-wall" | "rear-right-wall" | "rear-wall-left" | "rear-wall-right"
-export const FAN_POSITIONS: readonly FanPosition[] = ["rear-left-wall", "rear-right-wall", "rear-wall-left", "rear-wall-right"]
+export type FanPosition = "rear-left-wall" | "rear-right-wall"
+export const FAN_POSITIONS: readonly FanPosition[] = ["rear-left-wall", "rear-right-wall"]
 export const DEFAULT_FAN_POSITION: FanPosition = "rear-right-wall"
 
 // ---- Placement / fit types ----
@@ -443,10 +443,6 @@ function fanPositionTargetM(
       return { x: -(halfW - halfFanX - margin), z: rearZ }
     case "rear-right-wall":
       return { x: halfW - halfFanX - margin, z: rearZ }
-    case "rear-wall-left":
-      return { x: -halfFanX - margin, z: rearZ }
-    case "rear-wall-right":
-      return { x: halfFanX + margin, z: rearZ }
   }
 }
 

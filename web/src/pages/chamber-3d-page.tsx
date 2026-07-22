@@ -271,13 +271,6 @@ export function Chamber3dPage() {
     return base
   }, [lightCeilingGapCm, heightCm, lightPreset.heightCm, lightGapForFanConstraint])
 
-  const lightFanCollision = useMemo(() => {
-    if (lightGapForFanConstraint == null || fanPreset.form === "none") return false
-    const userGap = clampCeilingGapCm(lightCeilingGapCm, heightCm / 100, lightPreset.heightCm)
-    // User wants lamp closer to ceiling than fan allows → collision
-    return userGap < lightGapForFanConstraint
-  }, [lightCeilingGapCm, heightCm, lightPreset.heightCm, lightGapForFanConstraint, fanPreset.form])
-
   // ---- Light placement with fan-safe gap ----
   const lightPlan = useMemo(
     () =>
@@ -557,15 +550,7 @@ export function Chamber3dPage() {
                     </Select>
                   </AppFormField>
 
-                  <AppFormField
-                    label="Od sufitu (cm)"
-                    htmlFor="light_ceiling_gap_cm"
-                    end={
-                      lightFanCollision && fanPreset.form !== "none" ? (
-                        <Badge variant="destructive">kolizja z wentylatorem</Badge>
-                      ) : null
-                    }
-                  >
+                  <AppFormField label="Od sufitu (cm)" htmlFor="light_ceiling_gap_cm">
                     <Input
                       id="light_ceiling_gap_cm"
                       type="number"
@@ -573,7 +558,7 @@ export function Chamber3dPage() {
                       min={LIGHT_CEILING_GAP_MIN_CM}
                       max={Math.max(LIGHT_CEILING_GAP_MIN_CM, lightPlan.maxCeilingGapCm)}
                       step={1}
-                      value={effectiveCeilingGapCm}
+                      value={lightGapWithFanConstraint}
                       onChange={(event) => {
                         const raw = event.target.value
                         const parsed = parseEnclosureCmDraft(raw)
@@ -711,13 +696,7 @@ export function Chamber3dPage() {
                       <SelectContent>
                         {FAN_POSITIONS.map((pos) => (
                           <SelectItem key={pos} value={pos}>
-                            {pos === "rear-left-wall"
-                              ? "Lewa ściana tył"
-                              : pos === "rear-right-wall"
-                                ? "Prawa ściana tył"
-                                : pos === "rear-wall-left"
-                                  ? "Tylna lewa"
-                                  : "Tylna prawa"}
+                            {pos === "rear-left-wall" ? "Lewa ściana tył" : "Prawa ściana tył"}
                           </SelectItem>
                         ))}
                       </SelectContent>
