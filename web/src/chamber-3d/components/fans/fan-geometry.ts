@@ -148,10 +148,10 @@ export const FAN_WALL_MARGIN_M = 0.02
 
 export const FAN_ORIENTATIONS_DEG: readonly FanOrientationDeg[] = [0, 90]
 
-/** Predefined fan mounting positions on the ceiling. */
-export type FanPosition = "center" | "left" | "right" | "front" | "back"
-export const FAN_POSITIONS: readonly FanPosition[] = ["center", "left", "right", "front", "back"]
-export const DEFAULT_FAN_POSITION: FanPosition = "center"
+/** Predefined fan mounting positions – all in the rear half of the tent (realistic vent locations). */
+export type FanPosition = "rear-left-wall" | "rear-right-wall" | "rear-wall-left" | "rear-wall-right"
+export const FAN_POSITIONS: readonly FanPosition[] = ["rear-left-wall", "rear-right-wall", "rear-wall-left", "rear-wall-right"]
+export const DEFAULT_FAN_POSITION: FanPosition = "rear-right-wall"
 
 // ---- Placement / fit types ----
 
@@ -435,17 +435,18 @@ function fanPositionTargetM(
   const halfFanZ = fanExtentZM / 2
   const margin = 0.02
 
+  // All positions place the fan flush against the rear wall (Z = -halfD)
+  // and either against a side wall or near the rear-wall center line.
+  const rearZ = -(halfD - halfFanZ - margin)
   switch (position) {
-    case "left":
-      return { x: -(halfW - halfFanX - margin), z: 0 }
-    case "right":
-      return { x: halfW - halfFanX - margin, z: 0 }
-    case "front":
-      return { x: 0, z: halfD - halfFanZ - margin }
-    case "back":
-      return { x: 0, z: -(halfD - halfFanZ - margin) }
-    default:
-      return { x: 0, z: 0 }
+    case "rear-left-wall":
+      return { x: -(halfW - halfFanX - margin), z: rearZ }
+    case "rear-right-wall":
+      return { x: halfW - halfFanX - margin, z: rearZ }
+    case "rear-wall-left":
+      return { x: -halfFanX - margin, z: rearZ }
+    case "rear-wall-right":
+      return { x: halfFanX + margin, z: rearZ }
   }
 }
 
@@ -462,7 +463,7 @@ export function placeFanM(
   orientationDeg: FanOrientationDeg,
   ceilingGapCm: number,
   lightAABB: LightAABB | null,
-  fanPosition: FanPosition = "center",
+  fanPosition: FanPosition = "rear-right-wall",
 ): FanPlacementM | null {
   if (preset.form === "none") return null
 
@@ -539,7 +540,7 @@ export function planFanFit(
   orientationDeg: FanOrientationDeg,
   ceilingGapCm: number,
   lightAABB: LightAABB | null,
-  fanPosition: FanPosition = "center",
+  fanPosition: FanPosition = "rear-right-wall",
 ): FanFitResult {
   const volume = usableFanVolumeM(widthM, depthM, heightM)
   const usableWidthCm = volume.widthM * 100

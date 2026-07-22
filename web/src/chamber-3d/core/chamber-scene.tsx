@@ -34,7 +34,7 @@ export function ChamberCanvas({
   fanPresetId = "none",
   fanOrientationDeg = 0,
   fanCeilingGapCm = 2,
-  fanPosition = "center",
+  fanPosition = "rear-right-wall",
   roomLayout = "none",
   wallHeightCm = 300,
 }: ChamberSceneProps) {

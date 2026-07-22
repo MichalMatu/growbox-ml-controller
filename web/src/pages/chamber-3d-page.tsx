@@ -711,15 +711,13 @@ export function Chamber3dPage() {
                       <SelectContent>
                         {FAN_POSITIONS.map((pos) => (
                           <SelectItem key={pos} value={pos}>
-                            {pos === "center"
-                              ? "Środek"
-                              : pos === "left"
-                                ? "Lewo"
-                                : pos === "right"
-                                  ? "Prawo"
-                                  : pos === "front"
-                                    ? "Przód"
-                                    : "Tył"}
+                            {pos === "rear-left-wall"
+                              ? "Lewa ściana tył"
+                              : pos === "rear-right-wall"
+                                ? "Prawa ściana tył"
+                                : pos === "rear-wall-left"
+                                  ? "Tylna lewa"
+                                  : "Tylna prawa"}
                           </SelectItem>
                         ))}
                       </SelectContent>
