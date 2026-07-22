@@ -139,14 +139,14 @@ export function ChamberCanvas({
           intensity={CHAMBER_MATERIAL.studioKeyIntensity}
           shadow-mapSize-width={config.shadowMapSize}
           shadow-mapSize-height={config.shadowMapSize}
-          shadow-camera-near={0.01}
-          shadow-camera-far={maxSideM * 14}
-          shadow-camera-left={-maxSideM * 1.2}
-          shadow-camera-right={maxSideM * 1.2}
-          shadow-camera-top={maxSideM * 1.2}
-          shadow-camera-bottom={-maxSideM * 1.2}
-          shadow-bias={-0.0001}
-          shadow-normalBias={0.02}
+          shadow-camera-near={1.0}
+          shadow-camera-far={maxSideM * 10}
+          shadow-camera-left={-maxSideM * 3.5}
+          shadow-camera-right={maxSideM * 3.5}
+          shadow-camera-top={maxSideM * 3.5}
+          shadow-camera-bottom={-maxSideM * 3.5}
+          shadow-bias={-0.0002}
+          shadow-normalBias={0.03}
           shadow-radius={4}
         />
       )}
