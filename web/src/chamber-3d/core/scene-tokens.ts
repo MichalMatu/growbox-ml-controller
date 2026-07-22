@@ -88,7 +88,7 @@ export const CHAMBER_SCENE_FALLBACK = {
   lightDuct: "#9aa3ad",
   lightBulb: "#ffd89a",
   /** Dark grey powder-coated steel / ABS fan housing. */
-  fanHousing: "#1a1a1e",
+  fanHousing: "#2a2a32",
   /** Galvanised / plain steel spigot. */
   fanDuct: "#b0b4ba",
   /**

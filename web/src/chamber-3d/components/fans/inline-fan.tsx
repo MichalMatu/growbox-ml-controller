@@ -77,12 +77,12 @@ export function InlineFanMesh({
         <meshStandardMaterial {...housingMat} />
       </mesh>
 
-      {/* Left reducer cone: bodyR (at body, -X local → +X scene) → ductR (at spigot, +X local → -X scene)
-          After rotation Z=PI/2: radiusTop → scene -X (spigot), radiusBottom → scene +X (body). */}
+      {/* Left reducer cone */}
       <mesh
         position={[coneLeftCenterX, 0, 0]}
         rotation={[0, 0, Math.PI / 2]}
         castShadow
+        receiveShadow
       >
         <cylinderGeometry
           args={[ductR, bodyR, coneLengthM, segments, 1]}
@@ -90,12 +90,12 @@ export function InlineFanMesh({
         <meshStandardMaterial {...ductMat} />
       </mesh>
 
-      {/* Right reducer cone: bodyR (at body, +X local → -X scene) → ductR (at spigot, -X local → +X scene)
-          After rotation Z=PI/2: radiusTop → scene -X (body), radiusBottom → scene +X (spigot). */}
+      {/* Right reducer cone */}
       <mesh
         position={[coneRightCenterX, 0, 0]}
         rotation={[0, 0, Math.PI / 2]}
         castShadow
+        receiveShadow
       >
         <cylinderGeometry
           args={[bodyR, ductR, coneLengthM, segments, 1]}
@@ -108,6 +108,7 @@ export function InlineFanMesh({
         position={[ductLeftCenterX, 0, 0]}
         rotation={[0, 0, Math.PI / 2]}
         castShadow
+        receiveShadow
       >
         <cylinderGeometry args={[ductR, ductR, ductLengthM, segments]} />
         <meshStandardMaterial {...ductMat} />
@@ -118,24 +119,17 @@ export function InlineFanMesh({
         position={[ductRightCenterX, 0, 0]}
         rotation={[0, 0, Math.PI / 2]}
         castShadow
+        receiveShadow
       >
         <cylinderGeometry args={[ductR, ductR, ductLengthM, segments]} />
         <meshStandardMaterial {...ductMat} />
       </mesh>
 
-      {/* Decorative ring ridges on body */}
-      <RingRidge
-        offsetX={-bodyLengthM * 0.3}
-        radius={bodyR + 0.002}
-        ringLengthM={0.003}
-        colors={colors}
-      />
-      <RingRidge
-        offsetX={bodyLengthM * 0.3}
-        radius={bodyR + 0.002}
-        ringLengthM={0.003}
-        colors={colors}
-      />
+      {/* Decorative ring ridges on body — evenly spaced */}
+      <RingRidge offsetX={-bodyLengthM * 0.3} radius={bodyR + 0.002} ringLengthM={0.003} colors={colors} />
+      <RingRidge offsetX={-bodyLengthM * 0.1} radius={bodyR + 0.002} ringLengthM={0.003} colors={colors} />
+      <RingRidge offsetX={bodyLengthM * 0.1} radius={bodyR + 0.002} ringLengthM={0.003} colors={colors} />
+      <RingRidge offsetX={bodyLengthM * 0.3} radius={bodyR + 0.002} ringLengthM={0.003} colors={colors} />
     </group>
   )
 }
