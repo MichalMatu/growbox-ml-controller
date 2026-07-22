@@ -265,18 +265,36 @@ export function usableFanVolumeM(
 }
 
 /**
- * Max ceiling gap so the fan still clears the floor minimum.
+ * Max ceiling gap so the fan still clears the floor minimum
+ * and (optionally) stays above the light fixture with a minimum gap.
  * bodyDiameterCm + minFloorClearance + gap <= usable height.
  */
 export function maxFanCeilingGapCm(
   tentHeightM: number,
   bodyDiameterCm: number,
+  lightAABB?: LightAABB | null,
 ): number {
   if (bodyDiameterCm <= 0) return FAN_CEILING_GAP_MIN_CM
   const usable = usableFanVolumeM(1, 1, tentHeightM).heightM * 100
-  const maxGap = Math.floor(
+  let maxGap = Math.floor(
     usable - bodyDiameterCm - FAN_FLOOR_CLEARANCE_MIN_CM,
   )
+
+  // If there's a light below, fan cannot descend past the top of the light
+  if (lightAABB != null && lightAABB.heightM > 0) {
+    const verticalInset =
+      CHAMBER_GEOMETRY.wallThicknessM + CHAMBER_GEOMETRY.frameRadiusM * 2
+    const lightTopY = lightAABB.centerY + lightAABB.heightM / 2
+    // Fan bottom Y must be >= lightTopY + FAN_LIGHT_MIN_GAP_M
+    // gap = tentHeightM - verticalInset - fanTopY
+    // fanBottomY = fanTopY - bodyDiameterM/100
+    // constraint: fanBottomY >= lightTopY + FAN_LIGHT_GAP_M
+    const maxGapFromLight = Math.round(
+      (tentHeightM - verticalInset - bodyDiameterCm / 100 - lightTopY - FAN_LIGHT_MIN_GAP_M) * 100
+    )
+    maxGap = Math.min(maxGap, maxGapFromLight)
+  }
+
   return Math.max(FAN_CEILING_GAP_MIN_CM, maxGap)
 }
 
@@ -296,20 +314,32 @@ export function clampFanCeilingGapCm(
 // ---- Collision detection with light ----
 
 /**
- * Check if two AABBs on the XZ plane overlap, with a minimum gap.
- * Returns true if the gap between closest edges >= minGapM.
+ * Check if two AABBs overlap, with a minimum horizontal gap.
+ * Returns false if they overlap in all three axes.
+ * If they don't overlap vertically, horizontal overlap is irrelevant → return true.
  */
 function horizontalClearance(
   center1X: number,
   center1Z: number,
   extent1X: number,
   extent1Z: number,
+  center1Y: number,
+  extent1Y: number,
   center2X: number,
   center2Z: number,
   extent2X: number,
   extent2Z: number,
+  center2Y: number,
+  extent2Y: number,
   minGapM: number,
 ): boolean {
+  // Vertical overlap check first: if AABBs don't overlap in Y, no collision
+  const gapY =
+    Math.abs(center1Y - center2Y) -
+    (extent1Y / 2 + extent2Y / 2)
+  if (gapY > 1e-6) return true // separated vertically → no horizontal collision needed
+
+  // They overlap vertically — now check horizontal clearance
   const gapX =
     Math.abs(center1X - center2X) -
     (extent1X / 2 + extent2X / 2)
@@ -332,6 +362,8 @@ function horizontalClearance(
 function findNonCollidingX(
   fanExtentX: number,
   fanExtentZ: number,
+  fanCenterY: number,
+  fanExtentY: number,
   light: LightAABB,
   usableWidthM: number,
   minGapM: number,
@@ -352,8 +384,10 @@ function findNonCollidingX(
     const ok = horizontalClearance(
       xOffset, 0,
       fanExtentX, fanExtentZ,
+      fanCenterY, fanExtentY,
       light.centerX, light.centerZ,
       light.extentXM, light.extentZM,
+      light.centerY, light.heightM,
       minGapM,
     )
     if (ok) return xOffset
@@ -481,13 +515,15 @@ export function placeFanM(
   if (lightAABB != null && lightAABB.heightM > 0) {
     const clear = horizontalClearance(
       fanX, fanZ, extentXM, extentZM,
+      centerY, bodyDiameterM,
       lightAABB.centerX, lightAABB.centerZ,
       lightAABB.extentXM, lightAABB.extentZM,
+      lightAABB.centerY, lightAABB.heightM,
       FAN_LIGHT_MIN_GAP_M,
     )
     if (!clear) {
       const xOffset = findNonCollidingX(
-        extentXM, extentZM,
+        extentXM, extentZM, centerY, bodyDiameterM,
         { ...lightAABB, centerZ: lightAABB.centerZ - fanZ },
         volume.widthM,
         FAN_LIGHT_MIN_GAP_M,
@@ -496,7 +532,7 @@ export function placeFanM(
         fanX = xOffset
       } else {
         const zOffset = findNonCollidingX(
-          extentZM, extentXM,
+          extentZM, extentXM, centerY, bodyDiameterM,
           {
             centerX: lightAABB.centerZ - fanZ,
             centerY: lightAABB.centerY,
@@ -564,7 +600,7 @@ export function planFanFit(
   }
 
   const gap = clampFanCeilingGapCm(ceilingGapCm, heightM, preset.bodyDiameterCm)
-  const maxGap = maxFanCeilingGapCm(heightM, preset.bodyDiameterCm)
+  const maxGap = maxFanCeilingGapCm(heightM, preset.bodyDiameterCm, lightAABB)
   const fitsHorizontal = fanHorizontalFitsInTent(usableWidthCm, usableDepthCm, preset, orientationDeg)
   const fitsVertical = fanVerticalFits(usableHeightCm, preset.bodyDiameterCm, gap, maxGap)
 
