@@ -290,13 +290,36 @@ export function clampFanCeilingGapCm(
   gapCm: number,
   tentHeightM: number,
   bodyDiameterCm: number,
+  potHeightCm: number = 0,
 ): number {
   if (!Number.isFinite(gapCm)) return DEFAULT_FAN_CEILING_GAP_CM
-  const maxGap = maxFanCeilingGapCm(tentHeightM, bodyDiameterCm)
+  const maxGap = maxFanCeilingGapCm(tentHeightM, bodyDiameterCm, potHeightCm)
   const rounded = Math.round(gapCm)
   if (rounded < FAN_CEILING_GAP_MIN_CM) return FAN_CEILING_GAP_MIN_CM
   if (rounded > maxGap) return maxGap
   return rounded
+}
+
+/**
+ * Maximum fan ceiling gap to avoid descending below the light fixture.
+ * Returns null when light is absent.
+ */
+export function computeFanCeilingGapForLight(
+  tentHeightM: number,
+  lightCeilingGapCm: number,
+  lightHeightCm: number,
+  fanBodyDiameterCm: number,
+): number | null {
+  if (lightHeightCm <= 0 || fanBodyDiameterCm <= 0) return null
+  const verticalInset =
+    CHAMBER_GEOMETRY.wallThicknessM + CHAMBER_GEOMETRY.frameRadiusM * 2
+  const lightTopY = tentHeightM - verticalInset - lightCeilingGapCm / 100
+  // Fan bottom must be >= lightTopY + FAN_LIGHT_MIN_GAP_M
+  // max fan gap = tentH - vertInset - (lightTopY + FAN_LIGHT_MIN_GAP_M + bodyDiamM)
+  const maxGapCm = Math.round(
+    (tentHeightM - verticalInset - lightTopY - fanBodyDiameterCm / 100 - FAN_LIGHT_MIN_GAP_M) * 100
+  )
+  return Math.max(FAN_CEILING_GAP_MIN_CM, maxGapCm)
 }
 
 // ---- Collision detection with light ----

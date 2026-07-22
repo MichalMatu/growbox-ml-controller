@@ -52,6 +52,7 @@ import {
   FAN_PRESETS,
   clampFanCeilingGapCm,
   clampFanOrientationDeg,
+  computeFanCeilingGapForLight,
   computeLightCeilingGapForFan,
   getFanPreset,
   listFittingFanOrientations,
@@ -248,8 +249,19 @@ export function Chamber3dPage() {
   const fanPreset = useMemo(() => getFanPreset(fanPresetId), [fanPresetId])
 
   const effectiveFanCeilingGapCm = useMemo(
-    () => clampFanCeilingGapCm(fanCeilingGapCm, heightCm / 100, fanPreset.bodyDiameterCm),
-    [fanCeilingGapCm, heightCm, fanPreset.bodyDiameterCm],
+    () => {
+      const base = clampFanCeilingGapCm(fanCeilingGapCm, heightCm / 100, fanPreset.bodyDiameterCm, potMaxHeightCm)
+      // Also clamp from above by light position — fan cannot descend below the light
+      const limitFromLight = computeFanCeilingGapForLight(
+        heightCm / 100,
+        lightCeilingGapCm,
+        lightPreset.heightCm,
+        fanPreset.bodyDiameterCm,
+      )
+      if (limitFromLight != null && base > limitFromLight) return limitFromLight
+      return base
+    },
+    [fanCeilingGapCm, heightCm, fanPreset.bodyDiameterCm, potMaxHeightCm, lightCeilingGapCm, lightPreset.heightCm],
   )
 
   const fanOnlyPlan = useMemo(
@@ -282,12 +294,12 @@ export function Chamber3dPage() {
   // Light gap clamped to avoid fan, then used for light placement.
   // Larger gap = lamp hangs lower, so we need Math.MAX to push it below the fan.
   const lightGapWithFanConstraint = useMemo(() => {
-    const base = clampCeilingGapCm(lightCeilingGapCm, heightCm / 100, lightPreset.heightCm)
+    const base = clampCeilingGapCm(lightCeilingGapCm, heightCm / 100, lightPreset.heightCm, potMaxHeightCm)
     if (lightGapForFanConstraint != null) {
       return Math.max(base, lightGapForFanConstraint)
     }
     return base
-  }, [lightCeilingGapCm, heightCm, lightPreset.heightCm, lightGapForFanConstraint])
+  }, [lightCeilingGapCm, heightCm, lightPreset.heightCm, potMaxHeightCm, lightGapForFanConstraint])
 
   // ---- Light placement with fan-safe gap ----
   const lightPlan = useMemo(
@@ -335,8 +347,8 @@ export function Chamber3dPage() {
 
   // ---- Derived values for light UI ----
   const effectiveCeilingGapCm = useMemo(
-    () => clampCeilingGapCm(lightCeilingGapCm, heightCm / 100, lightPreset.heightCm),
-    [lightCeilingGapCm, heightCm, lightPreset.heightCm],
+    () => clampCeilingGapCm(lightCeilingGapCm, heightCm / 100, lightPreset.heightCm, potMaxHeightCm),
+    [lightCeilingGapCm, heightCm, lightPreset.heightCm, potMaxHeightCm],
   )
 
   const fittingOrientations = useMemo(
