@@ -1,4 +1,5 @@
 import { CHAMBER_GEOMETRY } from "@/chamber-3d/core/scene-tokens"
+import { FIXTURE_ABOVE_OBSTACLE_GAP_CM } from "@/chamber-3d/components/lights/light-geometry"
 
 /**
  * Minimum ceiling gap the lamp must use so its top sits at least
@@ -271,11 +272,16 @@ export function usableFanVolumeM(
 export function maxFanCeilingGapCm(
   tentHeightM: number,
   bodyDiameterCm: number,
+  potHeightCm: number = 0,
 ): number {
   if (bodyDiameterCm <= 0) return FAN_CEILING_GAP_MIN_CM
   const usable = usableFanVolumeM(1, 1, tentHeightM).heightM * 100
+  const bottomClearance = Math.max(
+    FIXTURE_ABOVE_OBSTACLE_GAP_CM,
+    potHeightCm + FIXTURE_ABOVE_OBSTACLE_GAP_CM,
+  )
   const maxGap = Math.floor(
-    usable - bodyDiameterCm - FAN_FLOOR_CLEARANCE_MIN_CM,
+    usable - bodyDiameterCm - bottomClearance,
   )
   return Math.max(FAN_CEILING_GAP_MIN_CM, maxGap)
 }
@@ -385,10 +391,15 @@ function fanVerticalFits(
   bodyDiameterCm: number,
   gapCm: number,
   maxGapCm: number,
+  potHeightCm: number = 0,
 ): boolean {
   if (bodyDiameterCm <= 0) return true
+  const bottomClearance = Math.max(
+    FIXTURE_ABOVE_OBSTACLE_GAP_CM,
+    potHeightCm + FIXTURE_ABOVE_OBSTACLE_GAP_CM,
+  )
   return (
-    bodyDiameterCm + FAN_FLOOR_CLEARANCE_MIN_CM + gapCm <= usableHeightCm + 1e-6 &&
+    bodyDiameterCm + bottomClearance + gapCm <= usableHeightCm + 1e-6 &&
     maxGapCm >= FAN_CEILING_GAP_MIN_CM
   )
 }
@@ -555,6 +566,7 @@ export function planFanFit(
   ceilingGapCm: number,
   lightAABB: LightAABB | null,
   fanPosition: FanPosition = "rear-right-wall",
+  potHeightCm: number = 0,
 ): FanFitResult {
   const volume = usableFanVolumeM(widthM, depthM, heightM)
   const usableWidthCm = volume.widthM * 100
@@ -582,9 +594,9 @@ export function planFanFit(
   }
 
   const gap = clampFanCeilingGapCm(ceilingGapCm, heightM, preset.bodyDiameterCm)
-  const maxGap = maxFanCeilingGapCm(heightM, preset.bodyDiameterCm)
+  const maxGap = maxFanCeilingGapCm(heightM, preset.bodyDiameterCm, potHeightCm)
   const fitsHorizontal = fanHorizontalFitsInTent(usableWidthCm, usableDepthCm, preset, orientationDeg)
-  const fitsVertical = fanVerticalFits(usableHeightCm, preset.bodyDiameterCm, gap, maxGap)
+  const fitsVertical = fanVerticalFits(usableHeightCm, preset.bodyDiameterCm, gap, maxGap, potHeightCm)
 
   if (!fitsHorizontal) {
     return {

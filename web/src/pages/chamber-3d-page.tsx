@@ -236,6 +236,12 @@ export function Chamber3dPage() {
 
   const visiblePotCount = clampFeltPotCount(Math.min(potCount, maxFit))
 
+  const potMaxHeightCm = useMemo(() => {
+    if (visiblePotCount === 0) return 0
+    if (potType === "square") return squarePotPreset.heightCm
+    return potPreset.heightCm
+  }, [visiblePotCount, potType, potPreset.heightCm, squarePotPreset.heightCm])
+
   const lightPreset = useMemo(() => getLightPreset(lightPresetId), [lightPresetId])
 
   // ---- Fan logic (computed first, independent of light gap) ----
@@ -257,8 +263,9 @@ export function Chamber3dPage() {
         effectiveFanCeilingGapCm,
         null,
         fanPosition,
+        potMaxHeightCm,
       ),
-    [widthCm, depthCm, heightCm, fanPreset, fanOrientationDeg, effectiveFanCeilingGapCm, fanPosition],
+    [widthCm, depthCm, heightCm, fanPreset, fanOrientationDeg, effectiveFanCeilingGapCm, fanPosition, potMaxHeightCm],
   )
 
   // Max light ceiling gap that avoids vertical collision with fan
@@ -292,8 +299,9 @@ export function Chamber3dPage() {
         lightPreset,
         lightOrientationDeg,
         lightGapWithFanConstraint,
+        potMaxHeightCm,
       ),
-    [widthCm, depthCm, heightCm, lightPreset, lightOrientationDeg, lightGapWithFanConstraint],
+    [widthCm, depthCm, heightCm, lightPreset, lightOrientationDeg, lightGapWithFanConstraint, potMaxHeightCm],
   )
 
   const lightAABB: LightAABB | null = useMemo(() => {
@@ -320,8 +328,9 @@ export function Chamber3dPage() {
         effectiveFanCeilingGapCm,
         lightAABB,
         fanPosition,
+        potMaxHeightCm,
       ),
-    [widthCm, depthCm, heightCm, fanPreset, fanOrientationDeg, effectiveFanCeilingGapCm, lightAABB, fanPosition],
+    [widthCm, depthCm, heightCm, fanPreset, fanOrientationDeg, effectiveFanCeilingGapCm, lightAABB, fanPosition, potMaxHeightCm],
   )
 
   // ---- Derived values for light UI ----

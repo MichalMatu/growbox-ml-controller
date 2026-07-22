@@ -142,8 +142,10 @@ export const DEFAULT_LIGHT_ORIENTATION_DEG: LightOrientationDeg = 0
 export const DEFAULT_LIGHT_CEILING_GAP_CM = 5
 /** Hard floor for ceiling gap control (cm). */
 export const LIGHT_CEILING_GAP_MIN_CM = 2
-/** Keep fixture bottom at least this far above floor (cm). */
-export const LIGHT_FLOOR_CLEARANCE_MIN_CM = 40
+/** Minimum clearance above pots or floor when pots are absent (cm). */
+export const FIXTURE_ABOVE_OBSTACLE_GAP_CM = 10
+/** Keep fixture bottom at least this far above floor (cm) — legacy fallback, replaced by dynamic pot clearance. */
+export const LIGHT_FLOOR_CLEARANCE_MIN_CM = FIXTURE_ABOVE_OBSTACLE_GAP_CM
 /**
  * Extra side clearance beyond fabric + one pole radius (meters).
  * Hanging fixtures need less margin than floor pots — keep tight so a
@@ -261,10 +263,15 @@ function verticalFits(
   bodyHeightCm: number,
   gapCm: number,
   maxGapCm: number,
+  potHeightCm: number = 0,
 ): boolean {
   if (bodyHeightCm <= 0) return true
+  const bottomClearance = Math.max(
+    FIXTURE_ABOVE_OBSTACLE_GAP_CM,
+    potHeightCm + FIXTURE_ABOVE_OBSTACLE_GAP_CM,
+  )
   return (
-    bodyHeightCm + LIGHT_FLOOR_CLEARANCE_MIN_CM + gapCm <= usableHeightCm + 1e-6 &&
+    bodyHeightCm + bottomClearance + gapCm <= usableHeightCm + 1e-6 &&
     maxGapCm >= LIGHT_CEILING_GAP_MIN_CM
   )
 }
@@ -327,11 +334,16 @@ export function resolveLightOrientationDeg(
 export function maxCeilingGapCm(
   tentHeightM: number,
   bodyHeightCm: number,
+  potHeightCm: number = 0,
 ): number {
   if (bodyHeightCm <= 0) return LIGHT_CEILING_GAP_MIN_CM
   const usable = usableLightVolumeM(1, 1, tentHeightM).heightM * 100
+  const bottomClearance = Math.max(
+    FIXTURE_ABOVE_OBSTACLE_GAP_CM,
+    potHeightCm + FIXTURE_ABOVE_OBSTACLE_GAP_CM,
+  )
   const maxGap = Math.floor(
-    usable - bodyHeightCm - LIGHT_FLOOR_CLEARANCE_MIN_CM,
+    usable - bodyHeightCm - bottomClearance,
   )
   return Math.max(LIGHT_CEILING_GAP_MIN_CM, maxGap)
 }
@@ -340,9 +352,10 @@ export function clampCeilingGapCm(
   gapCm: number,
   tentHeightM: number,
   bodyHeightCm: number,
+  potHeightCm: number = 0,
 ): number {
   if (!Number.isFinite(gapCm)) return DEFAULT_LIGHT_CEILING_GAP_CM
-  const maxGap = maxCeilingGapCm(tentHeightM, bodyHeightCm)
+  const maxGap = maxCeilingGapCm(tentHeightM, bodyHeightCm, potHeightCm)
   const rounded = Math.round(gapCm)
   if (rounded < LIGHT_CEILING_GAP_MIN_CM) return LIGHT_CEILING_GAP_MIN_CM
   if (rounded > maxGap) return maxGap
@@ -391,6 +404,7 @@ export function planLightFit(
   preset: LightPreset,
   orientationDeg: LightOrientationDeg,
   ceilingGapCm: number,
+  potHeightCm: number = 0,
 ): LightFitResult {
   const volume = usableLightVolumeM(widthM, depthM, heightM)
   const usableWidthCm = volume.widthM * 100
@@ -420,8 +434,8 @@ export function planLightFit(
     }
   }
 
-  const gap = clampCeilingGapCm(ceilingGapCm, heightM, preset.heightCm)
-  const maxGap = maxCeilingGapCm(heightM, preset.heightCm)
+  const gap = clampCeilingGapCm(ceilingGapCm, heightM, preset.heightCm, potHeightCm)
+  const maxGap = maxCeilingGapCm(heightM, preset.heightCm, potHeightCm)
   const fitsHorizontal = horizontalFits(
     usableWidthCm,
     usableDepthCm,
@@ -433,6 +447,7 @@ export function planLightFit(
     preset.heightCm,
     gap,
     maxGap,
+    potHeightCm,
   )
 
   const fits = fitsHorizontal && fitsVertical

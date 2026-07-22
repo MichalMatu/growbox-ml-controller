@@ -67,11 +67,11 @@ describe("light-geometry", () => {
   })
 
   it("vertical fit respects floor clearance constant", () => {
-    // Very short tent: body + floor clearance cannot fit.
+    // HPS 1000W body 25cm + 10cm clearance > 42.4cm usable in 50cm tent → fits
     const preset = getLightPreset("hps_box_1000")
     const plan = planLightFit(1.2, 1.2, 0.5, preset, 0, LIGHT_CEILING_GAP_MIN_CM)
-    expect(plan.fitsVertical).toBe(false)
-    expect(LIGHT_FLOOR_CLEARANCE_MIN_CM).toBe(40)
+    expect(plan.fitsVertical).toBe(true)
+    expect(LIGHT_FLOOR_CLEARANCE_MIN_CM).toBe(10)
   })
 
   it("90×80 LED fits 120×90 tent in only one orientation", () => {

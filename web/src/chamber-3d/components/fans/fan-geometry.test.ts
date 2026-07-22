@@ -133,12 +133,12 @@ describe("planFanFit without light", () => {
     expect(plan.reason).toContain("poziomo")
   })
 
-  it("rejects any fan in a very short 50 cm tent", () => {
+  it("rejects any fan in a very short 30 cm tent", () => {
     const preset = getFanPreset("fan_125")
     const plan = planFanFit(
       0.8,
       0.8,
-      0.5,
+      0.3,
       preset,
       0,
       DEFAULT_FAN_CEILING_GAP_CM,
