@@ -10,15 +10,26 @@ import {
   NON_UI_PATH_PREFIXES,
   REQUIRED_CSS_TOKENS,
   STYLE_OWNER_PATH_PREFIXES,
-} from "@/ui/allowed-surface"
+} from "@/config/allowed-surface"
 import {
   CHAMBER_CSS_VAR,
   CHAMBER_SCENE_FALLBACK,
 } from "@/chamber-3d/core/scene-tokens"
 
-const srcRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)))
+const configDir = path.dirname(fileURLToPath(import.meta.url))
+const srcRoot = path.resolve(configDir, "..")
 const buttonSource = readFileSync(path.join(srcRoot, "components/ui/button.tsx"), "utf8")
-const chromeSource = readFileSync(path.join(srcRoot, "components/app-chrome.tsx"), "utf8")
+
+/** Read all app-chrome source files (modular structure). */
+function readAppChromeSources(): string {
+  const dir = path.join(srcRoot, "components", "app-chrome")
+  const files = readdirSync(dir)
+    .filter((n) => n.endsWith(".tsx") || n.endsWith(".ts"))
+    .map((n) => path.join(dir, n))
+  return files.map((f) => readFileSync(f, "utf8")).join("\n")
+}
+const chromeSource = readAppChromeSources()
+
 const cssSource = readFileSync(path.join(srcRoot, "index.css"), "utf8")
 const sceneTokensSource = readFileSync(
   path.join(srcRoot, "chamber-3d", "core", "scene-tokens.ts"),

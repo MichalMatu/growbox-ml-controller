@@ -57,6 +57,7 @@ export type AllowedAppChromeExport = (typeof ALLOWED_APP_CHROME_EXPORTS)[number]
  * Hex is still restricted: only index.css + scene-tokens fallbacks.
  */
 export const STYLE_OWNER_PATH_PREFIXES = [
+  "components/app-chrome/",
   "components/app-chrome.tsx",
   "components/ui/",
   "index.css",
@@ -104,6 +105,7 @@ export const REQUIRED_CSS_TOKENS = [
 
 /** Non-UI modules that may exist under src without chrome imports. */
 export const NON_UI_PATH_PREFIXES = [
+  "config/",
   "domain/",
   "lib/",
   "ui/",

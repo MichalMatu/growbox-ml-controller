@@ -200,7 +200,14 @@ export function Chamber3dPage() {
     [widthCm, depthCm, heightCm],
   )
 
-  const potKeyParsed = useMemo(() => parsePotKey(potKey) ?? parsePotKey(DEFAULT_POT_KEY)!, [potKey])
+  const potKeyParsed = useMemo(() => {
+    const parsed = parsePotKey(potKey)
+    if (parsed) return parsed
+    // Fallback — guaranteed valid by DEFAULT_POT_KEY constant
+    const fallback = parsePotKey(DEFAULT_POT_KEY)
+    if (!fallback) throw new Error(`Invalid DEFAULT_POT_KEY: ${DEFAULT_POT_KEY}`)
+    return fallback
+  }, [potKey])
   const potType = potKeyParsed.type
   const potPresetId = potKeyParsed.presetId
 
@@ -556,7 +563,7 @@ export function Chamber3dPage() {
                       type="number"
                       inputMode="numeric"
                       min={LIGHT_CEILING_GAP_MIN_CM}
-                      max={Math.max(LIGHT_CEILING_GAP_MIN_CM, lightPlan.maxCeilingGapCm)}
+                      max={Math.max(LIGHT_CEILING_GAP_MIN_CM, lightPlan.maxCeilingGapCm ?? 0)}
                       step={1}
                       value={lightGapWithFanConstraint}
                       onChange={(event) => {
@@ -671,7 +678,7 @@ export function Chamber3dPage() {
                       )
                     }}
                     minCm={FAN_CEILING_GAP_MIN_CM}
-                    maxCm={Math.max(FAN_CEILING_GAP_MIN_CM, fanPlan.maxCeilingGapCm)}
+                     maxCm={Math.max(FAN_CEILING_GAP_MIN_CM, fanPlan.maxCeilingGapCm ?? 0)}
                   />
 
                   <AppFormField label="Max od sufitu" htmlFor="fan_gap_max">

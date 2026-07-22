@@ -55,7 +55,8 @@ export default defineConfig([
     files: [
       "src/lib/routing.ts",
       "src/components/app-chrome.tsx",
-      "src/ui/allowed-surface.ts",
+      "src/components/app-chrome/**/*.{ts,tsx}",
+      "src/config/allowed-surface.ts",
       "src/chamber-3d/core/scene-tokens.ts",
       "src/chamber-3d/performance/performance-tier.ts",
       "src/chamber-3d/performance/performance-context.tsx",
@@ -70,7 +71,9 @@ export default defineConfig([
     ignores: [
       "src/components/ui/**",
       "src/components/app-chrome.tsx",
+      "src/components/app-chrome/**/*.{ts,tsx}",
       "src/**/*.test.ts",
+      "src/config/**",
       "src/ui/**",
     ],
     rules: {
@@ -94,7 +97,7 @@ export default defineConfig([
       "src/pages/**/*.{ts,tsx}",
       "src/components/**/*.{ts,tsx}",
     ],
-    ignores: ["src/components/ui/**", "src/components/app-chrome.tsx"],
+    ignores: ["src/components/ui/**", "src/components/app-chrome.tsx", "src/components/app-chrome/**/*.{ts,tsx}", "src/config/**"],
     rules: {
       "no-restricted-syntax": ["error", ...featureSurfaceRestrictedSyntax],
     },
@@ -131,7 +134,7 @@ export default defineConfig([
   },
   // app-chrome: no hex; lengths via CSS tokens / named classes only
   {
-    files: ["src/components/app-chrome.tsx"],
+    files: ["src/components/app-chrome.tsx", "src/components/app-chrome/**/*.{ts,tsx}"],
     rules: {
       "no-restricted-syntax": [
         "error",
