@@ -52,7 +52,6 @@ import {
   FAN_PRESETS,
   clampFanCeilingGapCm,
   clampFanOrientationDeg,
-  computeLightCeilingGapForFan,
   getFanPreset,
   listFittingFanOrientations,
   planFanFit,
@@ -244,10 +243,10 @@ export function Chamber3dPage() {
 
   const lightPreset = useMemo(() => getLightPreset(lightPresetId), [lightPresetId])
 
-  // ---- Fan logic (computed first, independent of light gap) ----
+  // ---- Fan and Light placement with dynamic mutual avoidance ----
   const fanPreset = useMemo(() => getFanPreset(fanPresetId), [fanPresetId])
 
-  const effectiveFanCeilingGapCm = useMemo(
+  const baseFanGap = useMemo(
     () => clampFanCeilingGapCm(fanCeilingGapCm, heightCm / 100, fanPreset.bodyDiameterCm, potMaxHeightCm),
     [fanCeilingGapCm, heightCm, fanPreset.bodyDiameterCm, potMaxHeightCm],
   )
@@ -260,34 +259,72 @@ export function Chamber3dPage() {
         heightCm / 100,
         fanPreset,
         fanOrientationDeg,
-        effectiveFanCeilingGapCm,
+        baseFanGap,
         null,
         fanPosition,
         potMaxHeightCm,
       ),
-    [widthCm, depthCm, heightCm, fanPreset, fanOrientationDeg, effectiveFanCeilingGapCm, fanPosition, potMaxHeightCm],
+    [widthCm, depthCm, heightCm, fanPreset, fanOrientationDeg, baseFanGap, fanPosition, potMaxHeightCm],
   )
 
-  // Max light ceiling gap that avoids vertical collision with fan
-  const lightGapForFanConstraint = useMemo(
+  const baseLightPlan = useMemo(
     () =>
-      computeLightCeilingGapForFan(
+      planLightFit(
+        widthCm / 100,
+        depthCm / 100,
         heightCm / 100,
-        fanOnlyPlan.placement,
-        lightPreset.heightCm,
+        lightPreset,
+        lightOrientationDeg,
+        clampCeilingGapCm(lightCeilingGapCm, heightCm / 100, lightPreset.heightCm, potMaxHeightCm),
+        potMaxHeightCm,
       ),
-    [heightCm, fanOnlyPlan.placement, lightPreset.heightCm],
+    [widthCm, depthCm, heightCm, lightPreset, lightOrientationDeg, lightCeilingGapCm, potMaxHeightCm],
   )
 
-  // Light gap clamped to avoid fan, then used for light placement.
-  // Larger gap = lamp hangs lower, so we need Math.MAX to push it below the fan.
-  const lightGapWithFanConstraint = useMemo(() => {
-    const base = clampCeilingGapCm(lightCeilingGapCm, heightCm / 100, lightPreset.heightCm, potMaxHeightCm)
-    if (lightGapForFanConstraint != null) {
-      return Math.max(base, lightGapForFanConstraint)
+  const hasHorizontalOverlap = useMemo(() => {
+    if (lightPreset.form === "none" || fanPreset.form === "none") return false
+    if (!fanOnlyPlan.placement || !baseLightPlan.placement) return false
+    const fan = fanOnlyPlan.placement
+    const light = baseLightPlan.placement
+    const overlapX =
+      Math.abs(fan.x - light.x) < (fan.extentXM + light.extentXM) / 2 + 0.02
+    const overlapZ =
+      Math.abs(fan.z - light.z) < (fan.extentZM + light.extentZM) / 2 + 0.02
+    return overlapX && overlapZ
+  }, [lightPreset.form, fanPreset.form, fanOnlyPlan.placement, baseLightPlan.placement])
+
+  const { effectiveFanCeilingGapCm, effectiveLightCeilingGapCm } = useMemo(() => {
+    const baseLightGap = clampCeilingGapCm(lightCeilingGapCm, heightCm / 100, lightPreset.heightCm, potMaxHeightCm)
+    const baseFanGap = clampFanCeilingGapCm(fanCeilingGapCm, heightCm / 100, fanPreset.bodyDiameterCm, potMaxHeightCm)
+
+    if (!hasHorizontalOverlap) {
+      return {
+        effectiveFanCeilingGapCm: baseFanGap,
+        effectiveLightCeilingGapCm: baseLightGap,
+      }
     }
-    return base
-  }, [lightCeilingGapCm, heightCm, lightPreset.heightCm, potMaxHeightCm, lightGapForFanConstraint])
+
+    const maxAllowedFanGap = Math.floor(baseLightGap - fanPreset.bodyDiameterCm - 2)
+
+    if (maxAllowedFanGap >= FAN_CEILING_GAP_MIN_CM) {
+      const fanGap = Math.min(baseFanGap, maxAllowedFanGap)
+      return {
+        effectiveFanCeilingGapCm: fanGap,
+        effectiveLightCeilingGapCm: baseLightGap,
+      }
+    } else {
+      const fanGap = FAN_CEILING_GAP_MIN_CM
+      const minRequiredLightGap = Math.ceil(FAN_CEILING_GAP_MIN_CM + fanPreset.bodyDiameterCm + 2)
+      const lightGap = Math.min(
+        Math.max(baseLightGap, minRequiredLightGap),
+        baseLightPlan.maxCeilingGapCm
+      )
+      return {
+        effectiveFanCeilingGapCm: fanGap,
+        effectiveLightCeilingGapCm: lightGap,
+      }
+    }
+  }, [hasHorizontalOverlap, lightCeilingGapCm, fanCeilingGapCm, heightCm, lightPreset.heightCm, fanPreset.bodyDiameterCm, potMaxHeightCm, baseLightPlan.maxCeilingGapCm])
 
   // ---- Light placement with fan-safe gap ----
   const lightPlan = useMemo(
@@ -298,10 +335,10 @@ export function Chamber3dPage() {
         heightCm / 100,
         lightPreset,
         lightOrientationDeg,
-        lightGapWithFanConstraint,
+        effectiveLightCeilingGapCm,
         potMaxHeightCm,
       ),
-    [widthCm, depthCm, heightCm, lightPreset, lightOrientationDeg, lightGapWithFanConstraint, potMaxHeightCm],
+    [widthCm, depthCm, heightCm, lightPreset, lightOrientationDeg, effectiveLightCeilingGapCm, potMaxHeightCm],
   )
 
   const lightAABB: LightAABB | null = useMemo(() => {
@@ -598,13 +635,28 @@ export function Chamber3dPage() {
                     <CmDimensionField
                       id="light_ceiling_gap_cm"
                       label="Od sufitu (cm)"
-                      valueCm={lightCeilingGapCm}
+                      valueCm={effectiveLightCeilingGapCm}
                       onValueCmChange={(next) => {
-                        setLightCeilingGapCm(
-                          clampCeilingGapCm(next, heightCm / 100, lightPreset.heightCm, potMaxHeightCm),
-                        )
+                        let nextLight = next
+                        if (hasHorizontalOverlap && fanPreset.form !== "none") {
+                          const minLight = FAN_CEILING_GAP_MIN_CM + fanPreset.bodyDiameterCm + 2
+                          nextLight = Math.max(nextLight, minLight)
+                        }
+                        nextLight = clampCeilingGapCm(nextLight, heightCm / 100, lightPreset.heightCm, potMaxHeightCm)
+                        setLightCeilingGapCm(nextLight)
+
+                        if (hasHorizontalOverlap && fanPreset.form !== "none") {
+                          const maxFan = nextLight - fanPreset.bodyDiameterCm - 2
+                          if (fanCeilingGapCm > maxFan) {
+                            setFanCeilingGapCm(maxFan)
+                          }
+                        }
                       }}
-                      minCm={LIGHT_CEILING_GAP_MIN_CM}
+                      minCm={
+                        hasHorizontalOverlap && fanPreset.form !== "none"
+                          ? Math.ceil(FAN_CEILING_GAP_MIN_CM + fanPreset.bodyDiameterCm + 2)
+                          : LIGHT_CEILING_GAP_MIN_CM
+                      }
                       maxCm={lightPreset.form === "none" ? LIGHT_CEILING_GAP_MIN_CM : lightPlan.maxCeilingGapCm}
                       end={
                         <AppFieldMetaText>
@@ -697,14 +749,34 @@ export function Chamber3dPage() {
                     <CmDimensionField
                       id="fan_ceiling_gap_cm"
                       label="Od sufitu (cm)"
-                      valueCm={fanCeilingGapCm}
+                      valueCm={effectiveFanCeilingGapCm}
                       onValueCmChange={(next) => {
-                        setFanCeilingGapCm(
-                          clampFanCeilingGapCm(next, heightCm / 100, fanPreset.bodyDiameterCm, potMaxHeightCm),
-                        )
+                        let nextFan = next
+                        if (hasHorizontalOverlap && lightPreset.form !== "none") {
+                          const maxFan = baseLightPlan.maxCeilingGapCm - fanPreset.bodyDiameterCm - 2
+                          nextFan = Math.min(nextFan, maxFan)
+                        }
+                        nextFan = clampFanCeilingGapCm(nextFan, heightCm / 100, fanPreset.bodyDiameterCm, potMaxHeightCm)
+                        setFanCeilingGapCm(nextFan)
+
+                        if (hasHorizontalOverlap && lightPreset.form !== "none") {
+                          const minLight = nextFan + fanPreset.bodyDiameterCm + 2
+                          if (lightCeilingGapCm < minLight) {
+                            setLightCeilingGapCm(minLight)
+                          }
+                        }
                       }}
                       minCm={FAN_CEILING_GAP_MIN_CM}
-                      maxCm={fanPreset.form === "none" ? FAN_CEILING_GAP_MIN_CM : fanPlan.maxCeilingGapCm}
+                      maxCm={
+                        fanPreset.form === "none"
+                          ? FAN_CEILING_GAP_MIN_CM
+                          : Math.min(
+                              fanPlan.maxCeilingGapCm,
+                              hasHorizontalOverlap && lightPreset.form !== "none"
+                                ? Math.floor(baseLightPlan.maxCeilingGapCm - fanPreset.bodyDiameterCm - 2)
+                                : fanPlan.maxCeilingGapCm
+                            )
+                      }
                       end={
                         <AppFieldMetaText>
                           max {fanPreset.form === "none" ? "—" : `${fanPlan.maxCeilingGapCm} cm`}
@@ -783,7 +855,7 @@ export function Chamber3dPage() {
                 potCount={visiblePotCount}
                 lightPresetId={lightPresetId}
                 lightOrientationDeg={effectiveLightOrientationDeg}
-                lightCeilingGapCm={lightGapWithFanConstraint}
+                lightCeilingGapCm={effectiveLightCeilingGapCm}
                 lightOn={lightOn && lightPlan.fits}
                 fanPresetId={fanPresetId}
                 fanOrientationDeg={effectiveFanOrientationDeg}

@@ -12,10 +12,25 @@ import { FIXTURE_ABOVE_OBSTACLE_GAP_CM } from "@/chamber-3d/components/lights/li
 export function computeLightCeilingGapForFan(
   tentHeightM: number,
   fanPlacement: FanPlacementM | null,
-  _lightBodyHeightCm: number,
+  lightPlacement: { extentXM: number; extentZM: number; x?: number; z?: number } | number | null,
 ): number | null {
   if (fanPlacement == null) return null
-  void _lightBodyHeightCm
+
+  if (typeof lightPlacement === "object" && lightPlacement != null) {
+    const lightX = lightPlacement.x ?? 0
+    const lightZ = lightPlacement.z ?? 0
+    const overlapX =
+      Math.abs(fanPlacement.x - lightX) <
+      (fanPlacement.extentXM + lightPlacement.extentXM) / 2 + FAN_LIGHT_MIN_GAP_M
+    const overlapZ =
+      Math.abs(fanPlacement.z - lightZ) <
+      (fanPlacement.extentZM + lightPlacement.extentZM) / 2 + FAN_LIGHT_MIN_GAP_M
+
+    if (!overlapX || !overlapZ) {
+      return null
+    }
+  }
+
   const fanBottomY = fanPlacement.y - fanPlacement.heightM / 2
   const verticalInset =
     CHAMBER_GEOMETRY.wallThicknessM + CHAMBER_GEOMETRY.frameRadiusM * 2
