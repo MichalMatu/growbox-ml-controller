@@ -116,7 +116,7 @@ function RulerMarks({
 
             {/* Number label every 10 cm — to the right of dashes, left-aligned. */}
             {label != null ? (
-              <Text
+              <Text font="https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjQ.woff2"
                 position={[labelX, y, rulerZ]}
                 fontSize={fontSize}
                 color={tickColor}
