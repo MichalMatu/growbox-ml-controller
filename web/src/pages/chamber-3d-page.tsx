@@ -65,6 +65,8 @@ import {
   AppActionRow,
   AppCanvasFrame,
   AppCardBody,
+  AppControlSurface,
+  AppFieldMetaText,
   AppFormField,
   AppFormGrid,
   AppPage,
@@ -118,6 +120,7 @@ type CmFieldProps = {
   onValueCmChange: (nextCm: number) => void
   minCm?: number
   maxCm?: number
+  end?: React.ReactNode
 }
 
 function CmDimensionField({
@@ -127,6 +130,7 @@ function CmDimensionField({
   onValueCmChange,
   minCm = ENCLOSURE_CM_MIN,
   maxCm = ENCLOSURE_CM_MAX,
+  end,
 }: CmFieldProps) {
   const [draft, setDraft] = useState(String(valueCm))
   const [syncedCm, setSyncedCm] = useState(valueCm)
@@ -148,7 +152,7 @@ function CmDimensionField({
   }
 
   return (
-    <AppFormField label={label} htmlFor={id}>
+    <AppFormField label={label} htmlFor={id} end={end}>
       <Input
         id={id}
         type="number"
@@ -371,15 +375,35 @@ export function Chamber3dPage() {
     return fanFittingOrientations[0]!
   }, [fanPreset.form, fanFittingOrientations, fanOrientationDeg])
 
-  const lightSizeLabel =
-    lightPreset.form === "none"
-      ? "—"
-      : `${lightPreset.lengthCm}×${lightPreset.widthCm}×${lightPreset.heightCm} cm`
+  /** Scalone ustawienie pozycji i orientacji wentylatora. */
+  type FanPlacementKey = `${FanPosition}/${FanOrientationDeg}`
 
-  const fanSizeLabel =
-    fanPreset.form === "none"
-      ? "—"
-      : `Ø${fanPreset.ductDiameterCm} · ${fanPreset.totalLengthCm} cm`
+  const fanPlacementOptions: { key: FanPlacementKey; label: string }[] = []
+  for (const pos of FAN_POSITIONS) {
+    for (const deg of FAN_ORIENTATIONS_DEG) {
+      const posLabel = pos === "rear-left-wall" ? "Lewa" : "Prawa"
+      const degLabel = deg === 0 ? "wzdłuż szer." : "wzdłuż głęb."
+      const key = `${pos}/${deg}` as FanPlacementKey
+      const fits =
+        fanPreset.form === "none" || (fanFittingOrientations.includes(deg))
+      const label = fits
+        ? `${posLabel} · ${degLabel}`
+        : `${posLabel} · ${degLabel} (nie mieści)`
+      fanPlacementOptions.push({ key, label })
+    }
+  }
+
+  const currentFanPlacementKey: FanPlacementKey = `${fanPosition}/${effectiveFanOrientationDeg}`
+
+  function parseFanPlacementKey(key: string): { position: FanPosition; orientationDeg: FanOrientationDeg } | null {
+    const parts = key.split("/")
+    if (parts.length !== 2) return null
+    const pos = parts[0]
+    if (pos !== "rear-left-wall" && pos !== "rear-right-wall") return null
+    const deg = Number(parts[1])
+    if (deg !== 0 && deg !== 90) return null
+    return { position: pos as FanPosition, orientationDeg: deg as FanOrientationDeg }
+  }
 
   return (
     <AppPage width="wide">
@@ -400,340 +424,314 @@ export function Chamber3dPage() {
             </CardHeader>
             <CardContent>
               <AppCardBody variant="form">
-                <AppFormGrid>
-                  <CmDimensionField
-                    id="width_cm"
-                    label="Szerokość (cm)"
-                    valueCm={widthCm}
-                    onValueCmChange={setWidthCm}
-                  />
-                  <CmDimensionField
-                    id="depth_cm"
-                    label="Głębokość (cm)"
-                    valueCm={depthCm}
-                    onValueCmChange={setDepthCm}
-                  />
-                  <CmDimensionField
-                    id="height_cm"
-                    label="Wysokość (cm)"
-                    valueCm={heightCm}
-                    onValueCmChange={setHeightCm}
-                    maxCm={240}
-                  />
-                  <AppFormField label="Objętość (m³)" htmlFor="volume_m3">
-                    <Input
-                      id="volume_m3"
-                      type="text"
-                      inputMode="decimal"
-                      value={volumeM3.toFixed(4)}
-                      readOnly
-                      disabled
+                <AppControlSurface>
+                  <AppFormGrid>
+                    <CmDimensionField
+                      id="width_cm"
+                      label="Szerokość (cm)"
+                      valueCm={widthCm}
+                      onValueCmChange={setWidthCm}
                     />
-                  </AppFormField>
+                    <CmDimensionField
+                      id="depth_cm"
+                      label="Głębokość (cm)"
+                      valueCm={depthCm}
+                      onValueCmChange={setDepthCm}
+                    />
+                    <CmDimensionField
+                      id="height_cm"
+                      label="Wysokość (cm)"
+                      valueCm={heightCm}
+                      onValueCmChange={setHeightCm}
+                      maxCm={240}
+                    />
+                    <AppFormField label="Objętość (m³)" htmlFor="volume_m3">
+                      <Input
+                        id="volume_m3"
+                        type="text"
+                        inputMode="decimal"
+                        value={volumeM3.toFixed(4)}
+                        readOnly
+                        disabled
+                      />
+                    </AppFormField>
+                  </AppFormGrid>
+                </AppControlSurface>
 
-                  <AppFormField label="Donica" htmlFor="pot_size">
-                    <Select
-                      value={potKey}
-                      onValueChange={(value) => setPotKey(value as PotKey)}
-                    >
-                      <AppSelectTrigger id="pot_size">
-                        <SelectValue placeholder="Rozmiar" />
-                      </AppSelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Okrągła (filcowa)</SelectLabel>
-                          {FELT_POT_PRESETS.map((preset) => (
-                            <SelectItem key={`felt/${preset.id}`} value={`felt/${preset.id}`}>
-                              {preset.volumeL} L · ⌀{preset.diameterCm}×{preset.heightCm}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                        <SelectGroup>
-                          <SelectLabel>Kwadratowa (plastikowa)</SelectLabel>
-                          {SQUARE_POT_PRESETS.map((preset) => (
-                            <SelectItem key={`square/${preset.id}`} value={`square/${preset.id}`}>
-                              {preset.volumeL} L · {preset.sideCm}×{preset.sideCm}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </AppFormField>
+                <AppControlSurface>
+                  <AppFormGrid>
+                    <AppFormField label="Donica" htmlFor="pot_size">
+                      <Select
+                        value={potKey}
+                        onValueChange={(value) => setPotKey(value as PotKey)}
+                      >
+                        <AppSelectTrigger id="pot_size">
+                          <SelectValue placeholder="Rozmiar" />
+                        </AppSelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Okrągła (filcowa)</SelectLabel>
+                            {FELT_POT_PRESETS.map((preset) => (
+                              <SelectItem key={`felt/${preset.id}`} value={`felt/${preset.id}`}>
+                                {preset.volumeL} L · ⌀{preset.diameterCm}×{preset.heightCm}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                          <SelectGroup>
+                            <SelectLabel>Kwadratowa (plastikowa)</SelectLabel>
+                            {SQUARE_POT_PRESETS.map((preset) => (
+                              <SelectItem key={`square/${preset.id}`} value={`square/${preset.id}`}>
+                                {preset.volumeL} L · {preset.sideCm}×{preset.sideCm}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </AppFormField>
 
-                  <AppFormField
-                    label="Liczba"
-                    htmlFor="pot_count"
-                    end={
-                      maxFit === 0 && potCount > 0 ? (
-                        <Badge variant="destructive">0/{maxFit}</Badge>
-                      ) : (
-                        <Badge variant="secondary">
-                          {visiblePotCount}/{maxFit}
-                        </Badge>
-                      )
-                    }
-                  >
-                    <Select
-                      value={String(visiblePotCount)}
-                      onValueChange={(value) => setPotCount(clampFeltPotCount(Number(value)))}
-                    >
-                      <AppSelectTrigger id="pot_count">
-                        <SelectValue placeholder="Liczba" />
-                      </AppSelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: FELT_POT_COUNT_MAX + 1 }, (_, n) => {
-                          const fits = n <= maxFit
-                          return (
-                            <SelectItem key={n} value={String(n)} disabled={n > 0 && !fits}>
-                              {n === 0 ? "0" : fits ? `${n}` : `${n} (za dużo)`}
-                            </SelectItem>
-                          )
-                        })}
-                      </SelectContent>
-                    </Select>
-                  </AppFormField>
-
-                  <AppFormField
-                    label="Lampa"
-                    htmlFor="light_preset"
-                    end={
-                      lightPreset.form === "none" ? (
-                        <Badge variant="outline">off</Badge>
-                      ) : lightPlan.fits ? (
-                        <Badge variant="secondary">OK</Badge>
-                      ) : (
-                        <Badge variant="destructive">za duża</Badge>
-                      )
-                    }
-                  >
-                    <Select
-                      value={lightPresetId}
-                      onValueChange={(value) => setLightPresetId(value as LightPresetId)}
-                    >
-                      <AppSelectTrigger id="light_preset">
-                        <SelectValue placeholder="Model" />
-                      </AppSelectTrigger>
-                      <SelectContent>
-                        {LIGHT_PRESETS.map((preset) => (
-                          <SelectItem key={preset.id} value={preset.id}>
-                            {preset.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </AppFormField>
-
-                  <AppFormField label="Gabaryt" htmlFor="light_size">
-                    <Input id="light_size" type="text" value={lightSizeLabel} readOnly disabled />
-                  </AppFormField>
-
-                  <AppFormField label="Obrót" htmlFor="light_orientation">
-                    <Select
-                      value={String(effectiveLightOrientationDeg)}
-                      onValueChange={(value) =>
-                        setLightOrientationDeg(clampLightOrientationDeg(Number(value)))
+                    <AppFormField
+                      label="Liczba"
+                      htmlFor="pot_count"
+                      end={
+                        maxFit === 0 && potCount > 0 ? (
+                          <Badge variant="destructive">0/{maxFit}</Badge>
+                        ) : (
+                          <Badge variant="secondary">
+                            {visiblePotCount}/{maxFit}
+                          </Badge>
+                        )
                       }
-                      disabled={lightPreset.form === "none"}
                     >
-                      <AppSelectTrigger id="light_orientation">
-                        <SelectValue placeholder="Obrót" />
-                      </AppSelectTrigger>
-                      <SelectContent>
-                        {LIGHT_ORIENTATIONS_DEG.map((deg) => {
-                          const fitsYaw =
-                            lightPreset.form === "none" || fittingOrientations.includes(deg)
-                          const label = deg === 0 ? "0° · wzdłuż szer." : "90° · wzdłuż głęb."
-                          return (
-                            <SelectItem
-                              key={deg}
-                              value={String(deg)}
-                              disabled={!fitsYaw && fittingOrientations.length > 0}
-                            >
-                              {fitsYaw ? label : `${label} (nie mieści)`}
-                            </SelectItem>
-                          )
-                        })}
-                      </SelectContent>
-                    </Select>
-                  </AppFormField>
+                      <Select
+                        value={String(visiblePotCount)}
+                        onValueChange={(value) => setPotCount(clampFeltPotCount(Number(value)))}
+                      >
+                        <AppSelectTrigger id="pot_count">
+                          <SelectValue placeholder="Liczba" />
+                        </AppSelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: FELT_POT_COUNT_MAX + 1 }, (_, n) => {
+                            const fits = n <= maxFit
+                            return (
+                              <SelectItem key={n} value={String(n)} disabled={n > 0 && !fits}>
+                                {n === 0 ? "0" : fits ? `${n}` : `${n} (za dużo)`}
+                              </SelectItem>
+                            )
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </AppFormField>
+                  </AppFormGrid>
+                </AppControlSurface>
 
-                  <AppFormField label="Od sufitu (cm)" htmlFor="light_ceiling_gap_cm">
-                    <Input
-                      id="light_ceiling_gap_cm"
-                      type="number"
-                      inputMode="numeric"
-                      min={LIGHT_CEILING_GAP_MIN_CM}
-                      max={Math.max(LIGHT_CEILING_GAP_MIN_CM, lightPlan.maxCeilingGapCm ?? 0)}
-                      step={1}
-                      value={lightGapWithFanConstraint}
-                      onChange={(event) => {
-                        const raw = event.target.value
-                        const parsed = parseEnclosureCmDraft(raw)
-                        if (parsed !== null) {
-                          setLightCeilingGapCm(
-                            clampCeilingGapCm(parsed, heightCm / 100, lightPreset.heightCm),
-                          )
+                <AppControlSurface>
+                  <AppFormGrid>
+                    <AppFormField
+                      label="Lampa"
+                      htmlFor="light_preset"
+                      end={
+                        lightPreset.form === "none" ? (
+                          <Badge variant="outline">off</Badge>
+                        ) : lightPlan.fits ? (
+                          <Badge variant="secondary">OK</Badge>
+                        ) : (
+                          <Badge variant="destructive">za duża</Badge>
+                        )
+                      }
+                    >
+                      <Select
+                        value={lightPresetId}
+                        onValueChange={(value) => setLightPresetId(value as LightPresetId)}
+                      >
+                        <AppSelectTrigger id="light_preset">
+                          <SelectValue placeholder="Model" />
+                        </AppSelectTrigger>
+                        <SelectContent>
+                          {LIGHT_PRESETS.map((preset) => (
+                            <SelectItem key={preset.id} value={preset.id}>
+                              {preset.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </AppFormField>
+
+                    <AppFormField label="Obrót" htmlFor="light_orientation">
+                      <Select
+                        value={String(effectiveLightOrientationDeg)}
+                        onValueChange={(value) =>
+                          setLightOrientationDeg(clampLightOrientationDeg(Number(value)))
                         }
+                        disabled={lightPreset.form === "none"}
+                      >
+                        <AppSelectTrigger id="light_orientation">
+                          <SelectValue placeholder="Obrót" />
+                        </AppSelectTrigger>
+                        <SelectContent>
+                          {LIGHT_ORIENTATIONS_DEG.map((deg) => {
+                            const fitsYaw =
+                              lightPreset.form === "none" || fittingOrientations.includes(deg)
+                            const label = deg === 0 ? "0° · wzdłuż szer." : "90° · wzdłuż głęb."
+                            return (
+                              <SelectItem
+                                key={deg}
+                                value={String(deg)}
+                                disabled={!fitsYaw && fittingOrientations.length > 0}
+                              >
+                                {fitsYaw ? label : `${label} (nie mieści)`}
+                              </SelectItem>
+                            )
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </AppFormField>
+
+                    <CmDimensionField
+                      id="light_ceiling_gap_cm"
+                      label="Od sufitu (cm)"
+                      valueCm={lightCeilingGapCm}
+                      onValueCmChange={(next) => {
+                        setLightCeilingGapCm(
+                          clampCeilingGapCm(next, heightCm / 100, lightPreset.heightCm),
+                        )
                       }}
-                    />
-                  </AppFormField>
-
-                  <AppFormField label="Świeci" htmlFor="light_on">
-                    <Select
-                      value={lightOn ? "on" : "off"}
-                      onValueChange={(value) => setLightOn(value === "on")}
-                      disabled={lightPreset.form === "none" || !lightPlan.fits}
-                    >
-                      <AppSelectTrigger id="light_on">
-                        <SelectValue placeholder="Stan" />
-                      </AppSelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="on">Włączona</SelectItem>
-                        <SelectItem value="off">Wyłączona</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </AppFormField>
-
-                  <AppFormField label="Max od sufitu" htmlFor="light_gap_max">
-                    <Input
-                      id="light_gap_max"
-                      type="text"
-                      value={lightPreset.form === "none" ? "—" : `${lightPlan.maxCeilingGapCm} cm`}
-                      readOnly
-                      disabled
-                    />
-                  </AppFormField>
-
-                  <AppFormField
-                    label="Wentylator"
-                    htmlFor="fan_preset"
-                    end={
-                      fanPreset.form === "none" ? (
-                        <Badge variant="outline">off</Badge>
-                      ) : fanPlan.fits ? (
-                        <Badge variant="secondary">OK</Badge>
-                      ) : (
-                        <Badge variant="destructive">{fanPlan.reason ?? "koliduje"}</Badge>
-                      )
-                    }
-                  >
-                    <Select
-                      value={fanPresetId}
-                      onValueChange={(value) => setFanPresetId(value as FanPresetId)}
-                    >
-                      <AppSelectTrigger id="fan_preset">
-                        <SelectValue placeholder="Model" />
-                      </AppSelectTrigger>
-                      <SelectContent>
-                        {FAN_PRESETS.map((preset) => (
-                          <SelectItem key={preset.id} value={preset.id}>
-                            {preset.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </AppFormField>
-
-                  <AppFormField label="Gabaryt" htmlFor="fan_size">
-                    <Input id="fan_size" type="text" value={fanSizeLabel} readOnly disabled />
-                  </AppFormField>
-
-                  <AppFormField label="Obrót" htmlFor="fan_orientation">
-                    <Select
-                      value={String(effectiveFanOrientationDeg)}
-                      onValueChange={(value) =>
-                        setFanOrientationDeg(clampFanOrientationDeg(Number(value)))
+                      minCm={LIGHT_CEILING_GAP_MIN_CM}
+                      maxCm={lightPreset.form === "none" ? LIGHT_CEILING_GAP_MIN_CM : lightPlan.maxCeilingGapCm}
+                      end={
+                        <AppFieldMetaText>
+                          max {lightPreset.form === "none" ? "—" : `${lightPlan.maxCeilingGapCm} cm`}
+                        </AppFieldMetaText>
                       }
-                      disabled={fanPreset.form === "none"}
-                    >
-                      <AppSelectTrigger id="fan_orientation">
-                        <SelectValue placeholder="Obrót" />
-                      </AppSelectTrigger>
-                      <SelectContent>
-                        {FAN_ORIENTATIONS_DEG.map((deg) => {
-                          const fitsYaw =
-                            fanPreset.form === "none" || fanFittingOrientations.includes(deg)
-                          const label = deg === 0 ? "0° · wzdłuż szer." : "90° · wzdłuż głęb."
-                          return (
-                            <SelectItem
-                              key={deg}
-                              value={String(deg)}
-                              disabled={!fitsYaw && fanFittingOrientations.length > 0}
-                            >
-                              {fitsYaw ? label : `${label} (nie mieści)`}
-                            </SelectItem>
-                          )
-                        })}
-                      </SelectContent>
-                    </Select>
-                  </AppFormField>
-
-                  <CmDimensionField
-                    id="fan_ceiling_gap_cm"
-                    label="Od sufitu (cm)"
-                    valueCm={effectiveFanCeilingGapCm}
-                    onValueCmChange={(next) => {
-                      setFanCeilingGapCm(
-                        clampFanCeilingGapCm(next, heightCm / 100, fanPreset.bodyDiameterCm),
-                      )
-                    }}
-                    minCm={FAN_CEILING_GAP_MIN_CM}
-                     maxCm={Math.max(FAN_CEILING_GAP_MIN_CM, fanPlan.maxCeilingGapCm ?? 0)}
-                  />
-
-                  <AppFormField label="Max od sufitu" htmlFor="fan_gap_max">
-                    <Input
-                      id="fan_gap_max"
-                      type="text"
-                      value={fanPreset.form === "none" ? "—" : `${fanPlan.maxCeilingGapCm} cm`}
-                      readOnly
-                      disabled
                     />
-                  </AppFormField>
 
-                  <AppFormField label="Pozycja" htmlFor="fan_position">
-                    <Select
-                      value={fanPosition}
-                      onValueChange={(value) => setFanPosition(value as FanPosition)}
-                      disabled={fanPreset.form === "none"}
+                    <AppFormField label="Świeci" htmlFor="light_on">
+                      <Select
+                        value={lightOn ? "on" : "off"}
+                        onValueChange={(value) => setLightOn(value === "on")}
+                        disabled={lightPreset.form === "none" || !lightPlan.fits}
+                      >
+                        <AppSelectTrigger id="light_on">
+                          <SelectValue placeholder="Stan" />
+                        </AppSelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="on">Włączona</SelectItem>
+                          <SelectItem value="off">Wyłączona</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </AppFormField>
+                  </AppFormGrid>
+                </AppControlSurface>
+
+                <AppControlSurface>
+                  <AppFormGrid>
+                    <AppFormField
+                      label="Wentylator"
+                      htmlFor="fan_preset"
+                      end={
+                        fanPreset.form === "none" ? (
+                          <Badge variant="outline">off</Badge>
+                        ) : fanPlan.fits ? (
+                          <Badge variant="secondary">OK</Badge>
+                        ) : (
+                          <Badge variant="destructive">{fanPlan.reason ?? "koliduje"}</Badge>
+                        )
+                      }
                     >
-                      <AppSelectTrigger id="fan_position">
-                        <SelectValue placeholder="Pozycja" />
-                      </AppSelectTrigger>
-                      <SelectContent>
-                        {FAN_POSITIONS.map((pos) => (
-                          <SelectItem key={pos} value={pos}>
-                            {pos === "rear-left-wall" ? "Lewa ściana tył" : "Prawa ściana tył"}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </AppFormField>
+                      <Select
+                        value={fanPresetId}
+                        onValueChange={(value) => setFanPresetId(value as FanPresetId)}
+                      >
+                        <AppSelectTrigger id="fan_preset">
+                          <SelectValue placeholder="Model" />
+                        </AppSelectTrigger>
+                        <SelectContent>
+                          {FAN_PRESETS.map((preset) => (
+                            <SelectItem key={preset.id} value={preset.id}>
+                              {preset.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </AppFormField>
 
-                  <AppFormField label="Tło sceny" htmlFor="room_layout">
-                    <Select
-                      value={roomLayout}
-                      onValueChange={(value) => setRoomLayout(value as RoomLayout)}
-                    >
-                      <AppSelectTrigger id="room_layout">
-                        <SelectValue placeholder="Tło" />
-                      </AppSelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Studio (bez ścian)</SelectItem>
-                        <SelectItem value="flat">Przy ścianie</SelectItem>
-                        <SelectItem value="corner">W rogu</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </AppFormField>
+                    <AppFormField label="Umiejscowienie" htmlFor="fan_placement">
+                      <Select
+                        value={currentFanPlacementKey}
+                        onValueChange={(value) => {
+                          const parsed = parseFanPlacementKey(value)
+                          if (!parsed) return
+                          setFanPosition(parsed.position)
+                          setFanOrientationDeg(clampFanOrientationDeg(parsed.orientationDeg))
+                        }}
+                        disabled={fanPreset.form === "none"}
+                      >
+                        <AppSelectTrigger id="fan_placement">
+                          <SelectValue placeholder="Umiejscowienie" />
+                        </AppSelectTrigger>
+                        <SelectContent>
+                          {fanPlacementOptions.map((opt) => {
+                            const parsed = parseFanPlacementKey(opt.key)
+                            const deg = parsed?.orientationDeg
+                            const fits =
+                              fanPreset.form === "none" ||
+                              (deg !== undefined && fanFittingOrientations.includes(deg))
+                            return (
+                              <SelectItem key={opt.key} value={opt.key} disabled={!fits}>
+                                {opt.label}
+                              </SelectItem>
+                            )
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </AppFormField>
 
-                  <CmDimensionField
-                    id="wall_height_cm"
-                    label="Wys. ściany (cm)"
-                    valueCm={wallHeightCm}
-                    onValueCmChange={setWallHeightCm}
-                    maxCm={260}
-                  />
-                </AppFormGrid>
+                    <CmDimensionField
+                      id="fan_ceiling_gap_cm"
+                      label="Od sufitu (cm)"
+                      valueCm={fanCeilingGapCm}
+                      onValueCmChange={(next) => {
+                        setFanCeilingGapCm(
+                          clampFanCeilingGapCm(next, heightCm / 100, fanPreset.bodyDiameterCm),
+                        )
+                      }}
+                      minCm={FAN_CEILING_GAP_MIN_CM}
+                      maxCm={fanPreset.form === "none" ? FAN_CEILING_GAP_MIN_CM : fanPlan.maxCeilingGapCm}
+                      end={
+                        <AppFieldMetaText>
+                          max {fanPreset.form === "none" ? "—" : `${fanPlan.maxCeilingGapCm} cm`}
+                        </AppFieldMetaText>
+                      }
+                    />
+                  </AppFormGrid>
+                </AppControlSurface>
+
+                <AppControlSurface>
+                  <AppFormGrid>
+                    <AppFormField label="Tło sceny" htmlFor="room_layout">
+                      <Select
+                        value={roomLayout}
+                        onValueChange={(value) => setRoomLayout(value as RoomLayout)}
+                      >
+                        <AppSelectTrigger id="room_layout">
+                          <SelectValue placeholder="Tło" />
+                        </AppSelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Studio (bez ścian)</SelectItem>
+                          <SelectItem value="flat">Przy ścianie</SelectItem>
+                          <SelectItem value="corner">W rogu</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </AppFormField>
+
+                    <CmDimensionField
+                      id="wall_height_cm"
+                      label="Wys. ściany (cm)"
+                      valueCm={wallHeightCm}
+                      onValueCmChange={setWallHeightCm}
+                      maxCm={260}
+                    />
+                  </AppFormGrid>
+                </AppControlSurface>
 
                 <AppActionRow align="end">
                   <Button

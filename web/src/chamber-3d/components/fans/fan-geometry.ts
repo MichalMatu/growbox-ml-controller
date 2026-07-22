@@ -82,7 +82,7 @@ export const FAN_PRESETS: readonly FanPreset[] = [
   {
     id: "fan_100",
     form: "inline_duct",
-    label: "Wentylator Ø100 mm",
+    label: "Ø100 mm · 26 cm",
     ductDiameterCm: 10.0,
     bodyDiameterCm: 12.5,
     totalLengthCm: 26,
@@ -95,7 +95,7 @@ export const FAN_PRESETS: readonly FanPreset[] = [
   {
     id: "fan_125",
     form: "inline_duct",
-    label: "Wentylator Ø125 mm",
+    label: "Ø125 mm · 28 cm",
     ductDiameterCm: 12.5,
     bodyDiameterCm: 14.5,
     totalLengthCm: 28,
@@ -108,7 +108,7 @@ export const FAN_PRESETS: readonly FanPreset[] = [
   {
     id: "fan_150",
     form: "inline_duct",
-    label: "Wentylator Ø150 mm",
+    label: "Ø150 mm · 30 cm",
     ductDiameterCm: 15.0,
     bodyDiameterCm: 17.5,
     totalLengthCm: 30,
@@ -121,7 +121,7 @@ export const FAN_PRESETS: readonly FanPreset[] = [
   {
     id: "fan_200",
     form: "inline_duct",
-    label: "Wentylator Ø200 mm",
+    label: "Ø200 mm · 33 cm",
     ductDiameterCm: 20.0,
     bodyDiameterCm: 23.0,
     totalLengthCm: 33,
@@ -592,7 +592,7 @@ export function planFanFit(
       maxCeilingGapCm: maxGap,
       placement: null,
       fittingOrientations,
-      reason: "Wentylator nie mieści się pionowo (za nisko sufitu lub za mało miejsca nad podłogą)",
+      reason: "za duży",
     }
   }
 
