@@ -120,6 +120,9 @@
     --chamber-light-emitter: #f2f0e6;
     --chamber-light-duct: #9aa3ad;
     --chamber-light-bulb: #ffd89a;
+    /* Inline duct fan */
+    --chamber-fan-housing: #1a1a1e;
+    --chamber-fan-duct: #b0b4ba;
     /* Scene lights only — desaturated so foil keeps mirror silver */
     --chamber-light-led-scene: #f5f6f4;
     --chamber-light-hps-scene: #ffe9c8;
@@ -175,6 +178,10 @@
     --sidebar-ring: oklch(0.556 0 0);
 
     /* Room context — darker, moodier tones for dark theme */
+    /* Inline duct fan */
+    --chamber-fan-housing: #1a1a1e;
+    --chamber-fan-duct: #b0b4ba;
+
     --chamber-room-wall: #3a3530;
     --chamber-room-floor: #2a2520;
     --chamber-room-baseboard: #333028;

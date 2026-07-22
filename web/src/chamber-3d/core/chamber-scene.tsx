@@ -12,6 +12,9 @@ import { getSquarePotPreset, type SquarePotPresetId } from "@/chamber-3d/compone
 import { SquarePotGroup } from "@/chamber-3d/components/pots/square-pot"
 import { GrowLight } from "@/chamber-3d/components/lights"
 import { getLightPreset, type LightOrientationDeg, type LightPresetId, planLightFit } from "@/chamber-3d/components/lights/light-geometry"
+import { InlineFan } from "@/chamber-3d/components/fans"
+import { getFanPreset, planFanFit, type FanOrientationDeg, type FanPresetId, type FanPosition } from "@/chamber-3d/components/fans/fan-geometry"
+import type { LightAABB } from "@/chamber-3d/components/fans/fan-geometry"
 import { ChamberPerformanceProvider, useChamberPerformance } from "@/chamber-3d/performance/performance-context"
 import { Room, type RoomLayout } from "@/chamber-3d/environment/room"
 import { CHAMBER_CANVAS_CLASS, CHAMBER_MATERIAL, resolveChamberSceneColors } from "@/chamber-3d/core/scene-tokens"
@@ -28,6 +31,10 @@ export function ChamberCanvas({
   lightOrientationDeg = 0,
   lightCeilingGapCm = 5,
   lightOn = true,
+  fanPresetId = "none",
+  fanOrientationDeg = 0,
+  fanCeilingGapCm = 2,
+  fanPosition = "center",
   roomLayout = "none",
   wallHeightCm = 300,
 }: ChamberSceneProps) {
@@ -51,6 +58,36 @@ export function ChamberCanvas({
     () =>
       planLightFit(widthM, depthM, heightM, lightPreset, lightOrientationDeg, lightCeilingGapCm),
     [widthM, depthM, heightM, lightPreset, lightOrientationDeg, lightCeilingGapCm],
+  )
+
+  const fanPreset = useMemo(() => getFanPreset(fanPresetId), [fanPresetId])
+
+  // Build light AABB for fan collision detection
+  const lightAABB: LightAABB | null = useMemo(() => {
+    if (lightPlan.placement == null || lightPreset.form === "none") return null
+    return {
+      centerX: lightPlan.placement.x,
+      centerY: lightPlan.placement.y,
+      centerZ: lightPlan.placement.z,
+      extentXM: lightPlan.placement.extentXM,
+      extentZM: lightPlan.placement.extentZM,
+      heightM: lightPlan.placement.heightM,
+    }
+  }, [lightPlan.placement, lightPreset.form])
+
+  const fanPlan = useMemo(
+    () =>
+      planFanFit(
+        widthM,
+        depthM,
+        heightM,
+        fanPreset,
+        fanOrientationDeg,
+        fanCeilingGapCm,
+        lightAABB,
+        fanPosition,
+      ),
+    [widthM, depthM, heightM, fanPreset, fanOrientationDeg, fanCeilingGapCm, lightAABB, fanPosition],
   )
 
   // DPR floor = 1.0 at minimum — sub-1.0 DPR makes text and thin lines
@@ -195,6 +232,13 @@ export function ChamberCanvas({
             tentHeightM={heightM}
           />
         ) : null}
+        {fanPlan.placement != null ? (
+          <InlineFan
+            preset={fanPreset}
+            placement={fanPlan.placement}
+            colors={colors}
+          />
+        ) : null}
       </Suspense>
 
       {/* Stage floor — hidden when room provides architectural context */}
@@ -302,6 +346,10 @@ export type ChamberSceneProps = {
   lightOrientationDeg?: LightOrientationDeg
   lightCeilingGapCm?: number
   lightOn?: boolean
+  fanPresetId?: FanPresetId
+  fanOrientationDeg?: FanOrientationDeg
+  fanCeilingGapCm?: number
+  fanPosition?: FanPosition
   roomLayout?: RoomLayout
   /** Room wall height in cm (40–500). Defaults to standard 300 cm. */
   wallHeightCm?: number

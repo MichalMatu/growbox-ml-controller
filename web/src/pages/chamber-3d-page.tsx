@@ -42,6 +42,26 @@ import {
   type LightPresetId,
 } from "@/chamber-3d/components/lights/light-geometry"
 import {
+  DEFAULT_FAN_CEILING_GAP_CM,
+  DEFAULT_FAN_ORIENTATION_DEG,
+  DEFAULT_FAN_POSITION,
+  DEFAULT_FAN_PRESET_ID,
+  FAN_CEILING_GAP_MIN_CM,
+  FAN_ORIENTATIONS_DEG,
+  FAN_POSITIONS,
+  FAN_PRESETS,
+  clampFanCeilingGapCm,
+  clampFanOrientationDeg,
+  computeLightCeilingGapForFan,
+  getFanPreset,
+  listFittingFanOrientations,
+  planFanFit,
+  type FanOrientationDeg,
+  type FanPosition,
+  type FanPresetId,
+  type LightAABB,
+} from "@/chamber-3d/components/fans/fan-geometry"
+import {
   AppActionRow,
   AppCanvasFrame,
   AppCardBody,
@@ -87,7 +107,6 @@ function parsePotKey(key: string): { type: PotType; presetId: FeltPotPresetId | 
   const type = parts[0]
   if (type !== "felt" && type !== "square") return null
   const presetId = parts[1]
-  // Valid preset ids: 7l, 11l, 12l, 15l, 19l, 26l, 38l
   if (!["7l", "11l", "12l", "15l", "19l", "26l", "38l"].includes(presetId)) return null
   return { type: type as PotType, presetId: presetId as FeltPotPresetId | SquarePotPresetId }
 }
@@ -101,10 +120,6 @@ type CmFieldProps = {
   maxCm?: number
 }
 
-/**
- * Draft string while typing; clamp only on blur / Enter.
- * Live 3D updates only when the draft is already within min–max.
- */
 function CmDimensionField({
   id,
   label,
@@ -161,25 +176,22 @@ function CmDimensionField({
   )
 }
 
-/**
- * Isolated R3F playground. DOM chrome only via app-chrome + shadcn.
- * No freehand Tailwind in this file (enforced by lint/tests).
- */
 export function Chamber3dPage() {
   const [widthCm, setWidthCm] = useState(DEFAULT_WIDTH_CM)
   const [depthCm, setDepthCm] = useState(DEFAULT_DEPTH_CM)
   const [heightCm, setHeightCm] = useState(DEFAULT_HEIGHT_CM)
   const [potKey, setPotKey] = useState<PotKey>(DEFAULT_POT_KEY)
   const [potCount, setPotCount] = useState<FeltPotCount>(DEFAULT_POT_COUNT)
-  const [lightPresetId, setLightPresetId] = useState<LightPresetId>(
-    DEFAULT_LIGHT_PRESET_ID,
-  )
+  const [lightPresetId, setLightPresetId] = useState<LightPresetId>(DEFAULT_LIGHT_PRESET_ID)
   const [lightOrientationDeg, setLightOrientationDeg] =
     useState<LightOrientationDeg>(DEFAULT_LIGHT_ORIENTATION_DEG)
-  const [lightCeilingGapCm, setLightCeilingGapCm] = useState(
-    DEFAULT_LIGHT_CEILING_GAP_CM,
-  )
+  const [lightCeilingGapCm, setLightCeilingGapCm] = useState(DEFAULT_LIGHT_CEILING_GAP_CM)
   const [lightOn, setLightOn] = useState(true)
+  const [fanPresetId, setFanPresetId] = useState<FanPresetId>(DEFAULT_FAN_PRESET_ID)
+  const [fanOrientationDeg, setFanOrientationDeg] =
+    useState<FanOrientationDeg>(DEFAULT_FAN_ORIENTATION_DEG)
+  const [fanCeilingGapCm, setFanCeilingGapCm] = useState(DEFAULT_FAN_CEILING_GAP_CM)
+  const [fanPosition, setFanPosition] = useState<FanPosition>(DEFAULT_FAN_POSITION)
   const [roomLayout, setRoomLayout] = useState<RoomLayout>("flat")
   const [wallHeightCm, setWallHeightCm] = useState(DEFAULT_WALL_HEIGHT_CM)
 
@@ -211,22 +223,106 @@ export function Chamber3dPage() {
     })
   }, [widthCm, depthCm, heightCm, potType, potPreset.diameterCm, potPreset.heightCm, squarePotPreset.sideCm, squarePotPreset.heightCm])
 
-  /** Desired count clamped to what currently fits (keeps higher intent when tent grows). */
   const visiblePotCount = clampFeltPotCount(Math.min(potCount, maxFit))
 
-  const lightPreset = useMemo(
-    () => getLightPreset(lightPresetId),
-    [lightPresetId],
+  const lightPreset = useMemo(() => getLightPreset(lightPresetId), [lightPresetId])
+
+  // ---- Fan logic (computed first, independent of light gap) ----
+  const fanPreset = useMemo(() => getFanPreset(fanPresetId), [fanPresetId])
+
+  const effectiveFanCeilingGapCm = useMemo(
+    () => clampFanCeilingGapCm(fanCeilingGapCm, heightCm / 100, fanPreset.bodyDiameterCm),
+    [fanCeilingGapCm, heightCm, fanPreset.bodyDiameterCm],
   )
 
-  /** Derived clamp — no setState during render when tent/fixture shrinks. */
-  const effectiveCeilingGapCm = useMemo(
+  const fanOnlyPlan = useMemo(
     () =>
-      clampCeilingGapCm(
-        lightCeilingGapCm,
+      planFanFit(
+        widthCm / 100,
+        depthCm / 100,
         heightCm / 100,
+        fanPreset,
+        fanOrientationDeg,
+        effectiveFanCeilingGapCm,
+        null,
+        fanPosition,
+      ),
+    [widthCm, depthCm, heightCm, fanPreset, fanOrientationDeg, effectiveFanCeilingGapCm, fanPosition],
+  )
+
+  // Max light ceiling gap that avoids vertical collision with fan
+  const lightGapForFanConstraint = useMemo(
+    () =>
+      computeLightCeilingGapForFan(
+        heightCm / 100,
+        fanOnlyPlan.placement,
         lightPreset.heightCm,
       ),
+    [heightCm, fanOnlyPlan.placement, lightPreset.heightCm],
+  )
+
+  // Light gap clamped to avoid fan, then used for light placement.
+  // Larger gap = lamp hangs lower, so we need Math.MAX to push it below the fan.
+  const lightGapWithFanConstraint = useMemo(() => {
+    const base = clampCeilingGapCm(lightCeilingGapCm, heightCm / 100, lightPreset.heightCm)
+    if (lightGapForFanConstraint != null) {
+      return Math.max(base, lightGapForFanConstraint)
+    }
+    return base
+  }, [lightCeilingGapCm, heightCm, lightPreset.heightCm, lightGapForFanConstraint])
+
+  const lightFanCollision = useMemo(() => {
+    if (lightGapForFanConstraint == null || fanPreset.form === "none") return false
+    const userGap = clampCeilingGapCm(lightCeilingGapCm, heightCm / 100, lightPreset.heightCm)
+    // User wants lamp closer to ceiling than fan allows → collision
+    return userGap < lightGapForFanConstraint
+  }, [lightCeilingGapCm, heightCm, lightPreset.heightCm, lightGapForFanConstraint, fanPreset.form])
+
+  // ---- Light placement with fan-safe gap ----
+  const lightPlan = useMemo(
+    () =>
+      planLightFit(
+        widthCm / 100,
+        depthCm / 100,
+        heightCm / 100,
+        lightPreset,
+        lightOrientationDeg,
+        lightGapWithFanConstraint,
+      ),
+    [widthCm, depthCm, heightCm, lightPreset, lightOrientationDeg, lightGapWithFanConstraint],
+  )
+
+  const lightAABB: LightAABB | null = useMemo(() => {
+    if (lightPlan.placement == null || lightPreset.form === "none") return null
+    return {
+      centerX: lightPlan.placement.x,
+      centerY: lightPlan.placement.y,
+      centerZ: lightPlan.placement.z,
+      extentXM: lightPlan.placement.extentXM,
+      extentZM: lightPlan.placement.extentZM,
+      heightM: lightPlan.placement.heightM,
+    }
+  }, [lightPlan.placement, lightPreset.form])
+
+  // ---- Fan placement with actual light AABB for horizontal avoidance ----
+  const fanPlan = useMemo(
+    () =>
+      planFanFit(
+        widthCm / 100,
+        depthCm / 100,
+        heightCm / 100,
+        fanPreset,
+        fanOrientationDeg,
+        effectiveFanCeilingGapCm,
+        lightAABB,
+        fanPosition,
+      ),
+    [widthCm, depthCm, heightCm, fanPreset, fanOrientationDeg, effectiveFanCeilingGapCm, lightAABB, fanPosition],
+  )
+
+  // ---- Derived values for light UI ----
+  const effectiveCeilingGapCm = useMemo(
+    () => clampCeilingGapCm(lightCeilingGapCm, heightCm / 100, lightPreset.heightCm),
     [lightCeilingGapCm, heightCm, lightPreset.heightCm],
   )
 
@@ -242,7 +338,6 @@ export function Chamber3dPage() {
     [widthCm, depthCm, heightCm, lightPreset, effectiveCeilingGapCm],
   )
 
-  /** If current yaw does not fit but another does, snap to a valid one. */
   const effectiveLightOrientationDeg = useMemo(
     () =>
       resolveLightOrientationDeg(
@@ -253,40 +348,38 @@ export function Chamber3dPage() {
         lightOrientationDeg,
         effectiveCeilingGapCm,
       ),
-    [
-      widthCm,
-      depthCm,
-      heightCm,
-      lightPreset,
-      lightOrientationDeg,
-      effectiveCeilingGapCm,
-    ],
+    [widthCm, depthCm, heightCm, lightPreset, lightOrientationDeg, effectiveCeilingGapCm],
   )
 
-  const lightPlan = useMemo(
+  // ---- Derived values for fan UI ----
+  const fanFittingOrientations = useMemo(
     () =>
-      planLightFit(
+      listFittingFanOrientations(
         widthCm / 100,
         depthCm / 100,
         heightCm / 100,
-        lightPreset,
-        effectiveLightOrientationDeg,
-        effectiveCeilingGapCm,
+        fanPreset,
+        effectiveFanCeilingGapCm,
       ),
-    [
-      widthCm,
-      depthCm,
-      heightCm,
-      lightPreset,
-      effectiveLightOrientationDeg,
-      effectiveCeilingGapCm,
-    ],
+    [widthCm, depthCm, heightCm, fanPreset, effectiveFanCeilingGapCm],
   )
+
+  const effectiveFanOrientationDeg = useMemo(() => {
+    if (fanPreset.form === "none") return fanOrientationDeg
+    if (fanFittingOrientations.length === 0) return fanOrientationDeg
+    if (fanFittingOrientations.includes(fanOrientationDeg)) return fanOrientationDeg
+    return fanFittingOrientations[0]!
+  }, [fanPreset.form, fanFittingOrientations, fanOrientationDeg])
 
   const lightSizeLabel =
     lightPreset.form === "none"
       ? "—"
       : `${lightPreset.lengthCm}×${lightPreset.widthCm}×${lightPreset.heightCm} cm`
+
+  const fanSizeLabel =
+    fanPreset.form === "none"
+      ? "—"
+      : `Ø${fanPreset.ductDiameterCm} · ${fanPreset.totalLengthCm} cm`
 
   return (
     <AppPage width="wide">
@@ -341,9 +434,7 @@ export function Chamber3dPage() {
                   <AppFormField label="Donica" htmlFor="pot_size">
                     <Select
                       value={potKey}
-                      onValueChange={(value) => {
-                        setPotKey(value as PotKey)
-                      }}
+                      onValueChange={(value) => setPotKey(value as PotKey)}
                     >
                       <AppSelectTrigger id="pot_size">
                         <SelectValue placeholder="Rozmiar" />
@@ -384,9 +475,7 @@ export function Chamber3dPage() {
                   >
                     <Select
                       value={String(visiblePotCount)}
-                      onValueChange={(value) => {
-                        setPotCount(clampFeltPotCount(Number(value)))
-                      }}
+                      onValueChange={(value) => setPotCount(clampFeltPotCount(Number(value)))}
                     >
                       <AppSelectTrigger id="pot_count">
                         <SelectValue placeholder="Liczba" />
@@ -395,11 +484,7 @@ export function Chamber3dPage() {
                         {Array.from({ length: FELT_POT_COUNT_MAX + 1 }, (_, n) => {
                           const fits = n <= maxFit
                           return (
-                            <SelectItem
-                              key={n}
-                              value={String(n)}
-                              disabled={n > 0 && !fits}
-                            >
+                            <SelectItem key={n} value={String(n)} disabled={n > 0 && !fits}>
                               {n === 0 ? "0" : fits ? `${n}` : `${n} (za dużo)`}
                             </SelectItem>
                           )
@@ -423,9 +508,7 @@ export function Chamber3dPage() {
                   >
                     <Select
                       value={lightPresetId}
-                      onValueChange={(value) => {
-                        setLightPresetId(value as LightPresetId)
-                      }}
+                      onValueChange={(value) => setLightPresetId(value as LightPresetId)}
                     >
                       <AppSelectTrigger id="light_preset">
                         <SelectValue placeholder="Model" />
@@ -441,23 +524,15 @@ export function Chamber3dPage() {
                   </AppFormField>
 
                   <AppFormField label="Gabaryt" htmlFor="light_size">
-                    <Input
-                      id="light_size"
-                      type="text"
-                      value={lightSizeLabel}
-                      readOnly
-                      disabled
-                    />
+                    <Input id="light_size" type="text" value={lightSizeLabel} readOnly disabled />
                   </AppFormField>
 
                   <AppFormField label="Obrót" htmlFor="light_orientation">
                     <Select
                       value={String(effectiveLightOrientationDeg)}
-                      onValueChange={(value) => {
-                        setLightOrientationDeg(
-                          clampLightOrientationDeg(Number(value)),
-                        )
-                      }}
+                      onValueChange={(value) =>
+                        setLightOrientationDeg(clampLightOrientationDeg(Number(value)))
+                      }
                       disabled={lightPreset.form === "none"}
                     >
                       <AppSelectTrigger id="light_orientation">
@@ -466,21 +541,15 @@ export function Chamber3dPage() {
                       <SelectContent>
                         {LIGHT_ORIENTATIONS_DEG.map((deg) => {
                           const fitsYaw =
-                            lightPreset.form === "none" ||
-                            fittingOrientations.includes(deg)
-                          const label =
-                            deg === 0
-                              ? "0° · wzdłuż szer."
-                              : "90° · wzdłuż głęb."
+                            lightPreset.form === "none" || fittingOrientations.includes(deg)
+                          const label = deg === 0 ? "0° · wzdłuż szer." : "90° · wzdłuż głęb."
                           return (
                             <SelectItem
                               key={deg}
                               value={String(deg)}
                               disabled={!fitsYaw && fittingOrientations.length > 0}
                             >
-                              {fitsYaw
-                                ? label
-                                : `${label} (nie mieści)`}
+                              {fitsYaw ? label : `${label} (nie mieści)`}
                             </SelectItem>
                           )
                         })}
@@ -488,35 +557,40 @@ export function Chamber3dPage() {
                     </Select>
                   </AppFormField>
 
-                  <CmDimensionField
-                    id="light_ceiling_gap_cm"
+                  <AppFormField
                     label="Od sufitu (cm)"
-                    valueCm={effectiveCeilingGapCm}
-                    onValueCmChange={(next) => {
-                      setLightCeilingGapCm(
-                        clampCeilingGapCm(
-                          next,
-                          heightCm / 100,
-                          lightPreset.heightCm,
-                        ),
-                      )
-                    }}
-                    minCm={LIGHT_CEILING_GAP_MIN_CM}
-                    maxCm={Math.max(
-                      LIGHT_CEILING_GAP_MIN_CM,
-                      lightPlan.maxCeilingGapCm,
-                    )}
-                  />
+                    htmlFor="light_ceiling_gap_cm"
+                    end={
+                      lightFanCollision && fanPreset.form !== "none" ? (
+                        <Badge variant="destructive">kolizja z wentylatorem</Badge>
+                      ) : null
+                    }
+                  >
+                    <Input
+                      id="light_ceiling_gap_cm"
+                      type="number"
+                      inputMode="numeric"
+                      min={LIGHT_CEILING_GAP_MIN_CM}
+                      max={Math.max(LIGHT_CEILING_GAP_MIN_CM, lightPlan.maxCeilingGapCm)}
+                      step={1}
+                      value={effectiveCeilingGapCm}
+                      onChange={(event) => {
+                        const raw = event.target.value
+                        const parsed = parseEnclosureCmDraft(raw)
+                        if (parsed !== null) {
+                          setLightCeilingGapCm(
+                            clampCeilingGapCm(parsed, heightCm / 100, lightPreset.heightCm),
+                          )
+                        }
+                      }}
+                    />
+                  </AppFormField>
 
                   <AppFormField label="Świeci" htmlFor="light_on">
                     <Select
                       value={lightOn ? "on" : "off"}
-                      onValueChange={(value) => {
-                        setLightOn(value === "on")
-                      }}
-                      disabled={
-                        lightPreset.form === "none" || !lightPlan.fits
-                      }
+                      onValueChange={(value) => setLightOn(value === "on")}
+                      disabled={lightPreset.form === "none" || !lightPlan.fits}
                     >
                       <AppSelectTrigger id="light_on">
                         <SelectValue placeholder="Stan" />
@@ -527,26 +601,135 @@ export function Chamber3dPage() {
                       </SelectContent>
                     </Select>
                   </AppFormField>
+
                   <AppFormField label="Max od sufitu" htmlFor="light_gap_max">
                     <Input
                       id="light_gap_max"
                       type="text"
-                      value={
-                        lightPreset.form === "none"
-                          ? "—"
-                          : `${lightPlan.maxCeilingGapCm} cm`
-                      }
+                      value={lightPreset.form === "none" ? "—" : `${lightPlan.maxCeilingGapCm} cm`}
                       readOnly
                       disabled
                     />
                   </AppFormField>
 
+                  <AppFormField
+                    label="Wentylator"
+                    htmlFor="fan_preset"
+                    end={
+                      fanPreset.form === "none" ? (
+                        <Badge variant="outline">off</Badge>
+                      ) : fanPlan.fits ? (
+                        <Badge variant="secondary">OK</Badge>
+                      ) : (
+                        <Badge variant="destructive">{fanPlan.reason ?? "koliduje"}</Badge>
+                      )
+                    }
+                  >
+                    <Select
+                      value={fanPresetId}
+                      onValueChange={(value) => setFanPresetId(value as FanPresetId)}
+                    >
+                      <AppSelectTrigger id="fan_preset">
+                        <SelectValue placeholder="Model" />
+                      </AppSelectTrigger>
+                      <SelectContent>
+                        {FAN_PRESETS.map((preset) => (
+                          <SelectItem key={preset.id} value={preset.id}>
+                            {preset.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </AppFormField>
+
+                  <AppFormField label="Gabaryt" htmlFor="fan_size">
+                    <Input id="fan_size" type="text" value={fanSizeLabel} readOnly disabled />
+                  </AppFormField>
+
+                  <AppFormField label="Obrót" htmlFor="fan_orientation">
+                    <Select
+                      value={String(effectiveFanOrientationDeg)}
+                      onValueChange={(value) =>
+                        setFanOrientationDeg(clampFanOrientationDeg(Number(value)))
+                      }
+                      disabled={fanPreset.form === "none"}
+                    >
+                      <AppSelectTrigger id="fan_orientation">
+                        <SelectValue placeholder="Obrót" />
+                      </AppSelectTrigger>
+                      <SelectContent>
+                        {FAN_ORIENTATIONS_DEG.map((deg) => {
+                          const fitsYaw =
+                            fanPreset.form === "none" || fanFittingOrientations.includes(deg)
+                          const label = deg === 0 ? "0° · wzdłuż szer." : "90° · wzdłuż głęb."
+                          return (
+                            <SelectItem
+                              key={deg}
+                              value={String(deg)}
+                              disabled={!fitsYaw && fanFittingOrientations.length > 0}
+                            >
+                              {fitsYaw ? label : `${label} (nie mieści)`}
+                            </SelectItem>
+                          )
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </AppFormField>
+
+                  <CmDimensionField
+                    id="fan_ceiling_gap_cm"
+                    label="Od sufitu (cm)"
+                    valueCm={effectiveFanCeilingGapCm}
+                    onValueCmChange={(next) => {
+                      setFanCeilingGapCm(
+                        clampFanCeilingGapCm(next, heightCm / 100, fanPreset.bodyDiameterCm),
+                      )
+                    }}
+                    minCm={FAN_CEILING_GAP_MIN_CM}
+                    maxCm={Math.max(FAN_CEILING_GAP_MIN_CM, fanPlan.maxCeilingGapCm)}
+                  />
+
+                  <AppFormField label="Max od sufitu" htmlFor="fan_gap_max">
+                    <Input
+                      id="fan_gap_max"
+                      type="text"
+                      value={fanPreset.form === "none" ? "—" : `${fanPlan.maxCeilingGapCm} cm`}
+                      readOnly
+                      disabled
+                    />
+                  </AppFormField>
+
+                  <AppFormField label="Pozycja" htmlFor="fan_position">
+                    <Select
+                      value={fanPosition}
+                      onValueChange={(value) => setFanPosition(value as FanPosition)}
+                      disabled={fanPreset.form === "none"}
+                    >
+                      <AppSelectTrigger id="fan_position">
+                        <SelectValue placeholder="Pozycja" />
+                      </AppSelectTrigger>
+                      <SelectContent>
+                        {FAN_POSITIONS.map((pos) => (
+                          <SelectItem key={pos} value={pos}>
+                            {pos === "center"
+                              ? "Środek"
+                              : pos === "left"
+                                ? "Lewo"
+                                : pos === "right"
+                                  ? "Prawo"
+                                  : pos === "front"
+                                    ? "Przód"
+                                    : "Tył"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </AppFormField>
+
                   <AppFormField label="Tło sceny" htmlFor="room_layout">
                     <Select
                       value={roomLayout}
-                      onValueChange={(value) => {
-                        setRoomLayout(value as RoomLayout)
-                      }}
+                      onValueChange={(value) => setRoomLayout(value as RoomLayout)}
                     >
                       <AppSelectTrigger id="room_layout">
                         <SelectValue placeholder="Tło" />
@@ -582,6 +765,10 @@ export function Chamber3dPage() {
                       setLightOrientationDeg(DEFAULT_LIGHT_ORIENTATION_DEG)
                       setLightCeilingGapCm(DEFAULT_LIGHT_CEILING_GAP_CM)
                       setLightOn(true)
+                      setFanPresetId(DEFAULT_FAN_PRESET_ID)
+                      setFanOrientationDeg(DEFAULT_FAN_ORIENTATION_DEG)
+                      setFanCeilingGapCm(DEFAULT_FAN_CEILING_GAP_CM)
+                      setFanPosition(DEFAULT_FAN_POSITION)
                       setWallHeightCm(DEFAULT_WALL_HEIGHT_CM)
                     }}
                   >
@@ -605,8 +792,12 @@ export function Chamber3dPage() {
                 potCount={visiblePotCount}
                 lightPresetId={lightPresetId}
                 lightOrientationDeg={effectiveLightOrientationDeg}
-                lightCeilingGapCm={effectiveCeilingGapCm}
+                lightCeilingGapCm={lightGapWithFanConstraint}
                 lightOn={lightOn && lightPlan.fits}
+                fanPresetId={fanPresetId}
+                fanOrientationDeg={effectiveFanOrientationDeg}
+                fanCeilingGapCm={effectiveFanCeilingGapCm}
+                fanPosition={fanPosition}
                 roomLayout={roomLayout}
                 wallHeightCm={wallHeightCm}
               />

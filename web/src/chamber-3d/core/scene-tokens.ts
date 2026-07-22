@@ -37,6 +37,10 @@ export const CHAMBER_CSS_VAR = {
   lightDuct: "--chamber-light-duct",
   /** HPS bulb glass. */
   lightBulb: "--chamber-light-bulb",
+  /** Inline duct fan housing (motor body). */
+  fanHousing: "--chamber-fan-housing",
+  /** Fan duct spigot / reducer cone. */
+  fanDuct: "--chamber-fan-duct",
   /** Desaturated scene light tints (point/spot; not mesh emissive). */
   lightLedScene: "--chamber-light-led-scene",
   lightHpsScene: "--chamber-light-hps-scene",
@@ -83,6 +87,10 @@ export const CHAMBER_SCENE_FALLBACK = {
   lightEmitter: "#f2f0e6",
   lightDuct: "#9aa3ad",
   lightBulb: "#ffd89a",
+  /** Dark grey powder-coated steel / ABS fan housing. */
+  fanHousing: "#1a1a1e",
+  /** Galvanised / plain steel spigot. */
+  fanDuct: "#b0b4ba",
   /**
    * Scene light colors (point/spot only). Desaturated vs mesh emissive so
    * specular mylar keeps silver mirror sheen instead of lamp-colored milk.
@@ -161,6 +169,14 @@ export const CHAMBER_MATERIAL = {
   lightHousingEnvMapIntensity: 0.45,
   lightDuctRoughness: 0.28,
   lightDuctMetalness: 0.75,
+  /** Inline fan housing — matte powder-coated steel / ABS. */
+  fanHousingRoughness: 0.65,
+  fanHousingMetalness: 0.35,
+  fanHousingEnvMapIntensity: 0.35,
+  /** Fan duct spigot — galvanised steel, slightly smoother. */
+  fanDuctRoughness: 0.4,
+  fanDuctMetalness: 0.7,
+  fanDuctEnvMapIntensity: 0.6,
   /** Emitter glow is visual only (not scene light); keep below fixture intensity. */
   lightEmitterEmissiveOn: 4.5,
   lightEmitterEmissiveOff: 0.04,
@@ -395,6 +411,16 @@ export function resolveChamberSceneColors(
       rootStyle,
       CHAMBER_CSS_VAR.lightBulb,
       CHAMBER_SCENE_FALLBACK.lightBulb,
+    ),
+    fanHousing: readCssVar(
+      rootStyle,
+      CHAMBER_CSS_VAR.fanHousing,
+      CHAMBER_SCENE_FALLBACK.fanHousing,
+    ),
+    fanDuct: readCssVar(
+      rootStyle,
+      CHAMBER_CSS_VAR.fanDuct,
+      CHAMBER_SCENE_FALLBACK.fanDuct,
     ),
     lightLedScene: readCssVar(
       rootStyle,
