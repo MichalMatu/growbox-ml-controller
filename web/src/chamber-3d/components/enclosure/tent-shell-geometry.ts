@@ -36,7 +36,7 @@ export function buildShellPanels(
   // Podłoga zachodzi na ściany o 1mm (eps < 0) zamykając szczeliny od wewnątrz.
   // Przy grubości ścianki 2mm, 1mm przenikania mieści się wewnątrz ściany.
 
-  const bleed = 0.0
+  const bleed = 0.006
   const eps = -0.001
   const wallH = heightM - t + bleed
   const wallY = (heightM - t - bleed) / 2

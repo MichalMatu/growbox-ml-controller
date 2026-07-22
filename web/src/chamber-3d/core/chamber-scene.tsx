@@ -107,7 +107,7 @@ export function ChamberCanvas({
       }}
       onCreated={({ gl }) => {
         gl.setClearColor(0x000000, 0)
-        gl.shadowMap.type = 3 // VSMShadowMap for ultra smooth edges
+        gl.shadowMap.type = 2 // PCFSoftShadowMap for clean light-sealed shadows
       }}
       dpr={[dprMin, dprMax]}
     >
@@ -146,7 +146,7 @@ export function ChamberCanvas({
           shadow-camera-top={maxSideM * 1.2}
           shadow-camera-bottom={-maxSideM * 1.2}
           shadow-bias={-0.0001}
-          shadow-normalBias={0}
+          shadow-normalBias={0.02}
           shadow-radius={4}
         />
       )}

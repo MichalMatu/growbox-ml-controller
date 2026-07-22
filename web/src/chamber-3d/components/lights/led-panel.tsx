@@ -133,7 +133,7 @@ export function LedPanelMesh({
         shadow-camera-near={0.02}
         shadow-camera-far={8}
         shadow-bias={-0.0001}
-        shadow-normalBias={0}
+        shadow-normalBias={0.02}
         shadow-radius={8}
       >
         <object3D attach="target" position={[0, lightY - 1.5, 0]} />
@@ -152,7 +152,7 @@ export function LedPanelMesh({
         shadow-camera-near={0.02}
         shadow-camera-far={8}
         shadow-bias={-0.0001}
-        shadow-normalBias={0}
+        shadow-normalBias={0.02}
         shadow-radius={8}
       >
         <object3D attach="target" position={[0, lightY - 1.5, 0]} />

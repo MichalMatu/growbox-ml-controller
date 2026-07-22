@@ -24,7 +24,7 @@ describe("buildShellPanels", () => {
     const depthM = 1.0
     const heightM = 2.0
     const t = CHAMBER_GEOMETRY.wallThicknessM
-    const bleed = 0.0
+    const bleed = 0.006
     const wallY = (heightM - t - bleed) / 2
 
     const panels = buildShellPanels(widthM, depthM, heightM, t)
@@ -44,7 +44,7 @@ describe("buildShellPanels", () => {
     const depthM = 1.0
     const heightM = 2.0
     const t = CHAMBER_GEOMETRY.wallThicknessM
-    const bleed = 0.0
+    const bleed = 0.006
     const eps = -0.001
     const panels = buildShellPanels(widthM, depthM, heightM, t)
     const floor = panels[0]
