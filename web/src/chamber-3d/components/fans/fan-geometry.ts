@@ -265,36 +265,18 @@ export function usableFanVolumeM(
 }
 
 /**
- * Max ceiling gap so the fan still clears the floor minimum
- * and (optionally) stays above the light fixture with a minimum gap.
+ * Max ceiling gap so the fan still clears the floor minimum.
  * bodyDiameterCm + minFloorClearance + gap <= usable height.
  */
 export function maxFanCeilingGapCm(
   tentHeightM: number,
   bodyDiameterCm: number,
-  lightAABB?: LightAABB | null,
 ): number {
   if (bodyDiameterCm <= 0) return FAN_CEILING_GAP_MIN_CM
   const usable = usableFanVolumeM(1, 1, tentHeightM).heightM * 100
-  let maxGap = Math.floor(
+  const maxGap = Math.floor(
     usable - bodyDiameterCm - FAN_FLOOR_CLEARANCE_MIN_CM,
   )
-
-  // If there's a light below, fan cannot descend past the top of the light
-  if (lightAABB != null && lightAABB.heightM > 0) {
-    const verticalInset =
-      CHAMBER_GEOMETRY.wallThicknessM + CHAMBER_GEOMETRY.frameRadiusM * 2
-    const lightTopY = lightAABB.centerY + lightAABB.heightM / 2
-    // Fan bottom Y must be >= lightTopY + FAN_LIGHT_MIN_GAP_M
-    // gap = tentHeightM - verticalInset - fanTopY
-    // fanBottomY = fanTopY - bodyDiameterM/100
-    // constraint: fanBottomY >= lightTopY + FAN_LIGHT_GAP_M
-    const maxGapFromLight = Math.round(
-      (tentHeightM - verticalInset - bodyDiameterCm / 100 - lightTopY - FAN_LIGHT_MIN_GAP_M) * 100
-    )
-    maxGap = Math.min(maxGap, maxGapFromLight)
-  }
-
   return Math.max(FAN_CEILING_GAP_MIN_CM, maxGap)
 }
 
@@ -600,7 +582,7 @@ export function planFanFit(
   }
 
   const gap = clampFanCeilingGapCm(ceilingGapCm, heightM, preset.bodyDiameterCm)
-  const maxGap = maxFanCeilingGapCm(heightM, preset.bodyDiameterCm, lightAABB)
+  const maxGap = maxFanCeilingGapCm(heightM, preset.bodyDiameterCm)
   const fitsHorizontal = fanHorizontalFitsInTent(usableWidthCm, usableDepthCm, preset, orientationDeg)
   const fitsVertical = fanVerticalFits(usableHeightCm, preset.bodyDiameterCm, gap, maxGap)
 
