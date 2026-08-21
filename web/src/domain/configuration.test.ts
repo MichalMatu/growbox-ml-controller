@@ -18,7 +18,7 @@ import type { Configuration, JsonValue } from "./types"
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../../..")
 const golden = JSON.parse(
-  readFileSync(join(root, "docs/examples/minimal-single-pot.json"), "utf8"),
+  readFileSync(join(root, "web/schema/examples/minimal-single-pot.v5.json"), "utf8"),
 ) as Configuration
 
 function clone<T>(value: T): T {
@@ -26,7 +26,7 @@ function clone<T>(value: T): T {
 }
 
 describe("default and golden export shape", () => {
-  it("builds a default configuration covering every v4 feature path", () => {
+  it("builds a default configuration covering every v5 feature path", () => {
     const configuration = createDefaultConfiguration()
     expect(Array.isArray(configuration.pots)).toBe(true)
     expect((configuration.pots as unknown[]).length).toBe(POT_COUNT)
