@@ -11,6 +11,8 @@ repos:
       - id: check-merge-conflict
       - id: check-yaml
       - id: check-json
+        # TypeScript config files are JSONC and may legally contain comments/trailing commas.
+        exclude: ^web/tsconfig.*\.json$
       - id: detect-private-key
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
