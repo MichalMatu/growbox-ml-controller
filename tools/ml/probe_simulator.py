@@ -48,8 +48,11 @@ def _series_dict(
     soil_m: list[float],
     soil_t: list[float],
     nutrient_t: list[float],
+    outside_t: list[float] | None = None,
+    outside_rh: list[float] | None = None,
+    outside_co2: list[float] | None = None,
 ) -> dict[str, list[float]]:
-    return {
+    payload: dict[str, list[float]] = {
         "t_s": times,
         "air_temperature_c": air_t,
         "air_humidity_pct": air_rh,
@@ -58,6 +61,13 @@ def _series_dict(
         "soil_temperature_c": soil_t,
         "nutrient_solution_temperature_c": nutrient_t,
     }
+    if outside_t is not None:
+        payload["outside_temperature_c"] = outside_t
+    if outside_rh is not None:
+        payload["outside_humidity_pct"] = outside_rh
+    if outside_co2 is not None:
+        payload["outside_co2_ppm"] = outside_co2
+    return payload
 
 
 def _rollout(
@@ -75,6 +85,9 @@ def _rollout(
     soil_m = [sim.state.pots[0].soil_moisture_pct]
     soil_t = [sim.state.pots[0].soil_temperature_c]
     nutrient_t = [sim.state.nutrient_solution_temperature_c]
+    outside_t = [sim.state.outside_temperature_c]
+    outside_rh = [sim.state.outside_humidity_pct]
+    outside_co2 = [sim.state.outside_co2_ppm]
     for step_i in range(steps):
         action = action_fn(step_i, sim.state)
         state = sim.step(action, add_sensor_noise=False)
@@ -85,7 +98,21 @@ def _rollout(
         soil_m.append(state.pots[0].soil_moisture_pct)
         soil_t.append(state.pots[0].soil_temperature_c)
         nutrient_t.append(state.nutrient_solution_temperature_c)
-    return _series_dict(times, air_t, air_rh, co2, soil_m, soil_t, nutrient_t)
+        outside_t.append(state.outside_temperature_c)
+        outside_rh.append(state.outside_humidity_pct)
+        outside_co2.append(state.outside_co2_ppm)
+    return _series_dict(
+        times,
+        air_t,
+        air_rh,
+        co2,
+        soil_m,
+        soil_t,
+        nutrient_t,
+        outside_t=outside_t,
+        outside_rh=outside_rh,
+        outside_co2=outside_co2,
+    )
 
 
 def _base_pot(**kwargs: Any) -> PotConfig:

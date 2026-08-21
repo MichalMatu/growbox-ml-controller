@@ -693,6 +693,11 @@ def test_live_section_includes_pots_lights_and_pot_readings():
     assert 'live-table-group-head">${group.title}</th>' in group_fn
     assert 'live-table-group-head">Donice</th>' in pots_fn
     assert "Donica" not in pots_fn
+    assert 'title="odczyt − cel">Δ</th>' in group_fn
+    assert 'title="odczyt − cel">Δ</th>' in pots_fn
+    assert "formatLiveDeviation" in live_js
+    assert "delta-col" in group_fn
+    assert ".live-delta" in panel_css
     assert ".live-table-group-head" in panel_css
     assert 'kind: "pseudo"' in constants_js
     assert 'label: "Lampa"' in constants_js

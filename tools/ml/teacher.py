@@ -33,6 +33,8 @@ class CostConfig:
     energy: float = 0.08
     water: float = 0.16
     switching: float = 0.08
+    # Soft penalty when opposing climate actuators fight each other (labels only).
+    opposing_actuators: float = 12.0
     constraint_violation: float = 100.0
     unreachable_target: float = 0.35
     terminal_multiplier: float = 1.8
@@ -258,6 +260,13 @@ class RolloutTeacher:
             for now, before in zip(candidate.as_tuple(), simulator.previous_command.as_tuple())
         )
 
+        # Opposing pairs waste energy and fight setpoints (soft, not safety).
+        opposing = 0.0
+        if candidate.heater > 0.0 and candidate.cooler > 0.0:
+            opposing += candidate.heater * candidate.cooler
+        if candidate.humidifier > 0.0 and candidate.dehumidifier > 0.0:
+            opposing += candidate.humidifier * candidate.dehumidifier
+
         violation = 0.0
         if candidate.heater > 0.0 and not caps.heater.available:
             violation += 1.0 + candidate.heater
@@ -332,6 +341,7 @@ class RolloutTeacher:
             weights.energy * energy_proxy
             + weights.water * water_fraction
             + weights.switching * switches
+            + weights.opposing_actuators * opposing
             + weights.constraint_violation * violation
             + weights.unreachable_target * unreachable
         )

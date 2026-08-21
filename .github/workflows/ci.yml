@@ -45,10 +45,12 @@ jobs:
       - name: Check generated schema header
         run: bash scripts/check_schema.sh
 
-      - name: Run quick ML pipeline and check generated artifacts
-        run: |
-          python -m tools.ml.pipeline --quick --check-generated
-          git diff --exit-code
+      # The committed controller model is a full-training artifact. Python tests above
+      # validate its schema metadata, golden header and compiled C predictions. Run the
+      # quick pipeline separately in a temporary tree as a smoke test; never compare a
+      # freshly trained quick model byte-for-byte with the committed full model.
+      - name: Run isolated quick ML pipeline smoke test
+        run: python scripts/ml_quick_smoke.py
 
       - name: Configure portable C++ tests
         run: cmake -S test/host -B build/host-tests
@@ -80,5 +82,40 @@ jobs:
           path: .
           command: |
             python "$IDF_PATH/tools/idf_tools.py" install esp-clang
+            . "$IDF_PATH/export.sh"
             idf.py -B build/idf-ci -D GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n8 build
-            idf.py -B build/idf-ci clang-check --exit-code src
+            IDF_TOOLCHAIN=clang idf.py -B build/idf-clang-check -D GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n8 clang-check --exit-code src
+
+  web-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.10.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      - name: Install frontend dependencies
+        run: pnpm --dir web install --frozen-lockfile
+
+      - name: Typecheck frontend
+        run: pnpm --dir web typecheck
+
+      - name: Lint frontend
+        run: pnpm --dir web lint
+
+      - name: Test frontend
+        run: pnpm --dir web test
+
+      - name: Build frontend
+        run: pnpm --dir web build

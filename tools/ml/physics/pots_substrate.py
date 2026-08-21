@@ -216,11 +216,21 @@ def step_pot(
 
 
 def water_ml_to_humidity_pp(
-    water_ml: float, *, growbox_volume_m3: float, fraction_to_vapor: float = 1.0
+    water_ml: float,
+    *,
+    growbox_volume_m3: float,
+    fraction_to_vapor: float = 1.0,
+    air_temperature_c: float = 25.0,
 ) -> float:
-    """Convert liquid water [ml] added as vapor into approximate RH percentage points."""
-    volume = max(0.05, growbox_volume_m3)
-    # ~20 g absolute humidity span ≈ 100 %RH lumped capacity (same as chamber helpers).
-    air_capacity_g = max(1.0, volume * 20.0)
-    vapor_g = max(0.0, water_ml) * _clamp(fraction_to_vapor, 0.0, 1.0)
-    return vapor_g * 100.0 / air_capacity_g
+    """Convert liquid water [ml] added as vapor into approximate RH percentage points.
+
+    Uses temperature-aware saturation humidity capacity (see psychrometrics).
+    """
+    from .psychrometrics import water_ml_to_humidity_pp as _pp
+
+    return _pp(
+        water_ml,
+        growbox_volume_m3=growbox_volume_m3,
+        air_temperature_c=air_temperature_c,
+        fraction_to_vapor=fraction_to_vapor,
+    )
