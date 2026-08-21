@@ -84,7 +84,7 @@ jobs:
             python "$IDF_PATH/tools/idf_tools.py" install esp-clang
             . "$IDF_PATH/export.sh"
             idf.py -B build/idf-ci -D GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n8 build
-            idf.py -B build/idf-ci clang-check --exit-code src
+            IDF_TOOLCHAIN=clang idf.py -B build/idf-clang-check -D GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n8 clang-check --exit-code src
 
   web-tests:
     runs-on: ubuntu-24.04
