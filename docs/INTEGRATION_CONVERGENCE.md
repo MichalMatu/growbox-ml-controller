@@ -63,6 +63,28 @@ Do not silently reconcile this during cleanup.
 
 This mismatch is architectural/product work, not repository cleanup. Keep both states recoverable and label them accurately until a deliberate migration is performed.
 
+## Current preservation inventory
+
+This table records what has already been carried into the convergence branch and what must remain recoverable before source branches can be removed.
+
+| Source / artifact | Status in convergence | Deletion disposition |
+|---|---|---|
+| `main` firmware/controller tree | Preserved because the twin line descends directly from the v1 baseline | Keep source until full validation; dated snapshot exists |
+| `feature/sku-v1` | Fully contained in `feature/sim-twin-pyvista`, therefore also contained in convergence history | Candidate for deletion only after convergence is accepted; dated snapshot exists |
+| `feature/sim-twin-pyvista` | Convergence branch is a direct descendant; no history was reconstructed or flattened | Candidate for deletion only after convergence is accepted; dated snapshot exists |
+| `web/**` from configurator line | Imported into convergence without merging sparse-branch deletions | Source remains until final web/Pages validation; dated snapshot exists |
+| configurator schema v5 | Preserved as `web/schema/environment-controller.v5.json` | Do not replace root firmware v4 schema until an explicit migration |
+| configurator golden export | Preserved as `web/schema/examples/minimal-single-pot.v5.json` and used by web tests | Source copy may become redundant after validation; dated snapshot exists |
+| current firmware schema v4 | Remains at `schemas/environment-controller.json` unchanged | Required until deliberate firmware contract migration |
+| `docs/HARDWARE_CONFIGURATOR.md` on sparse branch | Historically useful design notes, but contains stale v4 assumptions | Preserve in `archive/2026-08-21-configurator-v5`; do not copy as current authority without rewriting |
+| `docs/SCHEMA_V4_FIELD_GUIDE.md` on sparse branch | Legacy v4 field guide; conflicts with current web v5 dimensions | Preserve in archive as historical material; do not expose as current v5 documentation |
+| `gate/check-contract.mjs` + tests | Valuable independent contract-validator logic, but mixed stale v4 names/comments with actual v5 checks and branch-specific root paths | Keep recoverable in archive; decide later whether to port cleanly under `web/` after CI convergence |
+| branch-specific root `AGENTS.md` / root pnpm gate | Sparse-branch operating rules, not safe as monorepo root authority | Preserve in archive; selectively port only rules still valid for converged tree |
+| configurator deployment workflow | Branch-specific publisher to `gh-pages` | Keep current deployment unchanged until candidate deployment is verified |
+| `gh-pages` generated tree | Current externally verified live build | Keep live plus dated snapshot until replacement deployment is proven |
+
+A source feature branch may be deleted later even when historical notes remain only in a dated archive branch; the archive is deliberately the lossless recovery layer. The active tree should not be polluted with stale documentation merely to make a feature branch deletable.
+
 ## Convergence order
 
 1. Keep all source branches and archive snapshots untouched.
@@ -85,7 +107,7 @@ This mismatch is architectural/product work, not repository cleanup. Keep both s
 - JSON configurator imports/exports the intended schema correctly
 - `/chamber-3d` works from the final Pages URL
 - README describes the actual architecture and contract versions without stale feature/output counts
-- no useful docs, profiles, calibration data, tests or experiments exist only on an old feature branch
+- every useful source-only artifact has an explicit disposition in the preservation inventory
 - archive snapshots are confirmed present
 
 Until every relevant item above is true, no historical/product branch is considered disposable.
