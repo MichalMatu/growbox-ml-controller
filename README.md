@@ -1,118 +1,128 @@
 # Growbox ML Controller
 
-Production-oriented TinyML environment-controller demo for ESP32-S3, designed for future GrowClip
-Nodeflow integration.
+ESP32-S3 environment-control research and product-development repository combining a portable C++ controller, TinyML inference, deterministic safety, simulation/calibration tooling, a scientific 3D twin, and browser-based hardware configuration.
 
-The project trains a small neural-network controller on deterministic, physically inspired growbox
-simulations, exports it to portable C with emlearn, and runs that exact generated model in a native
-ESP-IDF application. A separate deterministic safety supervisor remains in control of hard limits.
-The demonstration firmware only drives its local simulator: **it never configures or writes GPIO**.
+> **Integration status:** `integration/convergence-2026-08` is a non-destructive convergence workspace. The original product lines and dated archive snapshots remain available until this branch is fully validated. See [docs/INTEGRATION_CONVERGENCE.md](docs/INTEGRATION_CONVERGENCE.md).
 
-> This is an engineering demo, not a calibrated physical model or a validated controller for
-> unattended heaters, pumps, or other real equipment.
+## Live demos
 
-The long-term target is a **commercial configurable controller** (multi-pot irrigation, optional
-ML, deterministic safety), not a single hobby growbox. Product scope, v2 I/O, and work order:
-[docs/plan.md](docs/plan.md) (section *Wizja produktu*).
+- **Interactive 3D chamber configurator:** https://michalmatu.github.io/growbox-ml-controller/chamber-3d
+- **Hardware / JSON configurator:** https://michalmatu.github.io/growbox-ml-controller/
 
-## How it works
+The currently deployed Pages build still comes from the preserved configurator line. It will not be replaced from this integration branch until firmware, simulator/twin, frontend and deployment checks all pass.
 
-Python runs on the development computer to create and train the model. The ESP32-S3 runs only the
-exported C model, applies independent safety rules, and feeds the safe result back into a local
-simulator. TensorFlow is not needed on the board.
+## What this repository contains
+
+### ESP32-S3 controller and firmware
+
+The native ESP-IDF application runs a generated C inference model and places a deterministic `SafetySupervisor` between the model proposal and the final control decision. The demonstration firmware uses a local simulator and bounded UART/NDJSON protocol; it does **not** drive real GPIO loads in the demo configuration.
+
+The portable `lib/environment_control` layer is intentionally independent of ESP-IDF, Arduino, serial I/O, JSON, GPIO, Wi-Fi, FreeRTOS, sensor drivers and the simulator.
+
+**Firmware/controller contract:** `schemas/environment-controller.json` is currently **schema v4: 4 pot slots, 128 model features and 15 outputs**. This remains the active firmware/wire contract during repository convergence.
+
+### ML pipeline and simulation
+
+Python tooling generates deterministic synthetic scenarios, trains the model, exports it through the emlearn-compatible C runtime, checks generated artifacts and validates parity against golden vectors.
+
+The simulator line also contains calibration, deviations/foresight work and physically inspired chamber/pot models. These tools are research/engineering aids, not a calibrated real-world safety model.
+
+### Scientific 3D twin
+
+`tools/ml/twin/` provides a PyVista visual layer over the simulator, with `GrowboxProfile`, chamber/pot geometry, hardware profiles, camera/HUD tooling, live interaction and tests. The scientific twin intentionally visualizes a lumped model rather than pretending to be CFD.
+
+See [docs/simulator/TWIN_VIEW.md](docs/simulator/TWIN_VIEW.md) and [docs/simulator/CALIBRATION.md](docs/simulator/CALIBRATION.md).
+
+### Browser configurator and chamber 3D
+
+`web/` is a React + TypeScript + Vite application. It contains:
+
+- schema-driven hardware/JSON configuration at `/`
+- interactive React Three Fiber chamber configuration at `/chamber-3d`
+- Three.js / React Three Fiber geometry for enclosure, lighting, pots and fans
+- tests, type checking, linting and a production build gate
+
+The browser configurator has evolved beyond the current firmware contract and therefore carries its own explicit bundled schema at `web/schema/environment-controller.v5.json`.
+
+**Web configurator contract:** **schema v5: up to 9 pot slots, 228 model features and 25 outputs**.
+
+The v4 firmware and v5 browser contract are deliberately kept separate during convergence. This is an architectural migration boundary, not something to silently reconcile as repository cleanup.
+
+## Control path
 
 ```mermaid
 flowchart TB
-    subgraph Host["Development computer"]
-        Contract["Data contract<br/>40 features and 4 outputs"] --> Simulation["Python simulator<br/>and rollout teacher"]
-        Simulation --> Training["Keras MLP training<br/>40 to 32 to 32 to 4"]
-        Training --> Export["emlearn C model"]
+    subgraph Host["Development / simulation host"]
+        V4["Firmware contract v4\n128 features / 15 outputs"] --> Sim["Simulation / teacher / calibration"]
+        Sim --> Train["Keras training"]
+        Train --> Export["emlearn-compatible C model"]
+        Twin["PyVista scientific twin\nGrowboxProfile"] --> Sim
     end
+
     subgraph Board["ESP32-S3 / ESP-IDF"]
-        Input["Sensors, validity, targets,<br/>and actuator capabilities"] --> Encoder["FeatureEncoder<br/>clamp and normalize"]
-        Encoder --> Runtime["ModelRuntime<br/>emlearn inference"]
-        Runtime --> Raw["Raw ML proposal"]
-        Raw --> Safety["SafetySupervisor<br/>deterministic hard limits"]
+        Input["Sensors / validity / targets / capabilities"] --> Encoder["FeatureEncoder"]
+        Encoder --> Runtime["ModelRuntime"]
+        Runtime --> Proposal["Raw ML proposal"]
+        Proposal --> Safety["Deterministic SafetySupervisor"]
         Input --> Safety
-        Safety --> Safe["Safe control decision"]
-        Safe --> Demo["Demo simulator<br/>no GPIO"]
-        Demo --> Input
-        Safe --> Log["One NDJSON decision line"]
+        Safety --> Decision["Safe control decision"]
+        Decision --> Demo["Demo simulator / NDJSON"]
     end
-    Contract --> Encoder
+
     Export --> Runtime
+
+    subgraph Browser["Browser tooling"]
+        V5["Configurator contract v5\n228 features / 25 outputs"] --> Config["Hardware / JSON configurator"]
+        Config --> Chamber["React Three Fiber chamber 3D"]
+    end
 ```
-
-Every control cycle follows the same five steps:
-
-1. The demo simulator, or an external replay command, provides sensor readings, validity masks,
-   targets, enclosure parameters, and actuator capabilities.
-2. `FeatureEncoder` converts that state into the exact 40-element input vector. Values are clamped
-   to contract ranges and normalized to `0..1`.
-3. `ModelRuntime` verifies schema identity and dimensions, then runs the committed generated model.
-4. `SafetySupervisor` treats model outputs as suggestions and independently enforces availability,
-   temperature limits, binary dwell times, and irrigation limits.
-5. Firmware logs both `raw_output` and `safe_output`. Only the safe result is applied to the demo
-   simulator.
-
-The reusable `lib/environment_control` library has no dependency on ESP-IDF, Arduino, serial I/O,
-JSON, GPIO, Wi-Fi, FreeRTOS, sensor drivers, actuator drivers, or the simulator.
-
-**Docs:** [Plan prac (v2)](docs/plan.md) · [Architecture](docs/ARCHITECTURE.md) · [I/O map](docs/IO_MAP.md) · [Contract](docs/DATA_CONTRACT.md) · [Training](docs/MODEL_PIPELINE.md)
 
 ## Firmware stack
 
-- ESP-IDF 5.5.1 baseline in CI.
-- ESP32-S3 target, C++17 application and controller components.
-- ESP-IDF `json` component for the bounded NDJSON demo protocol.
-- ESP-IDF UART, monotonic timer, FreeRTOS, and heap APIs.
-- A narrow in-tree emlearn-compatible runtime pinned to the exact upstream revision used by the
-  generated model.
-- No Arduino framework and no PlatformIO firmware build.
+- ESP-IDF 5.5.1 baseline in CI
+- ESP32-S3, C++17
+- CMake / CTest portable host tests
+- emlearn-compatible generated C inference
+- deterministic safety supervisor
+- ESP-IDF UART, timers, FreeRTOS, heap diagnostics and JSON component
+- clang-tidy / clang-format / pre-commit quality gates
 
-The default profile is an ESP32-S3-DevKitC-1 with an N8 module: 8 MB quad flash and no PSRAM. An
-explicit N32R16V profile is provided for modules marked `ESP32-S3-WROOM-2-N32R16V`. Do not select the
-octal flash/PSRAM profile for N8 or N8R8 hardware.
+Default CI firmware profile: ESP32-S3-DevKitC-1 N8 (8 MB quad flash, no PSRAM). An explicit N32R16V profile is also retained for compatible hardware.
 
-## Prerequisites
+## Web stack
 
-- ESP-IDF 5.5.1 installed and exported into the active shell.
-- CMake and a host C++17 compiler for portable tests.
-- Python 3.11 and the pinned packages in `requirements-lock.txt` for training and analysis.
-- A data-capable USB cable connected to the development board's USB-to-UART port.
+- React 19
+- TypeScript
+- Vite
+- Three.js
+- React Three Fiber / drei
+- Tailwind CSS / shadcn UI
+- Vitest / ESLint / typecheck
 
-For a standard ESP-IDF installation, activate it before running firmware commands:
+## Project layout
 
-```bash
-. "$HOME/esp/esp-idf/export.sh"
-idf.py --version
+```text
+components/emlearn_runtime/       pinned inference runtime
+config/idf/                       ESP-IDF board profiles
+docs/                             architecture, contracts, simulator and integration docs
+examples/                         scenarios / examples
+lib/environment_control/          portable C++ controller
+profiles/                         saved GrowboxProfile examples
+schemas/                          active firmware/controller contract (v4)
+scripts/                          CI, IDF and helper scripts
+src/                              ESP-IDF demo application
+test/host/                        portable C++ CMake/CTest suite
+tests/                            Python simulator / ML / profile / twin tests
+tools/ml/                         simulation, training, calibration, analysis and twin
+tools/panel/                      local board control/diagnostic panel
+tools/serial/                     capture and replay
+web/                              browser configurator + React Three Fiber chamber 3D
+web/schema/                       explicit browser-side v5 contract snapshot
 ```
 
-## Quality gate (local)
+More detail: [docs/PROJECT_LAYOUT.md](docs/PROJECT_LAYOUT.md).
 
-One-time setup installs pre-commit hooks and dev linters:
-
-```bash
-make setup-dev
-```
-
-| Command | When |
-|---------|------|
-| `make check-fast` | Lint/format + schema check (matches CI pre-commit step) |
-| `make check` | Full gate: pre-commit + pre-push steps below |
-| `make check-push` | pytest, host C++ tests, **idf build** (N8 gate), **clang-tidy** (lib) |
-| `make idf-gate-build` | Firmware compile gate only (`build/idf-gate`, fast N8 profile) |
-| `make clang-tidy-host` | Static analysis on portable controller (`lib/environment_control`) |
-| `make fmt` | Auto-fix Python (ruff) and C++ (clang-format) on the tree |
-
-On `git commit`, fast hooks run on staged files. On `git push`, `make check-push` runs
-(`scripts/quality_gate_push.sh`). Requires ESP-IDF in the shell (`source export.sh`). For
-`idf.py clang-check` in CI, install esp-clang once: `python $IDF_PATH/tools/idf_tools.py install esp-clang`.
-
-Skip temporarily: `SKIP=quality-gate-push git push`, `SKIP_IDF_BUILD=1`, `SKIP_CLANG_TIDY=1`, or
-`git commit --no-verify` when needed.
-
-## Quick start
+## Quick start — firmware / ML / host tests
 
 ```bash
 python3 -m venv .venv
@@ -126,90 +136,58 @@ cmake --build build/host-tests --parallel
 ctest --test-dir build/host-tests --output-on-failure
 
 idf.py -B build/idf -D GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n8 build
-idf.py -B build/idf -p /dev/cu.usbserial-10 flash monitor
 ```
 
-Equivalent shortcuts are available through `make setup`, `make train-quick`, `make test`,
-`make build`, `make flash`, and `make monitor`.
+## Quick start — scientific twin
 
-## Optional N32R16V build
-
-Only for a module explicitly marked `ESP32-S3-WROOM-2-N32R16V`:
+PyVista is optional so the default firmware/ML environment does not require the GUI stack.
 
 ```bash
-idf.py -B build/idf-n32r16v \
-  -D "SDKCONFIG_DEFAULTS=config/idf/sdkconfig.defaults.n32r16v" \
-  -D GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n32r16v \
-  build
+pip install -e '.[twin]'
+python -m tools.ml.twin_view --live
 ```
 
-The profile enables 32 MB octal flash and octal PSRAM. The default build remains the safer N8/no-
-PSRAM configuration.
-
-## Project layout
-
-```text
-config/idf/                       board sdkconfig.defaults profiles
-schemas/                          active ML/wire contract (v4 pots)
-docs/                             documentation (+ docs/simulator research)
-tools/ml/                         simulation, training, export
-tools/panel/                      host control panel
-tools/serial/                     capture and replay
-lib/environment_control/          portable controller library
-components/emlearn_runtime/       pinned inference runtime
-src/                              ESP-IDF application (demo + UART)
-test/host/                        CMake/CTest (portable C++)
-tests/                            pytest
-scripts/                          CI and IDF helpers
-```
-
-Full map: [docs/PROJECT_LAYOUT.md](docs/PROJECT_LAYOUT.md).
-
-The root `CMakeLists.txt` registers `src/` and `lib/environment_control` as ESP-IDF components.
-`library.json` remains in the portable library because LiteGraph is still expected to consume an
-immutable release of that library through its PlatformIO build.
-
-## Training and export
-
-The quick profile is for CI and smoke tests only. Full training waits for the high-fidelity
-growbox simulator — see [docs/simulator/](docs/simulator/).
+A saved profile can be loaded with:
 
 ```bash
-make train-quick   # CI / smoke (not production weights)
-make train-full    # after simulator fidelity work
+python -m tools.ml.twin_view --live --profile profiles/example-single-pot.json
 ```
 
-See [Model pipeline](docs/MODEL_PIPELINE.md).
+## Quick start — browser tools
 
-## Build, flash, and monitor
+Requires Node.js 22 and pnpm 11.10.0.
 
 ```bash
-idf.py -B build/idf build
-idf.py -B build/idf -p /dev/cu.usbserial-10 flash
-idf.py -B build/idf -p /dev/cu.usbserial-10 monitor
+corepack enable
+corepack prepare pnpm@11.10.0 --activate
+pnpm --dir web install --frozen-lockfile
+pnpm --dir web dev
 ```
 
-On boot, firmware emits one startup NDJSON object containing framework, ESP-IDF, schema, model, and
-board-profile identity. It then emits one decision object per step. One wall-clock second represents
-a ten-second simulation step.
+Production gate:
 
-## Serial protocol and scenarios
+```bash
+pnpm --dir web typecheck
+pnpm --dir web lint
+pnpm --dir web test
+pnpm --dir web build
+```
 
-Commands are one JSON object per line. Supported operations remain:
+## CI
 
-- `status`
-- `reset`
-- `seed`
-- `pause` and `resume`
-- `step`
-- `target`
-- `load_scenario`
-- `mode` with `closed_loop` or `replay`
+The convergence branch validates the product layers independently:
 
-The ESP-IDF UART adapter uses a bounded 4096-byte line buffer and returns structured errors for
-oversized, malformed, or unsupported input.
+1. Python / host C++ / generated-artifact / clang-tidy checks.
+2. ESP-IDF 5.5.1 ESP32-S3 firmware build and clang-check.
+3. Browser typecheck, lint, tests and production build.
 
-Replay a committed scenario and save the bidirectional session:
+The separate gates are intentional: a frontend experiment must not silently redefine the firmware contract, and firmware changes must not silently break the browser tooling.
+
+## Serial demo protocol
+
+The ESP-IDF demo accepts one JSON command per line, including `status`, `reset`, `seed`, `pause`, `resume`, `step`, `target`, `load_scenario` and `mode` (`closed_loop` or `replay`). The UART adapter uses a bounded line buffer and returns structured errors for malformed or unsupported input.
+
+Example replay:
 
 ```bash
 python -m tools.serial.replay \
@@ -218,73 +196,24 @@ python -m tools.serial.replay \
   --output logs/nominal-session.ndjson
 ```
 
-Capture autonomous output until interrupted:
+## Important limitations
 
-```bash
-python -m tools.serial.capture \
-  --port /dev/cu.usbserial-10 \
-  --baud 115200 \
-  --output logs/closed-loop.ndjson
-```
+- Synthetic training does not establish real-world control performance or hardware safety.
+- The simulator is still being calibrated and should not be treated as a validated physical model.
+- The scientific 3D twin is a visualization of a lumped model, not CFD.
+- The demo firmware does not connect calibrated physical sensors/actuators or drive production loads.
+- The v4 firmware contract and v5 browser configurator contract are not yet a single production contract.
 
-Analyse a capture and optionally export decision rows to CSV:
+## GrowClip integration path
 
-```bash
-python -m tools.analysis.report logs/closed-loop.ndjson --csv logs/closed-loop.csv
-```
+A future integration with the private GrowClip / LiteGraph firmware is intended to replace the demo provider with a device adapter while preserving the portable encoder/runtime/safety boundary. See [docs/PORTING_TO_LITEGRAPH.md](docs/PORTING_TO_LITEGRAPH.md).
 
-## Contract and availability
+## Data preservation and convergence
 
-`schemas/environment-controller.json` is the single source of truth for field names, order,
-units, ranges, defaults, and model inputs/outputs. Generation embeds its canonical short hash in the
-C++ schema metadata, model, manifest, firmware, and startup logs. Firmware rejects a model built for
-a different contract identity.
+No source branch is considered disposable merely because its code has been copied into this branch. Before deleting any historical/product branch, the convergence checklist requires successful firmware, host, Python, frontend and Pages validation plus confirmation that no unique docs, profiles, calibration data, tests or experiments remain only on the old branch.
 
-After changing the contract, regenerate its C++ view before retraining:
-
-```bash
-python tools/schema/generate_environment_schema.py
-python -m tools.ml.pipeline --quick
-```
-
-Each sensor has an independent validity mask. A missing actuator is represented by
-`available: false` and zero maximum capability. The encoder exposes this to the model, while the
-safety supervisor independently forces that actuator's final output to zero. See
-[Data contract](docs/DATA_CONTRACT.md).
-
-## Tests and CI
-
-```bash
-python -m pytest
-python tools/schema/generate_environment_schema.py --check
-python -m tools.ml.pipeline --quick --check-generated
-cmake -S test/host -B build/host-tests
-cmake --build build/host-tests --parallel
-ctest --test-dir build/host-tests --output-on-failure
-idf.py -B build/idf build
-```
-
-CI runs Python validation, deterministic model regeneration, compiled-C golden-vector parity tests,
-and an ESP-IDF 5.5.1 ESP32-S3 firmware build. No physical board is required for CI.
-
-## Demo limitations
-
-- The training simulator is still **placeholder-grade** physics; high-fidelity work is tracked under
-  [docs/simulator/](docs/simulator/). Committed model weights may be `untrained-placeholder`.
-- Synthetic training cannot establish real-world performance or safety.
-- The v1 teacher is a short-horizon deterministic search, not model-predictive control or RL.
-- The exported float model favors a transparent demonstration over aggressive quantization.
-- No physical sensors or actuators are connected, calibrated, or driven.
-- Flashing and serial smoke testing require a locally attached board.
-
-## GrowClip Nodeflow path
-
-A future integration with `MichalMatu/esp32s3_LiteGraph` will replace the dummy simulator with a
-provider adapter and pass safe decisions to a typed actuator bridge. The encoder, runtime,
-supervisor, schema identity checks, and fixed-size public types should move unchanged. No integration
-with that repository is implemented here. See [Porting to LiteGraph](docs/PORTING_TO_LITEGRAPH.md).
+The exact snapshot branches and deletion criteria are documented in [docs/INTEGRATION_CONVERGENCE.md](docs/INTEGRATION_CONVERGENCE.md).
 
 ## License
 
-Released under the [MIT License](LICENSE). The in-tree emlearn runtime subset retains its upstream
-MIT notice in `components/emlearn_runtime/LICENSE`.
+Released under the [MIT License](LICENSE). The in-tree emlearn runtime subset retains its upstream MIT notice in `components/emlearn_runtime/LICENSE`.
