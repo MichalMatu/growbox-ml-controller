@@ -45,10 +45,12 @@ jobs:
       - name: Check generated schema header
         run: bash scripts/check_schema.sh
 
-      - name: Run quick ML pipeline and check generated artifacts
-        run: |
-          python -m tools.ml.pipeline --quick --check-generated
-          git diff --exit-code
+      # The committed controller model is a full-training artifact. Python tests above
+      # validate its schema metadata, golden header and compiled C predictions. Run the
+      # quick pipeline separately in a temporary tree as a smoke test; never compare a
+      # freshly trained quick model byte-for-byte with the committed full model.
+      - name: Run isolated quick ML pipeline smoke test
+        run: python scripts/ml_quick_smoke.py
 
       - name: Configure portable C++ tests
         run: cmake -S test/host -B build/host-tests
