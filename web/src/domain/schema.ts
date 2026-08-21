@@ -1,4 +1,4 @@
-import rawSchema from "../../../schemas/environment-controller.json"
+import rawSchema from "../../schema/environment-controller.v5.json"
 
 import type {
   ControllerSchema,
@@ -33,13 +33,13 @@ function isControllerSchema(value: unknown): value is ControllerSchema {
 }
 
 if (!isControllerSchema(rawSchema)) {
-  throw new Error("The shared environment-controller schema is not a valid v5 controller schema.")
+  throw new Error("The bundled web environment-controller schema is not a valid v5 controller schema.")
 }
 
 export const schema: ControllerSchema = rawSchema
 
 if (schema.model.features.length !== 228 || schema.model.outputs.length !== 25) {
-  throw new Error("The shared v5 schema must contain 228 features and 25 outputs.")
+  throw new Error("The bundled web v5 schema must contain 228 features and 25 outputs.")
 }
 
 /** Number of pot slots derived from schema feature paths. */
