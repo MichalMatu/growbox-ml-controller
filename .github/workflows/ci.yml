@@ -82,6 +82,7 @@ jobs:
           path: .
           command: |
             python "$IDF_PATH/tools/idf_tools.py" install esp-clang
+            . "$IDF_PATH/export.sh"
             idf.py -B build/idf-ci -D GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n8 build
             idf.py -B build/idf-ci clang-check --exit-code src
 
