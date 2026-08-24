@@ -3,7 +3,7 @@
   "daemon_version": "4.6.0",
   "state": "idle",
   "pid": 61556,
-  "updated_at": "2026-08-24T12:56:54.928441+00:00",
+  "updated_at": "2026-08-24T12:56:57.588604+00:00",
   "self_revision": "2920002459a6dc7267da7fe2cc633a4bf240aad2",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -13,5 +13,13 @@
   "memory_limit_mb_default": 4096,
   "current_task_id": null,
   "current_attempt_id": null,
-  "current_task_digest": null
+  "current_task_digest": null,
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "control_branch": "agent-control",
+  "default_branch": "main",
+  "execution_model": "multi_repository_worker",
+  "worker_pid": 61556,
+  "supervisor_pid": 718,
+  "last_task_id": "growbox-baseline-20260824-001"
 }
