@@ -1,13 +1,12 @@
 {
-  "event": "task_finished",
-  "task_id": "growbox-fix-room-reset-20260824-001",
-  "task_digest": "1fd1345eeecb608730043248e9b8ed591f6bcb5878818dc76ec74f70c16bfa48",
+  "event": "result_published",
   "status": "failed",
   "failure_reason": "patch_failed",
-  "finished_at": "2026-08-24T13:06:46.839669+00:00",
   "attempt_id": "aedbe76839029ba063cf180c",
+  "task_digest": "1fd1345eeecb608730043248e9b8ed591f6bcb5878818dc76ec74f70c16bfa48",
+  "finished_at": "2026-08-24T13:06:46.839669+00:00",
+  "updated_at": "2026-08-24T13:06:54.748080+00:00",
+  "task_id": "growbox-fix-room-reset-20260824-001",
   "daemon_version": "4.6.0",
-  "daemon_pid": 64706,
-  "updated_at": "2026-08-24T13:06:46.978144+00:00",
   "pid": 64706
 }
