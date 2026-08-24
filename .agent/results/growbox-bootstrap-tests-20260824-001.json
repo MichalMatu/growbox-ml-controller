@@ -1,0 +1,9 @@
+{
+  "id": "growbox-bootstrap-tests-20260824-001",
+  "status": "failed",
+  "failure_reason": "invalid_task_file",
+  "started_at": null,
+  "finished_at": "2026-08-24T12:57:29.207082+00:00",
+  "daemon_version": "4.6.0",
+  "error": "ValueError: task_timeout must be 1..1800, got 2400"
+}
