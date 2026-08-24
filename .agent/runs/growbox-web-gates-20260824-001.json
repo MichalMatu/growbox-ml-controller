@@ -1,14 +1,16 @@
 {
-  "event": "command_started",
+  "event": "command_finished",
   "phase": "commands",
   "index": 1,
   "total": 6,
   "command": "node --version && corepack pnpm --version",
-  "pid": 63253,
-  "timeout": 60,
-  "idle_timeout": 300,
-  "memory_limit_mb": 4096,
-  "started_at": "2026-08-24T13:02:17.487591+00:00",
+  "exit_code": 127,
+  "elapsed_seconds": 5.231,
+  "timed_out": false,
+  "idle_timed_out": false,
+  "task_timed_out": false,
+  "memory_limited": false,
+  "finished_at": "2026-08-24T13:02:22.716046+00:00",
   "stage_name": "web-toolchain",
   "stage_index": 1,
   "stage_total": 6,
@@ -19,5 +21,6 @@
   "task_digest": "77b91830de154744cee13a9ff2eca942f558c352c5b1984dd0a35bcb6f79fdd8",
   "daemon_version": "4.6.0",
   "daemon_pid": 63148,
-  "updated_at": "2026-08-24T13:02:17.487693+00:00"
+  "updated_at": "2026-08-24T13:02:22.716058+00:00",
+  "pid": 63148
 }
