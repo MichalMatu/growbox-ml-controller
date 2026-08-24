@@ -1,0 +1,109 @@
+{
+  "id": "growbox-bootstrap-tests-20260824-002",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "integration/convergence-2026-08",
+  "allow_write": false,
+  "started_at": "2026-08-24T12:58:52.281707+00:00",
+  "command_timeout": 1200,
+  "edits": {},
+  "commands": [
+    {
+      "command": "make setup",
+      "exit_code": 0,
+      "output": "python3 -m venv .venv\n.venv/bin/python -m pip install --upgrade pip\nRequirement already satisfied: pip in ./.venv/lib/python3.13/site-packages (25.3)\nCollecting pip\n  Using cached pip-26.2.1-py3-none-any.whl.metadata (4.6 kB)\nUsing cached pip-26.2.1-py3-none-any.whl (1.8 MB)\nInstalling collected packages: pip\n  Attempting uninstall: pip\n    Found existing installation: pip 25.3\n    Uninstalling pip-25.3:\n      Successfully uninstalled pip-25.3\nSuccessfully installed pip-26.2.1\n.venv/bin/python -m pip install -r requirements-lock.txt\nCollecting absl-py==2.5.0 (from -r requirements-lock.txt (line 2))\n  Downloading absl_py-2.5.0-py3-none-any.whl.metadata (3.3 kB)\nCollecting ajsonrpc==1.2.0 (from -r requirements-lock.txt (line 3))\n  Downloading ajsonrpc-1.2.0-py3-none-any.whl.metadata (6.9 kB)\nCollecting anyio==4.14.1 (from -r requirements-lock.txt (line 4))\n  Downloading anyio-4.14.1-py3-none-any.whl.metadata (4.6 kB)\nCollecting astunparse==1.6.3 (from -r requirements-lock.txt (line 5))\n  Downloading astunparse-1.6.3-py2.py3-none-any.whl.metadata (4.4 kB)\nCollecting attrs==26.1.0 (from -r requirements-lock.txt (line 6))\n  Downloading attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)\nCollecting bitarray==3.9.0 (from -r requirements-lock.txt (line 7))\n  Downloading bitarray-3.9.0-cp313-cp313-macosx_11_0_arm64.whl.metadata (35 kB)\nCollecting bitstring==4.3.1 (from -r requirements-lock.txt (line 8))\n  Downloading bitstring-4.3.1-py3-none-any.whl.metadata (5.3 kB)\nCollecting bottle==0.13.4 (from -r requirements-lock.txt (line 9))\n  Downloading bottle-0.13.4-py2.py3-none-any.whl.metadata (1.6 kB)\nCollecting certifi==2026.6.17 (from -r requirements-lock.txt (line 10))\n  Downloading certifi-2026.6.17-py3-none-any.whl.metadata (2.5 kB)\nCollecting cffi==2.1.0 (from -r requirements-lock.txt (line 11))\n  Downloading cffi-2.1.0-cp313-cp313-macosx_11_0_arm64.whl.metadata (2.5 kB)\nCollecting chardet==5.2.0 (from -r requirements-lock.txt (line 12))\n  Downloading chardet-5.2.0-py3-none-any.whl.metadata (3.4 kB)\nCollecting charset-normalizer==3.4.9 (from -r requirements-lock.txt (line 13))\n  Downloading charset_normalizer-3.4.9-cp313-cp313-macosx_10_13_universal2.whl.metadata (41 kB)\nCollecting click==8.3.3 (from -r requirements-lock.txt (line 14))\n  Downloading click-8.3.3-py3-none-any.whl.metadata (2.6 kB)\nCollecting colorama==0.4.6 (from -r requirements-lock.txt (line 15))\n  Downloading colorama-0.4.6-py2.py3-none-any.whl.metadata (17 kB)\nCollecting cryptography==45.0.7 (from -r requirements-lock.txt (line 16))\n  Downloading cryptography-45.0.7-cp311-abi3-macosx_10_9_universal2.whl.metadata (5.7 kB)\nCollecting ecdsa==0.19.2 (from -r requirements-lock.txt (line 17))\n  Downloading ecdsa-0.19.2-py2.py3-none-any.whl.metadata (29 kB)\nCollecting emlearn==0.23.2 (from -r requirements-lock.txt (line 18))\n  Downloading emlearn-0.23.2-py3-none-any.whl.metadata (7.7 kB)\nCollecting flatbuffers==25.12.19 (from -r requirements-lock.txt (line 19))\n  Downloading flatbuffers-25.12.19-py2.py3-none-any.whl.metadata (1.0 kB)\nCollecting gast==0.7.0 (from -r requirements-lock.txt (line 20))\n  Downloading gast-0.7.0-py3-none-any.whl.metadata (1.5 kB)\nCollecting google-pasta==0.2.0 (from -r requirements-lock.txt (line 21))\n  Downloading google_pasta-0.2.0-py3-none-any.whl.metadata (814 bytes)\nCollecting grpcio==1.82.1 (from -r requirements-lock.txt (line 22))\n  Downloading grpcio-1.82.1-cp313-cp313-macosx_11_0_universal2.whl.metadata (3.7 kB)\nCollecting h11==0.16.0 (from -r requirements-lock.txt (line 23))\n  Using cached h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)\nCollecting h5py==3.14.0 (from -r requirements-lock.txt (line 24))\n  Downloading h5py-3.14.0-cp313-cp313-macosx_11_0_arm64.whl.metadata (2.7 kB)\nCollecting idna==3.18 (from -r requirements-lock.txt (line 25))\n  Using cached idna-3.18-py3-none-any.whl.metadata (6.1 kB)\nCollecting iniconfig==2.3.0 (from -r requirements-lock.txt (line 26))\n  Using cached iniconfig-2.3.0-py3-none-any.whl.metadata (2.5 kB)\nCollecting intelhex==2.3.0 (from -r requirements-lock.txt (line 27))\n  Downloading intelhex-2.3.0-py2.py3-none-any.whl.metadata (2.7 kB)\nCollecting Jinja2==3.1.6 (from -r requirements-lock.txt (line 28))\n  Using cached jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)\nCollecting jsonschema==4.26.0 (from -r requirements-lock.txt (line 29))\n  Downloading jsonschema-4.26.0-py3-none-any.whl.metadata (7.6 kB)\nCollecting jsonschema-specifications==2025.9.1 (from -r requirements-lock.txt (line 30))\n  Downloading jsonschema_specifications-2025.9.1-py3-none-any.whl.metadata (2.9 kB)\nCollecting keras==3.15.0 (from -r requirements-lock.txt (line 31))\n  Downloading keras-3.15.0-py3-none-any.whl.metadata (6.3 kB)\nCollecting libclang==18.1.1 (from -r requirements-lock.txt (line 32))\n  Downloading libclang-18.1.1-1-py2.py3-none-macosx_11_0_arm64.whl.metadata (5.2 kB)\nCollecting markdown-it-py==4.2.0 (from -r requirements-lock.txt (line 33))\n  Downloading markdown_it_py-4.2.0-py3-none-any.whl.metadata (7.4 kB)\nCollecting MarkupSafe==3.0.3 (from -r requirements-lock.txt (line 34))\n  Using cached markupsafe-3.0.3-cp313-cp313-macosx_11_0_arm64.whl.metadata (2.7 kB)\nCollecting marshmallow==3.26.2 (from -r requirements-lock.txt (line 35))\n  Downloading marshmallow-3.26.2-py3-none-any.whl.metadata (7.3 kB)\nCollecting mdurl==0.1.2 (from -r requirements-lock.txt (line 36))\n  Downloading mdurl-0.1.2-py3-none-any.whl.metadata (1.6 kB)\nCollecting ml_dtypes==0.5.4 (from -r requirements-lock.txt (line 37))\n  Downloading ml_dtypes-0.5.4-cp313-cp313-macosx_10_13_universal2.whl.metadata (8.9 kB)\nCollecting namex==0.1.0 (from -r requirements-lock.txt (line 38))\n  Downloading namex-0.1.0-py3-none-any.whl.metadata (322 bytes)\nCollecting numpy==2.4.6 (from -r requirements-lock.txt (line 39))\n  Downloading numpy-2.4.6-cp313-cp313-macosx_14_0_arm64.whl.metadata (6.6 kB)\nCollecting opt_einsum==3.4.0 (from -r requirements-lock.txt (line 40))\n  Downloading opt_einsum-3.4.0-py3-none-any.whl.metadata (6.3 kB)\nCollecting optree==0.19.1 (from -r requirements-lock.txt (line 41))\n  Downloading optree-0.19.1-cp313-cp313-macosx_11_0_arm64.whl.metadata (32 kB)\nCollecting packaging==26.2 (from -r requirements-lock.txt (line 42))\n  Downloading packaging-26.2-py3-none-any.whl.metadata (3.5 kB)\nCollecting platformio==6.1.19 (from -r requirements-lock.txt (line 43))\n  Downloading platformio-6.1.19-py3-none-any.whl.metadata (7.2 kB)\nCollecting pluggy==1.6.0 (from -r requirements-lock.txt (line 44))\n  Using cached pluggy-1.6.0-py3-none-any.whl.metadata (4.8 kB)\nCollecting protobuf==7.35.1 (from -r requirements-lock.txt (line 45))\n  Downloading protobuf-7.35.1-cp310-abi3-macosx_10_9_universal2.whl.metadata (595 bytes)\nCollecting pybind11==3.0.4 (from -r requirements-lock.txt (line 46))\n  Downloading pybind11-3.0.4-py3-none-any.whl.metadata (10 kB)\nCollecting pycparser==3.0 (from -r requirements-lock.txt (line 47))\n  Downloading pycparser-3.0-py3-none-any.whl.metadata (8.2 kB)\nCollecting pyelftools==0.33 (from -r requirements-lock.txt (line 48))\n  Downloading pyelftools-0.33-py3-none-any.whl.metadata (1.0 kB)\nCollecting Pygments==2.20.0 (from -r requirements-lock.txt (line 49))\n  Downloading pygments-2.20.0-py3-none-any.whl.metadata (2.5 kB)\nCollecting pyserial==3.5 (from -r requirements-lock.txt (line 50))\n  Downloading pyserial-3.5-py2.py3-none-any.whl.metadata (1.6 kB)\nCollecting pytest==9.1.1 (from -r requirements-lock.txt (line 51))\n  Using cached pytest-9.1.1-py3-none-any.whl.metadata (7.6 kB)\nCollecting reedsolo==1.7.0 (from -r requirements-lock.txt (line 52))\n  Downloading reedsolo-1.7.0-py3-none-any.whl.metadata (23 kB)\nCollecting referencing==0.37.0 (from -r requirements-lock.txt (line 53))\n  Downloading referencing-0.37.0-py3-none-any.whl.metadata (2.8 kB)\nCollecting requests==2.34.2 (from -r requirements-lock.txt (line 54))\n  Using cached requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)\nCollecting rich==15.0.0 (from -r requirements-lock.txt (line 55))\n  Downloading rich-15.0.0-py3-none-any.whl.metadata (18 kB)\nCollecting rpds-py==2026.6.3 (from -r requirements-lock.txt (line 56))\n  Downloading rpds_py-2026.6.3-cp313-cp313-macosx_11_0_arm64.whl.metadata (4.1 kB)\nCollecting semantic-version==2.10.0 (from -r requirements-lock.txt (line 57))\n  Downloading semantic_version-2.10.0-py2.py3-none-any.whl.metadata (9.7 kB)\nCollecting six==1.17.0 (from -r requirements-lock.txt (line 58))\n  Downloading six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)\nCollecting starlette==0.52.1 (from -r requirements-lock.txt (line 59))\n  Downloading starlette-0.52.1-py3-none-any.whl.metadata (6.3 kB)\nCollecting tabulate==0.10.0 (from -r requirements-lock.txt (line 60))\n  Downloading tabulate-0.10.0-py3-none-any.whl.metadata (40 kB)\nCollecting tensorflow==2.21.0 (from -r requirements-lock.txt (line 61))\n  Downloading tensorflow-2.21.0-cp313-cp313-macosx_12_0_arm64.whl.metadata (4.4 kB)\nCollecting termcolor==3.3.0 (from -r requirements-lock.txt (line 62))\n  Downloading termcolor-3.3.0-py3-none-any.whl.metadata (6.5 kB)\nCollecting typing_extensions==4.16.0 (from -r requirements-lock.txt (line 63))\n  Using cached typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)\nCollecting urllib3==2.7.0 (from -r requirements-lock.txt (line 64))\n  Downloading urllib3-2.7.0-py3-none-any.whl.metadata (6.9 kB)\nCollecting uvicorn==0.40.0 (from -r requirements-lock.txt (line 65))\n  Downloading uvicorn-0.40.0-py3-none-any.whl.metadata (6.7 kB)\nCollecting wrapt==2.2.2 (from -r requirements-lock.txt (line 66))\n  Downloading wrapt-2.2.2-cp313-cp313-macosx_11_0_arm64.whl.metadata (7.4 kB)\nCollecting wsproto==1.3.2 (from -r requirements-lock.txt (line 67))\n  Downloading wsproto-1.3.2-py3-none-any.whl.metadata (5.2 kB)\nCollecting wheel<1.0,>=0.23.0 (from astunparse==1.6.3->-r requirements-lock.txt (line 5))\n  Downloading wheel-0.48.0-py3-none-any.whl.metadata (2.3 kB)\nCollecting setuptools (from tensorflow==2.21.0->-r requirements-lock.txt (line 61))\n  Using cached setuptools-84.0.0-py3-none-any.whl.metadata (6.6 kB)\nDownloading absl_py-2.5.0-py3-none-any.whl (137 kB)\nDownloading ajsonrpc-1.2.0-py3-none-any.whl (22 kB)\nDownloading anyio-4.14.1-py3-none-any.whl (124 kB)\nDownloading astunparse-1.6.3-py2.py3-none-any.whl (12 kB)\nDownloading six-1.17.0-py2.py3-none-any.whl (11 kB)\nDownloading attrs-26.1.0-py3-none-any.whl (67 kB)\nDownloading bitarray-3.9.0-cp313-cp313-macosx_11_0_arm64.whl (149 kB)\nDownloading bitstring-4.3.1-py3-none-any.whl (71 kB)\nDownloading bottle-0.13.4-py2.py3-none-any.whl (103 kB)\nDownloading certifi-2026.6.17-py3-none-any.whl (133 kB)\nDownloading cffi-2.1.0-cp313-cp313-macosx_11_0_arm64.whl (184 kB)\nDownloading chardet-5.2.0-py3-none-any.whl (199 kB)\nDownloading charset_normalizer-3.4.9-cp313-cp313-macosx_10_13_universal2.whl (317 kB)\nDownloading click-8.3.3-py3-none-any.whl (110 kB)\nDownloading colorama-0.4.6-py2.py3-none-any.whl (25 kB)\nDownloading cryptography-45.0.7-cp311-abi3-macosx_10_9_universal2.whl (7.0 MB)\n   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.0/7.0 MB 14.6 MB/s  0:00:00\nDownloading ecdsa-0.19.2-py2.py3-none-any.whl (150 kB)\nDownloading emlearn-0.23.2-py3-none-any.whl (78 kB)\nDownloading flatbuffers-25.12.19-py2.py3-none-any.whl (26 kB)\nDownloading gast-0.7.0-py3-none-any.whl (22 kB)\nDownloading google_pasta-0.2.0-py3-none-any.whl (57 kB)\nDownloading grpcio-1.82.1-cp313-cp313-macosx_11_0_universal2.whl (11.9 MB)\n   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11.9/11.9 MB 7.4 MB/s  0:00:01\nUsing cached typing_extensions-4.16.0-py3-none-any.whl (45 kB)\nUsing cached h11-0.16.0-py3-none-any.whl (37 kB)\nDownloading h5py-3.14.0-cp313-cp313-macosx_11_0_arm64.whl (2.8 MB)\n   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.8/2.8 MB 13.4 MB/s  0:00:00\nUsing cached idna-3.18-py3-none-any.whl (65 kB)\nUsing cached iniconfig-2.3.0-py3-none-any.whl (7.5 kB)\nDownloading intelhex-2.3.0-py2.py3-none-any.whl (50 kB)\nUsing cached jinja2-3.1.6-py3-none-any.whl (134 kB)\nDownloading jsonschema-4.26.0-py3-none-any.whl (90 kB)\nDownloading jsonschema_specifications-2025.9.1-py3-none-any.whl (18 kB)\nDownloading keras-3.15.0-py3-none-any.whl (1.7 MB)\n   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.7/1.7 MB 12.2 MB/s  0:00:00\nDownloading libclang-18.1.1-1-py2.py3-none-macosx_11_0_arm64.whl (25.8 MB)\n   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 25.8/25.8 MB 21.3 MB/s  0:00:01\nDownloading markdown_it_py-4.2.0-py3-none-any.whl (91 kB)\nDownloading mdurl-0.1.2-py3-none-any.whl (10.0 kB)\nUsing cached markupsafe-3.0.3-cp313-cp313-macosx_11_0_arm64.whl (12 kB)\nDownloading marshmallow-3.26.2-py3-none-any.whl (50 kB)\nDownloading ml_dtypes-0.5.4-cp313-cp313-macosx_10_13_universal2.whl (676 kB)\n   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 676.9/676.9 kB 15.5 MB/s  0:00:00\nDownloading namex-0.1.0-py3-none-any.whl (5.9 kB)\nDownloading numpy-2.4.6-cp313-cp313-macosx_14_0_arm64.whl (5.2 MB)\n   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.2/5.2 MB 19.1 MB/s  0:00:00\nDownloading opt_einsum-3.4.0-py3-none-any.whl (71 kB)\nDownloading optree-0.19.1-cp313-cp313-macosx_11_0_arm64.whl (398 kB)\nDownloading packaging-26.2-py3-none-any.whl (100 kB)\nDownloading platformio-6.1.19-py3-none-any.whl (421 kB)\nDownloading pyelftools-0.33-py3-none-any.whl (201 kB)\nDownloading pyserial-3.5-py2.py3-none-any.whl (90 kB)\nUsing cached requests-2.34.2-py3-none-any.whl (73 kB)\nDownloading semantic_version-2.10.0-py2.py3-none-any.whl (15 kB)\nDownloading starlette-0.52.1-py3-none-any.whl (74 kB)\nDownloading tabulate-0.10.0-py3-none-any.whl (39 kB)\nDownloading urllib3-2.7.0-py3-none-any.whl (131 kB)\nDownloading uvicorn-0.40.0-py3-none-any.whl (68 kB)\nDownloading wsproto-1.3.2-py3-none-any.whl (24 kB)\nUsing cached pluggy-1.6.0-py3-none-any.whl (20 kB)\nDownloading protobuf-7.35.1-cp310-abi3-macosx_10_9_universal2.whl (433 kB)\nDownloading pybind11-3.0.4-py3-none-any.whl (314 kB)\nDownloading pycparser-3.0-py3-none-any.whl (48 kB)\nDownloading pygments-2.20.0-py3-none-any.whl (1.2 MB)\n   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 19.4 MB/s  0:00:00\nUsing cached pytest-9.1.1-py3-none-any.whl (386 kB)\nDownloading reedsolo-1.7.0-py3-none-any.whl (32 kB)\nDownloading referencing-0.37.0-py3-none-any.whl (26 kB)\nDownloading rich-15.0.0-py3-none-any.whl (310 kB)\nDownloading rpds_py-2026.6.3-cp313-cp313-macosx_11_0_arm64.whl (338 kB)\nDownloading tensorflow-2.21.0-cp313-cp313-macosx_12_0_arm64.whl (223.8 MB)\n   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 223.8/223.8 MB 7.3 MB/s  0:00:30\nDownloading termcolor-3.3.0-py3-none-any.whl (7.7 kB)\nDownloading wrapt-2.2.2-cp313-cp313-macosx_11_0_arm64.whl (81 kB)\nDownloading wheel-0.48.0-py3-none-any.whl (33 kB)\nUsing cached setuptools-84.0.0-py3-none-any.whl (818 kB)\nInstalling collected packages: reedsolo, pyserial, namex, libclang, intelhex, flatbuffers, bottle, wrapt, urllib3, typing_extensions, termcolor, tabulate, six, setuptools, semantic-version, rpds-py, Pygments, pyelftools, pycparser, pybind11, protobuf, pluggy, packaging, opt_einsum, numpy, mdurl, MarkupSafe, iniconfig, idna, h11, gast, colorama, click, charset-normalizer, chardet, certifi, bitarray, attrs, ajsonrpc, absl-py, wsproto, wheel, uvicorn, requests, referencing, pytest, optree, ml_dtypes, marshmallow, markdown-it-py, Jinja2, h5py, grpcio, google-pasta, ecdsa, cffi, bitstring, anyio, starlette, rich, jsonschema-specifications, emlearn, cryptography, astunparse, platformio, keras, jsonschema, tensorflow\n\nSuccessfully installed Jinja2-3.1.6 MarkupSafe-3.0.3 Pygments-2.20.0 absl-py-2.5.0 ajsonrpc-1.2.0 anyio-4.14.1 astunparse-1.6.3 attrs-26.1.0 bitarray-3.9.0 bitstring-4.3.1 bottle-0.13.4 certifi-2026.6.17 cffi-2.1.0 chardet-5.2.0 charset-normalizer-3.4.9 click-8.3.3 colorama-0.4.6 cryptography-45.0.7 ecdsa-0.19.2 emlearn-0.23.2 flatbuffers-25.12.19 gast-0.7.0 google-pasta-0.2.0 grpcio-1.82.1 h11-0.16.0 h5py-3.14.0 idna-3.18 iniconfig-2.3.0 intelhex-2.3.0 jsonschema-4.26.0 jsonschema-specifications-2025.9.1 keras-3.15.0 libclang-18.1.1 markdown-it-py-4.2.0 marshmallow-3.26.2 mdurl-0.1.2 ml_dtypes-0.5.4 namex-0.1.0 numpy-2.4.6 opt_einsum-3.4.0 optree-0.19.1 packaging-26.2 platformio-6.1.19 pluggy-1.6.0 protobuf-7.35.1 pybind11-3.0.4 pycparser-3.0 pyelftools-0.33 pyserial-3.5 pytest-9.1.1 reedsolo-1.7.0 referencing-0.37.0 requests-2.34.2 rich-15.0.0 rpds-py-2026.6.3 semantic-version-2.10.0 setuptools-84.0.0 six-1.17.0 starlette-0.52.1 tabulate-0.10.0 tensorflow-2.21.0 termcolor-3.3.0 typing_extensions-4.16.0 urllib3-2.7.0 uvicorn-0.40.0 wheel-0.48.0 wrapt-2.2.2 wsproto-1.3.2\n",
+      "elapsed_seconds": 107.236,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "task_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "peak_rss_mb": 200.69,
+      "current_rss_mb": 200.69,
+      "stage_name": "bootstrap-venv",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "stage_timeout": 1200
+    },
+    {
+      "command": "make test-layout",
+      "exit_code": 0,
+      "output": ".venv/bin/python -m pytest tests/test_panel_layout.py tests/test_panel_tokens.py -q\n......................................................................   [100%]\n70 passed in 0.85s\n",
+      "elapsed_seconds": 5.748,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "task_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "peak_rss_mb": null,
+      "stage_name": "panel-layout-tests",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "stage_timeout": 300
+    },
+    {
+      "command": "make test-host",
+      "exit_code": 0,
+      "output": "cmake -S test/host -B build/host-tests\n-- The CXX compiler identification is AppleClang 21.0.0.21000101\n-- Detecting CXX compiler ABI info\n-- Detecting CXX compiler ABI info - done\n-- Check for working CXX compiler: /usr/bin/c++ - skipped\n-- Detecting CXX compile features\n-- Detecting CXX compile features - done\n-- Configuring done (1.7s)\n-- Generating done (0.1s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tests\ncmake --build build/host-tests --parallel\n[ 28%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/EnvironmentController.cpp.o\n[ 42%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/test/test_environment_controller/test_main.cpp.o\n[ 42%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/FeatureEncoder.cpp.o\n[ 57%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/EnvironmentTypes.cpp.o\n[ 71%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/ModelRuntime.cpp.o\n[ 85%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/SafetySupervisor.cpp.o\n[100%] Linking CXX executable environment_control_tests\n[100%] Built target environment_control_tests\nctest --test-dir build/host-tests --output-on-failure\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tests\n    Start 1: environment_control_tests\n1/1 Test #1: environment_control_tests ........   Passed    0.32 sec\n\n100% tests passed, 0 tests failed out of 1\n\nTotal Test time (real) =   0.32 sec\n",
+      "elapsed_seconds": 8.271,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "task_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "peak_rss_mb": 11.94,
+      "current_rss_mb": 11.94,
+      "stage_name": "host-cpp-tests",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "stage_timeout": 300
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "bootstrap-venv",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 107.236
+    },
+    {
+      "stage_name": "panel-layout-tests",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 5.748
+    },
+    {
+      "stage_name": "host-cpp-tests",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 8.271
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.054
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.042
+  },
+  "finished_at": "2026-08-24T13:01:00.039835+00:00",
+  "task_digest": "9373d3fdf26270b54292a2adb6dc4d783b37c1aaa411a00e258f403aa6157a80",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "attempt_id": "a3a5bb266ddda1fbe5d62a48",
+  "daemon_version": "4.6.0"
+}
