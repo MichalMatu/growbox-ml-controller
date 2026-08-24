@@ -1,15 +1,18 @@
 {
   "version": 1,
-  "daemon_version": "4.6.0",
+  "daemon_version": "4.8.0",
   "state": "idle",
-  "pid": 78191,
-  "updated_at": "2026-08-24T18:17:23.067365+00:00",
-  "self_revision": "2920002459a6dc7267da7fe2cc633a4bf240aad2",
+  "pid": 26424,
+  "updated_at": "2026-08-24T22:20:58.533838+00:00",
+  "self_revision": "2cc8eba6bb6afb71782639540aad420449297a5f",
   "poll_seconds": 15,
   "self_update_seconds": 60,
   "command_timeout_default": 900,
+  "command_timeout_max": 7200,
   "idle_timeout_default": 300,
+  "idle_timeout_max": 3600,
   "task_timeout_default": 1800,
+  "task_timeout_max": 21600,
   "memory_limit_mb_default": 4096,
   "current_task_id": null,
   "current_attempt_id": null,
@@ -19,6 +22,6 @@
   "control_branch": "agent-control",
   "default_branch": "main",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 78191,
-  "supervisor_pid": 718
+  "worker_pid": 26424,
+  "supervisor_pid": 67414
 }
