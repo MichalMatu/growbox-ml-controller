@@ -3,7 +3,7 @@
   "daemon_version": "4.6.0",
   "state": "running",
   "pid": 64706,
-  "updated_at": "2026-08-24T13:06:43.066709+00:00",
+  "updated_at": "2026-08-24T13:06:49.570799+00:00",
   "self_revision": "2920002459a6dc7267da7fe2cc633a4bf240aad2",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -15,16 +15,15 @@
   "current_attempt_id": "aedbe76839029ba063cf180c",
   "current_task_digest": "1fd1345eeecb608730043248e9b8ed591f6bcb5878818dc76ec74f70c16bfa48",
   "progress": {
-    "event": "task_started",
+    "event": "task_finished",
     "task_id": "growbox-fix-room-reset-20260824-001",
     "task_digest": "1fd1345eeecb608730043248e9b8ed591f6bcb5878818dc76ec74f70c16bfa48",
-    "idle_timeout": 300,
-    "task_timeout": 1200,
-    "memory_limit_mb": 4096,
-    "started_at": "2026-08-24T13:06:40.454988+00:00",
+    "status": "failed",
+    "failure_reason": "patch_failed",
+    "finished_at": "2026-08-24T13:06:46.839669+00:00",
     "attempt_id": "aedbe76839029ba063cf180c",
     "daemon_version": "4.6.0",
     "daemon_pid": 64706,
-    "updated_at": "2026-08-24T13:06:40.455008+00:00"
+    "updated_at": "2026-08-24T13:06:46.978144+00:00"
   }
 }
