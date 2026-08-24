@@ -1,6 +1,6 @@
 # Repository convergence and cleanup
 
-The repository has already converged onto `main`. Cleanup must preserve recoverability while removing redundant active branches and stale planning material.
+The repository has converged onto `main`. Repository cleanup must preserve the two user interfaces and the useful historical recovery points while removing redundant branch names and stale planning material.
 
 ## Current source of truth
 
@@ -8,54 +8,54 @@ The repository has already converged onto `main`. Cleanup must preserve recovera
 - `gh-pages` — generated deployment branch; keep while GitHub Pages depends on it.
 - `agent-control` — operational branch used by the repository agent; keep while that workflow is in use.
 
-The old integration branch `integration/convergence-2026-08` is no longer the intended development line. `main` contains the converged firmware, simulator/twin, browser configurator and lab panel.
+## User interfaces that must remain
 
-## Legacy UI that must be preserved
+Both interfaces are intentional and must be preserved:
 
-`tools/panel/` is the older Growbox ML laboratory dashboard / JSON scenario configurator. It is intentionally retained in `main`.
+- `tools/panel/` — older Growbox ML laboratory dashboard / JSON scenario configurator used with the Python/serial tooling.
+- `web/` — newer React/Vite configurator and `/chamber-3d` UI.
 
-The file `tools/panel/static/index.html` in `main` is byte-for-byte the same Git blob as in `feature/sim-twin-pyvista` (`76713f4aa1a43658313826acf713fd2037613343`). Deleting the redundant feature branch therefore does not remove this dashboard.
+The legacy panel is already preserved on `main`. `tools/panel/static/index.html` has the same Git blob as the version from `feature/sim-twin-pyvista` (`76713f4aa1a43658313826acf713fd2037613343`).
 
-The newer React configurator remains under `web/`, including the v5 schema snapshot in `web/schema/environment-controller.v5.json`.
+The remaining useful fix from `integration/convergence-2026-08` (`Fix chamber 3D room layout reset`) has also been carried into `main`.
 
-## Redundant feature branches
+## Branches intended to remain
 
-Each branch below has an exact archive snapshot and can be treated as redundant after this cleanup branch is reviewed:
+After branch cleanup the intended branch set is:
 
-| Feature branch | Exact archive snapshot |
-|---|---|
-| `feature/sku-v1` | `archive/2026-08-21-sku-v1` |
-| `feature/sim-twin-pyvista` | `archive/2026-08-21-sim-twin-pyvista` |
-| `feature/growbox-config-v4-docs` | `archive/2026-08-21-configurator-v5` |
+- `main`
+- `gh-pages`
+- `agent-control`
+- `archive/pre-squash-history` — disconnected pre-squash history; keep as the long-term historical recovery point.
+- `archive/2026-08-21-configurator-v5` — keep one snapshot of the old sparse configurator line because that branch had independent history not represented linearly in `main`.
 
-The archive comparisons are identical at the commit level.
+## Redundant branches safe to remove
 
-## Archive branches to keep for now
+These branch names are redundant after the completed convergence and preservation checks:
 
-- `archive/2026-08-21-main-baseline`
-- `archive/2026-08-21-sku-v1`
-- `archive/2026-08-21-sim-twin-pyvista`
-- `archive/2026-08-21-configurator-v5`
-- `archive/2026-08-21-pages-live`
-- `archive/pre-squash-history`
+- `cleanup/repository-2026-08` — merged cleanup work.
+- `integration/convergence-2026-08` — its remaining useful 3D reset fix is now in `main`.
+- `feature/sku-v1` — fully contained in the history leading to `main`.
+- `feature/sim-twin-pyvista` — fully contained in the history leading to `main`; the legacy dashboard is preserved on `main`.
+- `feature/growbox-config-v4-docs` — exact snapshot remains as `archive/2026-08-21-configurator-v5`.
+- `archive/2026-08-21-main-baseline` — historical ancestor already reachable from `main`.
+- `archive/2026-08-21-sku-v1` — duplicate recovery name for work already reachable from `main`.
+- `archive/2026-08-21-sim-twin-pyvista` — duplicate recovery name for work already reachable from `main`.
+- `archive/2026-08-21-pages-live` — identical to the current `gh-pages` tip at the time of cleanup.
 
-These are recovery points, not active development branches. They can be reconsidered later after the new architecture and ML contract stabilize.
+## Cleanup completed on `main`
+
+- removed root `continue_test.md` — old machine/audit handoff notes;
+- removed `docs/plan.md` — obsolete v2 planning document;
+- removed `docs/REPO.md` — obsolete branch guide;
+- fixed `Makefile` so `schema-check` calls the existing `scripts/check_schema.sh`;
+- retained both `tools/panel/` and `web/`;
+- preserved the chamber 3D room-layout reset fix from the former integration line.
 
 ## Contract state
 
-Do not mix repository cleanup with the ML redesign:
+Repository cleanup is deliberately separate from the ML redesign:
 
 - firmware/controller currently uses schema v4: 4 pots, 128 features, 15 outputs;
 - browser tooling carries schema v5: up to 9 pots, 228 features, 25 outputs;
-- the next ML architecture may replace this with smaller stateless contracts, but that is a separate product change.
-
-## Cleanup performed on `cleanup/repository-2026-08`
-
-- removed root `continue_test.md` — old machine/audit handoff notes;
-- removed `docs/plan.md` — obsolete v2 planning document that conflicts with the current v4/v5 state;
-- removed `docs/REPO.md` — obsolete branch guide describing `main` as the old v1 baseline;
-- fixed `Makefile` so `schema-check` calls the existing `scripts/check_schema.sh` instead of missing `scripts/check_schema_v3.sh`;
-- retained both `tools/panel/` and `web/`;
-- reduced this document to the current repository state.
-
-Historical copies of removed material remain recoverable from existing archive/history branches.
+- the next ML architecture may replace these with smaller stateless contracts, but that is separate product work.
