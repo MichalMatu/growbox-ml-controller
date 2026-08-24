@@ -1,180 +1,118 @@
 # Environment Controller MVP
 
-Status: architecture/design phase  
+Status: architecture/design phase — MVP v1 flow and I/O frozen  
 Branch: `mvp/environment-controller`
 
 ## 1. Product goal
 
-Build a small, hardware-independent environment controller for a typical indoor growbox.
+Build a hardware-independent environment controller for a typical indoor growbox.
 
-The MVP controls the climate from a small semantic configuration:
+Hardware choices do not define the core. ESP32-S3, OLED, encoder, GPIO, relay boards, BLE, MQTT, Shelly, Modbus and sensor models are future adapters.
 
-- target air temperature,
-- target relative humidity,
-- target CO2 concentration,
-- light schedule,
-- assignment of available outputs to actuator roles.
+## 2. Frozen MVP v1 architecture
 
-The first implementation must not depend on ESP32-S3, OLED, encoder, GPIO, relay boards, MQTT, Shelly, Modbus, or any particular sensor. Those are adapters around the core.
-
-The architecture follows an IPO-style separation:
-
-`inputs -> normalized environment state -> control -> safety/arbitration -> desired actions -> outputs`
-
-No layer should need to know how the layer on the other side is physically implemented.
-
-## 2. MVP boundary
-
-### Included
-
-Semantic measurements:
-
-- air temperature [degC],
-- relative humidity [%],
-- CO2 [ppm],
-- current time / schedule state.
-
-Semantic actuator roles:
-
-- heater,
-- cooler,
-- circulation/exhaust fan,
-- humidifier,
-- dehumidifier,
-- CO2 doser,
-- grow light.
-
-Configuration:
-
-- target temperature,
-- target humidity,
-- target CO2,
-- light ON/OFF schedule,
-- hysteresis/deadbands,
-- assignment of abstract output endpoints to actuator roles,
-- enabled/disabled state for each function.
-
-Controller behavior:
-
-- deterministic rule-based control first,
-- safety interlocks independent from the controller policy,
-- explicit handling of unavailable/stale/invalid measurements,
-- observable reasons for every resulting action.
-
-### Explicitly outside the first MVP
-
-- irrigation,
-- soil moisture,
-- pot-level control,
-- EC,
-- pH,
-- nutrient tank control,
-- PPFD/light intensity control,
-- leaf temperature,
-- multiple climate zones,
-- dosing recipes,
-- hardware drivers,
-- display/menu implementation,
-- ML as the primary controller.
-
-These can be added later without changing the core separation.
-
-## 3. Architectural layers
-
-### A. Input adapters
-
-An input adapter converts any source into semantic measurements.
-
-Possible future sources:
-
-- local sensor,
-- BLE,
-- MQTT,
-- Modbus,
-- Nodeflow,
-- REST API,
-- simulator,
-- recorded dataset.
-
-The core never sees source identity.
-
-Example semantic sample:
+The core follows IPO separation:
 
 ```text
-Measurement {
-  kind: AirTemperature
-  value: 23.7
-  valid: true
-  age_ms: 1200
-  quality: Good
-}
+INPUT
+semantic environment values
+        |
+        v
+PROCESSING
+ControlPolicy
+        |
+        v
+Safety + Arbitration
+        |
+        v
+OUTPUT
+semantic device-role commands
 ```
 
-### B. EnvironmentState
+Rules:
 
-One normalized snapshot used by control logic.
+- inputs describe values, never hardware sources;
+- processing never directly controls GPIO or a specific device;
+- outputs describe device roles, never physical endpoints;
+- hardware adapters exist only outside the core;
+- `SafetySupervisor` remains independent from the control policy;
+- the first policy is rule based; ML may later replace only `ControlPolicy`.
+
+## 3. Frozen INPUT contract
+
+Required semantic inputs:
+
+- `air_temperature_c`
+- `relative_humidity_pct`
+- `co2_ppm`
+- `time_of_day`
+- `light_schedule_active`
+
+Optional semantic inputs:
+
+- `outside_temperature_c`
+- `outside_humidity_pct`
+
+Every measured value must carry measurement state separately from its numeric value:
+
+- `valid`
+- freshness / `age_ms`
+
+A missing or invalid measurement must never be represented by a fake numeric value such as zero.
+
+The core does not know whether a value came from I2C, BLE, MQTT, Modbus, Nodeflow, REST, a simulator or a recorded dataset.
+
+## 4. Frozen user configuration
+
+Targets:
+
+- `target_temperature_c`
+- `target_humidity_pct`
+- `target_co2_ppm`
+
+Light schedule:
+
+- `light_on_time`
+- `light_off_time`
+
+Control tuning:
+
+- `temperature_deadband_c`
+- `humidity_deadband_pct`
+- `co2_deadband_ppm`
+
+Capabilities/configuration also describe which functions are available and which abstract endpoints are assigned to which output roles.
+
+## 5. Frozen OUTPUT roles
+
+MVP v1 device roles:
+
+- `heater`
+- `cooler`
+- `exhaust_fan`
+- `circulation_fan`
+- `humidifier`
+- `dehumidifier`
+- `co2_doser`
+- `light`
+
+Internal commands use normalized values:
+
+```text
+0.0 = off / minimum
+1.0 = full request
+```
+
+This applies even when the physical device is binary. The output adapter decides how a normalized command maps to relay ON/OFF, PWM, VFD, Shelly, Modbus or another implementation.
 
 Conceptually:
-
-```text
-EnvironmentState {
-  air_temperature
-  relative_humidity
-  co2
-  time
-  light_schedule_active
-}
-```
-
-Each measured value carries validity/freshness separately from its numeric value.
-
-No fake value such as `0` should represent a missing sensor.
-
-### C. User configuration
-
-The configuration describes intent, not hardware.
-
-```text
-ClimateTargets {
-  temperature_c
-  humidity_pct
-  co2_ppm
-}
-
-LightSchedule {
-  enabled
-  on_time
-  off_time
-}
-```
-
-Control tuning belongs here too:
-
-```text
-ControlTuning {
-  temperature_deadband_c
-  humidity_deadband_pct
-  co2_deadband_ppm
-}
-```
-
-Defaults must be safe and understandable.
-
-### D. ControlPolicy
-
-The policy consumes only:
-
-- `EnvironmentState`,
-- user targets,
-- availability/capabilities.
-
-It produces requests, not direct GPIO commands.
 
 ```text
 ControlRequests {
   heater: 0..1
   cooler: 0..1
-  fan: 0..1
+  exhaust_fan: 0..1
+  circulation_fan: 0..1
   humidifier: 0..1
   dehumidifier: 0..1
   co2_doser: 0..1
@@ -182,184 +120,106 @@ ControlRequests {
 }
 ```
 
-For the first MVP the policy is deterministic and rule based.
+## 6. Output binding
 
-A future `MlControlPolicy` may implement the same interface.
-
-### E. Safety and arbitration
-
-This layer is mandatory and must remain independent from ML/rules.
-
-Responsibilities include:
-
-- heater and cooler cannot fight each other,
-- humidifier and dehumidifier cannot fight each other,
-- CO2 dosing is disabled when lights are off,
-- CO2 dosing can be inhibited while strong exhaust ventilation is requested,
-- actuator maximum run time,
-- minimum ON/OFF time where appropriate,
-- fail-safe behavior when required measurements are stale or invalid,
-- output clamping to supported capability,
-- deterministic priority when several control needs request the same shared actuator.
-
-Output of this layer:
-
-```text
-DesiredActions
-```
-
-Every overridden request should carry a reason, for example:
-
-```text
-co2_doser = OFF
-reason = CO2_INHIBITED_LIGHTS_OFF
-```
-
-This will be useful for OLED, web UI, logs, debugging and training-data analysis.
-
-### F. Output mapping
-
-The controller operates on roles. Output mapping connects roles to abstract output endpoints.
+The core controls roles. A separate mapping connects roles to abstract output endpoints.
 
 Example:
 
 ```text
-output_1 -> Light
-output_2 -> Fan
-output_3 -> Heater
-output_4 -> Humidifier
-output_5 -> Co2Doser
-output_6 -> None
+Endpoint A -> Light
+Endpoint B -> ExhaustFan
+Endpoint C -> Heater
+Endpoint D -> Humidifier
+Endpoint E -> Co2Doser
+Endpoint F -> None
 ```
 
-An endpoint advertises capability rather than hardware type:
-
-```text
-OutputEndpointCapability = Binary | Variable
-```
+Only an adapter knows what an endpoint physically is.
 
 Examples later:
 
-- GPIO relay -> Binary,
-- SSR -> Binary or Variable depending on implementation,
-- PWM -> Variable,
-- Shelly switch -> Binary,
-- Modbus VFD -> Variable.
+- GPIO relay
+- SSR
+- PWM
+- Shelly
+- Modbus VFD
+- MQTT-controlled output
 
-The core does not contain those implementations.
+## 7. Processing
 
-More than one endpoint may eventually be assigned to the same role. The MVP data model should not make that impossible even if the first UI initially restricts it for simplicity.
-
-### G. Output adapters
-
-Output adapters translate `DesiredActions` into physical commands.
-
-Future examples:
-
-- GPIO,
-- relay board,
-- PWM,
-- Shelly RPC,
-- MQTT,
-- Modbus,
-- Nodeflow.
-
-They are outside control logic.
-
-## 4. Rule controller v1
-
-The first controller should deliberately be simple.
-
-### Temperature
-
-Below target minus deadband:
-
-- request heater.
-
-Above target plus deadband:
-
-- request cooler,
-- optionally request/increase fan according to configured ventilation strategy.
-
-Inside deadband:
-
-- no heating/cooling request.
-
-### Humidity
-
-Below target minus deadband:
-
-- request humidifier.
-
-Above target plus deadband:
-
-- request dehumidifier,
-- fan may also be requested when ventilation is allowed to help.
-
-### CO2
-
-If:
-
-- CO2 measurement is valid,
-- lights are active,
-- CO2 is below target minus deadband,
-- safety permits dosing,
-
-then request CO2 dosing.
-
-Otherwise do not dose.
-
-### Light
-
-Light request is derived directly from the schedule in the MVP.
-
-Manual override can be added later but must have explicit timeout/priority semantics rather than silently bypassing safety.
-
-## 5. Shared actuator problem
-
-This must be designed now because a fan can serve several purposes:
-
-- normal air exchange,
-- heat removal,
-- humidity removal,
-- CO2 management.
-
-Therefore climate loops should not directly switch the fan.
-
-Instead they emit named demands, for example:
+Phase 1 policy:
 
 ```text
-fan_demands {
-  baseline_ventilation
-  temperature
-  humidity
-  safety
-}
+RuleControlPolicy
 ```
 
-An arbitrator combines them into one final fan request, initially using a simple maximum/priority rule.
+Future policy:
 
-This avoids coupling temperature logic to humidity logic and leaves room for ML later.
+```text
+MlControlPolicy
+```
 
-## 6. Missing sensor behavior
+Both implement the same logical contract:
 
-A capability may exist without a measurement and a measurement may exist without an actuator.
+```text
+EnvironmentState + ControllerConfig
+              -> ControlPolicy
+              -> ControlRequests
+```
+
+ML is therefore a processing strategy, not the architecture of the whole product.
+
+## 8. Safety and arbitration
+
+Safety is authoritative and remains outside ML/rule policy.
+
+Minimum responsibilities:
+
+- heater and cooler cannot fight each other;
+- humidifier and dehumidifier cannot fight each other;
+- CO2 dosing is disabled with lights off;
+- CO2 dosing is disabled for invalid/stale CO2 measurement;
+- CO2 dosing may be inhibited during strong exhaust ventilation;
+- stale/invalid required measurements produce safe behavior;
+- actuator commands are clamped to available capability;
+- minimum ON/OFF time and maximum run time can be enforced where needed;
+- shared demands are resolved deterministically.
+
+The system should expose reasons for overrides and resulting actions.
+
+## 9. Fan behavior
+
+`exhaust_fan` and `circulation_fan` are separate roles.
+
+`exhaust_fan` may be requested for several reasons:
+
+- temperature removal;
+- humidity removal;
+- baseline air exchange;
+- safety.
+
+Individual loops do not directly own the exhaust fan. They produce demands and arbitration combines them into the final request.
+
+`circulation_fan` is an independent role for internal air movement and does not automatically imply outside-air exchange.
+
+## 10. Missing capability behavior
+
+Missing hardware is not itself an error.
 
 Examples:
 
-- temperature sensor present, heater absent -> monitor only,
-- humidity sensor absent, humidifier present -> humidifier must not run automatically,
-- CO2 sensor absent -> automatic CO2 dosing must be disabled,
-- CO2 sensor present, doser absent -> monitor only,
-- cooler absent -> high-temperature policy may use fan only if configured/safe.
+- temperature measurement available, heater absent -> monitor only / use other available strategies;
+- humidity measurement absent, humidifier present -> no automatic humidification;
+- CO2 measurement absent -> automatic CO2 dosing disabled;
+- CO2 measurement available, doser absent -> monitor only;
+- cooler absent -> cooling may use exhaust if available and allowed.
 
-The system should expose capability/availability explicitly instead of inferring it from numeric values.
+Availability is explicit and never inferred from numeric measurements.
 
-## 7. Configuration model
+## 11. Configuration and status model
 
-The eventual UI (OLED, web, app, etc.) edits one configuration model.
-
-Conceptual sections:
+Conceptually:
 
 ```text
 ControllerConfig
@@ -371,192 +231,71 @@ ControllerConfig
 └── safety_limits
 ```
 
-UI is therefore an editor/view of configuration and status, not part of control logic.
-
-The same configuration should be loadable from JSON for simulator/development use and from persistent storage on an embedded target later.
-
-## 8. Status model
-
-The core should publish a complete status snapshot suitable for any UI.
-
-Conceptually:
+The core publishes status independently of any UI:
 
 ```text
 ControllerStatus
 ├── environment
-├── target values
-├── requested actions
-├── final/safe actions
-├── output bindings
-├── active interlocks
-└── diagnostics/reasons
+├── targets
+├── requested_actions
+├── final_safe_actions
+├── output_bindings
+├── active_interlocks
+└── reasons / diagnostics
 ```
 
-An OLED can show a small subset; the web UI can show everything. Neither requires controller-specific special cases.
+OLED, web UI, app or API are only views/editors of this model.
 
-## 9. ML integration point
+## 12. MVP v1 boundary
 
-ML is deliberately not part of MVP phase 1.
+Included:
 
-The architectural seam is:
+- temperature control;
+- humidity control;
+- CO2 control;
+- light schedule;
+- exhaust and circulation fan roles;
+- hardware-independent input/output mapping;
+- rule policy;
+- safety/arbitration;
+- status/reason reporting.
 
-```text
-EnvironmentState + ControllerConfig
-               |
-               v
-          ControlPolicy
-               |
-               v
-        ControlRequests
-```
+Not included yet:
 
-Initially:
+- irrigation;
+- soil moisture;
+- EC;
+- pH;
+- nutrient tank control;
+- PPFD;
+- leaf temperature;
+- multiple climate zones;
+- hardware drivers;
+- OLED/menu implementation;
+- final ML model.
 
-```text
-ControlPolicy = RuleControlPolicy
-```
+## 13. Implementation order
 
-Later:
+1. Finish behavioral decisions for the frozen contract: exact safety rules, deadbands, priorities and schedule semantics.
+2. Define small hardware-independent domain types.
+3. Implement deterministic reference controller and SafetySupervisor.
+4. Adapt the existing simulator to the new `EnvironmentState` / output contract.
+5. Run the complete loop on desktop: `simulator -> controller -> simulator`.
+6. Define stable JSON configuration/status representation.
+7. Adapt existing dashboards as needed.
+8. Add embedded/hardware adapters only after the core is stable.
+9. Add ML policy later using the same I/O contract.
 
-```text
-ControlPolicy = MlControlPolicy
-```
+## 14. Decisions intentionally postponed
 
-Safety, arbitration, output mapping and hardware adapters remain unchanged.
+Do not choose yet:
 
-The existing simulator/training engine is retained and can later generate data for the new smaller semantic contract.
-
-## 10. Proposed implementation phases
-
-### Phase 0 — freeze the MVP behavior
-
-Before implementation, agree on:
-
-- exact semantic inputs,
-- exact actuator roles,
-- interaction/priority rules,
-- missing-sensor behavior,
-- default deadbands,
-- CO2 safety behavior,
-- fan arbitration,
-- schedule semantics,
-- configuration persistence semantics.
-
-Deliverable: this document becomes an agreed behavior specification.
-
-### Phase 1 — small domain contract
-
-Create hardware-independent types for:
-
-- measurements,
-- `EnvironmentState`,
-- `ControllerConfig`,
-- `OutputRole`,
-- output capabilities/bindings,
-- `ControlRequests`,
-- `DesiredActions`,
-- status/reason codes.
-
-No ESP32 code and no UI code yet.
-
-### Phase 2 — deterministic reference controller
-
-Implement:
-
-- schedule,
-- temperature rule,
-- humidity rule,
-- CO2 rule,
-- fan demands/arbitration,
-- safety supervisor.
-
-The same core should be executable against synthetic states on a desktop.
-
-### Phase 3 — connect the existing simulator
-
-Adapt the current simulator to feed the new MVP `EnvironmentState` and accept `DesiredActions`.
-
-This becomes the first complete closed-loop environment without hardware.
-
-Goal:
-
-```text
-simulator -> MVP controller -> simulator
-```
-
-At this point behavior can be tuned and visualized with the existing tooling.
-
-### Phase 4 — configuration and status interfaces
-
-Define stable JSON serialization for:
-
-- configuration,
-- state/status,
-- output binding.
-
-Both existing dashboards may then be adapted incrementally without coupling them to hardware.
-
-### Phase 5 — embedded adapter
-
-Only after the core behavior is stable:
-
-- ESP32-S3 runtime,
-- persistent settings,
-- clock,
-- local sensor adapters,
-- output adapters.
-
-### Phase 6 — local UI
-
-OLED + encoder becomes one UI adapter over the same configuration/status API.
-
-It is not required for controller correctness.
-
-### Phase 7 — ML policy
-
-Use the simulator and/or recorded real data to train a model against the new semantic contract.
-
-ML should initially replace only `RuleControlPolicy`; SafetySupervisor remains authoritative.
-
-## 11. MVP success criteria
-
-The MVP foundation is successful when a desktop simulation can configure something like:
-
-```text
-Target temperature: 24 C
-Target humidity:    60 %
-Target CO2:         900 ppm
-Lights:             06:00 -> 00:00
-
-Outputs:
-1 Light
-2 Fan
-3 Heater
-4 Humidifier
-5 CO2
-```
-
-and the controller can run closed-loop against the simulator while:
-
-- never depending on physical GPIO/sensor identity,
-- clearly showing why each actuator is ON/OFF,
-- failing safely when measurements disappear,
-- allowing a different input/output adapter without changing control logic,
-- allowing `RuleControlPolicy` to be replaced by ML later.
-
-## 12. Decisions intentionally postponed
-
-Do not decide these until the behavioral contract is stable:
-
-- exact ESP32 board,
-- display model,
-- encoder model,
-- sensor models,
-- number/type of GPIO expanders,
-- relay/SSR board,
-- MQTT topic layout,
-- BLE protocol,
-- enclosure/UI layout,
+- exact ESP32 board;
+- display or encoder;
+- sensor models;
+- GPIO/relay/SSR hardware;
+- MQTT/BLE/Modbus details;
+- final UI layout;
 - final ML architecture.
 
-Those choices must adapt to the controller contract, not define it.
+Those choices must adapt to this contract, not define it.
