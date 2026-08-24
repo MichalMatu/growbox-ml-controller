@@ -1,0 +1,42 @@
+{
+  "id": "growbox-web-gates-20260824-002",
+  "mode": "commands",
+  "work_branch": "integration/convergence-2026-08",
+  "allow_write": false,
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "steps": [
+    {
+      "name": "web-toolchain",
+      "command": "node --version && npx -y pnpm@11.10.0 --version",
+      "timeout": 120
+    },
+    {
+      "name": "web-install",
+      "command": "npx -y pnpm@11.10.0 --dir web install --frozen-lockfile",
+      "timeout": 600
+    },
+    {
+      "name": "web-typecheck",
+      "command": "npx -y pnpm@11.10.0 --dir web typecheck",
+      "timeout": 300
+    },
+    {
+      "name": "web-lint",
+      "command": "npx -y pnpm@11.10.0 --dir web lint",
+      "timeout": 300
+    },
+    {
+      "name": "web-test",
+      "command": "npx -y pnpm@11.10.0 --dir web test -- --run",
+      "timeout": 300
+    },
+    {
+      "name": "web-build",
+      "command": "npx -y pnpm@11.10.0 --dir web build",
+      "timeout": 300
+    }
+  ]
+}
