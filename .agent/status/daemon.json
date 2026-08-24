@@ -1,9 +1,9 @@
 {
   "version": 1,
   "daemon_version": "4.6.0",
-  "state": "idle",
-  "pid": 61556,
-  "updated_at": "2026-08-24T12:56:57.588604+00:00",
+  "state": "running",
+  "pid": 62258,
+  "updated_at": "2026-08-24T12:58:41.077794+00:00",
   "self_revision": "2920002459a6dc7267da7fe2cc633a4bf240aad2",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -11,15 +11,7 @@
   "idle_timeout_default": 300,
   "task_timeout_default": 1800,
   "memory_limit_mb_default": 4096,
-  "current_task_id": null,
-  "current_attempt_id": null,
-  "current_task_digest": null,
-  "repository_id": "growbox-ml-controller",
-  "repository": "MichalMatu/growbox-ml-controller",
-  "control_branch": "agent-control",
-  "default_branch": "main",
-  "execution_model": "multi_repository_worker",
-  "worker_pid": 61556,
-  "supervisor_pid": 718,
-  "last_task_id": "growbox-baseline-20260824-001"
+  "current_task_id": "growbox-bootstrap-tests-20260824-002",
+  "current_attempt_id": "a3a5bb266ddda1fbe5d62a48",
+  "current_task_digest": "9373d3fdf26270b54292a2adb6dc4d783b37c1aaa411a00e258f403aa6157a80"
 }
