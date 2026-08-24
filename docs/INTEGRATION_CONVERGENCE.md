@@ -53,6 +53,8 @@ Do not mix repository cleanup with the ML redesign:
 
 - removed root `continue_test.md` — old machine/audit handoff notes;
 - removed `docs/plan.md` — obsolete v2 planning document that conflicts with the current v4/v5 state;
+- removed `docs/REPO.md` — obsolete branch guide describing `main` as the old v1 baseline;
+- fixed `Makefile` so `schema-check` calls the existing `scripts/check_schema.sh` instead of missing `scripts/check_schema_v3.sh`;
 - retained both `tools/panel/` and `web/`;
 - reduced this document to the current repository state.
 
