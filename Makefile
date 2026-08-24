@@ -108,7 +108,7 @@ fmt: ensure-venv
 lint: check-fast
 
 schema-check: ensure-venv
-	bash scripts/check_schema_v3.sh
+	bash scripts/check_schema.sh
 
 schema: schema-check
 
