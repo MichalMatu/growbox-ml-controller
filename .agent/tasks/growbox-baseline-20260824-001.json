@@ -1,0 +1,27 @@
+{
+  "id": "growbox-baseline-20260824-001",
+  "mode": "commands",
+  "work_branch": "integration/convergence-2026-08",
+  "allow_write": false,
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "steps": [
+    {
+      "name": "workspace-state",
+      "command": "git status --short && printf '\\nBRANCH=' && git branch --show-current && printf '\\nHEAD=' && git rev-parse HEAD && printf '\\n'",
+      "timeout": 60
+    },
+    {
+      "name": "panel-layout-tests",
+      "command": "make test-layout",
+      "timeout": 600
+    },
+    {
+      "name": "host-cpp-tests",
+      "command": "make test-host",
+      "timeout": 900
+    }
+  ]
+}
