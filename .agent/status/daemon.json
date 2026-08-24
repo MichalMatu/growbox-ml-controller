@@ -3,7 +3,7 @@
   "daemon_version": "4.6.0",
   "state": "running",
   "pid": 61556,
-  "updated_at": "2026-08-24T12:56:18.326397+00:00",
+  "updated_at": "2026-08-24T12:56:23.593318+00:00",
   "self_revision": "2920002459a6dc7267da7fe2cc633a4bf240aad2",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -13,5 +13,18 @@
   "memory_limit_mb_default": 4096,
   "current_task_id": "growbox-baseline-20260824-001",
   "current_attempt_id": "5bccd214a754f4f74b7c258c",
-  "current_task_digest": "bea27c47c6c789bff3514c0f4adc198dcf6d806981c419be48f3abc7a0b4d336"
+  "current_task_digest": "bea27c47c6c789bff3514c0f4adc198dcf6d806981c419be48f3abc7a0b4d336",
+  "progress": {
+    "event": "task_started",
+    "task_id": "growbox-baseline-20260824-001",
+    "task_digest": "bea27c47c6c789bff3514c0f4adc198dcf6d806981c419be48f3abc7a0b4d336",
+    "idle_timeout": 300,
+    "task_timeout": 1800,
+    "memory_limit_mb": 4096,
+    "started_at": "2026-08-24T12:56:21.032343+00:00",
+    "attempt_id": "5bccd214a754f4f74b7c258c",
+    "daemon_version": "4.6.0",
+    "daemon_pid": 61556,
+    "updated_at": "2026-08-24T12:56:21.032373+00:00"
+  }
 }
