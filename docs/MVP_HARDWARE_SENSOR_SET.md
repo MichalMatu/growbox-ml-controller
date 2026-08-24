@@ -29,18 +29,6 @@ Provides:
 
 The exact BLE sensor model is intentionally not frozen yet.
 
-### Leaf temperature
-
-Low-cost contact temperature sensor using a small NTC thermistor mounted in a lightweight leaf clip.
-
-Provides:
-
-- `leaf_temperature_c`
-
-The sensor should contact the leaf gently and add as little thermal mass and shading as practical. It measures leaf temperature only; no separate humidity sensor is attached to the leaf.
-
-When a valid leaf temperature is available, the controller can calculate `leaf_vpd_kpa` from leaf temperature plus ambient RH. If the leaf sensor is missing, stale or invalid, control falls back to air VPD calculated from SCD41 air temperature and RH.
-
 ### Real-time clock — required onboard hardware
 
 A hardware RTC with backup power is mandatory for the embedded MVP and should be soldered onto the controller hardware/PCB.
@@ -70,10 +58,6 @@ BLE sensor
   outside temperature
   outside humidity
 
-PLANT
-NTC leaf clip
-  leaf temperature
-
 SYSTEM
 hardware RTC + backup power
   current time
@@ -81,7 +65,6 @@ hardware RTC + backup power
 
 DERIVED
   air VPD
-  leaf VPD when leaf temperature is valid
   outside VPD when outside T/RH are valid
 ```
 
@@ -90,17 +73,19 @@ DERIVED
 - ESP32-S3
 - SCD41
 - hardware RTC with backup power
-- interface for the NTC leaf-temperature clip
 
 The BLE outside sensor remains external and wireless.
 
 ## Not planned for the first hardware MVP
 
 - SHT45 or another duplicate inside T/RH sensor
-- IR leaf-temperature sensor
+- leaf-temperature sensor (contact NTC or IR)
 - leaf humidity sensor
+- leaf VPD
 - PPFD sensor
 - soil moisture
 - EC/pH
+
+Leaf temperature was intentionally removed from MVP v1 to keep the hardware, simulator and ML training dataset simpler. It can be reconsidered later only if it provides measurable value.
 
 Expansion remains possible later without changing the semantic controller contract.
