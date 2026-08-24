@@ -60,6 +60,7 @@ const DEFAULT_DEPTH_CM = 80
 const DEFAULT_HEIGHT_CM = 160
 const DEFAULT_WALL_HEIGHT_CM = 260
 const DEFAULT_POT_COUNT: FeltPotCount = 1
+const DEFAULT_ROOM_LAYOUT: RoomLayout = "flat"
 
 const DEFAULT_POT_KEY: PotKey = "felt/12l"
 
@@ -81,7 +82,7 @@ export function Chamber3dPage() {
     useState<FanOrientationDeg>(DEFAULT_FAN_ORIENTATION_DEG)
   const [fanCeilingGapCm, setFanCeilingGapCm] = useState(DEFAULT_FAN_CEILING_GAP_CM)
   const [fanPosition, setFanPosition] = useState<FanPosition>(DEFAULT_FAN_POSITION)
-  const [roomLayout, setRoomLayout] = useState<RoomLayout>("flat")
+  const [roomLayout, setRoomLayout] = useState<RoomLayout>(DEFAULT_ROOM_LAYOUT)
   const [wallHeightCm, setWallHeightCm] = useState(DEFAULT_WALL_HEIGHT_CM)
 
   const {
@@ -246,6 +247,7 @@ export function Chamber3dPage() {
                       setFanOrientationDeg(DEFAULT_FAN_ORIENTATION_DEG)
                       setFanCeilingGapCm(DEFAULT_FAN_CEILING_GAP_CM)
                       setFanPosition(DEFAULT_FAN_POSITION)
+                      setRoomLayout(DEFAULT_ROOM_LAYOUT)
                       setWallHeightCm(DEFAULT_WALL_HEIGHT_CM)
                     }}
                   >
