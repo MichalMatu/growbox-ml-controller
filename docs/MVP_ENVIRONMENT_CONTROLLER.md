@@ -14,24 +14,31 @@ Hardware choices do not define the core. ESP32-S3, OLED, encoder, GPIO, relay bo
 The core follows IPO separation:
 
 ```text
-INPUT
-semantic environment values
-        |
-        v
+MEASUREMENTS + SYSTEM TIME + CONFIGURATION
+                    |
+                    v
+             EnvironmentState
+                    |
+                    v
 PROCESSING
 ControlPolicy
-        |
-        v
-Safety + Arbitration
-        |
-        v
+                    |
+                    v
+ARBITRATION
+                    |
+                    v
+SAFETY SUPERVISOR
+                    |
+                    v
 OUTPUT
 semantic device-role commands
 ```
 
 Rules:
 
-- inputs describe values, never hardware sources;
+- measurements describe semantic values, never hardware sources;
+- current time is system context, not a sensor input;
+- schedule state is derived from current time and configuration;
 - processing never directly controls GPIO or a specific device;
 - outputs describe device roles, never physical endpoints;
 - hardware adapters exist only outside the core;
@@ -40,15 +47,13 @@ Rules:
 
 ## 3. Frozen INPUT contract
 
-Required semantic inputs:
+Required semantic measurements:
 
 - `air_temperature_c`
 - `relative_humidity_pct`
 - `co2_ppm`
-- `time_of_day`
-- `light_schedule_active`
 
-Optional semantic inputs:
+Optional semantic measurements:
 
 - `outside_temperature_c`
 - `outside_humidity_pct`
@@ -58,28 +63,53 @@ Every measured value must carry measurement state separately from its numeric va
 - `valid`
 - freshness / `age_ms`
 
+System context:
+
+- `current_time`
+
+`light_schedule_active` is not an input. It is derived from `current_time` and `light_schedule`.
+
 A missing or invalid measurement must never be represented by a fake numeric value such as zero.
 
 The core does not know whether a value came from I2C, BLE, MQTT, Modbus, Nodeflow, REST, a simulator or a recorded dataset.
 
 ## 4. Frozen user configuration
 
-Targets:
-
-- `target_temperature_c`
-- `target_humidity_pct`
-- `target_co2_ppm`
-
 Light schedule:
 
 - `light_on_time`
 - `light_off_time`
+
+Day targets:
+
+- `day_temperature_c`
+- `day_humidity_pct`
+- `day_co2_ppm`
+
+Night targets:
+
+- `night_temperature_c`
+- `night_humidity_pct`
+- `night_co2_enabled = false` by default
+
+The active target profile is derived from current time and the light schedule.
 
 Control tuning:
 
 - `temperature_deadband_c`
 - `humidity_deadband_pct`
 - `co2_deadband_ppm`
+- `minimum_ventilation`
+
+Safety limits:
+
+- `max_temperature_c`
+- `min_temperature_c`
+- `max_humidity_pct`
+- `max_co2_ppm`
+- `max_co2_dosing_time`
+- `sensor_timeout`
+- actuator-specific minimum ON/OFF times where required
 
 Capabilities/configuration also describe which functions are available and which abstract endpoints are assigned to which output roles.
 
@@ -178,13 +208,14 @@ Minimum responsibilities:
 
 - heater and cooler cannot fight each other;
 - humidifier and dehumidifier cannot fight each other;
-- CO2 dosing is disabled with lights off;
+- CO2 dosing is disabled with lights off unless explicitly supported later;
 - CO2 dosing is disabled for invalid/stale CO2 measurement;
 - CO2 dosing may be inhibited during strong exhaust ventilation;
 - stale/invalid required measurements produce safe behavior;
 - actuator commands are clamped to available capability;
 - minimum ON/OFF time and maximum run time can be enforced where needed;
-- shared demands are resolved deterministically.
+- shared demands are resolved deterministically;
+- configured hard safety limits override controller requests.
 
 The system should expose reasons for overrides and resulting actions.
 
@@ -223,8 +254,9 @@ Conceptually:
 
 ```text
 ControllerConfig
-├── targets
 ├── light_schedule
+├── day_targets
+├── night_targets
 ├── control_tuning
 ├── enabled_functions
 ├── output_bindings
@@ -236,7 +268,9 @@ The core publishes status independently of any UI:
 ```text
 ControllerStatus
 ├── environment
-├── targets
+├── current_time
+├── active_profile (DAY/NIGHT)
+├── active_targets
 ├── requested_actions
 ├── final_safe_actions
 ├── output_bindings
@@ -253,6 +287,7 @@ Included:
 - temperature control;
 - humidity control;
 - CO2 control;
+- day/night targets;
 - light schedule;
 - exhaust and circulation fan roles;
 - hardware-independent input/output mapping;
