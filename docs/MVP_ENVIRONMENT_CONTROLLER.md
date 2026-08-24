@@ -5,7 +5,9 @@ Branch: `mvp/environment-controller`
 
 ## 1. Product goal
 
-Build a hardware-independent environment controller for a typical indoor growbox.
+Build a standalone, hardware-independent environment controller for a typical indoor growbox.
+
+This project owns its own control model, simulation/training path, runtime contract and future embedded implementation. It is not an extension, plugin, ML node or control layer for `esp32s3_LiteGraph`.
 
 Hardware choices do not define the core. ESP32-S3, OLED, encoder, GPIO, relay boards, BLE, MQTT, Shelly, Modbus and sensor models are future adapters.
 
@@ -44,7 +46,7 @@ Rules:
 - outputs describe device roles, never physical endpoints;
 - hardware adapters exist only outside the core;
 - `SafetySupervisor` remains independent from the control policy;
-- the first policy is rule based; ML may later replace only `ControlPolicy`.
+- the first policy is rule based; ML may later replace only `ControlPolicy` inside this standalone project.
 
 ## 3. Frozen INPUT contract
 
@@ -83,7 +85,7 @@ CO2 is optional. A basic growbox controller must remain fully functional for tem
 
 A missing or invalid measurement must never be represented by a fake numeric value such as zero.
 
-The core does not know whether a value came from I2C, BLE, MQTT, Modbus, Nodeflow, REST, a simulator or a recorded dataset.
+The core does not know whether a value came from I2C, BLE, MQTT, Modbus, REST, a simulator or a recorded dataset.
 
 ## 4. Frozen user configuration
 
@@ -233,7 +235,7 @@ Phase 1 policy:
 RuleControlPolicy
 ```
 
-Future policy:
+Future policy inside this project:
 
 ```text
 MlControlPolicy
@@ -247,7 +249,7 @@ EnvironmentState + ControllerConfig
               -> ControlRequests
 ```
 
-ML is therefore a processing strategy, not the architecture of the whole product.
+ML is therefore a processing strategy inside the standalone growbox controller, not an extension of another automation runtime.
 
 The rule controller may use either RH or calculated VPD for humidity-related decisions according to the active DAY/NIGHT profile.
 
@@ -375,7 +377,8 @@ Not included yet:
 - multiple climate zones;
 - hardware drivers;
 - OLED/menu implementation;
-- final ML model.
+- final ML model;
+- LiteGraph/Nodeflow integration or an ML node for `esp32s3_LiteGraph`.
 
 ## 13. Implementation order
 
@@ -386,8 +389,8 @@ Not included yet:
 5. Run the complete loop on desktop: `simulator -> controller -> simulator`.
 6. Define stable JSON configuration/status representation.
 7. Adapt existing dashboards as needed.
-8. Add embedded/hardware adapters only after the core is stable.
-9. Add ML policy later using the same I/O contract.
+8. Add standalone embedded/hardware adapters only after the core is stable.
+9. Train and benchmark `MlControlPolicy` inside this project against the deterministic reference controller.
 
 ## 14. Decisions intentionally postponed
 
@@ -402,3 +405,17 @@ Do not choose yet:
 - final ML architecture.
 
 Those choices must adapt to this contract, not define it.
+
+## 15. Project boundary
+
+`growbox-ml-controller` and `esp32s3_LiteGraph` remain separate projects.
+
+For this MVP:
+
+- no ML node is added to LiteGraph;
+- no LiteGraph graph analysis is required by the growbox controller;
+- no shared runtime or control loop is introduced;
+- no dependency on Nodeflow contracts is allowed in the controller core;
+- any future interoperability, if ever useful, must happen through a generic external adapter/API and must not couple either project's internal architecture.
+
+This boundary is intentional: the growbox project must be able to prove or disprove the value of ML on its own, with its own simulator, benchmark and observable controller behavior.
