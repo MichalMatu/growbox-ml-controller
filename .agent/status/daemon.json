@@ -1,9 +1,9 @@
 {
   "version": 1,
   "daemon_version": "4.6.0",
-  "state": "idle",
-  "pid": 64706,
-  "updated_at": "2026-08-24T13:06:59.914797+00:00",
+  "state": "running",
+  "pid": 65055,
+  "updated_at": "2026-08-24T13:07:33.815175+00:00",
   "self_revision": "2920002459a6dc7267da7fe2cc633a4bf240aad2",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -11,15 +11,7 @@
   "idle_timeout_default": 300,
   "task_timeout_default": 1800,
   "memory_limit_mb_default": 4096,
-  "current_task_id": null,
-  "current_attempt_id": null,
-  "current_task_digest": null,
-  "repository_id": "growbox-ml-controller",
-  "repository": "MichalMatu/growbox-ml-controller",
-  "control_branch": "agent-control",
-  "default_branch": "main",
-  "execution_model": "multi_repository_worker",
-  "worker_pid": 64706,
-  "supervisor_pid": 718,
-  "last_task_id": "growbox-fix-room-reset-20260824-001"
+  "current_task_id": "growbox-fix-room-reset-20260824-002",
+  "current_attempt_id": "5d21b9b86ba557a3ea03b82e",
+  "current_task_digest": "0ad0f12e88ac97a24ad5f475119815d9b08f64fa1b0e47746ac8f3798f45850d"
 }
