@@ -3,7 +3,7 @@
   "daemon_version": "4.6.0",
   "state": "running",
   "pid": 63601,
-  "updated_at": "2026-08-24T13:03:52.832004+00:00",
+  "updated_at": "2026-08-24T13:04:07.496540+00:00",
   "self_revision": "2920002459a6dc7267da7fe2cc633a4bf240aad2",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -17,16 +17,16 @@
   "progress": {
     "event": "command_started",
     "phase": "commands",
-    "index": 4,
+    "index": 5,
     "total": 6,
-    "command": "npx -y pnpm@11.10.0 --dir web lint",
-    "pid": 63943,
+    "command": "npx -y pnpm@11.10.0 --dir web test -- --run",
+    "pid": 64039,
     "timeout": 300,
     "idle_timeout": 300,
     "memory_limit_mb": 4096,
-    "started_at": "2026-08-24T13:03:49.971156+00:00",
-    "stage_name": "web-lint",
-    "stage_index": 4,
+    "started_at": "2026-08-24T13:04:04.057647+00:00",
+    "stage_name": "web-test",
+    "stage_index": 5,
     "stage_total": 6,
     "stage_phase": "commands",
     "stage_timeout": 300,
@@ -35,6 +35,6 @@
     "task_digest": "020c2f4ad136d4d797bdd805c1a0c0efd6642213dee22c65ca4ee38df941a93a",
     "daemon_version": "4.6.0",
     "daemon_pid": 63601,
-    "updated_at": "2026-08-24T13:03:49.971239+00:00"
+    "updated_at": "2026-08-24T13:04:04.057731+00:00"
   }
 }
