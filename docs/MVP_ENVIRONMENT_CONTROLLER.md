@@ -52,12 +52,13 @@ Required semantic measurements:
 
 - `air_temperature_c`
 - `relative_humidity_pct`
-- `co2_ppm`
 
 Optional semantic measurements:
 
+- `co2_ppm`
 - `outside_temperature_c`
 - `outside_humidity_pct`
+- `leaf_temperature_c`
 
 Every measured value must carry measurement state separately from its numeric value:
 
@@ -70,12 +71,15 @@ System context:
 
 Derived environment values:
 
-- `vpd_kpa`
+- `air_vpd_kpa`
+- `leaf_vpd_kpa` when `leaf_temperature_c` is valid
 - optionally `outside_vpd_kpa` when outside temperature and humidity are valid
 
 `light_schedule_active` is not an input. It is derived from `current_time` and `light_schedule`.
 
-`vpd_kpa` is not a physical input. For MVP v1 it is calculated from air temperature and relative humidity, effectively assuming leaf temperature is close to air temperature. A future leaf-temperature measurement may improve the VPD model without changing the hardware-independent architecture.
+For MVP v1, VPD control must work without a leaf-temperature sensor. When `leaf_temperature_c` is unavailable, the controller uses air VPD calculated from air temperature and relative humidity. When a valid leaf temperature is available, the controller may use leaf VPD for more accurate plant-level control.
+
+CO2 is optional. A basic growbox controller must remain fully functional for temperature, humidity/VPD, ventilation and lighting without a CO2 sensor.
 
 A missing or invalid measurement must never be represented by a fake numeric value such as zero.
 
@@ -93,8 +97,10 @@ Day targets:
 - `day_temperature_c`
 - `day_humidity_pct`
 - `day_vpd_kpa`
-- `day_co2_ppm`
 - `day_humidity_control_mode = RH | VPD`
+- `day_co2_enabled`
+- `day_co2_ppm` when CO2 control is enabled
+- `day_light_level = 0..1`
 
 Night targets:
 
@@ -103,6 +109,8 @@ Night targets:
 - `night_vpd_kpa`
 - `night_humidity_control_mode = RH | VPD`
 - `night_co2_enabled = false` by default
+- `night_co2_ppm` only when explicitly enabled
+- `night_light_level = 0.0` by default
 
 The active target profile is derived from current time and the light schedule.
 
@@ -110,10 +118,12 @@ RH and VPD are coupled quantities, so the controller must not independently regu
 
 ```text
 RH mode  -> relative_humidity_pct is the controlled humidity target
-VPD mode -> vpd_kpa is the controlled humidity target
+VPD mode -> VPD is the controlled humidity target
 ```
 
 The non-selected value remains calculated and visible for monitoring, diagnostics and future ML use.
+
+Temperature always remains an independent target. A correct VPD does not make an incorrect air temperature acceptable.
 
 Control tuning:
 
@@ -151,7 +161,7 @@ MVP v1 device roles:
 Internal commands use normalized values:
 
 ```text
-0.0 = off / minimum
+0.0 = off / minimum request
 1.0 = full request
 ```
 
@@ -171,6 +181,23 @@ ControlRequests {
   light: 0..1
 }
 ```
+
+Each bound actuator may also declare configurable operating limits:
+
+```text
+ActuatorLimits {
+  min_level: 0..1
+  max_level: 0..1
+}
+```
+
+Examples:
+
+- exhaust fan may idle at `0.20` and ramp up to `1.00`;
+- a dimmable light may be limited to `0.70`;
+- a binary relay may still expose `0.0/1.0` after adapter conversion.
+
+The controller requests semantic intensity. The adapter decides how that request is physically represented.
 
 ## 6. Output binding
 
@@ -232,12 +259,14 @@ Minimum responsibilities:
 
 - heater and cooler cannot fight each other;
 - humidifier and dehumidifier cannot fight each other;
+- CO2 dosing is disabled when CO2 control is not configured;
 - CO2 dosing is disabled with lights off unless explicitly supported later;
-- CO2 dosing is disabled for invalid/stale CO2 measurement;
+- CO2 dosing is disabled for missing, invalid or stale CO2 measurement;
 - CO2 dosing may be inhibited during strong exhaust ventilation;
 - stale/invalid required measurements produce safe behavior;
 - VPD control is unavailable when temperature or humidity is invalid/stale;
-- actuator commands are clamped to available capability;
+- leaf-VPD control falls back to air VPD if leaf temperature is unavailable or stale;
+- actuator commands are clamped to configured min/max capability;
 - minimum ON/OFF time and maximum run time can be enforced where needed;
 - shared demands are resolved deterministically;
 - configured hard safety limits override controller requests.
@@ -257,6 +286,8 @@ The system should expose reasons for overrides and resulting actions.
 
 Individual loops do not directly own the exhaust fan. They produce demands and arbitration combines them into the final request.
 
+`minimum_ventilation` together with actuator `min_level` allows a typical growbox configuration where the exhaust fan runs continuously at a low baseline and increases only when climate control requires it.
+
 `circulation_fan` is an independent role for internal air movement and does not automatically imply outside-air exchange.
 
 ## 10. Missing capability behavior
@@ -268,7 +299,8 @@ Examples:
 - temperature measurement available, heater absent -> monitor only / use other available strategies;
 - humidity measurement absent, humidifier present -> no automatic RH or VPD control;
 - temperature or humidity invalid -> calculated VPD invalid;
-- CO2 measurement absent -> automatic CO2 dosing disabled;
+- leaf temperature absent -> use air VPD;
+- CO2 measurement absent -> temperature/RH/VPD/light control continues normally and automatic CO2 dosing stays disabled;
 - CO2 measurement available, doser absent -> monitor only;
 - cooler absent -> cooling may use exhaust if available and allowed.
 
@@ -287,6 +319,7 @@ ControllerConfig
 ├── control_tuning
 ├── enabled_functions
 ├── output_bindings
+├── actuator_limits
 └── safety_limits
 ```
 
@@ -297,8 +330,10 @@ ControllerStatus
 ├── environment
 │   ├── temperature
 │   ├── relative_humidity
-│   ├── vpd
-│   └── co2
+│   ├── air_vpd
+│   ├── leaf_temperature [optional]
+│   ├── leaf_vpd [optional]
+│   └── co2 [optional]
 ├── current_time
 ├── active_profile (DAY/NIGHT)
 ├── active_targets
@@ -317,11 +352,13 @@ Included:
 
 - temperature control;
 - humidity control by RH or calculated VPD;
-- VPD calculation and monitoring;
-- CO2 control;
+- air VPD calculation and monitoring;
+- optional leaf temperature and leaf-VPD calculation;
+- optional CO2 monitoring/control;
 - day/night targets;
-- light schedule;
+- light schedule and normalized light level;
 - exhaust and circulation fan roles;
+- configurable actuator min/max levels;
 - hardware-independent input/output mapping;
 - rule policy;
 - safety/arbitration;
@@ -335,7 +372,6 @@ Not included yet:
 - pH;
 - nutrient tank control;
 - PPFD;
-- leaf temperature as a physical measurement;
 - multiple climate zones;
 - hardware drivers;
 - OLED/menu implementation;
@@ -343,7 +379,7 @@ Not included yet:
 
 ## 13. Implementation order
 
-1. Finish behavioral decisions for the frozen contract: exact safety rules, deadbands, priorities, RH/VPD mode behavior and schedule semantics.
+1. Finish behavioral decisions for the frozen contract: exact safety rules, deadbands, priorities, RH/VPD mode behavior, actuator min/max semantics and schedule semantics.
 2. Define small hardware-independent domain types.
 3. Implement deterministic reference controller and SafetySupervisor.
 4. Adapt the existing simulator to the new `EnvironmentState` / output contract.
