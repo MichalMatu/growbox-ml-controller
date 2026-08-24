@@ -1,13 +1,12 @@
 {
-  "event": "task_finished",
-  "task_id": "growbox-web-gates-20260824-001",
-  "task_digest": "77b91830de154744cee13a9ff2eca942f558c352c5b1984dd0a35bcb6f79fdd8",
+  "event": "result_published",
   "status": "failed",
   "failure_reason": "command_failed",
-  "finished_at": "2026-08-24T13:02:28.022895+00:00",
   "attempt_id": "5fd8731b99d9449d10ef3ea8",
+  "task_digest": "77b91830de154744cee13a9ff2eca942f558c352c5b1984dd0a35bcb6f79fdd8",
+  "finished_at": "2026-08-24T13:02:28.022895+00:00",
+  "updated_at": "2026-08-24T13:02:36.045779+00:00",
+  "task_id": "growbox-web-gates-20260824-001",
   "daemon_version": "4.6.0",
-  "daemon_pid": 63148,
-  "updated_at": "2026-08-24T13:02:28.161926+00:00",
   "pid": 63148
 }
