@@ -39,6 +39,7 @@ Rules:
 - measurements describe semantic values, never hardware sources;
 - current time is system context, not a sensor input;
 - schedule state is derived from current time and configuration;
+- VPD is derived inside the core from temperature and relative humidity;
 - processing never directly controls GPIO or a specific device;
 - outputs describe device roles, never physical endpoints;
 - hardware adapters exist only outside the core;
@@ -67,7 +68,14 @@ System context:
 
 - `current_time`
 
+Derived environment values:
+
+- `vpd_kpa`
+- optionally `outside_vpd_kpa` when outside temperature and humidity are valid
+
 `light_schedule_active` is not an input. It is derived from `current_time` and `light_schedule`.
+
+`vpd_kpa` is not a physical input. For MVP v1 it is calculated from air temperature and relative humidity, effectively assuming leaf temperature is close to air temperature. A future leaf-temperature measurement may improve the VPD model without changing the hardware-independent architecture.
 
 A missing or invalid measurement must never be represented by a fake numeric value such as zero.
 
@@ -84,20 +92,34 @@ Day targets:
 
 - `day_temperature_c`
 - `day_humidity_pct`
+- `day_vpd_kpa`
 - `day_co2_ppm`
+- `day_humidity_control_mode = RH | VPD`
 
 Night targets:
 
 - `night_temperature_c`
 - `night_humidity_pct`
+- `night_vpd_kpa`
+- `night_humidity_control_mode = RH | VPD`
 - `night_co2_enabled = false` by default
 
 The active target profile is derived from current time and the light schedule.
+
+RH and VPD are coupled quantities, so the controller must not independently regulate both at the same time. Each DAY/NIGHT profile selects one humidity-control mode:
+
+```text
+RH mode  -> relative_humidity_pct is the controlled humidity target
+VPD mode -> vpd_kpa is the controlled humidity target
+```
+
+The non-selected value remains calculated and visible for monitoring, diagnostics and future ML use.
 
 Control tuning:
 
 - `temperature_deadband_c`
 - `humidity_deadband_pct`
+- `vpd_deadband_kpa`
 - `co2_deadband_ppm`
 - `minimum_ventilation`
 
@@ -200,6 +222,8 @@ EnvironmentState + ControllerConfig
 
 ML is therefore a processing strategy, not the architecture of the whole product.
 
+The rule controller may use either RH or calculated VPD for humidity-related decisions according to the active DAY/NIGHT profile.
+
 ## 8. Safety and arbitration
 
 Safety is authoritative and remains outside ML/rule policy.
@@ -212,6 +236,7 @@ Minimum responsibilities:
 - CO2 dosing is disabled for invalid/stale CO2 measurement;
 - CO2 dosing may be inhibited during strong exhaust ventilation;
 - stale/invalid required measurements produce safe behavior;
+- VPD control is unavailable when temperature or humidity is invalid/stale;
 - actuator commands are clamped to available capability;
 - minimum ON/OFF time and maximum run time can be enforced where needed;
 - shared demands are resolved deterministically;
@@ -226,7 +251,7 @@ The system should expose reasons for overrides and resulting actions.
 `exhaust_fan` may be requested for several reasons:
 
 - temperature removal;
-- humidity removal;
+- humidity/VPD correction;
 - baseline air exchange;
 - safety.
 
@@ -241,7 +266,8 @@ Missing hardware is not itself an error.
 Examples:
 
 - temperature measurement available, heater absent -> monitor only / use other available strategies;
-- humidity measurement absent, humidifier present -> no automatic humidification;
+- humidity measurement absent, humidifier present -> no automatic RH or VPD control;
+- temperature or humidity invalid -> calculated VPD invalid;
 - CO2 measurement absent -> automatic CO2 dosing disabled;
 - CO2 measurement available, doser absent -> monitor only;
 - cooler absent -> cooling may use exhaust if available and allowed.
@@ -257,6 +283,7 @@ ControllerConfig
 ├── light_schedule
 ├── day_targets
 ├── night_targets
+├── humidity_control_mode
 ├── control_tuning
 ├── enabled_functions
 ├── output_bindings
@@ -268,6 +295,10 @@ The core publishes status independently of any UI:
 ```text
 ControllerStatus
 ├── environment
+│   ├── temperature
+│   ├── relative_humidity
+│   ├── vpd
+│   └── co2
 ├── current_time
 ├── active_profile (DAY/NIGHT)
 ├── active_targets
@@ -285,7 +316,8 @@ OLED, web UI, app or API are only views/editors of this model.
 Included:
 
 - temperature control;
-- humidity control;
+- humidity control by RH or calculated VPD;
+- VPD calculation and monitoring;
 - CO2 control;
 - day/night targets;
 - light schedule;
@@ -303,7 +335,7 @@ Not included yet:
 - pH;
 - nutrient tank control;
 - PPFD;
-- leaf temperature;
+- leaf temperature as a physical measurement;
 - multiple climate zones;
 - hardware drivers;
 - OLED/menu implementation;
@@ -311,7 +343,7 @@ Not included yet:
 
 ## 13. Implementation order
 
-1. Finish behavioral decisions for the frozen contract: exact safety rules, deadbands, priorities and schedule semantics.
+1. Finish behavioral decisions for the frozen contract: exact safety rules, deadbands, priorities, RH/VPD mode behavior and schedule semantics.
 2. Define small hardware-independent domain types.
 3. Implement deterministic reference controller and SafetySupervisor.
 4. Adapt the existing simulator to the new `EnvironmentState` / output contract.
