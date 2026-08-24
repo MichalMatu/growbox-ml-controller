@@ -2,8 +2,8 @@
   "version": 1,
   "daemon_version": "4.6.0",
   "state": "idle",
-  "pid": 62245,
-  "updated_at": "2026-08-24T17:48:04.956131+00:00",
+  "pid": 78191,
+  "updated_at": "2026-08-24T18:17:23.067365+00:00",
   "self_revision": "2920002459a6dc7267da7fe2cc633a4bf240aad2",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -19,6 +19,6 @@
   "control_branch": "agent-control",
   "default_branch": "main",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 62245,
+  "worker_pid": 78191,
   "supervisor_pid": 718
 }
