@@ -41,7 +41,7 @@ Rules:
 - measurements describe semantic values, never hardware sources;
 - current time is system context, not a sensor input;
 - schedule state is derived from current time and configuration;
-- VPD is derived inside the core from temperature and relative humidity;
+- VPD is derived inside the core from air temperature and relative humidity;
 - processing never directly controls GPIO or a specific device;
 - outputs describe device roles, never physical endpoints;
 - hardware adapters exist only outside the core;
@@ -60,7 +60,6 @@ Optional semantic measurements:
 - `co2_ppm`
 - `outside_temperature_c`
 - `outside_humidity_pct`
-- `leaf_temperature_c`
 
 Every measured value must carry measurement state separately from its numeric value:
 
@@ -74,12 +73,11 @@ System context:
 Derived environment values:
 
 - `air_vpd_kpa`
-- `leaf_vpd_kpa` when `leaf_temperature_c` is valid
 - optionally `outside_vpd_kpa` when outside temperature and humidity are valid
 
 `light_schedule_active` is not an input. It is derived from `current_time` and `light_schedule`.
 
-For MVP v1, VPD control must work without a leaf-temperature sensor. When `leaf_temperature_c` is unavailable, the controller uses air VPD calculated from air temperature and relative humidity. When a valid leaf temperature is available, the controller may use leaf VPD for more accurate plant-level control.
+For MVP v1, VPD is calculated from air temperature and relative humidity only. Leaf temperature and leaf VPD are intentionally outside the MVP to keep hardware, simulation and model training simpler.
 
 CO2 is optional. A basic growbox controller must remain fully functional for temperature, humidity/VPD, ventilation and lighting without a CO2 sensor.
 
@@ -120,7 +118,7 @@ RH and VPD are coupled quantities, so the controller must not independently regu
 
 ```text
 RH mode  -> relative_humidity_pct is the controlled humidity target
-VPD mode -> VPD is the controlled humidity target
+VPD mode -> air_vpd_kpa is the controlled humidity target
 ```
 
 The non-selected value remains calculated and visible for monitoring, diagnostics and future ML use.
@@ -251,7 +249,7 @@ EnvironmentState + ControllerConfig
 
 ML is therefore a processing strategy inside the standalone growbox controller, not an extension of another automation runtime.
 
-The rule controller may use either RH or calculated VPD for humidity-related decisions according to the active DAY/NIGHT profile.
+The rule controller may use either RH or calculated air VPD for humidity-related decisions according to the active DAY/NIGHT profile.
 
 ## 8. Safety and arbitration
 
@@ -267,7 +265,6 @@ Minimum responsibilities:
 - CO2 dosing may be inhibited during strong exhaust ventilation;
 - stale/invalid required measurements produce safe behavior;
 - VPD control is unavailable when temperature or humidity is invalid/stale;
-- leaf-VPD control falls back to air VPD if leaf temperature is unavailable or stale;
 - actuator commands are clamped to configured min/max capability;
 - minimum ON/OFF time and maximum run time can be enforced where needed;
 - shared demands are resolved deterministically;
@@ -300,8 +297,7 @@ Examples:
 
 - temperature measurement available, heater absent -> monitor only / use other available strategies;
 - humidity measurement absent, humidifier present -> no automatic RH or VPD control;
-- temperature or humidity invalid -> calculated VPD invalid;
-- leaf temperature absent -> use air VPD;
+- temperature or humidity invalid -> calculated air VPD invalid;
 - CO2 measurement absent -> temperature/RH/VPD/light control continues normally and automatic CO2 dosing stays disabled;
 - CO2 measurement available, doser absent -> monitor only;
 - cooler absent -> cooling may use exhaust if available and allowed.
@@ -333,8 +329,6 @@ ControllerStatus
 │   ├── temperature
 │   ├── relative_humidity
 │   ├── air_vpd
-│   ├── leaf_temperature [optional]
-│   ├── leaf_vpd [optional]
 │   └── co2 [optional]
 ├── current_time
 ├── active_profile (DAY/NIGHT)
@@ -353,9 +347,8 @@ OLED, web UI, app or API are only views/editors of this model.
 Included:
 
 - temperature control;
-- humidity control by RH or calculated VPD;
+- humidity control by RH or calculated air VPD;
 - air VPD calculation and monitoring;
-- optional leaf temperature and leaf-VPD calculation;
 - optional CO2 monitoring/control;
 - day/night targets;
 - light schedule and normalized light level;
@@ -368,6 +361,7 @@ Included:
 
 Not included yet:
 
+- leaf-temperature sensing or leaf VPD;
 - irrigation;
 - soil moisture;
 - EC;
@@ -398,7 +392,7 @@ Do not choose yet:
 
 - exact ESP32 board;
 - display or encoder;
-- sensor models;
+- sensor models beyond the current hardware MVP set;
 - GPIO/relay/SSR hardware;
 - MQTT/BLE/Modbus details;
 - final UI layout;
