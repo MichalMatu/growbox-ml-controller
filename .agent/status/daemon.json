@@ -1,9 +1,9 @@
 {
   "version": 1,
   "daemon_version": "4.9.0",
-  "state": "idle",
-  "pid": 66475,
-  "updated_at": "2026-08-25T10:03:09.535139+00:00",
+  "state": "running",
+  "pid": 69192,
+  "updated_at": "2026-08-25T10:04:09.159764+00:00",
   "self_revision": "a8d6530a07bf3538c2354e8c1adffcba88ee98ae",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -14,15 +14,7 @@
   "task_timeout_default": 1800,
   "task_timeout_max": 21600,
   "memory_limit_mb_default": 4096,
-  "current_task_id": null,
-  "current_attempt_id": null,
-  "current_task_digest": null,
-  "repository_id": "growbox-ml-controller",
-  "repository": "MichalMatu/growbox-ml-controller",
-  "control_branch": "agent-control",
-  "default_branch": "main",
-  "execution_model": "multi_repository_worker",
-  "worker_pid": 66475,
-  "supervisor_pid": 67414,
-  "last_task_id": "20260825-litegraph-control-cleanup-final"
+  "current_task_id": "20260825-litegraph-work-storage-audit",
+  "current_attempt_id": "11c9e1a0c3a534dd6bafbce1",
+  "current_task_digest": "03fc8f148cf58ac097305312e88da3f45e69874c39803742e02a21be538361b9"
 }
