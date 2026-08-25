@@ -3,7 +3,7 @@
   "daemon_version": "4.9.5",
   "state": "idle",
   "pid": 76650,
-  "updated_at": "2026-08-25T12:17:28.819968+00:00",
+  "updated_at": "2026-08-25T12:17:33.011480+00:00",
   "self_revision": "673e1082747f604b6bb62a3a882e9130092ba650",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -16,5 +16,13 @@
   "memory_limit_mb_default": 4096,
   "current_task_id": null,
   "current_attempt_id": null,
-  "current_task_digest": null
+  "current_task_digest": null,
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "control_branch": "agent-control",
+  "default_branch": "main",
+  "execution_model": "multi_repository_worker",
+  "worker_pid": 76650,
+  "supervisor_pid": 67414,
+  "last_task_id": "20260825-local-agent-496-hot-path-patch"
 }
