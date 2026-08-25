@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260825-local-agent-hot-path-log-audit",
+  "task_digest": "de19d4c26e2f1d080e6a29747a5a3a8be07e6be436986d339f746b03a035f14e",
+  "idle_timeout": 30,
+  "task_timeout": 180,
+  "memory_limit_mb": 512,
+  "started_at": "2026-08-25T12:10:38.461174+00:00",
+  "attempt_id": "8821aeee8159d354498583ad",
+  "daemon_version": "4.9.5",
+  "daemon_pid": 72853,
+  "updated_at": "2026-08-25T12:10:38.461360+00:00",
+  "pid": 72853
+}
