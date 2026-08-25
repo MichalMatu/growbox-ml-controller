@@ -1,0 +1,13 @@
+{
+  "id": "20260825-litegraph-work-storage-audit",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "command_timeout": 300,
+  "idle_timeout": 300,
+  "task_timeout": 900,
+  "memory_limit_mb": 1024,
+  "commands": [
+    "set -euo pipefail; W=$HOME/agent-workspace/work; echo '=== TOTAL ==='; du -sh $W; echo '=== TOP LEVEL ==='; du -sh $W/.[!.]* $W/* 2>/dev/null | sort -h | tail -40; echo '=== INTERFACE ==='; du -sh $W/interface/.[!.]* $W/interface/* 2>/dev/null | sort -h | tail -30 || true; echo '=== GIT STATUS ==='; git -C $W status --short; echo '=== IGNORED TOP ==='; git -C $W status --ignored --short 2>/dev/null | head -100 || true; echo '=== COMMON CACHES ==='; for p in .pio .cache .pytest_cache .ruff_cache interface/node_modules interface/.svelte-kit interface/build interface/dist node_modules build dist; do if [ -e $W/$p ]; then du -sh $W/$p; fi; done"
+  ]
+}
