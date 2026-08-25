@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260825-litegraph-control-config-audit",
   "task_digest": "84b5cea0018530d1d47fdb8ebda159a286e8fdde483ad0ddb56b0092c63769e8",
-  "idle_timeout": 300,
-  "task_timeout": 900,
-  "memory_limit_mb": 1024,
-  "started_at": "2026-08-25T10:01:34.460214+00:00",
+  "status": "done",
+  "failure_reason": null,
+  "finished_at": "2026-08-25T10:01:38.216093+00:00",
   "attempt_id": "e29c506940c0f729b9bab349",
   "daemon_version": "4.9.0",
   "daemon_pid": 65050,
-  "updated_at": "2026-08-25T10:01:34.460400+00:00",
+  "updated_at": "2026-08-25T10:01:38.785499+00:00",
   "pid": 65050
 }
