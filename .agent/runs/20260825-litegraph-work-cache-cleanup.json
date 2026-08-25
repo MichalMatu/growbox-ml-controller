@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260825-litegraph-work-cache-cleanup",
+  "task_digest": "c436073fb5dfb08be68c0a25bc4162301c098d57f3a6be3decaaf4234b167b36",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 1024,
+  "started_at": "2026-08-25T10:05:43.457070+00:00",
+  "attempt_id": "1d9c7130e3c98db10428af29",
+  "daemon_version": "4.9.0",
+  "daemon_pid": 70342,
+  "updated_at": "2026-08-25T10:05:43.457255+00:00",
+  "pid": 70342
+}
