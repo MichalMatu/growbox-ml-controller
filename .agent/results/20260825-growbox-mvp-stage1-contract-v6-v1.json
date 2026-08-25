@@ -1,0 +1,9 @@
+{
+  "id": "20260825-growbox-mvp-stage1-contract-v6-v1",
+  "status": "failed",
+  "failure_reason": "invalid_task_file",
+  "started_at": null,
+  "finished_at": "2026-08-25T16:32:11.563083+00:00",
+  "daemon_version": "4.9.6",
+  "error": "JSONDecodeError: Expecting ',' delimiter: line 16 column 5909 (char 6331)"
+}
