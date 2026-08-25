@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260825-local-agent-496-hot-path-patch-v2",
+  "task_digest": "0ead80bfc8b619540dabdf687f853aa3a30b84ee597013c83b50321135e9efad",
+  "idle_timeout": 240,
+  "task_timeout": 1800,
+  "memory_limit_mb": 1024,
+  "started_at": "2026-08-25T12:19:29.253844+00:00",
+  "attempt_id": "56b2eeb26fda53f36a03505a",
+  "daemon_version": "4.9.5",
+  "daemon_pid": 77699,
+  "updated_at": "2026-08-25T12:19:29.254007+00:00",
+  "pid": 77699
+}
