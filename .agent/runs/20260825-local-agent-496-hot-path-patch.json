@@ -1,13 +1,12 @@
 {
-  "event": "task_finished",
-  "task_id": "20260825-local-agent-496-hot-path-patch",
-  "task_digest": "f7f4e4af5cced850cc738dc6470154944ebcfc42e74b5e36f82f8c5e22d0e482",
+  "event": "result_published",
   "status": "failed",
   "failure_reason": "command_failed",
-  "finished_at": "2026-08-25T12:17:14.359396+00:00",
   "attempt_id": "3a3d87a63df710a9fd238b6b",
+  "task_digest": "f7f4e4af5cced850cc738dc6470154944ebcfc42e74b5e36f82f8c5e22d0e482",
+  "finished_at": "2026-08-25T12:17:14.359396+00:00",
+  "updated_at": "2026-08-25T12:17:24.727477+00:00",
+  "task_id": "20260825-local-agent-496-hot-path-patch",
   "daemon_version": "4.9.5",
-  "daemon_pid": 76650,
-  "updated_at": "2026-08-25T12:17:14.727601+00:00",
   "pid": 76650
 }
