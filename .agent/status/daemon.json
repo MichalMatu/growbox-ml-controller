@@ -1,9 +1,9 @@
 {
   "version": 1,
   "daemon_version": "4.9.5",
-  "state": "running",
+  "state": "idle",
   "pid": 77699,
-  "updated_at": "2026-08-25T12:19:22.402475+00:00",
+  "updated_at": "2026-08-25T12:19:52.585337+00:00",
   "self_revision": "673e1082747f604b6bb62a3a882e9130092ba650",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -14,7 +14,7 @@
   "task_timeout_default": 1800,
   "task_timeout_max": 21600,
   "memory_limit_mb_default": 4096,
-  "current_task_id": "20260825-local-agent-496-hot-path-patch-v2",
-  "current_attempt_id": "56b2eeb26fda53f36a03505a",
-  "current_task_digest": "0ead80bfc8b619540dabdf687f853aa3a30b84ee597013c83b50321135e9efad"
+  "current_task_id": null,
+  "current_attempt_id": null,
+  "current_task_digest": null
 }
