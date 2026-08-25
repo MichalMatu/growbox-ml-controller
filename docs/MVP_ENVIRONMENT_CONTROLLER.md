@@ -1,6 +1,6 @@
 # Environment Controller MVP
 
-Status: architecture/design phase — MVP v1 flow, I/O and rebuild plan frozen  
+Status: architecture/design phase — MVP v1 flow, I/O and rebuild plan frozen
 Branch: `mvp/environment-controller`
 
 ## 1. Product goal
@@ -389,7 +389,7 @@ The active code on this branch still contains the old v4 4-pot / 15-output pipel
 Rebuild in this order:
 
 0. Capture baseline before code changes.
-1. Define climate-only contract/schema v5.
+1. Define climate-only contract/schema v6.
 2. Define the minimal controller input/state and trend calculation.
 3. Adapt the existing simulator to the climate-only contract.
 4. Add physics/regression tests and deterministic replay.
@@ -493,7 +493,7 @@ Recommended model metadata to preserve with every trained artifact:
 
 ## 18. Frozen ML v1 feature semantics
 
-The exact JSON ordering is defined when schema v5 is implemented, but the semantic content is frozen here.
+The exact JSON ordering is defined when schema v6 is implemented, but the semantic content is frozen here.
 
 ### Direct measurements available to ML
 
@@ -816,7 +816,7 @@ If later evidence proves a plant variable materially improves climate control, a
 
 The old v4 branch content currently contains 4-pot, irrigation, nutrient-heater and 15-output assumptions. During the rebuild these may remain temporarily as migration code, but the final climate-MVP active path must not depend on them.
 
-Only after contract v5, climate simulator, teacher, dataset audit and closed-loop benchmark are green should obsolete v4-only code/tests/schema pieces be deleted or archived.
+Only after contract v6, climate simulator, teacher, dataset audit and closed-loop benchmark are green should obsolete v4-only code/tests/schema pieces be deleted or archived.
 
 The final result should have one obvious active climate pipeline rather than two competing implementations.
 

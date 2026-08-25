@@ -1,6 +1,6 @@
 # MVP Rebuild Cleanup Plan
 
-Status: frozen companion plan for `MVP_ENVIRONMENT_CONTROLLER.md`  
+Status: frozen companion plan for `MVP_ENVIRONMENT_CONTROLLER.md`
 Branch: `mvp/environment-controller`
 
 This document defines how the repository is cleaned while rebuilding the climate-only MVP. It is part of the frozen implementation plan and exists to prevent the migration branch from becoming a permanent archive of obsolete v4/v5 concepts.
@@ -192,7 +192,7 @@ Safe sequence:
 
 ```text
 A. baseline old branch state
-B. climate schema v5
+B. climate schema v6
 C. climate state/features
 D. climate simulator
 E. physics/regression PASS
@@ -293,6 +293,6 @@ The next work item is not another design pass. It is Stage 0 from the frozen pla
 2. run and record the existing test baseline;
 3. record current contract hash/feature/output dimensions;
 4. save deterministic old-simulator reference traces;
-5. then implement the climate-only schema/contract v5 as the first behavioral migration step.
+5. then implement the climate-only schema/contract v6 as the first behavioral migration step.
 
 No frontend rewrite and no broad cleanup should precede this baseline capture.

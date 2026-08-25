@@ -1,0 +1,485 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Growbox Climate-Only Environment Controller Contract",
+  "schema_id": "environment-controller",
+  "schema_version": 6,
+  "status": "migration_target",
+  "contract_id": "climate-mvp-v1",
+  "draft_note": "Climate-only successor to firmware v4. Browser v5 remains historical migration input and is not this contract.",
+  "migration": {
+    "active_runtime_contract_during_stage_1": "schemas/environment-controller.json (v4)",
+    "historical_browser_contract": "web/schema/environment-controller.v5.json (v5)",
+    "target_contract": "schemas/environment-controller.v6.json (v6)",
+    "activation_rule": "Promote v6 to the single active root contract only after controller, simulator, encoder and tests have migrated."
+  },
+  "hash": {
+    "algorithm": "sha256",
+    "canonicalization": "UTF-8 JSON with lexicographically sorted keys and separators ',' and ':'",
+    "short_hex_characters": 12
+  },
+  "measurement_contract": {
+    "required": [
+      "air_temperature_c",
+      "relative_humidity_pct"
+    ],
+    "optional": [
+      "co2_ppm",
+      "outside_temperature_c",
+      "outside_humidity_pct"
+    ],
+    "state_fields": [
+      "value",
+      "valid",
+      "age_ms"
+    ],
+    "ml_freshness_rule": "fresh is derived deterministically from age_ms and configured sensor timeout; valid and fresh remain separate model features",
+    "missing_value_rule": "Never encode missing data as a meaningful zero. Numeric fallback/default is ignored unless valid and fresh indicate usability.",
+    "outside_co2_sensor": false
+  },
+  "derived_values": [
+    "air_vpd_kpa"
+  ],
+  "product_output_roles": [
+    "heater",
+    "cooler",
+    "exhaust_fan",
+    "circulation_fan",
+    "humidifier",
+    "dehumidifier",
+    "co2_doser",
+    "light"
+  ],
+  "policy_boundary": {
+    "ml_controlled_roles": [
+      "heater",
+      "cooler",
+      "exhaust_fan",
+      "humidifier",
+      "dehumidifier",
+      "co2_doser"
+    ],
+    "deterministic_roles": [
+      "circulation_fan",
+      "light"
+    ],
+    "light_semantics": "scheduled normalized level 0..1 is an ML context/disturbance; ML v1 cannot command light",
+    "circulation_fan_semantics": "deterministic/configured in the single-zone MVP; it is not outside-air exchange",
+    "safety_semantics": "SafetySupervisor remains authoritative after policy output and is never replaced by ML"
+  },
+  "model": {
+    "normalization": "minmax_to_zero_one",
+    "feature_count": 38,
+    "features": [
+      {
+        "name": "air_temperature_c",
+        "path": "measurements.air_temperature_c.value",
+        "type": "number",
+        "unit": "degC",
+        "minimum": -20.0,
+        "maximum": 60.0,
+        "default": 24.0
+      },
+      {
+        "name": "relative_humidity_pct",
+        "path": "measurements.relative_humidity_pct.value",
+        "type": "number",
+        "unit": "percent",
+        "minimum": 0.0,
+        "maximum": 100.0,
+        "default": 60.0
+      },
+      {
+        "name": "co2_ppm",
+        "path": "measurements.co2_ppm.value",
+        "type": "number",
+        "unit": "ppm",
+        "minimum": 250.0,
+        "maximum": 5000.0,
+        "default": 420.0
+      },
+      {
+        "name": "outside_temperature_c",
+        "path": "measurements.outside_temperature_c.value",
+        "type": "number",
+        "unit": "degC",
+        "minimum": -40.0,
+        "maximum": 60.0,
+        "default": 20.0
+      },
+      {
+        "name": "outside_humidity_pct",
+        "path": "measurements.outside_humidity_pct.value",
+        "type": "number",
+        "unit": "percent",
+        "minimum": 0.0,
+        "maximum": 100.0,
+        "default": 50.0
+      },
+      {
+        "name": "air_temperature_valid",
+        "path": "measurements.air_temperature_c.valid",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 1.0
+      },
+      {
+        "name": "air_temperature_fresh",
+        "path": "measurements.air_temperature_c.fresh",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 1.0
+      },
+      {
+        "name": "relative_humidity_valid",
+        "path": "measurements.relative_humidity_pct.valid",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 1.0
+      },
+      {
+        "name": "relative_humidity_fresh",
+        "path": "measurements.relative_humidity_pct.fresh",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 1.0
+      },
+      {
+        "name": "co2_valid",
+        "path": "measurements.co2_ppm.valid",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0
+      },
+      {
+        "name": "co2_fresh",
+        "path": "measurements.co2_ppm.fresh",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0
+      },
+      {
+        "name": "outside_temperature_valid",
+        "path": "measurements.outside_temperature_c.valid",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0
+      },
+      {
+        "name": "outside_temperature_fresh",
+        "path": "measurements.outside_temperature_c.fresh",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0
+      },
+      {
+        "name": "outside_humidity_valid",
+        "path": "measurements.outside_humidity_pct.valid",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0
+      },
+      {
+        "name": "outside_humidity_fresh",
+        "path": "measurements.outside_humidity_pct.fresh",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0
+      },
+      {
+        "name": "air_vpd_kpa",
+        "path": "derived.air_vpd_kpa",
+        "type": "number",
+        "unit": "kPa",
+        "minimum": 0.0,
+        "maximum": 6.0,
+        "default": 1.0
+      },
+      {
+        "name": "humidity_control_mode",
+        "path": "control.humidity_control_mode",
+        "type": "enum",
+        "unit": "enum",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0,
+        "encoding": {
+          "RH": 0.0,
+          "VPD": 1.0
+        }
+      },
+      {
+        "name": "target_air_temperature_c",
+        "path": "targets.air_temperature_c",
+        "type": "number",
+        "unit": "degC",
+        "minimum": 10.0,
+        "maximum": 40.0,
+        "default": 24.0
+      },
+      {
+        "name": "target_relative_humidity_pct",
+        "path": "targets.relative_humidity_pct",
+        "type": "number",
+        "unit": "percent",
+        "minimum": 20.0,
+        "maximum": 90.0,
+        "default": 60.0
+      },
+      {
+        "name": "target_air_vpd_kpa",
+        "path": "targets.air_vpd_kpa",
+        "type": "number",
+        "unit": "kPa",
+        "minimum": 0.2,
+        "maximum": 3.5,
+        "default": 1.2
+      },
+      {
+        "name": "co2_control_enabled",
+        "path": "targets.co2_enabled",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0
+      },
+      {
+        "name": "target_co2_ppm",
+        "path": "targets.co2_ppm",
+        "type": "number",
+        "unit": "ppm",
+        "minimum": 400.0,
+        "maximum": 2000.0,
+        "default": 800.0
+      },
+      {
+        "name": "light_level",
+        "path": "schedule.light_level",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0
+      },
+      {
+        "name": "temperature_rate_c_min",
+        "path": "trends.temperature_rate_c_min",
+        "type": "number",
+        "unit": "degC/min",
+        "minimum": -5.0,
+        "maximum": 5.0,
+        "default": 0.0
+      },
+      {
+        "name": "humidity_rate_pct_min",
+        "path": "trends.humidity_rate_pct_min",
+        "type": "number",
+        "unit": "percent/min",
+        "minimum": -20.0,
+        "maximum": 20.0,
+        "default": 0.0
+      },
+      {
+        "name": "co2_rate_ppm_min",
+        "path": "trends.co2_rate_ppm_min",
+        "type": "number",
+        "unit": "ppm/min",
+        "minimum": -1000.0,
+        "maximum": 1000.0,
+        "default": 0.0
+      },
+      {
+        "name": "previous_heater",
+        "path": "previous.heater",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0
+      },
+      {
+        "name": "previous_cooler",
+        "path": "previous.cooler",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0
+      },
+      {
+        "name": "previous_exhaust_fan",
+        "path": "previous.exhaust_fan",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0
+      },
+      {
+        "name": "previous_humidifier",
+        "path": "previous.humidifier",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0
+      },
+      {
+        "name": "previous_dehumidifier",
+        "path": "previous.dehumidifier",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0
+      },
+      {
+        "name": "previous_co2_doser",
+        "path": "previous.co2_doser",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0
+      },
+      {
+        "name": "heater_available",
+        "path": "capabilities.heater.available",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 1.0
+      },
+      {
+        "name": "cooler_available",
+        "path": "capabilities.cooler.available",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0
+      },
+      {
+        "name": "exhaust_fan_available",
+        "path": "capabilities.exhaust_fan.available",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 1.0
+      },
+      {
+        "name": "humidifier_available",
+        "path": "capabilities.humidifier.available",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 1.0
+      },
+      {
+        "name": "dehumidifier_available",
+        "path": "capabilities.dehumidifier.available",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0
+      },
+      {
+        "name": "co2_doser_available",
+        "path": "capabilities.co2_doser.available",
+        "type": "boolean",
+        "unit": "mask",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0
+      }
+    ],
+    "output_count": 6,
+    "outputs": [
+      {
+        "name": "heater",
+        "path": "requests.heater",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0
+      },
+      {
+        "name": "cooler",
+        "path": "requests.cooler",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0
+      },
+      {
+        "name": "exhaust_fan",
+        "path": "requests.exhaust_fan",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0
+      },
+      {
+        "name": "humidifier",
+        "path": "requests.humidifier",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0
+      },
+      {
+        "name": "dehumidifier",
+        "path": "requests.dehumidifier",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0
+      },
+      {
+        "name": "co2_doser",
+        "path": "requests.co2_doser",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0
+      }
+    ],
+    "trend_window_target_s": 60.0,
+    "feature_order_is_contractual": true,
+    "output_order_is_contractual": true
+  },
+  "future_extension_boundary": {
+    "plant_irrigation": "separate module/controller; do not add pot placeholders to climate ML v1",
+    "new_ml_sensor_rule": "A new sensor requires a deliberate model-contract version and benchmarked benefit."
+  }
+}
