@@ -1,8 +1,15 @@
 # Agent notes — Growbox ML
 
-## Local Agent v4.6 — repository workflow
+## Local Agent v4.9.6 — repository workflow
 
-This repository is registered in the shared `MichalMatu/local-agent` v4.6 multi-repository supervisor.
+This repository is registered in the shared `MichalMatu/local-agent` multi-repository supervisor.
+
+Canonical Local Agent source of truth:
+
+- repository: `MichalMatu/local-agent`
+- branch: `main`
+- release line: `v4.9.x`
+- current synchronized release: `4.9.6`
 
 Repository identity:
 
@@ -10,26 +17,68 @@ Repository identity:
 - local-agent repository id: `growbox-ml-controller`
 - control branch: `agent-control`
 - default source branch: `main`
-- execution model: one shared supervisor across repositories, with at most one local task executing at a time
+- current MVP work branch: `mvp/environment-controller`
+- execution model: one long-lived shared supervisor with short-lived repository workers and global execution concurrency fixed at one
 
 ### New chat bootstrap
 
 When starting work on this repository in a new chat/session:
 
-1. Read this `AGENTS.md` and the current `README.md` before proposing or executing changes.
-2. Inspect the current GitHub state of the repository and the branch relevant to the requested work. Do not assume `main` is always the correct work branch; the README may identify an active integration branch.
-3. Use this repository's own `agent-control` branch for Local Agent tasks. Never send Growbox tasks through another repository's control branch (for example LiteGraph).
-4. Submit task requests under `.agent/tasks/<task-id>.json` on `agent-control`.
-5. Follow execution through `.agent/runs/<task-id>.json` and `.agent/status/daemon.json`.
-6. Read the terminal result from `.agent/results/<task-id>.json` before reporting completion.
-7. Prefer remote status/results from GitHub over asking the user to copy local terminal logs when Local Agent can provide the state directly.
-8. Keep repository workspaces isolated. A task for this repository must not read, modify, checkpoint, or publish results through another repository's Local Agent workspace.
+1. Read this `AGENTS.md`, the current `README.md`, and any branch-specific planning document before proposing or executing changes.
+2. Inspect the exact GitHub branch relevant to the requested work. Do not assume `main` is the work branch.
+3. Inspect `.agent/status/daemon.json` on `agent-control` and verify `daemon_version` against `MichalMatu/local-agent/agent_version.py` when Local Agent compatibility matters.
+4. When exact daemon source identity matters, compare `.agent/status/daemon.json:self_revision` with `MichalMatu/local-agent/main`; do not infer synchronization from the version string alone.
+5. Use this repository's own `agent-control` branch for Local Agent tasks. Never send Growbox tasks through another repository's control branch.
+6. Submit immutable task requests under `.agent/tasks/<task-id>.json` on `agent-control` and set `work_branch` explicitly whenever the task must run on a non-default branch such as `mvp/environment-controller`.
+7. Follow execution through `.agent/runs/<task-id>.json` and `.agent/status/daemon.json`.
+8. Read the terminal result from `.agent/results/<task-id>.json` before reporting completion.
+9. Prefer remote run/status/result evidence over asking the user to copy local terminal logs when Local Agent can provide the state directly.
+10. Keep repository workspaces isolated. A Growbox task must not publish results through another repository's Local Agent control plane.
+
+### v4.9 execution rules
+
+- Local Agent is a deterministic executor, not a coding model. The planner chooses the exact commands/change; the daemon executes and reports evidence.
+- Machine-generated task content, commands, prompts, logs, code comments, documentation changes and commit messages authored for Local Agent execution must be English-only.
+- Task ids and payloads are immutable within this repository. Interrupted tasks are never automatically replayed.
+- `expected_head` is not implemented. If exact source identity matters, verify the expected Git SHA explicitly in an early task stage.
+- Repository workers execute at most one pending task per turn. The shared supervisor serializes work across repositories.
+- Repository-local workers must not perform supervisor-wide `restart` or `self_update` actions. Those are owned by the shared supervisor/launchd administration path.
+- A repository worker may report current daemon version/revision through `.agent/status/daemon.json`; use that evidence before attempting any maintenance action.
+- Use bounded task timeouts/memory. The canonical defaults are command 900 s, no-output 300 s, whole-task 1800 s and process-group RSS 4096 MiB unless the task has a justified override.
+- Successful stages must not leave background descendants.
+- Final results are durably spooled before remote publication; publication recovery must not re-execute commands.
+
+### Efficient verification workflow
+
+For non-trivial staged coding work, prefer:
+
+```json
+"workflow_policy": "efficient-verification-v1"
+```
+
+Rules:
+
+- primary `steps` use `verification_level: "work"` or `"focused"`;
+- `verify_steps` use `"focused"` and exactly one final `"full"` stage;
+- the full stage must be the last verification stage;
+- do not mix legacy `commands` / `verify_commands` fields into an opted-in task;
+- if the full gate finds a defect and source changes, rerun the affected focused gate first, then rerun the final full gate.
+
+Use the narrowest meaningful verification while editing, then one broad final gate. Do not repeatedly run the complete suite after every small edit.
 
 ### Control branch contract
 
-`agent-control` is a control plane, not a development branch. Product/source changes belong on the requested source/work branch. The control branch is reserved for Local Agent queue, status, run, result, and daemon-control files under `.agent/`.
+`agent-control` is a control plane, not a development branch. Product/source changes belong on the requested `work_branch`.
 
-The canonical Local Agent implementation and operational documentation live in `MichalMatu/local-agent`. If the control protocol changes, update this bootstrap section so future chats do not depend on remembered conversation context.
+The control branch is reserved for Local Agent state under `.agent/`, including:
+
+- `.agent/tasks/`
+- `.agent/runs/`
+- `.agent/results/`
+- `.agent/status/`
+- `.agent/daemon/`
+
+The canonical implementation and operational documentation live in `MichalMatu/local-agent`. If that repository changes its control protocol, update this bootstrap section so future chats depend on repository evidence rather than remembered conversation context.
 
 ## Panel UI (`tools/panel/static/`) — układ pól
 
