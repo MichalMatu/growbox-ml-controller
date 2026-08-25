@@ -1,0 +1,57 @@
+{
+  "id": "20260825-local-agent-finalize-496",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "started_at": "2026-08-25T12:45:30.708943+00:00",
+  "command_timeout": 300,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; cd \"$HOME/local-agent\"; git switch main; git fetch --prune origin main; git reset --hard origin/main; test \"$(python3 -c 'import agent_version; print(agent_version.RELEASE_VERSION)')\" = \"4.9.6\"; for b in v4.9.4-adaptive-polling v4.9.5-active-poll-priority v4.9.5-supervisor-control-handoff v4.9.6-hot-path v4.9.7-tail-latency cleanup-marker-do-not-use v4.9.6-finalize-stable temporary-cleanup-helper x cleanup-now ignore-this temp-delete-me final-temp oops-temp please-delete; do git branch -D \"$b\" >/dev/null 2>&1 || true; if git ls-remote --exit-code --heads origin \"$b\" >/dev/null 2>&1; then git push origin --delete \"$b\"; fi; done; git fetch --prune origin; if ! git rev-parse -q --verify refs/tags/v4.9.6 >/dev/null; then git tag -a v4.9.6 -m 'local-agent 4.9.6 stable'; git push origin v4.9.6; fi; python3 -m py_compile agentd.py agent_core.py agent_runtime.py agent_process.py agent_storage.py agent_repository.py agent_repo_worker.py agent_multirepo.py agent_repo_admin.py agentctl.py agent_version.py; python3 -m unittest -q tests.test_agent_multirepo tests.test_agent_repo_worker tests.test_agent_storage; python3 agentctl.py doctor; test -z \"$(git status --porcelain)\"; echo BRANCH=$(git branch --show-current); echo HEAD=$(git rev-parse HEAD); echo VERSION=$(python3 -c 'import agent_version; print(agent_version.RELEASE_VERSION)'); echo REMOTE_BRANCHES; git branch -r; echo TAG=$(git tag -l v4.9.6); echo FINALIZE_496_OK",
+      "exit_code": 0,
+      "output": "Already on 'main'\nYour branch is up to date with 'origin/main'.\nFrom https://github.com/MichalMatu/local-agent\n * branch            main       -> FETCH_HEAD\nHEAD is now at 2187ce4 local-agent 4.9.6: optimize multirepo task hot path\nTo https://github.com/MichalMatu/local-agent.git\n - [deleted]         v4.9.4-adaptive-polling\nTo https://github.com/MichalMatu/local-agent.git\n - [deleted]         v4.9.5-active-poll-priority\nTo https://github.com/MichalMatu/local-agent.git\n - [deleted]         v4.9.5-supervisor-control-handoff\nTo https://github.com/MichalMatu/local-agent.git\n - [deleted]         v4.9.6-hot-path\nTo https://github.com/MichalMatu/local-agent.git\n - [deleted]         v4.9.7-tail-latency\nTo https://github.com/MichalMatu/local-agent.git\n - [deleted]         cleanup-marker-do-not-use\nTo https://github.com/MichalMatu/local-agent.git\n - [deleted]         v4.9.6-finalize-stable\nTo https://github.com/MichalMatu/local-agent.git\n - [deleted]         temporary-cleanup-helper\nTo https://github.com/MichalMatu/local-agent.git\n - [deleted]         x\nTo https://github.com/MichalMatu/local-agent.git\n - [deleted]         cleanup-now\nTo https://github.com/MichalMatu/local-agent.git\n - [deleted]         ignore-this\nTo https://github.com/MichalMatu/local-agent.git\n - [deleted]         temp-delete-me\nTo https://github.com/MichalMatu/local-agent.git\n - [deleted]         final-temp\nTo https://github.com/MichalMatu/local-agent.git\n - [deleted]         oops-temp\nTo https://github.com/MichalMatu/local-agent.git\n - [deleted]         please-delete\nTo https://github.com/MichalMatu/local-agent.git\n * [new tag]         v4.9.6 -> v4.9.6\n[2026-08-25T12:46:12.075259+00:00] [multi-repo] completed repository turn=a\n[2026-08-25T12:46:12.203724+00:00] [multi-repo] completed repository turn=c\n[2026-08-25T12:46:12.204635+00:00] [multi-repo] supervisor control service degraded repository=a: RuntimeError: network down\n[2026-08-25T12:46:12.205452+00:00] [multi-repo] repository worker failed repository=a exit=3; continuing with other repositories\n[2026-08-25T12:46:12.205491+00:00] [multi-repo] completed repository turn=b\n[2026-08-25T12:46:12.206074+00:00] [multi-repo] completed repository turn=c\n[2026-08-25T12:46:12.214699+00:00] [multi-repo] repository worker timed out repository=a limit=25200s\n[2026-08-25T12:46:12.397151+00:00] exec: git add -- .agent/status/daemon.json\n[2026-08-25T12:46:12.578562+00:00] exec finished exit=128 elapsed=0.2s: git add -- .agent/status/daemon.json\n[2026-08-25T12:46:12.578708+00:00] remote repository status publish failed repository=project-a: RuntimeError: fatal: not a git repository (or any of the parent directories): .git\n\n[2026-08-25T12:46:12.593056+00:00] multi-repo dispatch repository=project-a task=one\n[2026-08-25T12:46:12.795607+00:00] exec: git add -- .agent/status/daemon.json\n[2026-08-25T12:46:12.978144+00:00] exec finished exit=128 elapsed=0.2s: git add -- .agent/status/daemon.json\n[2026-08-25T12:46:12.978304+00:00] remote repository status publish failed repository=project-a: RuntimeError: fatal: not a git repository (or any of the parent directories): .git\n\n[2026-08-25T12:46:12.993094+00:00] multi-repo dispatch repository=project-a task=one\n----------------------------------------------------------------------\nRan 34 tests in 0.954s\n\nOK\n{\n  \"ok\": true,\n  \"release_version\": \"4.9.6\",\n  \"storage_policy\": {\n    \"control_history_depth\": 256,\n    \"control_sparse_paths\": [\n      \".agent\"\n    ],\n    \"automatic_destructive_cleanup\": false\n  },\n  \"checks\": [\n    {\n      \"name\": \"self_repo\",\n      \"ok\": true,\n      \"detail\": \"/Users/michal/local-agent\"\n    },\n    {\n      \"name\": \"status_file\",\n      \"ok\": true,\n      \"detail\": \"/Users/michal/Library/Application Support/local-agent/status.json\"\n    },\n    {\n      \"name\": \"daemon_process\",\n      \"ok\": true,\n      \"detail\": \"pid=67414\"\n    },\n    {\n      \"name\": \"repository_registry\",\n      \"ok\": true,\n      \"detail\": \"repositories=3\"\n    },\n    {\n      \"name\": \"repository:litegraph\",\n      \"ok\": true,\n      \"detail\": \"MichalMatu/esp32s3_LiteGraph\"\n    },\n    {\n      \"name\": \"repository:growbox-ml-controller\",\n      \"ok\": true,\n      \"detail\": \"MichalMatu/growbox-ml-controller\"\n    },\n    {\n      \"name\": \"repository:photomaps\",\n      \"ok\": true,\n      \"detail\": \"MichalMatu/PhotoMaps\"\n    }\n  ],\n  \"pending_claims\": 1,\n  \"pending_result_publications\": 0,\n  \"checkpoint_stats\": [\n    {\n      \"repository_id\": \"litegraph\",\n      \"files\": 60,\n      \"bytes\": 531470,\n      \"scan_truncated\": false\n    },\n    {\n      \"repository_id\": \"growbox-ml-controller\",\n      \"files\": 3,\n      \"bytes\": 2188,\n      \"scan_truncated\": false\n    },\n    {\n      \"repository_id\": \"photomaps\",\n      \"files\": 0,\n      \"bytes\": 0,\n      \"scan_truncated\": false\n    }\n  ],\n  \"workspace_storage\": [\n    {\n      \"repository_id\": \"litegraph\",\n      \"kind\": \"control\",\n      \"path\": \"/Users/michal/agent-workspace/repos/litegraph/control\",\n      \"files\": 1551,\n      \"bytes\": 24628524,\n      \"scan_truncated\": false,\n      \"warning_threshold_bytes\": 268435456,\n      \"warning\": false\n    },\n    {\n      \"repository_id\": \"litegraph\",\n      \"kind\": \"work\",\n      \"path\": \"/Users/michal/agent-workspace/repos/litegraph/work\",\n      \"files\": 8101,\n      \"bytes\": 166541874,\n      \"scan_truncated\": false,\n      \"warning_threshold_bytes\": 2147483648,\n      \"warning\": false\n    },\n    {\n      \"repository_id\": \"growbox-ml-controller\",\n      \"kind\": \"control\",\n      \"path\": \"/Users/michal/agent-workspace/repos/growbox-ml-controller/control\",\n      \"files\": 1400,\n      \"bytes\": 12580529,\n      \"scan_truncated\": false,\n      \"warning_threshold_bytes\": 268435456,\n      \"warning\": false\n    },\n    {\n      \"repository_id\": \"growbox-ml-controller\",\n      \"kind\": \"work\",\n      \"path\": \"/Users/michal/agent-workspace/repos/growbox-ml-controller/work\",\n      \"files\": 45523,\n      \"bytes\": 1769544807,\n      \"scan_truncated\": false,\n      \"warning_threshold_bytes\": 2147483648,\n      \"warning\": false\n    },\n    {\n      \"repository_id\": \"photomaps\",\n      \"kind\": \"control\",\n      \"path\": \"/Users/michal/agent-workspace/repos/photomaps/control\",\n      \"files\": 577,\n      \"bytes\": 2932152,\n      \"scan_truncated\": false,\n      \"warning_threshold_bytes\": 268435456,\n      \"warning\": false\n    },\n    {\n      \"repository_id\": \"photomaps\",\n      \"kind\": \"work\",\n      \"path\": \"/Users/michal/agent-workspace/repos/photomaps/work\",\n      \"files\": 751,\n      \"bytes\": 5956820,\n      \"scan_truncated\": false,\n      \"warning_threshold_bytes\": 2147483648,\n      \"warning\": false\n    }\n  ],\n  \"control_history\": [\n    {\n      \"repository_id\": \"litegraph\",\n      \"target_depth\": 256,\n      \"commits\": 256,\n      \"git_bytes\": 12974103,\n      \"git_files\": 526,\n      \"scan_truncated\": false,\n      \"shallow\": true,\n      \"sparse\": true,\n      \"partial_clone\": true,\n      \"warning\": false\n    },\n    {\n      \"repository_id\": \"growbox-ml-controller\",\n      \"target_depth\": 256,\n      \"commits\": 257,\n      \"git_bytes\": 12269632,\n      \"git_files\": 1325,\n      \"scan_truncated\": false,\n      \"shallow\": true,\n      \"sparse\": null,\n      \"partial_clone\": null,\n      \"warning\": true\n    },\n    {\n      \"repository_id\": \"photomaps\",\n      \"target_depth\": 256,\n      \"commits\": 101,\n      \"git_bytes\": 2848053,\n      \"git_files\": 541,\n      \"scan_truncated\": false,\n      \"shallow\": false,\n      \"sparse\": null,\n      \"partial_clone\": null,\n      \"warning\": true\n    }\n  ],\n  \"warnings\": [\n    \"control storage policy drift for growbox-ml-controller: commits=257 bytes=12269632 shallow=True sparse=None partial=None\",\n    \"control storage policy drift for photomaps: commits=101 bytes=2848053 shallow=False sparse=None partial=None\"\n  ]\n}\nBRANCH=main\nHEAD=2187ce41aabd26d3a2344a9c64b6a767497832a2\nVERSION=4.9.6\nREMOTE_BRANCHES\n  origin/HEAD -> origin/main\n  origin/main\nTAG=v4.9.6\nFINALIZE_496_OK\n",
+      "elapsed_seconds": 60.254,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 1024,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 28.92,
+      "current_rss_mb": 21.11,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 60.254
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.225
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.219
+  },
+  "finished_at": "2026-08-25T12:46:33.525899+00:00",
+  "task_digest": "b95824697df018e3ec61a15a8fcaab8c514b4b3288c6b1f220955fb954125f66",
+  "idle_timeout": 120,
+  "task_timeout": 900,
+  "memory_limit_mb": 1024,
+  "attempt_id": "e6a45bf22f0f1dd0970a84a7",
+  "daemon_version": "4.9.6"
+}
