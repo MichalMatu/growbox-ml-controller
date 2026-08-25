@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260825-growbox-mvp-stage1-contract-v6-v2",
+  "task_digest": "54c6caaf168e5c51be3191c460d54ec4f30039dc30bcd8de89f029c2f58cfa73",
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-25T16:52:29.798694+00:00",
+  "attempt_id": "e1d6a0ea0493ce9994030126",
+  "daemon_version": "4.9.6",
+  "daemon_pid": 63725,
+  "updated_at": "2026-08-25T16:52:29.798864+00:00",
+  "pid": 63725
+}
