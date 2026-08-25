@@ -2,8 +2,8 @@
   "version": 1,
   "daemon_version": "4.9.6",
   "state": "idle",
-  "pid": 92153,
-  "updated_at": "2026-08-25T12:34:14.145440+00:00",
+  "pid": 94111,
+  "updated_at": "2026-08-25T12:39:46.718239+00:00",
   "self_revision": "2187ce41aabd26d3a2344a9c64b6a767497832a2",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -22,7 +22,7 @@
   "control_branch": "agent-control",
   "default_branch": "main",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 92153,
+  "worker_pid": 94111,
   "supervisor_pid": 67414,
-  "last_task_id": "20260825-496-production-audit"
+  "last_task_id": "20260825-local-agent-497-tail-latency"
 }
