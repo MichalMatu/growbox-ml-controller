@@ -1,9 +1,9 @@
 {
   "version": 1,
   "daemon_version": "4.9.5",
-  "state": "idle",
-  "pid": 77699,
-  "updated_at": "2026-08-25T12:19:57.257602+00:00",
+  "state": "running",
+  "pid": 78550,
+  "updated_at": "2026-08-25T12:21:02.914696+00:00",
   "self_revision": "673e1082747f604b6bb62a3a882e9130092ba650",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -14,15 +14,7 @@
   "task_timeout_default": 1800,
   "task_timeout_max": 21600,
   "memory_limit_mb_default": 4096,
-  "current_task_id": null,
-  "current_attempt_id": null,
-  "current_task_digest": null,
-  "repository_id": "growbox-ml-controller",
-  "repository": "MichalMatu/growbox-ml-controller",
-  "control_branch": "agent-control",
-  "default_branch": "main",
-  "execution_model": "multi_repository_worker",
-  "worker_pid": 77699,
-  "supervisor_pid": 67414,
-  "last_task_id": "20260825-local-agent-496-hot-path-patch-v2"
+  "current_task_id": "20260825-local-agent-496-hot-path-patch-v3",
+  "current_attempt_id": "4b80219a7d8a162404328678",
+  "current_task_digest": "f3e6a3bc669653033f0b496a96bdef7aee2cb56a04b9b68d5ccde14a523a2c8f"
 }
