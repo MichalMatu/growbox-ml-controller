@@ -1,0 +1,13 @@
+{
+  "id": "20260825-local-agent-local-scan-benchmark",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "command_timeout": 60,
+  "idle_timeout": 30,
+  "task_timeout": 180,
+  "memory_limit_mb": 512,
+  "commands": [
+    "set -euo pipefail; cd \"$HOME/local-agent\"; python3 - <<'PY'\nimport time\nfrom agent_repository import load_repository_registry\nimport agent_repo_worker as w\nimport agentd\nreg=load_repository_registry()\nfor r in reg:\n    w.bind_repository(r)\n    td=r.control/'.agent/tasks'; rd=r.control/'.agent/results'\n    tasks=len(list(td.glob('*.json'))) if td.exists() else 0\n    results=len(list(rd.glob('*.json'))) if rd.exists() else 0\n    vals=[]\n    for _ in range(5):\n        t=time.perf_counter(); p=agentd.pending_tasks(); vals.append((time.perf_counter()-t)*1000)\n    print(f'{r.repository_id}: tasks={tasks} results={results} pending={len(p)} pending_scan_ms={[round(x,2) for x in vals]}')\nPY"
+  ]
+}
