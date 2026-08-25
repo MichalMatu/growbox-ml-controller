@@ -1,0 +1,33 @@
+{
+  "id": "20260825-growbox-mvp-stage1-contract-v6-v2",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "workflow_policy": "efficient-verification-v1",
+  "command_timeout": 1800,
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "memory_limit_mb": 4096,
+  "steps": [
+    {
+      "name": "implement-climate-contract-v6",
+      "verification_level": "work",
+      "timeout": 300,
+      "command": "set -euo pipefail; echo 'English-only execution evidence.'; test \"$(git rev-parse HEAD)\" = 198c93d24f4ec43ed76559b4ba84e8285619c36c; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/20260825-growbox-mvp-stage1-contract-v6.py > /tmp/growbox-stage1-v6.py; .venv/bin/python /tmp/growbox-stage1-v6.py; git diff --check; git status --short"
+    },
+    {
+      "name": "review-climate-contract-v6",
+      "verification_level": "focused",
+      "timeout": 300,
+      "command": "set -euo pipefail; .venv/bin/python -m json.tool schemas/environment-controller.v6.json >/dev/null; .venv/bin/python -m pytest tests/test_mvp_contract_v6.py -q; git diff --check; git diff --stat; git diff -- docs/MVP_ENVIRONMENT_CONTROLLER.md docs/MVP_REBUILD_CLEANUP_PLAN.md schemas/environment-controller.v6.json tests/test_mvp_contract_v6.py"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "full-local-regression-and-publish",
+      "verification_level": "full",
+      "timeout": 2400,
+      "command": "set -euo pipefail; .venv/bin/python -m pytest -q -m 'not hardware'; bash scripts/check_schema.sh; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests --output-on-failure; bash scripts/run_clang_tidy_host.sh; git diff --check; git add -- docs/MVP_ENVIRONMENT_CONTROLLER.md docs/MVP_REBUILD_CLEANUP_PLAN.md schemas/environment-controller.v6.json tests/test_mvp_contract_v6.py; git diff --cached --check; git commit -m 'Add climate-only MVP v6 migration contract'; git push origin HEAD:mvp/environment-controller"
+    }
+  ]
+}
