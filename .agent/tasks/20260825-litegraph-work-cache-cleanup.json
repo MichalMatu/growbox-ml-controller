@@ -1,0 +1,13 @@
+{
+  "id": "20260825-litegraph-work-cache-cleanup",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": true,
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 1024,
+  "commands": [
+    "set -euo pipefail; W=$HOME/agent-workspace/work; test -z \"$(git -C $W status --porcelain)\"; echo '=== BEFORE ==='; du -sh $W; rm -rf $W/.pio $W/build $W/interface/node_modules $W/interface/.svelte-kit $W/interface/build $W/interface/test-results $W/marketing-site/node_modules $W/marketing-site/.svelte-kit $W/marketing-site/build $W/docs/doxygen/out; find $W -type d -name __pycache__ -prune -exec rm -rf {} +; find $W -name .DS_Store -delete; git -C $W gc --prune=now; test -z \"$(git -C $W status --porcelain)\"; echo '=== AFTER ==='; du -sh $W $W/.git $W/interface $W/marketing-site $W/logs 2>/dev/null; echo '=== GIT OBJECTS ==='; git -C $W count-objects -vH; git -C $W status -sb"
+  ]
+}
