@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "daemon_version": "4.8.0",
-  "state": "idle",
-  "pid": 46280,
-  "updated_at": "2026-08-25T09:27:04.079995+00:00",
-  "self_revision": "2cc8eba6bb6afb71782639540aad420449297a5f",
+  "daemon_version": "4.9.0",
+  "state": "running",
+  "pid": 65050,
+  "updated_at": "2026-08-25T10:01:31.114349+00:00",
+  "self_revision": "a8d6530a07bf3538c2354e8c1adffcba88ee98ae",
   "poll_seconds": 15,
   "self_update_seconds": 60,
   "command_timeout_default": 900,
@@ -14,14 +14,7 @@
   "task_timeout_default": 1800,
   "task_timeout_max": 21600,
   "memory_limit_mb_default": 4096,
-  "current_task_id": null,
-  "current_attempt_id": null,
-  "current_task_digest": null,
-  "repository_id": "growbox-ml-controller",
-  "repository": "MichalMatu/growbox-ml-controller",
-  "control_branch": "agent-control",
-  "default_branch": "main",
-  "execution_model": "multi_repository_worker",
-  "worker_pid": 46280,
-  "supervisor_pid": 67414
+  "current_task_id": "20260825-litegraph-control-config-audit",
+  "current_attempt_id": "e29c506940c0f729b9bab349",
+  "current_task_digest": "84b5cea0018530d1d47fdb8ebda159a286e8fdde483ad0ddb56b0092c63769e8"
 }
