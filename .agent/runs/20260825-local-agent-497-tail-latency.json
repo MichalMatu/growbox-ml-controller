@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260825-local-agent-497-tail-latency",
+  "task_digest": "40104dd4a5c322d46ce7ef39688aa19224c65c7666d28ec8540ca3c679132363",
+  "idle_timeout": 240,
+  "task_timeout": 1800,
+  "memory_limit_mb": 1024,
+  "started_at": "2026-08-25T12:38:21.058880+00:00",
+  "attempt_id": "79dbd6a7f19ee7790f18c402",
+  "daemon_version": "4.9.6",
+  "daemon_pid": 94111,
+  "updated_at": "2026-08-25T12:38:21.059136+00:00",
+  "pid": 94111
+}
