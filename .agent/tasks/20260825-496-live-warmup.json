@@ -1,0 +1,11 @@
+{
+  "id": "20260825-496-live-warmup",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "command_timeout": 60,
+  "idle_timeout": 30,
+  "task_timeout": 180,
+  "memory_limit_mb": 512,
+  "commands": ["printf 'LIVE_WARMUP_OK\\n'"]
+}
