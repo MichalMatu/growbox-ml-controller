@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260825-litegraph-work-storage-audit",
+  "task_digest": "03fc8f148cf58ac097305312e88da3f45e69874c39803742e02a21be538361b9",
+  "idle_timeout": 300,
+  "task_timeout": 900,
+  "memory_limit_mb": 1024,
+  "started_at": "2026-08-25T10:04:12.295347+00:00",
+  "attempt_id": "11c9e1a0c3a534dd6bafbce1",
+  "daemon_version": "4.9.0",
+  "daemon_pid": 69192,
+  "updated_at": "2026-08-25T10:04:12.295749+00:00",
+  "pid": 69192
+}
