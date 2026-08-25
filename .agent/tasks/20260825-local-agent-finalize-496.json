@@ -1,0 +1,13 @@
+{
+  "id": "20260825-local-agent-finalize-496",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "command_timeout": 300,
+  "idle_timeout": 120,
+  "task_timeout": 900,
+  "memory_limit_mb": 1024,
+  "commands": [
+    "set -euo pipefail; cd \"$HOME/local-agent\"; git switch main; git fetch --prune origin main; git reset --hard origin/main; test \"$(python3 -c 'import agent_version; print(agent_version.RELEASE_VERSION)')\" = \"4.9.6\"; for b in v4.9.4-adaptive-polling v4.9.5-active-poll-priority v4.9.5-supervisor-control-handoff v4.9.6-hot-path v4.9.7-tail-latency cleanup-marker-do-not-use v4.9.6-finalize-stable temporary-cleanup-helper x cleanup-now ignore-this temp-delete-me final-temp oops-temp please-delete; do git branch -D \"$b\" >/dev/null 2>&1 || true; if git ls-remote --exit-code --heads origin \"$b\" >/dev/null 2>&1; then git push origin --delete \"$b\"; fi; done; git fetch --prune origin; if ! git rev-parse -q --verify refs/tags/v4.9.6 >/dev/null; then git tag -a v4.9.6 -m 'local-agent 4.9.6 stable'; git push origin v4.9.6; fi; python3 -m py_compile agentd.py agent_core.py agent_runtime.py agent_process.py agent_storage.py agent_repository.py agent_repo_worker.py agent_multirepo.py agent_repo_admin.py agentctl.py agent_version.py; python3 -m unittest -q tests.test_agent_multirepo tests.test_agent_repo_worker tests.test_agent_storage; python3 agentctl.py doctor; test -z \"$(git status --porcelain)\"; echo BRANCH=$(git branch --show-current); echo HEAD=$(git rev-parse HEAD); echo VERSION=$(python3 -c 'import agent_version; print(agent_version.RELEASE_VERSION)'); echo REMOTE_BRANCHES; git branch -r; echo TAG=$(git tag -l v4.9.6); echo FINALIZE_496_OK"
+  ]
+}
