@@ -1,0 +1,9 @@
+{
+  "event": "invalid_task_rejected",
+  "status": "failed",
+  "failure_reason": "invalid_task_file",
+  "updated_at": "2026-08-25T16:32:15.645374+00:00",
+  "task_id": "20260825-growbox-mvp-stage1-contract-v6-v1",
+  "daemon_version": "4.9.6",
+  "pid": 60390
+}
