@@ -1,13 +1,12 @@
 {
-  "event": "task_finished",
-  "task_id": "20260825-litegraph-control-cleanup-final",
-  "task_digest": "a3e49ce8a19916cf19c8ba730fc3f657b58c20d3b024f4208f4cbf132ea34cd7",
+  "event": "result_published",
   "status": "done",
   "failure_reason": null,
-  "finished_at": "2026-08-25T10:02:52.399423+00:00",
   "attempt_id": "6f85c37183f39fff607c8478",
+  "task_digest": "a3e49ce8a19916cf19c8ba730fc3f657b58c20d3b024f4208f4cbf132ea34cd7",
+  "finished_at": "2026-08-25T10:02:52.399423+00:00",
+  "updated_at": "2026-08-25T10:03:00.881562+00:00",
+  "task_id": "20260825-litegraph-control-cleanup-final",
   "daemon_version": "4.9.0",
-  "daemon_pid": 66475,
-  "updated_at": "2026-08-25T10:02:52.882091+00:00",
   "pid": 66475
 }
