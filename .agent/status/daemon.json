@@ -1,9 +1,9 @@
 {
   "version": 1,
   "daemon_version": "4.9.0",
-  "state": "running",
+  "state": "idle",
   "pid": 66475,
-  "updated_at": "2026-08-25T10:02:28.438835+00:00",
+  "updated_at": "2026-08-25T10:03:04.217440+00:00",
   "self_revision": "a8d6530a07bf3538c2354e8c1adffcba88ee98ae",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -14,7 +14,7 @@
   "task_timeout_default": 1800,
   "task_timeout_max": 21600,
   "memory_limit_mb_default": 4096,
-  "current_task_id": "20260825-litegraph-control-cleanup-final",
-  "current_attempt_id": "6f85c37183f39fff607c8478",
-  "current_task_digest": "a3e49ce8a19916cf19c8ba730fc3f657b58c20d3b024f4208f4cbf132ea34cd7"
+  "current_task_id": null,
+  "current_attempt_id": null,
+  "current_task_digest": null
 }
