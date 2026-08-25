@@ -1,9 +1,9 @@
 {
   "version": 1,
   "daemon_version": "4.9.5",
-  "state": "running",
+  "state": "idle",
   "pid": 75281,
-  "updated_at": "2026-08-25T12:13:54.157591+00:00",
+  "updated_at": "2026-08-25T12:14:13.026309+00:00",
   "self_revision": "673e1082747f604b6bb62a3a882e9130092ba650",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -14,7 +14,7 @@
   "task_timeout_default": 1800,
   "task_timeout_max": 21600,
   "memory_limit_mb_default": 4096,
-  "current_task_id": "20260825-local-agent-local-scan-benchmark",
-  "current_attempt_id": "e9a412b9b52452293508ab0d",
-  "current_task_digest": "658d986d43c05b2f3b5ac870161f3f269735aee0ceb466b1484563b1131ea782"
+  "current_task_id": null,
+  "current_attempt_id": null,
+  "current_task_digest": null
 }
