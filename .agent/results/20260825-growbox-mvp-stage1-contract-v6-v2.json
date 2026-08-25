@@ -1,0 +1,117 @@
+{
+  "id": "20260825-growbox-mvp-stage1-contract-v6-v2",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "started_at": "2026-08-25T16:52:29.798787+00:00",
+  "command_timeout": 1800,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; echo 'English-only execution evidence.'; test \"$(git rev-parse HEAD)\" = 198c93d24f4ec43ed76559b4ba84e8285619c36c; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/20260825-growbox-mvp-stage1-contract-v6.py > /tmp/growbox-stage1-v6.py; .venv/bin/python /tmp/growbox-stage1-v6.py; git diff --check; git status --short",
+      "exit_code": 0,
+      "output": "English-only execution evidence.\nFrom https://github.com/MichalMatu/growbox-ml-controller\n * branch            agent-control -> FETCH_HEAD\n   b1e8f34..68e161e  agent-control -> origin/agent-control\ngenerated features=38 outputs=6\n M docs/MVP_ENVIRONMENT_CONTROLLER.md\n M docs/MVP_REBUILD_CLEANUP_PLAN.md\n?? schemas/environment-controller.v6.json\n?? tests/test_mvp_contract_v6.py\n",
+      "elapsed_seconds": 2.0,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 7.95,
+      "current_rss_mb": 7.95,
+      "stage_name": "implement-climate-contract-v6",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "stage_timeout": 300,
+      "verification_level": "work"
+    },
+    {
+      "command": "set -euo pipefail; .venv/bin/python -m json.tool schemas/environment-controller.v6.json >/dev/null; .venv/bin/python -m pytest tests/test_mvp_contract_v6.py -q; git diff --check; git diff --stat; git diff -- docs/MVP_ENVIRONMENT_CONTROLLER.md docs/MVP_REBUILD_CLEANUP_PLAN.md schemas/environment-controller.v6.json tests/test_mvp_contract_v6.py",
+      "exit_code": 0,
+      "output": ".....                                                                    [100%]\n5 passed in 0.06s\n docs/MVP_ENVIRONMENT_CONTROLLER.md | 8 ++++----\n docs/MVP_REBUILD_CLEANUP_PLAN.md   | 6 +++---\n 2 files changed, 7 insertions(+), 7 deletions(-)\ndiff --git a/docs/MVP_ENVIRONMENT_CONTROLLER.md b/docs/MVP_ENVIRONMENT_CONTROLLER.md\nindex 582616f..7ab920c 100644\n--- a/docs/MVP_ENVIRONMENT_CONTROLLER.md\n+++ b/docs/MVP_ENVIRONMENT_CONTROLLER.md\n@@ -1,6 +1,6 @@\n # Environment Controller MVP\n \n-Status: architecture/design phase — MVP v1 flow, I/O and rebuild plan frozen  \n+Status: architecture/design phase — MVP v1 flow, I/O and rebuild plan frozen\n Branch: `mvp/environment-controller`\n \n ## 1. Product goal\n@@ -389,7 +389,7 @@ The active code on this branch still contains the old v4 4-pot / 15-output pipel\n Rebuild in this order:\n \n 0. Capture baseline before code changes.\n-1. Define climate-only contract/schema v5.\n+1. Define climate-only contract/schema v6.\n 2. Define the minimal controller input/state and trend calculation.\n 3. Adapt the existing simulator to the climate-only contract.\n 4. Add physics/regression tests and deterministic replay.\n@@ -493,7 +493,7 @@ Recommended model metadata to preserve with every trained artifact:\n \n ## 18. Frozen ML v1 feature semantics\n \n-The exact JSON ordering is defined when schema v5 is implemented, but the semantic content is frozen here.\n+The exact JSON ordering is defined when schema v6 is implemented, but the semantic content is frozen here.\n \n ### Direct measurements available to ML\n \n@@ -816,7 +816,7 @@ If later evidence proves a plant variable materially improves climate control, a\n \n The old v4 branch content currently contains 4-pot, irrigation, nutrient-heater and 15-output assumptions. During the rebuild these may remain temporarily as migration code, but the final climate-MVP active path must not depend on them.\n \n-Only after contract v5, climate simulator, teacher, dataset audit and closed-loop benchmark are green should obsolete v4-only code/tests/schema pieces be deleted or archived.\n+Only after contract v6, climate simulator, teacher, dataset audit and closed-loop benchmark are green should obsolete v4-only code/tests/schema pieces be deleted or archived.\n \n The final result should have one obvious active climate pipeline rather than two competing implementations.\n \ndiff --git a/docs/MVP_REBUILD_CLEANUP_PLAN.md b/docs/MVP_REBUILD_CLEANUP_PLAN.md\nindex bb9e01e..e3dd731 100644\n--- a/docs/MVP_REBUILD_CLEANUP_PLAN.md\n+++ b/docs/MVP_REBUILD_CLEANUP_PLAN.md\n@@ -1,6 +1,6 @@\n # MVP Rebuild Cleanup Plan\n \n-Status: frozen companion plan for `MVP_ENVIRONMENT_CONTROLLER.md`  \n+Status: frozen companion plan for `MVP_ENVIRONMENT_CONTROLLER.md`\n Branch: `mvp/environment-controller`\n \n This document defines how the repository is cleaned while rebuilding the climate-only MVP. It is part of the frozen implementation plan and exists to prevent the migration branch from becoming a permanent archive of obsolete v4/v5 concepts.\n@@ -192,7 +192,7 @@ Safe sequence:\n \n ```text\n A. baseline old branch state\n-B. climate schema v5\n+B. climate schema v6\n C. climate state/features\n D. climate simulator\n E. physics/regression PASS\n@@ -293,6 +293,6 @@ The next work item is not another design pass. It is Stage 0 from the frozen pla\n 2. run and record the existing test baseline;\n 3. record current contract hash/feature/output dimensions;\n 4. save deterministic old-simulator reference traces;\n-5. then implement the climate-only schema/contract v5 as the first behavioral migration step.\n+5. then implement the climate-only schema/contract v6 as the first behavioral migration step.\n \n No frontend rewrite and no broad cleanup should precede this baseline capture.\n",
+      "elapsed_seconds": 1.526,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 1.34,
+      "current_rss_mb": 1.34,
+      "stage_name": "review-climate-contract-v6",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "stage_timeout": 300,
+      "verification_level": "focused"
+    }
+  ],
+  "verification": [
+    {
+      "command": "set -euo pipefail; .venv/bin/python -m pytest -q -m 'not hardware'; bash scripts/check_schema.sh; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests --output-on-failure; bash scripts/run_clang_tidy_host.sh; git diff --check; git add -- docs/MVP_ENVIRONMENT_CONTROLLER.md docs/MVP_REBUILD_CLEANUP_PLAN.md schemas/environment-controller.v6.json tests/test_mvp_contract_v6.py; git diff --cached --check; git commit -m 'Add climate-only MVP v6 migration contract'; git push origin HEAD:mvp/environment-controller",
+      "exit_code": 0,
+      "output": "........................................................................ [ 20%]\n........................................................................ [ 41%]\n........................................................................ [ 62%]\n................................................sss..................... [ 82%]\n...........................................................              [100%]\n=========================== short test summary info ============================\nSKIPPED [3] tests/test_panel_visual.py:74: panel visual regression requires pillow and playwright (make setup-dev)\n344 passed, 3 skipped, 9 deselected in 29.61s\n-- Configuring done (0.1s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tests\n[100%] Built target environment_control_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tests\n    Start 1: environment_control_tests\n1/1 Test #1: environment_control_tests ........   Passed    0.03 sec\n\n100% tests passed, 0 tests failed out of 1\n\nTotal Test time (real) =   0.04 sec\n==> host clang-tidy (build/host-tidy)\n-- The CXX compiler identification is AppleClang 21.0.0.21000101\n-- Detecting CXX compiler ABI info\n-- Detecting CXX compiler ABI info - done\n-- Check for working CXX compiler: /Library/Developer/CommandLineTools/usr/bin/clang++ - skipped\n-- Detecting CXX compile features\n-- Detecting CXX compile features - done\n-- Configuring done (1.4s)\n-- Generating done (0.1s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tidy\n[ 14%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/EnvironmentController.cpp.o\n[ 28%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/test/test_environment_controller/test_main.cpp.o\n[ 57%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/EnvironmentTypes.cpp.o\n[ 57%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/FeatureEncoder.cpp.o\n[ 71%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/SafetySupervisor.cpp.o\n[ 85%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/ModelRuntime.cpp.o\n[100%] Linking CXX executable environment_control_tests\n[100%] Built target environment_control_tests\nclang-tidy: lib/environment_control/src/EnvironmentController.cpp\n458 warnings generated.\nclang-tidy: lib/environment_control/src/FeatureEncoder.cpp\n458 warnings generated.\nclang-tidy: lib/environment_control/src/SafetySupervisor.cpp\n458 warnings generated.\nclang-tidy: lib/environment_control/src/ModelRuntime.cpp\n470 warnings generated.\n[agent-work f2530e1] Add climate-only MVP v6 migration contract\n 4 files changed, 620 insertions(+), 7 deletions(-)\n create mode 100644 schemas/environment-controller.v6.json\n create mode 100644 tests/test_mvp_contract_v6.py\nTo https://github.com/MichalMatu/growbox-ml-controller.git\n   198c93d..f2530e1  HEAD -> mvp/environment-controller\n",
+      "elapsed_seconds": 52.9,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 359.55,
+      "current_rss_mb": 15.5,
+      "stage_name": "full-local-regression-and-publish",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "verification",
+      "stage_timeout": 2400,
+      "verification_level": "full"
+    }
+  ],
+  "stages": [
+    {
+      "stage_name": "implement-climate-contract-v6",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "verification_level": "work",
+      "outcome": "passed",
+      "elapsed_seconds": 2.0
+    },
+    {
+      "stage_name": "review-climate-contract-v6",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "verification_level": "focused",
+      "outcome": "passed",
+      "elapsed_seconds": 1.526
+    },
+    {
+      "stage_name": "full-local-regression-and-publish",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "verification",
+      "verification_level": "full",
+      "outcome": "passed",
+      "elapsed_seconds": 52.9
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.265
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.278
+  },
+  "finished_at": "2026-08-25T16:53:29.143068+00:00",
+  "task_digest": "54c6caaf168e5c51be3191c460d54ec4f30039dc30bcd8de89f029c2f58cfa73",
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "memory_limit_mb": 4096,
+  "attempt_id": "e1d6a0ea0493ce9994030126",
+  "daemon_version": "4.9.6"
+}
