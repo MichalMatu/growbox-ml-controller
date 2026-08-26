@@ -1,0 +1,39 @@
+{
+  "id": "20260826-growbox-mvp-stage7c-full-training-v1",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "workflow_policy": "efficient-verification-v1",
+  "command_timeout": 3600,
+  "idle_timeout": 3600,
+  "task_timeout": 10800,
+  "memory_limit_mb": 4096,
+  "steps": [
+    {
+      "name": "install-full-training-runner",
+      "verification_level": "work",
+      "timeout": 600,
+      "command": "set -euo pipefail; test \"$(git rev-parse HEAD)\" = 45dda6d; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/stage7c/full_training_runner.py > tools/ml/train_climate_v6.py; .venv/bin/ruff check --fix tools/ml/train_climate_v6.py; .venv/bin/ruff format tools/ml/train_climate_v6.py; git diff --check; git status --short"
+    },
+    {
+      "name": "full-climate-training-experiment",
+      "verification_level": "focused",
+      "timeout": 3600,
+      "command": "set -euo pipefail; PYTHONPATH=\"$PWD\" .venv/bin/python tools/ml/train_climate_v6.py"
+    },
+    {
+      "name": "validate-and-stage-training-report",
+      "verification_level": "focused",
+      "timeout": 600,
+      "command": "set -euo pipefail; .venv/bin/python - <<'PY'\nimport json, math\nfrom pathlib import Path\np = Path('build/climate_v6_training_seed1847.json')\nd = json.loads(p.read_text())\nassert d['schema_version'] == 6\nassert d['feature_count'] == 38\nassert len(d['output_names']) == 6\nassert d['dataset']['rows'] == 6240\nassert d['training']['parameter_count'] == 2502\nassert d['training']['winner'] in {c['spec']['name'] for c in d['training']['candidates']}\nassert len(d['training']['candidates']) == 4\nfor c in d['training']['candidates']:\n    for k in ('balanced_mae','mae','rmse','macro_f1'):\n        assert math.isfinite(float(c['validation'][k]))\nfor k in ('balanced_mae','mae','rmse','macro_f1'):\n    assert math.isfinite(float(d['training']['winner_test'][k]))\nprint('TRAINING_RESULT_VALIDATION=PASS')\nPY\nmkdir -p reports/ml; cp build/climate_v6_training_seed1847.json reports/ml/climate_v6_training_seed1847.json; .venv/bin/ruff check tools/ml/train_climate_v6.py; git diff --check; git status --short"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "full-regression-and-publish-training-report",
+      "verification_level": "full",
+      "timeout": 3000,
+      "command": "set -euo pipefail; git add -- tools/ml/train_climate_v6.py reports/ml/climate_v6_training_seed1847.json; .venv/bin/pre-commit run --all-files; .venv/bin/python -m pytest -q -m 'not hardware'; bash scripts/check_schema.sh; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests --output-on-failure; bash scripts/run_clang_tidy_host.sh; git diff --check; git add -- tools/ml/train_climate_v6.py reports/ml/climate_v6_training_seed1847.json; git diff --cached --check; git commit -m 'Run full climate v6 training comparison'; git push origin HEAD:mvp/environment-controller"
+    }
+  ]
+}
