@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260826-growbox-mvp-stage9b-full-vpd-dataset-v1",
+  "task_digest": "a499c26fbee2f213d6eec391a7875effd8792e756aa84d289499ba8e744c36c8",
+  "idle_timeout": 3600,
+  "task_timeout": 21600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-26T17:07:20.731752+00:00",
+  "attempt_id": "04db7738f2ee8c56883f08fb",
+  "daemon_version": "4.9.6",
+  "daemon_pid": 46044,
+  "updated_at": "2026-08-26T17:07:20.732024+00:00",
+  "pid": 46044
+}
