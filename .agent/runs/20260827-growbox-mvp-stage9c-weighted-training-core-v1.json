@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260827-growbox-mvp-stage9c-weighted-training-core-v1",
+  "task_digest": "881cb71d22dce489e48696a2ede030b028ecd2619574582d6c378abbe253e97f",
+  "idle_timeout": 1800,
+  "task_timeout": 10800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-26T23:12:03.438162+00:00",
+  "attempt_id": "b41bd799df91f353d21397de",
+  "daemon_version": "4.10.0",
+  "daemon_pid": 24111,
+  "updated_at": "2026-08-26T23:12:03.439114+00:00",
+  "pid": 24111
+}
