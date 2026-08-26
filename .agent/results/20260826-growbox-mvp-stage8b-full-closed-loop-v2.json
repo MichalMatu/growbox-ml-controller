@@ -1,0 +1,117 @@
+{
+  "id": "20260826-growbox-mvp-stage8b-full-closed-loop-v2",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "started_at": "2026-08-26T15:32:03.800402+00:00",
+  "command_timeout": 7200,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; test \"$(git rev-parse HEAD)\" = 4c3105720cf2295d934849b84b41713c67836c60; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/stage8b/run_climate_v6_closed_loop.py > tools/ml/run_climate_v6_closed_loop.py; .venv/bin/ruff check --fix tools/ml/run_climate_v6_closed_loop.py; .venv/bin/ruff format tools/ml/run_climate_v6_closed_loop.py; .venv/bin/python -m pytest tests/test_climate_benchmark.py -q; git diff --check; git status --short",
+      "exit_code": 0,
+      "output": "From https://github.com/MichalMatu/growbox-ml-controller\n * branch            agent-control -> FETCH_HEAD\n   ece6537..7a45520  agent-control -> origin/agent-control\nFound 1 error (1 fixed, 0 remaining).\n1 file left unchanged\n.....                                                                    [100%]\n5 passed in 37.67s\n?? tools/ml/run_climate_v6_closed_loop.py\n",
+      "elapsed_seconds": 40.897,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 58.14,
+      "current_rss_mb": 58.14,
+      "stage_name": "install-closed-loop-runner",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "stage_timeout": 600,
+      "verification_level": "work"
+    },
+    {
+      "command": "set -euo pipefail; CLIMATE_BENCHMARK_WORKERS=6 PYTHONPATH=\"$PWD\" .venv/bin/python tools/ml/run_climate_v6_closed_loop.py; .venv/bin/python - <<'PY'\nimport json, math\nfrom pathlib import Path\np=Path('build/climate_v6_closed_loop_seed91273.json')\nd=json.loads(p.read_text())\nassert d['config']['workers'] == 6\nassert d['config']['scenarios_per_family'] == 2\nassert d['config']['steps_per_scenario'] == 60\nassert set(d['aggregate']) == {'rule','teacher','ml'}\nassert len(d['families']) == 13\nassert len(d['episodes']) == 78\nassert d['model']['candidate_name'] == 'adam_huber'\nassert d['model']['parameter_count'] == 2502\nfor name, metrics in d['aggregate'].items():\n    assert metrics['steps'] == 1560, (name, metrics['steps'])\n    for key in ('tracking_cost','outside_deadband_fraction','temperature_mae_c','rh_mae_pct','vpd_mae_kpa','co2_mae_ppm','switching_per_step','safety_intervention_fraction','hard_limit_violation_fraction'):\n        assert math.isfinite(float(metrics[key])), (name,key)\nPath('reports/ml').mkdir(parents=True, exist_ok=True)\nPath('reports/ml/climate_v6_closed_loop_seed91273.json').write_text(p.read_text())\nprint('CLOSED_LOOP_RESULT_VALIDATION=PASS')\nprint('CLOSED_LOOP_ACCEPTED=', d['verdict']['accepted'])\nPY\n.venv/bin/ruff check tools/ml/run_climate_v6_closed_loop.py; git diff --check; git status --short",
+      "exit_code": 0,
+      "output": "CLIMATE_V6_CLOSED_LOOP_START workers=6\nCLOSED_LOOP_HEARTBEAT elapsed_s=60\nCLOSED_LOOP_HEARTBEAT elapsed_s=120\nCLOSED_LOOP_HEARTBEAT elapsed_s=180\nrule: tracking=5.093205 outside=0.9974 temp_mae=3.1528 rh_mae=3.8819 vpd_mae=0.0000 co2_mae=291.83 switching=0.00550 safety=0.0000 hard_limits=0.0000\nteacher: tracking=4.962696 outside=0.9487 temp_mae=2.9497 rh_mae=3.4843 vpd_mae=0.0000 co2_mae=300.27 switching=0.00925 safety=0.0000 hard_limits=0.0000\nml: tracking=7.529854 outside=0.9974 temp_mae=3.4918 rh_mae=8.5161 vpd_mae=0.0000 co2_mae=479.09 switching=0.00110 safety=0.6538 hard_limits=0.0000\nCLOSED_LOOP_VERDICT=NO_GO\nreason=ML did not improve tracking cost by at least 2% versus rule baseline\nreason=ML needs materially more safety intervention than rule baseline\nfamily=actuator_missing rule_tracking=20.929125 teacher_tracking=20.929138 ml_tracking=21.256577 rule_outside=1.0000 ml_outside=1.0000\nfamily=co2_enrichment rule_tracking=0.317848 teacher_tracking=0.286353 ml_tracking=1.289969 rule_outside=1.0000 ml_outside=1.0000\nfamily=co2_unavailable rule_tracking=1.238214 teacher_tracking=1.185753 ml_tracking=1.199294 rule_outside=1.0000 ml_outside=1.0000\nfamily=cold_heating rule_tracking=15.637014 teacher_tracking=15.628932 ml_tracking=21.834365 rule_outside=1.0000 ml_outside=1.0000\nfamily=day_light_load rule_tracking=0.099940 teacher_tracking=0.058124 ml_tracking=0.375064 rule_outside=1.0000 ml_outside=1.0000\nfamily=day_to_night rule_tracking=1.301322 teacher_tracking=0.946695 ml_tracking=1.634114 rule_outside=1.0000 ml_outside=1.0000\nfamily=dry_humidification rule_tracking=2.238679 teacher_tracking=2.200538 ml_tracking=15.230127 rule_outside=1.0000 ml_outside=1.0000\nfamily=hot_cooling rule_tracking=15.169073 teacher_tracking=15.054335 ml_tracking=17.035811 rule_outside=1.0000 ml_outside=1.0000\nfamily=humid_dehumidification rule_tracking=1.146643 teacher_tracking=1.042904 ml_tracking=5.871854 rule_outside=1.0000 ml_outside=1.0000\nfamily=night_to_day rule_tracking=0.903632 teacher_tracking=0.940540 ml_tracking=1.027596 rule_outside=1.0000 ml_outside=1.0000\nfamily=outside_harmful rule_tracking=0.123970 teacher_tracking=0.016910 ml_tracking=0.131972 rule_outside=0.9667 ml_outside=0.9667\nfamily=outside_helpful rule_tracking=5.153994 teacher_tracking=4.555859 ml_tracking=6.642768 rule_outside=1.0000 ml_outside=1.0000\nfamily=sensor_fault rule_tracking=1.952216 teacher_tracking=1.668971 ml_tracking=4.358595 rule_outside=1.0000 ml_outside=1.0000\nCLOSED_LOOP_REPORT=build/climate_v6_closed_loop_seed91273.json\nCLIMATE_V6_CLOSED_LOOP=COMPLETE\nCLOSED_LOOP_RESULT_VALIDATION=PASS\nCLOSED_LOOP_ACCEPTED= False\nAll checks passed!\n?? reports/ml/climate_v6_closed_loop_seed91273.json\n?? tools/ml/run_climate_v6_closed_loop.py\n",
+      "elapsed_seconds": 221.244,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 281.42,
+      "current_rss_mb": 281.42,
+      "stage_name": "full-held-out-closed-loop-benchmark",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "stage_timeout": 7200,
+      "verification_level": "focused"
+    }
+  ],
+  "verification": [
+    {
+      "command": "set -euo pipefail; git add -- tools/ml/run_climate_v6_closed_loop.py reports/ml/climate_v6_closed_loop_seed91273.json; .venv/bin/pre-commit run --all-files; .venv/bin/python -m pytest -q -m 'not hardware'; bash scripts/check_schema.sh; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests --output-on-failure; bash scripts/run_clang_tidy_host.sh; git diff --check; git add -- tools/ml/run_climate_v6_closed_loop.py reports/ml/climate_v6_closed_loop_seed91273.json; git diff --cached --check; git commit -m 'Run climate v6 closed-loop benchmark'; git push origin HEAD:mvp/environment-controller",
+      "exit_code": 0,
+      "output": "trim trailing whitespace.................................................Passed\nfix end of files.........................................................Passed\ncheck for merge conflicts................................................Passed\ncheck yaml...............................................................Passed\ncheck json...............................................................Passed\ndetect private key.......................................................Passed\nruff.....................................................................Passed\nruff-format..............................................................Passed\nclang-format.............................................................Passed\nenvironment schema (--check).............................................Passed\n........................................................................ [ 17%]\n........................................................................ [ 35%]\n........................................................................ [ 53%]\n........................................................................ [ 70%]\n........................................................................ [ 88%]\n...............................................                          [100%]\n407 passed, 9 deselected in 126.73s (0:02:06)\n-- Configuring done (0.1s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tests\n[ 36%] Built target climate_v6_tests\n[100%] Built target environment_control_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tests\n    Start 1: environment_control_tests\n1/2 Test #1: environment_control_tests ........   Passed    0.01 sec\n    Start 2: climate_v6_tests\n2/2 Test #2: climate_v6_tests .................   Passed    0.01 sec\n\n100% tests passed, 0 tests failed out of 2\n\nTotal Test time (real) =   0.02 sec\n==> host clang-tidy (build/host-tidy)\n-- The CXX compiler identification is AppleClang 21.0.0.21000101\n-- Detecting CXX compiler ABI info\n-- Detecting CXX compiler ABI info - done\n-- Check for working CXX compiler: /Library/Developer/CommandLineTools/usr/bin/clang++ - skipped\n-- Detecting CXX compile features\n-- Detecting CXX compile features - done\n-- Configuring done (1.8s)\n-- Generating done (0.2s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tidy\n[  9%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/test/test_environment_controller/test_main.cpp.o\n[ 18%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/EnvironmentController.cpp.o\n[ 27%] Building CXX object CMakeFiles/climate_v6_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/test/test_climate_v6/test_main.cpp.o\n[ 36%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/EnvironmentTypes.cpp.o\n[ 45%] Building CXX object CMakeFiles/climate_v6_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateFeatureEncoder.cpp.o\n[ 54%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/ModelRuntime.cpp.o\n[ 72%] Building CXX object CMakeFiles/climate_v6_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateTrendEstimator.cpp.o\n[ 72%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/FeatureEncoder.cpp.o\n[ 81%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/SafetySupervisor.cpp.o\n[ 90%] Linking CXX executable climate_v6_tests\n[100%] Linking CXX executable environment_control_tests\n[100%] Built target climate_v6_tests\n[100%] Built target environment_control_tests\nclang-tidy: lib/environment_control/src/EnvironmentController.cpp\n458 warnings generated.\nclang-tidy: lib/environment_control/src/FeatureEncoder.cpp\n458 warnings generated.\nclang-tidy: lib/environment_control/src/SafetySupervisor.cpp\n458 warnings generated.\nclang-tidy: lib/environment_control/src/ModelRuntime.cpp\n470 warnings generated.\nclang-tidy: lib/environment_control/src/climate/ClimateFeatureEncoder.cpp\n458 warnings generated.\nclang-tidy: lib/environment_control/src/climate/ClimateTrendEstimator.cpp\n458 warnings generated.\n[agent-work f0bcc1e] Run climate v6 closed-loop benchmark\n 2 files changed, 2917 insertions(+)\n create mode 100644 reports/ml/climate_v6_closed_loop_seed91273.json\n create mode 100644 tools/ml/run_climate_v6_closed_loop.py\nTo https://github.com/MichalMatu/growbox-ml-controller.git\n   4c31057..f0bcc1e  HEAD -> mvp/environment-controller\n",
+      "elapsed_seconds": 163.662,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 404.36,
+      "current_rss_mb": 23.06,
+      "stage_name": "full-regression-and-publish-benchmark",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "verification",
+      "stage_timeout": 3600,
+      "verification_level": "full"
+    }
+  ],
+  "stages": [
+    {
+      "stage_name": "install-closed-loop-runner",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "verification_level": "work",
+      "outcome": "passed",
+      "elapsed_seconds": 40.897
+    },
+    {
+      "stage_name": "full-held-out-closed-loop-benchmark",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "verification_level": "focused",
+      "outcome": "passed",
+      "elapsed_seconds": 221.244
+    },
+    {
+      "stage_name": "full-regression-and-publish-benchmark",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "verification",
+      "verification_level": "full",
+      "outcome": "passed",
+      "elapsed_seconds": 163.662
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.283
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.11
+  },
+  "finished_at": "2026-08-26T15:39:12.439598+00:00",
+  "task_digest": "cdc0f8e58dc574056bb00240086866af7ea75d5a161fceb77d3d2e473ce7e138",
+  "idle_timeout": 3600,
+  "task_timeout": 21600,
+  "memory_limit_mb": 4096,
+  "attempt_id": "06d5bcf94d20418a4574f731",
+  "daemon_version": "4.9.6"
+}
