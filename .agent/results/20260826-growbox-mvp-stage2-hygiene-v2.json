@@ -1,0 +1,117 @@
+{
+  "id": "20260826-growbox-mvp-stage2-hygiene-v2",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "started_at": "2026-08-26T10:16:47.181655+00:00",
+  "command_timeout": 1800,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; test \"$(git rev-parse HEAD)\" = f5f776c4749469e4da6deacbdce621b37ac94ab5; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/stage2/hygiene-v2.py > /tmp/stage2-hygiene.py; .venv/bin/python /tmp/stage2-hygiene.py; .venv/bin/pre-commit run ruff --all-files || true; .venv/bin/pre-commit run ruff-format --all-files || true; .venv/bin/pre-commit run clang-format --all-files || true; .venv/bin/pre-commit run trailing-whitespace --all-files || true; .venv/bin/pre-commit run end-of-file-fixer --all-files || true; .venv/bin/pre-commit run --all-files; git diff --check; git status --short",
+      "exit_code": 0,
+      "output": "From https://github.com/MichalMatu/growbox-ml-controller\n * branch            agent-control -> FETCH_HEAD\n   347eb0d..bb75a07  agent-control -> origin/agent-control\npre-commit climate v6 hygiene rules updated\nruff.....................................................................Failed\n- hook id: ruff\n- exit code: 1\n- files were modified by this hook\n\ntests/test_climate_contract_codegen.py:16:17: E702 Multiple statements on one line (semicolon)\n   |\n14 | def test_generated_climate_header_is_fresh(): assert HEADER.read_text(encoding=\"utf-8\")==render(document())\n15 | def test_generator_rejects_pot_feature_leak():\n16 |     d=document(); d[\"model\"][\"features\"][0][\"name\"]=\"soil_temperature_c\"\n   |                 ^ E702\n17 |     with pytest.raises(ValueError,match=\"non-climate feature\"): validate(d)\n18 | def test_generator_rejects_output_reordering():\n   |\n\ntests/test_climate_contract_codegen.py:17:63: E701 Multiple statements on one line (colon)\n   |\n15 | def test_generator_rejects_pot_feature_leak():\n16 |     d=document(); d[\"model\"][\"features\"][0][\"name\"]=\"soil_temperature_c\"\n17 |     with pytest.raises(ValueError,match=\"non-climate feature\"): validate(d)\n   |                                                               ^ E701\n18 | def test_generator_rejects_output_reordering():\n19 |     d=document(); o=d[\"model\"][\"outputs\"]; o[0],o[1]=o[1],o[0]\n   |\n\ntests/test_climate_contract_codegen.py:19:17: E702 Multiple statements on one line (semicolon)\n   |\n17 |     with pytest.raises(ValueError,match=\"non-climate feature\"): validate(d)\n18 | def test_generator_rejects_output_reordering():\n19 |     d=document(); o=d[\"model\"][\"outputs\"]; o[0],o[1]=o[1],o[0]\n   |                 ^ E702\n20 |     with pytest.raises(ValueError,match=\"unexpected output order\"): validate(d)\n   |\n\ntests/test_climate_contract_codegen.py:19:42: E702 Multiple statements on one line (semicolon)\n   |\n17 |     with pytest.raises(ValueError,match=\"non-climate feature\"): validate(d)\n18 | def test_generator_rejects_output_reordering():\n19 |     d=document(); o=d[\"model\"][\"outputs\"]; o[0],o[1]=o[1],o[0]\n   |                                          ^ E702\n20 |     with pytest.raises(ValueError,match=\"unexpected output order\"): validate(d)\n   |\n\ntests/test_climate_contract_codegen.py:20:67: E701 Multiple statements on one line (colon)\n   |\n18 | def test_generator_rejects_output_reordering():\n19 |     d=document(); o=d[\"model\"][\"outputs\"]; o[0],o[1]=o[1],o[0]\n20 |     with pytest.raises(ValueError,match=\"unexpected output order\"): validate(d)\n   |                                                                   ^ E701\n   |\n\nFound 8 errors (3 fixed, 5 remaining).\n\nruff-format..............................................................Failed\n- hook id: ruff-format\n- files were modified by this hook\n\n2 files reformatted, 90 files left unchanged\n\nclang-format.............................................................Failed\n- hook id: clang-format\n- files were modified by this hook\ntrim trailing whitespace.................................................Passed\nfix end of files.........................................................Passed\ntrim trailing whitespace.................................................Passed\nfix end of files.........................................................Passed\ncheck for merge conflicts................................................Passed\ncheck yaml...............................................................Passed\ncheck json...............................................................Passed\ndetect private key.......................................................Passed\nruff.....................................................................Passed\nruff-format..............................................................Passed\nclang-format.............................................................Passed\nenvironment schema (--check).............................................Passed\n M .pre-commit-config.yaml\n M lib/environment_control/src/climate/ClimateFeatureEncoder.cpp\n M lib/environment_control/src/climate/ClimateFeatureEncoder.h\n M lib/environment_control/src/climate/ClimateMath.h\n M lib/environment_control/src/climate/ClimateTrendEstimator.cpp\n M lib/environment_control/src/climate/ClimateTrendEstimator.h\n M lib/environment_control/src/climate/ClimateTypes.h\n M test/test_climate_v6/test_main.cpp\n M tests/test_climate_contract_codegen.py\n M tests/test_mvp_contract_v6.py\n M tools/schema/generate_climate_contract.py\n",
+      "elapsed_seconds": 18.852,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 139.16,
+      "current_rss_mb": 50.11,
+      "stage_name": "apply-and-format-tracked-stage2-files",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "stage_timeout": 900,
+      "verification_level": "work"
+    },
+    {
+      "command": "set -euo pipefail; bash scripts/check_schema.sh; .venv/bin/python -m pytest tests/test_mvp_contract_v6.py tests/test_climate_contract_codegen.py -q; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests -R climate_v6_tests --output-on-failure; git diff --check",
+      "exit_code": 0,
+      "output": "........                                                                 [100%]\n8 passed in 0.12s\n-- Configuring done (0.2s)\n-- Generating done (0.1s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tests\n[ 18%] Building CXX object CMakeFiles/climate_v6_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateTrendEstimator.cpp.o\n[ 18%] Building CXX object CMakeFiles/climate_v6_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/test/test_climate_v6/test_main.cpp.o\n[ 27%] Building CXX object CMakeFiles/climate_v6_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateFeatureEncoder.cpp.o\n[ 90%] Built target environment_control_tests\n[100%] Linking CXX executable climate_v6_tests\n[100%] Built target climate_v6_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tests\n    Start 2: climate_v6_tests\n1/1 Test #2: climate_v6_tests .................   Passed    0.41 sec\n\n100% tests passed, 0 tests failed out of 1\n\nTotal Test time (real) =   0.42 sec\n",
+      "elapsed_seconds": 6.661,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 252.88,
+      "current_rss_mb": 252.88,
+      "stage_name": "focused-stage2-regression",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "stage_timeout": 900,
+      "verification_level": "focused"
+    }
+  ],
+  "verification": [
+    {
+      "command": "set -euo pipefail; .venv/bin/pre-commit run --all-files; .venv/bin/python -m pytest -q -m 'not hardware'; bash scripts/check_schema.sh; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests --output-on-failure; bash scripts/run_clang_tidy_host.sh; git diff --check; if ! git diff --quiet; then git add -- .pre-commit-config.yaml tools/schema/generate_climate_contract.py lib/environment_control/src/climate test/test_climate_v6 tests/test_climate_contract_codegen.py tests/test_mvp_contract_v6.py test/host/CMakeLists.txt scripts/check_schema.sh scripts/run_clang_tidy_host.sh docs/MVP_ENVIRONMENT_CONTROLLER.md; git diff --cached --check; git commit -m 'Harden climate v6 quality gates'; git push origin HEAD:mvp/environment-controller; fi",
+      "exit_code": 0,
+      "output": "trim trailing whitespace.................................................Passed\nfix end of files.........................................................Passed\ncheck for merge conflicts................................................Passed\ncheck yaml...............................................................Passed\ncheck json...............................................................Passed\ndetect private key.......................................................Passed\nruff.....................................................................Passed\nruff-format..............................................................Passed\nclang-format.............................................................Passed\nenvironment schema (--check).............................................Passed\n........................................................................ [ 20%]\n........................................................................ [ 41%]\n........................................................................ [ 61%]\n........................................................................ [ 82%]\n..............................................................           [100%]\n350 passed, 9 deselected in 53.64s\n-- Configuring done (0.1s)\n-- Generating done (0.1s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tests\n[ 36%] Built target climate_v6_tests\n[100%] Built target environment_control_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tests\n    Start 1: environment_control_tests\n1/2 Test #1: environment_control_tests ........   Passed    0.01 sec\n    Start 2: climate_v6_tests\n2/2 Test #2: climate_v6_tests .................   Passed    0.01 sec\n\n100% tests passed, 0 tests failed out of 2\n\nTotal Test time (real) =   0.03 sec\n==> host clang-tidy (build/host-tidy)\n-- The CXX compiler identification is AppleClang 21.0.0.21000101\n-- Detecting CXX compiler ABI info\n-- Detecting CXX compiler ABI info - done\n-- Check for working CXX compiler: /Library/Developer/CommandLineTools/usr/bin/clang++ - skipped\n-- Detecting CXX compile features\n-- Detecting CXX compile features - done\n-- Configuring done (1.7s)\n-- Generating done (0.2s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tidy\n[  9%] Building CXX object CMakeFiles/climate_v6_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/test/test_climate_v6/test_main.cpp.o\n[ 36%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/test/test_environment_controller/test_main.cpp.o\n[ 45%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/FeatureEncoder.cpp.o\n[ 45%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/EnvironmentController.cpp.o\n[ 54%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/EnvironmentTypes.cpp.o\n[ 18%] Building CXX object CMakeFiles/climate_v6_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateFeatureEncoder.cpp.o\n[ 63%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/SafetySupervisor.cpp.o\n[ 81%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/ModelRuntime.cpp.o\n[ 81%] Building CXX object CMakeFiles/climate_v6_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateTrendEstimator.cpp.o\n[ 90%] Linking CXX executable climate_v6_tests\n[ 90%] Built target climate_v6_tests\n[100%] Linking CXX executable environment_control_tests\n[100%] Built target environment_control_tests\nclang-tidy: lib/environment_control/src/EnvironmentController.cpp\n458 warnings generated.\nclang-tidy: lib/environment_control/src/FeatureEncoder.cpp\n458 warnings generated.\nclang-tidy: lib/environment_control/src/SafetySupervisor.cpp\n458 warnings generated.\nclang-tidy: lib/environment_control/src/ModelRuntime.cpp\n470 warnings generated.\nclang-tidy: lib/environment_control/src/climate/ClimateFeatureEncoder.cpp\n460 warnings generated.\n/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateFeatureEncoder.cpp:27:24: warning: statement should be inside braces [readability-braces-around-statements]\n   27 |     if (clipped != raw)\n      |                        ^\n      |                         {\n   28 |       r_.clamped_feature_mask |= std::uint64_t{1U} << i;\n      |                                                         \n/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateFeatureEncoder.cpp:98:14: warning: statement should be inside braces [readability-braces-around-statements]\n   98 |   if (report)\n      |              ^\n      |               {\n   99 |     *report = local;\n      |                     \nclang-tidy: lib/environment_control/src/climate/ClimateTrendEstimator.cpp\n468 warnings generated.\n/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateTrendEstimator.cpp:10:77: warning: statement should be inside braces [readability-braces-around-statements]\n   10 |   while (first < size_ && newest - samples_[first].timestamp_ms > kWindowMs)\n      |                                                                             ^\n      |                                                                              {\n   11 |     ++first;\n      |             \n/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateTrendEstimator.cpp:12:46: warning: statement should be inside braces [readability-braces-around-statements]\n   12 |   for (std::size_t i = first; i < size_; ++i)\n      |                                              ^\n      |                                               {\n   13 |     samples_[i - first] = samples_[i];\n      |                                       \n/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateTrendEstimator.cpp:17:60: warning: statement should be inside braces [readability-braces-around-statements]\n   17 |   if (size_ > 0U && ts < samples_[size_ - 1U].timestamp_ms)\n      |                                                            ^\n      |                                                             {\n   18 |     reset();\n      |             \n/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateTrendEstimator.cpp:26:58: warning: statement should be inside braces [readability-braces-around-statements]\n   26 |     if (ts - last.timestamp_ms < kMinimumSampleSpacingMs)\n      |                                                          ^\n      |                                                           {\n   27 |       return;\n      |              \n/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateTrendEstimator.cpp:30:45: warning: statement should be inside braces [readability-braces-around-statements]\n   30 |     for (std::size_t i = 1U; i < size_; ++i)\n      |                                             ^\n      |                                              {\n   31 |       samples_[i - 1U] = samples_[i];\n      |                                      \n/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateTrendEstimator.cpp:37:18: warning: statement should be inside braces [readability-braces-around-statements]\n   37 |   if (size_ < 2U)\n      |                  ^\n      |                   {\n   38 |     return {};\n      |               \n/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateTrendEstimator.cpp:41:34: warning: statement should be inside braces [readability-braces-around-statements]\n   41 |   if (span < kMinimumTrendSpanMs)\n      |                                  ^\n      |                                   {\n   42 |     return {};\n      |               \n/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateTrendEstimator.cpp:53:27: warning: statement should be inside braces [readability-braces-around-statements]\n   53 |   if (std::abs(d) < 1e-12)\n      |                           ^\n      |                            {\n   54 |     return {};\n      |               \n/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateTrendEstimator.cpp:60:83: warning: statement should be inside braces [readability-braces-around-statements]\n   60 |   if (!m.valid || m.age_ms > timeout || !std::isfinite(m.value) || m.age_ms > now)\n      |                                                                                   ^\n      |                                                                                    {\n   61 |     return {};\n      |               \n/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateTrendEstimator.cpp:67:50: warning: statement should be inside braces [readability-braces-around-statements]\n   67 |   if (has_monotonic_ && now < last_monotonic_ms_)\n      |                                                  ^\n      |                                                   {\n   68 |     reset();\n      |             \n[agent-work 88ed005] Harden climate v6 quality gates\n 11 files changed, 450 insertions(+), 92 deletions(-)\nTo https://github.com/MichalMatu/growbox-ml-controller.git\n   f5f776c..88ed005  HEAD -> mvp/environment-controller\n",
+      "elapsed_seconds": 97.443,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 546.17,
+      "current_rss_mb": 22.95,
+      "stage_name": "full-stage2-regression-and-publish",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "verification",
+      "stage_timeout": 2400,
+      "verification_level": "full"
+    }
+  ],
+  "stages": [
+    {
+      "stage_name": "apply-and-format-tracked-stage2-files",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "verification_level": "work",
+      "outcome": "passed",
+      "elapsed_seconds": 18.852
+    },
+    {
+      "stage_name": "focused-stage2-regression",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "verification_level": "focused",
+      "outcome": "passed",
+      "elapsed_seconds": 6.661
+    },
+    {
+      "stage_name": "full-stage2-regression-and-publish",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "verification",
+      "verification_level": "full",
+      "outcome": "passed",
+      "elapsed_seconds": 97.443
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.207
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.131
+  },
+  "finished_at": "2026-08-26T10:18:52.883092+00:00",
+  "task_digest": "d32885e86d90a8390b2706ceb44650719130018b8226489b43f6dd6f3ae6fc72",
+  "idle_timeout": 900,
+  "task_timeout": 5400,
+  "memory_limit_mb": 4096,
+  "attempt_id": "49d6c74168ef5fa67d1b7213",
+  "daemon_version": "4.9.6"
+}
