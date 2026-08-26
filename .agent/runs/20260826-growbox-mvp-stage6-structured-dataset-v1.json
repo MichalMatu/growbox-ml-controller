@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260826-growbox-mvp-stage6-structured-dataset-v1",
+  "task_digest": "82600ad6d266da47ad6e429ee73f4c023f65df2001b7bcfa849ef8cfc9a8b072",
+  "idle_timeout": 900,
+  "task_timeout": 10800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-26T10:52:57.448186+00:00",
+  "attempt_id": "36ff7510718bef159423b180",
+  "daemon_version": "4.9.6",
+  "daemon_pid": 57989,
+  "updated_at": "2026-08-26T10:52:57.448487+00:00",
+  "pid": 57989
+}
