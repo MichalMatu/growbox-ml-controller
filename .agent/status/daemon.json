@@ -2,8 +2,8 @@
   "version": 1,
   "daemon_version": "4.9.6",
   "state": "idle",
-  "pid": 55999,
-  "updated_at": "2026-08-26T18:13:10.415856+00:00",
+  "pid": 61613,
+  "updated_at": "2026-08-26T18:30:46.252779+00:00",
   "self_revision": "8a86798c35ee3a659ec9f50decfcecf3fe259efc",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -22,6 +22,6 @@
   "control_branch": "agent-control",
   "default_branch": "main",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 55999,
+  "worker_pid": 61613,
   "supervisor_pid": 67414
 }
