@@ -1,0 +1,33 @@
+{
+  "id": "20260826-growbox-mvp-stage2-hygiene-v1",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "workflow_policy": "efficient-verification-v1",
+  "command_timeout": 1800,
+  "idle_timeout": 900,
+  "task_timeout": 5400,
+  "memory_limit_mb": 4096,
+  "steps": [
+    {
+      "name": "apply-and-format-tracked-stage2-files",
+      "verification_level": "work",
+      "timeout": 900,
+      "command": "set -euo pipefail; test \"$(git rev-parse HEAD)\" = f5f776c4749469e4da6deacbdce621b37ac94ab5; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/stage2/hygiene.py > /tmp/stage2-hygiene.py; .venv/bin/python /tmp/stage2-hygiene.py; .venv/bin/pre-commit run ruff --all-files || true; .venv/bin/pre-commit run ruff-format --all-files || true; .venv/bin/pre-commit run clang-format --all-files || true; .venv/bin/pre-commit run trailing-whitespace --all-files || true; .venv/bin/pre-commit run end-of-file-fixer --all-files || true; .venv/bin/pre-commit run --all-files; git diff --check; git status --short"
+    },
+    {
+      "name": "focused-stage2-regression",
+      "verification_level": "focused",
+      "timeout": 900,
+      "command": "set -euo pipefail; bash scripts/check_schema.sh; .venv/bin/python -m pytest tests/test_mvp_contract_v6.py tests/test_climate_contract_codegen.py -q; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests -R climate_v6_tests --output-on-failure; git diff --check"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "full-stage2-regression-and-publish",
+      "verification_level": "full",
+      "timeout": 2400,
+      "command": "set -euo pipefail; .venv/bin/pre-commit run --all-files; .venv/bin/python -m pytest -q -m 'not hardware'; bash scripts/check_schema.sh; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests --output-on-failure; bash scripts/run_clang_tidy_host.sh; git diff --check; if ! git diff --quiet; then git add -- .pre-commit-config.yaml tools/schema/generate_climate_contract.py lib/environment_control/src/climate test/test_climate_v6 tests/test_climate_contract_codegen.py tests/test_mvp_contract_v6.py test/host/CMakeLists.txt scripts/check_schema.sh scripts/run_clang_tidy_host.sh docs/MVP_ENVIRONMENT_CONTROLLER.md; git diff --cached --check; git commit -m 'Harden climate v6 quality gates'; git push origin HEAD:mvp/environment-controller; fi"
+    }
+  ]
+}
