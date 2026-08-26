@@ -1,0 +1,60 @@
+{
+  "id": "20260826-growbox-mvp-stage7c-full-training-v1",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "started_at": "2026-08-26T14:47:19.645514+00:00",
+  "command_timeout": 3600,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; test \"$(git rev-parse HEAD)\" = 45dda6d; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/stage7c/full_training_runner.py > tools/ml/train_climate_v6.py; .venv/bin/ruff check --fix tools/ml/train_climate_v6.py; .venv/bin/ruff format tools/ml/train_climate_v6.py; git diff --check; git status --short",
+      "exit_code": 1,
+      "output": "",
+      "elapsed_seconds": 0.558,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": null,
+      "stage_name": "install-full-training-runner",
+      "stage_index": 1,
+      "stage_total": 4,
+      "stage_phase": "commands",
+      "stage_timeout": 600,
+      "verification_level": "work"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "install-full-training-runner",
+      "stage_index": 1,
+      "stage_total": 4,
+      "stage_phase": "commands",
+      "verification_level": "work",
+      "outcome": "failed",
+      "elapsed_seconds": 0.558
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.263
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.243
+  },
+  "failure_reason": "command_failed",
+  "finished_at": "2026-08-26T14:47:22.953551+00:00",
+  "task_digest": "9fb0deb1a464ced787167cc534dc4c3e7e4138009661086b183622bd228a7fb4",
+  "idle_timeout": 3600,
+  "task_timeout": 10800,
+  "memory_limit_mb": 4096,
+  "attempt_id": "320a65e6d90e2b2cde432e85",
+  "daemon_version": "4.9.6"
+}
