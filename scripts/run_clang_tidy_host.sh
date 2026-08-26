@@ -43,6 +43,8 @@ SOURCES=(
   lib/environment_control/src/FeatureEncoder.cpp
   lib/environment_control/src/SafetySupervisor.cpp
   lib/environment_control/src/ModelRuntime.cpp
+  lib/environment_control/src/climate/ClimateFeatureEncoder.cpp
+  lib/environment_control/src/climate/ClimateTrendEstimator.cpp
 )
 
 CMAKE_ARGS=(-S test/host -B "${BUILD_DIR}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug)

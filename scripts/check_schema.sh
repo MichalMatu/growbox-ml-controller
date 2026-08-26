@@ -11,4 +11,5 @@ else
   PYTHON="$(command -v python)"
 fi
 
-exec "${PYTHON}" "${ROOT}/tools/schema/generate_environment_schema.py" --check
+"${PYTHON}" "${ROOT}/tools/schema/generate_environment_schema.py" --check
+"${PYTHON}" "${ROOT}/tools/schema/generate_climate_contract.py" --check

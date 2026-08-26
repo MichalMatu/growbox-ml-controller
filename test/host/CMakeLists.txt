@@ -27,9 +27,21 @@ target_include_directories(
 target_compile_features(environment_control_tests PRIVATE cxx_std_17)
 target_compile_options(environment_control_tests PRIVATE -Wall -Wextra -Wpedantic)
 
+add_executable(
+  climate_v6_tests
+  "${PROJECT_ROOT}/test/test_climate_v6/test_main.cpp"
+  "${PROJECT_ROOT}/lib/environment_control/src/climate/ClimateFeatureEncoder.cpp"
+  "${PROJECT_ROOT}/lib/environment_control/src/climate/ClimateTrendEstimator.cpp"
+)
+target_include_directories(climate_v6_tests PRIVATE "${PROJECT_ROOT}/lib/environment_control/src/climate")
+target_compile_features(climate_v6_tests PRIVATE cxx_std_17)
+target_compile_options(climate_v6_tests PRIVATE -Wall -Wextra -Wpedantic)
+
 if(UNIX)
   target_link_libraries(environment_control_tests PRIVATE m)
+  target_link_libraries(climate_v6_tests PRIVATE m)
 endif()
 
 enable_testing()
 add_test(NAME environment_control_tests COMMAND environment_control_tests)
+add_test(NAME climate_v6_tests COMMAND climate_v6_tests)

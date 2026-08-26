@@ -526,7 +526,7 @@ A static measurement alone cannot distinguish a rising process from a falling pr
 - `humidity_rate_pct_min`;
 - `co2_rate_ppm_min` when CO2 is valid.
 
-Initial implementation target: a fixed approximately 60-second trend window using a deterministic low-noise estimator. The estimator definition and window are part of the model contract once implemented and must be identical in simulation/training and runtime.
+Implemented v6 semantics: a deterministic 60-second least-squares trend window. Fresh valid source samples are retained at approximately 5-second spacing, at most 16 samples per channel, and no trend is exposed until at least 10 seconds of source-time span exists. Repeated faster samples are ignored until the 5-second source-time spacing is reached. Invalid/stale measurements suppress the corresponding trend, and monotonic-clock rollback resets trend history. These rules are contractual for v6 and must be mirrored by simulation/training.
 
 ### Previous actions
 
