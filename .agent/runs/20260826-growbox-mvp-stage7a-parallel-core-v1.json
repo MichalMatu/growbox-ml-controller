@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260826-growbox-mvp-stage7a-parallel-core-v1",
+  "task_digest": "fd124453528f1cdab2b9f3a5adbf18befd506dbb7f22cd7dcbafffd28b960532",
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-26T13:25:52.354073+00:00",
+  "attempt_id": "2fedc34165fba507b17f42d8",
+  "daemon_version": "4.9.6",
+  "daemon_pid": 10912,
+  "updated_at": "2026-08-26T13:25:52.354381+00:00",
+  "pid": 10912
+}
