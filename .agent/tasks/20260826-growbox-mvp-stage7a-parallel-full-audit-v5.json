@@ -1,0 +1,27 @@
+{
+  "id": "20260826-growbox-mvp-stage7a-parallel-full-audit-v5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "workflow_policy": "efficient-verification-v1",
+  "command_timeout": 3600,
+  "idle_timeout": 3600,
+  "task_timeout": 7200,
+  "memory_limit_mb": 4096,
+  "steps": [
+    {
+      "name": "parallel-dataset-preflight",
+      "verification_level": "focused",
+      "timeout": 600,
+      "command": "set -euo pipefail; test \"$(git rev-parse HEAD)\" = 9fe7a86b92545226078095ddcbc5ca12bf7d0c1b; .venv/bin/python -m pytest tests/test_climate_dataset_parallel.py tests/test_climate_dataset.py -q"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "parallel-full-climate-dataset-audit",
+      "verification_level": "full",
+      "timeout": 3600,
+      "command": "set -euo pipefail; .venv/bin/python - <<'PY'\nfrom tools.ml.climate_dataset import ClimateDatasetConfig, assert_climate_dataset_ready, audit_climate_dataset\nfrom tools.ml.climate_dataset_parallel import generate_climate_dataset_parallel\nprint('CLIMATE_V6_PARALLEL_FULL_AUDIT_START', flush=True)\nconfig = ClimateDatasetConfig.full(seed=1847)\nbundle = generate_climate_dataset_parallel(config, workers=4)\nreport = audit_climate_dataset(bundle)\nprint('CLIMATE_V6_PARALLEL_FULL_AUDIT', flush=True)\nfor line in report.summary_lines():\n    print(line, flush=True)\nprint('families=', report.family_counts, flush=True)\nprint('splits=', report.split_counts, flush=True)\nprint('mean_level=', report.mean_level, flush=True)\nprint('conflicting_temperature_rows=', report.conflicting_temperature_rows, flush=True)\nprint('conflicting_humidity_rows=', report.conflicting_humidity_rows, flush=True)\nassert_climate_dataset_ready(report, require_family_coverage_in_each_split=True, bundle=bundle)\nprint('FULL_DATASET_GATE=PASS', flush=True)\nPY"
+    }
+  ]
+}
