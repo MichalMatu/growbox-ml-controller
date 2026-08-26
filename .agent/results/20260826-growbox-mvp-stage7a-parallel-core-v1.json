@@ -1,0 +1,117 @@
+{
+  "id": "20260826-growbox-mvp-stage7a-parallel-core-v1",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "started_at": "2026-08-26T13:25:52.354249+00:00",
+  "command_timeout": 1800,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; test \"$(git rev-parse HEAD)\" = d337c1dae44404cadb7a63a87bb9caf4c35eec18; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/stage7a-parallel/climate_dataset_parallel.py > tools/ml/climate_dataset_parallel.py; git show origin/agent-control:.agent/task-assets/stage7a-parallel/test_climate_dataset_parallel.py > tests/test_climate_dataset_parallel.py; .venv/bin/ruff check --fix tools/ml/climate_dataset_parallel.py tests/test_climate_dataset_parallel.py; .venv/bin/ruff format tools/ml/climate_dataset_parallel.py tests/test_climate_dataset_parallel.py; git diff --check; git status --short",
+      "exit_code": 0,
+      "output": "From https://github.com/MichalMatu/growbox-ml-controller\n * branch            agent-control -> FETCH_HEAD\n   c87e20d..a82564a  agent-control -> origin/agent-control\nAll checks passed!\n1 file reformatted, 1 file left unchanged\n?? tests/test_climate_dataset_parallel.py\n?? tools/ml/climate_dataset_parallel.py\n",
+      "elapsed_seconds": 2.297,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 1.84,
+      "current_rss_mb": 1.84,
+      "stage_name": "install-parallel-dataset-generator",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "stage_timeout": 600,
+      "verification_level": "work"
+    },
+    {
+      "command": "set -euo pipefail; .venv/bin/python -m pytest tests/test_climate_dataset_parallel.py -q; .venv/bin/ruff check tools/ml/climate_dataset_parallel.py tests/test_climate_dataset_parallel.py; git diff --check",
+      "exit_code": 0,
+      "output": "...                                                                      [100%]\n3 passed in 31.87s\nAll checks passed!\n",
+      "elapsed_seconds": 34.437,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 142.06,
+      "current_rss_mb": 142.06,
+      "stage_name": "bit-exact-parallel-gate",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "stage_timeout": 1200,
+      "verification_level": "focused"
+    }
+  ],
+  "verification": [
+    {
+      "command": "set -euo pipefail; git add -- tools/ml/climate_dataset_parallel.py tests/test_climate_dataset_parallel.py; .venv/bin/pre-commit run --all-files; .venv/bin/python -m pytest -q -m 'not hardware'; bash scripts/check_schema.sh; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests --output-on-failure; bash scripts/run_clang_tidy_host.sh; git diff --check; git add -- tools/ml/climate_dataset_parallel.py tests/test_climate_dataset_parallel.py; git diff --cached --check; git commit -m 'Add deterministic parallel climate dataset generation'; git push origin HEAD:mvp/environment-controller",
+      "exit_code": 0,
+      "output": "trim trailing whitespace.................................................Passed\nfix end of files.........................................................Passed\ncheck for merge conflicts................................................Passed\ncheck yaml...............................................................Passed\ncheck json...............................................................Passed\ndetect private key.......................................................Passed\nruff.....................................................................Passed\nruff-format..............................................................Passed\nclang-format.............................................................Passed\nenvironment schema (--check).............................................Passed\n........................................................................ [ 18%]\n........................................................................ [ 36%]\n........................................................................ [ 54%]\n........................................................................ [ 73%]\n........................................................................ [ 91%]\n.................................                                        [100%]\n393 passed, 9 deselected in 113.12s (0:01:53)\n-- Configuring done (0.2s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tests\n[ 36%] Built target climate_v6_tests\n[100%] Built target environment_control_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tests\n    Start 1: environment_control_tests\n1/2 Test #1: environment_control_tests ........   Passed    0.02 sec\n    Start 2: climate_v6_tests\n2/2 Test #2: climate_v6_tests .................   Passed    0.03 sec\n\n100% tests passed, 0 tests failed out of 2\n\nTotal Test time (real) =   0.06 sec\n==> host clang-tidy (build/host-tidy)\n-- The CXX compiler identification is AppleClang 21.0.0.21000101\n-- Detecting CXX compiler ABI info\n-- Detecting CXX compiler ABI info - done\n-- Check for working CXX compiler: /Library/Developer/CommandLineTools/usr/bin/clang++ - skipped\n-- Detecting CXX compile features\n-- Detecting CXX compile features - done\n-- Configuring done (2.9s)\n-- Generating done (0.4s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tidy\n[ 18%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/test/test_environment_controller/test_main.cpp.o\n[ 18%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/EnvironmentController.cpp.o\n[ 45%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/EnvironmentTypes.cpp.o\n[ 27%] Building CXX object CMakeFiles/climate_v6_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateFeatureEncoder.cpp.o\n[ 45%] Building CXX object CMakeFiles/climate_v6_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateTrendEstimator.cpp.o\n[ 54%] Building CXX object CMakeFiles/climate_v6_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/test/test_climate_v6/test_main.cpp.o\n[ 63%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/FeatureEncoder.cpp.o\n[ 72%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/ModelRuntime.cpp.o\n[ 81%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/SafetySupervisor.cpp.o\n[ 90%] Linking CXX executable climate_v6_tests\n[100%] Linking CXX executable environment_control_tests\n[100%] Built target climate_v6_tests\n[100%] Built target environment_control_tests\nclang-tidy: lib/environment_control/src/EnvironmentController.cpp\n458 warnings generated.\nclang-tidy: lib/environment_control/src/FeatureEncoder.cpp\n458 warnings generated.\nclang-tidy: lib/environment_control/src/SafetySupervisor.cpp\n458 warnings generated.\nclang-tidy: lib/environment_control/src/ModelRuntime.cpp\n470 warnings generated.\nclang-tidy: lib/environment_control/src/climate/ClimateFeatureEncoder.cpp\n458 warnings generated.\nclang-tidy: lib/environment_control/src/climate/ClimateTrendEstimator.cpp\n458 warnings generated.\n[agent-work 9fe7a86] Add deterministic parallel climate dataset generation\n 2 files changed, 239 insertions(+)\n create mode 100644 tests/test_climate_dataset_parallel.py\n create mode 100644 tools/ml/climate_dataset_parallel.py\nTo https://github.com/MichalMatu/growbox-ml-controller.git\n   d337c1d..9fe7a86  HEAD -> mvp/environment-controller\n",
+      "elapsed_seconds": 161.963,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 349.5,
+      "current_rss_mb": 17.31,
+      "stage_name": "full-regression-and-publish",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "verification",
+      "stage_timeout": 3000,
+      "verification_level": "full"
+    }
+  ],
+  "stages": [
+    {
+      "stage_name": "install-parallel-dataset-generator",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "verification_level": "work",
+      "outcome": "passed",
+      "elapsed_seconds": 2.297
+    },
+    {
+      "stage_name": "bit-exact-parallel-gate",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "verification_level": "focused",
+      "outcome": "passed",
+      "elapsed_seconds": 34.437
+    },
+    {
+      "stage_name": "full-regression-and-publish",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "verification",
+      "verification_level": "full",
+      "outcome": "passed",
+      "elapsed_seconds": 161.963
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.205
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.106
+  },
+  "finished_at": "2026-08-26T13:29:13.554801+00:00",
+  "task_digest": "fd124453528f1cdab2b9f3a5adbf18befd506dbb7f22cd7dcbafffd28b960532",
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "memory_limit_mb": 4096,
+  "attempt_id": "2fedc34165fba507b17f42d8",
+  "daemon_version": "4.9.6"
+}
