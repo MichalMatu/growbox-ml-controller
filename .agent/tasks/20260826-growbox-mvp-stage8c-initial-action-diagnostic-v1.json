@@ -1,0 +1,13 @@
+{
+  "id": "20260826-growbox-mvp-stage8c-initial-action-diagnostic-v1",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "command_timeout": 1200,
+  "idle_timeout": 600,
+  "task_timeout": 2400,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "set -euo pipefail; test \"$(git rev-parse HEAD)\" = f0bcc1ed7d201a712784563d1d5acacebad55313; .venv/bin/python - <<'PY'\nfrom pathlib import Path\nimport numpy as np\nfrom tools.ml.climate_input import ClimateInputConfig, ClimateTrends, encode_climate_input\nfrom tools.ml.climate_model_artifact import load_portable_model\nfrom tools.ml.climate_policy import ClimateRulePolicy, apply_climate_safety, arbitrate_climate_action\nfrom tools.ml.climate_scenarios import structured_training_episodes\nfrom tools.ml.climate_simulator import CLIMATE_OUTPUT_NAMES, ClimateAction, ClimateSimulator\nfrom tools.ml.climate_teacher import ClimateRolloutTeacher\nroot=Path('.')\nmodel=load_portable_model(root/'reports/ml/climate_v6_model_seed1847.npz', root/'reports/ml/climate_v6_model_seed1847.json')\nratios={name:[] for name in CLIMATE_OUTPUT_NAMES}\nprint('INITIAL_ACTION_DIAGNOSTIC')\nfor episode in structured_training_episodes(scenarios_per_family=1, seed=91273):\n    sim=ClimateSimulator(episode.scenario)\n    profile=episode.first_profile\n    sim.set_light_level(profile.light_level)\n    state=sim.observe(add_sensor_noise=False)\n    status={}\n    features=encode_climate_input(sim.scenario,state,previous=ClimateAction(),trends=ClimateTrends(),status=status,config=ClimateInputConfig(targets=profile.targets,humidity_control_mode=profile.humidity_control_mode))\n    pred=model.predict(features)\n    ml=ClimateAction.from_mapping(dict(zip(CLIMATE_OUTPUT_NAMES,(float(v) for v in pred),strict=True)))\n    rule=ClimateRulePolicy().choose(sim.scenario,state,profile,status=status)\n    teacher=ClimateRolloutTeacher().choose(sim,profile.targets,humidity_control_mode=profile.humidity_control_mode,status=status).action\n    arb=arbitrate_climate_action(ml,sim.scenario)\n    safe=apply_climate_safety(arb.action,sim.scenario,state,profile,status=status)\n    for name in CLIMATE_OUTPUT_NAMES:\n        tv=getattr(teacher,name); mv=getattr(safe.action,name)\n        if tv>0.05:\n            ratios[name].append(mv/tv)\n    fmt=lambda a:','.join(f'{v:.3f}' for v in a.as_tuple())\n    print(f'{episode.family}: teacher=[{fmt(teacher)}] rule=[{fmt(rule)}] ml_raw=[{fmt(ml)}] ml_applied=[{fmt(safe.action)}] arb={arb.interventions} safety={safe.interventions}')\nprint('ACTIVE_ML_TO_TEACHER_RATIO')\nfor name,values in ratios.items():\n    print(name, 'n=',len(values),'mean=',(sum(values)/len(values) if values else None),'values=',values)\nPY"
+  ]
+}
