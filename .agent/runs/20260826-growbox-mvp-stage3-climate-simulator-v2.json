@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260826-growbox-mvp-stage3-climate-simulator-v2",
+  "task_digest": "6a349489f3bb9356a75407d2af97143bb298af6696ae3f074b5f01d6fc57e24f",
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-26T10:34:28.829047+00:00",
+  "attempt_id": "f7aa77b1f69a2836d46aa781",
+  "daemon_version": "4.9.6",
+  "daemon_pid": 44721,
+  "updated_at": "2026-08-26T10:34:28.829245+00:00",
+  "pid": 44721
+}
