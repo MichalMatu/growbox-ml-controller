@@ -2,8 +2,8 @@
   "version": 1,
   "daemon_version": "4.9.6",
   "state": "idle",
-  "pid": 34198,
-  "updated_at": "2026-08-26T10:21:53.265835+00:00",
+  "pid": 35449,
+  "updated_at": "2026-08-26T10:25:11.796586+00:00",
   "self_revision": "2187ce41aabd26d3a2344a9c64b6a767497832a2",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -22,7 +22,7 @@
   "control_branch": "agent-control",
   "default_branch": "main",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 34198,
+  "worker_pid": 35449,
   "supervisor_pid": 67414,
-  "last_task_id": "20260826-growbox-mvp-stage2-tidy-hardening-v1"
+  "last_task_id": "20260826-growbox-mvp-stage2-tidy-hardening-v2"
 }
