@@ -2,8 +2,8 @@
   "version": 1,
   "daemon_version": "4.10.0",
   "state": "idle",
-  "pid": 26201,
-  "updated_at": "2026-08-26T23:28:15.995680+00:00",
+  "pid": 27451,
+  "updated_at": "2026-08-26T23:43:54.454311+00:00",
   "self_revision": "1a6e73c1aa58421158492b5c5b365493a7c90eea",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -22,7 +22,7 @@
   "control_branch": "agent-control",
   "default_branch": "main",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 26201,
+  "worker_pid": 27451,
   "supervisor_pid": 17932,
-  "last_task_id": "20260827-growbox-mvp-stage9c-full-weighted-training-v1"
+  "last_task_id": "20260827-growbox-mvp-stage9d-vpd-closed-loop-v1"
 }
