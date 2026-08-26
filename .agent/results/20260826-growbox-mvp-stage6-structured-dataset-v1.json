@@ -1,0 +1,117 @@
+{
+  "id": "20260826-growbox-mvp-stage6-structured-dataset-v1",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "started_at": "2026-08-26T10:52:57.448360+00:00",
+  "command_timeout": 1800,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; test \"$(git rev-parse HEAD)\" = af78e99620597e32ffe965aa7c2eaae6234e84a1; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/stage6/climate_scenarios.py > tools/ml/climate_scenarios.py; git show origin/agent-control:.agent/task-assets/stage6/climate_dataset.py > tools/ml/climate_dataset.py; git show origin/agent-control:.agent/task-assets/stage6/test_climate_dataset.py > tests/test_climate_dataset.py; .venv/bin/ruff check --fix tools/ml/climate_scenarios.py tools/ml/climate_dataset.py tests/test_climate_dataset.py; .venv/bin/ruff format tools/ml/climate_scenarios.py tools/ml/climate_dataset.py tests/test_climate_dataset.py; git diff --check; git status --short",
+      "exit_code": 0,
+      "output": "From https://github.com/MichalMatu/growbox-ml-controller\n * branch            agent-control -> FETCH_HEAD\n   5cf8e24..c87e20d  agent-control -> origin/agent-control\nAll checks passed!\n3 files reformatted\n?? tests/test_climate_dataset.py\n?? tools/ml/climate_dataset.py\n?? tools/ml/climate_scenarios.py\n",
+      "elapsed_seconds": 2.454,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 1.88,
+      "current_rss_mb": 1.88,
+      "stage_name": "install-structured-climate-dataset",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "stage_timeout": 600,
+      "verification_level": "work"
+    },
+    {
+      "command": "set -euo pipefail; .venv/bin/python -m pytest tests/test_climate_dataset.py tests/test_climate_teacher.py tests/test_climate_input.py tests/test_climate_simulator.py -q; .venv/bin/python - <<'PY'\nfrom tools.ml.climate_dataset import ClimateDatasetConfig, assert_climate_dataset_ready, audit_climate_dataset, generate_climate_dataset\nbundle = generate_climate_dataset(ClimateDatasetConfig.quick(seed=1847))\nreport = audit_climate_dataset(bundle)\nprint('CLIMATE_V6_QUICK_AUDIT')\nfor line in report.summary_lines():\n    print(line)\nprint('families=', report.family_counts)\nprint('splits=', report.split_counts)\nprint('mean_level=', report.mean_level)\nassert_climate_dataset_ready(report)\nPY\n.venv/bin/ruff check tools/ml/climate_scenarios.py tools/ml/climate_dataset.py tests/test_climate_dataset.py; git diff --check; git diff --stat",
+      "exit_code": 0,
+      "output": "........................................                                 [100%]\n40 passed in 47.34s\nCLIMATE_V6_QUICK_AUDIT\nready_for_training=True\nrows=52 features=38 outputs=6\nactive_fraction: heater=0.154, cooler=0.365, exhaust_fan=0.423, humidifier=0.135, dehumidifier=0.115, co2_doser=0.212\nsafe_fallback_fraction=0.096\nall_zero_fraction=0.250\nfamilies= {'cold_heating': 4, 'hot_cooling': 4, 'dry_humidification': 4, 'humid_dehumidification': 4, 'outside_helpful': 4, 'outside_harmful': 4, 'day_light_load': 4, 'day_to_night': 4, 'night_to_day': 4, 'co2_enrichment': 4, 'co2_unavailable': 4, 'actuator_missing': 4, 'sensor_fault': 4}\nsplits= {'validation': 8, 'test': 8, 'train': 36}\nmean_level= {'heater': 0.11249999701976776, 'cooler': 0.2528845965862274, 'exhaust_fan': 0.29807692766189575, 'humidifier': 0.07403846085071564, 'dehumidifier': 0.10384614765644073, 'co2_doser': 0.10576923191547394}\nAll checks passed!\n",
+      "elapsed_seconds": 93.038,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 58.42,
+      "current_rss_mb": 25.98,
+      "stage_name": "focused-dataset-and-real-audit",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "stage_timeout": 2400,
+      "verification_level": "focused"
+    }
+  ],
+  "verification": [
+    {
+      "command": "set -euo pipefail; git add -- tools/ml/climate_scenarios.py tools/ml/climate_dataset.py tests/test_climate_dataset.py; .venv/bin/pre-commit run --all-files; .venv/bin/python -m pytest -q -m 'not hardware'; bash scripts/check_schema.sh; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests --output-on-failure; bash scripts/run_clang_tidy_host.sh; git diff --check; git add -- tools/ml/climate_scenarios.py tools/ml/climate_dataset.py tests/test_climate_dataset.py; git diff --cached --check; git commit -m 'Add structured climate v6 dataset audit'; git push origin HEAD:mvp/environment-controller",
+      "exit_code": 0,
+      "output": "trim trailing whitespace.................................................Passed\nfix end of files.........................................................Passed\ncheck for merge conflicts................................................Passed\ncheck yaml...............................................................Passed\ncheck json...............................................................Passed\ndetect private key.......................................................Passed\nruff.....................................................................Passed\nruff-format..............................................................Passed\nclang-format.............................................................Passed\nenvironment schema (--check).............................................Passed\n........................................................................ [ 18%]\n........................................................................ [ 36%]\n........................................................................ [ 55%]\n........................................................................ [ 73%]\n........................................................................ [ 92%]\n..............................                                           [100%]\n390 passed, 9 deselected in 116.93s (0:01:56)\n-- Configuring done (0.2s)\n-- Generating done (0.1s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tests\n[ 36%] Built target climate_v6_tests\n[100%] Built target environment_control_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tests\n    Start 1: environment_control_tests\n1/2 Test #1: environment_control_tests ........   Passed    0.04 sec\n    Start 2: climate_v6_tests\n2/2 Test #2: climate_v6_tests .................   Passed    0.03 sec\n\n100% tests passed, 0 tests failed out of 2\n\nTotal Test time (real) =   0.12 sec\n==> host clang-tidy (build/host-tidy)\n-- The CXX compiler identification is AppleClang 21.0.0.21000101\n-- Detecting CXX compiler ABI info\n-- Detecting CXX compiler ABI info - done\n-- Check for working CXX compiler: /Library/Developer/CommandLineTools/usr/bin/clang++ - skipped\n-- Detecting CXX compile features\n-- Detecting CXX compile features - done\n-- Configuring done (5.3s)\n-- Generating done (0.2s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tidy\n[ 18%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/EnvironmentTypes.cpp.o\n[ 18%] Building CXX object CMakeFiles/climate_v6_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateFeatureEncoder.cpp.o\n[ 45%] Building CXX object CMakeFiles/climate_v6_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateTrendEstimator.cpp.o\n[ 54%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/EnvironmentController.cpp.o\n[ 54%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/test/test_environment_controller/test_main.cpp.o\n[ 63%] Building CXX object CMakeFiles/climate_v6_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/test/test_climate_v6/test_main.cpp.o\n[ 63%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/FeatureEncoder.cpp.o\n[ 72%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/ModelRuntime.cpp.o\n[ 81%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/SafetySupervisor.cpp.o\n[ 90%] Linking CXX executable climate_v6_tests\n[100%] Linking CXX executable environment_control_tests\n[100%] Built target climate_v6_tests\n[100%] Built target environment_control_tests\nclang-tidy: lib/environment_control/src/EnvironmentController.cpp\n458 warnings generated.\nclang-tidy: lib/environment_control/src/FeatureEncoder.cpp\n458 warnings generated.\nclang-tidy: lib/environment_control/src/SafetySupervisor.cpp\n458 warnings generated.\nclang-tidy: lib/environment_control/src/ModelRuntime.cpp\n470 warnings generated.\nclang-tidy: lib/environment_control/src/climate/ClimateFeatureEncoder.cpp\n458 warnings generated.\nclang-tidy: lib/environment_control/src/climate/ClimateTrendEstimator.cpp\n458 warnings generated.\n[agent-work d337c1d] Add structured climate v6 dataset audit\n 3 files changed, 1068 insertions(+)\n create mode 100644 tests/test_climate_dataset.py\n create mode 100644 tools/ml/climate_dataset.py\n create mode 100644 tools/ml/climate_scenarios.py\nTo https://github.com/MichalMatu/growbox-ml-controller.git\n   af78e99..d337c1d  HEAD -> mvp/environment-controller\n",
+      "elapsed_seconds": 189.347,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 366.91,
+      "current_rss_mb": 23.06,
+      "stage_name": "full-regression-and-publish",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "verification",
+      "stage_timeout": 3600,
+      "verification_level": "full"
+    }
+  ],
+  "stages": [
+    {
+      "stage_name": "install-structured-climate-dataset",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "verification_level": "work",
+      "outcome": "passed",
+      "elapsed_seconds": 2.454
+    },
+    {
+      "stage_name": "focused-dataset-and-real-audit",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "verification_level": "focused",
+      "outcome": "passed",
+      "elapsed_seconds": 93.038
+    },
+    {
+      "stage_name": "full-regression-and-publish",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "verification",
+      "verification_level": "full",
+      "outcome": "passed",
+      "elapsed_seconds": 189.347
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.141
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.202
+  },
+  "finished_at": "2026-08-26T10:57:45.539657+00:00",
+  "task_digest": "82600ad6d266da47ad6e429ee73f4c023f65df2001b7bcfa849ef8cfc9a8b072",
+  "idle_timeout": 900,
+  "task_timeout": 10800,
+  "memory_limit_mb": 4096,
+  "attempt_id": "36ff7510718bef159423b180",
+  "daemon_version": "4.9.6"
+}
