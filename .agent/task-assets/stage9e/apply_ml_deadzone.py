@@ -24,7 +24,7 @@ s = s.replace(
 )
 benchmark.write_text(s)
 
- tests = Path("tests/test_climate_benchmark.py")
+tests = Path("tests/test_climate_benchmark.py")
 s = tests.read_text()
 s = s.replace(
     "    ClimateRulePolicy,\n    apply_climate_safety,\n",
