@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260826-growbox-mvp-stage8c-initial-action-diagnostic-v1",
+  "task_digest": "2292f942de141af38678d09d269f28a41785e584240ac13ed28d41593723c997",
+  "idle_timeout": 600,
+  "task_timeout": 2400,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-26T15:40:49.737868+00:00",
+  "attempt_id": "3962b9d11e1ed14310d3e889",
+  "daemon_version": "4.9.6",
+  "daemon_pid": 32430,
+  "updated_at": "2026-08-26T15:40:49.737993+00:00",
+  "pid": 32430
+}
