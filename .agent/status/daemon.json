@@ -2,8 +2,8 @@
   "version": 1,
   "daemon_version": "4.9.6",
   "state": "idle",
-  "pid": 26250,
-  "updated_at": "2026-08-26T15:10:02.747788+00:00",
+  "pid": 29304,
+  "updated_at": "2026-08-26T15:25:39.833002+00:00",
   "self_revision": "8a86798c35ee3a659ec9f50decfcecf3fe259efc",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -22,7 +22,7 @@
   "control_branch": "agent-control",
   "default_branch": "main",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 26250,
+  "worker_pid": 29304,
   "supervisor_pid": 67414,
-  "last_task_id": "20260826-growbox-mvp-stage7d-portable-winner-v1"
+  "last_task_id": "20260826-growbox-mvp-stage8a-closed-loop-core-v1"
 }
