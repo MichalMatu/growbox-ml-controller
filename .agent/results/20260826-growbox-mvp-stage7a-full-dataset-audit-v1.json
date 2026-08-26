@@ -1,0 +1,9 @@
+{
+  "id": "20260826-growbox-mvp-stage7a-full-dataset-audit-v1",
+  "status": "failed",
+  "failure_reason": "invalid_task_file",
+  "started_at": null,
+  "finished_at": "2026-08-26T12:52:06.011985+00:00",
+  "daemon_version": "4.9.6",
+  "error": "ValueError: steps item timeout must be 1..7200, got 10800"
+}
