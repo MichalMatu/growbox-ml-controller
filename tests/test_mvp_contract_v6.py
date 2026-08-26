@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-
 SCHEMA_PATH = Path("schemas/environment-controller.v6.json")
 EXPECTED_FEATURES = (
     "air_temperature_c",

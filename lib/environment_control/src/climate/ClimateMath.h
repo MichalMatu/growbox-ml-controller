@@ -10,4 +10,4 @@ inline float airVpdKpa(float temperature_c, float relative_humidity_pct) noexcep
   const float humidity = std::clamp(relative_humidity_pct, 0.0F, 100.0F);
   return std::max(0.0F, saturationVapourPressureKpa(temperature_c) * (1.0F - humidity / 100.0F));
 }
-}  // namespace growbox::climate
+} // namespace growbox::climate
