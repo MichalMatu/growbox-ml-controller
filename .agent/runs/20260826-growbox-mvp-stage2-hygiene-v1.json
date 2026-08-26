@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260826-growbox-mvp-stage2-hygiene-v1",
+  "task_digest": "9df907902d5e3fc9794ad84c7491e076000e7af7af04e2ce474d7be3f3dfc223",
+  "idle_timeout": 900,
+  "task_timeout": 5400,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-26T10:15:48.776462+00:00",
+  "attempt_id": "01d93186271cd1c449783f91",
+  "daemon_version": "4.9.6",
+  "daemon_pid": 28055,
+  "updated_at": "2026-08-26T10:15:48.776718+00:00",
+  "pid": 28055
+}
