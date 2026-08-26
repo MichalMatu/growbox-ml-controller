@@ -1,0 +1,33 @@
+{
+  "id": "20260826-growbox-mvp-stage9a-vpd-coverage-v3",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "workflow_policy": "efficient-verification-v1",
+  "command_timeout": 3600,
+  "idle_timeout": 1800,
+  "task_timeout": 10800,
+  "memory_limit_mb": 4096,
+  "steps": [
+    {
+      "name": "apply-vpd-coverage-and-update-benchmark-expectations",
+      "verification_level": "work",
+      "timeout": 600,
+      "command": "set -euo pipefail; test \"$(git rev-parse HEAD)\" = f0bcc1ed7d201a712784563d1d5acacebad55313; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/stage9a/apply_stage9a.py > /tmp/growbox-stage9a.py; .venv/bin/python /tmp/growbox-stage9a.py; .venv/bin/python - <<'PY'\nfrom pathlib import Path\np=Path('tests/test_climate_benchmark.py')\ns=p.read_text()\ns=s.replace('from tools.ml.climate_scenarios import ClimateProfile, build_training_episode', 'from tools.ml.climate_scenarios import (\\n    REQUIRED_SCENARIO_FAMILIES,\\n    ClimateProfile,\\n    build_training_episode,\\n)')\ns=s.replace('    assert len(report.families) == 13\\n    assert len(report.episodes) == 39\\n    for metrics in report.aggregate.values():\\n        assert metrics.steps == 13 * 6\\n', '    family_count = len(REQUIRED_SCENARIO_FAMILIES)\\n    assert len(report.families) == family_count\\n    assert len(report.episodes) == family_count * 3\\n    for metrics in report.aggregate.values():\\n        assert metrics.steps == family_count * 6\\n')\np.write_text(s)\nPY\n.venv/bin/ruff check --fix tools/ml/climate_scenarios.py tools/ml/climate_dataset.py tools/ml/climate_dataset_parallel.py tests/test_climate_dataset.py tests/test_climate_dataset_parallel.py tests/test_climate_benchmark.py; .venv/bin/ruff format tools/ml/climate_scenarios.py tools/ml/climate_dataset.py tools/ml/climate_dataset_parallel.py tests/test_climate_dataset.py tests/test_climate_dataset_parallel.py tests/test_climate_benchmark.py; git diff --check; git status --short"
+    },
+    {
+      "name": "focused-vpd-and-benchmark-gate",
+      "verification_level": "focused",
+      "timeout": 2400,
+      "command": "set -euo pipefail; .venv/bin/python -m pytest tests/test_climate_dataset.py tests/test_climate_dataset_parallel.py tests/test_climate_teacher.py tests/test_climate_input.py tests/test_climate_benchmark.py -q; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/stage9a/focused_vpd_gate.py > /tmp/growbox-stage9a-focused.py; PYTHONPATH=\"$PWD\" .venv/bin/python /tmp/growbox-stage9a-focused.py; git diff --check"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "full-regression-and-publish",
+      "verification_level": "full",
+      "timeout": 3600,
+      "command": "set -euo pipefail; git add -- tools/ml/climate_scenarios.py tools/ml/climate_dataset.py tools/ml/climate_dataset_parallel.py tests/test_climate_dataset.py tests/test_climate_dataset_parallel.py tests/test_climate_benchmark.py; .venv/bin/pre-commit run --all-files; .venv/bin/python -m pytest -q -m 'not hardware'; bash scripts/check_schema.sh; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests --output-on-failure; bash scripts/run_clang_tidy_host.sh; git diff --check; git add -- tools/ml/climate_scenarios.py tools/ml/climate_dataset.py tools/ml/climate_dataset_parallel.py tests/test_climate_dataset.py tests/test_climate_dataset_parallel.py tests/test_climate_benchmark.py; git diff --cached --check; git commit -m 'Add RH and VPD dataset coverage'; git push origin HEAD:mvp/environment-controller"
+    }
+  ]
+}
