@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260826-growbox-mvp-stage7c-full-training-v1",
   "task_digest": "9fb0deb1a464ced787167cc534dc4c3e7e4138009661086b183622bd228a7fb4",
-  "idle_timeout": 3600,
-  "task_timeout": 10800,
-  "memory_limit_mb": 4096,
-  "started_at": "2026-08-26T14:47:19.645408+00:00",
+  "status": "failed",
+  "failure_reason": "command_failed",
+  "finished_at": "2026-08-26T14:47:22.953551+00:00",
   "attempt_id": "320a65e6d90e2b2cde432e85",
   "daemon_version": "4.9.6",
   "daemon_pid": 23884,
-  "updated_at": "2026-08-26T14:47:19.645583+00:00",
+  "updated_at": "2026-08-26T14:47:23.587733+00:00",
   "pid": 23884
 }
