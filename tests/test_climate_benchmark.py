@@ -13,7 +13,11 @@ from tools.ml.climate_policy import (
     apply_climate_safety,
     arbitrate_climate_action,
 )
-from tools.ml.climate_scenarios import ClimateProfile, build_training_episode
+from tools.ml.climate_scenarios import (
+    REQUIRED_SCENARIO_FAMILIES,
+    ClimateProfile,
+    build_training_episode,
+)
 from tools.ml.climate_simulator import ClimateAction, ClimateState
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -95,10 +99,11 @@ def test_quick_closed_loop_benchmark_is_finite_and_covers_all_policies() -> None
     model = load_portable_model(WEIGHTS, METADATA)
     report = run_closed_loop_benchmark(model, config=ClimateBenchmarkConfig.quick(seed=55_001))
     assert set(report.aggregate) == {"rule", "teacher", "ml"}
-    assert len(report.families) == 13
-    assert len(report.episodes) == 39
+    family_count = len(REQUIRED_SCENARIO_FAMILIES)
+    assert len(report.families) == family_count
+    assert len(report.episodes) == family_count * 3
     for metrics in report.aggregate.values():
-        assert metrics.steps == 13 * 6
+        assert metrics.steps == family_count * 6
         assert np.isfinite(metrics.tracking_cost)
         assert np.isfinite(metrics.temperature_mae_c)
         assert 0.0 <= metrics.outside_deadband_fraction <= 1.0

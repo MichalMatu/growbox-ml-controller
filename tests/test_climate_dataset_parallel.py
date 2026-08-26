@@ -17,6 +17,7 @@ def _assert_same_bundle(reference, parallel) -> None:
     np.testing.assert_array_equal(reference.dataset.splits, parallel.dataset.splits)
     np.testing.assert_array_equal(reference.families, parallel.families)
     np.testing.assert_array_equal(reference.profiles, parallel.profiles)
+    np.testing.assert_array_equal(reference.humidity_modes, parallel.humidity_modes)
     np.testing.assert_array_equal(reference.safe_fallbacks, parallel.safe_fallbacks)
 
 

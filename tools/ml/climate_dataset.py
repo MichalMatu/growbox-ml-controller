@@ -64,12 +64,14 @@ class ClimateDatasetBundle:
     dataset: Dataset
     families: np.ndarray
     profiles: np.ndarray
+    humidity_modes: np.ndarray
     safe_fallbacks: np.ndarray
 
     def __post_init__(self) -> None:
         rows = self.dataset.features.shape[0]
         if any(
-            len(values) != rows for values in (self.families, self.profiles, self.safe_fallbacks)
+            len(values) != rows
+            for values in (self.families, self.profiles, self.humidity_modes, self.safe_fallbacks)
         ):
             raise ValueError("climate dataset metadata has inconsistent row counts")
 
@@ -82,6 +84,7 @@ class ClimateDatasetAudit:
     output_count: int
     family_counts: dict[str, int]
     split_counts: dict[str, int]
+    humidity_mode_counts: dict[str, int]
     active_fraction: dict[str, float]
     mean_level: dict[str, float]
     safe_fallback_fraction: float
@@ -98,6 +101,10 @@ class ClimateDatasetAudit:
         lines = [
             f"ready_for_training={self.ready_for_training}",
             f"rows={self.row_count} features={self.feature_count} outputs={self.output_count}",
+            "humidity_modes: "
+            + ", ".join(
+                f"{name}={self.humidity_mode_counts.get(name, 0)}" for name in ("RH", "VPD")
+            ),
             f"active_fraction: {label_summary}",
             f"safe_fallback_fraction={self.safe_fallback_fraction:.3f}",
             f"all_zero_fraction={self.all_zero_fraction:.3f}",
@@ -202,6 +209,7 @@ def generate_climate_dataset(
     splits: list[str] = []
     families: list[str] = []
     profiles: list[str] = []
+    humidity_modes: list[str] = []
     safe_fallbacks: list[bool] = []
 
     for episode_index, episode in enumerate(episodes):
@@ -254,6 +262,7 @@ def generate_climate_dataset(
             splits.append(split_by_id[simulator.scenario.scenario_id])
             families.append(episode.family)
             profiles.append(profile.name)
+            humidity_modes.append(profile.humidity_control_mode)
             safe_fallbacks.append(teacher_result.safe_fallback)
             simulator.step(
                 teacher_result.action,
@@ -274,6 +283,7 @@ def generate_climate_dataset(
         dataset=dataset,
         families=np.asarray(families),
         profiles=np.asarray(profiles),
+        humidity_modes=np.asarray(humidity_modes),
         safe_fallbacks=np.asarray(safe_fallbacks, dtype=np.bool_),
     )
 
@@ -318,6 +328,11 @@ def audit_climate_dataset(
     for split in ("train", "validation", "test"):
         if split_counts.get(split, 0) == 0:
             errors.append(f"split {split!r} has no rows")
+
+    humidity_mode_counts = dict(Counter(str(value) for value in bundle.humidity_modes))
+    for mode in ("RH", "VPD"):
+        if humidity_mode_counts.get(mode, 0) == 0:
+            errors.append(f"humidity mode {mode!r} has no rows")
 
     active_fraction: dict[str, float] = {}
     mean_level: dict[str, float] = {}
@@ -373,6 +388,7 @@ def audit_climate_dataset(
         output_count=output_count,
         family_counts=family_counts,
         split_counts=split_counts,
+        humidity_mode_counts=humidity_mode_counts,
         active_fraction=active_fraction,
         mean_level=mean_level,
         safe_fallback_fraction=safe_fallback_fraction,
@@ -388,6 +404,7 @@ def assert_climate_dataset_ready(
     report: ClimateDatasetAudit,
     *,
     require_family_coverage_in_each_split: bool = False,
+    require_humidity_mode_coverage_in_each_split: bool = False,
     bundle: ClimateDatasetBundle | None = None,
 ) -> None:
     errors = list(report.errors)
@@ -402,6 +419,17 @@ def assert_climate_dataset_ready(
             for split in ("train", "validation", "test"):
                 if (family, split) not in pairs:
                     errors.append(f"family {family!r} is absent from {split!r} split")
+    if require_humidity_mode_coverage_in_each_split:
+        if bundle is None:
+            raise ValueError("bundle is required for split/humidity-mode coverage check")
+        mode_pairs = {
+            (str(mode), str(split))
+            for mode, split in zip(bundle.humidity_modes, bundle.dataset.splits, strict=True)
+        }
+        for mode in ("RH", "VPD"):
+            for split in ("train", "validation", "test"):
+                if (mode, split) not in mode_pairs:
+                    errors.append(f"humidity mode {mode!r} is absent from {split!r} split")
     if errors:
         raise ValueError("climate dataset is not ready for training: " + " | ".join(errors))
 

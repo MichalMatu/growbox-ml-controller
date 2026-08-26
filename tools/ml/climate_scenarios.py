@@ -34,6 +34,8 @@ REQUIRED_SCENARIO_FAMILIES = (
     "hot_cooling",
     "dry_humidification",
     "humid_dehumidification",
+    "dry_vpd_control",
+    "humid_vpd_control",
     "outside_helpful",
     "outside_harmful",
     "day_light_load",
@@ -242,6 +244,34 @@ def build_training_episode(
             outside_humidity_pct=float(rng.uniform(75.0, 95.0)),
         )
         first = _profile("dehumidify", temperature=state.air_temperature_c, humidity=58.0)
+    elif family == "dry_vpd_control":
+        state = replace(
+            state,
+            air_temperature_c=float(rng.uniform(24.0, 27.0)),
+            relative_humidity_pct=float(rng.uniform(26.0, 40.0)),
+            outside_humidity_pct=float(rng.uniform(20.0, 42.0)),
+        )
+        first = _profile(
+            "dry-vpd",
+            temperature=state.air_temperature_c,
+            humidity=60.0,
+            vpd=float(rng.uniform(1.05, 1.30)),
+            mode="VPD",
+        )
+    elif family == "humid_vpd_control":
+        state = replace(
+            state,
+            air_temperature_c=float(rng.uniform(23.0, 26.0)),
+            relative_humidity_pct=float(rng.uniform(78.0, 92.0)),
+            outside_humidity_pct=float(rng.uniform(78.0, 96.0)),
+        )
+        first = _profile(
+            "humid-vpd",
+            temperature=state.air_temperature_c,
+            humidity=60.0,
+            vpd=float(rng.uniform(1.05, 1.30)),
+            mode="VPD",
+        )
     elif family == "outside_helpful":
         state = replace(
             state,

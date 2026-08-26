@@ -70,6 +70,15 @@ def test_transition_families_switch_profile_at_midpoint() -> None:
     assert night_to_day.profile_for_step(2, 4).name == "day"
 
 
+def test_vpd_families_use_vpd_mode() -> None:
+    dry = build_training_episode("dry_vpd_control", 0, 1004)
+    humid = build_training_episode("humid_vpd_control", 0, 1005)
+    assert dry.first_profile.humidity_control_mode == "VPD"
+    assert humid.first_profile.humidity_control_mode == "VPD"
+    assert dry.first_profile.targets.air_vpd_kpa > 0.0
+    assert humid.first_profile.targets.air_vpd_kpa > 0.0
+
+
 def test_sensor_fault_family_faults_only_second_half() -> None:
     episode = build_training_episode("sensor_fault", 0, 1003)
     assert episode.fault_sensor == "air_temperature_c"
@@ -114,6 +123,7 @@ def test_small_dataset_has_v6_shapes_metadata_and_no_conflicting_labels() -> Non
     assert dataset.labels.shape == (expected_rows, 6)
     assert dataset.output_names == CLIMATE_OUTPUT_NAMES
     assert set(bundle.families) == set(REQUIRED_SCENARIO_FAMILIES)
+    assert set(bundle.humidity_modes) == {"RH", "VPD"}
     assert set(dataset.splits) == {"train", "validation", "test"}
     assert np.isfinite(dataset.features).all()
     assert np.isfinite(dataset.labels).all()
@@ -140,6 +150,7 @@ def test_dataset_generation_is_deterministic_for_same_seed() -> None:
     assert np.array_equal(left.dataset.labels, right.dataset.labels)
     assert np.array_equal(left.dataset.splits, right.dataset.splits)
     assert np.array_equal(left.families, right.families)
+    assert np.array_equal(left.humidity_modes, right.humidity_modes)
 
 
 def test_family_aware_split_covers_each_family_when_three_samples_exist() -> None:
@@ -178,6 +189,7 @@ def test_audit_reports_structure_and_never_hides_conflicts() -> None:
     assert report.conflicting_temperature_rows == 0
     assert report.conflicting_humidity_rows == 0
     assert set(report.family_counts) == set(REQUIRED_SCENARIO_FAMILIES)
+    assert set(report.humidity_mode_counts) == {"RH", "VPD"}
 
 
 def test_audit_rejects_all_zero_labels_before_training() -> None:
@@ -205,6 +217,7 @@ def test_audit_rejects_all_zero_labels_before_training() -> None:
         dataset=zero_dataset,
         families=source.families,
         profiles=source.profiles,
+        humidity_modes=source.humidity_modes,
         safe_fallbacks=source.safe_fallbacks,
     )
     report = audit_climate_dataset(bundle)
@@ -212,6 +225,29 @@ def test_audit_rejects_all_zero_labels_before_training() -> None:
     assert any("active fraction" in error for error in report.errors)
     with pytest.raises(ValueError, match="not ready for training"):
         assert_climate_dataset_ready(report)
+
+
+def test_audit_rejects_dataset_without_vpd_rows() -> None:
+    source = generate_climate_dataset(
+        ClimateDatasetConfig(
+            scenarios_per_family=1,
+            steps_per_scenario=1,
+            seed=9753,
+            random_invalid_probability=0.0,
+            random_stale_probability=0.0,
+        ),
+        teacher=fast_teacher(),
+    )
+    rh_only = ClimateDatasetBundle(
+        dataset=source.dataset,
+        families=source.families,
+        profiles=source.profiles,
+        humidity_modes=np.full(len(source.humidity_modes), "RH"),
+        safe_fallbacks=source.safe_fallbacks,
+    )
+    report = audit_climate_dataset(rh_only, minimum_active_fraction=0.0)
+    assert not report.ready_for_training
+    assert any("VPD" in error for error in report.errors)
 
 
 def test_full_style_family_coverage_gate_requires_bundle() -> None:

@@ -51,6 +51,7 @@ class _EpisodeRows:
     splits: np.ndarray
     families: np.ndarray
     profiles: np.ndarray
+    humidity_modes: np.ndarray
     safe_fallbacks: np.ndarray
 
 
@@ -69,6 +70,7 @@ def _generate_episode_rows(work: _EpisodeWork) -> _EpisodeRows:
     feature_rows: list[np.ndarray] = []
     label_rows: list[np.ndarray] = []
     profiles: list[str] = []
+    humidity_modes: list[str] = []
     safe_fallbacks: list[bool] = []
 
     for step_index in range(config.steps_per_scenario):
@@ -108,6 +110,7 @@ def _generate_episode_rows(work: _EpisodeWork) -> _EpisodeRows:
         )
         label_rows.append(contract.output_vector(teacher_result.action.as_dict()))
         profiles.append(profile.name)
+        humidity_modes.append(profile.humidity_control_mode)
         safe_fallbacks.append(teacher_result.safe_fallback)
         simulator.step(
             teacher_result.action,
@@ -124,6 +127,7 @@ def _generate_episode_rows(work: _EpisodeWork) -> _EpisodeRows:
         splits=np.full(rows, work.split),
         families=np.full(rows, episode.family),
         profiles=np.asarray(profiles),
+        humidity_modes=np.asarray(humidity_modes),
         safe_fallbacks=np.asarray(safe_fallbacks, dtype=np.bool_),
     )
 
@@ -181,6 +185,7 @@ def generate_climate_dataset_parallel(
         dataset=dataset,
         families=_concat(chunks, "families"),
         profiles=_concat(chunks, "profiles"),
+        humidity_modes=_concat(chunks, "humidity_modes"),
         safe_fallbacks=_concat(chunks, "safe_fallbacks"),
     )
 
