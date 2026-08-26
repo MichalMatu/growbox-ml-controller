@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260826-growbox-mvp-stage7b-climate-training-core-v2",
+  "task_digest": "32c23b8032364e6dc29235085972560782b5162195b5e3740863c490e4f63e7d",
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-26T14:14:03.464267+00:00",
+  "attempt_id": "92ac9c8ebfc6f9ab0e0d381d",
+  "daemon_version": "4.9.6",
+  "daemon_pid": 19632,
+  "updated_at": "2026-08-26T14:14:03.464573+00:00",
+  "pid": 19632
+}
