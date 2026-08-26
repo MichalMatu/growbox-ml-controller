@@ -52,6 +52,22 @@ def _clip(value: float) -> float:
     return min(1.0, max(0.0, float(value)))
 
 
+ML_REQUEST_DEADZONE = 0.05
+
+
+def apply_ml_request_deadzone(
+    action: ClimateAction, threshold: float = ML_REQUEST_DEADZONE
+) -> ClimateAction:
+    threshold = float(threshold)
+    if not 0.0 <= threshold < 1.0:
+        raise ValueError("ML request dead-zone must be in [0, 1)")
+    values = {
+        name: 0.0 if float(value) <= threshold else float(value)
+        for name, value in action.clipped().as_dict().items()
+    }
+    return ClimateAction.from_mapping(values).clipped()
+
+
 def _level(error: float, deadband: float, full_scale: float) -> float:
     excess = max(0.0, abs(float(error)) - float(deadband))
     return _clip(excess / max(1.0e-9, float(full_scale)))
@@ -304,7 +320,9 @@ __all__ = [
     "ClimateRuleConfig",
     "ClimateRulePolicy",
     "ClimateSafetyLimits",
+    "ML_REQUEST_DEADZONE",
     "apply_climate_safety",
+    "apply_ml_request_deadzone",
     "arbitrate_climate_action",
     "hard_limit_violations",
 ]

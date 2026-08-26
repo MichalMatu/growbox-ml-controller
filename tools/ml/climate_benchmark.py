@@ -17,6 +17,7 @@ from .climate_model_artifact import ClimatePortableModel
 from .climate_policy import (
     ClimateRulePolicy,
     apply_climate_safety,
+    apply_ml_request_deadzone,
     arbitrate_climate_action,
     hard_limit_violations,
 )
@@ -246,7 +247,7 @@ def _raw_action(
     action = ClimateAction.from_mapping(
         dict(zip(CLIMATE_OUTPUT_NAMES, (float(value) for value in prediction), strict=True))
     )
-    return action, status
+    return apply_ml_request_deadzone(action), status
 
 
 def _run_episode(work: _BenchmarkWork) -> EpisodeMetrics:

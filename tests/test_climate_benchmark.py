@@ -9,8 +9,10 @@ from tools.ml.climate_benchmark import ClimateBenchmarkConfig, run_closed_loop_b
 from tools.ml.climate_input import ClimateTargets, MeasurementStatus
 from tools.ml.climate_model_artifact import load_portable_model
 from tools.ml.climate_policy import (
+    ML_REQUEST_DEADZONE,
     ClimateRulePolicy,
     apply_climate_safety,
+    apply_ml_request_deadzone,
     arbitrate_climate_action,
 )
 from tools.ml.climate_scenarios import (
@@ -72,6 +74,39 @@ def test_arbitration_removes_opposing_actuators() -> None:
     assert result.action.humidifier == 0.7
     assert result.action.dehumidifier == 0.0
     assert len(result.interventions) == 2
+
+
+def test_ml_request_deadzone_turns_sigmoid_tails_off() -> None:
+    assert ML_REQUEST_DEADZONE == 0.05
+    action = apply_ml_request_deadzone(
+        ClimateAction(
+            heater=0.001,
+            cooler=0.05,
+            exhaust_fan=0.05001,
+            humidifier=0.02,
+            dehumidifier=0.0,
+            co2_doser=0.049,
+        )
+    )
+    assert action.heater == 0.0
+    assert action.cooler == 0.0
+    assert action.exhaust_fan == 0.05001
+    assert action.humidifier == 0.0
+    assert action.dehumidifier == 0.0
+    assert action.co2_doser == 0.0
+
+    episode = build_training_episode("cold_heating", 0, 3334)
+    arbitration = arbitrate_climate_action(action, episode.scenario)
+    assert not arbitration.interventions
+
+
+def test_ml_request_deadzone_rejects_invalid_threshold() -> None:
+    try:
+        apply_ml_request_deadzone(ClimateAction(), threshold=1.0)
+    except ValueError as exc:
+        assert "dead-zone" in str(exc)
+    else:
+        raise AssertionError("invalid ML dead-zone must be rejected")
 
 
 def test_safety_zeros_commands_when_required_sensor_is_stale() -> None:
