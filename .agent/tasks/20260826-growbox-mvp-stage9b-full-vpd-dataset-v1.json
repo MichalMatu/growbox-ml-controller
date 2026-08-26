@@ -1,0 +1,33 @@
+{
+  "id": "20260826-growbox-mvp-stage9b-full-vpd-dataset-v1",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "workflow_policy": "efficient-verification-v1",
+  "command_timeout": 7200,
+  "idle_timeout": 3600,
+  "task_timeout": 21600,
+  "memory_limit_mb": 4096,
+  "steps": [
+    {
+      "name": "install-stage9b-audit-runner",
+      "verification_level": "work",
+      "timeout": 900,
+      "command": "set -euo pipefail; test \"$(git rev-parse HEAD)\" = 1b8b27dbedf4ccb0d4672a0f07911446370ab240; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/stage9b/run_climate_v6_dataset_audit.py > tools/ml/run_climate_v6_dataset_audit.py; .venv/bin/ruff check --fix tools/ml/run_climate_v6_dataset_audit.py; .venv/bin/ruff format tools/ml/run_climate_v6_dataset_audit.py; .venv/bin/python -m pytest tests/test_climate_dataset.py tests/test_climate_dataset_parallel.py -q; git diff --check; git status --short"
+    },
+    {
+      "name": "full-7200-row-vpd-dataset-audit",
+      "verification_level": "focused",
+      "timeout": 7200,
+      "command": "set -euo pipefail; CLIMATE_DATASET_WORKERS=6 PYTHONPATH=\"$PWD\" .venv/bin/python tools/ml/run_climate_v6_dataset_audit.py; .venv/bin/python - <<'PY'\nimport json\nfrom pathlib import Path\np=Path('reports/ml/climate_v6_dataset_audit_seed1847_vpd.json')\nd=json.loads(p.read_text())\nassert d['audit']['ready_for_training'] is True\nassert d['config']['families'] == 15\nassert d['config']['rows'] == 7200\nassert d['workers'] == 6\nassert d['audit']['split_counts'] == {'train': 4800, 'validation': 1200, 'test': 1200}\nassert d['audit']['humidity_mode_counts']['VPD'] > 0\nfor split in ('train','validation','test'):\n    assert d['split_humidity_mode_counts'][split]['RH'] > 0\n    assert d['split_humidity_mode_counts'][split]['VPD'] > 0\n    for name, stats in d['label_coverage'][split].items():\n        assert stats['active_count'] > 0, (split,name)\n        assert stats['strong_count'] > 0, (split,name)\nfor name in ('humidifier','dehumidifier'):\n    assert d['vpd_output_coverage'][name]['active_count'] > 0\n    assert d['vpd_output_coverage'][name]['strong_count'] > 0\nprint('STAGE9B_REPORT_VALIDATION=PASS')\nPY\n.venv/bin/ruff check tools/ml/run_climate_v6_dataset_audit.py; git diff --check; git status --short"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "full-regression-and-publish-stage9b",
+      "verification_level": "full",
+      "timeout": 3600,
+      "command": "set -euo pipefail; git add -- tools/ml/run_climate_v6_dataset_audit.py reports/ml/climate_v6_dataset_audit_seed1847_vpd.json; .venv/bin/pre-commit run --all-files; .venv/bin/python -m pytest -q -m 'not hardware'; bash scripts/check_schema.sh; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests --output-on-failure; bash scripts/run_clang_tidy_host.sh; git diff --check; git add -- tools/ml/run_climate_v6_dataset_audit.py reports/ml/climate_v6_dataset_audit_seed1847_vpd.json; git diff --cached --check; git commit -m 'Audit full RH and VPD climate dataset'; git push origin HEAD:mvp/environment-controller"
+    }
+  ]
+}
