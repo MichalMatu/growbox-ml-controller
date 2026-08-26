@@ -1,0 +1,69 @@
+{
+  "id": "20260827-growbox-mvp-stage10-overnight-dagger-v1",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "workflow_policy": "efficient-verification-v1",
+  "command_timeout": 7200,
+  "idle_timeout": 3600,
+  "task_timeout": 21600,
+  "memory_limit_mb": 4096,
+  "steps": [
+    {
+      "name": "install-dagger-core-and-focused-gate",
+      "verification_level": "focused",
+      "timeout": 1800,
+      "command": "set -euo pipefail; test \"$(git rev-parse HEAD)\" = 4b805fd1780c42e7c7ca900ccf7fc3e0801b4b17; test -f build/climate_v6_full_seed1847_vpd.npz; test -f reports/ml/climate_v6_model_seed1847_vpd.npz; test -f reports/ml/climate_v6_model_seed1847_vpd.json; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/stage10/climate_dagger.py > tools/ml/climate_dagger.py; git show origin/agent-control:.agent/task-assets/stage10/run_dagger_overnight.py > tools/ml/run_dagger_overnight.py; git show origin/agent-control:.agent/task-assets/stage10/test_climate_dagger.py > tests/test_climate_dagger.py; .venv/bin/ruff check --fix tools/ml/climate_dagger.py tools/ml/run_dagger_overnight.py tests/test_climate_dagger.py; .venv/bin/ruff format tools/ml/climate_dagger.py tools/ml/run_dagger_overnight.py tests/test_climate_dagger.py; .venv/bin/python -m pytest tests/test_climate_dagger.py tests/test_climate_benchmark.py tests/test_climate_training_weighted.py -q; git diff --check"
+    },
+    {
+      "name": "dagger-init-and-baseline-dev",
+      "verification_level": "work",
+      "timeout": 7200,
+      "command": "set -euo pipefail; rm -rf build/dagger_stage10; PYTHONPATH=\"$PWD\" .venv/bin/python tools/ml/run_dagger_overnight.py init; test -f build/dagger_stage10/state.json; git diff --check"
+    },
+    {
+      "name": "dagger-iteration-1",
+      "verification_level": "work",
+      "timeout": 7200,
+      "command": "set -euo pipefail; PYTHONPATH=\"$PWD\" .venv/bin/python tools/ml/run_dagger_overnight.py iteration 1; .venv/bin/python -c \"import json; d=json.load(open('build/dagger_stage10/state.json')); assert d['completed_iterations']==1\"; git diff --check"
+    },
+    {
+      "name": "dagger-iteration-2",
+      "verification_level": "work",
+      "timeout": 7200,
+      "command": "set -euo pipefail; PYTHONPATH=\"$PWD\" .venv/bin/python tools/ml/run_dagger_overnight.py iteration 2; .venv/bin/python -c \"import json; d=json.load(open('build/dagger_stage10/state.json')); assert d['completed_iterations']==2\"; git diff --check"
+    },
+    {
+      "name": "dagger-iteration-3",
+      "verification_level": "work",
+      "timeout": 7200,
+      "command": "set -euo pipefail; PYTHONPATH=\"$PWD\" .venv/bin/python tools/ml/run_dagger_overnight.py iteration 3; .venv/bin/python -c \"import json; d=json.load(open('build/dagger_stage10/state.json')); assert d['completed_iterations']==3\"; git diff --check"
+    },
+    {
+      "name": "dagger-iteration-4",
+      "verification_level": "work",
+      "timeout": 7200,
+      "command": "set -euo pipefail; PYTHONPATH=\"$PWD\" .venv/bin/python tools/ml/run_dagger_overnight.py iteration 4; .venv/bin/python -c \"import json; d=json.load(open('build/dagger_stage10/state.json')); assert d['completed_iterations']==4\"; git diff --check"
+    },
+    {
+      "name": "dagger-iteration-5",
+      "verification_level": "work",
+      "timeout": 7200,
+      "command": "set -euo pipefail; PYTHONPATH=\"$PWD\" .venv/bin/python tools/ml/run_dagger_overnight.py iteration 5; .venv/bin/python -c \"import json; d=json.load(open('build/dagger_stage10/state.json')); assert d['completed_iterations']==5\"; git diff --check"
+    },
+    {
+      "name": "dagger-final-held-out-evaluation",
+      "verification_level": "focused",
+      "timeout": 7200,
+      "command": "set -euo pipefail; PYTHONPATH=\"$PWD\" .venv/bin/python tools/ml/run_dagger_overnight.py final; .venv/bin/python - <<'PY'\nimport json\nfrom pathlib import Path\np=Path('reports/ml/climate_v6_dagger_overnight.json')\nd=json.loads(p.read_text())\nassert d['completed_iterations'] == 5\nassert len(d['iterations']) == 5\nassert d['final']['dataset_rows'] == 97200\nassert d['final']['validation_rows'] == 1200\nassert d['final']['test_rows'] == 1200\nassert d['final']['scenario_overlap_count'] == 0\nassert d['final']['closed_loop']['config']['seed'] == 271828\nassert d['final']['closed_loop']['config']['workers'] == 6\nassert len(d['final']['closed_loop']['families']) == 15\nprint('STAGE10_FINAL_REPORT_GATE=PASS verdict=' + ('PASS' if d['final']['closed_loop']['verdict']['accepted'] else 'NO_GO'))\nPY\ngit diff --check"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "full-regression-and-publish-stage10",
+      "verification_level": "full",
+      "timeout": 3600,
+      "command": "set -euo pipefail; git add -- tools/ml/climate_dagger.py tools/ml/run_dagger_overnight.py tests/test_climate_dagger.py reports/ml/climate_v6_dagger_overnight.json reports/ml/climate_v6_model_dagger_candidate.npz reports/ml/climate_v6_model_dagger_candidate.json; .venv/bin/pre-commit run --all-files; .venv/bin/python -m pytest -q -m 'not hardware'; bash scripts/check_schema.sh; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests --output-on-failure; bash scripts/run_clang_tidy_host.sh; git diff --check; git add -- tools/ml/climate_dagger.py tools/ml/run_dagger_overnight.py tests/test_climate_dagger.py reports/ml/climate_v6_dagger_overnight.json reports/ml/climate_v6_model_dagger_candidate.npz reports/ml/climate_v6_model_dagger_candidate.json; git diff --cached --check; git commit -m 'Run overnight climate DAgger experiment'; git push origin HEAD:mvp/environment-controller"
+    }
+  ]
+}
