@@ -1,4 +1,13 @@
 {
+  "artifact": {
+    "dataset_cache_reused": true,
+    "dataset_generation_workers": 0,
+    "metadata_file": "reports/ml/climate_v6_model_seed1847.json",
+    "portable_max_prediction_delta": 5.960464477539063e-08,
+    "weights_file": "reports/ml/climate_v6_model_seed1847.npz",
+    "weights_format": "npz-float32-v1",
+    "weights_sha256": "4786ff6eaca2fe28ea4b432c9db1b05d9347e630a1619a548cc2ef5712cda7d7"
+  },
   "contract_hash": "8c5ba15ea43feb013bc4da4d4d7eabceaefd79e217b78ebe9a45956c1a830145",
   "dataset": {
     "active_fraction": {

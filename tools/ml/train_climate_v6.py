@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 from dataclasses import asdict
 from pathlib import Path
@@ -16,11 +17,24 @@ from tools.ml.climate_training import ClimateTrainingConfig, compare_candidates,
 from tools.ml.contract import load_contract
 
 
+def dataset_worker_count() -> int:
+    override = os.environ.get("CLIMATE_DATASET_WORKERS")
+    if override is not None:
+        workers = int(override)
+        if workers <= 0:
+            raise ValueError("CLIMATE_DATASET_WORKERS must be positive")
+        return workers
+    cpu_count = os.cpu_count() or 2
+    return max(1, min(6, max(1, cpu_count - 2)))
+
+
 def main() -> None:
     seed = 1847
     print("CLIMATE_V6_FULL_TRAINING_START", flush=True)
     dataset_config = ClimateDatasetConfig.full(seed=seed)
-    bundle = generate_climate_dataset_parallel(dataset_config, workers=4)
+    workers = dataset_worker_count()
+    print(f"DATASET_WORKERS={workers}", flush=True)
+    bundle = generate_climate_dataset_parallel(dataset_config, workers=workers)
     audit = audit_climate_dataset(bundle)
     assert_climate_dataset_ready(
         audit,
@@ -49,6 +63,7 @@ def main() -> None:
             "rows": int(bundle.dataset.features.shape[0]),
             "scenarios_per_family": dataset_config.scenarios_per_family,
             "steps_per_scenario": dataset_config.steps_per_scenario,
+            "workers": workers,
             "split_counts": audit.split_counts,
             "family_counts": audit.family_counts,
             "active_fraction": audit.active_fraction,
@@ -76,7 +91,10 @@ def main() -> None:
     }
     report_path = Path("build/climate_v6_training_seed1847.json")
     report_path.parent.mkdir(parents=True, exist_ok=True)
-    report_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    report_path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
     print(f"TRAINING_REPORT={report_path}", flush=True)
     print("CLIMATE_V6_FULL_TRAINING=PASS", flush=True)
 
