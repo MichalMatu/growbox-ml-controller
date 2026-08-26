@@ -1,13 +1,14 @@
 """Portable climate-v6 MLP artifact and NumPy inference.
 
 The artifact stores the exact float32 weights of the selected 38->32->32->6
-Keras model plus contract identity.  NumPy inference is deliberately independent
+Keras model plus contract identity. NumPy inference is deliberately independent
 of TensorFlow so closed-loop benchmarks and later embedded export exercise the
 persisted model rather than an in-memory training object.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 from dataclasses import dataclass
@@ -27,6 +28,14 @@ _EXPECTED_SHAPES = (
 _WEIGHT_KEYS = ("w1", "b1", "w2", "b2", "w3", "b3")
 
 
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 @dataclass(frozen=True)
 class ClimateModelMetadata:
     schema_version: int
@@ -40,7 +49,9 @@ class ClimateModelMetadata:
     def validate(self) -> None:
         if self.schema_version != 6:
             raise ValueError("portable climate model requires schema v6")
-        if len(self.contract_hash) != 64 or any(ch not in "0123456789abcdef" for ch in self.contract_hash):
+        if len(self.contract_hash) != 64 or any(
+            ch not in "0123456789abcdef" for ch in self.contract_hash
+        ):
             raise ValueError("contract_hash must be a lowercase SHA-256 hex digest")
         if len(self.feature_names) != 38 or len(set(self.feature_names)) != 38:
             raise ValueError("portable climate model requires 38 unique feature names")
@@ -61,7 +72,9 @@ class ClimatePortableModel:
         self.metadata.validate()
         if len(self.weights) != len(_EXPECTED_SHAPES):
             raise ValueError("portable climate model must contain six weight arrays")
-        for index, (array, shape) in enumerate(zip(self.weights, _EXPECTED_SHAPES, strict=True)):
+        for index, (array, shape) in enumerate(
+            zip(self.weights, _EXPECTED_SHAPES, strict=True)
+        ):
             value = np.asarray(array)
             if value.shape != shape:
                 raise ValueError(f"weight {index} has shape {value.shape}, expected {shape}")
@@ -120,6 +133,7 @@ def save_portable_model(
         weights_destination,
         **{key: value for key, value in zip(_WEIGHT_KEYS, model.weights, strict=True)},
     )
+    weights_sha256 = _sha256_file(weights_destination)
     payload = {
         "schema_version": model.metadata.schema_version,
         "contract_hash": model.metadata.contract_hash,
@@ -131,6 +145,7 @@ def save_portable_model(
         "parameter_count": model.parameter_count,
         "weights_file": weights_destination.name,
         "weights_format": "npz-float32-v1",
+        "weights_sha256": weights_sha256,
     }
     metadata_destination.write_text(
         json.dumps(payload, indent=2, sort_keys=True) + "\n",
@@ -145,6 +160,10 @@ def load_portable_model(
     weights_source = Path(weights_path)
     metadata_source = Path(metadata_path)
     payload = json.loads(metadata_source.read_text(encoding="utf-8"))
+    expected_sha256 = str(payload.get("weights_sha256", ""))
+    actual_sha256 = _sha256_file(weights_source)
+    if expected_sha256 != actual_sha256:
+        raise ValueError("portable climate model weights SHA-256 mismatch")
     metadata = ClimateModelMetadata(
         schema_version=int(payload["schema_version"]),
         contract_hash=str(payload["contract_hash"]),
@@ -168,12 +187,23 @@ def load_portable_model(
     return model
 
 
-def max_prediction_delta(keras_model: Any, portable: ClimatePortableModel, features: np.ndarray) -> float:
+def max_prediction_delta(
+    keras_model: Any,
+    portable: ClimatePortableModel,
+    features: np.ndarray,
+) -> float:
     keras_prediction = np.asarray(keras_model(features, training=False), dtype=np.float32)
     portable_prediction = portable.predict(features)
     if keras_prediction.shape != portable_prediction.shape:
         raise ValueError("Keras and portable prediction shapes differ")
-    delta = float(np.max(np.abs(keras_prediction.astype(np.float64) - portable_prediction.astype(np.float64))))
+    delta = float(
+        np.max(
+            np.abs(
+                keras_prediction.astype(np.float64)
+                - portable_prediction.astype(np.float64)
+            )
+        )
+    )
     if not math.isfinite(delta):
         raise ValueError("prediction delta is not finite")
     return delta
