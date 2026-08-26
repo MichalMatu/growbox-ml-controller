@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260826-growbox-mvp-stage9a-vpd-coverage-v1",
+  "task_digest": "22144f25f29a8561fa584dec85a785e4ba12591c8d6be14a147be7283bce3e04",
+  "idle_timeout": 1800,
+  "task_timeout": 10800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-26T16:02:25.412503+00:00",
+  "attempt_id": "66b41e3ea6b2778ca4f3f423",
+  "daemon_version": "4.9.6",
+  "daemon_pid": 35775,
+  "updated_at": "2026-08-26T16:02:25.412651+00:00",
+  "pid": 35775
+}
