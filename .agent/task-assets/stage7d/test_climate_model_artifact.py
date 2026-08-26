@@ -58,6 +58,17 @@ def test_portable_model_round_trip(tmp_path: Path) -> None:
     assert loaded.parameter_count == 2502
 
 
+def test_portable_model_rejects_tampered_weights(tmp_path: Path) -> None:
+    config = ClimateTrainingConfig.quick(seed=1847)
+    portable = from_keras_model(build_climate_model(config=config), _metadata())
+    weights_path = tmp_path / "model.npz"
+    metadata_path = tmp_path / "model.json"
+    save_portable_model(portable, weights_path, metadata_path)
+    weights_path.write_bytes(weights_path.read_bytes() + b"tamper")
+    with pytest.raises(ValueError, match="SHA-256"):
+        load_portable_model(weights_path, metadata_path)
+
+
 def test_portable_model_rejects_bad_shape() -> None:
     weights = (
         np.zeros((37, 32), dtype=np.float32),
