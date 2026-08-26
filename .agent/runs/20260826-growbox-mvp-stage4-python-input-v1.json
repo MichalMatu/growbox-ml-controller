@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260826-growbox-mvp-stage4-python-input-v1",
+  "task_digest": "3500220b8d345b3ed95e0b88016db8bb82ba8696b898c7e86b086fffaf0e5d82",
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-26T10:39:53.276621+00:00",
+  "attempt_id": "5ea348f4c1e5cfb2b87010f7",
+  "daemon_version": "4.9.6",
+  "daemon_pid": 51600,
+  "updated_at": "2026-08-26T10:39:53.276792+00:00",
+  "pid": 51600
+}
