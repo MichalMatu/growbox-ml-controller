@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260826-growbox-mvp-stage2-tidy-hardening-v1",
+  "task_digest": "2b3b351d09f98f28aed8edcf49e2f0a20afdc8f8807bb083641449dfdf35935e",
+  "idle_timeout": 900,
+  "task_timeout": 5400,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-26T10:21:18.374301+00:00",
+  "attempt_id": "240845d1524d8aa3d9022f36",
+  "daemon_version": "4.9.6",
+  "daemon_pid": 34198,
+  "updated_at": "2026-08-26T10:21:18.374526+00:00",
+  "pid": 34198
+}
