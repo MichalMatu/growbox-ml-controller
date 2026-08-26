@@ -24,8 +24,9 @@ public:
     }
     const float lo = contract::kFeatureMinimums[i], hi = contract::kFeatureMaximums[i],
                 clipped = std::clamp(raw, lo, hi);
-    if (clipped != raw)
+    if (clipped != raw) {
       r_.clamped_feature_mask |= std::uint64_t{1U} << i;
+    }
     const float span = hi - lo;
     v_.values[i] = span > 0.0F ? (clipped - lo) / span : 0.0F;
   }
@@ -95,8 +96,9 @@ ClimateFeatureVector ClimateFeatureEncoder::encode(const ClimateControllerInput&
   w.flag(contract::FeatureIndex::HumidifierAvailable, input.capabilities.humidifier);
   w.flag(contract::FeatureIndex::DehumidifierAvailable, input.capabilities.dehumidifier);
   w.flag(contract::FeatureIndex::Co2DoserAvailable, input.capabilities.co2_doser);
-  if (report)
+  if (report) {
     *report = local;
+  }
   return vector;
 }
 } // namespace growbox::climate

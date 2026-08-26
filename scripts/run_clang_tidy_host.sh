@@ -68,5 +68,10 @@ cmake --build "${BUILD_DIR}" --parallel
 
 for file in "${SOURCES[@]}"; do
   echo "clang-tidy: ${file}"
-  "${CLANG_TIDY_BIN}" -p "${BUILD_DIR}" "${file}" --quiet "${EXTRA_TIDY_ARGS[@]}"
+  if [[ "${file}" == lib/environment_control/src/climate/* ]]; then
+    "${CLANG_TIDY_BIN}" -p "${BUILD_DIR}" "${file}" --quiet \
+      --warnings-as-errors=readability-braces-around-statements "${EXTRA_TIDY_ARGS[@]}"
+  else
+    "${CLANG_TIDY_BIN}" -p "${BUILD_DIR}" "${file}" --quiet "${EXTRA_TIDY_ARGS[@]}"
+  fi
 done
