@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260827-growbox-mvp-stage9e-ml-request-deadzone-v1",
+  "task_digest": "8303e79e48a6531df93b3061af9b76cc9a86e7b289f327063e5ee79715d0f376",
+  "idle_timeout": 1800,
+  "task_timeout": 10800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-26T23:47:07.721779+00:00",
+  "attempt_id": "fc8a7b243cc35242636c04fe",
+  "daemon_version": "4.10.0",
+  "daemon_pid": 29537,
+  "updated_at": "2026-08-26T23:47:07.722073+00:00",
+  "pid": 29537
+}
