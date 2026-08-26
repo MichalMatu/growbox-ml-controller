@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260826-growbox-mvp-stage7a-full-dataset-audit-v4",
+  "task_digest": "031d50105c121f66dcfcb03bc4c40296755d2396a17e9d72021d47a9208b8607",
+  "idle_timeout": 1800,
+  "task_timeout": 14400,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-26T12:54:56.678980+00:00",
+  "attempt_id": "09d7dcc45cf7b846fcc09df0",
+  "daemon_version": "4.9.6",
+  "daemon_pid": 2530,
+  "updated_at": "2026-08-26T12:54:56.679259+00:00",
+  "pid": 2530
+}
