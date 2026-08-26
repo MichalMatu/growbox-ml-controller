@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260826-growbox-mvp-stage8b-full-closed-loop-v2",
+  "task_digest": "cdc0f8e58dc574056bb00240086866af7ea75d5a161fceb77d3d2e473ce7e138",
+  "idle_timeout": 3600,
+  "task_timeout": 21600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-26T15:32:03.800305+00:00",
+  "attempt_id": "06d5bcf94d20418a4574f731",
+  "daemon_version": "4.9.6",
+  "daemon_pid": 30947,
+  "updated_at": "2026-08-26T15:32:03.800472+00:00",
+  "pid": 30947
+}
