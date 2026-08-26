@@ -1,0 +1,27 @@
+{
+  "id": "20260826-growbox-mvp-stage7a-full-dataset-audit-v4",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "workflow_policy": "efficient-verification-v1",
+  "command_timeout": 7200,
+  "idle_timeout": 1800,
+  "task_timeout": 14400,
+  "memory_limit_mb": 4096,
+  "steps": [
+    {
+      "name": "dataset-audit-preflight",
+      "verification_level": "focused",
+      "timeout": 300,
+      "command": "set -euo pipefail; test \"$(git rev-parse HEAD)\" = d337c1dae44404cadb7a63a87bb9caf4c35eec18; .venv/bin/python -m pytest tests/test_climate_dataset.py -q"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "full-climate-dataset-audit",
+      "verification_level": "full",
+      "timeout": 7200,
+      "command": "set -euo pipefail; .venv/bin/python - <<'PY'\nfrom tools.ml.climate_dataset import ClimateDatasetConfig, assert_climate_dataset_ready, audit_climate_dataset, generate_climate_dataset\nconfig = ClimateDatasetConfig.full(seed=1847)\nbundle = generate_climate_dataset(config)\nreport = audit_climate_dataset(bundle)\nprint('CLIMATE_V6_FULL_AUDIT')\nfor line in report.summary_lines():\n    print(line)\nprint('families=', report.family_counts)\nprint('splits=', report.split_counts)\nprint('mean_level=', report.mean_level)\nprint('conflicting_temperature_rows=', report.conflicting_temperature_rows)\nprint('conflicting_humidity_rows=', report.conflicting_humidity_rows)\nassert_climate_dataset_ready(report, require_family_coverage_in_each_split=True, bundle=bundle)\nprint('FULL_DATASET_GATE=PASS')\nPY"
+    }
+  ]
+}
