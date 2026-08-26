@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260826-growbox-mvp-stage2-climate-core-v2",
+  "task_digest": "2e45b6496e3d7262215305500ccdb00faa3e84a31247b124d8c9feb355b4dd8d",
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-26T10:09:22.203902+00:00",
+  "attempt_id": "cfc7f9c8f87dcc44d3aa73bd",
+  "daemon_version": "4.9.6",
+  "daemon_pid": 25016,
+  "updated_at": "2026-08-26T10:09:22.204063+00:00",
+  "pid": 25016
+}
