@@ -1,0 +1,33 @@
+{
+  "id": "20260827-growbox-mvp-stage9d-vpd-closed-loop-v1",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "workflow_policy": "efficient-verification-v1",
+  "command_timeout": 7200,
+  "idle_timeout": 3600,
+  "task_timeout": 21600,
+  "memory_limit_mb": 4096,
+  "steps": [
+    {
+      "name": "install-stage9d-runner-and-preflight",
+      "verification_level": "work",
+      "timeout": 1200,
+      "command": "set -euo pipefail; test \"$(git rev-parse HEAD)\" = d7b2bcf60f73e7d834a000bcf2a7f6d6e5adae5d; test -f build/climate_v6_full_seed1847_vpd.npz; test -f reports/ml/climate_v6_model_seed1847_vpd.npz; test -f reports/ml/climate_v6_model_seed1847_vpd.json; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/stage9d/run_vpd_closed_loop.py > tools/ml/run_vpd_closed_loop.py; .venv/bin/ruff check --fix tools/ml/run_vpd_closed_loop.py; .venv/bin/ruff format tools/ml/run_vpd_closed_loop.py; .venv/bin/python -m pytest tests/test_climate_benchmark.py tests/test_climate_model_artifact.py -q; git diff --check; git status --short"
+    },
+    {
+      "name": "full-held-out-rh-vpd-closed-loop",
+      "verification_level": "focused",
+      "timeout": 7200,
+      "command": "set -euo pipefail; PYTHONPATH=\"$PWD\" .venv/bin/python tools/ml/run_vpd_closed_loop.py; .venv/bin/python - <<'PY'\nimport json\nfrom pathlib import Path\np=Path('reports/ml/climate_v6_closed_loop_seed91273_vpd.json')\nd=json.loads(p.read_text())\nassert d['schema_version'] == 6\nassert d['config']['workers'] == 6\nassert d['config']['scenarios_per_family'] == 2\nassert d['config']['steps_per_scenario'] == 60\nassert len(d['families']) == 15\nassert len(d['episodes']) == 90\nassert d['leakage_check']['overlap_count'] == 0\nfor policy in ('rule','teacher','ml'):\n    assert d['aggregate'][policy]['episodes'] == 30\n    assert d['aggregate'][policy]['steps'] == 1800\nprint('STAGE9D_REPORT_GATE=PASS verdict=' + ('PASS' if d['verdict']['accepted'] else 'NO_GO'))\nPY\n.venv/bin/ruff check tools/ml/run_vpd_closed_loop.py; git diff --check"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "full-regression-and-publish-stage9d",
+      "verification_level": "full",
+      "timeout": 3600,
+      "command": "set -euo pipefail; git add -- tools/ml/run_vpd_closed_loop.py reports/ml/climate_v6_closed_loop_seed91273_vpd.json; .venv/bin/pre-commit run --all-files; .venv/bin/python -m pytest -q -m 'not hardware'; bash scripts/check_schema.sh; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests --output-on-failure; bash scripts/run_clang_tidy_host.sh; git diff --check; git add -- tools/ml/run_vpd_closed_loop.py reports/ml/climate_v6_closed_loop_seed91273_vpd.json; git diff --cached --check; git commit -m 'Benchmark RH and VPD climate model closed loop'; git push origin HEAD:mvp/environment-controller"
+    }
+  ]
+}
