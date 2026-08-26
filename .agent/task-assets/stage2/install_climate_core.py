@@ -1,0 +1,232 @@
+#!/usr/bin/env python3
+from pathlib import Path
+import subprocess
+import sys
+
+ROOT = Path.cwd()
+FILES = {
+"lib/environment_control/src/climate/ClimateMath.h": r'''#pragma once
+#include <algorithm>
+#include <cmath>
+namespace growbox::climate {
+inline float saturationVapourPressureKpa(float temperature_c) noexcept {
+  const float temperature = std::clamp(temperature_c, -40.0F, 80.0F);
+  return 0.61094F * std::exp((17.625F * temperature) / (temperature + 243.04F));
+}
+inline float airVpdKpa(float temperature_c, float relative_humidity_pct) noexcept {
+  const float humidity = std::clamp(relative_humidity_pct, 0.0F, 100.0F);
+  return std::max(0.0F, saturationVapourPressureKpa(temperature_c) * (1.0F - humidity / 100.0F));
+}
+}  // namespace growbox::climate
+''',
+"lib/environment_control/src/climate/ClimateTypes.h": r'''#pragma once
+#include "ClimateContract.h"
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <limits>
+namespace growbox::climate {
+inline constexpr std::uint64_t kUnknownMeasurementAgeMs = std::numeric_limits<std::uint64_t>::max();
+inline constexpr std::uint64_t kDefaultSensorTimeoutMs = 30'000ULL;
+namespace detail { constexpr float featureDefault(contract::FeatureIndex f) noexcept { return contract::kFeatureDefaults[contract::index(f)]; } }
+struct MeasuredValue { float value = 0.0F; bool valid = false; std::uint64_t age_ms = kUnknownMeasurementAgeMs; };
+struct ClimateMeasurements {
+  MeasuredValue air_temperature_c{detail::featureDefault(contract::FeatureIndex::AirTemperatureC), false, kUnknownMeasurementAgeMs};
+  MeasuredValue relative_humidity_pct{detail::featureDefault(contract::FeatureIndex::RelativeHumidityPct), false, kUnknownMeasurementAgeMs};
+  MeasuredValue co2_ppm{detail::featureDefault(contract::FeatureIndex::Co2Ppm), false, kUnknownMeasurementAgeMs};
+  MeasuredValue outside_temperature_c{detail::featureDefault(contract::FeatureIndex::OutsideTemperatureC), false, kUnknownMeasurementAgeMs};
+  MeasuredValue outside_humidity_pct{detail::featureDefault(contract::FeatureIndex::OutsideHumidityPct), false, kUnknownMeasurementAgeMs};
+};
+struct TrendValue { float rate_per_min = 0.0F; bool available = false; };
+struct ClimateTrends { TrendValue temperature{}; TrendValue humidity{}; TrendValue co2{}; };
+struct ClimateState { ClimateMeasurements measurements{}; ClimateTrends trends{}; };
+enum class HumidityControlMode : std::uint8_t { Rh = 0U, Vpd = 1U };
+struct ClimateTargets {
+  float air_temperature_c = detail::featureDefault(contract::FeatureIndex::TargetAirTemperatureC);
+  float relative_humidity_pct = detail::featureDefault(contract::FeatureIndex::TargetRelativeHumidityPct);
+  float air_vpd_kpa = detail::featureDefault(contract::FeatureIndex::TargetAirVpdKpa);
+  bool co2_enabled = false;
+  float co2_ppm = detail::featureDefault(contract::FeatureIndex::TargetCo2Ppm);
+};
+struct ClimateSchedule { float light_level = detail::featureDefault(contract::FeatureIndex::LightLevel); };
+struct PreviousClimateActions { float heater=0.0F, cooler=0.0F, exhaust_fan=0.0F, humidifier=0.0F, dehumidifier=0.0F, co2_doser=0.0F; };
+struct ClimateCapabilities { bool heater=false, cooler=false, exhaust_fan=false, humidifier=false, dehumidifier=false, co2_doser=false; };
+struct ClimateControllerInput { ClimateState state{}; HumidityControlMode humidity_control_mode=HumidityControlMode::Rh; ClimateTargets targets{}; ClimateSchedule schedule{}; PreviousClimateActions previous{}; ClimateCapabilities capabilities{}; std::uint64_t sensor_timeout_ms=kDefaultSensorTimeoutMs; };
+struct ClimateFeatureVector { std::array<float, contract::kFeatureCount> values{}; };
+struct ClimateEncoderReport {
+  std::uint64_t substituted_feature_mask=0U, clamped_feature_mask=0U;
+  bool substituted(contract::FeatureIndex f) const noexcept { return (substituted_feature_mask & (std::uint64_t{1U} << contract::index(f))) != 0U; }
+  bool clamped(contract::FeatureIndex f) const noexcept { return (clamped_feature_mask & (std::uint64_t{1U} << contract::index(f))) != 0U; }
+};
+struct ClimatePolicyRequest { float heater=0.0F, cooler=0.0F, exhaust_fan=0.0F, humidifier=0.0F, dehumidifier=0.0F, co2_doser=0.0F; };
+static_assert(contract::kFeatureCount <= 64U, "Climate encoder masks require at most 64 features");
+static_assert(contract::kOutputCount == 6U, "Climate MVP policy request implements six ML outputs");
+}  // namespace growbox::climate
+''',
+"lib/environment_control/src/climate/ClimateFeatureEncoder.h": r'''#pragma once
+#include "ClimateTypes.h"
+namespace growbox::climate {
+class ClimateFeatureEncoder { public: static ClimateFeatureVector encode(const ClimateControllerInput& input, ClimateEncoderReport* report=nullptr) noexcept; };
+}  // namespace growbox::climate
+''',
+"lib/environment_control/src/climate/ClimateFeatureEncoder.cpp": r'''#include "ClimateFeatureEncoder.h"
+#include "ClimateMath.h"
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
+namespace growbox::climate { namespace {
+struct MeasurementStatus { bool valid=false, fresh=false, usable=false; };
+MeasurementStatus statusOf(const MeasuredValue& m, std::uint64_t timeout) noexcept { const bool valid=m.valid && std::isfinite(m.value); const bool fresh=m.age_ms <= timeout; return {valid, fresh, valid && fresh}; }
+class Writer {
+ public:
+  Writer(ClimateFeatureVector& v, ClimateEncoderReport& r): v_(v), r_(r) {}
+  void write(contract::FeatureIndex f, float raw, bool substitute=false) noexcept { const auto i=contract::index(f); if (substitute || !std::isfinite(raw)) { raw=contract::kFeatureDefaults[i]; r_.substituted_feature_mask |= std::uint64_t{1U} << i; } const float lo=contract::kFeatureMinimums[i], hi=contract::kFeatureMaximums[i], clipped=std::clamp(raw, lo, hi); if (clipped != raw) r_.clamped_feature_mask |= std::uint64_t{1U} << i; const float span=hi-lo; v_.values[i]=span>0.0F ? (clipped-lo)/span : 0.0F; }
+  void flag(contract::FeatureIndex f, bool value) noexcept { write(f, value ? 1.0F : 0.0F); }
+ private: ClimateFeatureVector& v_; ClimateEncoderReport& r_;
+}; }
+ClimateFeatureVector ClimateFeatureEncoder::encode(const ClimateControllerInput& input, ClimateEncoderReport* report) noexcept {
+  ClimateFeatureVector vector{}; ClimateEncoderReport local{}; Writer w(vector, local); const auto& m=input.state.measurements;
+  const auto t=statusOf(m.air_temperature_c,input.sensor_timeout_ms), rh=statusOf(m.relative_humidity_pct,input.sensor_timeout_ms), co2=statusOf(m.co2_ppm,input.sensor_timeout_ms), ot=statusOf(m.outside_temperature_c,input.sensor_timeout_ms), oh=statusOf(m.outside_humidity_pct,input.sensor_timeout_ms);
+  w.write(contract::FeatureIndex::AirTemperatureC,m.air_temperature_c.value,!t.usable); w.write(contract::FeatureIndex::RelativeHumidityPct,m.relative_humidity_pct.value,!rh.usable); w.write(contract::FeatureIndex::Co2Ppm,m.co2_ppm.value,!co2.usable); w.write(contract::FeatureIndex::OutsideTemperatureC,m.outside_temperature_c.value,!ot.usable); w.write(contract::FeatureIndex::OutsideHumidityPct,m.outside_humidity_pct.value,!oh.usable);
+  w.flag(contract::FeatureIndex::AirTemperatureValid,t.valid); w.flag(contract::FeatureIndex::AirTemperatureFresh,t.fresh); w.flag(contract::FeatureIndex::RelativeHumidityValid,rh.valid); w.flag(contract::FeatureIndex::RelativeHumidityFresh,rh.fresh); w.flag(contract::FeatureIndex::Co2Valid,co2.valid); w.flag(contract::FeatureIndex::Co2Fresh,co2.fresh); w.flag(contract::FeatureIndex::OutsideTemperatureValid,ot.valid); w.flag(contract::FeatureIndex::OutsideTemperatureFresh,ot.fresh); w.flag(contract::FeatureIndex::OutsideHumidityValid,oh.valid); w.flag(contract::FeatureIndex::OutsideHumidityFresh,oh.fresh);
+  const bool vpd_ok=t.usable && rh.usable; w.write(contract::FeatureIndex::AirVpdKpa,vpd_ok ? airVpdKpa(m.air_temperature_c.value,m.relative_humidity_pct.value) : 0.0F,!vpd_ok);
+  w.write(contract::FeatureIndex::HumidityControlMode,input.humidity_control_mode==HumidityControlMode::Vpd ? 1.0F : 0.0F); w.write(contract::FeatureIndex::TargetAirTemperatureC,input.targets.air_temperature_c); w.write(contract::FeatureIndex::TargetRelativeHumidityPct,input.targets.relative_humidity_pct); w.write(contract::FeatureIndex::TargetAirVpdKpa,input.targets.air_vpd_kpa); w.flag(contract::FeatureIndex::Co2ControlEnabled,input.targets.co2_enabled); w.write(contract::FeatureIndex::TargetCo2Ppm,input.targets.co2_ppm); w.write(contract::FeatureIndex::LightLevel,input.schedule.light_level);
+  const auto& tr=input.state.trends; w.write(contract::FeatureIndex::TemperatureRateCMin,tr.temperature.rate_per_min,!t.usable || !tr.temperature.available); w.write(contract::FeatureIndex::HumidityRatePctMin,tr.humidity.rate_per_min,!rh.usable || !tr.humidity.available); w.write(contract::FeatureIndex::Co2RatePpmMin,tr.co2.rate_per_min,!co2.usable || !tr.co2.available);
+  w.write(contract::FeatureIndex::PreviousHeater,input.previous.heater); w.write(contract::FeatureIndex::PreviousCooler,input.previous.cooler); w.write(contract::FeatureIndex::PreviousExhaustFan,input.previous.exhaust_fan); w.write(contract::FeatureIndex::PreviousHumidifier,input.previous.humidifier); w.write(contract::FeatureIndex::PreviousDehumidifier,input.previous.dehumidifier); w.write(contract::FeatureIndex::PreviousCo2Doser,input.previous.co2_doser);
+  w.flag(contract::FeatureIndex::HeaterAvailable,input.capabilities.heater); w.flag(contract::FeatureIndex::CoolerAvailable,input.capabilities.cooler); w.flag(contract::FeatureIndex::ExhaustFanAvailable,input.capabilities.exhaust_fan); w.flag(contract::FeatureIndex::HumidifierAvailable,input.capabilities.humidifier); w.flag(contract::FeatureIndex::DehumidifierAvailable,input.capabilities.dehumidifier); w.flag(contract::FeatureIndex::Co2DoserAvailable,input.capabilities.co2_doser);
+  if (report) *report=local; return vector;
+}
+}  // namespace growbox::climate
+''',
+"lib/environment_control/src/climate/ClimateTrendEstimator.h": r'''#pragma once
+#include "ClimateTypes.h"
+#include <array>
+#include <cstddef>
+#include <cstdint>
+namespace growbox::climate {
+class ClimateTrendEstimator {
+ public:
+  static constexpr std::uint64_t kWindowMs=contract::kTrendWindowMs, kMinimumSampleSpacingMs=5'000ULL, kMinimumTrendSpanMs=10'000ULL; static constexpr std::size_t kMaximumSamples=16U;
+  ClimateTrends update(const ClimateMeasurements& measurements, std::uint64_t monotonic_ms, std::uint64_t sensor_timeout_ms=kDefaultSensorTimeoutMs) noexcept; void reset() noexcept;
+ private:
+  struct Sample { std::uint64_t timestamp_ms=0U; float value=0.0F; };
+  class Channel { public: TrendValue update(const MeasuredValue&,std::uint64_t,std::uint64_t) noexcept; void reset() noexcept; private: void add(float,std::uint64_t) noexcept; void prune(std::uint64_t) noexcept; TrendValue estimate() const noexcept; std::array<Sample,kMaximumSamples> samples_{}; std::size_t size_=0U; };
+  Channel temperature_{},humidity_{},co2_{}; std::uint64_t last_monotonic_ms_=0U; bool has_monotonic_=false;
+};
+}  // namespace growbox::climate
+''',
+"lib/environment_control/src/climate/ClimateTrendEstimator.cpp": r'''#include "ClimateTrendEstimator.h"
+#include <cmath>
+#include <cstddef>
+namespace growbox::climate {
+void ClimateTrendEstimator::Channel::reset() noexcept { size_=0U; }
+void ClimateTrendEstimator::Channel::prune(std::uint64_t newest) noexcept { std::size_t first=0U; while(first<size_ && newest-samples_[first].timestamp_ms>kWindowMs) ++first; for(std::size_t i=first;i<size_;++i) samples_[i-first]=samples_[i]; size_-=first; }
+void ClimateTrendEstimator::Channel::add(float value,std::uint64_t ts) noexcept { if(size_>0U && ts<samples_[size_-1U].timestamp_ms) reset(); prune(ts); if(size_>0U){ auto& last=samples_[size_-1U]; if(ts==last.timestamp_ms){ last.value=value; return; } if(ts-last.timestamp_ms<kMinimumSampleSpacingMs) return; } if(size_==kMaximumSamples){ for(std::size_t i=1U;i<size_;++i) samples_[i-1U]=samples_[i]; --size_; } samples_[size_++]={ts,value}; }
+TrendValue ClimateTrendEstimator::Channel::estimate() const noexcept { if(size_<2U) return {}; const auto first=samples_[0].timestamp_ms; const auto span=samples_[size_-1U].timestamp_ms-first; if(span<kMinimumTrendSpanMs) return {}; double sx=0,sy=0,sxx=0,sxy=0; for(std::size_t i=0U;i<size_;++i){ const double x=static_cast<double>(samples_[i].timestamp_ms-first)/60000.0, y=samples_[i].value; sx+=x; sy+=y; sxx+=x*x; sxy+=x*y; } const double n=static_cast<double>(size_), d=n*sxx-sx*sx; if(std::abs(d)<1e-12) return {}; const double slope=(n*sxy-sx*sy)/d; return std::isfinite(slope) ? TrendValue{static_cast<float>(slope),true} : TrendValue{}; }
+TrendValue ClimateTrendEstimator::Channel::update(const MeasuredValue& m,std::uint64_t now,std::uint64_t timeout) noexcept { if(!m.valid || m.age_ms>timeout || !std::isfinite(m.value) || m.age_ms>now) return {}; add(m.value,now-m.age_ms); return estimate(); }
+ClimateTrends ClimateTrendEstimator::update(const ClimateMeasurements& m,std::uint64_t now,std::uint64_t timeout) noexcept { if(has_monotonic_ && now<last_monotonic_ms_) reset(); last_monotonic_ms_=now; has_monotonic_=true; return {temperature_.update(m.air_temperature_c,now,timeout),humidity_.update(m.relative_humidity_pct,now,timeout),co2_.update(m.co2_ppm,now,timeout)}; }
+void ClimateTrendEstimator::reset() noexcept { temperature_.reset(); humidity_.reset(); co2_.reset(); last_monotonic_ms_=0U; has_monotonic_=false; }
+}  // namespace growbox::climate
+''',
+"test/test_climate_v6/test_main.cpp": r'''#include "ClimateContract.h"
+#include "ClimateFeatureEncoder.h"
+#include "ClimateMath.h"
+#include "ClimateTrendEstimator.h"
+#include <cmath>
+#include <cstring>
+#include <iostream>
+namespace { int failures=0; void check(bool c,const char* m){ if(!c){ ++failures; std::cerr<<"FAIL: "<<m<<'\n'; }} bool near(float a,float b,float t){ return std::abs(a-b)<=t; } float feature(const growbox::climate::ClimateFeatureVector& v,growbox::climate::contract::FeatureIndex i){ return v.values[growbox::climate::contract::index(i)]; }
+void contractTest(){ namespace c=growbox::climate::contract; check(c::kSchemaVersion==6U,"schema version"); check(c::kFeatureCount==38U,"feature count"); check(c::kOutputCount==6U,"output count"); const char* expected[]={"heater","cooler","exhaust_fan","humidifier","dehumidifier","co2_doser"}; for(std::size_t i=0;i<c::kOutputCount;++i) check(std::strcmp(c::kOutputNames[i],expected[i])==0,"output order"); }
+void encoderTest(){ using namespace growbox::climate; namespace c=growbox::climate::contract; ClimateControllerInput in{}; in.state.measurements.air_temperature_c={24.0F,true,0U}; in.state.measurements.relative_humidity_pct={60.0F,true,0U}; in.state.measurements.co2_ppm={999.0F,false,0U}; in.state.measurements.outside_temperature_c={18.0F,true,40'000U}; in.state.measurements.outside_humidity_pct={45.0F,true,0U}; in.humidity_control_mode=HumidityControlMode::Vpd; in.schedule.light_level=0.75F; in.previous.heater=2.0F; in.capabilities.heater=true; in.state.trends.temperature={1.0F,true}; in.state.trends.humidity={-2.0F,true}; in.state.trends.co2={100.0F,true}; ClimateEncoderReport r{}; const auto v=ClimateFeatureEncoder::encode(in,&r); check(near(feature(v,c::FeatureIndex::AirTemperatureC),0.55F,0.0001F),"temperature normalization"); check(feature(v,c::FeatureIndex::Co2Valid)==0.0F,"CO2 valid"); check(feature(v,c::FeatureIndex::Co2Fresh)==1.0F,"freshness independent"); check(r.substituted(c::FeatureIndex::Co2Ppm),"invalid CO2 fallback"); check(feature(v,c::FeatureIndex::OutsideTemperatureFresh)==0.0F,"stale outside"); check(r.substituted(c::FeatureIndex::OutsideTemperatureC),"stale fallback"); check(feature(v,c::FeatureIndex::HumidityControlMode)==1.0F,"VPD mode"); check(near(feature(v,c::FeatureIndex::LightLevel),0.75F,0.0001F),"light context"); check(feature(v,c::FeatureIndex::PreviousHeater)==1.0F,"command clamp"); check(r.clamped(c::FeatureIndex::PreviousHeater),"clamp diagnostic"); }
+void trendTest(){ using namespace growbox::climate; ClimateTrendEstimator e{}; ClimateMeasurements m{}; ClimateTrends tr{}; for(std::uint64_t ms=0U;ms<=60'000U;ms+=5'000U){ const float min=static_cast<float>(ms)/60'000.0F; m.air_temperature_c={20.0F+min,true,0U}; m.relative_humidity_pct={60.0F-2.0F*min,true,0U}; m.co2_ppm={500.0F+100.0F*min,true,0U}; tr=e.update(m,ms); if(ms<10'000U) check(!tr.temperature.available,"startup trend"); } check(tr.temperature.available && near(tr.temperature.rate_per_min,1.0F,0.01F),"temperature trend"); check(tr.humidity.available && near(tr.humidity.rate_per_min,-2.0F,0.01F),"humidity trend"); check(tr.co2.available && near(tr.co2.rate_per_min,100.0F,0.05F),"CO2 trend"); m.co2_ppm.age_ms=kDefaultSensorTimeoutMs+1U; tr=e.update(m,65'000U); check(!tr.co2.available,"stale CO2 trend"); tr=e.update(m,1'000U); check(!tr.temperature.available,"rollback resets trend"); ClimateTrendEstimator fast{}; m.co2_ppm={500.0F,true,0U}; for(std::uint64_t ms=0U;ms<=60'000U;ms+=1'000U){ const float min=static_cast<float>(ms)/60'000.0F; m.air_temperature_c={20.0F+min,true,0U}; m.relative_humidity_pct={60.0F,true,0U}; tr=fast.update(m,ms); } check(tr.temperature.available && near(tr.temperature.rate_per_min,1.0F,0.02F),"1 Hz trend"); }
+}
+int main(){ contractTest(); check(near(growbox::climate::airVpdKpa(25.0F,60.0F),1.264F,0.015F),"VPD math"); encoderTest(); trendTest(); if(failures){ std::cerr<<failures<<" climate v6 checks failed\n"; return 1;} std::cout<<"climate v6 checks passed\n"; return 0; }
+''',
+"tests/test_climate_contract_codegen.py": r'''from __future__ import annotations
+import json
+from pathlib import Path
+import pytest
+from tools.schema.generate_climate_contract import render, validate
+ROOT=Path(__file__).resolve().parents[1]
+SCHEMA=ROOT/"schemas/environment-controller.v6.json"
+HEADER=ROOT/"lib/environment_control/src/climate/ClimateContract.h"
+def document(): return json.loads(SCHEMA.read_text(encoding="utf-8"))
+def test_generated_climate_header_is_fresh(): assert HEADER.read_text(encoding="utf-8")==render(document())
+def test_generator_rejects_pot_feature_leak():
+    d=document(); d["model"]["features"][0]["name"]="soil_temperature_c"
+    with pytest.raises(ValueError,match="non-climate feature"): validate(d)
+def test_generator_rejects_output_reordering():
+    d=document(); o=d["model"]["outputs"]; o[0],o[1]=o[1],o[0]
+    with pytest.raises(ValueError,match="unexpected output order"): validate(d)
+'''
+}
+for rel, content in FILES.items():
+    path=ROOT/rel
+    path.parent.mkdir(parents=True,exist_ok=True)
+    path.write_text(content,encoding="utf-8")
+
+# Generator is copied separately by the task before this installer runs.
+subprocess.run([sys.executable,"tools/schema/generate_climate_contract.py"],cwd=ROOT,check=True)
+
+cmake_path=ROOT/"test/host/CMakeLists.txt"; text=cmake_path.read_text(encoding="utf-8")
+old="""target_compile_features(environment_control_tests PRIVATE cxx_std_17)
+target_compile_options(environment_control_tests PRIVATE -Wall -Wextra -Wpedantic)
+
+if(UNIX)
+  target_link_libraries(environment_control_tests PRIVATE m)
+endif()
+
+enable_testing()
+add_test(NAME environment_control_tests COMMAND environment_control_tests)
+"""
+new="""target_compile_features(environment_control_tests PRIVATE cxx_std_17)
+target_compile_options(environment_control_tests PRIVATE -Wall -Wextra -Wpedantic)
+
+add_executable(
+  climate_v6_tests
+  \"${PROJECT_ROOT}/test/test_climate_v6/test_main.cpp\"
+  \"${PROJECT_ROOT}/lib/environment_control/src/climate/ClimateFeatureEncoder.cpp\"
+  \"${PROJECT_ROOT}/lib/environment_control/src/climate/ClimateTrendEstimator.cpp\"
+)
+target_include_directories(climate_v6_tests PRIVATE \"${PROJECT_ROOT}/lib/environment_control/src/climate\")
+target_compile_features(climate_v6_tests PRIVATE cxx_std_17)
+target_compile_options(climate_v6_tests PRIVATE -Wall -Wextra -Wpedantic)
+
+if(UNIX)
+  target_link_libraries(environment_control_tests PRIVATE m)
+  target_link_libraries(climate_v6_tests PRIVATE m)
+endif()
+
+enable_testing()
+add_test(NAME environment_control_tests COMMAND environment_control_tests)
+add_test(NAME climate_v6_tests COMMAND climate_v6_tests)
+"""
+if old not in text: raise SystemExit("CMake anchor not found")
+cmake_path.write_text(text.replace(old,new),encoding="utf-8")
+
+check=ROOT/"scripts/check_schema.sh"; text=check.read_text(encoding="utf-8")
+old='exec "${PYTHON}" "${ROOT}/tools/schema/generate_environment_schema.py" --check\n'
+new='"${PYTHON}" "${ROOT}/tools/schema/generate_environment_schema.py" --check\n"${PYTHON}" "${ROOT}/tools/schema/generate_climate_contract.py" --check\n'
+if old not in text: raise SystemExit("schema check anchor not found")
+check.write_text(text.replace(old,new),encoding="utf-8")
+
+tidy=ROOT/"scripts/run_clang_tidy_host.sh"; text=tidy.read_text(encoding="utf-8")
+old="""  lib/environment_control/src/SafetySupervisor.cpp
+  lib/environment_control/src/ModelRuntime.cpp
+)
+"""
+new="""  lib/environment_control/src/SafetySupervisor.cpp
+  lib/environment_control/src/ModelRuntime.cpp
+  lib/environment_control/src/climate/ClimateFeatureEncoder.cpp
+  lib/environment_control/src/climate/ClimateTrendEstimator.cpp
+)
+"""
+if old not in text: raise SystemExit("clang tidy anchor not found")
+tidy.write_text(text.replace(old,new),encoding="utf-8")
+
+doc=ROOT/"docs/MVP_ENVIRONMENT_CONTROLLER.md"; text=doc.read_text(encoding="utf-8")
+old="Initial implementation target: a fixed approximately 60-second trend window using a deterministic low-noise estimator. The estimator definition and window are part of the model contract once implemented and must be identical in simulation/training and runtime."
+new="Implemented v6 semantics: a deterministic 60-second least-squares trend window. Fresh valid source samples are retained at approximately 5-second spacing, at most 16 samples per channel, and no trend is exposed until at least 10 seconds of source-time span exists. Repeated faster samples are ignored until the 5-second source-time spacing is reached. Invalid/stale measurements suppress the corresponding trend, and monotonic-clock rollback resets trend history. These rules are contractual for v6 and must be mirrored by simulation/training."
+if old not in text: raise SystemExit("trend documentation anchor not found")
+doc.write_text(text.replace(old,new),encoding="utf-8")
+print("Stage 2 climate core installed")
