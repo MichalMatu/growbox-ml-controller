@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260826-growbox-mvp-stage7d-portable-winner-v1",
+  "task_digest": "61be1923cfdb5362ac9f8d4090ddb9886f617bf849d4b32e10778943f0c59254",
+  "idle_timeout": 3600,
+  "task_timeout": 10800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-26T15:06:19.744343+00:00",
+  "attempt_id": "5ec445fe241d7e399d690123",
+  "daemon_version": "4.9.6",
+  "daemon_pid": 26250,
+  "updated_at": "2026-08-26T15:06:19.744496+00:00",
+  "pid": 26250
+}
