@@ -1,0 +1,61 @@
+{
+  "id": "20260826-growbox-mvp-stage2-climate-core-v1",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "started_at": "2026-08-26T10:06:48.157684+00:00",
+  "command_timeout": 1800,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; echo 'English-only execution evidence.'; test \"$(git rev-parse HEAD)\" = f2530e11b3be8a3f9c50a221592d3ad5fc8479f4; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/20260826-growbox-mvp-stage2-climate-core.py > /tmp/growbox-stage2-core.py; git show origin/agent-control:.agent/task-assets/20260826-growbox-mvp-stage2-trend-fix.py > /tmp/growbox-stage2-trend-fix.py; .venv/bin/python /tmp/growbox-stage2-core.py; .venv/bin/python /tmp/growbox-stage2-trend-fix.py; .venv/bin/pre-commit run ruff --all-files || true; .venv/bin/pre-commit run ruff-format --all-files || true; .venv/bin/pre-commit run clang-format --all-files || true; .venv/bin/pre-commit run ruff --all-files; .venv/bin/pre-commit run ruff-format --all-files; .venv/bin/pre-commit run clang-format --all-files; git diff --check; git status --short",
+      "exit_code": 1,
+      "output": "English-only execution evidence.\nFrom https://github.com/MichalMatu/growbox-ml-controller\n * branch            agent-control -> FETCH_HEAD\n   68e161e..daecea2  agent-control -> origin/agent-control\n  File \"/tmp/growbox-stage2-core.py\", line 10\n    FILES: dict[str, str] = {\n                            ^\nSyntaxError: '{' was never closed\n",
+      "elapsed_seconds": 2.125,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 1.88,
+      "current_rss_mb": 1.88,
+      "stage_name": "implement-climate-v6-core",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "stage_timeout": 600,
+      "verification_level": "work"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "implement-climate-v6-core",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "verification_level": "work",
+      "outcome": "failed",
+      "elapsed_seconds": 2.125
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.231
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.286
+  },
+  "failure_reason": "command_failed",
+  "finished_at": "2026-08-26T10:06:53.392024+00:00",
+  "task_digest": "75c3c2e88a28b24461edc6f3907f3e4656c7af06628f0491fc06b9e9511a62e6",
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "memory_limit_mb": 4096,
+  "attempt_id": "01cc641e309b66df59ce5c17",
+  "daemon_version": "4.9.6"
+}
