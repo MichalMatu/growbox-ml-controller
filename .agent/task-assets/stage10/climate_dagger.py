@@ -279,14 +279,15 @@ def frozen_split_fingerprint(dataset: Dataset, split: str) -> str:
 
     mask = dataset.splits == split
     digest = hashlib.sha256()
-    for array in (
-        dataset.features[mask],
-        dataset.labels[mask],
-        dataset.scenario_ids[mask].astype("U"),
-        dataset.scenario_seeds[mask],
-    ):
+    for array in (dataset.features[mask], dataset.labels[mask], dataset.scenario_seeds[mask]):
         values = np.ascontiguousarray(array)
+        digest.update(str(values.shape).encode("utf-8"))
+        digest.update(str(values.dtype).encode("utf-8"))
         digest.update(values.tobytes())
+    for scenario_id in dataset.scenario_ids[mask]:
+        encoded = str(scenario_id).encode("utf-8")
+        digest.update(len(encoded).to_bytes(4, "little"))
+        digest.update(encoded)
     return digest.hexdigest()
 
 
