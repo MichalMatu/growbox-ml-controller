@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260826-growbox-mvp-stage5-climate-teacher-v1",
+  "task_digest": "b2ac7ed2427f64959324228672f698e667b7fd4a6c9ea5c3f32a653167dbdcd3",
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-26T10:44:53.185652+00:00",
+  "attempt_id": "72092e54a51fe9fba9ab3ec4",
+  "daemon_version": "4.9.6",
+  "daemon_pid": 54069,
+  "updated_at": "2026-08-26T10:44:53.185966+00:00",
+  "pid": 54069
+}
