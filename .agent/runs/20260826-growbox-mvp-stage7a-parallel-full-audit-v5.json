@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260826-growbox-mvp-stage7a-parallel-full-audit-v5",
+  "task_digest": "ba9b78f391ed16cd3dd6cd653dfe58c7b684b49b6cdbb39ed40a34901c3ebef7",
+  "idle_timeout": 3600,
+  "task_timeout": 7200,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-26T14:12:10.443622+00:00",
+  "attempt_id": "3e4242995ac3c6ecfc75e247",
+  "daemon_version": "4.9.6",
+  "daemon_pid": 19324,
+  "updated_at": "2026-08-26T14:12:10.443893+00:00",
+  "pid": 19324
+}
