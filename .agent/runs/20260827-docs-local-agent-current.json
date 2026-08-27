@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260827-docs-local-agent-current",
+  "task_digest": "f5e1addef8de9492f65638bfe5de988b1d3bc3c76f3ece79c6b717b031f5eed2",
+  "idle_timeout": 60,
+  "task_timeout": 600,
+  "memory_limit_mb": 256,
+  "started_at": "2026-08-27T10:19:37.623330+00:00",
+  "attempt_id": "1ce6a565ea03937c6f09ce82",
+  "daemon_version": "4.10.0",
+  "daemon_pid": 99506,
+  "updated_at": "2026-08-27T10:19:37.623618+00:00",
+  "pid": 99506
+}
