@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260827-growbox-mvp-stage10-overnight-dagger-v3",
+  "task_digest": "ba8ef4937d7f011c8d249f5733ba476c7d78bae8e00062a2fc0afe8bffb70e24",
+  "idle_timeout": 3600,
+  "task_timeout": 21600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-27T00:10:25.336824+00:00",
+  "attempt_id": "e3b8a211ac3cf6b8b1b0aeb5",
+  "daemon_version": "4.10.0",
+  "daemon_pid": 33283,
+  "updated_at": "2026-08-27T00:10:25.337140+00:00",
+  "pid": 33283
+}
