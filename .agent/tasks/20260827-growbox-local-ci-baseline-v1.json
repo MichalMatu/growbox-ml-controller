@@ -1,0 +1,17 @@
+{
+  "id": "20260827-growbox-local-ci-baseline-v1",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "command_timeout": 3600,
+  "idle_timeout": 1200,
+  "task_timeout": 10800,
+  "memory_limit_mb": 8192,
+  "commands": [
+    "set -euo pipefail; EXPECTED=4e376aeddf8dfdfbdcb09dd41e9f2a992feca1a4; echo '=== SOURCE IDENTITY ==='; printf 'branch='; git branch --show-current; printf 'head='; git rev-parse HEAD; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain --untracked-files=no)\"; echo '=== MAC TOOLCHAIN ==='; sw_vers; uname -m; python3 --version; test -x .venv/bin/python; .venv/bin/python --version; cmake --version | head -n 1; clang --version | head -n 1; if command -v clang-tidy >/dev/null 2>&1; then clang-tidy --version | head -n 2; else echo 'clang-tidy: MISSING'; fi; if command -v node >/dev/null 2>&1; then node --version; else echo 'node: MISSING'; fi; if command -v pnpm >/dev/null 2>&1; then pnpm --version; else echo 'pnpm: MISSING'; fi; if bash -c 'source scripts/source_idf.sh >/dev/null 2>&1 && idf.py --version'; then :; else echo 'ESP-IDF: UNAVAILABLE'; fi",
+    "set -euo pipefail; echo '=== PYTHON + HOST QUALITY GATE ==='; .venv/bin/python -m pip check; .venv/bin/pre-commit run --all-files; .venv/bin/python -m pytest -q -m 'not hardware'; bash scripts/check_schema.sh; .venv/bin/python scripts/ml_quick_smoke.py; cmake -S test/host -B build/host-tests -DCMAKE_EXPORT_COMPILE_COMMANDS=ON; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests --output-on-failure; bash scripts/run_clang_tidy_host.sh; echo 'PYTHON_HOST_GATE_OK'",
+    "set -euo pipefail; echo '=== WEB GATE ==='; command -v pnpm >/dev/null 2>&1; pnpm --dir web install --frozen-lockfile; pnpm --dir web typecheck; pnpm --dir web lint; pnpm --dir web test; pnpm --dir web build; echo 'WEB_GATE_OK'",
+    "set -euo pipefail; echo '=== ESP-IDF BUILD GATE ==='; bash scripts/idf_gate_build.sh; echo 'ESP_IDF_BUILD_GATE_OK'",
+    "set -euo pipefail; echo '=== FINAL WORKTREE CHECK ==='; git status --short; test -z \"$(git status --porcelain --untracked-files=no)\"; echo 'LOCAL_CI_BASELINE_OK'"
+  ]
+}
