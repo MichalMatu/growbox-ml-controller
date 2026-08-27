@@ -1,6 +1,6 @@
 """Portable climate-v6 MLP artifact and NumPy inference.
 
-The artifact stores the exact float32 weights of the selected 38->32->32->6
+The artifact stores exact float32 weights for a two-hidden-layer 38 -> H1 -> H2 -> 6
 Keras model plus contract identity. NumPy inference is deliberately independent
 of TensorFlow so closed-loop benchmarks and later embedded export exercise the
 persisted model rather than an in-memory training object.
@@ -17,14 +17,6 @@ from typing import Any
 
 import numpy as np
 
-_EXPECTED_SHAPES = (
-    (38, 32),
-    (32,),
-    (32, 32),
-    (32,),
-    (32, 6),
-    (6,),
-)
 _WEIGHT_KEYS = ("w1", "b1", "w2", "b2", "w3", "b3")
 
 
@@ -63,6 +55,37 @@ class ClimateModelMetadata:
             raise ValueError("source_commit is required")
 
 
+def _validate_weight_arrays(weights: tuple[np.ndarray, ...]) -> None:
+    if len(weights) != len(_WEIGHT_KEYS):
+        raise ValueError("portable climate model must contain six weight arrays")
+
+    arrays = tuple(np.asarray(value) for value in weights)
+    w1, b1, w2, b2, w3, b3 = arrays
+
+    if w1.ndim != 2 or w1.shape[0] != 38 or w1.shape[1] <= 0:
+        raise ValueError(f"weight 0 has shape {w1.shape}, expected (38, H1)")
+    hidden_1 = int(w1.shape[1])
+    if b1.shape != (hidden_1,):
+        raise ValueError(f"weight 1 has shape {b1.shape}, expected ({hidden_1},)")
+
+    if w2.ndim != 2 or w2.shape[0] != hidden_1 or w2.shape[1] <= 0:
+        raise ValueError(f"weight 2 has shape {w2.shape}, expected ({hidden_1}, H2)")
+    hidden_2 = int(w2.shape[1])
+    if b2.shape != (hidden_2,):
+        raise ValueError(f"weight 3 has shape {b2.shape}, expected ({hidden_2},)")
+
+    if w3.shape != (hidden_2, 6):
+        raise ValueError(f"weight 4 has shape {w3.shape}, expected ({hidden_2}, 6)")
+    if b3.shape != (6,):
+        raise ValueError(f"weight 5 has shape {b3.shape}, expected (6,)")
+
+    for index, value in enumerate(arrays):
+        if value.dtype != np.float32:
+            raise ValueError(f"weight {index} must be float32")
+        if not np.isfinite(value).all():
+            raise ValueError(f"weight {index} contains NaN/Inf")
+
+
 @dataclass(frozen=True)
 class ClimatePortableModel:
     metadata: ClimateModelMetadata
@@ -70,20 +93,15 @@ class ClimatePortableModel:
 
     def __post_init__(self) -> None:
         self.metadata.validate()
-        if len(self.weights) != len(_EXPECTED_SHAPES):
-            raise ValueError("portable climate model must contain six weight arrays")
-        for index, (array, shape) in enumerate(zip(self.weights, _EXPECTED_SHAPES, strict=True)):
-            value = np.asarray(array)
-            if value.shape != shape:
-                raise ValueError(f"weight {index} has shape {value.shape}, expected {shape}")
-            if value.dtype != np.float32:
-                raise ValueError(f"weight {index} must be float32")
-            if not np.isfinite(value).all():
-                raise ValueError(f"weight {index} contains NaN/Inf")
+        _validate_weight_arrays(self.weights)
 
     @property
     def parameter_count(self) -> int:
         return int(sum(array.size for array in self.weights))
+
+    @property
+    def hidden_units(self) -> tuple[int, int]:
+        return int(self.weights[0].shape[1]), int(self.weights[2].shape[1])
 
     def predict(self, features: np.ndarray) -> np.ndarray:
         values = np.asarray(features, dtype=np.float32)
@@ -109,13 +127,10 @@ class ClimatePortableModel:
 def from_keras_model(model: Any, metadata: ClimateModelMetadata) -> ClimatePortableModel:
     metadata.validate()
     raw_weights = model.get_weights()
-    if len(raw_weights) != len(_EXPECTED_SHAPES):
+    if len(raw_weights) != len(_WEIGHT_KEYS):
         raise ValueError("unexpected Keras weight array count for climate-v6 MLP")
     weights = tuple(np.asarray(value, dtype=np.float32) for value in raw_weights)
-    portable = ClimatePortableModel(metadata=metadata, weights=weights)
-    if portable.parameter_count != 2502:
-        raise ValueError(f"unexpected climate-v6 parameter count: {portable.parameter_count}")
-    return portable
+    return ClimatePortableModel(metadata=metadata, weights=weights)
 
 
 def save_portable_model(
