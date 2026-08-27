@@ -1,0 +1,13 @@
+{
+  "id": "20260827-growbox-idf-clang-check-v1",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "command_timeout": 3600,
+  "idle_timeout": 1200,
+  "task_timeout": 7200,
+  "memory_limit_mb": 6144,
+  "commands": [
+    "set -euo pipefail; EXPECTED=4e376aeddf8dfdfbdcb09dd41e9f2a992feca1a4; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain --untracked-files=no)\"; echo '=== ESP-CLANG INSTALL/CHECK ==='; env -u VIRTUAL_ENV -u IDF_PATH -u IDF_PYTHON_ENV_PATH PATH='/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin' HOME=\"$HOME\" /bin/bash --noprofile --norc -c 'set -euo pipefail; source \"$HOME/esp/esp-idf/export.sh\"; python \"$IDF_PATH/tools/idf_tools.py\" install esp-clang; source \"$IDF_PATH/export.sh\"; IDF_TOOLCHAIN=clang idf.py -B build/idf-clang-check -D GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n8 clang-check --exit-code src'; test -z \"$(git status --porcelain --untracked-files=no)\"; echo 'ESP_IDF_CLANG_CHECK_OK'"
+  ]
+}
