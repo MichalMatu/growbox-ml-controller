@@ -23,6 +23,7 @@ from .climate_input import (
 )
 from .climate_model_artifact import ClimatePortableModel, load_portable_model
 from .climate_policy import (
+    ClimateRulePolicy,
     apply_climate_safety,
     apply_ml_request_deadzone,
     arbitrate_climate_action,
@@ -30,7 +31,6 @@ from .climate_policy import (
 from .climate_scenarios import ClimateTrainingEpisode, structured_training_episodes
 from .climate_simulator import CLIMATE_OUTPUT_NAMES, ClimateAction, ClimateSimulator
 from .climate_teacher import ClimateRolloutTeacher
-from .climate_policy import ClimateRulePolicy
 
 AUDIT_POLICIES = ("rule", "teacher", "ml_stage10", "ml_stage11")
 DEADZONE = 0.05
@@ -150,13 +150,17 @@ def _policy_actions(
             sensor_timeout_ms=config.sensor_timeout_ms,
         )
     elif policy == "teacher":
-        action = ClimateRolloutTeacher().choose(
-            simulator,
-            profile.targets,
-            humidity_control_mode=profile.humidity_control_mode,
-            status=status,
-            sensor_timeout_ms=config.sensor_timeout_ms,
-        ).action
+        action = (
+            ClimateRolloutTeacher()
+            .choose(
+                simulator,
+                profile.targets,
+                humidity_control_mode=profile.humidity_control_mode,
+                status=status,
+                sensor_timeout_ms=config.sensor_timeout_ms,
+            )
+            .action
+        )
     else:
         raise ValueError(f"unsupported CO2 audit policy: {policy!r}")
     return action, action, status
@@ -325,9 +329,7 @@ def _aggregate(rows: list[Co2EpisodeMetrics]) -> dict[str, float | int]:
         "raw_co2_mean": weighted("raw_co2_mean"),
         "requested_co2_mean": weighted("requested_co2_mean"),
         "applied_co2_mean": weighted("applied_co2_mean"),
-        "co2_dose_command_seconds_per_episode": sum(
-            row.co2_dose_command_seconds for row in rows
-        )
+        "co2_dose_command_seconds_per_episode": sum(row.co2_dose_command_seconds for row in rows)
         / len(rows),
         "exhaust_co2_product_mean": weighted("exhaust_co2_product_mean"),
         "co2_delta_exhaust_on_ppm": (
@@ -420,9 +422,7 @@ def run_audit(
         ("co2_doser_unavailable", lambda row: not row.co2_doser_available),
     ):
         capability_groups[label] = {
-            policy: _aggregate(
-                [row for row in rows if row.policy == policy and predicate(row)]
-            )
+            policy: _aggregate([row for row in rows if row.policy == policy and predicate(row)])
             for policy in AUDIT_POLICIES
         }
 
