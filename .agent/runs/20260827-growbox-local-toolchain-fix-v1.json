@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 1,
+  "index": 2,
   "total": 2,
-  "command": "set -euo pipefail; echo '=== INSTALL PINNED PNPM ==='; PREFIX=\"$(npm config get prefix)\"; echo \"npm_prefix=$PREFIX\"; npm install --global pnpm@11.10.0; command -v pnpm; test \"$(pnpm --version)\" = \"11.10.0\"; echo 'PNPM_READY'",
-  "pid": 57495,
+  "command": "set -euo pipefail; echo '=== ESP-IDF DIAGNOSTIC ==='; IDF=\"$HOME/esp/esp-idf\"; test -d \"$IDF/.git\"; git -C \"$IDF\" rev-parse --short HEAD; git -C \"$IDF\" describe --tags --always --dirty; set +e; source \"$IDF/export.sh\"; RC=$?; set -e; echo \"export_rc=$RC\"; echo \"IDF_PATH=${IDF_PATH:-}\"; command -v idf.py || true; if command -v idf.py >/dev/null 2>&1; then idf.py --version; fi; if [ \"$RC\" -ne 0 ] || ! command -v idf.py >/dev/null 2>&1; then echo '=== FALLBACK IDF 5.5.4 ==='; IDF=\"$HOME/esp/esp-idf-v5.5.4\"; test -f \"$IDF/export.sh\"; source \"$IDF/export.sh\"; command -v idf.py; idf.py --version; fi; echo 'IDF_DIAGNOSTIC_OK'",
+  "pid": 57547,
   "timeout": 1800,
   "idle_timeout": 600,
   "memory_limit_mb": 4096,
-  "started_at": "2026-08-27T16:26:04.908954+00:00",
-  "stage_name": "command-1",
-  "stage_index": 1,
+  "started_at": "2026-08-27T16:26:11.097776+00:00",
+  "stage_name": "command-2",
+  "stage_index": 2,
   "stage_total": 2,
   "stage_phase": "commands",
   "task_id": "20260827-growbox-local-toolchain-fix-v1",
@@ -18,5 +18,5 @@
   "task_digest": "843b35a235dbf1d0aa90dba05e42e124e55a062abf1c02dafeeaf45e98ce2264",
   "daemon_version": "4.10.2",
   "daemon_pid": 57447,
-  "updated_at": "2026-08-27T16:26:04.909641+00:00"
+  "updated_at": "2026-08-27T16:26:11.144925+00:00"
 }
