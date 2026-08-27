@@ -23,7 +23,7 @@ from .climate_input import (
     MeasurementStatus,
 )
 from .climate_simulator import ClimateAction, ClimateSimulator
-from .climate_teacher import ClimateRolloutTeacher, ClimateTeacherCost
+from .climate_teacher import ClimateRolloutTeacher, ClimateTeacherConfig, ClimateTeacherCost
 
 DEFAULT_MOVE_BLOCK_STEPS: tuple[int, ...] = (1, 1, 1, 1, 2, 2, 3, 4, 5, 10)
 
@@ -59,7 +59,9 @@ class ClimateSequenceTeacherConfig:
             )
 
     @classmethod
-    def full_sequence(cls, *, horizon_s: float = 300.0, rollout_dt_s: float = 10.0) -> "ClimateSequenceTeacherConfig":
+    def full_sequence(
+        cls, *, horizon_s: float = 300.0, rollout_dt_s: float = 10.0
+    ) -> "ClimateSequenceTeacherConfig":
         horizon_steps = horizon_s / rollout_dt_s
         rounded_steps = int(round(horizon_steps))
         if not math.isclose(horizon_steps, rounded_steps, rel_tol=0.0, abs_tol=1.0e-9):
@@ -93,7 +95,14 @@ class ClimateSequenceRolloutTeacher:
     ) -> None:
         self.cost = cost or ClimateTeacherCost()
         self.config = config or ClimateSequenceTeacherConfig()
-        self._constant_teacher = ClimateRolloutTeacher(cost=self.cost)
+        self._constant_teacher = ClimateRolloutTeacher(
+            cost=self.cost,
+            config=ClimateTeacherConfig(
+                horizon_s=self.config.horizon_s,
+                rollout_dt_s=self.config.rollout_dt_s,
+                coordinate_passes=2,
+            ),
+        )
 
     def choose(
         self,
