@@ -153,8 +153,13 @@ def build_climate_model(*, config: ClimateTrainingConfig) -> Any:
         ],
         name="growbox_climate_v6_controller",
     )
-    if model.count_params() != 2502:
-        raise AssertionError(f"unexpected climate-v6 parameter count: {model.count_params()}")
+    hidden_units = int(config.hidden_units)
+    expected_params = hidden_units * hidden_units + 46 * hidden_units + 6
+    if model.count_params() != expected_params:
+        raise AssertionError(
+            "unexpected climate-v6 parameter count: "
+            f"{model.count_params()} != {expected_params} for hidden_units={hidden_units}"
+        )
     return model
 
 
