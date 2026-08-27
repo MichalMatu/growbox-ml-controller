@@ -6,6 +6,7 @@ on:
       - mvp/environment-controller
     paths:
       - ".github/workflows/stage11-format-cleanup.yml"
+      - "tools/ml/climate_co2_audit.py"
 
 permissions:
   contents: write
@@ -49,5 +50,5 @@ jobs:
             echo "No formatting changes required"
             exit 0
           fi
-          git commit -m "Format distributed climate tooling"
+          git commit -m "Format climate diagnostic tooling"
           git push origin HEAD:mvp/environment-controller
