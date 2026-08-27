@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260827-growbox-web-gate-v1",
+  "task_digest": "68c87c0a426c7b05404428de3e4f6b22283c1223f8a5c42279d7b86835926f5c",
+  "idle_timeout": 600,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-27T16:29:06.937462+00:00",
+  "attempt_id": "57d308430e3de3cf5e87f59c",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 58329,
+  "updated_at": "2026-08-27T16:29:06.937671+00:00",
+  "pid": 58329
+}
