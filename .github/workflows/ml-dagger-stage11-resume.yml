@@ -1,0 +1,175 @@
+name: ML DAgger Stage 11 Resume
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - mvp/environment-controller
+    paths:
+      - ".github/workflows/ml-dagger-stage11-resume.yml"
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: ml-stage11-resume-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONPATH: "."
+  PYTHONHASHSEED: "0"
+  TF_DETERMINISTIC_OPS: "1"
+  TF_CPP_MIN_LOG_LEVEL: "2"
+  OMP_NUM_THREADS: "1"
+  OPENBLAS_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  SOURCE_RUN_ID: "33063179811"
+
+jobs:
+  train-missing-candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        hidden: [64, 96]
+    steps:
+      - name: Check out source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-lock.txt
+
+      - name: Install pinned dependencies
+        run: python -m pip install -r requirements-lock.txt
+
+      - name: Download frozen Stage 11 dataset
+        uses: actions/download-artifact@v4
+        with:
+          name: stage11-dataset
+          path: build/stage11
+          repository: MichalMatu/growbox-ml-controller
+          run-id: ${{ env.SOURCE_RUN_ID }}
+          github-token: ${{ github.token }}
+
+      - name: Validate width-aware model contract
+        run: |
+          python - <<'PY'
+          from tools.ml.climate_training import ClimateTrainingConfig, build_climate_model
+
+          expected = {32: 2502, 64: 7046, 96: 13638}
+          for hidden, params in expected.items():
+              model = build_climate_model(config=ClimateTrainingConfig(hidden_units=hidden))
+              assert model.count_params() == params, (hidden, model.count_params(), params)
+          print("STAGE11_WIDTH_CONTRACT=PASS")
+          PY
+
+      - name: Train and dev-benchmark candidate
+        run: |
+          python tools/ml/run_dagger_distributed.py train \
+            --dataset build/stage11/dataset.npz \
+            --hidden-units ${{ matrix.hidden }} \
+            --epochs 36 \
+            --workers 4 \
+            --output-dir build/stage11/candidate-${{ matrix.hidden }}
+
+      - name: Upload candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage11-candidate-${{ matrix.hidden }}
+          path: build/stage11/candidate-${{ matrix.hidden }}/*
+          if-no-files-found: error
+          retention-days: 7
+
+  final-held-out:
+    needs: train-missing-candidate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-lock.txt
+
+      - name: Install pinned dependencies
+        run: python -m pip install -r requirements-lock.txt
+
+      - name: Download frozen Stage 11 dataset
+        uses: actions/download-artifact@v4
+        with:
+          name: stage11-dataset
+          path: build/stage11
+          repository: MichalMatu/growbox-ml-controller
+          run-id: ${{ env.SOURCE_RUN_ID }}
+          github-token: ${{ github.token }}
+
+      - name: Download completed 32-wide candidate
+        uses: actions/download-artifact@v4
+        with:
+          name: stage11-candidate-32
+          path: build/stage11/candidates
+          repository: MichalMatu/growbox-ml-controller
+          run-id: ${{ env.SOURCE_RUN_ID }}
+          github-token: ${{ github.token }}
+
+      - name: Download resumed candidates
+        uses: actions/download-artifact@v4
+        with:
+          pattern: stage11-candidate-*
+          path: build/stage11/candidates
+          merge-multiple: true
+
+      - name: Select on dev and run new held-out once
+        run: |
+          python tools/ml/run_dagger_distributed.py final \
+            --dataset build/stage11/dataset.npz \
+            --candidate-reports build/stage11/candidates/candidate-h*-report.json \
+            --candidate-root build/stage11/candidates \
+            --workers 4 \
+            --output-report reports/ml/climate_v6_stage11_distributed.json \
+            --output-weights reports/ml/climate_v6_model_stage11_candidate.npz \
+            --output-metadata reports/ml/climate_v6_model_stage11_candidate.json
+
+      - name: Run focused regression
+        run: |
+          pytest -q \
+            tests/test_climate_training.py \
+            tests/test_climate_training_weighted.py \
+            tests/test_climate_dagger_distributed.py
+
+      - name: Upload final Stage 11 artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage11-final
+          path: |
+            reports/ml/climate_v6_stage11_distributed.json
+            reports/ml/climate_v6_model_stage11_candidate.npz
+            reports/ml/climate_v6_model_stage11_candidate.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Commit final Stage 11 report
+        if: github.ref == 'refs/heads/mvp/environment-controller'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            reports/ml/climate_v6_stage11_distributed.json \
+            reports/ml/climate_v6_model_stage11_candidate.npz \
+            reports/ml/climate_v6_model_stage11_candidate.json
+          if git diff --cached --quiet; then
+            echo "No Stage 11 artifact changes to commit"
+            exit 0
+          fi
+          git commit -m "Run resumed distributed climate architecture search"
+          git push origin HEAD:mvp/environment-controller
