@@ -2,8 +2,8 @@
   "version": 1,
   "daemon_version": "4.10.2",
   "state": "idle",
-  "pid": 44532,
-  "updated_at": "2026-08-27T14:57:47.584795+00:00",
+  "pid": 55716,
+  "updated_at": "2026-08-27T16:23:39.631293+00:00",
   "self_revision": "907fd342b1e5f0e3fb4006c2933ef5a00f426376",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -22,6 +22,7 @@
   "control_branch": "agent-control",
   "default_branch": "main",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 44532,
-  "supervisor_pid": 1293
+  "worker_pid": 55716,
+  "supervisor_pid": 1293,
+  "last_task_id": "20260827-growbox-local-ci-baseline-v1"
 }
