@@ -18,6 +18,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  PYTHONPATH: "."
   PYTHONHASHSEED: "0"
   TF_DETERMINISTIC_OPS: "1"
   TF_CPP_MIN_LOG_LEVEL: "2"
