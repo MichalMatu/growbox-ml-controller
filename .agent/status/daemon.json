@@ -2,8 +2,8 @@
   "version": 1,
   "daemon_version": "4.10.0",
   "state": "idle",
-  "pid": 89429,
-  "updated_at": "2026-08-27T10:02:27.710565+00:00",
+  "pid": 99506,
+  "updated_at": "2026-08-27T10:19:55.053444+00:00",
   "self_revision": "1a6e73c1aa58421158492b5c5b365493a7c90eea",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -22,7 +22,7 @@
   "control_branch": "agent-control",
   "default_branch": "main",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 89429,
+  "worker_pid": 99506,
   "supervisor_pid": 17932,
-  "last_task_id": "20260827-growbox-mvp-stage10-overnight-dagger-v4"
+  "last_task_id": "20260827-docs-local-agent-current"
 }
