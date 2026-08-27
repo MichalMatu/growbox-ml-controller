@@ -15,8 +15,8 @@ from tools.ml.climate_benchmark import ClimateBenchmarkConfig, run_closed_loop_b
 from tools.ml.climate_dagger import (
     DaggerCollectionConfig,
     DaggerRows,
-    _EpisodeWork,
     _collect_episode,
+    _EpisodeWork,
     append_train_only,
     frozen_split_fingerprint,
 )
@@ -207,14 +207,12 @@ def merge_shards(paths: list[Path], *, expected_rows: int) -> DaggerRows:
     permutation = np.argsort(row_order, kind="stable")
 
     def cat_dataset(name: str) -> np.ndarray:
-        return np.concatenate(
-            [getattr(rows.dataset, name) for rows, _order in loaded], axis=0
-        )[permutation]
-
-    def cat_meta(name: str) -> np.ndarray:
-        return np.concatenate([getattr(rows, name) for rows, _order in loaded], axis=0)[
+        return np.concatenate([getattr(rows.dataset, name) for rows, _order in loaded], axis=0)[
             permutation
         ]
+
+    def cat_meta(name: str) -> np.ndarray:
+        return np.concatenate([getattr(rows, name) for rows, _order in loaded], axis=0)[permutation]
 
     dataset = Dataset(
         features=cat_dataset("features"),
@@ -296,9 +294,7 @@ def merge_with_base(
         "test_fingerprint": test_fp,
     }
     summary.parent.mkdir(parents=True, exist_ok=True)
-    summary.write_text(
-        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-    )
+    summary.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(
         f"STAGE11_MERGE base={payload['base_rows']} dagger={payload['dagger_rows']} "
         f"total={payload['total_rows']}",
@@ -307,9 +303,7 @@ def merge_with_base(
 
 
 def _training_spec():
-    return next(
-        spec for spec in DEFAULT_WEIGHTED_CANDIDATES if spec.name == "adam_huber_baseline"
-    )
+    return next(spec for spec in DEFAULT_WEIGHTED_CANDIDATES if spec.name == "adam_huber_baseline")
 
 
 def _portable_from_result(result, *, hidden_units: int):
@@ -389,9 +383,7 @@ def train_candidate(
         "metadata_file": metadata_path.name,
         "elapsed_seconds": time.monotonic() - started,
     }
-    report_path.write_text(
-        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-    )
+    report_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(
         f"STAGE11_CANDIDATE hidden={hidden_units} "
         f"val_control={result.validation.control_mae:.6f} "
@@ -411,9 +403,7 @@ def _copy_model(
     shutil.copy2(src_weights, dst_weights)
     metadata = json.loads(src_metadata.read_text(encoding="utf-8"))
     metadata["weights_file"] = dst_weights.name
-    dst_metadata.write_text(
-        json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-    )
+    dst_metadata.write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 def select_and_finalize(
@@ -428,9 +418,7 @@ def select_and_finalize(
 ) -> None:
     if not candidate_reports:
         raise ValueError("no Stage 11 candidate reports supplied")
-    candidates = [
-        json.loads(path.read_text(encoding="utf-8")) for path in candidate_reports
-    ]
+    candidates = [json.loads(path.read_text(encoding="utf-8")) for path in candidate_reports]
     winner = min(
         candidates,
         key=lambda item: tuple(float(value) for value in item["score"]),
@@ -487,9 +475,7 @@ def select_and_finalize(
         "candidate_metadata": str(output_metadata),
     }
     output_report.parent.mkdir(parents=True, exist_ok=True)
-    output_report.write_text(
-        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-    )
+    output_report.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     verdict = "PASS" if final.verdict.accepted else "NO_GO"
     print(f"STAGE11_SELECTED_HIDDEN={hidden_units}", flush=True)
     print(

@@ -16,12 +16,8 @@ from tools.ml.run_dagger_distributed import (
 def _rows(values: list[int]) -> DaggerRows:
     row_count = len(values)
     dataset = Dataset(
-        features=np.asarray(
-            [[float(value)] * 38 for value in values], dtype=np.float32
-        ),
-        labels=np.asarray(
-            [[float(value) / 10.0] * 6 for value in values], dtype=np.float32
-        ),
+        features=np.asarray([[float(value)] * 38 for value in values], dtype=np.float32),
+        labels=np.asarray([[float(value) / 10.0] * 6 for value in values], dtype=np.float32),
         scenario_ids=np.asarray([f"scenario-{value}" for value in values]),
         scenario_seeds=np.asarray(values, dtype=np.int64),
         splits=np.full(row_count, "train"),
@@ -38,9 +34,7 @@ def _rows(values: list[int]) -> DaggerRows:
     return DaggerRows(
         dataset=dataset,
         families=np.asarray([f"family-{value}" for value in values]),
-        humidity_modes=np.asarray(
-            ["RH" if value % 2 == 0 else "VPD" for value in values]
-        ),
+        humidity_modes=np.asarray(["RH" if value % 2 == 0 else "VPD" for value in values]),
         safe_fallbacks=np.asarray([False] * row_count, dtype=np.bool_),
     )
 
