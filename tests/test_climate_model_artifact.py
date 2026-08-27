@@ -37,11 +37,31 @@ def test_portable_model_matches_keras_predictions() -> None:
     portable = from_keras_model(keras_model, _metadata())
     features = np.random.default_rng(13).uniform(0.0, 1.0, size=(32, 38)).astype(np.float32)
     assert portable.parameter_count == 2502
+    assert portable.hidden_units == (32, 32)
     assert max_prediction_delta(keras_model, portable, features) <= 2.0e-6
     prediction = portable.predict(features)
     assert prediction.shape == (32, 6)
     assert np.isfinite(prediction).all()
     assert np.all((prediction >= 0.0) & (prediction <= 1.0))
+
+
+def test_portable_model_supports_wider_hidden_layers(tmp_path: Path) -> None:
+    config = ClimateTrainingConfig(seed=1847, epochs=1, batch_size=32, hidden_units=64)
+    keras_model = build_climate_model(config=config)
+    portable = from_keras_model(keras_model, _metadata())
+    features = np.random.default_rng(17).uniform(0.0, 1.0, size=(16, 38)).astype(np.float32)
+
+    assert portable.parameter_count == 7046
+    assert portable.hidden_units == (64, 64)
+    assert max_prediction_delta(keras_model, portable, features) <= 2.0e-6
+
+    weights_path = tmp_path / "wide-model.npz"
+    metadata_path = tmp_path / "wide-model.json"
+    save_portable_model(portable, weights_path, metadata_path)
+    loaded = load_portable_model(weights_path, metadata_path)
+    assert loaded.hidden_units == (64, 64)
+    assert loaded.parameter_count == 7046
+    np.testing.assert_array_equal(loaded.predict(features), portable.predict(features))
 
 
 def test_portable_model_round_trip(tmp_path: Path) -> None:
