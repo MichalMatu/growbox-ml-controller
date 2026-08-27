@@ -1,0 +1,9 @@
+{
+  "event": "invalid_task_rejected",
+  "status": "failed",
+  "failure_reason": "invalid_task_file",
+  "updated_at": "2026-08-27T00:03:19.921601+00:00",
+  "task_id": "20260827-growbox-mvp-stage10-overnight-dagger-v2",
+  "daemon_version": "4.10.0",
+  "pid": 32210
+}
