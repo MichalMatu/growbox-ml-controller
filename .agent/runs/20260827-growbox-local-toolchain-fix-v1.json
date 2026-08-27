@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260827-growbox-local-toolchain-fix-v1",
+  "task_digest": "843b35a235dbf1d0aa90dba05e42e124e55a062abf1c02dafeeaf45e98ce2264",
+  "idle_timeout": 600,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-27T16:26:02.264232+00:00",
+  "attempt_id": "60fde5e1e89317bcecd66780",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 57447,
+  "updated_at": "2026-08-27T16:26:02.264512+00:00",
+  "pid": 57447
+}
