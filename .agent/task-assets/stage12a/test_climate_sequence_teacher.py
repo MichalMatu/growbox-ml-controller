@@ -11,6 +11,7 @@ from tools.ml.climate_sequence_teacher import (
     DEFAULT_MOVE_BLOCK_STEPS,
 )
 from tools.ml.climate_simulator import (
+    ClimateAction,
     ClimateActuatorCapabilities,
     ClimateEnvironmentParameters,
     ClimateResponseLag,
