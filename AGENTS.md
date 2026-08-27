@@ -1,8 +1,8 @@
 # Agent notes — Growbox ML
 
-## Local Agent v4.6 — repository workflow
+## Local Agent — repository workflow
 
-This repository is registered in the shared `MichalMatu/local-agent` v4.6 multi-repository supervisor.
+This repository is registered in the shared `MichalMatu/local-agent` multi-repository supervisor. Read the live daemon version, revision and execution model from `.agent/status/daemon.json` on `agent-control`; do not hard-code a Local Agent release number in this repository.
 
 Repository identity:
 
@@ -30,6 +30,8 @@ When starting work on this repository in a new chat/session:
 `agent-control` is a control plane, not a development branch. Product/source changes belong on the requested source/work branch. The control branch is reserved for Local Agent queue, status, run, result, and daemon-control files under `.agent/`.
 
 The canonical Local Agent implementation and operational documentation live in `MichalMatu/local-agent`. If the control protocol changes, update this bootstrap section so future chats do not depend on remembered conversation context.
+
+For substantial coding tasks, prefer `workflow_policy: "efficient-verification-v1"` with explicit `work` / `focused` stages and exactly one final `full` verification stage. Task payloads are immutable: a claimed or interrupted task is not replayed automatically, so changed work or an intentional retry must use a new unique task id. A successful local task proves execution and verification; source publication remains an explicit final step.
 
 ## Panel UI (`tools/panel/static/`) — układ pól
 
