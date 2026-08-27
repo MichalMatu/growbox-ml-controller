@@ -48,6 +48,9 @@ jobs:
       - name: Install pinned dependencies
         run: python -m pip install -r requirements-lock.txt
 
+      - name: Verify portable width support
+        run: pytest -q tests/test_climate_model_artifact.py
+
       - name: Download frozen Stage 11 dataset
         uses: actions/download-artifact@v4
         with:
@@ -143,6 +146,7 @@ jobs:
       - name: Run focused regression
         run: |
           pytest -q \
+            tests/test_climate_model_artifact.py \
             tests/test_climate_training.py \
             tests/test_climate_training_weighted.py \
             tests/test_climate_dagger_distributed.py
