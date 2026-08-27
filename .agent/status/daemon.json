@@ -2,8 +2,8 @@
   "version": 1,
   "daemon_version": "4.10.2",
   "state": "idle",
-  "pid": 58720,
-  "updated_at": "2026-08-27T21:48:58.670282+00:00",
+  "pid": 65762,
+  "updated_at": "2026-08-27T22:10:27.358038+00:00",
   "self_revision": "907fd342b1e5f0e3fb4006c2933ef5a00f426376",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -22,6 +22,6 @@
   "control_branch": "agent-control",
   "default_branch": "main",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 58720,
+  "worker_pid": 65762,
   "supervisor_pid": 1293
 }
