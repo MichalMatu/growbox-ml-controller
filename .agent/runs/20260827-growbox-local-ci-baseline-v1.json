@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260827-growbox-local-ci-baseline-v1",
+  "task_digest": "5b05d9b62c7c41de3d094fea793aafa9ade9405b4c1991c89636139f42fdd5dd",
+  "idle_timeout": 1200,
+  "task_timeout": 10800,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-27T16:15:17.034008+00:00",
+  "attempt_id": "05f431c72d0a52720c3d08b9",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 55716,
+  "updated_at": "2026-08-27T16:15:17.034310+00:00",
+  "pid": 55716
+}
