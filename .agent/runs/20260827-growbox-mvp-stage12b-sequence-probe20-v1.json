@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260827-growbox-mvp-stage12b-sequence-probe20-v1",
+  "task_digest": "47857ff5ed709c59ed603b2c00a280c545abf36c2ab82b9e99a7cf1cd8d2d844",
+  "idle_timeout": 1800,
+  "task_timeout": 10800,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-27T17:01:58.952423+00:00",
+  "attempt_id": "4ec9df581298e66c7ab4a988",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 68952,
+  "updated_at": "2026-08-27T17:01:58.952606+00:00",
+  "pid": 68952
+}
