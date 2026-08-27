@@ -1,0 +1,13 @@
+{
+  "id": "20260827-growbox-web-gate-v1",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "command_timeout": 1800,
+  "idle_timeout": 600,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "set -euo pipefail; EXPECTED=4e376aeddf8dfdfbdcb09dd41e9f2a992feca1a4; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain --untracked-files=no)\"; test \"$(pnpm --version)\" = '11.10.0'; echo '=== WEB GATE ==='; pnpm --dir web install --frozen-lockfile; pnpm --dir web typecheck; pnpm --dir web lint; pnpm --dir web test; pnpm --dir web build; test -z \"$(git status --porcelain --untracked-files=no)\"; echo 'WEB_GATE_OK'"
+  ]
+}
