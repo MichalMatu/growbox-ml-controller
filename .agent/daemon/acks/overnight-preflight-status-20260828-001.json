@@ -1,0 +1,12 @@
+{
+  "id": "overnight-preflight-status-20260828-001",
+  "action": "status",
+  "status": "completed",
+  "daemon_version": "4.10.2",
+  "updated_at": "2026-08-27T23:37:03.530890+00:00",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "control_branch": "agent-control",
+  "default_branch": "main",
+  "result": "status_published"
+}
