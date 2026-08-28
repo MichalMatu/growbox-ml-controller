@@ -31,6 +31,7 @@ add_executable(
   climate_v6_tests
   "${PROJECT_ROOT}/test/test_climate_v6/test_main.cpp"
   "${PROJECT_ROOT}/lib/environment_control/src/climate/ClimateFeatureEncoder.cpp"
+  "${PROJECT_ROOT}/lib/environment_control/src/climate/ClimateRuntimeController.cpp"
   "${PROJECT_ROOT}/lib/environment_control/src/climate/ClimateTrendEstimator.cpp"
 )
 target_include_directories(climate_v6_tests PRIVATE "${PROJECT_ROOT}/lib/environment_control/src/climate")
