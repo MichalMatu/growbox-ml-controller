@@ -1,0 +1,58 @@
+{
+  "id": "20260828-growbox-stage14b-residual-bound-sweep-v1",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "started_at": "2026-08-28T04:19:18.861397+00:00",
+  "command_timeout": 1800,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; EXPECTED=34d164cd7b5a68ed7b46228e7aef8539c7539c6e; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; rm -f warnings.txt; test -z \"$(git status --porcelain)\"; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/stage14/stage14b_residual_bound_sweep.py > /tmp/stage14b-residual-bound-sweep.py; .venv/bin/python -m py_compile /tmp/stage14b-residual-bound-sweep.py; PYTHONPATH=. .venv/bin/python /tmp/stage14b-residual-bound-sweep.py; test -z \"$(git status --porcelain)\"",
+      "exit_code": 0,
+      "output": "From https://github.com/MichalMatu/growbox-ml-controller\n * branch            agent-control -> FETCH_HEAD\n   855612e..0d87074  agent-control -> origin/agent-control\nSTAGE14B_JSON={\"bounds\": {\"0.10\": {\"headroom_to_projection_floor\": 0.01806417852640152, \"improvement_vs_rule_fraction\": 0.005034969345025472, \"oracle_projection_floor_mae\": 0.11375818401575089, \"validation_action_mae\": 0.1318223625421524, \"validation_action_mae_by_output\": {\"co2_doser\": 0.06226649135351181, \"cooler\": 0.26962804794311523, \"dehumidifier\": 0.007178245112299919, \"exhaust_fan\": 0.23070089519023895, \"heater\": 0.16990803182125092, \"humidifier\": 0.05125243961811066}}, \"0.20\": {\"headroom_to_projection_floor\": 0.03413565456867218, \"improvement_vs_rule_fraction\": 0.009647274343576852, \"oracle_projection_floor_mae\": 0.09707562625408173, \"validation_action_mae\": 0.1312112808227539, \"validation_action_mae_by_output\": {\"co2_doser\": 0.06014149636030197, \"cooler\": 0.266478955745697, \"dehumidifier\": 0.011335168033838272, \"exhaust_fan\": 0.22526991367340088, \"heater\": 0.17009279131889343, \"humidifier\": 0.05394941568374634}}, \"0.35\": {\"headroom_to_projection_floor\": 0.05709175020456314, \"improvement_vs_rule_fraction\": 0.016632483115920253, \"oracle_projection_floor_mae\": 0.07319406419992447, \"validation_action_mae\": 0.1302858144044876, \"validation_action_mae_by_output\": {\"co2_doser\": 0.06144178658723831, \"cooler\": 0.2606906294822693, \"dehumidifier\": 0.017545856535434723, \"exhaust_fan\": 0.21679151058197021, \"heater\": 0.1679237335920334, \"humidifier\": 0.05732136219739914}}, \"0.50\": {\"headroom_to_projection_floor\": 0.07333138212561607, \"improvement_vs_rule_fraction\": 0.05154041921824866, \"oracle_projection_floor_mae\": 0.052329499274492264, \"validation_action_mae\": 0.12566088140010834, \"validation_action_mae_by_output\": {\"co2_doser\": 0.05650459975004196, \"cooler\": 0.24049673974514008, \"dehumidifier\": 0.015231972560286522, \"exhaust_fan\": 0.2097814381122589, \"heater\": 0.16734513640403748, \"humidifier\": 0.06460544466972351}}, \"1.00\": {\"headroom_to_projection_floor\": 0.12326744921781399, \"improvement_vs_rule_fraction\": 0.06960549603113905, \"oracle_projection_floor_mae\": 2.207579397062176e-10, \"validation_action_mae\": 0.12326744943857193, \"validation_action_mae_by_output\": {\"co2_doser\": 0.06976192444562912, \"cooler\": 0.24542252719402313, \"dehumidifier\": 0.03827116638422012, \"exhaust_fan\": 0.16911280155181885, \"heater\": 0.13990744948387146, \"humidifier\": 0.07712884992361069}}}, \"experiment\": \"stage14b_sequence_oracle_residual_bound_sweep\", \"rows\": 180, \"rule_validation_action_mae\": 0.13248944282531738, \"scenarios_per_family\": 4, \"seed\": 141421, \"sequence_evaluations_per_row\": 300.9, \"split_rows\": {\"test_reserved_uninspected\": 45, \"train\": 90, \"validation\": 45}, \"steps_per_scenario\": 3, \"test_metrics_evaluated\": false, \"validation_family_counts\": {\"actuator_missing\": 3, \"co2_enrichment\": 3, \"co2_unavailable\": 3, \"cold_heating\": 3, \"day_light_load\": 3, \"day_to_night\": 3, \"dry_humidification\": 3, \"dry_vpd_control\": 3, \"hot_cooling\": 3, \"humid_dehumidification\": 3, \"humid_vpd_control\": 3, \"night_to_day\": 3, \"outside_harmful\": 3, \"outside_helpful\": 3, \"sensor_fault\": 3}, \"wall_seconds\": 960.1885972910095, \"winner_beats_rule\": true, \"winner_bound\": 1.0, \"winner_validation_action_mae\": 0.12326744943857193}\n",
+      "elapsed_seconds": 963.577,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 8192,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 331.69,
+      "current_rss_mb": 331.69,
+      "stage_name": "run-stage14b-residual-bound-sweep",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "stage_timeout": 1800
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "run-stage14b-residual-bound-sweep",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 963.577
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.138
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 1.096
+  },
+  "finished_at": "2026-08-28T04:35:26.323465+00:00",
+  "task_digest": "55911bd7b3886f5c0c0e67e551355cf0b1b1b55d66c6f63ad1d68c19867eab8c",
+  "idle_timeout": 1200,
+  "task_timeout": 2400,
+  "memory_limit_mb": 8192,
+  "attempt_id": "08b52660a046c7b01ea9c8ae",
+  "daemon_version": "4.10.2"
+}
