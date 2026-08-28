@@ -1,0 +1,59 @@
+{
+  "id": "20260828-growbox-stage14e-projected-residual-smoothing-audit-v1",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "started_at": "2026-08-28T05:19:56.901073+00:00",
+  "command_timeout": 3600,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; EXPECTED=34d164cd7b5a68ed7b46228e7aef8539c7539c6e; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; rm -f warnings.txt; test -z \"$(git status --porcelain)\"; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/stage14/stage14d_residual_intervention_audit.py > /tmp/stage14d-residual-intervention-audit.py; git show origin/agent-control:.agent/task-assets/stage14/stage14e_projected_residual_smoothing_audit.py > /tmp/stage14e-projected-residual-smoothing-audit.py; .venv/bin/python -m py_compile /tmp/stage14d-residual-intervention-audit.py /tmp/stage14e-projected-residual-smoothing-audit.py; PYTHONPATH=. .venv/bin/python /tmp/stage14e-projected-residual-smoothing-audit.py; test -z \"$(git status --porcelain)\"",
+      "exit_code": 1,
+      "output": "From https://github.com/MichalMatu/growbox-ml-controller\n * branch            agent-control -> FETCH_HEAD\n   ebfd827..78c6af2  agent-control -> origin/agent-control\nTraceback (most recent call last):\n  File \"/tmp/stage14e-projected-residual-smoothing-audit.py\", line 27, in <module>\n    spec.loader.exec_module(base)\n    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"<frozen importlib._bootstrap_external>\", line 1027, in exec_module\n  File \"<frozen importlib._bootstrap>\", line 488, in _call_with_frames_removed\n  File \"/tmp/stage14d-residual-intervention-audit.py\", line 46, in <module>\n    @dataclass(frozen=True)\n     ~~~~~~~~~^^^^^^^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.13/3.13.9_1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/dataclasses.py\", line 1295, in wrap\n    return _process_class(cls, init, repr, eq, order, unsafe_hash,\n                          frozen, match_args, kw_only, slots,\n                          weakref_slot)\n  File \"/opt/homebrew/Cellar/python@3.13/3.13.9_1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/dataclasses.py\", line 997, in _process_class\n    and _is_type(type, cls, dataclasses, dataclasses.KW_ONLY,\n        ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                 _is_kw_only))):\n                 ^^^^^^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.13/3.13.9_1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/dataclasses.py\", line 757, in _is_type\n    ns = sys.modules.get(cls.__module__).__dict__\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'NoneType' object has no attribute '__dict__'. Did you mean: '__dir__'?\n",
+      "elapsed_seconds": 2.99,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 8192,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 7.59,
+      "current_rss_mb": 7.59,
+      "stage_name": "run-stage14e-projected-residual-smoothing-audit",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "stage_timeout": 3600
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "run-stage14e-projected-residual-smoothing-audit",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "failed",
+      "elapsed_seconds": 2.99
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.105
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.249
+  },
+  "failure_reason": "command_failed",
+  "finished_at": "2026-08-28T05:20:03.654203+00:00",
+  "task_digest": "41bb9cdfd8fcfe1278163ee1e2da663160b1da9da8c5e2ab004f1bb4b49aa20b",
+  "idle_timeout": 1800,
+  "task_timeout": 4200,
+  "memory_limit_mb": 8192,
+  "attempt_id": "8555cbc145ae90dc9fdcf542",
+  "daemon_version": "4.10.2"
+}
