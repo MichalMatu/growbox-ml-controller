@@ -1,0 +1,33 @@
+{
+  "id": "20260828-growbox-env-esp-idf-v5-5-4-align-v1",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "workflow_policy": "efficient-verification-v1",
+  "command_timeout": 7200,
+  "idle_timeout": 1200,
+  "task_timeout": 10800,
+  "memory_limit_mb": 8192,
+  "steps": [
+    {
+      "name": "audit-and-align-active-esp-idf-v5-5-4",
+      "verification_level": "work",
+      "timeout": 5400,
+      "command": "set -euo pipefail; EXPECTED=19999bde451f068ee503d4b7c9a0a91712709c2a; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; IDF_EXPORT=''; for candidate in \"${IDF_EXPORT_SH:-}\" \"${HOME}/esp/esp-idf/export.sh\" \"${HOME}/esp-idf/export.sh\"; do if [[ -n \"$candidate\" && -f \"$candidate\" ]]; then IDF_EXPORT=\"$candidate\"; break; fi; done; test -n \"$IDF_EXPORT\"; IDF_ROOT=\"$(cd \"$(dirname \"$IDF_EXPORT\")\" && pwd)\"; test -d \"$IDF_ROOT/.git\"; echo \"IDF_ROOT=$IDF_ROOT\"; git -C \"$IDF_ROOT\" remote get-url origin; test -z \"$(git -C \"$IDF_ROOT\" status --porcelain --untracked-files=normal)\"; git -C \"$IDF_ROOT\" fetch --tags origin; git -C \"$IDF_ROOT\" rev-parse 'refs/tags/v5.5.4^{commit}'; git -C \"$IDF_ROOT\" switch --detach v5.5.4; git -C \"$IDF_ROOT\" submodule sync --recursive; git -C \"$IDF_ROOT\" submodule update --init --recursive; test \"$(git -C \"$IDF_ROOT\" describe --tags --exact-match HEAD)\" = 'v5.5.4'; test -z \"$(git -C \"$IDF_ROOT\" status --porcelain --untracked-files=normal)\"; CLEAN_PATH='/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin'; env -u VIRTUAL_ENV -u CONDA_PREFIX -u PYTHONHOME PATH=\"$CLEAN_PATH\" bash \"$IDF_ROOT/install.sh\" esp32s3; unset VIRTUAL_ENV CONDA_PREFIX PYTHONHOME || true; export PATH=\"$CLEAN_PATH\"; source \"$IDF_EXPORT\"; idf.py --version | tee /tmp/idf-version-v554.txt; grep -Eq 'ESP-IDF v5\\.5\\.4($|[- ])' /tmp/idf-version-v554.txt; printf 'IDF_COMMIT=%s\\n' \"$(git -C \"$IDF_ROOT\" rev-parse HEAD)\""
+    },
+    {
+      "name": "focused-esp-idf-v5-5-4-environment-audit",
+      "verification_level": "focused",
+      "timeout": 1800,
+      "command": "set -euo pipefail; CLEAN_PATH='/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin'; unset VIRTUAL_ENV CONDA_PREFIX PYTHONHOME || true; export PATH=\"$CLEAN_PATH\"; source scripts/source_idf.sh; test \"$(git -C \"$IDF_PATH\" describe --tags --exact-match HEAD)\" = 'v5.5.4'; test -z \"$(git -C \"$IDF_PATH\" status --porcelain --untracked-files=normal)\"; idf.py --version | tee /tmp/idf-version-focused-v554.txt; grep -Eq 'ESP-IDF v5\\.5\\.4($|[- ])' /tmp/idf-version-focused-v554.txt; printf 'ACTIVE_IDF_PATH=%s\\n' \"$IDF_PATH\"; for root in \"${HOME}/esp/esp-idf\" \"${HOME}/esp-idf\"; do if [[ -d \"$root/.git\" ]]; then printf 'DISCOVERED_IDF=%s tag=' \"$root\"; git -C \"$root\" describe --tags --exact-match HEAD 2>/dev/null || git -C \"$root\" rev-parse --short HEAD; fi; done; test -z \"$(git status --porcelain)\""
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "verify-v5-5-4-with-clean-esp32s3-build",
+      "verification_level": "full",
+      "timeout": 7200,
+      "command": "set -euo pipefail; EXPECTED=19999bde451f068ee503d4b7c9a0a91712709c2a; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; CLEAN_PATH='/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin'; unset VIRTUAL_ENV CONDA_PREFIX PYTHONHOME || true; export PATH=\"$CLEAN_PATH\"; source scripts/source_idf.sh; test \"$(git -C \"$IDF_PATH\" describe --tags --exact-match HEAD)\" = 'v5.5.4'; test -z \"$(git -C \"$IDF_PATH\" status --porcelain --untracked-files=normal)\"; idf.py --version | tee /tmp/idf-version-final-v554.txt; grep -Eq 'ESP-IDF v5\\.5\\.4($|[- ])' /tmp/idf-version-final-v554.txt; rm -rf build/idf-gate; bash scripts/idf_gate_build.sh; test -z \"$(git status --porcelain)\"; printf 'FINAL_IDF_PATH=%s\\nFINAL_IDF_TAG=%s\\nFINAL_IDF_COMMIT=%s\\n' \"$IDF_PATH\" \"$(git -C \"$IDF_PATH\" describe --tags --exact-match HEAD)\" \"$(git -C \"$IDF_PATH\" rev-parse HEAD)\""
+    }
+  ]
+}
