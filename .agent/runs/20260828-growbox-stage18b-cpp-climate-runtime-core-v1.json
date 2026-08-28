@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260828-growbox-stage18b-cpp-climate-runtime-core-v1",
+  "task_digest": "c2d523d40a97a7c66800d3cb9863a73396b32caefa9208b292489c2408cff096",
+  "idle_timeout": 1200,
+  "task_timeout": 5400,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-28T10:29:19.744938+00:00",
+  "attempt_id": "6c8395a6faca04114fa01b9d",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 98345,
+  "updated_at": "2026-08-28T10:29:19.745241+00:00",
+  "pid": 98345
+}
