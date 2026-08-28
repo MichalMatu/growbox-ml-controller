@@ -1,0 +1,33 @@
+{
+  "id": "20260828-growbox-stage18a-runtime-policy-modes-v1",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "workflow_policy": "efficient-verification-v1",
+  "command_timeout": 1800,
+  "idle_timeout": 1200,
+  "task_timeout": 4200,
+  "memory_limit_mb": 8192,
+  "steps": [
+    {
+      "name": "apply-stage18a-runtime-policy-modes",
+      "verification_level": "work",
+      "timeout": 600,
+      "command": "set -euo pipefail; EXPECTED=54693e57b0d736a5171b42dca88e45b595bbe94d; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; rm -f warnings.txt; test -z \"$(git status --porcelain)\"; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/stage18/apply_stage18a_runtime_policy_modes.py > /tmp/apply-stage18a-runtime-policy-modes.py; .venv/bin/python /tmp/apply-stage18a-runtime-policy-modes.py; git diff --check; git status --short"
+    },
+    {
+      "name": "focused-stage18a-runtime-policy-tests",
+      "verification_level": "focused",
+      "timeout": 900,
+      "command": "set -euo pipefail; .venv/bin/python -m pytest -q tests/test_climate_runtime.py tests/test_climate_input.py tests/test_climate_benchmark.py; .venv/bin/python -m ruff check tools/ml/climate_runtime.py tests/test_climate_runtime.py; .venv/bin/python -m ruff format --check tools/ml/climate_runtime.py tests/test_climate_runtime.py; git diff --check"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "full-regression-and-publish-stage18a",
+      "verification_level": "full",
+      "timeout": 3000,
+      "command": "set -euo pipefail; git add -A; .venv/bin/pre-commit run --all-files; .venv/bin/python -m pytest -q -m 'not hardware'; bash scripts/check_schema.sh; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests --output-on-failure; bash scripts/run_clang_tidy_host.sh; git diff --check; git add -A; git diff --cached --check; git commit -m 'Add climate runtime policy modes'; git push origin HEAD:mvp/environment-controller; test -z \"$(git status --porcelain)\"; printf 'PUBLISHED_HEAD=%s\\n' \"$(git rev-parse HEAD)\""
+    }
+  ]
+}
