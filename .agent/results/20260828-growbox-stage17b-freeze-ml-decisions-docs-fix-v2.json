@@ -1,0 +1,116 @@
+{
+  "id": "20260828-growbox-stage17b-freeze-ml-decisions-docs-fix-v2",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "started_at": "2026-08-28T09:59:48.215899+00:00",
+  "command_timeout": 1800,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; EXPECTED=698d4e7e31a192a19b9f18cc0d11ea7a1a146fa6; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; rm -f warnings.txt; test -z \"$(git status --porcelain)\"; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/stage17/apply_stage17b_ml_decision_docs.py > /tmp/apply-stage17b-ml-decision-docs.py; .venv/bin/python /tmp/apply-stage17b-ml-decision-docs.py; perl -pi -e 's/[ \\t]+$//' docs/ML_DECISION_REPORT.md docs/MODEL_PIPELINE.md docs/MVP_ENVIRONMENT_CONTROLLER.md docs/CHANGELOG.md; .venv/bin/python -m json.tool docs/ML_DECISION_REPORT.json >/dev/null; git diff --check; git status --short",
+      "exit_code": 0,
+      "output": "From https://github.com/MichalMatu/growbox-ml-controller\n * branch            agent-control -> FETCH_HEAD\n   455f14d..9fc9926  agent-control -> origin/agent-control\n M docs/CHANGELOG.md\n M docs/MODEL_PIPELINE.md\n M docs/MVP_ENVIRONMENT_CONTROLLER.md\n?? docs/ML_DECISION_REPORT.json\n?? docs/ML_DECISION_REPORT.md\n",
+      "elapsed_seconds": 2.221,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 8192,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 2.83,
+      "current_rss_mb": 2.83,
+      "stage_name": "apply-stage17b-ml-decision-docs-recovery",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "stage_timeout": 600,
+      "verification_level": "work"
+    },
+    {
+      "command": "set -euo pipefail; grep -q '44 -> 32 -> 32 -> 6' docs/MODEL_PIPELINE.md; grep -q 'Runtime direction' docs/MODEL_PIPELINE.md; grep -q 'Stage 16' docs/ML_DECISION_REPORT.md; grep -q '\"runtime_authority\": \"rule\"' docs/ML_DECISION_REPORT.json; grep -q 'Current implementation checkpoint' docs/MVP_ENVIRONMENT_CONTROLLER.md; ! grep -q '128 → 32 → 32 → 15' docs/MODEL_PIPELINE.md; git diff --check",
+      "exit_code": 0,
+      "output": "",
+      "elapsed_seconds": 0.776,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 8192,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": null,
+      "stage_name": "focused-stage17b-doc-consistency-recovery",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "stage_timeout": 600,
+      "verification_level": "focused"
+    }
+  ],
+  "verification": [
+    {
+      "command": "set -euo pipefail; git add -A; .venv/bin/pre-commit run --all-files; .venv/bin/python -m pytest -q -m 'not hardware'; bash scripts/check_schema.sh; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests --output-on-failure; bash scripts/run_clang_tidy_host.sh; git diff --check; git add -A; git diff --cached --check; git commit -m 'Freeze climate ML decisions through Stage 16'; git push origin HEAD:mvp/environment-controller; test -z \"$(git status --porcelain)\"; printf 'PUBLISHED_HEAD=%s\\n' \"$(git rev-parse HEAD)\"",
+      "exit_code": 0,
+      "output": "trim trailing whitespace.................................................Passed\nfix end of files.........................................................Passed\ncheck for merge conflicts................................................Passed\ncheck yaml...............................................................Passed\ncheck json...............................................................Passed\ndetect private key.......................................................Passed\nruff.....................................................................Passed\nruff-format..............................................................Passed\nclang-format.............................................................Passed\nenvironment schema (--check).............................................Passed\n........................................................................ [ 16%]\n........................................................................ [ 32%]\n........................................................................ [ 49%]\n........................................................................ [ 65%]\n........................................................................ [ 81%]\n........................................................................ [ 98%]\n........                                                                 [100%]\n440 passed, 9 deselected in 209.06s (0:03:29)\n-- Configuring done (0.2s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tests\n[ 36%] Built target climate_v6_tests\n[100%] Built target environment_control_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tests\n    Start 1: environment_control_tests\n1/2 Test #1: environment_control_tests ........   Passed    0.01 sec\n    Start 2: climate_v6_tests\n2/2 Test #2: climate_v6_tests .................   Passed    0.01 sec\n\n100% tests passed, 0 tests failed out of 2\n\nTotal Test time (real) =   0.03 sec\n==> host clang-tidy (build/host-tidy)\n-- The CXX compiler identification is AppleClang 21.0.0.21000101\n-- Detecting CXX compiler ABI info\n-- Detecting CXX compiler ABI info - done\n-- Check for working CXX compiler: /Library/Developer/CommandLineTools/usr/bin/clang++ - skipped\n-- Detecting CXX compile features\n-- Detecting CXX compile features - done\n-- Configuring done (2.4s)\n-- Generating done (0.1s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tidy\n[ 18%] Building CXX object CMakeFiles/climate_v6_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateTrendEstimator.cpp.o\n[ 36%] Building CXX object CMakeFiles/climate_v6_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/test/test_climate_v6/test_main.cpp.o\n[ 45%] Building CXX object CMakeFiles/climate_v6_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateFeatureEncoder.cpp.o\n[ 45%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/test/test_environment_controller/test_main.cpp.o\n[ 45%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/EnvironmentTypes.cpp.o\n[ 54%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/ModelRuntime.cpp.o\n[ 63%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/SafetySupervisor.cpp.o\n[ 72%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/EnvironmentController.cpp.o\n[ 81%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/FeatureEncoder.cpp.o\n[ 90%] Linking CXX executable climate_v6_tests\n[100%] Linking CXX executable environment_control_tests\n[100%] Built target climate_v6_tests\n[100%] Built target environment_control_tests\nclang-tidy: lib/environment_control/src/EnvironmentController.cpp\n458 warnings generated.\nclang-tidy: lib/environment_control/src/FeatureEncoder.cpp\n458 warnings generated.\nclang-tidy: lib/environment_control/src/SafetySupervisor.cpp\n458 warnings generated.\nclang-tidy: lib/environment_control/src/ModelRuntime.cpp\n470 warnings generated.\nclang-tidy: lib/environment_control/src/climate/ClimateFeatureEncoder.cpp\n458 warnings generated.\nclang-tidy: lib/environment_control/src/climate/ClimateTrendEstimator.cpp\n458 warnings generated.\n[agent-work 54693e5] Freeze climate ML decisions through Stage 16\n 5 files changed, 263 insertions(+), 20 deletions(-)\n create mode 100644 docs/ML_DECISION_REPORT.json\n create mode 100644 docs/ML_DECISION_REPORT.md\nTo https://github.com/MichalMatu/growbox-ml-controller.git\n   698d4e7..54693e5  HEAD -> mvp/environment-controller\nPUBLISHED_HEAD=54693e57b0d736a5171b42dca88e45b595bbe94d\n",
+      "elapsed_seconds": 253.929,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 8192,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 332.75,
+      "current_rss_mb": 17.23,
+      "stage_name": "full-regression-and-publish-stage17b-recovery",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "verification",
+      "stage_timeout": 3000,
+      "verification_level": "full"
+    }
+  ],
+  "stages": [
+    {
+      "stage_name": "apply-stage17b-ml-decision-docs-recovery",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "verification_level": "work",
+      "outcome": "passed",
+      "elapsed_seconds": 2.221
+    },
+    {
+      "stage_name": "focused-stage17b-doc-consistency-recovery",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "verification_level": "focused",
+      "outcome": "passed",
+      "elapsed_seconds": 0.776
+    },
+    {
+      "stage_name": "full-regression-and-publish-stage17b-recovery",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "verification",
+      "verification_level": "full",
+      "outcome": "passed",
+      "elapsed_seconds": 253.929
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.245
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.688
+  },
+  "finished_at": "2026-08-28T10:04:08.541366+00:00",
+  "task_digest": "592d8404da6d314156e8e33f1bddc1d765844dca2bf9a7fde26dd2e9c25df80f",
+  "idle_timeout": 1200,
+  "task_timeout": 4200,
+  "memory_limit_mb": 8192,
+  "attempt_id": "2b6a280c4242145d66997020",
+  "daemon_version": "4.10.2"
+}
