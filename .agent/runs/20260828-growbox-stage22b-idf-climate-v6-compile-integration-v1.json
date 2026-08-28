@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260828-growbox-stage22b-idf-climate-v6-compile-integration-v1",
+  "task_digest": "fe63de8ae8aa7310edb6949dd30947ac7541db8dfece1fb6318df22203400986",
+  "idle_timeout": 1200,
+  "task_timeout": 10800,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-28T20:19:37.339589+00:00",
+  "attempt_id": "fadd9a65ece15c5bb44cde50",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 80307,
+  "updated_at": "2026-08-28T20:19:37.339822+00:00",
+  "pid": 80307
+}
