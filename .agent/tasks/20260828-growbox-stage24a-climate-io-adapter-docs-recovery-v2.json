@@ -1,0 +1,33 @@
+{
+  "id": "20260828-growbox-stage24a-climate-io-adapter-docs-recovery-v2",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "workflow_policy": "efficient-verification-v1",
+  "command_timeout": 7200,
+  "idle_timeout": 1200,
+  "task_timeout": 10800,
+  "memory_limit_mb": 8192,
+  "steps": [
+    {
+      "name": "apply-climate-io-adapter-doc-sync-and-fix-whitespace",
+      "verification_level": "work",
+      "timeout": 1200,
+      "command": "set -euo pipefail; EXPECTED=c7da0e33a82680558b2f27d85652d7d8e43d72c3; git fetch origin mvp/environment-controller agent-control; git reset --hard origin/mvp/environment-controller; git clean -fd; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; git show origin/agent-control:.agent/task-assets/stage24/apply_stage24a_climate_io_adapter.py > /tmp/apply-stage24a-climate-io-adapter.py; git show origin/agent-control:.agent/task-assets/stage24/sync_stage24a_docs.py > /tmp/sync-stage24a-docs.py; .venv/bin/python /tmp/apply-stage24a-climate-io-adapter.py; .venv/bin/python /tmp/sync-stage24a-docs.py; .venv/bin/python - <<'PY'\nfrom pathlib import Path\nfor path in [Path('README.md'), Path('AGENTS.md'), *Path('docs').glob('*.md')]:\n    text = path.read_text()\n    path.write_text('\\n'.join(line.rstrip() for line in text.splitlines()) + ('\\n' if text.endswith('\\n') else ''))\nPY\n.venv/bin/pre-commit run clang-format --files src/climate/ClimateIoAdapters.h src/climate/ClimateIoAdapters.cpp test/test_climate_io_adapters/test_main.cpp || true; .venv/bin/pre-commit run clang-format --files src/climate/ClimateIoAdapters.h src/climate/ClimateIoAdapters.cpp test/test_climate_io_adapters/test_main.cpp; git diff --check; git status --short"
+    },
+    {
+      "name": "focused-climate-io-adapter-and-doc-checks",
+      "verification_level": "focused",
+      "timeout": 1800,
+      "command": "set -euo pipefail; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --target climate_io_adapter_tests --parallel; ctest --test-dir build/host-tests -R '^climate_io_adapter_tests$' --output-on-failure; .venv/bin/pre-commit run --files src/climate/ClimateIoAdapters.h src/climate/ClimateIoAdapters.cpp test/test_climate_io_adapters/test_main.cpp README.md docs/CURRENT_STATUS.md docs/ARCHITECTURE.md docs/CHANGELOG.md docs/PROJECT_LAYOUT.md docs/MVP_HARDWARE_SENSOR_SET.md docs/INTEGRATION_CONVERGENCE.md docs/PORTING_TO_LITEGRAPH.md AGENTS.md; grep -F 'ESP-IDF 5.5.4' README.md; grep -F 'ClimateInputAdapter' docs/ARCHITECTURE.md; grep -F 'Local Agent v4.10.2' AGENTS.md; if grep -E 'ESP-IDF 5\\.5\\.1|Local Agent v4\\.9\\.6' README.md docs/ARCHITECTURE.md docs/CHANGELOG.md AGENTS.md; then exit 1; fi; git diff --check"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "full-regression-idf-v5-5-4-and-publish-stage24a",
+      "verification_level": "full",
+      "timeout": 7200,
+      "command": "set -euo pipefail; git add -A; .venv/bin/pre-commit run --all-files; .venv/bin/python -m pytest -q -m 'not hardware'; bash scripts/check_schema.sh; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests --output-on-failure; bash scripts/run_clang_tidy_host.sh; unset VIRTUAL_ENV CONDA_PREFIX PYTHONHOME || true; export PATH='/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin'; source \"$HOME/esp/esp-idf/export.sh\"; idf.py --version | grep -F 'ESP-IDF v5.5.4'; rm -rf build/idf-gate; bash scripts/idf_gate_build.sh; git diff --check; git add -A; git diff --cached --check; git commit -m 'Add climate I/O adapter seam and refresh docs'; git push origin HEAD:mvp/environment-controller; test -z \"$(git status --porcelain)\"; printf 'PUBLISHED_HEAD=%s\\n' \"$(git rev-parse HEAD)\""
+    }
+  ]
+}
