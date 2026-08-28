@@ -37,6 +37,12 @@ EXPECTED_FEATURES = (
     "previous_humidifier",
     "previous_dehumidifier",
     "previous_co2_doser",
+    "estimated_effective_heater",
+    "estimated_effective_cooler",
+    "estimated_effective_exhaust_fan",
+    "estimated_effective_humidifier",
+    "estimated_effective_dehumidifier",
+    "estimated_effective_co2_doser",
     "heater_available",
     "cooler_available",
     "exhaust_fan_available",
@@ -81,7 +87,7 @@ def test_v6_ml_feature_order_is_frozen_and_small() -> None:
     model = schema["model"]
     names = tuple(item["name"] for item in model["features"])
     assert names == EXPECTED_FEATURES
-    assert model["feature_count"] == len(EXPECTED_FEATURES) == 38
+    assert model["feature_count"] == len(EXPECTED_FEATURES) == 44
     assert len(names) == len(set(names))
     for item in model["features"]:
         assert item["minimum"] <= item["default"] <= item["maximum"]

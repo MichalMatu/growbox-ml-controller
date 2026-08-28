@@ -1,3 +1,4 @@
+#include "ClimateActuatorStateEstimator.h"
 #include "ClimateContract.h"
 #include "ClimateFeatureEncoder.h"
 #include "ClimateMath.h"
@@ -23,7 +24,7 @@ float feature(const growbox::climate::ClimateFeatureVector& v,
 void contractTest() {
   namespace c = growbox::climate::contract;
   check(c::kSchemaVersion == 6U, "schema version");
-  check(c::kFeatureCount == 38U, "feature count");
+  check(c::kFeatureCount == 44U, "feature count");
   check(c::kOutputCount == 6U, "output count");
   const char* expected[] = {"heater",     "cooler",       "exhaust_fan",
                             "humidifier", "dehumidifier", "co2_doser"};
@@ -42,6 +43,7 @@ void encoderTest() {
   in.humidity_control_mode = HumidityControlMode::Vpd;
   in.schedule.light_level = 0.75F;
   in.previous.heater = 2.0F;
+  in.estimated_effective.heater = 0.25F;
   in.capabilities.heater = true;
   in.state.trends.temperature = {1.0F, true};
   in.state.trends.humidity = {-2.0F, true};
@@ -59,7 +61,36 @@ void encoderTest() {
   check(near(feature(v, c::FeatureIndex::LightLevel), 0.75F, 0.0001F), "light context");
   check(feature(v, c::FeatureIndex::PreviousHeater) == 1.0F, "command clamp");
   check(r.clamped(c::FeatureIndex::PreviousHeater), "clamp diagnostic");
+  check(near(feature(v, c::FeatureIndex::EstimatedEffectiveHeater), 0.25F, 0.0001F),
+        "effective actuator context");
 }
+void actuatorEstimatorTest() {
+  using namespace growbox::climate;
+  ClimateActuatorStateEstimator estimator{};
+  ClimateCapabilities capabilities{};
+  capabilities.heater = true;
+  capabilities.cooler = true;
+  capabilities.exhaust_fan = true;
+  capabilities.humidifier = true;
+  capabilities.dehumidifier = true;
+  capabilities.co2_doser = true;
+  ClimatePolicyRequest command{};
+  command.heater = 1.0F;
+  command.cooler = 0.5F;
+  command.exhaust_fan = 0.8F;
+  command.humidifier = 0.6F;
+  command.dehumidifier = 0.4F;
+  command.co2_doser = 0.7F;
+  const auto first = estimator.update(command, 10.0F, capabilities);
+  check(near(first.heater, 1.0F - std::exp(-10.0F / 35.0F), 0.0001F), "heater lag");
+  check(near(first.cooler, 0.5F * (1.0F - std::exp(-10.0F / 45.0F)), 0.0001F), "cooler lag");
+  check(near(first.co2_doser, 0.7F, 0.0001F), "zero-lag CO2");
+  estimator.reset();
+  capabilities.heater = false;
+  const auto masked = estimator.update(command, 10.0F, capabilities);
+  check(masked.heater == 0.0F, "unavailable actuator masked");
+}
+
 void trendTest() {
   using namespace growbox::climate;
   ClimateTrendEstimator e{};
@@ -98,6 +129,7 @@ int main() {
   contractTest();
   check(near(growbox::climate::airVpdKpa(25.0F, 60.0F), 1.264F, 0.015F), "VPD math");
   encoderTest();
+  actuatorEstimatorTest();
   trendTest();
   if (failures) {
     std::cerr << failures << " climate v6 checks failed\n";

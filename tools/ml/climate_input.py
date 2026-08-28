@@ -1,6 +1,6 @@
 """Python-side climate-v6 controller input and trend semantics.
 
-Training and simulation must encode exactly the same 38 features as the C++
+Training and simulation must encode exactly the same 44 features as the C++
 ``ClimateFeatureEncoder`` used by firmware. This module deliberately does not
 reuse the historical v4 controller-input bridge.
 """
@@ -78,6 +78,65 @@ class ClimateInputConfig:
     targets: ClimateTargets = field(default_factory=ClimateTargets)
     humidity_control_mode: HumidityControlMode = "RH"
     sensor_timeout_ms: int = DEFAULT_SENSOR_TIMEOUT_MS
+
+
+class ClimateEffectiveActionEstimator:
+    """Runtime-equivalent first-order actuator-state estimator."""
+
+    def __init__(self) -> None:
+        self.state = ClimateAction()
+
+    def reset(self) -> None:
+        self.state = ClimateAction()
+
+    @staticmethod
+    def _lag(previous: float, requested: float, dt: float, time_constant: float) -> float:
+        if time_constant <= 0.0:
+            return requested
+        alpha = 1.0 - math.exp(-dt / time_constant)
+        return previous + alpha * (requested - previous)
+
+    @staticmethod
+    def _masked_command(scenario: ClimateScenario, command: ClimateAction) -> ClimateAction:
+        values = command.clipped().as_dict()
+        caps = scenario.actuators
+        values["heater"] = values["heater"] if caps.heater.available else 0.0
+        values["cooler"] = values["cooler"] if caps.cooler.available else 0.0
+        if caps.exhaust_fan.available:
+            fan = values["exhaust_fan"]
+            if 0.0 < fan < caps.exhaust_fan.minimum_command:
+                fan = 0.0
+            values["exhaust_fan"] = fan
+        else:
+            values["exhaust_fan"] = 0.0
+        values["humidifier"] = values["humidifier"] if caps.humidifier.available else 0.0
+        values["dehumidifier"] = values["dehumidifier"] if caps.dehumidifier.available else 0.0
+        values["co2_doser"] = values["co2_doser"] if caps.co2_doser.available else 0.0
+        return ClimateAction.from_mapping(values)
+
+    def update(
+        self,
+        scenario: ClimateScenario,
+        command: ClimateAction,
+        timestep_s: float | None = None,
+    ) -> ClimateAction:
+        dt = float(scenario.timestep_s if timestep_s is None else timestep_s)
+        if not math.isfinite(dt) or dt <= 0.0:
+            raise ValueError("timestep_s must be finite and positive")
+        requested = self._masked_command(scenario, command)
+        old = self.state
+        lag = scenario.response_lag
+        self.state = ClimateAction(
+            heater=self._lag(old.heater, requested.heater, dt, lag.heater_s),
+            cooler=self._lag(old.cooler, requested.cooler, dt, lag.cooler_s),
+            exhaust_fan=self._lag(old.exhaust_fan, requested.exhaust_fan, dt, lag.exhaust_fan_s),
+            humidifier=self._lag(old.humidifier, requested.humidifier, dt, lag.humidifier_s),
+            dehumidifier=self._lag(
+                old.dehumidifier, requested.dehumidifier, dt, lag.dehumidifier_s
+            ),
+            co2_doser=self._lag(old.co2_doser, requested.co2_doser, dt, lag.co2_doser_s),
+        )
+        return self.state
 
 
 class _TrendChannel:
@@ -197,6 +256,7 @@ def climate_controller_record(
     state: ClimateState,
     *,
     previous: ClimateAction | None = None,
+    estimated_effective: ClimateAction | None = None,
     trends: ClimateTrends | None = None,
     status: Mapping[str, MeasurementStatus] | None = None,
     config: ClimateInputConfig | None = None,
@@ -209,6 +269,7 @@ def climate_controller_record(
         raise ValueError("climate controller record requires schema v6")
     defaults = _feature_defaults(contract)
     previous = previous or ClimateAction()
+    estimated_effective = estimated_effective or ClimateAction()
     trends = trends or ClimateTrends()
     config = config or ClimateInputConfig()
     statuses = status or {}
@@ -273,6 +334,7 @@ def climate_controller_record(
             "co2_rate_ppm_min": trend_value("co2_rate_ppm_min", trends.co2, "co2_ppm"),
         },
         "previous": previous.as_dict(),
+        "estimated_effective": estimated_effective.as_dict(),
         "capabilities": {
             "heater": {"available": caps.heater.available},
             "cooler": {"available": caps.cooler.available},
@@ -289,6 +351,7 @@ def encode_climate_input(
     state: ClimateState,
     *,
     previous: ClimateAction | None = None,
+    estimated_effective: ClimateAction | None = None,
     trends: ClimateTrends | None = None,
     status: Mapping[str, MeasurementStatus] | None = None,
     config: ClimateInputConfig | None = None,
@@ -299,20 +362,22 @@ def encode_climate_input(
         scenario,
         state,
         previous=previous,
+        estimated_effective=estimated_effective,
         trends=trends,
         status=status,
         config=config,
         contract=contract,
     )
     encoded = contract.encode(record)
-    if encoded.shape != (38,):
-        raise ValueError(f"expected 38 climate features, got {encoded.shape}")
+    if encoded.shape != (44,):
+        raise ValueError(f"expected 44 climate features, got {encoded.shape}")
     return encoded
 
 
 __all__ = [
     "CLIMATE_V6_CONTRACT_PATH",
     "DEFAULT_SENSOR_TIMEOUT_MS",
+    "ClimateEffectiveActionEstimator",
     "ClimateInputConfig",
     "ClimateTargets",
     "ClimateTrendEstimator",

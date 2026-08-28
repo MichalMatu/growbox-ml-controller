@@ -7,6 +7,7 @@ from dataclasses import asdict, dataclass
 from typing import Literal
 
 from .climate_input import (
+    ClimateEffectiveActionEstimator,
     ClimateInputConfig,
     ClimateTrendEstimator,
     MeasurementStatus,
@@ -191,6 +192,7 @@ def _raw_action(
     config: ClimateBenchmarkConfig,
     model: ClimatePortableModel,
     trend_estimator: ClimateTrendEstimator,
+    effective_estimator: ClimateEffectiveActionEstimator,
 ) -> tuple[ClimateAction, dict[str, MeasurementStatus]]:
     profile = episode.profile_for_step(step, config.steps_per_scenario)
     simulator.set_light_level(profile.light_level)
@@ -239,6 +241,7 @@ def _raw_action(
         simulator.scenario,
         state,
         previous=simulator.previous_command,
+        estimated_effective=effective_estimator.state,
         trends=trends,
         status=status,
         config=input_config,
@@ -256,6 +259,7 @@ def _run_episode(work: _BenchmarkWork) -> EpisodeMetrics:
     config = work.config
     simulator = ClimateSimulator(episode.scenario)
     trend_estimator = ClimateTrendEstimator()
+    effective_estimator = ClimateEffectiveActionEstimator()
     previous_applied = ClimateAction()
 
     tracking_cost_sum = 0.0
@@ -312,6 +316,7 @@ def _run_episode(work: _BenchmarkWork) -> EpisodeMetrics:
             config,
             work.model,
             trend_estimator,
+            effective_estimator,
         )
         raw_opposition_steps += int(_raw_opposition(raw))
         arbitration = arbitrate_climate_action(raw, simulator.scenario)
@@ -332,6 +337,7 @@ def _run_episode(work: _BenchmarkWork) -> EpisodeMetrics:
         effort_sum += sum(applied.as_tuple()) / len(CLIMATE_OUTPUT_NAMES)
         co2_seconds += applied.co2_doser * simulator.scenario.timestep_s
         simulator.step(applied, add_sensor_noise=False, light_level=profile.light_level)
+        effective_estimator.update(simulator.scenario, applied)
         previous_applied = applied
 
     steps = config.steps_per_scenario

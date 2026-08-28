@@ -59,8 +59,8 @@ def validate(document: dict[str, Any]) -> None:
     outputs = model.get("outputs")
     if not isinstance(features, list) or not isinstance(outputs, list):
         raise ValueError("model features and outputs must be lists")
-    if model.get("feature_count") != 38 or len(features) != 38:
-        raise ValueError("climate v6 must contain exactly 38 features")
+    if model.get("feature_count") != 44 or len(features) != 44:
+        raise ValueError("climate v6 must contain exactly 44 features")
     if model.get("output_count") != 6 or len(outputs) != 6:
         raise ValueError("climate v6 must contain exactly 6 outputs")
     names = [str(item["name"]) for item in features]

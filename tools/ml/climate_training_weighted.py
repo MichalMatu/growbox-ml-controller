@@ -117,13 +117,13 @@ class WeightedTrainingComparison:
 
 
 def _assert_dataset(dataset: Dataset) -> None:
-    if dataset.features.ndim != 2 or dataset.features.shape[1] != 38:
-        raise ValueError("weighted climate-v6 training requires exactly 38 features")
+    if dataset.features.ndim != 2 or dataset.features.shape[1] != 44:
+        raise ValueError("weighted climate-v6 training requires exactly 44 features")
     if dataset.labels.ndim != 2 or dataset.labels.shape[1] != 6:
         raise ValueError("weighted climate-v6 training requires exactly 6 outputs")
     if dataset.output_names != CLIMATE_OUTPUT_NAMES:
         raise ValueError("dataset output order does not match climate-v6")
-    if len(set(dataset.feature_names)) != 38:
+    if len(set(dataset.feature_names)) != 44:
         raise ValueError("climate-v6 feature names must be unique")
     if not np.isfinite(dataset.features).all() or not np.isfinite(dataset.labels).all():
         raise ValueError("training dataset contains NaN/Inf")

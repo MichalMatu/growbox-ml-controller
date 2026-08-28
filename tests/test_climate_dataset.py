@@ -119,7 +119,7 @@ def test_small_dataset_has_v6_shapes_metadata_and_no_conflicting_labels() -> Non
     )
     dataset = bundle.dataset
     expected_rows = len(REQUIRED_SCENARIO_FAMILIES) * 2
-    assert dataset.features.shape == (expected_rows, 38)
+    assert dataset.features.shape == (expected_rows, 44)
     assert dataset.labels.shape == (expected_rows, 6)
     assert dataset.output_names == CLIMATE_OUTPUT_NAMES
     assert set(bundle.families) == set(REQUIRED_SCENARIO_FAMILIES)
@@ -184,7 +184,7 @@ def test_audit_reports_structure_and_never_hides_conflicts() -> None:
     )
     report = audit_climate_dataset(bundle, minimum_active_fraction=0.0)
     assert report.row_count == len(REQUIRED_SCENARIO_FAMILIES) * 2
-    assert report.feature_count == 38
+    assert report.feature_count == 44
     assert report.output_count == 6
     assert report.conflicting_temperature_rows == 0
     assert report.conflicting_humidity_rows == 0

@@ -23,6 +23,7 @@ from .climate_dataset import (
 )
 from .climate_input import (
     CLIMATE_V6_CONTRACT_PATH,
+    ClimateEffectiveActionEstimator,
     ClimateInputConfig,
     ClimateTrendEstimator,
     encode_climate_input,
@@ -65,6 +66,7 @@ def _generate_episode_rows(work: _EpisodeWork) -> _EpisodeRows:
     simulator = ClimateSimulator(episode.scenario)
     teacher = ClimateRolloutTeacher()
     trend_estimator = ClimateTrendEstimator()
+    effective_estimator = ClimateEffectiveActionEstimator()
     status_rng = np.random.default_rng(episode.scenario.seed ^ 0x6A09E667 ^ work.episode_index)
 
     feature_rows: list[np.ndarray] = []
@@ -95,6 +97,7 @@ def _generate_episode_rows(work: _EpisodeWork) -> _EpisodeRows:
                 simulator.scenario,
                 observation,
                 previous=simulator.previous_command,
+                estimated_effective=effective_estimator.state,
                 trends=trends,
                 status=status,
                 config=input_config,
@@ -117,6 +120,7 @@ def _generate_episode_rows(work: _EpisodeWork) -> _EpisodeRows:
             add_sensor_noise=False,
             light_level=profile.light_level,
         )
+        effective_estimator.update(simulator.scenario, teacher_result.action)
 
     rows = config.steps_per_scenario
     return _EpisodeRows(

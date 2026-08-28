@@ -61,6 +61,10 @@ struct PreviousClimateActions {
   float heater = 0.0F, cooler = 0.0F, exhaust_fan = 0.0F, humidifier = 0.0F, dehumidifier = 0.0F,
         co2_doser = 0.0F;
 };
+struct EstimatedEffectiveClimateActions {
+  float heater = 0.0F, cooler = 0.0F, exhaust_fan = 0.0F, humidifier = 0.0F, dehumidifier = 0.0F,
+        co2_doser = 0.0F;
+};
 struct ClimateCapabilities {
   bool heater = false, cooler = false, exhaust_fan = false, humidifier = false,
        dehumidifier = false, co2_doser = false;
@@ -71,6 +75,7 @@ struct ClimateControllerInput {
   ClimateTargets targets{};
   ClimateSchedule schedule{};
   PreviousClimateActions previous{};
+  EstimatedEffectiveClimateActions estimated_effective{};
   ClimateCapabilities capabilities{};
   std::uint64_t sensor_timeout_ms = kDefaultSensorTimeoutMs;
 };

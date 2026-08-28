@@ -46,7 +46,7 @@ def _load_audited_dataset() -> tuple[Dataset, dict[str, object], dict[str, np.nd
         raise ValueError("Stage 9B report does not describe the expected 7200-row dataset")
 
     dataset = Dataset.load(DATASET_CACHE)
-    if dataset.features.shape != (7200, 38) or dataset.labels.shape != (7200, 6):
+    if dataset.features.shape != (7200, 44) or dataset.labels.shape != (7200, 6):
         raise ValueError("Stage 9B cached dataset shape mismatch")
     if dataset.output_names != CLIMATE_OUTPUT_NAMES:
         raise ValueError("Stage 9B cached dataset output order mismatch")

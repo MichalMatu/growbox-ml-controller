@@ -71,7 +71,7 @@ def main() -> None:
         raise ValueError("training report contract does not match active climate-v6 contract")
 
     dataset, generation_workers, cache_reused = _load_or_generate_dataset()
-    if dataset.features.shape != (6240, 38) or dataset.labels.shape != (6240, 6):
+    if dataset.features.shape != (6240, 44) or dataset.labels.shape != (6240, 6):
         raise ValueError("unexpected full climate-v6 dataset shape")
     if dataset.output_names != contract.outputs or dataset.feature_names != contract.feature_names:
         raise ValueError("cached dataset contract ordering mismatch")

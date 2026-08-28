@@ -9,7 +9,7 @@ from tools.ml.dataset import Dataset
 
 def _dataset(prefix: str, splits: list[str]) -> Dataset:
     rows = len(splits)
-    features = np.arange(rows * 38, dtype=np.float32).reshape(rows, 38) / 100.0
+    features = np.arange(rows * 44, dtype=np.float32).reshape(rows, 44) / 100.0
     labels = np.zeros((rows, 6), dtype=np.float32)
     for index in range(rows):
         labels[index, index % 6] = 0.5
@@ -19,7 +19,7 @@ def _dataset(prefix: str, splits: list[str]) -> Dataset:
         scenario_ids=np.asarray([f"{prefix}-{index}" for index in range(rows)]),
         scenario_seeds=np.arange(rows, dtype=np.int64) + 100,
         splits=np.asarray(splits),
-        feature_names=tuple(f"f{index}" for index in range(38)),
+        feature_names=tuple(f"f{index}" for index in range(44)),
         output_names=CLIMATE_OUTPUT_NAMES,
     )
 

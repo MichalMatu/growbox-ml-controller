@@ -7,8 +7,8 @@ namespace growbox::climate::contract {
 inline constexpr std::uint32_t kSchemaVersion = 6U;
 inline constexpr char kSchemaId[] = "environment-controller";
 inline constexpr char kContractId[] = "climate-mvp-v1";
-inline constexpr char kSchemaHash[] = "8c5ba15ea43f";
-inline constexpr std::size_t kFeatureCount = 38U;
+inline constexpr char kSchemaHash[] = "fe7d6b4362ad";
+inline constexpr std::size_t kFeatureCount = 44U;
 inline constexpr std::size_t kOutputCount = 6U;
 inline constexpr std::uint64_t kTrendWindowMs = 60000ULL;
 enum class FeatureIndex : std::size_t {
@@ -44,12 +44,18 @@ enum class FeatureIndex : std::size_t {
   PreviousHumidifier = 29U,
   PreviousDehumidifier = 30U,
   PreviousCo2Doser = 31U,
-  HeaterAvailable = 32U,
-  CoolerAvailable = 33U,
-  ExhaustFanAvailable = 34U,
-  HumidifierAvailable = 35U,
-  DehumidifierAvailable = 36U,
-  Co2DoserAvailable = 37U,
+  EstimatedEffectiveHeater = 32U,
+  EstimatedEffectiveCooler = 33U,
+  EstimatedEffectiveExhaustFan = 34U,
+  EstimatedEffectiveHumidifier = 35U,
+  EstimatedEffectiveDehumidifier = 36U,
+  EstimatedEffectiveCo2Doser = 37U,
+  HeaterAvailable = 38U,
+  CoolerAvailable = 39U,
+  ExhaustFanAvailable = 40U,
+  HumidifierAvailable = 41U,
+  DehumidifierAvailable = 42U,
+  Co2DoserAvailable = 43U,
 };
 enum class OutputIndex : std::size_t {
   Heater = 0U,
@@ -92,6 +98,12 @@ inline constexpr std::array<const char*, kFeatureCount> kFeatureNames{{
     "previous_humidifier",
     "previous_dehumidifier",
     "previous_co2_doser",
+    "estimated_effective_heater",
+    "estimated_effective_cooler",
+    "estimated_effective_exhaust_fan",
+    "estimated_effective_humidifier",
+    "estimated_effective_dehumidifier",
+    "estimated_effective_co2_doser",
     "heater_available",
     "cooler_available",
     "exhaust_fan_available",
@@ -132,6 +144,12 @@ inline constexpr std::array<const char*, kFeatureCount> kFeaturePaths{{
     "previous.humidifier",
     "previous.dehumidifier",
     "previous.co2_doser",
+    "estimated_effective.heater",
+    "estimated_effective.cooler",
+    "estimated_effective.exhaust_fan",
+    "estimated_effective.humidifier",
+    "estimated_effective.dehumidifier",
+    "estimated_effective.co2_doser",
     "capabilities.heater.available",
     "capabilities.cooler.available",
     "capabilities.exhaust_fan.available",
@@ -166,6 +184,12 @@ inline constexpr std::array<float, kFeatureCount> kFeatureMinimums{{
     -5.0f,
     -20.0f,
     -1000.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.0f,
     0.0f,
     0.0f,
     0.0f,
@@ -218,6 +242,12 @@ inline constexpr std::array<float, kFeatureCount> kFeatureMaximums{{
     1.0f,
     1.0f,
     1.0f,
+    1.0f,
+    1.0f,
+    1.0f,
+    1.0f,
+    1.0f,
+    1.0f,
 }};
 inline constexpr std::array<float, kFeatureCount> kFeatureDefaults{{
     24.0f,
@@ -242,6 +272,12 @@ inline constexpr std::array<float, kFeatureCount> kFeatureDefaults{{
     1.2f,
     0.0f,
     800.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.0f,
     0.0f,
     0.0f,
     0.0f,

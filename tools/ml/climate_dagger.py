@@ -14,6 +14,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from .climate_input import (
+    ClimateEffectiveActionEstimator,
     ClimateInputConfig,
     ClimateTrendEstimator,
     MeasurementStatus,
@@ -121,6 +122,7 @@ def _collect_episode(
     config = work.config
     simulator = ClimateSimulator(episode.scenario)
     trend_estimator = ClimateTrendEstimator()
+    effective_estimator = ClimateEffectiveActionEstimator()
     teacher = ClimateRolloutTeacher()
 
     features: list[np.ndarray] = []
@@ -154,6 +156,7 @@ def _collect_episode(
             simulator.scenario,
             observation,
             previous=simulator.previous_command,
+            estimated_effective=effective_estimator.state,
             trends=trends,
             status=status,
             config=input_config,
@@ -191,6 +194,7 @@ def _collect_episode(
         safe_fallbacks.append(teacher_result.safe_fallback)
 
         simulator.step(safety.action, add_sensor_noise=False, light_level=profile.light_level)
+        effective_estimator.update(simulator.scenario, safety.action)
 
     rows = len(features)
     return (
@@ -247,7 +251,7 @@ def collect_dagger_rows(
     modes = np.concatenate([item[6] for item in parts], axis=0)
     fallbacks = np.concatenate([item[7] for item in parts], axis=0)
     expected_rows = len(episodes) * config.steps_per_scenario
-    if features.shape != (expected_rows, 38) or labels.shape != (expected_rows, 6):
+    if features.shape != (expected_rows, 44) or labels.shape != (expected_rows, 6):
         raise AssertionError("DAgger collection produced unexpected tensor shapes")
     if not np.isfinite(features).all() or not np.isfinite(labels).all():
         raise ValueError("DAgger collection produced NaN/Inf")

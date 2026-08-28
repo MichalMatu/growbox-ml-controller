@@ -1,7 +1,7 @@
 """Deterministic climate-v6 MLP training and candidate comparison.
 
 This module is deliberately separate from the legacy trainer.  It consumes the
-38 -> 6 climate-v6 dataset, keeps scenario-level splits intact, shuffles rows
+44 -> 6 climate-v6 dataset, keeps scenario-level splits intact, shuffles rows
 deterministically inside the training split, selects candidates using validation
 only, and evaluates the test split only after a winner is frozen.
 """
@@ -101,13 +101,13 @@ def configure_tensorflow_determinism(seed: int) -> Any:
 
 
 def _assert_climate_dataset(dataset: Dataset) -> None:
-    if dataset.features.ndim != 2 or dataset.features.shape[1] != 38:
-        raise ValueError("climate-v6 training requires exactly 38 features")
+    if dataset.features.ndim != 2 or dataset.features.shape[1] != 44:
+        raise ValueError("climate-v6 training requires exactly 44 features")
     if dataset.labels.ndim != 2 or dataset.labels.shape[1] != 6:
         raise ValueError("climate-v6 training requires exactly 6 outputs")
     if dataset.output_names != CLIMATE_OUTPUT_NAMES:
         raise ValueError("dataset output order does not match climate-v6")
-    if len(set(dataset.feature_names)) != 38:
+    if len(set(dataset.feature_names)) != 44:
         raise ValueError("climate-v6 feature names must be unique")
     if not np.isfinite(dataset.features).all() or not np.isfinite(dataset.labels).all():
         raise ValueError("training dataset contains NaN/Inf")
@@ -128,7 +128,7 @@ def build_climate_model(*, config: ClimateTrainingConfig) -> Any:
     keras = tf.keras
     model = keras.Sequential(
         [
-            keras.layers.Input(shape=(38,), name="climate_v6_features"),
+            keras.layers.Input(shape=(44,), name="climate_v6_features"),
             keras.layers.Dense(
                 config.hidden_units,
                 activation="relu",
@@ -154,7 +154,7 @@ def build_climate_model(*, config: ClimateTrainingConfig) -> Any:
         name="growbox_climate_v6_controller",
     )
     hidden_units = int(config.hidden_units)
-    expected_params = hidden_units * hidden_units + 46 * hidden_units + 6
+    expected_params = hidden_units * hidden_units + 52 * hidden_units + 6
     if model.count_params() != expected_params:
         raise AssertionError(
             "unexpected climate-v6 parameter count: "

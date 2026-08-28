@@ -16,12 +16,12 @@ from tools.ml.run_dagger_distributed import (
 def _rows(values: list[int]) -> DaggerRows:
     row_count = len(values)
     dataset = Dataset(
-        features=np.asarray([[float(value)] * 38 for value in values], dtype=np.float32),
+        features=np.asarray([[float(value)] * 44 for value in values], dtype=np.float32),
         labels=np.asarray([[float(value) / 10.0] * 6 for value in values], dtype=np.float32),
         scenario_ids=np.asarray([f"scenario-{value}" for value in values]),
         scenario_seeds=np.asarray(values, dtype=np.int64),
         splits=np.full(row_count, "train"),
-        feature_names=tuple(f"feature-{index}" for index in range(38)),
+        feature_names=tuple(f"feature-{index}" for index in range(44)),
         output_names=(
             "heater",
             "cooler",

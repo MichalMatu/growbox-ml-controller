@@ -140,7 +140,7 @@ def main() -> None:
     )
 
     dataset = bundle.dataset
-    if dataset.features.shape != (expected_rows, 38):
+    if dataset.features.shape != (expected_rows, 44):
         raise AssertionError(f"unexpected feature shape: {dataset.features.shape}")
     if dataset.labels.shape != (expected_rows, 6):
         raise AssertionError(f"unexpected label shape: {dataset.labels.shape}")

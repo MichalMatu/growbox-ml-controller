@@ -1,6 +1,6 @@
 """Portable climate-v6 MLP artifact and NumPy inference.
 
-The artifact stores exact float32 weights for a two-hidden-layer 38 -> H1 -> H2 -> 6
+The artifact stores exact float32 weights for a two-hidden-layer 44 -> H1 -> H2 -> 6
 Keras model plus contract identity. NumPy inference is deliberately independent
 of TensorFlow so closed-loop benchmarks and later embedded export exercise the
 persisted model rather than an in-memory training object.
@@ -45,8 +45,8 @@ class ClimateModelMetadata:
             ch not in "0123456789abcdef" for ch in self.contract_hash
         ):
             raise ValueError("contract_hash must be a lowercase SHA-256 hex digest")
-        if len(self.feature_names) != 38 or len(set(self.feature_names)) != 38:
-            raise ValueError("portable climate model requires 38 unique feature names")
+        if len(self.feature_names) != 44 or len(set(self.feature_names)) != 44:
+            raise ValueError("portable climate model requires 44 unique feature names")
         if len(self.output_names) != 6 or len(set(self.output_names)) != 6:
             raise ValueError("portable climate model requires 6 unique output names")
         if not self.candidate_name:
@@ -62,8 +62,8 @@ def _validate_weight_arrays(weights: tuple[np.ndarray, ...]) -> None:
     arrays = tuple(np.asarray(value) for value in weights)
     w1, b1, w2, b2, w3, b3 = arrays
 
-    if w1.ndim != 2 or w1.shape[0] != 38 or w1.shape[1] <= 0:
-        raise ValueError(f"weight 0 has shape {w1.shape}, expected (38, H1)")
+    if w1.ndim != 2 or w1.shape[0] != 44 or w1.shape[1] <= 0:
+        raise ValueError(f"weight 0 has shape {w1.shape}, expected (44, H1)")
     hidden_1 = int(w1.shape[1])
     if b1.shape != (hidden_1,):
         raise ValueError(f"weight 1 has shape {b1.shape}, expected ({hidden_1},)")
@@ -108,8 +108,8 @@ class ClimatePortableModel:
         single = values.ndim == 1
         if single:
             values = values.reshape(1, -1)
-        if values.ndim != 2 or values.shape[1] != 38:
-            raise ValueError("portable climate model expects shape (38,) or (N, 38)")
+        if values.ndim != 2 or values.shape[1] != 44:
+            raise ValueError("portable climate model expects shape (44,) or (N, 44)")
         if not np.isfinite(values).all():
             raise ValueError("model input contains NaN/Inf")
         w1, b1, w2, b2, w3, b3 = self.weights

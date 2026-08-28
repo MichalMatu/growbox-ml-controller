@@ -14,6 +14,7 @@ import numpy as np
 
 from .climate_input import (
     CLIMATE_V6_CONTRACT_PATH,
+    ClimateEffectiveActionEstimator,
     ClimateInputConfig,
     ClimateTrendEstimator,
     MeasurementStatus,
@@ -215,6 +216,7 @@ def generate_climate_dataset(
     for episode_index, episode in enumerate(episodes):
         simulator = ClimateSimulator(episode.scenario)
         trend_estimator = ClimateTrendEstimator()
+        effective_estimator = ClimateEffectiveActionEstimator()
         status_rng = np.random.default_rng(episode.scenario.seed ^ 0x6A09E667 ^ episode_index)
 
         for step_index in range(config.steps_per_scenario):
@@ -243,6 +245,7 @@ def generate_climate_dataset(
                     simulator.scenario,
                     observation,
                     previous=simulator.previous_command,
+                    estimated_effective=effective_estimator.state,
                     trends=trends,
                     status=status,
                     config=input_config,
@@ -269,6 +272,7 @@ def generate_climate_dataset(
                 add_sensor_noise=False,
                 light_level=profile.light_level,
             )
+            effective_estimator.update(simulator.scenario, teacher_result.action)
 
     dataset = Dataset(
         features=np.asarray(feature_rows, dtype=np.float32),
@@ -304,8 +308,8 @@ def audit_climate_dataset(
     rows = int(features.shape[0]) if features.ndim == 2 else 0
     feature_count = int(features.shape[1]) if features.ndim == 2 else 0
     output_count = int(labels.shape[1]) if labels.ndim == 2 else 0
-    if feature_count != 38:
-        errors.append(f"expected 38 features, got {feature_count}")
+    if feature_count != 44:
+        errors.append(f"expected 44 features, got {feature_count}")
     if output_count != 6:
         errors.append(f"expected 6 outputs, got {output_count}")
     if dataset.output_names != CLIMATE_OUTPUT_NAMES:

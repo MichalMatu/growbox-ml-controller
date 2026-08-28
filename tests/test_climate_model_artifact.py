@@ -35,8 +35,8 @@ def test_portable_model_matches_keras_predictions() -> None:
     config = ClimateTrainingConfig.quick(seed=1847)
     keras_model = build_climate_model(config=config)
     portable = from_keras_model(keras_model, _metadata())
-    features = np.random.default_rng(13).uniform(0.0, 1.0, size=(32, 38)).astype(np.float32)
-    assert portable.parameter_count == 2502
+    features = np.random.default_rng(13).uniform(0.0, 1.0, size=(32, 44)).astype(np.float32)
+    assert portable.parameter_count == 2694
     assert portable.hidden_units == (32, 32)
     assert max_prediction_delta(keras_model, portable, features) <= 2.0e-6
     prediction = portable.predict(features)
@@ -49,9 +49,9 @@ def test_portable_model_supports_wider_hidden_layers(tmp_path: Path) -> None:
     config = ClimateTrainingConfig(seed=1847, epochs=1, batch_size=32, hidden_units=64)
     keras_model = build_climate_model(config=config)
     portable = from_keras_model(keras_model, _metadata())
-    features = np.random.default_rng(17).uniform(0.0, 1.0, size=(16, 38)).astype(np.float32)
+    features = np.random.default_rng(17).uniform(0.0, 1.0, size=(16, 44)).astype(np.float32)
 
-    assert portable.parameter_count == 7046
+    assert portable.parameter_count == 7430
     assert portable.hidden_units == (64, 64)
     assert max_prediction_delta(keras_model, portable, features) <= 2.0e-6
 
@@ -60,7 +60,7 @@ def test_portable_model_supports_wider_hidden_layers(tmp_path: Path) -> None:
     save_portable_model(portable, weights_path, metadata_path)
     loaded = load_portable_model(weights_path, metadata_path)
     assert loaded.hidden_units == (64, 64)
-    assert loaded.parameter_count == 7046
+    assert loaded.parameter_count == 7430
     np.testing.assert_array_equal(loaded.predict(features), portable.predict(features))
 
 
@@ -72,10 +72,10 @@ def test_portable_model_round_trip(tmp_path: Path) -> None:
     metadata_path = tmp_path / "model.json"
     save_portable_model(portable, weights_path, metadata_path)
     loaded = load_portable_model(weights_path, metadata_path)
-    features = np.random.default_rng(21).uniform(0.0, 1.0, size=(7, 38)).astype(np.float32)
+    features = np.random.default_rng(21).uniform(0.0, 1.0, size=(7, 44)).astype(np.float32)
     np.testing.assert_array_equal(loaded.predict(features), portable.predict(features))
     assert loaded.metadata == portable.metadata
-    assert loaded.parameter_count == 2502
+    assert loaded.parameter_count == 2694
 
 
 def test_portable_model_rejects_tampered_weights(tmp_path: Path) -> None:
@@ -105,7 +105,7 @@ def test_portable_model_rejects_bad_shape() -> None:
 def test_portable_model_rejects_nonfinite_input() -> None:
     config = ClimateTrainingConfig.quick(seed=1847)
     portable = from_keras_model(build_climate_model(config=config), _metadata())
-    bad = np.zeros((38,), dtype=np.float32)
+    bad = np.zeros((44,), dtype=np.float32)
     bad[3] = np.nan
     with pytest.raises(ValueError, match="NaN/Inf"):
         portable.predict(bad)

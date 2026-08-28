@@ -23,8 +23,8 @@ from tools.ml.climate_scenarios import (
 from tools.ml.climate_simulator import ClimateAction, ClimateState
 
 ROOT = Path(__file__).resolve().parents[1]
-WEIGHTS = ROOT / "reports" / "ml" / "climate_v6_model_seed1847.npz"
-METADATA = ROOT / "reports" / "ml" / "climate_v6_model_seed1847.json"
+WEIGHTS = ROOT / "reports" / "ml" / "climate_v6_model_stage13_compat.npz"
+METADATA = ROOT / "reports" / "ml" / "climate_v6_model_stage13_compat.json"
 
 
 def _profile(*, temperature: float = 24.0, humidity: float = 60.0) -> ClimateProfile:

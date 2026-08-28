@@ -68,7 +68,7 @@
   },
   "model": {
     "normalization": "minmax_to_zero_one",
-    "feature_count": 38,
+    "feature_count": 44,
     "features": [
       {
         "name": "air_temperature_c",
@@ -356,6 +356,60 @@
       {
         "name": "previous_co2_doser",
         "path": "previous.co2_doser",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0
+      },
+      {
+        "name": "estimated_effective_heater",
+        "path": "estimated_effective.heater",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0
+      },
+      {
+        "name": "estimated_effective_cooler",
+        "path": "estimated_effective.cooler",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0
+      },
+      {
+        "name": "estimated_effective_exhaust_fan",
+        "path": "estimated_effective.exhaust_fan",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0
+      },
+      {
+        "name": "estimated_effective_humidifier",
+        "path": "estimated_effective.humidifier",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0
+      },
+      {
+        "name": "estimated_effective_dehumidifier",
+        "path": "estimated_effective.dehumidifier",
+        "type": "number",
+        "unit": "ratio",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.0
+      },
+      {
+        "name": "estimated_effective_co2_doser",
+        "path": "estimated_effective.co2_doser",
         "type": "number",
         "unit": "ratio",
         "minimum": 0.0,

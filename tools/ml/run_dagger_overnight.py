@@ -138,7 +138,7 @@ def init() -> None:
     if not BASE_DATASET.exists() or not INITIAL_WEIGHTS.exists() or not INITIAL_METADATA.exists():
         raise FileNotFoundError("Stage 10 requires Stage 9B dataset and Stage 9C portable model")
     base = Dataset.load(BASE_DATASET)
-    if base.features.shape != (7200, 38) or base.labels.shape != (7200, 6):
+    if base.features.shape != (7200, 44) or base.labels.shape != (7200, 6):
         raise ValueError("unexpected Stage 9B base dataset shape")
     split_counts = {
         split: int(np.sum(base.splits == split)) for split in ("train", "validation", "test")

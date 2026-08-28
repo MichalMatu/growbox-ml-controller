@@ -243,7 +243,7 @@ def generate_base(output: Path, workers: int) -> None:
         require_humidity_mode_coverage_in_each_split=True,
         bundle=bundle,
     )
-    if bundle.dataset.features.shape != (7200, 38) or bundle.dataset.labels.shape != (7200, 6):
+    if bundle.dataset.features.shape != (7200, 44) or bundle.dataset.labels.shape != (7200, 6):
         raise AssertionError("Stage 11 regenerated base dataset shape mismatch")
     split_counts = {
         split: int(np.sum(bundle.dataset.splits == split))

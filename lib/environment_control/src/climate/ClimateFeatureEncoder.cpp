@@ -90,6 +90,15 @@ ClimateFeatureVector ClimateFeatureEncoder::encode(const ClimateControllerInput&
   w.write(contract::FeatureIndex::PreviousHumidifier, input.previous.humidifier);
   w.write(contract::FeatureIndex::PreviousDehumidifier, input.previous.dehumidifier);
   w.write(contract::FeatureIndex::PreviousCo2Doser, input.previous.co2_doser);
+  w.write(contract::FeatureIndex::EstimatedEffectiveHeater, input.estimated_effective.heater);
+  w.write(contract::FeatureIndex::EstimatedEffectiveCooler, input.estimated_effective.cooler);
+  w.write(contract::FeatureIndex::EstimatedEffectiveExhaustFan,
+          input.estimated_effective.exhaust_fan);
+  w.write(contract::FeatureIndex::EstimatedEffectiveHumidifier,
+          input.estimated_effective.humidifier);
+  w.write(contract::FeatureIndex::EstimatedEffectiveDehumidifier,
+          input.estimated_effective.dehumidifier);
+  w.write(contract::FeatureIndex::EstimatedEffectiveCo2Doser, input.estimated_effective.co2_doser);
   w.flag(contract::FeatureIndex::HeaterAvailable, input.capabilities.heater);
   w.flag(contract::FeatureIndex::CoolerAvailable, input.capabilities.cooler);
   w.flag(contract::FeatureIndex::ExhaustFanAvailable, input.capabilities.exhaust_fan);

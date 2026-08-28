@@ -8,6 +8,7 @@ import numpy as np
 from tools.ml.climate_input import (
     CLIMATE_V6_CONTRACT_PATH,
     DEFAULT_SENSOR_TIMEOUT_MS,
+    ClimateEffectiveActionEstimator,
     ClimateInputConfig,
     ClimateTargets,
     ClimateTrendEstimator,
@@ -58,11 +59,12 @@ def test_python_encoder_matches_cpp_reference_case() -> None:
         scenario,
         state,
         previous=ClimateAction(heater=2.0),
+        estimated_effective=ClimateAction(heater=0.25),
         trends=trends,
         status=status,
         config=config,
     )
-    assert vector.shape == (38,)
+    assert vector.shape == (44,)
     assert math.isclose(feature_value(vector, "air_temperature_c"), 0.55, abs_tol=1e-6)
     assert feature_value(vector, "co2_valid") == 0.0
     assert feature_value(vector, "co2_fresh") == 1.0
@@ -70,6 +72,7 @@ def test_python_encoder_matches_cpp_reference_case() -> None:
     assert feature_value(vector, "humidity_control_mode") == 1.0
     assert math.isclose(feature_value(vector, "light_level"), 0.75, abs_tol=1e-6)
     assert feature_value(vector, "previous_heater") == 1.0
+    assert math.isclose(feature_value(vector, "estimated_effective_heater"), 0.25, abs_tol=1e-6)
 
     contract = load_contract(CLIMATE_V6_CONTRACT_PATH)
     defaults = {feature.name: feature for feature in contract.features}
@@ -234,3 +237,32 @@ def test_active_targets_and_mode_are_encoded_without_wall_clock() -> None:
     assert record["targets"]["co2_enabled"] is True
     assert record["schedule"]["light_level"] == 0.8
     assert "current_time" not in record
+
+
+def test_effective_action_estimator_matches_simulator_response_lag() -> None:
+    scenario = ClimateScenario()
+    from tools.ml.climate_simulator import ClimateSimulator
+
+    simulator = ClimateSimulator(scenario)
+    estimator = ClimateEffectiveActionEstimator()
+    commands = (
+        ClimateAction(heater=1.0, exhaust_fan=0.8, humidifier=0.6),
+        ClimateAction(heater=0.2, exhaust_fan=0.1, humidifier=0.0),
+        ClimateAction(heater=0.0, exhaust_fan=1.0, humidifier=0.4),
+    )
+    for command in commands:
+        simulator.step(command, add_sensor_noise=False)
+        estimated = estimator.update(scenario, command)
+        assert np.allclose(
+            np.asarray(estimated.as_tuple()),
+            np.asarray(simulator.effective_action.as_tuple()),
+            atol=1.0e-12,
+        )
+
+
+def test_effective_action_estimator_reset_returns_zero_state() -> None:
+    scenario = ClimateScenario()
+    estimator = ClimateEffectiveActionEstimator()
+    estimator.update(scenario, ClimateAction(heater=1.0))
+    estimator.reset()
+    assert estimator.state == ClimateAction()

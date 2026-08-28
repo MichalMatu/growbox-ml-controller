@@ -17,7 +17,7 @@ from tools.ml.dataset import Dataset
 def _dataset() -> Dataset:
     rng = np.random.default_rng(117)
     rows = 30
-    features = rng.uniform(0.0, 1.0, size=(rows, 38)).astype(np.float32)
+    features = rng.uniform(0.0, 1.0, size=(rows, 44)).astype(np.float32)
     labels = np.zeros((rows, 6), dtype=np.float32)
     for row in range(rows):
         labels[row, row % 6] = 0.80
@@ -28,7 +28,7 @@ def _dataset() -> Dataset:
         scenario_ids=np.asarray([f"weighted-{row:02d}" for row in range(rows)]),
         scenario_seeds=np.arange(rows, dtype=np.int64),
         splits=np.asarray(["train"] * 18 + ["validation"] * 6 + ["test"] * 6),
-        feature_names=tuple(f"feature_{index}" for index in range(38)),
+        feature_names=tuple(f"feature_{index}" for index in range(44)),
         output_names=CLIMATE_OUTPUT_NAMES,
     )
 

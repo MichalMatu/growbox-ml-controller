@@ -16,6 +16,7 @@ from pathlib import Path
 import numpy as np
 
 from .climate_input import (
+    ClimateEffectiveActionEstimator,
     ClimateInputConfig,
     ClimateTrendEstimator,
     MeasurementStatus,
@@ -93,6 +94,7 @@ def _ml_actions(
     config: Co2AuditConfig,
     model: ClimatePortableModel,
     trends: ClimateTrendEstimator,
+    effective: ClimateEffectiveActionEstimator,
 ) -> tuple[ClimateAction, ClimateAction, dict[str, MeasurementStatus]]:
     profile = episode.profile_for_step(step, config.steps_per_scenario)
     simulator.set_light_level(profile.light_level)
@@ -108,6 +110,7 @@ def _ml_actions(
         simulator.scenario,
         state,
         previous=simulator.previous_command,
+        estimated_effective=effective.state,
         trends=trend_values,
         status=status,
         config=ClimateInputConfig(
@@ -131,11 +134,12 @@ def _policy_actions(
     config: Co2AuditConfig,
     model: ClimatePortableModel | None,
     trends: ClimateTrendEstimator,
+    effective: ClimateEffectiveActionEstimator,
 ) -> tuple[ClimateAction, ClimateAction, dict[str, MeasurementStatus]]:
     if policy.startswith("ml_"):
         if model is None:
             raise ValueError("ML audit policy requires a model")
-        return _ml_actions(simulator, episode, step, config, model, trends)
+        return _ml_actions(simulator, episode, step, config, model, trends, effective)
 
     profile = episode.profile_for_step(step, config.steps_per_scenario)
     simulator.set_light_level(profile.light_level)
@@ -174,6 +178,7 @@ def _run_policy_episode(
 ) -> Co2EpisodeMetrics:
     simulator = ClimateSimulator(episode.scenario)
     trends = ClimateTrendEstimator()
+    effective = ClimateEffectiveActionEstimator()
     co2_abs_sum = 0.0
     exhaust_on_error_sum = 0.0
     exhaust_off_error_sum = 0.0
@@ -204,6 +209,7 @@ def _run_policy_episode(
             config,
             model,
             trends,
+            effective,
         )
         arbitration = arbitrate_climate_action(requested, simulator.scenario)
         safety = apply_climate_safety(
@@ -220,6 +226,7 @@ def _run_policy_episode(
             add_sensor_noise=False,
             light_level=profile.light_level,
         )
+        effective.update(simulator.scenario, applied)
 
         co2_status = status.get("co2_ppm", MeasurementStatus())
         if not profile.targets.co2_enabled or not co2_status.usable(
