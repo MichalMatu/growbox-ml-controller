@@ -1,0 +1,33 @@
+{
+  "id": "20260828-growbox-stage13-effective-observability-fix-v2",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "workflow_policy": "efficient-verification-v1",
+  "command_timeout": 1800,
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "memory_limit_mb": 8192,
+  "steps": [
+    {
+      "name": "recover-stage13-parameter-count",
+      "verification_level": "work",
+      "timeout": 600,
+      "command": "set -euo pipefail; EXPECTED=f4700a6ba9f22e13cf1b35fff6d28424f5807711; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test -n \"$(git status --porcelain)\"; test -z \"$(git diff --cached --name-only)\"; PYTHONPATH=. .venv/bin/python - <<'PY'\nimport json\nfrom pathlib import Path\nd=json.loads(Path('schemas/environment-controller.v6.json').read_text())\nassert d['model']['feature_count'] == 44\nassert len(d['model']['features']) == 44\nassert 'assert model.input_shape == (None, 44)' in Path('tests/test_climate_training.py').read_text()\nassert 'expected_params = hidden_units * hidden_units + 46 * hidden_units + 6' in Path('tools/ml/climate_training.py').read_text()\nPY\ngit fetch origin agent-control; git show origin/agent-control:.agent/task-assets/stage13/fix_stage13_parameter_count.py > /tmp/fix-stage13-parameter-count.py; .venv/bin/python /tmp/fix-stage13-parameter-count.py; .venv/bin/ruff check --fix tools/ml/climate_training.py tests/test_climate_training.py; .venv/bin/ruff format tools/ml/climate_training.py tests/test_climate_training.py; git diff --check; git status --short"
+    },
+    {
+      "name": "focused-stage13-observability-recovery",
+      "verification_level": "focused",
+      "timeout": 1800,
+      "command": "set -euo pipefail; .venv/bin/python tools/schema/generate_climate_contract.py --check; .venv/bin/python -m pytest tests/test_mvp_contract_v6.py tests/test_climate_input.py tests/test_climate_dataset.py tests/test_climate_training.py tests/test_climate_training_weighted.py tests/test_climate_dagger.py tests/test_climate_dagger_distributed.py tests/test_climate_model_artifact.py -q; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests -R climate_v6_tests --output-on-failure; git diff --check"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "full-regression-and-publish-stage13-recovery",
+      "verification_level": "full",
+      "timeout": 3600,
+      "command": "set -euo pipefail; git add -A; .venv/bin/pre-commit run --all-files; .venv/bin/python -m pytest -q -m 'not hardware'; bash scripts/check_schema.sh; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests --output-on-failure; bash scripts/run_clang_tidy_host.sh; git diff --check; git add -A; git diff --cached --check; git commit -m 'Add effective actuator observability'; git push origin HEAD:mvp/environment-controller"
+    }
+  ]
+}
