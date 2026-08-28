@@ -1,0 +1,9 @@
+{
+  "event": "invalid_task_rejected",
+  "status": "failed",
+  "failure_reason": "invalid_task_file",
+  "updated_at": "2026-08-28T21:42:06.163100+00:00",
+  "task_id": "20260828-growbox-ci-esp-idf-v5-5-4-v1",
+  "daemon_version": "4.10.2",
+  "pid": 31263
+}
