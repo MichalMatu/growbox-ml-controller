@@ -2,7 +2,7 @@
 
 ESP32-S3 environment-control research and product-development repository combining a portable C++ controller, TinyML inference, deterministic safety, simulation/calibration tooling, a scientific 3D twin, and browser-based hardware configuration.
 
-> **Integration status:** `integration/convergence-2026-08` is a non-destructive convergence workspace. The original product lines and dated archive snapshots remain available until this branch is fully validated. See [docs/INTEGRATION_CONVERGENCE.md](docs/INTEGRATION_CONVERGENCE.md).
+> **Current controller status:** climate-v6 runtime work continues on `mvp/environment-controller`. Rule is authoritative, ML is shadow/research-only, and the hardware-neutral I/O seam is now being integrated. See [docs/CURRENT_STATUS.md](docs/CURRENT_STATUS.md).
 
 ## Live demos
 
@@ -15,11 +15,11 @@ The currently deployed Pages build still comes from the preserved configurator l
 
 ### ESP32-S3 controller and firmware
 
-The native ESP-IDF application runs a generated C inference model and places a deterministic `SafetySupervisor` between the model proposal and the final control decision. The demonstration firmware uses a local simulator and bounded UART/NDJSON protocol; it does **not** drive real GPIO loads in the demo configuration.
+The preserved ESP-IDF demonstration still uses the legacy `EnvironmentController` plus local simulator/UART protocol. In parallel, the current climate-v6 C++ runtime (`ClimateRuntimeController` + `ClimateControlLoop`) is host/HIL tested and compiled into the real ESP32-S3 firmware build. It does **not** drive real GPIO loads yet.
 
 The portable `lib/environment_control` layer is intentionally independent of ESP-IDF, Arduino, serial I/O, JSON, GPIO, Wi-Fi, FreeRTOS, sensor drivers and the simulator.
 
-**Firmware/controller contract:** `schemas/environment-controller.json` is currently **schema v4: 4 pot slots, 128 model features and 15 outputs**. This remains the active firmware/wire contract during repository convergence.
+**Contract boundary:** the preserved legacy demo/wire path still uses root schema v4, while all new climate-controller runtime work targets `schemas/environment-controller.v6.json`: **44 runtime-observable features and 6 ML-controlled climate outputs**. The contracts are intentionally not silently mixed.
 
 ### ML pipeline and simulation
 
@@ -48,38 +48,29 @@ The browser configurator has evolved beyond the current firmware contract and th
 
 The v4 firmware and v5 browser contract are deliberately kept separate during convergence. This is an architectural migration boundary, not something to silently reconcile as repository cleanup.
 
+
 ## Control path
 
 ```mermaid
 flowchart TB
-    subgraph Host["Development / simulation host"]
-        V4["Firmware contract v4\n128 features / 15 outputs"] --> Sim["Simulation / teacher / calibration"]
-        Sim --> Train["Keras training"]
-        Train --> Export["emlearn-compatible C model"]
-        Twin["PyVista scientific twin\nGrowboxProfile"] --> Sim
-    end
-
-    subgraph Board["ESP32-S3 / ESP-IDF"]
-        Input["Sensors / validity / targets / capabilities"] --> Encoder["FeatureEncoder"]
-        Encoder --> Runtime["ModelRuntime"]
-        Runtime --> Proposal["Raw ML proposal"]
-        Proposal --> Safety["Deterministic SafetySupervisor"]
-        Input --> Safety
-        Safety --> Decision["Safe control decision"]
-        Decision --> Demo["Demo simulator / NDJSON"]
-    end
-
-    Export --> Runtime
-
-    subgraph Browser["Browser tooling"]
-        V5["Configurator contract v5\n228 features / 25 outputs"] --> Config["Hardware / JSON configurator"]
-        Config --> Chamber["React Three Fiber chamber 3D"]
-    end
+    Providers["Measurements / config / time providers"] --> InputAdapter["ClimateInputAdapter"]
+    InputAdapter --> Loop["ClimateControlLoop"]
+    Loop --> Runtime["ClimateRuntimeController"]
+    Runtime --> Rule["Rule policy — authoritative"]
+    Runtime --> ML["ML — shadow by default"]
+    Rule --> Arb["Arbitration + deterministic safety"]
+    ML --> Arb
+    Arb --> Sink["ClimateActuatorAdapter"]
+    Sink --> Roles["Semantic actuator roles"]
+    Roles --> Hardware["GPIO / relays / remote devices later"]
 ```
+
+The legacy simulator/serial demo remains available while this climate-v6 application path is being
+integrated. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Firmware stack
 
-- ESP-IDF 5.5.1 baseline in CI
+- ESP-IDF 5.5.4 baseline in CI
 - ESP32-S3, C++17
 - CMake / CTest portable host tests
 - emlearn-compatible generated C inference
@@ -178,7 +169,7 @@ pnpm --dir web build
 The convergence branch validates the product layers independently:
 
 1. Python / host C++ / generated-artifact / clang-tidy checks.
-2. ESP-IDF 5.5.1 ESP32-S3 firmware build and clang-check.
+2. ESP-IDF 5.5.4 ESP32-S3 firmware build and clang-check.
 3. Browser typecheck, lint, tests and production build.
 
 The separate gates are intentional: a frontend experiment must not silently redefine the firmware contract, and firmware changes must not silently break the browser tooling.

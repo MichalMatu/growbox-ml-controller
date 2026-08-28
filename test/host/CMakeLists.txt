@@ -79,12 +79,28 @@ target_include_directories(climate_virtual_hil_tests PRIVATE "${PROJECT_ROOT}/li
 target_compile_features(climate_virtual_hil_tests PRIVATE cxx_std_17)
 target_compile_options(climate_virtual_hil_tests PRIVATE -Wall -Wextra -Wpedantic)
 
+
+add_executable(
+  climate_io_adapter_tests
+  "${PROJECT_ROOT}/test/test_climate_io_adapters/test_main.cpp"
+  "${PROJECT_ROOT}/src/climate/ClimateIoAdapters.cpp"
+)
+target_include_directories(
+  climate_io_adapter_tests
+  PRIVATE
+    "${PROJECT_ROOT}/src"
+    "${PROJECT_ROOT}/lib/environment_control/src"
+)
+target_compile_features(climate_io_adapter_tests PRIVATE cxx_std_17)
+target_compile_options(climate_io_adapter_tests PRIVATE -Wall -Wextra -Wpedantic)
+
 if(UNIX)
   target_link_libraries(environment_control_tests PRIVATE m)
   target_link_libraries(climate_v6_tests PRIVATE m)
   target_link_libraries(climate_runtime_parity_tests PRIVATE m)
   target_link_libraries(climate_control_loop_tests PRIVATE m)
   target_link_libraries(climate_virtual_hil_tests PRIVATE m)
+  target_link_libraries(climate_io_adapter_tests PRIVATE m)
 endif()
 
 enable_testing()
@@ -93,3 +109,4 @@ add_test(NAME climate_v6_tests COMMAND climate_v6_tests)
 add_test(NAME climate_runtime_parity_tests COMMAND climate_runtime_parity_tests)
 add_test(NAME climate_control_loop_tests COMMAND climate_control_loop_tests)
 add_test(NAME climate_virtual_hil_tests COMMAND climate_virtual_hil_tests)
+add_test(NAME climate_io_adapter_tests COMMAND climate_io_adapter_tests)

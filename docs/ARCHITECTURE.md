@@ -1,92 +1,107 @@
 # Architecture
 
-Work plan and v2 I/O roadmap: [plan.md](plan.md). Hardware mapping: [IO_MAP.md](IO_MAP.md).
+Current status: [CURRENT_STATUS.md](CURRENT_STATUS.md).
+Hardware plan: [MVP_HARDWARE_SENSOR_SET.md](MVP_HARDWARE_SENSOR_SET.md).
+Scientific decisions: [ML_DECISION_REPORT.md](ML_DECISION_REPORT.md).
 
-## Design goals
+## Design rule
 
-The repository separates a portable, deterministic controller from every deployment concern. The
-same `environment_control` library is used by the ESP-IDF demonstration and is intended to move
-unchanged into GrowClip Nodeflow. The library does not depend on ESP-IDF, Arduino, serial I/O, JSON,
-GPIO, networking, FreeRTOS, a sensor driver, an actuator driver, or either simulator.
+The climate controller is independent from sensor libraries and physical actuator endpoints.
+Hardware produces semantic measurements and consumes semantic role commands. The controller does
+not know whether a value came from I2C, BLE, MQTT, a simulator or a recorded trace.
+
+## Current climate-v6 path
 
 ```text
-Standalone ESP-IDF demo                         GrowClip later
-----------------------                         --------------
-DummyEnvironmentSimulator                      Nodeflow sensor providers
-             |                                               |
-             +--------------- ControllerInput ---------------+
-                                      |
-                               FeatureEncoder
-                                      |
-                                ModelRuntime
-                                      |
-                              SafetySupervisor
-                                      |
-                           SafeControlDecision
-             +------------------------+-----------------------+
-             |                                                |
-Demo simulator adapter                           Nodeflow actuator bridge
+sensor/config/time providers
+           |
+           v
+  ClimateInputSnapshot
+           |
+           v
+  ClimateInputAdapter
+           |
+           v
+   ClimateControlLoop
+           |
+           v
+ClimateRuntimeController
+   |               |
+   | Rule          | optional ML
+   |               | (shadow by default)
+   +-------+-------+
+           |
+      arbitration
+           |
+  deterministic safety
+           |
+           v
+   semantic safe command
+           |
+           v
+ ClimateActuatorAdapter
+           |
+           v
+   semantic role driver
+           |
+           v
+GPIO / relay / PWM / remote device later
 ```
 
-## ESP-IDF project boundary
+`ClimateControlLoop` is the I/O-facing safety boundary. If input acquisition fails, it passes an
+invalid/default input into the runtime so deterministic safety resolves to OFF. If an actuator
+command is rejected, it attempts all-OFF, resets unconfirmed runtime actuator state, and latches
+an actuator fault if OFF also fails.
 
-The root is a native ESP-IDF project targeting ESP32-S3. `src/` is registered as the application
-component, `lib/environment_control` is a separate portable component, and
-`components/emlearn_runtime` provides only the dense-network API required by the generated model.
-The current CI firmware baseline is ESP-IDF 5.5.1.
+The loop owns confirmed previous-applied actions. The runtime owns trend estimation and the
+effective-actuator estimator. Sensor/configuration adapters must not duplicate those states.
 
-The application component owns UART setup, monotonic scheduling, cJSON parsing/serialization,
-heap diagnostics, and the local demo lifecycle. It executes one controller cycle per wall-clock
-second, representing ten simulated seconds. No code path configures or writes GPIO.
+## Policy modes
 
-## Layers
+- `Rule` — authoritative default and current production recommendation.
+- `MlShadow` — ML is evaluated and recorded but Rule remains authoritative.
+- `MlActive` — explicit research-only opt-in; not qualified for real actuation.
 
-### Contract and generated metadata
+Arbitration and deterministic safety remain authoritative regardless of policy mode.
 
-`schemas/environment-controller.json` owns field names, feature and output order, ranges,
-defaults, units, and availability semantics. The generator emits `EnvironmentSchema.h` and model
-metadata. A canonical schema hash is embedded in the schema header, model header, model manifest,
-and boot log. The model runtime refuses inference when these values differ.
+## Climate-v6 contract
 
-### Portable controller library
+`schemas/environment-controller.v6.json` and generated `ClimateContract.h` define schema v6,
+contract `climate-mvp-v1`, 44 features and 6 ML-controlled semantic outputs. Inputs contain only
+runtime-observable state: measurements with validity/freshness, targets, schedule level, trends,
+previous applied actions, estimated effective actions and role capabilities.
 
-- `FeatureEncoder` validates finite values, applies validity masks, clamps inputs to contract
-  ranges, and normalizes the fixed-size feature vector.
-- `ModelRuntime` validates model metadata and invokes the generated emlearn model through a narrow,
-  status-code-based API.
-- `SafetySupervisor` deterministically enforces actuator availability and independent safety/timing
-  constraints. It does not rely on model behavior for safety.
-- `EnvironmentController` composes the three stages and returns the decision plus diagnostics. It
-  neither logs nor touches hardware.
+The older root `schemas/environment-controller.json` and legacy `EnvironmentController` demo are
+retained during migration because the serial demo/browser history still depends on them. They
+are not the architecture for new climate-v6 runtime work.
 
-Inference uses stack or caller-owned fixed-size objects. It does not allocate dynamically or throw
-exceptions.
+## Application I/O boundary
 
-### Demonstration firmware
+`src/climate/ClimateIoAdapters.*` provides the narrow application seam:
 
-The ESP-IDF application runs a local closed loop against `DummyEnvironmentSimulator`. It uses the
-built-in `json` component only to parse bounded serial commands and serialize NDJSON records. The
-UART adapter is outside the controller library, and the simulator is not linked into the portable
-component.
+- `ClimateSnapshotProvider` produces measurements, target/configuration state, schedule level,
+  capabilities and sensor timeout;
+- `ClimateInputAdapter` maps that snapshot to `ClimateInputSource`;
+- `ClimateRoleDriver` accepts one normalized semantic role command at a time;
+- `ClimateActuatorAdapter` maps all six climate outputs and reports failure if any role fails.
 
-### Host pipeline
+Concrete SCD41/BLE/RTC/GPIO dependencies stay outside `lib/environment_control`.
 
-The Python pipeline generates complete time-series scenarios from a growbox thermodynamics
-simulator (lumped-parameter, coupled T/RH/soil/fan/outside — see [plan.md](plan.md)), labels them
-with a deterministic finite-action rollout teacher, trains a small regression MLP, exports it
-through emlearn, compares Python and compiled-C predictions on golden vectors, and writes
-deterministic generated headers. Splits are by scenario seed, so steps from one simulated run
-cannot cross data partitions.
+## Verification layers
 
-Portable C++ tests use ordinary CMake and CTest. They compile the same controller sources and the
-same generated model as the firmware build.
+- Python scientific/simulator tests;
+- Python/C++ golden runtime parity;
+- portable C++ climate-v6 tests;
+- `ClimateControlLoop` failure tests;
+- multi-step virtual HIL tests;
+- application I/O adapter mapping tests;
+- real ESP-IDF ESP32-S3 compile gate;
+- GitHub Actions CI on ESP-IDF v5.5.4.
 
-## Safety boundary
+Simulator or virtual-HIL PASS establishes software behavior, not real hardware readiness.
 
-The model only proposes continuous values in `[0, 1]`. The safety supervisor can mask, clamp, or
-quantize proposals and reports a reason bitmask. Physical adapters remain responsible for mapping a
-safe normalized command to PWM, duty cycles, relay states, or timed pump pulses.
+## Preserved legacy demo
 
-The demo is an integration test, not a validated agronomic controller. The bundled environment
-simulator targets training-grade thermodynamic fidelity (not runtime on real hardware — sensors
-provide state there). Hardware interlocks remain mandatory in a real deployment.
+`src/main.cpp` still drives `DummyEnvironmentSimulator` through the older
+`EnvironmentController` and bounded UART/NDJSON protocol. This remains a reference/demo path
+until climate-v6 has concrete providers. Do not silently mix the legacy and climate-v6 contracts.

@@ -1,5 +1,7 @@
 # Repository convergence and cleanup
 
+> **Historical cleanup note:** this document records the repository convergence/branch cleanup. For the current climate-v6 runtime architecture and active development branch, use [CURRENT_STATUS.md](CURRENT_STATUS.md).
+
 The repository has converged onto `main`. Repository cleanup must preserve the two user interfaces and the useful historical recovery points while removing redundant branch names and stale planning material.
 
 ## Current source of truth
@@ -52,10 +54,10 @@ These branch names are redundant after the completed convergence and preservatio
 - retained both `tools/panel/` and `web/`;
 - preserved the chamber 3D room-layout reset fix from the former integration line.
 
+
 ## Contract state
 
-Repository cleanup is deliberately separate from the ML redesign:
-
-- firmware/controller currently uses schema v4: 4 pots, 128 features, 15 outputs;
-- browser tooling carries schema v5: up to 9 pots, 228 features, 25 outputs;
-- the next ML architecture may replace these with smaller stateless contracts, but that is separate product work.
+The convergence history includes legacy firmware schema v4 and browser schema v5. New climate
+runtime development targets schema v6 (`climate-mvp-v1`, 44 features, 6 ML-controlled climate
+outputs). The preserved legacy demo is intentionally not silently rewritten to v6. See
+`CURRENT_STATUS.md` for the live migration state.

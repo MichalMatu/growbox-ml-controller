@@ -1,6 +1,7 @@
 idf_component_register(
   SRCS
     "main.cpp"
+    "climate/ClimateIoAdapters.cpp"
     "demo/DummyEnvironmentSimulator.cpp"
     "demo/SerialJsonProtocol.cpp"
     "demo/protocol/JsonLineWriter.cpp"

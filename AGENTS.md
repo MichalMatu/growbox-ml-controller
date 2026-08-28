@@ -1,6 +1,6 @@
 # Agent notes — Growbox ML
 
-## Local Agent v4.9.6 — repository workflow
+## Local Agent v4.10.2 — repository workflow
 
 This repository is registered in the shared `MichalMatu/local-agent` multi-repository supervisor.
 
@@ -8,8 +8,8 @@ Canonical Local Agent source of truth:
 
 - repository: `MichalMatu/local-agent`
 - branch: `main`
-- release line: `v4.9.x`
-- current synchronized release: `4.9.6`
+- release line: `v4.10.x`
+- current synchronized release: `4.10.2`
 
 Repository identity:
 
@@ -35,7 +35,7 @@ When starting work on this repository in a new chat/session:
 9. Prefer remote run/status/result evidence over asking the user to copy local terminal logs when Local Agent can provide the state directly.
 10. Keep repository workspaces isolated. A Growbox task must not publish results through another repository's Local Agent control plane.
 
-### v4.9 execution rules
+### v4.10 execution rules
 
 - Local Agent is a deterministic executor, not a coding model. The planner chooses the exact commands/change; the daemon executes and reports evidence.
 - Machine-generated task content, commands, prompts, logs, code comments, documentation changes and commit messages authored for Local Agent execution must be English-only.

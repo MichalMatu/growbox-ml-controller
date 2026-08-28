@@ -1,6 +1,6 @@
 # Project layout
 
-Intentional structure after the v4 pots cleanup. Prefer this map over scattering new files at the root.
+Intentional repository structure. Current climate-v6 status is tracked in `CURRENT_STATUS.md`; legacy v4/v5 assets remain where required for migration/reproducibility.
 
 ```text
 .
@@ -25,9 +25,9 @@ Intentional structure after the v4 pots cleanup. Prefer this map over scattering
 ├── examples/                 # scenario JSONL samples
 ├── third_party/              # research clones (see third_party/README.md; not build deps)
 │
-├── lib/environment_control/  # portable C++ controller library
+├── lib/environment_control/  # portable legacy + climate-v6 C++ controller core
 ├── components/               # ESP-IDF extra components (emlearn)
-├── src/                      # ESP-IDF application (demo + serial)
+├── src/                      # ESP-IDF app; legacy demo plus climate-v6 I/O adapters
 │
 ├── test/                     # host CMake / Unity (portable C++)
 ├── tests/                    # pytest (Python + panel)

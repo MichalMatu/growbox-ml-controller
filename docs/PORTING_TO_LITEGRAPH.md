@@ -1,5 +1,7 @@
 # GrowClip Nodeflow integration strategy
 
+> **Migration note:** this document describes the older `EnvironmentController` integration model. New climate-v6 integration work should start from [CURRENT_STATUS.md](CURRENT_STATUS.md) and [ARCHITECTURE.md](ARCHITECTURE.md), using `ClimateControlLoop` and the semantic I/O adapter boundary.
+
 ## Decision
 
 Keep `growbox-ml-controller` as an independent upstream project. It is the canonical source for the

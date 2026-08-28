@@ -89,3 +89,19 @@ The BLE outside sensor remains external and wireless.
 Leaf temperature was intentionally removed from MVP v1 to keep the hardware, simulator and ML training dataset simpler. It can be reconsidered later only if it provides measurable value.
 
 Expansion remains possible later without changing the semantic controller contract.
+
+
+## Integration order
+
+Do not couple the climate core directly to a sensor library. The application-side
+`src/climate/ClimateIoAdapters.*` seam is integrated first and is tested with fakes.
+
+Concrete hardware work follows behind that seam:
+
+1. freeze the SCD41 library/driver and map its T/RH/CO2 readings into a snapshot provider;
+2. freeze the outside BLE sensor and map its T/RH plus freshness into the same snapshot;
+3. freeze the backed-up RTC and derive DAY/NIGHT target/schedule state outside the core;
+4. map physical output endpoints to semantic actuator roles;
+5. bring up hardware in Rule mode, then use ML_SHADOW for real trace collection.
+
+No soldering choice changes the 44-feature/6-output climate-v6 semantic contract.
