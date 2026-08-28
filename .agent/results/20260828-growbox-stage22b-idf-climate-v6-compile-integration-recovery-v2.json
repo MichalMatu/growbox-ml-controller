@@ -1,0 +1,61 @@
+{
+  "id": "20260828-growbox-stage22b-idf-climate-v6-compile-integration-recovery-v2",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "started_at": "2026-08-28T20:28:50.209738+00:00",
+  "command_timeout": 7200,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; EXPECTED=c0be9f78627e24bc65bc9d64981ed0e6c4528189; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; rm -f warnings.txt; test -z \"$(git status --porcelain)\"; IDF_EXPORT=''; for candidate in \"${IDF_EXPORT_SH:-}\" \"${HOME}/esp/esp-idf/export.sh\" \"${HOME}/esp-idf/export.sh\"; do if [[ -n \"$candidate\" && -f \"$candidate\" ]]; then IDF_EXPORT=\"$candidate\"; break; fi; done; test -n \"$IDF_EXPORT\"; IDF_ROOT=\"$(cd \"$(dirname \"$IDF_EXPORT\")\" && pwd)\"; if ! bash -lc \"source '$IDF_EXPORT' >/dev/null 2>&1 && command -v idf.py >/dev/null 2>&1\"; then test -f \"$IDF_ROOT/install.sh\"; bash \"$IDF_ROOT/install.sh\" esp32s3; fi; source \"$IDF_EXPORT\"; idf.py --version; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/stage22/apply_stage22b_idf_climate_v6_integration.py > /tmp/apply-stage22b-idf-climate-v6-integration.py; .venv/bin/python /tmp/apply-stage22b-idf-climate-v6-integration.py; .venv/bin/python -c \"from pathlib import Path; s=Path('lib/environment_control/CMakeLists.txt').read_text(); required=['src/climate/ClimateControlLoop.cpp','src/climate/ClimateFeatureEncoder.cpp','src/climate/ClimateRuntimeController.cpp','src/climate/ClimateTrendEstimator.cpp']; assert all(s.count(x)==1 for x in required)\"; git diff --check; git status --short",
+      "exit_code": 1,
+      "output": "Checking \"python3\" ...\nPython 3.13.9\n\"python3\" has been detected\n\nERROR: ESP-IDF Python virtual environment \"/Users/michal/.espressif/python_env/idf5.5_py3.13_env/bin/python\" not found. Please run the install script to set it up before proceeding.\n",
+      "elapsed_seconds": 8.143,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 8192,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 92.98,
+      "current_rss_mb": 92.98,
+      "stage_name": "restore-idf-python-env-and-apply-stage22b",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "stage_timeout": 3600,
+      "verification_level": "work"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "restore-idf-python-env-and-apply-stage22b",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "verification_level": "work",
+      "outcome": "failed",
+      "elapsed_seconds": 8.143
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.245
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.734
+  },
+  "failure_reason": "command_failed",
+  "finished_at": "2026-08-28T20:29:02.069659+00:00",
+  "task_digest": "42dd8238862a0d626c1fd960b5d135388e3c319b1661c19afb069251eee774c8",
+  "idle_timeout": 1200,
+  "task_timeout": 10800,
+  "memory_limit_mb": 8192,
+  "attempt_id": "c1e1746bb487d85ca801b82a",
+  "daemon_version": "4.10.2"
+}
