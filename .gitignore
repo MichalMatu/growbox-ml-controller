@@ -32,6 +32,7 @@ tmp/
 logs/
 captures/
 *.ndjson
+!tests/fixtures/climate_runtime_replay.ndjson
 *.log
 .serial-port
 
