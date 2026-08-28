@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260828-growbox-stage15d-dominant-request-coupling-dev-v1",
+  "task_digest": "a832e30142eeeb4b528967e6e591a2c7bc5e2e0115f39620cd594efd45e35436",
+  "idle_timeout": 600,
+  "task_timeout": 1200,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-28T07:42:16.972037+00:00",
+  "attempt_id": "a2b41bd5d7cc775c9ba8bda0",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 67186,
+  "updated_at": "2026-08-28T07:42:16.972243+00:00",
+  "pid": 67186
+}
