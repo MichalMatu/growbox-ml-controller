@@ -2,8 +2,15 @@ from __future__ import annotations
 
 import numpy as np
 
-from tools.ml.climate_dagger import append_train_only, frozen_split_fingerprint
+from tools.ml.climate_dagger import (
+    DaggerCollectionConfig,
+    _make_teacher,
+    append_train_only,
+    frozen_split_fingerprint,
+)
+from tools.ml.climate_sequence_teacher import ClimateSequenceRolloutTeacher
 from tools.ml.climate_simulator import CLIMATE_OUTPUT_NAMES
+from tools.ml.climate_teacher import ClimateRolloutTeacher
 from tools.ml.dataset import Dataset
 
 
@@ -83,3 +90,22 @@ def test_frozen_split_fingerprint_changes_when_content_changes() -> None:
         output_names=dataset.output_names,
     )
     assert frozen_split_fingerprint(changed, "validation") != before
+
+
+def test_dagger_teacher_kind_preserves_rollout_default_and_allows_sequence_opt_in() -> None:
+    default = DaggerCollectionConfig(seed=1)
+    assert default.teacher_kind == "rollout"
+    assert isinstance(_make_teacher(default.teacher_kind), ClimateRolloutTeacher)
+
+    sequence = DaggerCollectionConfig(seed=1, teacher_kind="sequence")
+    assert sequence.teacher_kind == "sequence"
+    assert isinstance(_make_teacher(sequence.teacher_kind), ClimateSequenceRolloutTeacher)
+
+
+def test_dagger_teacher_kind_rejects_unknown_value() -> None:
+    try:
+        DaggerCollectionConfig(seed=1, teacher_kind="unknown")
+    except ValueError as exc:
+        assert "teacher_kind" in str(exc)
+    else:
+        raise AssertionError("unknown DAgger teacher_kind must be rejected")

@@ -27,6 +27,7 @@ from .climate_policy import (
     arbitrate_climate_action,
 )
 from .climate_scenarios import ClimateTrainingEpisode, structured_training_episodes
+from .climate_sequence_teacher import ClimateSequenceRolloutTeacher
 from .climate_simulator import CLIMATE_OUTPUT_NAMES, ClimateAction, ClimateSimulator
 from .climate_teacher import ClimateRolloutTeacher
 from .contract import Contract
@@ -39,12 +40,15 @@ class DaggerCollectionConfig:
     scenarios_per_family: int = 12
     steps_per_scenario: int = 100
     workers: int = 6
+    teacher_kind: str = "rollout"
     random_invalid_probability: float = 0.01
     random_stale_probability: float = 0.01
 
     def __post_init__(self) -> None:
         if self.scenarios_per_family <= 0 or self.steps_per_scenario <= 0 or self.workers <= 0:
             raise ValueError("DAgger scenarios, steps and workers must be positive")
+        if self.teacher_kind not in {"rollout", "sequence"}:
+            raise ValueError("DAgger teacher_kind must be 'rollout' or 'sequence'")
         if not 0.0 <= self.random_invalid_probability < 1.0:
             raise ValueError("random_invalid_probability must be in [0, 1)")
         if not 0.0 <= self.random_stale_probability < 1.0:
@@ -113,6 +117,16 @@ def _status_for_step(
     return statuses
 
 
+def _make_teacher(
+    teacher_kind: str,
+) -> ClimateRolloutTeacher | ClimateSequenceRolloutTeacher:
+    if teacher_kind == "rollout":
+        return ClimateRolloutTeacher()
+    if teacher_kind == "sequence":
+        return ClimateSequenceRolloutTeacher()
+    raise ValueError(f"unsupported DAgger teacher_kind: {teacher_kind!r}")
+
+
 def _collect_episode(
     work: _EpisodeWork,
 ) -> tuple[
@@ -123,7 +137,7 @@ def _collect_episode(
     simulator = ClimateSimulator(episode.scenario)
     trend_estimator = ClimateTrendEstimator()
     effective_estimator = ClimateEffectiveActionEstimator()
-    teacher = ClimateRolloutTeacher()
+    teacher = _make_teacher(config.teacher_kind)
 
     features: list[np.ndarray] = []
     labels: list[np.ndarray] = []
