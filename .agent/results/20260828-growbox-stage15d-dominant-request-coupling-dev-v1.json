@@ -1,0 +1,58 @@
+{
+  "id": "20260828-growbox-stage15d-dominant-request-coupling-dev-v1",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "started_at": "2026-08-28T07:42:16.972154+00:00",
+  "command_timeout": 900,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; EXPECTED=34d164cd7b5a68ed7b46228e7aef8539c7539c6e; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; rm -f warnings.txt; test -z \"$(git status --porcelain)\"; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/stage15/stage15c_co2_priority_representative_dev.py > /tmp/stage15c-co2-priority-representative-dev.py; git show origin/agent-control:.agent/task-assets/stage15/stage15d_dominant_request_coupling_dev.py > /tmp/stage15d-dominant-request-coupling-dev.py; .venv/bin/python -m py_compile /tmp/stage15c-co2-priority-representative-dev.py /tmp/stage15d-dominant-request-coupling-dev.py; PYTHONPATH=. .venv/bin/python /tmp/stage15d-dominant-request-coupling-dev.py; test -z \"$(git status --porcelain)\"",
+      "exit_code": 0,
+      "output": "From https://github.com/MichalMatu/growbox-ml-controller\n * branch            agent-control -> FETCH_HEAD\n   b1be3f2..89fecf0  agent-control -> origin/agent-control\nSTAGE15D_JSON={\"candidate_arbitration_reasons\": {}, \"candidate_metrics\": {\"actuator_effort_per_step\": 0.0932192544776338, \"arbitration_intervention_fraction\": 0.0, \"co2_enabled_usable_steps\": 600, \"co2_mae_ppm\": 313.83233019413336, \"hard_limit_violation_fraction\": 0.0, \"overlap_fraction\": 0.0, \"overlap_fraction_on_co2_enabled_usable\": 0.0, \"safety_intervention_fraction\": 0.0, \"steps\": 1800, \"switching_per_step\": 0.009165166123637065, \"tracking_cost\": 4.558942610243063, \"vent_loss_proxy_per_co2_enabled_usable_step\": 0.000294478665220761}, \"candidate_qualifies\": false, \"candidate_safety_reasons\": {}, \"comparison\": {\"co2_mae_improvement_vs_rule_fraction\": -0.08427757658135729, \"overlap_delta_fraction\": -0.065, \"switching_ratio_vs_rule\": 1.7181753741208408, \"tracking_improvement_vs_rule_fraction\": -0.00309853174885589, \"vent_loss_proxy_delta\": -0.037522989085016875}, \"experiment\": \"stage15d_dominant_request_coupling_dev\", \"per_family\": {\"actuator_missing\": {\"candidate_overlap_fraction\": 0.0, \"co2_mae_delta_ppm\": 0.0, \"rule_overlap_fraction\": 0.0, \"switching_delta\": 0.0, \"tracking_delta\": 0.0}, \"co2_enrichment\": {\"candidate_overlap_fraction\": 0.0, \"co2_mae_delta_ppm\": -1.267892705989027, \"rule_overlap_fraction\": 0.4666666666666667, \"switching_delta\": 0.0018288448718085564, \"tracking_delta\": -0.0002883973889040159}, \"co2_unavailable\": {\"candidate_overlap_fraction\": 0.0, \"co2_mae_delta_ppm\": 0.0, \"rule_overlap_fraction\": 0.0, \"switching_delta\": 0.0, \"tracking_delta\": 0.0}, \"cold_heating\": {\"candidate_overlap_fraction\": 0.0, \"co2_mae_delta_ppm\": 0.0, \"rule_overlap_fraction\": 0.0, \"switching_delta\": 0.0, \"tracking_delta\": 0.0}, \"day_light_load\": {\"candidate_overlap_fraction\": 0.0, \"co2_mae_delta_ppm\": 0.0, \"rule_overlap_fraction\": 0.008333333333333333, \"switching_delta\": 6.73485527463726e-05, \"tracking_delta\": 0.0}, \"day_to_night\": {\"candidate_overlap_fraction\": 0.0, \"co2_mae_delta_ppm\": 0.0, \"rule_overlap_fraction\": 0.0, \"switching_delta\": 0.0, \"tracking_delta\": 0.0}, \"dry_humidification\": {\"candidate_overlap_fraction\": 0.0, \"co2_mae_delta_ppm\": 0.0, \"rule_overlap_fraction\": 0.0, \"switching_delta\": 0.0, \"tracking_delta\": 0.0}, \"dry_vpd_control\": {\"candidate_overlap_fraction\": 0.0, \"co2_mae_delta_ppm\": 0.0, \"rule_overlap_fraction\": 0.0, \"switching_delta\": 0.0, \"tracking_delta\": 0.0}, \"hot_cooling\": {\"candidate_overlap_fraction\": 0.0, \"co2_mae_delta_ppm\": 0.0, \"rule_overlap_fraction\": 0.0, \"switching_delta\": 0.0, \"tracking_delta\": 0.0}, \"humid_dehumidification\": {\"candidate_overlap_fraction\": 0.0, \"co2_mae_delta_ppm\": 0.0, \"rule_overlap_fraction\": 0.0, \"switching_delta\": 0.0, \"tracking_delta\": 0.0}, \"humid_vpd_control\": {\"candidate_overlap_fraction\": 0.0, \"co2_mae_delta_ppm\": 0.0, \"rule_overlap_fraction\": 0.0, \"switching_delta\": 0.0, \"tracking_delta\": 0.0}, \"night_to_day\": {\"candidate_overlap_fraction\": 0.0, \"co2_mae_delta_ppm\": 0.0, \"rule_overlap_fraction\": 0.0, \"switching_delta\": 0.0, \"tracking_delta\": 0.0}, \"outside_harmful\": {\"candidate_overlap_fraction\": 0.0, \"co2_mae_delta_ppm\": 0.0, \"rule_overlap_fraction\": 0.0, \"switching_delta\": 0.0, \"tracking_delta\": 0.0}, \"outside_helpful\": {\"candidate_overlap_fraction\": 0.0, \"co2_mae_delta_ppm\": 0.0, \"rule_overlap_fraction\": 0.0, \"switching_delta\": 0.0, \"tracking_delta\": 0.0}, \"sensor_fault\": {\"candidate_overlap_fraction\": 0.0, \"co2_mae_delta_ppm\": 123.23402394810887, \"rule_overlap_fraction\": 0.5, \"switching_delta\": 0.055567643290227675, \"tracking_delta\": 0.2115243025160689}}, \"reserved_stage14ab_test_split_evaluated\": false, \"rule_arbitration_reasons\": {}, \"rule_metrics\": {\"actuator_effort_per_step\": 0.0962112210371015, \"arbitration_intervention_fraction\": 0.0, \"co2_enabled_usable_steps\": 600, \"co2_mae_ppm\": 289.4391039457094, \"hard_limit_violation_fraction\": 0.0, \"overlap_fraction\": 0.065, \"overlap_fraction_on_co2_enabled_usable\": 0.195, \"safety_intervention_fraction\": 0.0, \"steps\": 1800, \"switching_per_step\": 0.0053342436759848885, \"tracking_cost\": 4.5448602165679155, \"vent_loss_proxy_per_co2_enabled_usable_step\": 0.037817467750237636}, \"rule_safety_reasons\": {}, \"scenarios_per_family\": 2, \"seed\": 316227, \"steps_per_scenario\": 60, \"variant\": \"dominant_priority\", \"wall_seconds\": 2.385894790990278}\n",
+      "elapsed_seconds": 4.953,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 39.42,
+      "current_rss_mb": 39.42,
+      "stage_name": "run-stage15d-dominant-request-coupling-dev",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "stage_timeout": 900
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "run-stage15d-dominant-request-coupling-dev",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 4.953
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.206
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.258
+  },
+  "finished_at": "2026-08-28T07:42:25.105590+00:00",
+  "task_digest": "a832e30142eeeb4b528967e6e591a2c7bc5e2e0115f39620cd594efd45e35436",
+  "idle_timeout": 600,
+  "task_timeout": 1200,
+  "memory_limit_mb": 4096,
+  "attempt_id": "a2b41bd5d7cc775c9ba8bda0",
+  "daemon_version": "4.10.2"
+}
