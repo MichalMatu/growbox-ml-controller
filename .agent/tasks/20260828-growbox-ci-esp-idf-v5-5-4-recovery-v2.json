@@ -1,0 +1,33 @@
+{
+  "id": "20260828-growbox-ci-esp-idf-v5-5-4-recovery-v2",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "workflow_policy": "efficient-verification-v1",
+  "command_timeout": 7200,
+  "idle_timeout": 1200,
+  "task_timeout": 10800,
+  "memory_limit_mb": 8192,
+  "steps": [
+    {
+      "name": "update-ci-esp-idf-to-v5-5-4",
+      "verification_level": "work",
+      "timeout": 900,
+      "command": "set -euo pipefail; EXPECTED=19999bde451f068ee503d4b7c9a0a91712709c2a; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; .venv/bin/python -c \"from pathlib import Path; p=Path('.github/workflows/ci.yml'); s=p.read_text(); assert s.count('ESP-IDF 5.5.1') == 1; assert s.count('esp_idf_version: v5.5.1') == 1; s=s.replace('ESP-IDF 5.5.1','ESP-IDF 5.5.4').replace('esp_idf_version: v5.5.1','esp_idf_version: v5.5.4'); p.write_text(s)\"; grep -F 'Build ESP32-S3 firmware with ESP-IDF 5.5.4' .github/workflows/ci.yml; grep -F 'esp_idf_version: v5.5.4' .github/workflows/ci.yml; if grep -Fq '5.5.1' .github/workflows/ci.yml; then exit 1; fi; git diff --check; git status --short"
+    },
+    {
+      "name": "focused-ci-yaml-check",
+      "verification_level": "focused",
+      "timeout": 900,
+      "command": "set -euo pipefail; .venv/bin/pre-commit run --files .github/workflows/ci.yml; .venv/bin/python -c \"from pathlib import Path; s=Path('.github/workflows/ci.yml').read_text(); assert s.count('esp_idf_version: v5.5.4') == 1; assert 'v5.5.1' not in s\"; git diff --check"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "full-regression-and-publish-ci-v5-5-4",
+      "verification_level": "full",
+      "timeout": 7200,
+      "command": "set -euo pipefail; git add -A; .venv/bin/pre-commit run --all-files; .venv/bin/python -m pytest -q -m 'not hardware'; bash scripts/check_schema.sh; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests --output-on-failure; bash scripts/run_clang_tidy_host.sh; unset VIRTUAL_ENV CONDA_PREFIX PYTHONHOME || true; export PATH='/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin'; rm -rf build/idf-gate; bash scripts/idf_gate_build.sh; git diff --check; git add -A; git diff --cached --check; git commit -m 'Use ESP-IDF v5.5.4 in CI'; git push origin HEAD:mvp/environment-controller; test -z \"$(git status --porcelain)\"; printf 'PUBLISHED_HEAD=%s\\n' \"$(git rev-parse HEAD)\""
+    }
+  ]
+}
