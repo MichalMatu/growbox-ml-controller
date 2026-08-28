@@ -1,0 +1,58 @@
+{
+  "id": "20260828-growbox-stage14g-residual-data-scaling-probe-fix-v2",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "started_at": "2026-08-28T06:30:21.211610+00:00",
+  "command_timeout": 2400,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; EXPECTED=34d164cd7b5a68ed7b46228e7aef8539c7539c6e; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; rm -f warnings.txt; test -z \"$(git status --porcelain)\"; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/stage14/stage14d_residual_intervention_audit.py > /tmp/stage14d-residual-intervention-audit.py; git show origin/agent-control:.agent/task-assets/stage14/stage14f_per_output_residual_ablation.py > /tmp/stage14f-per-output-residual-ablation.py; git show origin/agent-control:.agent/task-assets/stage14/stage14g_residual_data_scaling_probe.py > /tmp/stage14g-residual-data-scaling-probe.py; .venv/bin/python - <<'PY'\nfrom pathlib import Path\np = Path('/tmp/stage14g-residual-data-scaling-probe.py')\ns = p.read_text()\nneedle = 'TRAIN_SCENARIOS_PER_FAMILY = 8'\nif needle not in s:\n    raise SystemExit('expected Stage 14G scenario-count constant not found')\np.write_text(s.replace(needle, 'TRAIN_SCENARIOS_PER_FAMILY = 6', 1))\nPY\n.venv/bin/python -m py_compile /tmp/stage14d-residual-intervention-audit.py /tmp/stage14f-per-output-residual-ablation.py /tmp/stage14g-residual-data-scaling-probe.py; PYTHONPATH=. .venv/bin/python /tmp/stage14g-residual-data-scaling-probe.py; test -z \"$(git status --porcelain)\"",
+      "exit_code": 0,
+      "output": "From https://github.com/MichalMatu/growbox-ml-controller\n * branch            agent-control -> FETCH_HEAD\n   91ea1b6..dd93ff7  agent-control -> origin/agent-control\nSTAGE14G_JSON={\"benchmark_seed\": 223607, \"deadzone\": 0.2, \"eligible_zero_intervention_variants\": [\"all\", \"cooler_exhaust\", \"thermal_exhaust\"], \"experiment\": \"stage14g_residual_data_scaling_probe\", \"reserved_stage14ab_test_split_evaluated\": false, \"rule_metrics\": {\"actuator_effort_per_step\": 0.1194567923778944, \"arbitration_intervention_fraction\": 0.0, \"hard_limit_violation_fraction\": 0.0, \"safety_intervention_fraction\": 0.0, \"steps\": 180, \"switching_per_step\": 0.019810384107063865, \"tracking_cost\": 6.544351824422378}, \"train_family_counts\": {\"actuator_missing\": 12, \"co2_enrichment\": 12, \"co2_unavailable\": 12, \"cold_heating\": 12, \"day_light_load\": 12, \"day_to_night\": 12, \"dry_humidification\": 12, \"dry_vpd_control\": 12, \"hot_cooling\": 12, \"humid_dehumidification\": 12, \"humid_vpd_control\": 12, \"night_to_day\": 12, \"outside_harmful\": 12, \"outside_helpful\": 12, \"sensor_fault\": 12}, \"train_rows\": 180, \"train_scenarios_per_family\": 6, \"train_seed\": 141421, \"train_steps_per_scenario\": 3, \"training_sequence_evaluations_per_row\": 296.53333333333336, \"variants\": {\"all\": {\"arbitration_reasons\": {}, \"enabled_outputs\": [\"heater\", \"cooler\", \"exhaust_fan\", \"humidifier\", \"dehumidifier\", \"co2_doser\"], \"metrics\": {\"actuator_effort_per_step\": 0.17797941380240784, \"arbitration_intervention_fraction\": 0.0, \"hard_limit_violation_fraction\": 0.0, \"safety_intervention_fraction\": 0.0, \"steps\": 180, \"switching_per_step\": 0.02988132285256009, \"tracking_cost\": 6.485874125442274}, \"safety_reasons\": {}, \"switching_ratio_vs_rule\": 1.5083666571565966, \"tracking_improvement_vs_rule_fraction\": 0.008935598291319753}, \"cooler_exhaust\": {\"arbitration_reasons\": {}, \"enabled_outputs\": [\"cooler\", \"exhaust_fan\"], \"metrics\": {\"actuator_effort_per_step\": 0.15455117327876874, \"arbitration_intervention_fraction\": 0.0, \"hard_limit_violation_fraction\": 0.0, \"safety_intervention_fraction\": 0.0, \"steps\": 180, \"switching_per_step\": 0.026810502363972505, \"tracking_cost\": 6.497658851906794}, \"safety_reasons\": {}, \"switching_ratio_vs_rule\": 1.3533560086001857, \"tracking_improvement_vs_rule_fraction\": 0.007134850596102395}, \"dehumidifier\": {\"arbitration_reasons\": {}, \"enabled_outputs\": [\"dehumidifier\"], \"metrics\": {\"actuator_effort_per_step\": 0.1194567923928575, \"arbitration_intervention_fraction\": 0.0, \"hard_limit_violation_fraction\": 0.0, \"safety_intervention_fraction\": 0.0, \"steps\": 180, \"switching_per_step\": 0.019810384142436768, \"tracking_cost\": 6.544351824718181}, \"safety_reasons\": {}, \"switching_ratio_vs_rule\": 1.0000000017855737, \"tracking_improvement_vs_rule_fraction\": -4.519966247944147e-11}, \"thermal_exhaust\": {\"arbitration_reasons\": {}, \"enabled_outputs\": [\"heater\", \"cooler\", \"exhaust_fan\"], \"metrics\": {\"actuator_effort_per_step\": 0.17683613239227003, \"arbitration_intervention_fraction\": 0.0, \"hard_limit_violation_fraction\": 0.0, \"safety_intervention_fraction\": 0.0, \"steps\": 180, \"switching_per_step\": 0.02911769808399389, \"tracking_cost\": 6.487602180901065}, \"safety_reasons\": {}, \"switching_ratio_vs_rule\": 1.4698199654599973, \"tracking_improvement_vs_rule_fraction\": 0.008671545333112096}}, \"wall_seconds\": 888.2966996670002, \"winner\": \"cooler_exhaust\", \"winner_metrics\": {\"arbitration_reasons\": {}, \"enabled_outputs\": [\"cooler\", \"exhaust_fan\"], \"metrics\": {\"actuator_effort_per_step\": 0.15455117327876874, \"arbitration_intervention_fraction\": 0.0, \"hard_limit_violation_fraction\": 0.0, \"safety_intervention_fraction\": 0.0, \"steps\": 180, \"switching_per_step\": 0.026810502363972505, \"tracking_cost\": 6.497658851906794}, \"safety_reasons\": {}, \"switching_ratio_vs_rule\": 1.3533560086001857, \"tracking_improvement_vs_rule_fraction\": 0.007134850596102395}}\n",
+      "elapsed_seconds": 892.032,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 8192,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 314.81,
+      "current_rss_mb": 314.81,
+      "stage_name": "run-stage14g-residual-data-scaling-probe-fixed-v2",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "stage_timeout": 2400
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "run-stage14g-residual-data-scaling-probe-fixed-v2",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 892.032
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 1.015
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.147
+  },
+  "finished_at": "2026-08-28T06:45:17.318482+00:00",
+  "task_digest": "58021933e3e45e6605d5d935a781e980c607b9e71115deddf8334f46b29cd906",
+  "idle_timeout": 1800,
+  "task_timeout": 3000,
+  "memory_limit_mb": 8192,
+  "attempt_id": "545a2c0469f6eba5e116cca2",
+  "daemon_version": "4.10.2"
+}
