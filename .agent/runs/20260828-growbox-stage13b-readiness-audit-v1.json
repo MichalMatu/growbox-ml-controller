@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260828-growbox-stage13b-readiness-audit-v1",
+  "task_digest": "1aadddb475089c4177f2a7f0f49aed6f1f129aef0aa22b013da5341738f27b69",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-28T03:39:19.382472+00:00",
+  "attempt_id": "20933aebea31d84358bc4ebb",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 38885,
+  "updated_at": "2026-08-28T03:39:19.382622+00:00",
+  "pid": 38885
+}
