@@ -1,0 +1,33 @@
+{
+  "id": "20260828-growbox-stage23a-multistep-virtual-hil-v1",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "workflow_policy": "efficient-verification-v1",
+  "command_timeout": 7200,
+  "idle_timeout": 1200,
+  "task_timeout": 10800,
+  "memory_limit_mb": 8192,
+  "steps": [
+    {
+      "name": "apply-stage23a-multistep-virtual-hil",
+      "verification_level": "work",
+      "timeout": 900,
+      "command": "set -euo pipefail; EXPECTED=b5ed93eafae6fe5559cc714a79f9651a4969b135; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; rm -f warnings.txt; test -z \"$(git status --porcelain)\"; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/stage23/apply_stage23a_virtual_hil.py > /tmp/apply-stage23a-virtual-hil.py; .venv/bin/python /tmp/apply-stage23a-virtual-hil.py; .venv/bin/pre-commit run clang-format --files test/test_climate_virtual_hil/test_main.cpp || true; .venv/bin/pre-commit run clang-format --files test/test_climate_virtual_hil/test_main.cpp; git diff --check; git status --short"
+    },
+    {
+      "name": "focused-stage23a-multistep-virtual-hil",
+      "verification_level": "focused",
+      "timeout": 1800,
+      "command": "set -euo pipefail; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --target climate_virtual_hil_tests --parallel; ctest --test-dir build/host-tests -R '^climate_virtual_hil_tests$' --output-on-failure; .venv/bin/pre-commit run clang-format --files test/test_climate_virtual_hil/test_main.cpp; git diff --check"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "full-regression-idf-build-and-publish-stage23a",
+      "verification_level": "full",
+      "timeout": 7200,
+      "command": "set -euo pipefail; git add -A; .venv/bin/pre-commit run --all-files; .venv/bin/python -m pytest -q -m 'not hardware'; bash scripts/check_schema.sh; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests --output-on-failure; bash scripts/run_clang_tidy_host.sh; unset VIRTUAL_ENV CONDA_PREFIX PYTHONHOME || true; export PATH='/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin'; rm -rf build/idf-gate; bash scripts/idf_gate_build.sh; git diff --check; git add -A; git diff --cached --check; git commit -m 'Add multi-step climate virtual HIL tests'; git push origin HEAD:mvp/environment-controller; test -z \"$(git status --porcelain)\"; printf 'PUBLISHED_HEAD=%s\\n' \"$(git rev-parse HEAD)\""
+    }
+  ]
+}
