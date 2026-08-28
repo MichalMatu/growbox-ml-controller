@@ -2,8 +2,8 @@
   "version": 1,
   "daemon_version": "4.10.2",
   "state": "idle",
-  "pid": 40803,
-  "updated_at": "2026-08-28T03:57:41.030879+00:00",
+  "pid": 42375,
+  "updated_at": "2026-08-28T04:16:26.625520+00:00",
   "self_revision": "c98d97025c97c682118ba29383956351d8459c77",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -22,7 +22,7 @@
   "control_branch": "agent-control",
   "default_branch": "main",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 40803,
+  "worker_pid": 42375,
   "supervisor_pid": 1293,
-  "last_task_id": "20260828-growbox-stage13-effective-observability-v6"
+  "last_task_id": "20260828-growbox-stage14a-sequence-residual-probe-v1"
 }
