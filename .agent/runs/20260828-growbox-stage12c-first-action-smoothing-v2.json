@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260828-growbox-stage12c-first-action-smoothing-v2",
+  "task_digest": "37747b6d5907a86aed75c982841c3490dc5e229c8caa41880eb5097b317fbc3a",
+  "idle_timeout": 1800,
+  "task_timeout": 10800,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-28T00:07:35.547065+00:00",
+  "attempt_id": "9f6fc356ef86b4ccefaacc7c",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 14398,
+  "updated_at": "2026-08-28T00:07:35.547401+00:00",
+  "pid": 14398
+}
