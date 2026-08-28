@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260829-growbox-stage25b-runtime-boundary-v1",
+  "task_digest": "9ede7a69ce021495fde97c7d0088b4030a651f517ba094a8ef37414703c28bf7",
+  "idle_timeout": 1200,
+  "task_timeout": 14400,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-28T23:56:17.573253+00:00",
+  "attempt_id": "fe85bfc145464e0d6b380ca4",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 98915,
+  "updated_at": "2026-08-28T23:56:17.573397+00:00",
+  "pid": 98915
+}
