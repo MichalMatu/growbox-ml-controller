@@ -74,10 +74,10 @@ jobs:
       - name: Check out source
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
-      - name: Build ESP32-S3 firmware with ESP-IDF 5.5.1
+      - name: Build ESP32-S3 firmware with ESP-IDF 5.5.4
         uses: espressif/esp-idf-ci-action@v1
         with:
-          esp_idf_version: v5.5.1
+          esp_idf_version: v5.5.4
           target: esp32s3
           path: .
           command: |
