@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260829-growbox-stage25a-ipo-fake-composition-recovery-v2",
+  "task_digest": "f82bfa17d590a95e57acdfacb8575af66477aa85afd5522508382681d1de87ce",
+  "idle_timeout": 1200,
+  "task_timeout": 10800,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-28T23:16:39.873471+00:00",
+  "attempt_id": "3d57c094c8aa3ecd74616248",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 80524,
+  "updated_at": "2026-08-28T23:16:39.873769+00:00",
+  "pid": 80524
+}
