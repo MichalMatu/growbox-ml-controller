@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260828-growbox-stage18c2-runtime-golden-parity-recovery-v4",
+  "task_digest": "cce152c5826d895d96ba60b5ee1eb97eeaa304d9083e04a73a84fccf275396f1",
+  "idle_timeout": 1200,
+  "task_timeout": 5400,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-28T10:57:36.014874+00:00",
+  "attempt_id": "cf8c01d6beeb0899539df4a7",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 3992,
+  "updated_at": "2026-08-28T10:57:36.015016+00:00",
+  "pid": 3992
+}
