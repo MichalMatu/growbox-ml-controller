@@ -1,0 +1,117 @@
+{
+  "id": "20260828-growbox-stage22a-cpp-control-loop-fakes-v1",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "started_at": "2026-08-28T19:55:54.876734+00:00",
+  "command_timeout": 1800,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; EXPECTED=b4425efa080789d88417d131db4db36a9597e877; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; rm -f warnings.txt; test -z \"$(git status --porcelain)\"; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/stage22/apply_stage22a_cpp_control_loop_fakes.py > /tmp/apply-stage22a-cpp-control-loop-fakes.py; .venv/bin/python /tmp/apply-stage22a-cpp-control-loop-fakes.py; .venv/bin/pre-commit run clang-format --files lib/environment_control/src/climate/ClimateControlLoop.h lib/environment_control/src/climate/ClimateControlLoop.cpp test/test_climate_control_loop/test_main.cpp || true; .venv/bin/pre-commit run clang-format --files lib/environment_control/src/climate/ClimateControlLoop.h lib/environment_control/src/climate/ClimateControlLoop.cpp test/test_climate_control_loop/test_main.cpp; git diff --check; git status --short",
+      "exit_code": 0,
+      "output": "From https://github.com/MichalMatu/growbox-ml-controller\n * branch            agent-control -> FETCH_HEAD\n   a25b5fa..4e4dbee  agent-control -> origin/agent-control\nclang-format.............................................................Passed\nclang-format.............................................................Passed\n M test/host/CMakeLists.txt\n?? lib/environment_control/src/climate/ClimateControlLoop.cpp\n?? lib/environment_control/src/climate/ClimateControlLoop.h\n?? test/test_climate_control_loop/\n",
+      "elapsed_seconds": 4.477,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 8192,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 40.89,
+      "current_rss_mb": 40.89,
+      "stage_name": "apply-stage22a-cpp-control-loop-fakes",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "stage_timeout": 900,
+      "verification_level": "work"
+    },
+    {
+      "command": "set -euo pipefail; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --target climate_control_loop_tests --parallel; ctest --test-dir build/host-tests -R '^climate_control_loop_tests$' --output-on-failure; .venv/bin/pre-commit run clang-format --files lib/environment_control/src/climate/ClimateControlLoop.h lib/environment_control/src/climate/ClimateControlLoop.cpp test/test_climate_control_loop/test_main.cpp; git diff --check",
+      "exit_code": 0,
+      "output": "-- Configuring done (0.3s)\n-- Generating done (0.7s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tests\n[ 33%] Building CXX object CMakeFiles/climate_control_loop_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateRuntimeController.cpp.o\n[ 66%] Building CXX object CMakeFiles/climate_control_loop_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/test/test_climate_control_loop/test_main.cpp.o\n[ 66%] Building CXX object CMakeFiles/climate_control_loop_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateTrendEstimator.cpp.o\n[ 83%] Building CXX object CMakeFiles/climate_control_loop_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateControlLoop.cpp.o\n[ 66%] Building CXX object CMakeFiles/climate_control_loop_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateFeatureEncoder.cpp.o\n[100%] Linking CXX executable climate_control_loop_tests\n[100%] Built target climate_control_loop_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tests\n    Start 4: climate_control_loop_tests\n1/1 Test #4: climate_control_loop_tests .......   Passed    0.42 sec\n\n100% tests passed, 0 tests failed out of 1\n\nTotal Test time (real) =   0.42 sec\nclang-format.............................................................Passed\n",
+      "elapsed_seconds": 8.698,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 8192,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 178.33,
+      "current_rss_mb": 71.05,
+      "stage_name": "focused-stage22a-cpp-control-loop-fakes",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "stage_timeout": 1500,
+      "verification_level": "focused"
+    }
+  ],
+  "verification": [
+    {
+      "command": "set -euo pipefail; git add -A; .venv/bin/pre-commit run --all-files; .venv/bin/python -m pytest -q -m 'not hardware'; bash scripts/check_schema.sh; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests --output-on-failure; bash scripts/run_clang_tidy_host.sh; git diff --check; git add -A; git diff --cached --check; git commit -m 'Add climate control loop fake adapters'; git push origin HEAD:mvp/environment-controller; test -z \"$(git status --porcelain)\"; printf 'PUBLISHED_HEAD=%s\\n' \"$(git rev-parse HEAD)\"",
+      "exit_code": 0,
+      "output": "trim trailing whitespace.................................................Passed\nfix end of files.........................................................Passed\ncheck for merge conflicts................................................Passed\ncheck yaml...............................................................Passed\ncheck json...............................................................Passed\ndetect private key.......................................................Passed\nruff.....................................................................Passed\nruff-format..............................................................Passed\nclang-format.............................................................Passed\nenvironment schema (--check).............................................Passed\n........................................................................ [ 15%]\n........................................................................ [ 30%]\n........................................................................ [ 45%]\n........................................................................ [ 60%]\n........................................................................ [ 75%]\n........................................................................ [ 91%]\n..........................................                               [100%]\n474 passed, 9 deselected in 215.97s (0:03:35)\n-- Configuring done (0.3s)\n-- Generating done (0.1s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tests\n[ 43%] Built target climate_control_loop_tests\n[ 65%] Built target climate_v6_tests\n[ 69%] Built target climate_runtime_parity_tests\n[100%] Built target environment_control_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tests\n    Start 1: environment_control_tests\n1/4 Test #1: environment_control_tests ........   Passed    0.02 sec\n    Start 2: climate_v6_tests\n2/4 Test #2: climate_v6_tests .................   Passed    0.02 sec\n    Start 3: climate_runtime_parity_tests\n3/4 Test #3: climate_runtime_parity_tests .....   Passed    0.02 sec\n    Start 4: climate_control_loop_tests\n4/4 Test #4: climate_control_loop_tests .......   Passed    0.01 sec\n\n100% tests passed, 0 tests failed out of 4\n\nTotal Test time (real) =   0.08 sec\n==> host clang-tidy (build/host-tidy)\n-- The CXX compiler identification is AppleClang 21.0.0.21000101\n-- Detecting CXX compiler ABI info\n-- Detecting CXX compiler ABI info - done\n-- Check for working CXX compiler: /Library/Developer/CommandLineTools/usr/bin/clang++ - skipped\n-- Detecting CXX compile features\n-- Detecting CXX compile features - done\n-- Configuring done (3.8s)\n-- Generating done (0.2s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tidy\n[  4%] Building CXX object CMakeFiles/climate_runtime_parity_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateRuntimeController.cpp.o\n[  8%] Building CXX object CMakeFiles/climate_runtime_parity_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateFeatureEncoder.cpp.o\n[ 13%] Building CXX object CMakeFiles/climate_v6_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateTrendEstimator.cpp.o\n[ 17%] Building CXX object CMakeFiles/climate_v6_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateFeatureEncoder.cpp.o\n[ 21%] Building CXX object CMakeFiles/climate_v6_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateRuntimeController.cpp.o\n[ 26%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/EnvironmentController.cpp.o\n[ 30%] Building CXX object CMakeFiles/climate_control_loop_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateControlLoop.cpp.o\n[ 34%] Building CXX object CMakeFiles/climate_runtime_parity_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/test/test_climate_runtime_parity/test_main.cpp.o\n[ 39%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/test/test_environment_controller/test_main.cpp.o\n[ 43%] Building CXX object CMakeFiles/climate_v6_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/test/test_climate_v6/test_main.cpp.o\n[ 47%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/FeatureEncoder.cpp.o\n[ 52%] Building CXX object CMakeFiles/climate_control_loop_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/test/test_climate_control_loop/test_main.cpp.o\n[ 56%] Building CXX object CMakeFiles/climate_runtime_parity_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateTrendEstimator.cpp.o\n[ 60%] Building CXX object CMakeFiles/climate_control_loop_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateRuntimeController.cpp.o\n[ 65%] Building CXX object CMakeFiles/climate_control_loop_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateFeatureEncoder.cpp.o\n[ 73%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/EnvironmentTypes.cpp.o\n[ 73%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/SafetySupervisor.cpp.o\n[ 78%] Building CXX object CMakeFiles/climate_control_loop_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateTrendEstimator.cpp.o\n[ 82%] Building CXX object CMakeFiles/environment_control_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/ModelRuntime.cpp.o\n[ 86%] Linking CXX executable climate_control_loop_tests\n[ 91%] Linking CXX executable climate_runtime_parity_tests\n[ 95%] Linking CXX executable climate_v6_tests\n[100%] Linking CXX executable environment_control_tests\n[100%] Built target climate_runtime_parity_tests\n[100%] Built target environment_control_tests\n[100%] Built target climate_v6_tests\n[100%] Built target climate_control_loop_tests\nclang-tidy: lib/environment_control/src/EnvironmentController.cpp\n458 warnings generated.\nclang-tidy: lib/environment_control/src/FeatureEncoder.cpp\n458 warnings generated.\nclang-tidy: lib/environment_control/src/SafetySupervisor.cpp\n458 warnings generated.\nclang-tidy: lib/environment_control/src/ModelRuntime.cpp\n470 warnings generated.\nclang-tidy: lib/environment_control/src/climate/ClimateFeatureEncoder.cpp\n458 warnings generated.\n916 warnings generated.\n1374 warnings generated.\nclang-tidy: lib/environment_control/src/climate/ClimateTrendEstimator.cpp\n458 warnings generated.\n916 warnings generated.\n1374 warnings generated.\n[agent-work bd94bea] Add climate control loop fake adapters\n 4 files changed, 356 insertions(+)\n create mode 100644 lib/environment_control/src/climate/ClimateControlLoop.cpp\n create mode 100644 lib/environment_control/src/climate/ClimateControlLoop.h\n create mode 100644 test/test_climate_control_loop/test_main.cpp\nTo https://github.com/MichalMatu/growbox-ml-controller.git\n   b4425ef..bd94bea  HEAD -> mvp/environment-controller\nPUBLISHED_HEAD=bd94bea60fa7c3ca4a9b5420dae40edb9baff14b\n",
+      "elapsed_seconds": 300.779,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 8192,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 594.2,
+      "current_rss_mb": 7.11,
+      "stage_name": "full-regression-and-publish-stage22a",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "verification",
+      "stage_timeout": 3600,
+      "verification_level": "full"
+    }
+  ],
+  "stages": [
+    {
+      "stage_name": "apply-stage22a-cpp-control-loop-fakes",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "verification_level": "work",
+      "outcome": "passed",
+      "elapsed_seconds": 4.477
+    },
+    {
+      "stage_name": "focused-stage22a-cpp-control-loop-fakes",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "verification_level": "focused",
+      "outcome": "passed",
+      "elapsed_seconds": 8.698
+    },
+    {
+      "stage_name": "full-regression-and-publish-stage22a",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "verification",
+      "verification_level": "full",
+      "outcome": "passed",
+      "elapsed_seconds": 300.779
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.216
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.734
+  },
+  "finished_at": "2026-08-28T20:01:12.501248+00:00",
+  "task_digest": "2f61a3a388f33a229f28b9553ef6151cd575487eb2a98383ddde17e54383238d",
+  "idle_timeout": 1200,
+  "task_timeout": 5400,
+  "memory_limit_mb": 8192,
+  "attempt_id": "0c15b710642d150799eaac46",
+  "daemon_version": "4.10.2"
+}
