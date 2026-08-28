@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260828-growbox-stage21a-canonical-replay-fixture-v1",
+  "task_digest": "d716c73920b993e5c39d4260db7e1171c2995ccf4ea2a72d338c88739045e440",
+  "idle_timeout": 1200,
+  "task_timeout": 5400,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-28T19:47:00.786326+00:00",
+  "attempt_id": "c005dc8a1c0994368c419875",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 65614,
+  "updated_at": "2026-08-28T19:47:00.786518+00:00",
+  "pid": 65614
+}
