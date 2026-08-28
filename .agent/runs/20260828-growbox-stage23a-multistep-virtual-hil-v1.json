@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260828-growbox-stage23a-multistep-virtual-hil-v1",
+  "task_digest": "60f34109517f9636fdae79af7ccfe7b1471873b624eb7307ff4605c2f5eaa298",
+  "idle_timeout": 1200,
+  "task_timeout": 10800,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-28T20:50:31.205915+00:00",
+  "attempt_id": "71e3b3fd7fa67ba8bad9616e",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 2771,
+  "updated_at": "2026-08-28T20:50:31.206185+00:00",
+  "pid": 2771
+}
