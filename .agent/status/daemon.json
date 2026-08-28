@@ -2,8 +2,8 @@
   "version": 1,
   "daemon_version": "4.10.2",
   "state": "idle",
-  "pid": 86863,
-  "updated_at": "2026-08-28T09:55:36.715198+00:00",
+  "pid": 87853,
+  "updated_at": "2026-08-28T10:04:20.696611+00:00",
   "self_revision": "c98d97025c97c682118ba29383956351d8459c77",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -22,7 +22,7 @@
   "control_branch": "agent-control",
   "default_branch": "main",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 86863,
+  "worker_pid": 87853,
   "supervisor_pid": 1293,
-  "last_task_id": "20260828-growbox-stage17b-freeze-ml-decisions-docs-v1"
+  "last_task_id": "20260828-growbox-stage17b-freeze-ml-decisions-docs-fix-v2"
 }
