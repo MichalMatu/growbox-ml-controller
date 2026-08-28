@@ -2,6 +2,7 @@
 
 Date: 2026-08-28
 Development branch: `mvp/environment-controller`
+Fresh-chat bootstrap: `docs/CONTINUATION_PLAN.md`
 
 This is the short source of truth for the current climate-controller product path. Historical
 simulator, browser-contract and repository-convergence documents remain for reproducibility, but
@@ -70,9 +71,13 @@ See `docs/MVP_HARDWARE_SENSOR_SET.md`.
 
 ## Next steps
 
-1. Keep the legacy demo intact while proving the new adapter seam in host and ESP-IDF builds.
-2. Add concrete SCD41 / BLE / RTC providers after parts and libraries are frozen.
-3. Add concrete semantic actuator-role drivers.
-4. Bring up real hardware in Rule mode first.
-5. Run ML only in `MlShadow` while collecting real traces.
-6. Re-qualify ML from real data before considering active ML actuation.
+The detailed fresh-context plan is in `docs/CONTINUATION_PLAN.md`.
+
+1. Prove the strict IPO composition with interchangeable fake Input/Output implementations using
+   the same public interfaces intended for future hardware.
+2. Keep the legacy demo intact while proving the new climate-v6 application composition path.
+3. Add concrete SCD41 / BLE / RTC providers only after parts and libraries are frozen.
+4. Add concrete semantic actuator-role drivers.
+5. Bring up real hardware in Rule mode first.
+6. Run ML only in `MlShadow` while collecting real traces.
+7. Re-qualify ML from real data before considering active ML actuation.
