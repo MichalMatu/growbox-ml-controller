@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260828-growbox-stage15c-co2-priority-representative-dev-v1",
+  "task_digest": "1ec21192b89c86266ecb58c93193826c9680e09c38f92493bb48b6bb0a2fa5e7",
+  "idle_timeout": 1200,
+  "task_timeout": 2400,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-28T07:21:24.130778+00:00",
+  "attempt_id": "c57a55603d8f015073ef2828",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 63864,
+  "updated_at": "2026-08-28T07:21:24.130903+00:00",
+  "pid": 63864
+}
