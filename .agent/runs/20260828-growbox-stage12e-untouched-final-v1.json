@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260828-growbox-stage12e-untouched-final-v1",
+  "task_digest": "8f6b8b770acfdc6826434259c9d1f2c94bc45ff06283e01b4f51750ad6d60df6",
+  "idle_timeout": 1800,
+  "task_timeout": 8000,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-28T01:38:38.083141+00:00",
+  "attempt_id": "d877eb03654e23ca23fe25d5",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 23612,
+  "updated_at": "2026-08-28T01:38:38.083284+00:00",
+  "pid": 23612
+}
