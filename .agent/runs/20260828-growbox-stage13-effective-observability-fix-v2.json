@@ -1,13 +1,11 @@
 {
-  "event": "task_finished",
-  "task_id": "20260828-growbox-stage13-effective-observability-fix-v2",
-  "task_digest": "d0bc161fe0de94abc9170b894c6697252a0dfb9304f78474c8e6b3d475e66308",
+  "event": "result_republished",
   "status": "failed",
   "failure_reason": "command_failed",
-  "finished_at": "2026-08-28T02:59:06.568519+00:00",
   "attempt_id": "207f2648f2b7e3a1d93b4431",
+  "task_digest": "d0bc161fe0de94abc9170b894c6697252a0dfb9304f78474c8e6b3d475e66308",
+  "updated_at": "2026-08-28T02:59:29.790673+00:00",
+  "task_id": "20260828-growbox-stage13-effective-observability-fix-v2",
   "daemon_version": "4.10.2",
-  "daemon_pid": 32066,
-  "updated_at": "2026-08-28T02:59:07.305478+00:00",
-  "pid": 32066
+  "pid": 32238
 }
