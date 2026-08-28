@@ -1,0 +1,133 @@
+{
+  "id": "20260828-growbox-stage17b-freeze-ml-decisions-docs-v1",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "started_at": "2026-08-28T09:55:09.759900+00:00",
+  "command_timeout": 1800,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; EXPECTED=698d4e7e31a192a19b9f18cc0d11ea7a1a146fa6; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; rm -f warnings.txt; test -z \"$(git status --porcelain)\"; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/stage17/apply_stage17b_ml_decision_docs.py > /tmp/apply-stage17b-ml-decision-docs.py; .venv/bin/python /tmp/apply-stage17b-ml-decision-docs.py; .venv/bin/python -m json.tool docs/ML_DECISION_REPORT.json >/dev/null; git diff --check; git status --short",
+      "exit_code": 0,
+      "output": "From https://github.com/MichalMatu/growbox-ml-controller\n * branch            agent-control -> FETCH_HEAD\n   29b1023..455f14d  agent-control -> origin/agent-control\n M docs/CHANGELOG.md\n M docs/MODEL_PIPELINE.md\n M docs/MVP_ENVIRONMENT_CONTROLLER.md\n?? docs/ML_DECISION_REPORT.json\n?? docs/ML_DECISION_REPORT.md\n",
+      "elapsed_seconds": 2.02,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 8192,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 1.88,
+      "current_rss_mb": 1.88,
+      "stage_name": "apply-stage17b-ml-decision-docs",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "stage_timeout": 600,
+      "verification_level": "work"
+    },
+    {
+      "command": "set -euo pipefail; grep -q '44 -> 32 -> 32 -> 6' docs/MODEL_PIPELINE.md; grep -q 'Runtime direction' docs/MODEL_PIPELINE.md; grep -q 'Stage 16' docs/ML_DECISION_REPORT.md; grep -q '\"runtime_authority\": \"rule\"' docs/ML_DECISION_REPORT.json; grep -q 'Current implementation checkpoint' docs/MVP_ENVIRONMENT_CONTROLLER.md; ! grep -q '128 → 32 → 32 → 15' docs/MODEL_PIPELINE.md; git diff --check",
+      "exit_code": 0,
+      "output": "",
+      "elapsed_seconds": 0.704,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 8192,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": null,
+      "stage_name": "focused-stage17b-doc-consistency",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "stage_timeout": 600,
+      "verification_level": "focused"
+    }
+  ],
+  "verification": [
+    {
+      "command": "set -euo pipefail; git add -A; .venv/bin/pre-commit run --all-files; .venv/bin/python -m pytest -q -m 'not hardware'; bash scripts/check_schema.sh; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests --output-on-failure; bash scripts/run_clang_tidy_host.sh; git diff --check; git add -A; git diff --cached --check; git commit -m 'Freeze climate ML decisions through Stage 16'; git push origin HEAD:mvp/environment-controller; test -z \"$(git status --porcelain)\"; printf 'PUBLISHED_HEAD=%s\\n' \"$(git rev-parse HEAD)\"",
+      "exit_code": 1,
+      "output": "trim trailing whitespace.................................................Failed\n- hook id: trailing-whitespace\n- exit code: 1\n- files were modified by this hook\n\nFixing docs/ML_DECISION_REPORT.md\n\nfix end of files.........................................................Passed\ncheck for merge conflicts................................................Passed\ncheck yaml...............................................................Passed\ncheck json...............................................................Passed\ndetect private key.......................................................Passed\nruff.....................................................................Passed\nruff-format..............................................................Passed\nclang-format.............................................................Passed\nenvironment schema (--check).............................................Passed\n",
+      "elapsed_seconds": 7.835,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 8192,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 55.81,
+      "current_rss_mb": 33.64,
+      "stage_name": "full-regression-and-publish-stage17b",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "verification",
+      "stage_timeout": 3000,
+      "verification_level": "full"
+    }
+  ],
+  "stages": [
+    {
+      "stage_name": "apply-stage17b-ml-decision-docs",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "verification_level": "work",
+      "outcome": "passed",
+      "elapsed_seconds": 2.02
+    },
+    {
+      "stage_name": "focused-stage17b-doc-consistency",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "verification_level": "focused",
+      "outcome": "passed",
+      "elapsed_seconds": 0.704
+    },
+    {
+      "stage_name": "full-regression-and-publish-stage17b",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "verification",
+      "verification_level": "full",
+      "outcome": "failed",
+      "elapsed_seconds": 7.835
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "M  docs/CHANGELOG.md\nA  docs/ML_DECISION_REPORT.json\nAM docs/ML_DECISION_REPORT.md\nM  docs/MODEL_PIPELINE.md\nM  docs/MVP_ENVIRONMENT_CONTROLLER.md\n",
+    "elapsed_seconds": 0.208
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "diff --git a/docs/ML_DECISION_REPORT.md b/docs/ML_DECISION_REPORT.md\nindex 975d165..317d859 100644\n--- a/docs/ML_DECISION_REPORT.md\n+++ b/docs/ML_DECISION_REPORT.md\n@@ -1,6 +1,6 @@\n # ML decision report — climate-v6 Stages 12–16\n \n-Date: 2026-08-28  \n+Date: 2026-08-28\n Branch: `mvp/environment-controller`\n \n This document freezes the decisions reached by the climate-v6 research program so later runtime/product work does not repeat rejected experiments or accidentally reuse revealed evaluation seeds.\n",
+    "elapsed_seconds": 0.151
+  },
+  "failure_reason": "verification_failed",
+  "finished_at": "2026-08-28T09:55:22.960550+00:00",
+  "workspace_checkpoint": {
+    "version": 2,
+    "task_id": "20260828-growbox-stage17b-freeze-ml-decisions-docs-v1",
+    "reason": "task-exit",
+    "created_at": "2026-08-28T09:55:23.886207+00:00",
+    "base_head": "698d4e7e31a192a19b9f18cc0d11ea7a1a146fa6",
+    "work_branch": "agent-work",
+    "path": "/Users/michal/agent-workspace/repos/growbox-ml-controller/checkpoints/20260828-growbox-stage17b-freeze-ml-decisions-docs-v1/1787910923515667000-task-exit",
+    "tracked_patch": "tracked.patch",
+    "untracked_root": "untracked",
+    "untracked_files": [],
+    "tracked_patch_bytes": 15372,
+    "untracked_bytes": 0,
+    "total_bytes": 15372,
+    "status": "M  docs/CHANGELOG.md\nA  docs/ML_DECISION_REPORT.json\nAM docs/ML_DECISION_REPORT.md\nM  docs/MODEL_PIPELINE.md\nM  docs/MVP_ENVIRONMENT_CONTROLLER.md\n"
+  },
+  "task_digest": "057d47a9f0ccae01516bce632e9570052685252f4a6adfbd878ddedaadc7540b",
+  "idle_timeout": 1200,
+  "task_timeout": 4200,
+  "memory_limit_mb": 8192,
+  "attempt_id": "7b2fa8edc269fba17c9079b9",
+  "daemon_version": "4.10.2"
+}
