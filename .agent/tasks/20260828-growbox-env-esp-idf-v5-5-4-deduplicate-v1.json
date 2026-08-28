@@ -1,0 +1,26 @@
+{
+  "id": "20260828-growbox-env-esp-idf-v5-5-4-deduplicate-v1",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "command_timeout": 1800,
+  "idle_timeout": 600,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "steps": [
+    {
+      "name": "audit-and-remove-redundant-esp-idf-v5-5-4-checkout",
+      "verification_level": "work",
+      "timeout": 1200,
+      "command": "set -euo pipefail; EXPECTED=19999bde451f068ee503d4b7c9a0a91712709c2a; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; ACTIVE=\"${HOME}/esp/esp-idf\"; EXTRA=\"${HOME}/esp/esp-idf-v5.5.4\"; test -d \"$ACTIVE/.git\"; ACTIVE_COMMIT=\"$(git -C \"$ACTIVE\" rev-parse HEAD)\"; test \"$(git -C \"$ACTIVE\" describe --tags --exact-match HEAD)\" = 'v5.5.4'; if [[ -e \"$EXTRA\" ]]; then test -d \"$EXTRA/.git\"; ORIGIN=\"$(git -C \"$EXTRA\" remote get-url origin)\"; case \"$ORIGIN\" in https://github.com/espressif/esp-idf.git|git@github.com:espressif/esp-idf.git) ;; *) echo \"Refusing to remove unexpected ESP-IDF origin: $ORIGIN\" >&2; exit 1;; esac; test -z \"$(git -C \"$EXTRA\" status --porcelain --untracked-files=normal)\"; test \"$(git -C \"$EXTRA\" describe --tags --exact-match HEAD)\" = 'v5.5.4'; test \"$(git -C \"$EXTRA\" rev-parse HEAD)\" = \"$ACTIVE_COMMIT\"; rm -rf \"$EXTRA\"; fi; printf 'ACTIVE_IDF_COMMIT=%s\\n' \"$ACTIVE_COMMIT\"; find \"${HOME}/esp\" -maxdepth 1 -type d -name 'esp-idf*' -print | sort"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "verify-single-active-esp-idf-v5-5-4",
+      "verification_level": "focused",
+      "timeout": 1200,
+      "command": "set -euo pipefail; ACTIVE=\"${HOME}/esp/esp-idf\"; test -d \"$ACTIVE/.git\"; test \"$(git -C \"$ACTIVE\" describe --tags --exact-match HEAD)\" = 'v5.5.4'; test ! -e \"${HOME}/esp/esp-idf-v5.5.4\"; CLEAN_PATH='/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin'; unset VIRTUAL_ENV CONDA_PREFIX PYTHONHOME || true; export PATH=\"$CLEAN_PATH\"; source \"$ACTIVE/export.sh\"; idf.py --version | tee /tmp/idf-version-v554-single.txt; grep -Eq 'ESP-IDF v5\\.5\\.4($|[- ])' /tmp/idf-version-v554-single.txt; test -z \"$(git status --porcelain)\"; printf 'SINGLE_ACTIVE_IDF=%s\\n' \"$ACTIVE\""
+    }
+  ]
+}
