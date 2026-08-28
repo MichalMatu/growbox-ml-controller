@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260828-growbox-stage16d-dagger-tradeoff-confirmation-v1",
+  "task_digest": "37c4ebe96f6572338084a8aaacaf04dedc409737c65f5666e86885445fdf9864",
+  "idle_timeout": 1200,
+  "task_timeout": 2400,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-28T08:28:20.348544+00:00",
+  "attempt_id": "ead5ae2f9c80d2e4ffe6ca96",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 74354,
+  "updated_at": "2026-08-28T08:28:20.348827+00:00",
+  "pid": 74354
+}
