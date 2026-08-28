@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260828-growbox-stage16a-sequence-dagger-readiness-audit-v1",
+  "task_digest": "a8f08136e4476a330b1f33f0038abfaa1695f35b234a80a1e163d3b8c4cb0f00",
+  "idle_timeout": 180,
+  "task_timeout": 600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-28T07:51:51.634035+00:00",
+  "attempt_id": "1b3cfe38afb5230bf8b76be6",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 68697,
+  "updated_at": "2026-08-28T07:51:51.634184+00:00",
+  "pid": 68697
+}
