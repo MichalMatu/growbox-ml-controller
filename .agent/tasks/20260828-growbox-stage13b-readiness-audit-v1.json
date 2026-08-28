@@ -1,0 +1,13 @@
+{
+  "id": "20260828-growbox-stage13b-readiness-audit-v1",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "set -euo pipefail; EXPECTED=f4700a6ba9f22e13cf1b35fff6d28424f5807711; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; rm -f warnings.txt; test -z \"$(git status --porcelain)\"; printf '%s\\n' '=== LOCAL DATASET AND MODEL ASSETS ==='; find build reports/ml -maxdepth 2 -type f 2>/dev/null | sort | grep -E '(climate.*\\.(npz|json)|dataset)' || true; printf '%s\\n' '=== NPZ SHAPES AND METADATA ==='; PYTHONPATH=. .venv/bin/python - <<'PY'\nfrom pathlib import Path\nimport json\nimport numpy as np\nfor p in sorted(Path('build').glob('**/*climate*.npz')) + sorted(Path('reports/ml').glob('*climate*.npz')):\n    try:\n        with np.load(p, allow_pickle=False) as d:\n            print('NPZ', p, {k: tuple(d[k].shape) for k in d.files if hasattr(d[k], 'shape')})\n    except Exception as exc:\n        print('NPZ_ERROR', p, type(exc).__name__, str(exc))\nfor p in sorted(Path('reports/ml').glob('*climate*.json')):\n    try:\n        d=json.loads(p.read_text())\n        print('JSON', p, 'schema_version=', d.get('schema_version'), 'contract_hash=', d.get('contract_hash'), 'feature_names_len=', len(d.get('feature_names', [])) if isinstance(d.get('feature_names'), list) else None)\n    except Exception as exc:\n        print('JSON_ERROR', p, type(exc).__name__, str(exc))\nPY\nprintf '%s\\n' '=== ENCODER CALL SITES ==='; rg -n --hidden --glob '!build/**' --glob '!.git/**' 'encode_climate_input\\(|climate_controller_record\\(|ClimateFeatureEncoder::encode\\(' tools lib tests test || true; printf '%s\\n' '=== EFFECTIVE STATE REFERENCES ==='; rg -n --hidden --glob '!build/**' --glob '!.git/**' 'estimated_effective|ClimateEffectiveActionEstimator|ClimateActuatorStateEstimator|effective_action' tools lib tests test || true; printf '%s\\n' '=== BENCHMARK ML INPUT PATH ==='; rg -n -C 5 'encode_climate_input|previous_command|model\\.predict|portable' tools/ml/climate_benchmark.py tools/ml/climate_policy.py || true; printf '%s\\n' '=== CLIMATE V6 RUNTIME ENCODER USERS ==='; rg -n -C 4 'ClimateFeatureEncoder|ClimateControllerInput' lib test tests || true; printf '%s\\n' '=== FINAL STATUS ==='; test -z \"$(git status --porcelain)\""
+  ]
+}
