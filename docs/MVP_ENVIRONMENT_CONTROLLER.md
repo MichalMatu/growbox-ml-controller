@@ -1,6 +1,6 @@
 # Environment Controller MVP
 
-Status: architecture/design phase — MVP v1 flow, I/O and rebuild plan frozen
+Status: implementation phase — climate-v6 simulation/training path qualified through Stage 16; hardware runtime integration remains in progress
 Branch: `mvp/environment-controller`
 
 ## 1. Product goal
@@ -429,6 +429,20 @@ For this MVP:
 - any future interoperability must happen through a generic external adapter/API and must not couple either project's internal architecture.
 
 This boundary is intentional: the growbox project must be able to prove or disprove the value of ML on its own, with its own simulator, benchmark and observable controller behavior.
+
+## Current implementation checkpoint — 2026-08-28
+
+The rebuild has progressed beyond the original planning checkpoint:
+
+- climate-v6 uses 44 ordered ML features and 6 climate outputs;
+- Sequence Teacher is qualified for new labels;
+- effective actuator observability is implemented;
+- Rule remains the recommended authoritative runtime policy;
+- residual ML and deterministic CO2/exhaust coupling were rejected on DEV evidence;
+- one bounded Sequence-Teacher DAgger iteration failed the switching gate on two DEV seeds, so no second iteration or candidate publication is planned;
+- next work is runtime policy-mode/shadow diagnostics, trace/replay, parity, and simulated/HIL preparation before real sensors.
+
+See `docs/ML_DECISION_REPORT.md` for the frozen evidence and seed hygiene.
 
 # Frozen implementation plan
 
