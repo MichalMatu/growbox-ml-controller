@@ -1,0 +1,17 @@
+{
+  "id": "20260828-growbox-stage16a-sequence-dagger-readiness-audit-v1",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "command_timeout": 300,
+  "idle_timeout": 180,
+  "task_timeout": 600,
+  "memory_limit_mb": 4096,
+  "steps": [
+    {
+      "name": "run-stage16a-sequence-dagger-readiness-audit",
+      "timeout": 300,
+      "command": "set -euo pipefail; EXPECTED=34d164cd7b5a68ed7b46228e7aef8539c7539c6e; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; rm -f warnings.txt; test -z \"$(git status --porcelain)\"; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/stage16/stage16a_sequence_dagger_readiness_audit.py > /tmp/stage16a-sequence-dagger-readiness-audit.py; .venv/bin/python -m py_compile /tmp/stage16a-sequence-dagger-readiness-audit.py; PYTHONPATH=. .venv/bin/python /tmp/stage16a-sequence-dagger-readiness-audit.py; test -z \"$(git status --porcelain)\""
+    }
+  ]
+}
