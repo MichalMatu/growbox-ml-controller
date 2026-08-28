@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260828-growbox-stage14b-residual-bound-sweep-v1",
+  "task_digest": "55911bd7b3886f5c0c0e67e551355cf0b1b1b55d66c6f63ad1d68c19867eab8c",
+  "idle_timeout": 1200,
+  "task_timeout": 2400,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-28T04:19:18.861266+00:00",
+  "attempt_id": "08b52660a046c7b01ea9c8ae",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 44205,
+  "updated_at": "2026-08-28T04:19:18.861511+00:00",
+  "pid": 44205
+}
