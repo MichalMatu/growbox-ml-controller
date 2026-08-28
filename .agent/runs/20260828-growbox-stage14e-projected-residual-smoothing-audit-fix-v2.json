@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260828-growbox-stage14e-projected-residual-smoothing-audit-fix-v2",
+  "task_digest": "6db43ce1fb4c4d3cb4829a36a614ac1d85a63cc5bf1cf1106c918cdf0f922d80",
+  "idle_timeout": 1800,
+  "task_timeout": 4200,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-28T05:29:23.975665+00:00",
+  "attempt_id": "c1f046522a466c77b7c93b15",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 51737,
+  "updated_at": "2026-08-28T05:29:23.975809+00:00",
+  "pid": 51737
+}
