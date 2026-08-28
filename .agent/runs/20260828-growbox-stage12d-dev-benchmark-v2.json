@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260828-growbox-stage12d-dev-benchmark-v2",
+  "task_digest": "8bc7f748e06f19dabf69bf9c56f289d99ee4b8f651cfa31470075f16a7328cc5",
+  "idle_timeout": 1800,
+  "task_timeout": 7800,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-28T00:38:41.023932+00:00",
+  "attempt_id": "85a83b7abb2236add9f8d1e0",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 18435,
+  "updated_at": "2026-08-28T00:38:41.024058+00:00",
+  "pid": 18435
+}
