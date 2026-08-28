@@ -5,9 +5,10 @@ holds one candidate action for the complete rollout horizon, this oracle optimiz
 a move-blocked sequence and returns only the first action. Calling ``choose`` again
 at the next control step therefore implements receding-horizon sequence control.
 
-The primary objective is the benchmark-aligned climate tracking cost. Actuator
-energy, CO2 use and switching are used only as a lexicographic tie-breaker so the
-oracle never sacrifices tracking merely to reduce effort.
+The primary objective is the benchmark-aligned climate tracking cost. After the
+best tracking plan is found, a narrow relative tracking band may be used to prefer
+a smoother receding-horizon first action, with whole-plan delta-u and the existing
+secondary cost used only as later tie-breakers.
 """
 
 from __future__ import annotations
@@ -35,6 +36,7 @@ class ClimateSequenceTeacherConfig:
     move_block_steps: tuple[int, ...] = DEFAULT_MOVE_BLOCK_STEPS
     coordinate_passes: int = 1
     primary_tolerance: float = 1.0e-12
+    smoothing_tolerance_fraction: float = 0.001
 
     def __post_init__(self) -> None:
         if not math.isfinite(self.horizon_s) or self.horizon_s <= 0.0:
@@ -45,6 +47,11 @@ class ClimateSequenceTeacherConfig:
             raise ValueError("coordinate_passes must be positive")
         if not math.isfinite(self.primary_tolerance) or self.primary_tolerance < 0.0:
             raise ValueError("primary_tolerance must be finite and non-negative")
+        if (
+            not math.isfinite(self.smoothing_tolerance_fraction)
+            or self.smoothing_tolerance_fraction < 0.0
+        ):
+            raise ValueError("smoothing_tolerance_fraction must be finite and non-negative")
         if not self.move_block_steps or any(step <= 0 for step in self.move_block_steps):
             raise ValueError("move_block_steps must contain positive integers")
 
@@ -217,6 +224,25 @@ class ClimateSequenceRolloutTeacher:
                             best_primary = primary
                             best_secondary = secondary
 
+        if self.config.smoothing_tolerance_fraction > 0.0:
+            (
+                best_plan,
+                best_primary,
+                best_secondary,
+                smoothing_evaluations,
+            ) = self._smooth_plan_within_tracking_band(
+                simulator,
+                best_plan,
+                best_primary,
+                best_secondary,
+                targets,
+                humidity_control_mode=humidity_control_mode,
+                co2_usable=co2_usable,
+                outside_usable=outside_usable,
+                allow_co2=allow_co2,
+            )
+            evaluations += smoothing_evaluations
+
         return ClimateSequenceTeacherResult(
             action=best_plan[0],
             plan=best_plan,
@@ -291,6 +317,99 @@ class ClimateSequenceRolloutTeacher:
         if primary < best_primary - tolerance:
             return True
         return abs(primary - best_primary) <= tolerance and secondary < best_secondary - 1.0e-12
+
+    @staticmethod
+    def _action_delta(action: ClimateAction, previous: ClimateAction) -> float:
+        current_values = action.clipped().as_tuple()
+        previous_values = previous.clipped().as_tuple()
+        return sum(
+            abs(now - before) for now, before in zip(current_values, previous_values, strict=True)
+        ) / len(current_values)
+
+    @classmethod
+    def _plan_delta_u(cls, plan: Sequence[ClimateAction], previous: ClimateAction) -> float:
+        total = 0.0
+        before = previous.clipped()
+        for action in plan:
+            command = action.clipped()
+            total += cls._action_delta(command, before)
+            before = command
+        return total
+
+    def _smooth_plan_within_tracking_band(
+        self,
+        simulator: ClimateSimulator,
+        plan: tuple[ClimateAction, ...],
+        tracking_anchor: float,
+        secondary_cost: float,
+        targets: ClimateTargets,
+        *,
+        humidity_control_mode: HumidityControlMode,
+        co2_usable: bool,
+        outside_usable: bool,
+        allow_co2: bool,
+    ) -> tuple[tuple[ClimateAction, ...], float, float, int]:
+        tracking_limit = tracking_anchor * (1.0 + self.config.smoothing_tolerance_fraction)
+        selected_plan = plan
+        selected_tracking = tracking_anchor
+        selected_secondary = secondary_cost
+        previous = simulator.previous_command.clipped()
+        selected_first_delta = self._action_delta(selected_plan[0], previous)
+        selected_plan_delta = self._plan_delta_u(selected_plan, previous)
+        evaluations = 0
+
+        for block_index in range(len(selected_plan)):
+            for group in ("temperature", "humidity", "exhaust", "co2"):
+                current_action = selected_plan[block_index]
+                for candidate_action in self._group_options(
+                    simulator,
+                    current_action,
+                    group=group,
+                    outside_usable=outside_usable,
+                    allow_co2=allow_co2,
+                ):
+                    if candidate_action == current_action:
+                        continue
+                    candidate_plan_list = list(selected_plan)
+                    candidate_plan_list[block_index] = candidate_action
+                    candidate_plan = tuple(candidate_plan_list)
+                    tracking, secondary = self.evaluate_plan(
+                        simulator,
+                        candidate_plan,
+                        targets,
+                        humidity_control_mode=humidity_control_mode,
+                        co2_usable=co2_usable,
+                    )
+                    evaluations += 1
+                    if tracking > tracking_limit + 1.0e-12:
+                        continue
+
+                    first_delta = self._action_delta(candidate_plan[0], previous)
+                    plan_delta = self._plan_delta_u(candidate_plan, previous)
+                    if (
+                        first_delta < selected_first_delta - 1.0e-12
+                        or (
+                            abs(first_delta - selected_first_delta) <= 1.0e-12
+                            and plan_delta < selected_plan_delta - 1.0e-12
+                        )
+                        or (
+                            abs(first_delta - selected_first_delta) <= 1.0e-12
+                            and abs(plan_delta - selected_plan_delta) <= 1.0e-12
+                            and secondary < selected_secondary - 1.0e-12
+                        )
+                    ):
+                        selected_plan = candidate_plan
+                        selected_tracking = tracking
+                        selected_secondary = secondary
+                        selected_first_delta = first_delta
+                        selected_plan_delta = plan_delta
+
+        return (
+            selected_plan,
+            float(selected_tracking),
+            float(selected_secondary),
+            evaluations,
+        )
 
     def _group_options(
         self,

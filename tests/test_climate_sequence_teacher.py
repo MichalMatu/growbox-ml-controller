@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from dataclasses import replace
 
 import pytest
@@ -184,3 +185,44 @@ def test_evaluate_plan_rejects_wrong_number_of_blocks() -> None:
             (ClimateAction(),),
             ClimateTargets(),
         )
+
+
+def test_config_rejects_invalid_smoothing_tolerance() -> None:
+    for value in (-0.001, math.inf, math.nan):
+        with pytest.raises(
+            ValueError, match="smoothing_tolerance_fraction must be finite and non-negative"
+        ):
+            replace(fast_config(), smoothing_tolerance_fraction=value)
+
+
+def test_smoothing_stays_inside_tracking_band_and_never_increases_first_action_delta() -> None:
+    state = ClimateState(
+        air_temperature_c=29.0,
+        relative_humidity_pct=72.0,
+        co2_ppm=900.0,
+        outside_temperature_c=20.0,
+        outside_humidity_pct=45.0,
+    )
+    targets = ClimateTargets(
+        air_temperature_c=24.0,
+        relative_humidity_pct=58.0,
+        co2_enabled=True,
+        co2_ppm=1_050.0,
+    )
+    unsmoothed_config = replace(fast_config(), smoothing_tolerance_fraction=0.0)
+    smoothed_config = replace(fast_config(), smoothing_tolerance_fraction=0.001)
+
+    unsmoothed = ClimateSequenceRolloutTeacher(config=unsmoothed_config).choose(
+        make_sim(state), targets
+    )
+    smoothed = ClimateSequenceRolloutTeacher(config=smoothed_config).choose(
+        make_sim(state), targets
+    )
+
+    zero = ClimateAction()
+    unsmoothed_delta = ClimateSequenceRolloutTeacher._action_delta(unsmoothed.action, zero)
+    smoothed_delta = ClimateSequenceRolloutTeacher._action_delta(smoothed.action, zero)
+
+    assert smoothed.tracking_cost <= unsmoothed.tracking_cost * 1.001 + 1.0e-12
+    assert smoothed_delta <= unsmoothed_delta + 1.0e-12
+    assert smoothed.evaluations > unsmoothed.evaluations
