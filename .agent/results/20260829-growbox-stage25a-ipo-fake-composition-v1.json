@@ -1,0 +1,9 @@
+{
+  "id": "20260829-growbox-stage25a-ipo-fake-composition-v1",
+  "status": "failed",
+  "failure_reason": "invalid_task_file",
+  "started_at": null,
+  "finished_at": "2026-08-28T23:14:35.190201+00:00",
+  "daemon_version": "4.10.2",
+  "error": "JSONDecodeError: Invalid control character at: line 16 column 1153 (char 1639)"
+}
