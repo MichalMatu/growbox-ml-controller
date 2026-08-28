@@ -89,44 +89,13 @@ This architecture must permit combinations such as:
 - real sensors + Rule-authoritative real actuators + ML shadow;
 - different physical output backends without controller changes.
 
-## Immediate next stage: Stage25A — IPO composition with fake providers
+## Stage25A completed — strict IPO composition with fake providers
 
-Goal: prove a complete application-level climate-v6 path using only interchangeable fake
-implementations. Do not add SCD41/BLE/RTC/GPIO libraries yet.
+Stage25A proves the complete application-level path without physical hardware:
 
-Recommended bounded scope:
+`ClimateSnapshotProvider -> ClimateInputAdapter -> ClimateControlLoop -> ClimateActuatorAdapter -> ClimateRoleDriver`
 
-1. Add an application composition/orchestration layer under `src/climate/` that wires:
-   `ClimateSnapshotProvider -> ClimateInputAdapter -> ClimateControlLoop ->
-   ClimateActuatorAdapter -> ClimateRoleDriver`.
-2. Keep construction/dependency injection explicit. Avoid globals hidden inside the processing
-   layer.
-3. Add fake implementations for host/application tests only, using the same public provider/driver
-   interfaces intended for hardware.
-4. Exercise multi-tick scenarios through the full IPO composition:
-   - nominal Rule control;
-   - stale/invalid measurement;
-   - provider unavailable;
-   - ML shadow differing from Rule but never driving Output;
-   - actuator rejection -> OFF recovery;
-   - double actuator failure -> latched fault;
-   - reset/recovery;
-   - confirmed applied feedback remains correct across ticks.
-5. Compile the composition seam into the real ESP-IDF build, but do not make it drive physical GPIO.
-6. Preserve the legacy demo path for now. If an application-level selectable climate-v6 demo is
-   useful, make selection explicit and compile-time/configuration controlled rather than silently
-   replacing legacy behavior.
-7. Update `docs/CURRENT_STATUS.md` only after Stage25A actually passes.
-
-Success criteria:
-
-- focused host tests for the new composition pass;
-- all existing non-hardware Python tests pass;
-- all host CTest targets pass;
-- clang-tidy passes according to repository gate;
-- real ESP-IDF v5.5.4 S3 build passes;
-- no concrete sensor or GPIO dependency enters Processing;
-- clean commit is pushed to `mvp/environment-controller`.
+`ClimateApplication` is only the constructor-injected composition root. It adds no policy, hardware knowledge or duplicate runtime state. Fake providers/drivers live in host tests and use the same public interfaces intended for future real hardware. Multi-tick coverage includes nominal Rule control, changing/stale/invalid/unavailable measurements, ML shadow isolation, rejection -> OFF recovery, double-failure latch/reset, confirmed applied feedback and all six semantic role mappings. The legacy `src/main.cpp` remains unchanged and no SCD41/BLE/RTC/GPIO dependency is introduced.
 
 ## Following stages
 
