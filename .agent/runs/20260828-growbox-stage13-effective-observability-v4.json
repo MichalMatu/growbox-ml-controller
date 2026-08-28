@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260828-growbox-stage13-effective-observability-v4",
+  "task_digest": "51732d17b378dfa4c2ef7aa1534840afbd375c12b10ff234bc1cd803d96ae925",
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-28T03:18:27.196075+00:00",
+  "attempt_id": "b175f9227906d97a3628ba03",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 35260,
+  "updated_at": "2026-08-28T03:18:27.196232+00:00",
+  "pid": 35260
+}
