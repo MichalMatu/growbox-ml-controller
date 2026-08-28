@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260828-growbox-stage22a-cpp-control-loop-fakes-v1",
+  "task_digest": "2f61a3a388f33a229f28b9553ef6151cd575487eb2a98383ddde17e54383238d",
+  "idle_timeout": 1200,
+  "task_timeout": 5400,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-28T19:55:54.876630+00:00",
+  "attempt_id": "0c15b710642d150799eaac46",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 69023,
+  "updated_at": "2026-08-28T19:55:54.876798+00:00",
+  "pid": 69023
+}
