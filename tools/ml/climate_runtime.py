@@ -4,7 +4,8 @@ This module is the Python reference runtime for policy authority. Rule control i
 production authority by default. ML shadow mode evaluates the persisted model
 through the same arbitration and safety gates without allowing ML to influence
 the applied command. ML active mode exists only as an explicit, unqualified
-research opt-in and is disabled by default.
+research opt-in and is disabled by default. Missing, blocked, or failed ML always
+falls back to the Rule path and is reported through ``ClimateRuntimeStatus``.
 """
 
 from __future__ import annotations
@@ -40,6 +41,13 @@ class ClimatePolicyMode(str, Enum):
     ML_ACTIVE = "ml_active"
 
 
+class ClimateRuntimeStatus(str, Enum):
+    OK = "ok"
+    ML_PROVIDER_MISSING = "ml_provider_missing"
+    ML_INFERENCE_FAILED = "ml_inference_failed"
+    ML_ACTIVE_NOT_ALLOWED = "ml_active_not_allowed"
+
+
 class ClimateInferenceModel(Protocol):
     def predict(self, features: np.ndarray) -> np.ndarray: ...
 
@@ -53,6 +61,7 @@ class ClimateRuntimeConfig:
 
 @dataclass(frozen=True)
 class ClimateRuntimeDecision:
+    status: ClimateRuntimeStatus
     mode: ClimatePolicyMode
     authoritative_policy: str
     rule_raw: ClimateAction
@@ -73,7 +82,7 @@ class ClimateRuntimeDecision:
 
 
 class ClimateRuntimeController:
-    """Reference climate-v6 runtime with explicit policy authority."""
+    """Reference climate-v6 runtime with explicit policy authority and Rule fallback."""
 
     def __init__(
         self,
@@ -84,13 +93,6 @@ class ClimateRuntimeController:
         self.model = model
         if self.config.sensor_timeout_ms < 0:
             raise ValueError("sensor_timeout_ms must be non-negative")
-        if self.config.mode is not ClimatePolicyMode.RULE and self.model is None:
-            raise ValueError("ML shadow/active mode requires an inference model")
-        if (
-            self.config.mode is ClimatePolicyMode.ML_ACTIVE
-            and not self.config.allow_unqualified_ml_active
-        ):
-            raise ValueError("ML active mode is not qualified; explicit research opt-in required")
         self.rule_policy = ClimateRulePolicy()
         self.trend_estimator = ClimateTrendEstimator()
         self.effective_estimator = ClimateEffectiveActionEstimator()
@@ -195,30 +197,52 @@ class ClimateRuntimeController:
             sensor_timeout_ms=self.config.sensor_timeout_ms,
         )
 
+        runtime_status = ClimateRuntimeStatus.OK
         ml_raw: ClimateAction | None = None
         ml_arbitrated: ClimateAction | None = None
         ml_safe: ClimateAction | None = None
         ml_arb_interventions: tuple[str, ...] = ()
         ml_safety_interventions: tuple[str, ...] = ()
         ml_features: tuple[float, ...] | None = None
-        if self.config.mode is not ClimatePolicyMode.RULE:
-            (
-                ml_raw,
-                ml_arbitrated,
-                ml_safe,
-                ml_arb_interventions,
-                ml_safety_interventions,
-                ml_features,
-            ) = self._evaluate_ml(scenario, state, profile, previous, trends, statuses)
 
-        if self.config.mode is ClimatePolicyMode.ML_ACTIVE:
+        if (
+            self.config.mode is ClimatePolicyMode.ML_ACTIVE
+            and not self.config.allow_unqualified_ml_active
+        ):
+            runtime_status = ClimateRuntimeStatus.ML_ACTIVE_NOT_ALLOWED
+        elif self.config.mode is not ClimatePolicyMode.RULE:
+            if self.model is None:
+                runtime_status = ClimateRuntimeStatus.ML_PROVIDER_MISSING
+            else:
+                try:
+                    (
+                        ml_raw,
+                        ml_arbitrated,
+                        ml_safe,
+                        ml_arb_interventions,
+                        ml_safety_interventions,
+                        ml_features,
+                    ) = self._evaluate_ml(scenario, state, profile, previous, trends, statuses)
+                except Exception:
+                    runtime_status = ClimateRuntimeStatus.ML_INFERENCE_FAILED
+                    ml_raw = None
+                    ml_arbitrated = None
+                    ml_safe = None
+                    ml_arb_interventions = ()
+                    ml_safety_interventions = ()
+                    ml_features = None
+
+        authoritative_policy = "rule"
+        applied = rule_safe.action
+        if (
+            self.config.mode is ClimatePolicyMode.ML_ACTIVE
+            and runtime_status is ClimateRuntimeStatus.OK
+        ):
             if ml_safe is None:
-                raise RuntimeError("ML active mode did not produce a safe action")
-            authoritative_policy = "ml"
-            applied = ml_safe
-        else:
-            authoritative_policy = "rule"
-            applied = rule_safe.action
+                runtime_status = ClimateRuntimeStatus.ML_INFERENCE_FAILED
+            else:
+                authoritative_policy = "ml"
+                applied = ml_safe
 
         effective_before = self.effective_estimator.state
         effective_after = self.effective_estimator.update(
@@ -227,6 +251,7 @@ class ClimateRuntimeController:
             timestep_s=timestep_s,
         )
         return ClimateRuntimeDecision(
+            status=runtime_status,
             mode=self.config.mode,
             authoritative_policy=authoritative_policy,
             rule_raw=rule_raw,
@@ -253,4 +278,5 @@ __all__ = [
     "ClimateRuntimeConfig",
     "ClimateRuntimeController",
     "ClimateRuntimeDecision",
+    "ClimateRuntimeStatus",
 ]

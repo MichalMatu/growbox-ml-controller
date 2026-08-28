@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import numpy as np
-import pytest
 
 from tools.ml.climate_input import ClimateEffectiveActionEstimator, MeasurementStatus
 from tools.ml.climate_policy import (
@@ -13,6 +12,7 @@ from tools.ml.climate_runtime import (
     ClimatePolicyMode,
     ClimateRuntimeConfig,
     ClimateRuntimeController,
+    ClimateRuntimeStatus,
 )
 from tools.ml.climate_scenarios import build_training_episode
 from tools.ml.climate_simulator import ClimateAction
@@ -27,6 +27,12 @@ class _FakeModel:
         return self.values.copy()
 
 
+class _FailingModel:
+    def predict(self, features: np.ndarray) -> np.ndarray:
+        assert features.shape == (44,)
+        raise RuntimeError("synthetic inference failure")
+
+
 def _episode(family: str = "cold_heating"):
     return build_training_episode(family, 0, 18_018)
 
@@ -37,16 +43,12 @@ def test_rule_is_default_authority_and_needs_no_model() -> None:
     profile = episode.first_profile
     runtime = ClimateRuntimeController()
 
-    decision = runtime.step(
-        episode.scenario,
-        state,
-        profile,
-        monotonic_ms=0,
-    )
+    decision = runtime.step(episode.scenario, state, profile, monotonic_ms=0)
 
     expected_raw = ClimateRulePolicy().choose(episode.scenario, state, profile)
     expected_arb = arbitrate_climate_action(expected_raw, episode.scenario)
     expected_safe = apply_climate_safety(expected_arb.action, episode.scenario, state, profile)
+    assert decision.status is ClimateRuntimeStatus.OK
     assert decision.mode is ClimatePolicyMode.RULE
     assert decision.authoritative_policy == "rule"
     assert decision.applied == expected_safe.action
@@ -54,9 +56,21 @@ def test_rule_is_default_authority_and_needs_no_model() -> None:
     assert decision.ml_features is None
 
 
-def test_ml_shadow_requires_model() -> None:
-    with pytest.raises(ValueError, match="requires an inference model"):
-        ClimateRuntimeController(config=ClimateRuntimeConfig(mode=ClimatePolicyMode.ML_SHADOW))
+def test_ml_shadow_without_model_falls_back_to_rule_with_status() -> None:
+    episode = _episode()
+    runtime = ClimateRuntimeController(
+        config=ClimateRuntimeConfig(mode=ClimatePolicyMode.ML_SHADOW)
+    )
+    decision = runtime.step(
+        episode.scenario,
+        episode.scenario.initial_state,
+        episode.first_profile,
+        monotonic_ms=0,
+    )
+    assert decision.status is ClimateRuntimeStatus.ML_PROVIDER_MISSING
+    assert decision.authoritative_policy == "rule"
+    assert decision.applied == decision.rule_safe
+    assert decision.ml_raw is None
 
 
 def test_ml_shadow_cannot_change_applied_command_or_effective_state() -> None:
@@ -76,6 +90,7 @@ def test_ml_shadow_cannot_change_applied_command_or_effective_state() -> None:
         monotonic_ms=0,
     )
 
+    assert decision.status is ClimateRuntimeStatus.OK
     assert decision.authoritative_policy == "rule"
     assert decision.applied == decision.rule_safe
     assert decision.ml_raw is not None
@@ -87,12 +102,22 @@ def test_ml_shadow_cannot_change_applied_command_or_effective_state() -> None:
     assert decision.effective_after == expected_effective
 
 
-def test_ml_active_is_blocked_without_explicit_unqualified_opt_in() -> None:
-    with pytest.raises(ValueError, match="not qualified"):
-        ClimateRuntimeController(
-            model=_FakeModel((0.0, 0.0, 0.0, 0.0, 0.0, 0.0)),
-            config=ClimateRuntimeConfig(mode=ClimatePolicyMode.ML_ACTIVE),
-        )
+def test_ml_active_without_opt_in_falls_back_to_rule_with_status() -> None:
+    episode = _episode()
+    runtime = ClimateRuntimeController(
+        model=_FakeModel((0.0, 0.0, 0.0, 0.0, 0.0, 0.0)),
+        config=ClimateRuntimeConfig(mode=ClimatePolicyMode.ML_ACTIVE),
+    )
+    decision = runtime.step(
+        episode.scenario,
+        episode.scenario.initial_state,
+        episode.first_profile,
+        monotonic_ms=0,
+    )
+    assert decision.status is ClimateRuntimeStatus.ML_ACTIVE_NOT_ALLOWED
+    assert decision.authoritative_policy == "rule"
+    assert decision.applied == decision.rule_safe
+    assert decision.ml_raw is None
 
 
 def test_explicit_research_ml_active_still_uses_arbitration_and_safety() -> None:
@@ -107,19 +132,50 @@ def test_explicit_research_ml_active_still_uses_arbitration_and_safety() -> None
         ),
     )
 
-    decision = runtime.step(
-        episode.scenario,
-        state,
-        profile,
-        monotonic_ms=0,
-    )
+    decision = runtime.step(episode.scenario, state, profile, monotonic_ms=0)
 
+    assert decision.status is ClimateRuntimeStatus.OK
     assert decision.authoritative_policy == "ml"
     assert decision.ml_safe is not None
     assert decision.applied == decision.ml_safe
     assert decision.ml_arbitrated is not None
     assert decision.ml_arbitrated.cooler == 0.0
     assert decision.ml_arbitrated.dehumidifier == 0.0
+
+
+def test_ml_inference_failure_falls_back_to_rule() -> None:
+    episode = _episode()
+    runtime = ClimateRuntimeController(
+        model=_FailingModel(),
+        config=ClimateRuntimeConfig(mode=ClimatePolicyMode.ML_SHADOW),
+    )
+    decision = runtime.step(
+        episode.scenario,
+        episode.scenario.initial_state,
+        episode.first_profile,
+        monotonic_ms=0,
+    )
+    assert decision.status is ClimateRuntimeStatus.ML_INFERENCE_FAILED
+    assert decision.authoritative_policy == "rule"
+    assert decision.applied == decision.rule_safe
+    assert decision.ml_raw is None
+    assert decision.ml_features is None
+
+
+def test_nonfinite_ml_output_falls_back_to_rule() -> None:
+    episode = _episode()
+    runtime = ClimateRuntimeController(
+        model=_FakeModel((float("nan"), 0.0, 0.0, 0.0, 0.0, 0.0)),
+        config=ClimateRuntimeConfig(mode=ClimatePolicyMode.ML_SHADOW),
+    )
+    decision = runtime.step(
+        episode.scenario,
+        episode.scenario.initial_state,
+        episode.first_profile,
+        monotonic_ms=0,
+    )
+    assert decision.status is ClimateRuntimeStatus.ML_INFERENCE_FAILED
+    assert decision.applied == decision.rule_safe
 
 
 def test_required_sensor_fault_keeps_shadow_observational_only() -> None:
@@ -139,6 +195,7 @@ def test_required_sensor_fault_keeps_shadow_observational_only() -> None:
         status={"air_temperature_c": MeasurementStatus(valid=False)},
     )
 
+    assert decision.status is ClimateRuntimeStatus.OK
     assert decision.applied == ClimateAction()
     assert decision.rule_safe == ClimateAction()
     assert decision.ml_safe == ClimateAction()
