@@ -1,0 +1,13 @@
+{
+  "id": "20260828-growbox-stage12d-dev-benchmark-v2",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "command_timeout": 7200,
+  "idle_timeout": 1800,
+  "task_timeout": 7800,
+  "memory_limit_mb": 8192,
+  "commands": [
+    "set -euo pipefail; EXPECTED=f4700a6ba9f22e13cf1b35fff6d28424f5807711; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; rm -f warnings.txt; test -z \"$(git status --porcelain)\"; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/stage12d/stage12d_sequence_dev_benchmark.py > /tmp/growbox-stage12d-dev-benchmark.py; PYTHONPATH=. .venv/bin/python -m py_compile /tmp/growbox-stage12d-dev-benchmark.py; PYTHONPATH=. .venv/bin/python /tmp/growbox-stage12d-dev-benchmark.py --seed 161803 --scenarios-per-family 2 --steps 60 --workers 6; test -z \"$(git status --porcelain)\""
+  ]
+}
