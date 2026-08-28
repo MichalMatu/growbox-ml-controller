@@ -1,0 +1,134 @@
+{
+  "id": "20260828-growbox-stage13-effective-observability-v5",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "started_at": "2026-08-28T03:28:13.812708+00:00",
+  "command_timeout": 1800,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; EXPECTED=f4700a6ba9f22e13cf1b35fff6d28424f5807711; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; rm -f warnings.txt; test -z \"$(git status --porcelain)\"; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/stage13/apply_effective_actuator_observability.py > /tmp/apply-stage13-observability.py; git show origin/agent-control:.agent/task-assets/stage13/fix_stage13_parameter_count_v4.py > /tmp/fix-stage13-parameter-count-v4.py; .venv/bin/python /tmp/apply-stage13-observability.py; .venv/bin/python /tmp/fix-stage13-parameter-count-v4.py; .venv/bin/python tools/schema/generate_climate_contract.py; .venv/bin/ruff check --fix tools/schema/generate_climate_contract.py tools/ml/climate_input.py tools/ml/climate_dataset.py tools/ml/run_climate_v6_dataset_audit.py tools/ml/climate_training.py tools/ml/climate_training_weighted.py tools/ml/climate_dagger.py tools/ml/climate_model_artifact.py tools/ml/export_climate_v6_winner.py tools/ml/run_dagger_overnight.py tools/ml/run_weighted_climate_v6_training.py tools/ml/run_dagger_distributed.py tests/test_mvp_contract_v6.py tests/test_climate_input.py tests/test_climate_dataset.py tests/test_climate_training.py tests/test_climate_training_weighted.py tests/test_climate_dagger.py tests/test_climate_dagger_distributed.py tests/test_climate_model_artifact.py; .venv/bin/ruff format tools/schema/generate_climate_contract.py tools/ml/climate_input.py tools/ml/climate_dataset.py tools/ml/run_climate_v6_dataset_audit.py tools/ml/climate_training.py tools/ml/climate_training_weighted.py tools/ml/climate_dagger.py tools/ml/climate_model_artifact.py tools/ml/export_climate_v6_winner.py tools/ml/run_dagger_overnight.py tools/ml/run_weighted_climate_v6_training.py tools/ml/run_dagger_distributed.py tests/test_mvp_contract_v6.py tests/test_climate_input.py tests/test_climate_dataset.py tests/test_climate_training.py tests/test_climate_training_weighted.py tests/test_climate_dagger.py tests/test_climate_dagger_distributed.py tests/test_climate_model_artifact.py; set +e; .venv/bin/pre-commit run clang-format --files lib/environment_control/src/climate/ClimateActuatorStateEstimator.h lib/environment_control/src/climate/ClimateFeatureEncoder.cpp test/test_climate_v6/test_main.cpp; FORMAT_RC=$?; set -e; test \"$FORMAT_RC\" -eq 0 -o \"$FORMAT_RC\" -eq 1; .venv/bin/pre-commit run clang-format --files lib/environment_control/src/climate/ClimateActuatorStateEstimator.h lib/environment_control/src/climate/ClimateFeatureEncoder.cpp test/test_climate_v6/test_main.cpp; git diff --check; git status --short",
+      "exit_code": 0,
+      "output": "From https://github.com/MichalMatu/growbox-ml-controller\n * branch            agent-control -> FETCH_HEAD\n   08ae906..04fd658  agent-control -> origin/agent-control\nStage 13 effective-actuator observability migration applied\nStage 13 parameter-count expectations updated for 44 features\nwrote /Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateContract.h hash=fe7d6b4362ad\nAll checks passed!\n2 files reformatted, 18 files left unchanged\nclang-format.............................................................Failed\n- hook id: clang-format\n- files were modified by this hook\nclang-format.............................................................Passed\n M lib/environment_control/src/climate/ClimateContract.h\n M lib/environment_control/src/climate/ClimateFeatureEncoder.cpp\n M lib/environment_control/src/climate/ClimateTypes.h\n M schemas/environment-controller.v6.json\n M test/test_climate_v6/test_main.cpp\n M tests/test_climate_dagger.py\n M tests/test_climate_dagger_distributed.py\n M tests/test_climate_dataset.py\n M tests/test_climate_input.py\n M tests/test_climate_model_artifact.py\n M tests/test_climate_training.py\n M tests/test_climate_training_weighted.py\n M tests/test_mvp_contract_v6.py\n M tools/ml/climate_dagger.py\n M tools/ml/climate_dataset.py\n M tools/ml/climate_input.py\n M tools/ml/climate_model_artifact.py\n M tools/ml/climate_training.py\n M tools/ml/climate_training_weighted.py\n M tools/ml/export_climate_v6_winner.py\n M tools/ml/run_climate_v6_dataset_audit.py\n M tools/ml/run_dagger_distributed.py\n M tools/ml/run_dagger_overnight.py\n M tools/ml/run_weighted_climate_v6_training.py\n M tools/schema/generate_climate_contract.py\n?? lib/environment_control/src/climate/ClimateActuatorStateEstimator.h\n",
+      "elapsed_seconds": 4.385,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 8192,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 17.28,
+      "current_rss_mb": 17.28,
+      "stage_name": "apply-stage13-effective-observability-v5",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "stage_timeout": 900,
+      "verification_level": "work"
+    },
+    {
+      "command": "set -euo pipefail; .venv/bin/python tools/schema/generate_climate_contract.py --check; .venv/bin/python -m pytest tests/test_mvp_contract_v6.py tests/test_climate_input.py tests/test_climate_dataset.py tests/test_climate_training.py tests/test_climate_training_weighted.py tests/test_climate_dagger.py tests/test_climate_dagger_distributed.py tests/test_climate_model_artifact.py -q; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests -R climate_v6_tests --output-on-failure; git diff --check",
+      "exit_code": 0,
+      "output": "......................................................                   [100%]\n54 passed in 49.63s\n-- Configuring done (0.2s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tests\n[ 18%] Building CXX object CMakeFiles/climate_v6_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateFeatureEncoder.cpp.o\n[ 18%] Building CXX object CMakeFiles/climate_v6_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/test/test_climate_v6/test_main.cpp.o\n[ 27%] Building CXX object CMakeFiles/climate_v6_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateTrendEstimator.cpp.o\n[ 90%] Built target environment_control_tests\n[100%] Linking CXX executable climate_v6_tests\n[100%] Built target climate_v6_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tests\n    Start 2: climate_v6_tests\n1/1 Test #2: climate_v6_tests .................   Passed    0.41 sec\n\n100% tests passed, 0 tests failed out of 1\n\nTotal Test time (real) =   0.42 sec\n",
+      "elapsed_seconds": 57.688,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 8192,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 393.61,
+      "current_rss_mb": 12.47,
+      "stage_name": "focused-stage13-observability-v5",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "stage_timeout": 1800,
+      "verification_level": "focused"
+    }
+  ],
+  "verification": [
+    {
+      "command": "set -euo pipefail; git add -A; .venv/bin/pre-commit run --all-files; .venv/bin/python -m pytest -q -m 'not hardware'; bash scripts/check_schema.sh; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests --output-on-failure; bash scripts/run_clang_tidy_host.sh; git diff --check; git add -A; git diff --cached --check; git commit -m 'Add effective actuator observability'; git push origin HEAD:mvp/environment-controller",
+      "exit_code": 1,
+      "output": "trim trailing whitespace.................................................Passed\nfix end of files.........................................................Passed\ncheck for merge conflicts................................................Passed\ncheck yaml...............................................................Passed\ncheck json...............................................................Passed\ndetect private key.......................................................Passed\nruff.....................................................................Passed\nruff-format..............................................................Passed\nclang-format.............................................................Passed\nenvironment schema (--check).............................................Passed\n..........................................F............................. [ 16%]\n........................................................................ [ 32%]\n........................................................................ [ 49%]\n........................................................................ [ 65%]\n........................................................................ [ 82%]\n........................................................................ [ 98%]\n.....                                                                    [100%]\n=================================== FAILURES ===================================\n______ test_quick_closed_loop_benchmark_is_finite_and_covers_all_policies ______\n\n    def test_quick_closed_loop_benchmark_is_finite_and_covers_all_policies() -> None:\n>       model = load_portable_model(WEIGHTS, METADATA)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\ntests/test_climate_benchmark.py:134: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \ntools/ml/climate_model_artifact.py:193: in load_portable_model\n    model = ClimatePortableModel(metadata=metadata, weights=weights)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n<string>:5: in __init__\n    ???\ntools/ml/climate_model_artifact.py:95: in __post_init__\n    self.metadata.validate()\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nself = ClimateModelMetadata(schema_version=6, contract_hash='8c5ba15ea43feb013bc4da4d4d7eabceaefd79e217b78ebe9a45956c1a830145...co2_doser'), training_seed=1847, candidate_name='adam_huber', source_commit='45dda6d23ac70c563becab208cbebef0595c82d0')\n\n    def validate(self) -> None:\n        if self.schema_version != 6:\n            raise ValueError(\"portable climate model requires schema v6\")\n        if len(self.contract_hash) != 64 or any(\n            ch not in \"0123456789abcdef\" for ch in self.contract_hash\n        ):\n            raise ValueError(\"contract_hash must be a lowercase SHA-256 hex digest\")\n        if len(self.feature_names) != 44 or len(set(self.feature_names)) != 44:\n>           raise ValueError(\"portable climate model requires 44 unique feature names\")\nE           ValueError: portable climate model requires 44 unique feature names\n\ntools/ml/climate_model_artifact.py:49: ValueError\n=========================== short test summary info ============================\nFAILED tests/test_climate_benchmark.py::test_quick_closed_loop_benchmark_is_finite_and_covers_all_policies\n1 failed, 436 passed, 9 deselected in 147.11s (0:02:27)\n",
+      "elapsed_seconds": 157.191,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 8192,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 416.22,
+      "current_rss_mb": 134.33,
+      "stage_name": "full-regression-and-publish-stage13-v5",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "verification",
+      "stage_timeout": 3600,
+      "verification_level": "full"
+    }
+  ],
+  "stages": [
+    {
+      "stage_name": "apply-stage13-effective-observability-v5",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "verification_level": "work",
+      "outcome": "passed",
+      "elapsed_seconds": 4.385
+    },
+    {
+      "stage_name": "focused-stage13-observability-v5",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "verification_level": "focused",
+      "outcome": "passed",
+      "elapsed_seconds": 57.688
+    },
+    {
+      "stage_name": "full-regression-and-publish-stage13-v5",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "verification",
+      "verification_level": "full",
+      "outcome": "failed",
+      "elapsed_seconds": 157.191
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "A  lib/environment_control/src/climate/ClimateActuatorStateEstimator.h\nM  lib/environment_control/src/climate/ClimateContract.h\nM  lib/environment_control/src/climate/ClimateFeatureEncoder.cpp\nM  lib/environment_control/src/climate/ClimateTypes.h\nM  schemas/environment-controller.v6.json\nM  test/test_climate_v6/test_main.cpp\nM  tests/test_climate_dagger.py\nM  tests/test_climate_dagger_distributed.py\nM  tests/test_climate_dataset.py\nM  tests/test_climate_input.py\nM  tests/test_climate_model_artifact.py\nM  tests/test_climate_training.py\nM  tests/test_climate_training_weighted.py\nM  tests/test_mvp_contract_v6.py\nM  tools/ml/climate_dagger.py\nM  tools/ml/climate_dataset.py\nM  tools/ml/climate_input.py\nM  tools/ml/climate_model_artifact.py\nM  tools/ml/climate_training.py\nM  tools/ml/climate_training_weighted.py\nM  tools/ml/export_climate_v6_winner.py\nM  tools/ml/run_climate_v6_dataset_audit.py\nM  tools/ml/run_dagger_distributed.py\nM  tools/ml/run_dagger_overnight.py\nM  tools/ml/run_weighted_climate_v6_training.py\nM  tools/schema/generate_climate_contract.py\n",
+    "elapsed_seconds": 0.134
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.27
+  },
+  "failure_reason": "verification_failed",
+  "finished_at": "2026-08-28T03:31:56.384845+00:00",
+  "workspace_checkpoint": {
+    "version": 2,
+    "task_id": "20260828-growbox-stage13-effective-observability-v5",
+    "reason": "task-exit",
+    "created_at": "2026-08-28T03:31:57.912648+00:00",
+    "base_head": "f4700a6ba9f22e13cf1b35fff6d28424f5807711",
+    "work_branch": "agent-work",
+    "path": "/Users/michal/agent-workspace/repos/growbox-ml-controller/checkpoints/20260828-growbox-stage13-effective-observability-v5/1787887917574103000-task-exit",
+    "tracked_patch": "tracked.patch",
+    "untracked_root": "untracked",
+    "untracked_files": [],
+    "tracked_patch_bytes": 48589,
+    "untracked_bytes": 0,
+    "total_bytes": 48589,
+    "status": "A  lib/environment_control/src/climate/ClimateActuatorStateEstimator.h\nM  lib/environment_control/src/climate/ClimateContract.h\nM  lib/environment_control/src/climate/ClimateFeatureEncoder.cpp\nM  lib/environment_control/src/climate/ClimateTypes.h\nM  schemas/environment-controller.v6.json\nM  test/test_climate_v6/test_main.cpp\nM  tests/test_climate_dagger.py\nM  tests/test_climate_dagger_distributed.py\nM  tests/test_climate_dataset.py\nM  tests/test_climate_input.py\nM  tests/test_climate_model_artifact.py\nM  tests/test_climate_training.py\nM  tests/test_climate_training_weighted.py\nM  tests/test_mvp_contract_v6.py\nM  tools/ml/climate_dagger.py\nM  tools/ml/climate_dataset.py\nM  tools/ml/climate_input.py\nM  tools/ml/climate_model_artifact.py\nM  tools/ml/climate_training.py\nM  tools/ml/climate_training_weighted.py\nM  tools/ml/export_climate_v6_winner.py\nM  tools/ml/run_climate_v6_dataset_audit.py\nM  tools/ml/run_dagger_distributed.py\nM  tools/ml/run_dagger_overnight.py\nM  tools/ml/run_weighted_climate_v6_training.py\nM  tools/schema/generate_climate_contract.py\n"
+  },
+  "task_digest": "408fb597d96d0c4e0200fa00176e4e05d6c8b6e0cc2a6dc30c42dbffc0450685",
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "memory_limit_mb": 8192,
+  "attempt_id": "db3c2bcaba5caee6c8b2d433",
+  "daemon_version": "4.10.2"
+}
