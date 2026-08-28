@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260828-growbox-stage17b-freeze-ml-decisions-docs-fix-v2",
+  "task_digest": "592d8404da6d314156e8e33f1bddc1d765844dca2bf9a7fde26dd2e9c25df80f",
+  "idle_timeout": 1200,
+  "task_timeout": 4200,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-28T09:59:48.215776+00:00",
+  "attempt_id": "2b6a280c4242145d66997020",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 87853,
+  "updated_at": "2026-08-28T09:59:48.215959+00:00",
+  "pid": 87853
+}
