@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260828-growbox-stage15b-deterministic-coupling-ablation-v1",
+  "task_digest": "2564c00d40e8164c69f982105942ba0a1931a60945ee5d0e366f3c8514306be5",
+  "idle_timeout": 1200,
+  "task_timeout": 2400,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-28T07:11:29.365914+00:00",
+  "attempt_id": "2ed2d30b748caea47d2d8b2a",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 62286,
+  "updated_at": "2026-08-28T07:11:29.366057+00:00",
+  "pid": 62286
+}
