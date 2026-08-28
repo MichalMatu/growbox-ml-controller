@@ -1,0 +1,17 @@
+{
+  "id": "20260828-growbox-stage16c-sequence-dagger-iter1-dev-v1",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "command_timeout": 3300,
+  "idle_timeout": 1800,
+  "task_timeout": 3600,
+  "memory_limit_mb": 8192,
+  "steps": [
+    {
+      "name": "run-stage16c-sequence-dagger-iter1-dev",
+      "timeout": 3300,
+      "command": "set -euo pipefail; EXPECTED=698d4e7e31a192a19b9f18cc0d11ea7a1a146fa6; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; rm -f warnings.txt; test -z \"$(git status --porcelain)\"; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/stage16/stage16c_sequence_dagger_iter1_dev.py > /tmp/stage16c-sequence-dagger-iter1-dev.py; .venv/bin/python -m py_compile /tmp/stage16c-sequence-dagger-iter1-dev.py; PYTHONPATH=. .venv/bin/python /tmp/stage16c-sequence-dagger-iter1-dev.py; test -z \"$(git status --porcelain)\""
+    }
+  ]
+}
