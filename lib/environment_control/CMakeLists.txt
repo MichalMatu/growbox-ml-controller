@@ -5,6 +5,10 @@ idf_component_register(
     "src/FeatureEncoder.cpp"
     "src/ModelRuntime.cpp"
     "src/SafetySupervisor.cpp"
+    "src/climate/ClimateControlLoop.cpp"
+    "src/climate/ClimateFeatureEncoder.cpp"
+    "src/climate/ClimateRuntimeController.cpp"
+    "src/climate/ClimateTrendEstimator.cpp"
   INCLUDE_DIRS
     "src"
   REQUIRES
