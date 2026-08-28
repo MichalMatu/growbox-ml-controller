@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260828-growbox-ci-esp-idf-v5-5-4-recovery-v2",
+  "task_digest": "c3397f62fbf93f03d42254531624dc677d15e8324feaa31b4993ae473b615a49",
+  "idle_timeout": 1200,
+  "task_timeout": 10800,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-28T21:47:18.904574+00:00",
+  "attempt_id": "857e05c71bf9e4fcdc8a1534",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 33527,
+  "updated_at": "2026-08-28T21:47:18.904756+00:00",
+  "pid": 33527
+}
