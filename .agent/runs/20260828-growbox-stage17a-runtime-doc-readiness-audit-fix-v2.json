@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260828-growbox-stage17a-runtime-doc-readiness-audit-fix-v2",
+  "task_digest": "a45c4904aaffbe1af30943bdfc9c7b3a9e13f86aff166ffa5976e0863dab6595",
+  "idle_timeout": 300,
+  "task_timeout": 900,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-28T09:50:18.118305+00:00",
+  "attempt_id": "fb2cb937bb04cec4594395b3",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 85992,
+  "updated_at": "2026-08-28T09:50:18.118519+00:00",
+  "pid": 85992
+}
