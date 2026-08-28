@@ -1,0 +1,33 @@
+{
+  "id": "20260828-growbox-stage13-effective-observability-v1",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "workflow_policy": "efficient-verification-v1",
+  "command_timeout": 1800,
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "memory_limit_mb": 8192,
+  "steps": [
+    {
+      "name": "apply-stage13-effective-actuator-observability",
+      "verification_level": "work",
+      "timeout": 900,
+      "command": "set -euo pipefail; EXPECTED=f4700a6ba9f22e13cf1b35fff6d28424f5807711; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; rm -f warnings.txt; test -z \"$(git status --porcelain)\"; git fetch origin agent-control; git show origin/agent-control:.agent/task-assets/stage13/apply_effective_actuator_observability.py > /tmp/apply-stage13-observability.py; .venv/bin/python /tmp/apply-stage13-observability.py; .venv/bin/python tools/schema/generate_climate_contract.py; .venv/bin/ruff check --fix tools/schema/generate_climate_contract.py tools/ml/climate_input.py tools/ml/climate_dataset.py tools/ml/run_climate_v6_dataset_audit.py tools/ml/climate_training.py tools/ml/climate_training_weighted.py tools/ml/climate_dagger.py tools/ml/climate_model_artifact.py tools/ml/export_climate_v6_winner.py tools/ml/run_dagger_overnight.py tools/ml/run_weighted_climate_v6_training.py tools/ml/run_dagger_distributed.py tests/test_mvp_contract_v6.py tests/test_climate_input.py tests/test_climate_dataset.py tests/test_climate_training.py tests/test_climate_training_weighted.py tests/test_climate_dagger.py tests/test_climate_dagger_distributed.py tests/test_climate_model_artifact.py; .venv/bin/ruff format tools/schema/generate_climate_contract.py tools/ml/climate_input.py tools/ml/climate_dataset.py tools/ml/run_climate_v6_dataset_audit.py tools/ml/climate_training.py tools/ml/climate_training_weighted.py tools/ml/climate_dagger.py tools/ml/climate_model_artifact.py tools/ml/export_climate_v6_winner.py tools/ml/run_dagger_overnight.py tools/ml/run_weighted_climate_v6_training.py tools/ml/run_dagger_distributed.py tests/test_mvp_contract_v6.py tests/test_climate_input.py tests/test_climate_dataset.py tests/test_climate_training.py tests/test_climate_training_weighted.py tests/test_climate_dagger.py tests/test_climate_dagger_distributed.py tests/test_climate_model_artifact.py; git diff --check; git status --short"
+    },
+    {
+      "name": "focused-stage13-observability",
+      "verification_level": "focused",
+      "timeout": 1800,
+      "command": "set -euo pipefail; .venv/bin/python tools/schema/generate_climate_contract.py --check; .venv/bin/python -m pytest tests/test_mvp_contract_v6.py tests/test_climate_input.py tests/test_climate_dataset.py tests/test_climate_training.py tests/test_climate_training_weighted.py tests/test_climate_dagger.py tests/test_climate_dagger_distributed.py tests/test_climate_model_artifact.py -q; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests -R climate_v6_tests --output-on-failure; git diff --check"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "full-regression-and-publish-stage13",
+      "verification_level": "full",
+      "timeout": 3600,
+      "command": "set -euo pipefail; git add -A; .venv/bin/pre-commit run --all-files; .venv/bin/python -m pytest -q -m 'not hardware'; bash scripts/check_schema.sh; cmake -S test/host -B build/host-tests; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests --output-on-failure; bash scripts/run_clang_tidy_host.sh; git diff --check; git add -A; git diff --cached --check; git commit -m 'Add effective actuator observability'; git push origin HEAD:mvp/environment-controller"
+    }
+  ]
+}
