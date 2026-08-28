@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260828-growbox-stage24a-climate-io-adapter-docs-recovery-v2",
+  "task_digest": "769eae6f5e9d4cd2d6a6e05d7aecc4d81cd15dcb6fffe914fc423274f173d145",
+  "idle_timeout": 1200,
+  "task_timeout": 10800,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-28T22:21:39.268406+00:00",
+  "attempt_id": "e0d1836e64953a04089c55a3",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 54256,
+  "updated_at": "2026-08-28T22:21:39.268575+00:00",
+  "pid": 54256
+}
