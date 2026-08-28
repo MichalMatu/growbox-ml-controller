@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260828-growbox-stage15a-co2-exhaust-coupling-audit-v1",
+  "task_digest": "386e56d52b84804846bd4006333654d82f31577d2d6f8edeb2f40d9b11a3aa1c",
+  "idle_timeout": 1800,
+  "task_timeout": 3000,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-28T06:51:24.099666+00:00",
+  "attempt_id": "e5a914ff7f45c1d6eccc595f",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 60088,
+  "updated_at": "2026-08-28T06:51:24.099838+00:00",
+  "pid": 60088
+}
