@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260828-growbox-stage20a-deterministic-trace-replay-recovery-v2",
+  "task_digest": "1a2eb64a270a1f395a0b840ddfdbfdf0a3004bc361aa73467ec5a918e00c28d4",
+  "idle_timeout": 1200,
+  "task_timeout": 5400,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-28T19:37:46.462679+00:00",
+  "attempt_id": "270b1db53d45433a4b99d8dc",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 61706,
+  "updated_at": "2026-08-28T19:37:46.462950+00:00",
+  "pid": 61706
+}
