@@ -1,0 +1,9 @@
+{
+  "id": "20260828-growbox-stage17a-runtime-doc-readiness-audit-v1",
+  "status": "failed",
+  "failure_reason": "invalid_task_file",
+  "started_at": null,
+  "finished_at": "2026-08-28T09:20:50.067704+00:00",
+  "daemon_version": "4.10.2",
+  "error": "ValueError: commands items must be non-empty strings"
+}
