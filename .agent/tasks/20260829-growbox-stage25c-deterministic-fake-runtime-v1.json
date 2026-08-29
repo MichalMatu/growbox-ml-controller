@@ -1,0 +1,33 @@
+{
+  "id": "20260829-growbox-stage25c-deterministic-fake-runtime-v1",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "workflow_policy": "efficient-verification-v1",
+  "command_timeout": 7200,
+  "idle_timeout": 1200,
+  "task_timeout": 14400,
+  "memory_limit_mb": 8192,
+  "steps": [
+    {
+      "name": "apply-stage25c-deterministic-fake-runtime",
+      "verification_level": "work",
+      "timeout": 1800,
+      "command": "git fetch origin agent-control && git show origin/agent-control:.agent/task-assets/stage25/run_stage25c_deterministic_fake_runtime_v1.sh > /tmp/stage25c-v1.sh && bash /tmp/stage25c-v1.sh apply 640cc3b90031a61dded1c54865e4b54cd3a4d549"
+    },
+    {
+      "name": "focused-stage25c-deterministic-fake-runtime",
+      "verification_level": "focused",
+      "timeout": 1800,
+      "command": "git fetch origin agent-control && git show origin/agent-control:.agent/task-assets/stage25/run_stage25c_deterministic_fake_runtime_v1.sh > /tmp/stage25c-v1.sh && bash /tmp/stage25c-v1.sh focused"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "full-regression-dual-idf-v5-5-4-and-publish-stage25c",
+      "verification_level": "full",
+      "timeout": 7200,
+      "command": "git fetch origin agent-control && git show origin/agent-control:.agent/task-assets/stage25/run_stage25c_deterministic_fake_runtime_v1.sh > /tmp/stage25c-v1.sh && bash /tmp/stage25c-v1.sh full 640cc3b90031a61dded1c54865e4b54cd3a4d549"
+    }
+  ]
+}
