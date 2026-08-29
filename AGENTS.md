@@ -24,7 +24,7 @@ Repository identity:
 
 When starting work on this repository in a new chat/session:
 
-1. Read this `AGENTS.md`, the current `README.md`, and any branch-specific planning document before proposing or executing changes.
+1. Read this `AGENTS.md`, the current `README.md`, `docs/CONTINUATION_PLAN.md`, and `docs/STAGE27_NATIVE_IDF_HANDOFF.md` before proposing or executing changes.
 2. Inspect the exact GitHub branch relevant to the requested work. Do not assume `main` is the work branch.
 3. Inspect `.agent/status/daemon.json` on `agent-control` and verify `daemon_version` against `MichalMatu/local-agent/agent_version.py` when Local Agent compatibility matters.
 4. When exact daemon source identity matters, compare `.agent/status/daemon.json:self_revision` with `MichalMatu/local-agent/main`; do not infer synchronization from the version string alone.
@@ -34,10 +34,12 @@ When starting work on this repository in a new chat/session:
 8. Read the terminal result from `.agent/results/<task-id>.json` before reporting completion.
 9. Prefer remote run/status/result evidence over asking the user to copy local terminal logs when Local Agent can provide the state directly.
 10. Keep repository workspaces isolated. A Growbox task must not publish results through another repository's Local Agent control plane.
+11. Do not reopen completed Stage25/26 work. Current hardware direction and the Stage27 bootstrap are frozen in `docs/STAGE27_NATIVE_IDF_HANDOFF.md`.
 
 ### v4.10 execution rules
 
-- Local Agent is a deterministic executor, not a coding model. The planner chooses the exact commands/change; the daemon executes and reports evidence.
+- Local Agent is a deterministic executor, not a coding model. The planner chooses the exact bounded work; the daemon executes declared local commands/changes and reports evidence.
+- The planner may also make bounded source changes directly through GitHub on the work branch when that is more efficient, then use Local Agent for real local synchronization/build/test verification. See the hybrid workflow below.
 - Machine-generated task content, commands, prompts, logs, code comments, documentation changes and commit messages authored for Local Agent execution must be English-only.
 - Task ids and payloads are immutable within this repository. Interrupted tasks are never automatically replayed.
 - `expected_head` is not implemented. If exact source identity matters, verify the expected Git SHA explicitly in an early task stage.
@@ -65,6 +67,46 @@ Rules:
 - if the full gate finds a defect and source changes, rerun the affected focused gate first, then rerun the final full gate.
 
 Use the narrowest meaningful verification while editing, then one broad final gate. Do not repeatedly run the complete suite after every small edit.
+
+### Hybrid direct-GitHub + Local Agent workflow
+
+Direct GitHub source editing is an approved planner path when it reduces overhead. It does not replace Local Agent verification for executable changes.
+
+Prefer a direct GitHub commit for:
+
+- documentation/handoff changes;
+- small isolated code changes with an exact clear replacement;
+- small configuration/build metadata changes;
+- changes that are awkward to encode as a task patch but easy to review as one remote commit.
+
+Prefer Local Agent to perform the edit when:
+
+- many files must change together;
+- local search/refactoring/generation tools are useful;
+- the implementation needs tight edit/compile/test iteration;
+- the change is large enough that a direct GitHub sequence would create unnecessary intermediate commits.
+
+Before any direct GitHub write to the work branch:
+
+1. fetch fresh `.agent/status/daemon.json` and ensure no conflicting task is active;
+2. fetch the current remote work-branch HEAD;
+3. write product/source changes only to the work branch, never to `agent-control`;
+4. record the returned commit SHA;
+5. do not allow a direct remote edit to race with Local Agent publishing to the same work branch.
+
+After a direct GitHub **code/build/config** change:
+
+1. queue a new immutable Local Agent task with a new unique task id;
+2. explicitly verify/synchronize to the intended remote SHA because `expected_head` is not implemented;
+3. run impact-appropriate focused tests/builds;
+4. run one final full verification when repository policy/change impact requires it;
+5. inspect the exact terminal result before claiming the change works.
+
+A GitHub commit proves publication, not correctness. Docs-only changes with no executable/config impact do not automatically require a firmware build, but the resulting remote content/HEAD should still be checked.
+
+If verification fails and a fix is needed, either make another bounded direct GitHub fix or queue a new edit task. Never mutate/replay an old Local Agent task id.
+
+The complete Stage27-specific version of this workflow is in `docs/STAGE27_NATIVE_IDF_HANDOFF.md`.
 
 ### Control branch contract
 
