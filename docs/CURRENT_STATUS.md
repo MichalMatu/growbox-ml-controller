@@ -66,6 +66,8 @@ Stage25E adds a test-only fault-injection and soak virtual HIL through the same 
 
 Stage26A adds a hardware-neutral composite input layer beneath `ClimateSnapshotProvider`. Separate interfaces represent inside environment, outside environment, wall clock and schedule/config resolution, and `CompositeClimateSnapshotProvider` aggregates them into one existing `ClimateInputSnapshot`. Clock plus schedule/config are required context; unavailable inside/outside component reads degrade to invalid measurement fields so the existing runtime decides fail-closed behavior. Host fakes prove nominal aggregation, partial sensor loss, clock/config loss and full `ClimateApplication` behavior. No physical sensor library, bus or pin dependency is introduced.
 
+Stage26B adds a hardware-neutral semantic output mapping beneath `ClimateRoleDriver`. `MappedClimateRoleDriver` maps the six stable roles to configured endpoint identifiers and forwards only finite normalized levels. Enabled mappings propagate explicit OFF writes; disabled/unmapped roles accept OFF without I/O and reject nonzero commands. Host fakes prove deterministic mapping and partial rejection without adding a physical output backend.
+
 ## Not integrated yet
 
 `src/main.cpp` still runs the preserved legacy simulator/serial demonstration through the older

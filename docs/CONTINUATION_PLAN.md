@@ -141,11 +141,14 @@ required context; unavailable inside/outside reads become invalid measurements a
 the existing fail-closed runtime semantics. Host fakes cover nominal, partial-loss and application
 integration paths. No SCD41/BLE/RTC library, bus or pin selection is introduced.
 
-### Stage26B — hardware-ready semantic output layer
+### Stage26B completed — hardware-ready semantic output layer
 
-Introduce configuration/mapping beneath `ClimateRoleDriver` for the six stable semantic actuator
-roles. Keep endpoint implementations fake and normalized; test disabled capabilities, OFF,
-partial rejection and deterministic role mapping. Do not add GPIO/PWM/relay/Shelly code yet.
+A hardware-neutral `MappedClimateRoleDriver` now maps the six stable semantic roles to configured
+endpoint identifiers beneath the existing `ClimateRoleDriver` seam. Endpoint writes always receive
+finite normalized levels. Enabled mappings propagate explicit OFF writes; disabled/unmapped roles
+accept OFF without I/O but reject nonzero commands, making capability/config mismatches fail visibly.
+Host fakes cover deterministic role mapping, OFF, disabled mappings, normalization and partial
+endpoint rejection. No physical output backend, bus or pin dependency is introduced.
 
 ### Stage26C — pre-hardware readiness gate
 
