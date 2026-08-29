@@ -25,17 +25,40 @@ idf_component_register(
     esp_timer
     heap
     json
+    bt
+    esp_driver_i2c
+    nvs_flash
+    sensirion_scd4x
 )
 
 target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_17)
 target_compile_options(${COMPONENT_LIB} PRIVATE -Wall -Wextra -Wpedantic)
 
 set(GROWBOX_APP_MODE "legacy" CACHE STRING "Growbox application runtime")
-set_property(CACHE GROWBOX_APP_MODE PROPERTY STRINGS "legacy" "climate-v6-fake")
+set_property(
+  CACHE GROWBOX_APP_MODE
+  PROPERTY STRINGS "legacy" "climate-v6-fake" "climate-v6-real-inputs"
+)
 if(GROWBOX_APP_MODE STREQUAL "legacy")
   set(GROWBOX_APP_CLIMATE_V6_FAKE 0)
+  set(GROWBOX_APP_CLIMATE_V6_REAL_INPUTS 0)
 elseif(GROWBOX_APP_MODE STREQUAL "climate-v6-fake")
   set(GROWBOX_APP_CLIMATE_V6_FAKE 1)
+  set(GROWBOX_APP_CLIMATE_V6_REAL_INPUTS 0)
+elseif(GROWBOX_APP_MODE STREQUAL "climate-v6-real-inputs")
+  set(GROWBOX_APP_CLIMATE_V6_FAKE 0)
+  set(GROWBOX_APP_CLIMATE_V6_REAL_INPUTS 1)
+  target_sources(
+    ${COMPONENT_LIB}
+    PRIVATE
+      "climate/ClimateV6RealInputRuntime.cpp"
+      "climate/native/BthomeV2Decoder.cpp"
+      "climate/native/Ds3231Codec.cpp"
+      "climate/native/NativeI2cBus.cpp"
+      "climate/native/Scd41InsideSource.cpp"
+      "climate/native/Ds3231ClockSource.cpp"
+      "climate/native/BleOutsideSource.cpp"
+  )
 else()
   message(FATAL_ERROR "Unsupported GROWBOX_APP_MODE: ${GROWBOX_APP_MODE}")
 endif()
@@ -43,9 +66,17 @@ endif()
 if(NOT DEFINED GROWBOX_BOARD_PROFILE)
   set(GROWBOX_BOARD_PROFILE "esp32s3-devkitc1-n16r8")
 endif()
+set(GROWBOX_I2C_SDA_GPIO "8" CACHE STRING "Stage27 shared I2C SDA GPIO")
+set(GROWBOX_I2C_SCL_GPIO "9" CACHE STRING "Stage27 shared I2C SCL GPIO")
+set(GROWBOX_BLE_OUTSIDE_MAC "" CACHE STRING "Stage27 outside BTHome sensor MAC")
+
 target_compile_definitions(
   ${COMPONENT_LIB}
   PRIVATE
     GROWBOX_BOARD_PROFILE="${GROWBOX_BOARD_PROFILE}"
     GROWBOX_APP_CLIMATE_V6_FAKE=${GROWBOX_APP_CLIMATE_V6_FAKE}
+    GROWBOX_APP_CLIMATE_V6_REAL_INPUTS=${GROWBOX_APP_CLIMATE_V6_REAL_INPUTS}
+    GROWBOX_I2C_SDA_GPIO=${GROWBOX_I2C_SDA_GPIO}
+    GROWBOX_I2C_SCL_GPIO=${GROWBOX_I2C_SCL_GPIO}
+    GROWBOX_BLE_OUTSIDE_MAC="${GROWBOX_BLE_OUTSIDE_MAC}"
 )
