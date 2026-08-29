@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260829-growbox-stage25d-observability-v1",
+  "task_digest": "cb74924cf78fe5396ffb97592af5830231c2adce1229dc85f703382f68143e74",
+  "idle_timeout": 1200,
+  "task_timeout": 14400,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-29T00:45:20.614006+00:00",
+  "attempt_id": "26e3588b0877715147bdc27a",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 41696,
+  "updated_at": "2026-08-29T00:45:20.614286+00:00",
+  "pid": 41696
+}
