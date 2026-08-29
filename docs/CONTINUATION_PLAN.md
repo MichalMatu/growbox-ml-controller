@@ -99,23 +99,48 @@ Stage25A proves the complete application-level path without physical hardware:
 
 ## Following stages
 
-### Stage25B — application runtime boundary
+### Stage25B completed — explicit reversible application runtime boundary
 
-After Stage25A, decide whether to expose a climate-v6 fake/runtime demo beside the legacy demo.
-Keep it explicit and reversible. Add diagnostics/status needed to prove which policy mode and I/O
-backend are active.
+`GROWBOX_APP_MODE` now defaults to `legacy`. The optional `climate-v6-fake` mode runs the proven
+`ClimateApplication` path with a fixed fake snapshot provider and an accept-all fake role driver.
+It reports application/policy/input/output identity over JSON serial status and has no GPIO or
+physical actuator dependency. The ESP-IDF v5.5.4 gate compiles both modes.
 
-### Stage26 — freeze first real hardware adapters
+### Stage25C — deterministic fake runtime
 
-Only then select concrete libraries and pins/buses:
+Replace the fixed smoke snapshot with a deterministic scenario provider that exercises changing
+inside/outside measurements, target and schedule transitions, capabilities and long multi-tick
+runs through exactly the same public provider/driver interfaces intended for hardware.
 
-- SCD41: inside temperature/RH/CO2;
-- BLE outside temperature/RH sensor: exact model still to be frozen;
-- hardware RTC with backup: exact part still to be frozen;
-- physical actuator endpoints: exact relay/PWM/remote backend still to be frozen.
+### Stage25D — climate-v6 observability and diagnostics
 
-Implement each as a replaceable Input or Output adapter. Do not contaminate Processing with driver
-code.
+Expose versioned diagnostics for measurement value/validity/age, targets, schedule, capabilities,
+Rule proposal, ML shadow proposal, final safe request, confirmed applied state, I/O/runtime status
+and actuator-fault latch state. Keep diagnostics observational; they must not become a control path.
+
+### Stage25E — fault-injection and soak virtual HIL
+
+Extend virtual HIL with repeated stale/invalid/unavailable inputs, timeout boundaries, recovery,
+capability changes, actuator rejection, OFF rejection, latch/reset and long deterministic runs.
+Prove again that rejected commands never become confirmed/effective applied state.
+
+### Stage26A — hardware-ready composite input layer
+
+Introduce hardware-neutral component interfaces for inside environment, outside environment and
+clock/schedule/config sources, then aggregate them into one `ClimateInputSnapshot`. Implement and
+test only fake component sources at this stage. Do not select sensor libraries or buses yet.
+
+### Stage26B — hardware-ready semantic output layer
+
+Introduce configuration/mapping beneath `ClimateRoleDriver` for the six stable semantic actuator
+roles. Keep endpoint implementations fake and normalized; test disabled capabilities, OFF,
+partial rejection and deterministic role mapping. Do not add GPIO/PWM/relay/Shelly code yet.
+
+### Stage26C — pre-hardware readiness gate
+
+Run the complete host/schema/static/ESP-IDF gate, audit the climate-v6 fake path end to end and add
+a hardware bring-up checklist. The checklist must leave unresolved BLE/RTC/pin/library choices
+explicit for manual freeze before physical work.
 
 ### Stage27 — hardware bring-up
 

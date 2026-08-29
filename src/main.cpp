@@ -1,3 +1,10 @@
+#ifndef GROWBOX_APP_CLIMATE_V6_FAKE
+#define GROWBOX_APP_CLIMATE_V6_FAKE 0
+#endif
+
+#include "climate/ClimateV6FakeRuntime.h"
+
+#if !GROWBOX_APP_CLIMATE_V6_FAKE
 #include <cJSON.h>
 #include <driver/usb_serial_jtag.h>
 #include <esp_err.h>
@@ -119,8 +126,12 @@ void runControllerStep() noexcept {
 }
 
 } // namespace
+#endif
 
 extern "C" void app_main() {
+#if GROWBOX_APP_CLIMATE_V6_FAKE
+  growbox::app::climate_io::runClimateV6FakeRuntime();
+#else
   ESP_ERROR_CHECK(protocol.begin());
   vTaskDelay(pdMS_TO_TICKS(250));
   emitStartup();
@@ -143,4 +154,5 @@ extern "C" void app_main() {
     }
     vTaskDelay(1);
   }
+#endif
 }

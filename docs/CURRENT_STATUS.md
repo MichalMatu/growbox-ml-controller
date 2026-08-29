@@ -56,6 +56,8 @@ estimated effective actions. Hardware providers must not duplicate those states.
 
 Stage25A adds `ClimateApplication`, a deliberately small constructor-injected composition root around the existing input adapter, control loop and actuator adapter. Host tests now exercise the complete `ClimateSnapshotProvider -> ClimateInputAdapter -> ClimateControlLoop -> ClimateActuatorAdapter -> ClimateRoleDriver` path across multiple ticks, including stale/invalid/unavailable input, ML shadow isolation, rejected commands with OFF recovery, fault latching/reset, confirmed applied feedback and all six semantic actuator roles. Fake providers and drivers remain test-only implementations of the same public interfaces intended for future hardware.
 
+Stage25B adds an explicit build-time application boundary. `GROWBOX_APP_MODE` defaults to `legacy`, while `climate-v6-fake` selects a hardware-neutral climate-v6 runtime backed by a fixed fake snapshot provider and an accept-all fake role driver. The climate-v6 fake runtime emits startup/status identity (`application`, policy mode, input backend and output backend) and never touches GPIO or physical loads. Both application modes are required to compile in the ESP-IDF v5.5.4 gate.
+
 ## Not integrated yet
 
 `src/main.cpp` still runs the preserved legacy simulator/serial demonstration through the older
