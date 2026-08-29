@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260829-growbox-stage26a-composite-input-v1",
+  "task_digest": "360eef99fb8dcc0028435a68ed4c23fe3fed6ef8196631587c559fc897694130",
+  "idle_timeout": 1200,
+  "task_timeout": 14400,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-29T01:31:25.359077+00:00",
+  "attempt_id": "e5d77dd7c087992732742a12",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 76550,
+  "updated_at": "2026-08-29T01:31:25.359510+00:00",
+  "pid": 76550
+}
