@@ -2,8 +2,8 @@
   "version": 1,
   "daemon_version": "4.10.2",
   "state": "idle",
-  "pid": 98915,
-  "updated_at": "2026-08-28T23:56:36.370239+00:00",
+  "pid": 973,
+  "updated_at": "2026-08-29T00:13:43.023737+00:00",
   "self_revision": "c98d97025c97c682118ba29383956351d8459c77",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -22,7 +22,7 @@
   "control_branch": "agent-control",
   "default_branch": "main",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 98915,
+  "worker_pid": 973,
   "supervisor_pid": 1293,
-  "last_task_id": "20260829-growbox-stage25b-runtime-boundary-v1"
+  "last_task_id": "20260829-growbox-stage25b-runtime-boundary-recovery-v2"
 }
