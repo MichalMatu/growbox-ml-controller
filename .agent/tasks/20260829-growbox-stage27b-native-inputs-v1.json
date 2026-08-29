@@ -1,0 +1,33 @@
+{
+  "id": "20260829-growbox-stage27b-native-inputs-v1",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "workflow_policy": "efficient-verification-v1",
+  "command_timeout": 7200,
+  "idle_timeout": 1200,
+  "task_timeout": 18000,
+  "memory_limit_mb": 8192,
+  "steps": [
+    {
+      "name": "apply-pinned-sensirion-stage27b",
+      "verification_level": "work",
+      "timeout": 1800,
+      "command": "git fetch origin agent-control && git show origin/agent-control:.agent/task-assets/stage27/run_stage27b_native_inputs_v1.sh > /tmp/stage27b-v1.sh && bash /tmp/stage27b-v1.sh apply 80601c83d3ae01058d0527cfcf7b3b5708cc77da"
+    },
+    {
+      "name": "focused-native-input-build",
+      "verification_level": "focused",
+      "timeout": 5400,
+      "command": "git fetch origin agent-control && git show origin/agent-control:.agent/task-assets/stage27/run_stage27b_native_inputs_v1.sh > /tmp/stage27b-v1.sh && bash /tmp/stage27b-v1.sh focused 80601c83d3ae01058d0527cfcf7b3b5708cc77da"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "full-stage27b-regression-and-publish",
+      "verification_level": "full",
+      "timeout": 7200,
+      "command": "git fetch origin agent-control && git show origin/agent-control:.agent/task-assets/stage27/run_stage27b_native_inputs_v1.sh > /tmp/stage27b-v1.sh && bash /tmp/stage27b-v1.sh full 80601c83d3ae01058d0527cfcf7b3b5708cc77da"
+    }
+  ]
+}
