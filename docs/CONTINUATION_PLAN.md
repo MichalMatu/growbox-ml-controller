@@ -114,11 +114,13 @@ targets, light schedule and actuator capabilities. The embedded `climate-v6-fake
 and host coverage runs 1,200 ticks through the full `ClimateApplication` path. Sensor faults and
 actuator rejection are deliberately deferred to Stage25E rather than mixed into the nominal fake.
 
-### Stage25D — climate-v6 observability and diagnostics
+### Stage25D completed — climate-v6 observability and diagnostics
 
-Expose versioned diagnostics for measurement value/validity/age, targets, schedule, capabilities,
-Rule proposal, ML shadow proposal, final safe request, confirmed applied state, I/O/runtime status
-and actuator-fault latch state. Keep diagnostics observational; they must not become a control path.
+Versioned schema-v1 diagnostics now observe the exact snapshot attempt consumed by the controller,
+including measurement value/validity/age, targets, schedule and capabilities. They also copy Rule
+and ML-shadow evaluations, the final safe request, confirmed applied state, I/O/runtime status and
+actuator-fault latch state after each tick. The observer is a transparent provider decorator and
+diagnostics remain read-only: they do not feed policy, runtime state or actuator writes.
 
 ### Stage25E — fault-injection and soak virtual HIL
 

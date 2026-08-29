@@ -60,6 +60,8 @@ Stage25B adds an explicit build-time application boundary. `GROWBOX_APP_MODE` de
 
 Stage25C replaces the fixed smoke snapshot with `DeterministicClimateScenarioProvider`, a hardware-neutral provider whose output is a pure function of monotonic time. Its 240-tick cycle varies inside/outside T/RH/CO2, day/night targets and light schedule plus actuator capabilities. Host tests prove timestamp determinism, cycle periodicity and a 1,200-tick full `ClimateApplication` run with fake outputs. Fault injection remains intentionally reserved for Stage25E.
 
+Stage25D adds versioned climate-v6 diagnostics without adding a control path. `ObservedClimateSnapshotProvider` transparently decorates any `ClimateSnapshotProvider` and records exactly the single sample attempt consumed by the controller. After each tick, diagnostics copy measurement value/validity/age, targets, schedule, capabilities, Rule and ML-shadow evaluations, final safe request, confirmed applied actions, I/O/runtime status and actuator-fault state from existing runtime evidence. The fake ESP-IDF runtime emits this as `climate_runtime_diagnostics` schema version 1; diagnostics never write policy, runtime or actuator state.
+
 ## Not integrated yet
 
 `src/main.cpp` still runs the preserved legacy simulator/serial demonstration through the older

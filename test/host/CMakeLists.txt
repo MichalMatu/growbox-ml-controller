@@ -135,6 +135,21 @@ target_include_directories(
 target_compile_features(climate_deterministic_fake_runtime_tests PRIVATE cxx_std_17)
 target_compile_options(climate_deterministic_fake_runtime_tests PRIVATE -Wall -Wextra -Wpedantic)
 
+
+add_executable(
+  climate_diagnostics_tests
+  "${PROJECT_ROOT}/test/test_climate_diagnostics/test_main.cpp"
+  "${PROJECT_ROOT}/src/climate/ClimateDiagnostics.cpp"
+)
+target_include_directories(
+  climate_diagnostics_tests
+  PRIVATE
+    "${PROJECT_ROOT}/src"
+    "${PROJECT_ROOT}/lib/environment_control/src"
+)
+target_compile_features(climate_diagnostics_tests PRIVATE cxx_std_17)
+target_compile_options(climate_diagnostics_tests PRIVATE -Wall -Wextra -Wpedantic)
+
 if(UNIX)
   target_link_libraries(environment_control_tests PRIVATE m)
   target_link_libraries(climate_v6_tests PRIVATE m)
@@ -144,6 +159,7 @@ if(UNIX)
   target_link_libraries(climate_io_adapter_tests PRIVATE m)
   target_link_libraries(climate_application_composition_tests PRIVATE m)
   target_link_libraries(climate_deterministic_fake_runtime_tests PRIVATE m)
+  target_link_libraries(climate_diagnostics_tests PRIVATE m)
 endif()
 
 enable_testing()
@@ -155,3 +171,4 @@ add_test(NAME climate_virtual_hil_tests COMMAND climate_virtual_hil_tests)
 add_test(NAME climate_io_adapter_tests COMMAND climate_io_adapter_tests)
 add_test(NAME climate_application_composition_tests COMMAND climate_application_composition_tests)
 add_test(NAME climate_deterministic_fake_runtime_tests COMMAND climate_deterministic_fake_runtime_tests)
+add_test(NAME climate_diagnostics_tests COMMAND climate_diagnostics_tests)
