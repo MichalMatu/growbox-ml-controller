@@ -62,6 +62,8 @@ Stage25C replaces the fixed smoke snapshot with `DeterministicClimateScenarioPro
 
 Stage25D adds versioned climate-v6 diagnostics without adding a control path. `ObservedClimateSnapshotProvider` transparently decorates any `ClimateSnapshotProvider` and records exactly the single sample attempt consumed by the controller. After each tick, diagnostics copy measurement value/validity/age, targets, schedule, capabilities, Rule and ML-shadow evaluations, final safe request, confirmed applied actions, I/O/runtime status and actuator-fault state from existing runtime evidence. The fake ESP-IDF runtime emits this as `climate_runtime_diagnostics` schema version 1; diagnostics never write policy, runtime or actuator state.
 
+Stage25E adds a test-only fault-injection and soak virtual HIL through the same public application I/O seam used by future hardware. Coverage repeatedly exercises stale, invalid and unavailable samples, the exact sensor-timeout boundary, capability changes, deterministic recovery, periodic actuator rejection, fail-safe OFF rejection, fault latch/reset and multi-thousand-tick runs. Rejected actuator requests are never accepted as confirmed state; after a rejection or explicit reset the next runtime step starts with zero effective actuator context. No physical driver or firmware fault mode is introduced.
+
 ## Not integrated yet
 
 `src/main.cpp` still runs the preserved legacy simulator/serial demonstration through the older

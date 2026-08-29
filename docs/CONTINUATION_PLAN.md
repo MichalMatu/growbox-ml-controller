@@ -122,11 +122,15 @@ and ML-shadow evaluations, the final safe request, confirmed applied state, I/O/
 actuator-fault latch state after each tick. The observer is a transparent provider decorator and
 diagnostics remain read-only: they do not feed policy, runtime state or actuator writes.
 
-### Stage25E — fault-injection and soak virtual HIL
+### Stage25E completed — fault-injection and soak virtual HIL
 
-Extend virtual HIL with repeated stale/invalid/unavailable inputs, timeout boundaries, recovery,
-capability changes, actuator rejection, OFF rejection, latch/reset and long deterministic runs.
-Prove again that rejected commands never become confirmed/effective applied state.
+Host-side virtual HIL now drives the public `ClimateSnapshotProvider -> ClimateApplication ->
+ClimateRoleDriver` seam through repeated stale/invalid/unavailable inputs, the exact freshness
+boundary (`age == timeout` versus `timeout + 1`), capability loss/recovery, periodic actuator
+rejection, fail-safe OFF rejection, fault latch/reset and long deterministic soak runs. The harness
+remains test-only and adds no firmware fault mode. It verifies that a rejected command never becomes
+confirmed state and that the next runtime step after rejection/reset starts from zero effective
+actuator context.
 
 ### Stage26A — hardware-ready composite input layer
 
