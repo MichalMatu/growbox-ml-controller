@@ -1,0 +1,33 @@
+{
+  "id": "20260829-growbox-stage26a-composite-input-v1",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "workflow_policy": "efficient-verification-v1",
+  "command_timeout": 7200,
+  "idle_timeout": 1200,
+  "task_timeout": 14400,
+  "memory_limit_mb": 8192,
+  "steps": [
+    {
+      "name": "apply-stage26a-composite-input",
+      "verification_level": "work",
+      "timeout": 1800,
+      "command": "git fetch origin agent-control && git show origin/agent-control:.agent/task-assets/stage26/run_stage26a_composite_input_v1.sh > /tmp/stage26a-v1.sh && bash /tmp/stage26a-v1.sh apply ed8219fc5b38bc69d3b21a345cfb468029b2325b"
+    },
+    {
+      "name": "focused-stage26a-composite-input",
+      "verification_level": "focused",
+      "timeout": 1800,
+      "command": "git fetch origin agent-control && git show origin/agent-control:.agent/task-assets/stage26/run_stage26a_composite_input_v1.sh > /tmp/stage26a-v1.sh && bash /tmp/stage26a-v1.sh focused"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "full-regression-dual-idf-v5-5-4-and-publish-stage26a",
+      "verification_level": "full",
+      "timeout": 7200,
+      "command": "git fetch origin agent-control && git show origin/agent-control:.agent/task-assets/stage26/run_stage26a_composite_input_v1.sh > /tmp/stage26a-v1.sh && bash /tmp/stage26a-v1.sh full ed8219fc5b38bc69d3b21a345cfb468029b2325b"
+    }
+  ]
+}
