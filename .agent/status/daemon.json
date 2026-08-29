@@ -2,8 +2,8 @@
   "version": 1,
   "daemon_version": "4.10.2",
   "state": "idle",
-  "pid": 59159,
-  "updated_at": "2026-08-29T01:26:37.227161+00:00",
+  "pid": 76550,
+  "updated_at": "2026-08-29T01:44:37.551710+00:00",
   "self_revision": "c98d97025c97c682118ba29383956351d8459c77",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -22,7 +22,7 @@
   "control_branch": "agent-control",
   "default_branch": "main",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 59159,
+  "worker_pid": 76550,
   "supervisor_pid": 1293,
-  "last_task_id": "20260829-growbox-stage25e-resilience-soak-recovery-v2"
+  "last_task_id": "20260829-growbox-stage26a-composite-input-v1"
 }
