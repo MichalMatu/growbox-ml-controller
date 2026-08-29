@@ -1,6 +1,7 @@
 #include "climate/ClimateV6FakeRuntime.h"
 
 #include "climate/ClimateApplication.h"
+#include "climate/ClimateDeterministicFake.h"
 #include "demo/protocol/JsonLineWriter.h"
 
 #include <cJSON.h>
@@ -15,35 +16,6 @@
 namespace growbox::app::climate_io {
 namespace {
 
-constexpr std::uint32_t kTickIntervalMs = 1'000U;
-constexpr std::uint64_t kSensorTimeoutMs = 30'000U;
-
-class FixedFakeSnapshotProvider final : public ClimateSnapshotProvider {
-public:
-  bool snapshot(std::uint64_t, ClimateInputSnapshot& output) noexcept override {
-    output = {};
-    output.measurements.air_temperature_c = {23.0F, true, 0U};
-    output.measurements.relative_humidity_pct = {60.0F, true, 0U};
-    output.measurements.co2_ppm = {500.0F, true, 0U};
-    output.measurements.outside_temperature_c = {18.0F, true, 0U};
-    output.measurements.outside_humidity_pct = {50.0F, true, 0U};
-    output.targets.air_temperature_c = 24.0F;
-    output.targets.relative_humidity_pct = 60.0F;
-    output.targets.air_vpd_kpa = 1.2F;
-    output.targets.co2_enabled = true;
-    output.targets.co2_ppm = 950.0F;
-    output.schedule.light_level = 0.6F;
-    output.capabilities.heater = true;
-    output.capabilities.cooler = true;
-    output.capabilities.exhaust_fan = true;
-    output.capabilities.humidifier = true;
-    output.capabilities.dehumidifier = true;
-    output.capabilities.co2_doser = true;
-    output.sensor_timeout_ms = kSensorTimeoutMs;
-    return true;
-  }
-};
-
 class AcceptAllFakeRoleDriver final : public ClimateRoleDriver {
 public:
   bool apply(ClimateActuatorRole, float, std::uint64_t) noexcept override {
@@ -54,8 +26,9 @@ public:
 ::growbox::climate::ClimateRuntimeConfig ruleRuntimeConfig() noexcept {
   ::growbox::climate::ClimateRuntimeConfig config{};
   config.mode = ::growbox::climate::ClimatePolicyMode::Rule;
-  config.sensor_timeout_ms = kSensorTimeoutMs;
-  config.timestep_s = static_cast<float>(kTickIntervalMs) / 1000.0F;
+  config.sensor_timeout_ms = ::growbox::climate::kDefaultSensorTimeoutMs;
+  config.timestep_s =
+      static_cast<float>(DeterministicClimateScenarioProvider::kTickIntervalMs) / 1000.0F;
   return config;
 }
 
@@ -125,7 +98,9 @@ void emitStartup() noexcept {
   cJSON_AddStringToObject(document, "input_backend", "fake");
   cJSON_AddStringToObject(document, "output_backend", "fake");
   cJSON_AddBoolToObject(document, "gpio_control", false);
-  cJSON_AddNumberToObject(document, "tick_interval_ms", kTickIntervalMs);
+  cJSON_AddNumberToObject(document, "tick_interval_ms",
+                          DeterministicClimateScenarioProvider::kTickIntervalMs);
+  cJSON_AddStringToObject(document, "scenario", "deterministic-240-tick-v1");
   ::growbox::demo::wire::emitJsonDocument(document);
 }
 
@@ -156,7 +131,7 @@ void emitStatus(std::uint64_t monotonic_ms, const ::growbox::climate::ClimateLoo
 [[noreturn]] void runClimateV6FakeRuntime() noexcept {
   beginJsonOutput();
 
-  FixedFakeSnapshotProvider provider;
+  DeterministicClimateScenarioProvider provider;
   AcceptAllFakeRoleDriver driver;
   ::growbox::climate::ClimateRuntimeController runtime(nullptr, ruleRuntimeConfig());
   ClimateApplication application(runtime, provider, driver);
@@ -167,7 +142,7 @@ void emitStatus(std::uint64_t monotonic_ms, const ::growbox::climate::ClimateLoo
     ::growbox::climate::ClimateRuntimeDecision decision{};
     const ::growbox::climate::ClimateLoopResult result = application.tick(now_ms, decision);
     emitStatus(now_ms, result, decision, application.actuatorFaultLatched());
-    vTaskDelay(pdMS_TO_TICKS(kTickIntervalMs));
+    vTaskDelay(pdMS_TO_TICKS(DeterministicClimateScenarioProvider::kTickIntervalMs));
   }
 }
 

@@ -3,6 +3,7 @@ idf_component_register(
     "main.cpp"
     "climate/ClimateIoAdapters.cpp"
     "climate/ClimateApplication.cpp"
+    "climate/ClimateDeterministicFake.cpp"
     "climate/ClimateV6FakeRuntime.cpp"
     "demo/DummyEnvironmentSimulator.cpp"
     "demo/SerialJsonProtocol.cpp"

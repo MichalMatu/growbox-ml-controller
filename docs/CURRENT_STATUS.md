@@ -58,6 +58,8 @@ Stage25A adds `ClimateApplication`, a deliberately small constructor-injected co
 
 Stage25B adds an explicit build-time application boundary. `GROWBOX_APP_MODE` defaults to `legacy`, while `climate-v6-fake` selects a hardware-neutral climate-v6 runtime backed by a fixed fake snapshot provider and an accept-all fake role driver. The climate-v6 fake runtime emits startup/status identity (`application`, policy mode, input backend and output backend) and never touches GPIO or physical loads. Both application modes are required to compile in the ESP-IDF v5.5.4 gate.
 
+Stage25C replaces the fixed smoke snapshot with `DeterministicClimateScenarioProvider`, a hardware-neutral provider whose output is a pure function of monotonic time. Its 240-tick cycle varies inside/outside T/RH/CO2, day/night targets and light schedule plus actuator capabilities. Host tests prove timestamp determinism, cycle periodicity and a 1,200-tick full `ClimateApplication` run with fake outputs. Fault injection remains intentionally reserved for Stage25E.
+
 ## Not integrated yet
 
 `src/main.cpp` still runs the preserved legacy simulator/serial demonstration through the older

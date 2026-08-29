@@ -106,11 +106,13 @@ Stage25A proves the complete application-level path without physical hardware:
 It reports application/policy/input/output identity over JSON serial status and has no GPIO or
 physical actuator dependency. The ESP-IDF v5.5.4 gate compiles both modes.
 
-### Stage25C — deterministic fake runtime
+### Stage25C completed — deterministic fake runtime
 
-Replace the fixed smoke snapshot with a deterministic scenario provider that exercises changing
-inside/outside measurements, target and schedule transitions, capabilities and long multi-tick
-runs through exactly the same public provider/driver interfaces intended for hardware.
+`DeterministicClimateScenarioProvider` is a hardware-neutral `ClimateSnapshotProvider` whose output
+is a pure function of monotonic time. A 240-tick cycle changes inside/outside T/RH/CO2, day/night
+targets, light schedule and actuator capabilities. The embedded `climate-v6-fake` runtime uses it,
+and host coverage runs 1,200 ticks through the full `ClimateApplication` path. Sensor faults and
+actuator rejection are deliberately deferred to Stage25E rather than mixed into the nominal fake.
 
 ### Stage25D — climate-v6 observability and diagnostics
 
