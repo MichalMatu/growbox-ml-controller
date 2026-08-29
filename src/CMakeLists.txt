@@ -3,6 +3,7 @@ idf_component_register(
     "main.cpp"
     "climate/ClimateIoAdapters.cpp"
     "climate/ClimateApplication.cpp"
+    "climate/ClimateCompositeInput.cpp"
     "climate/ClimateDeterministicFake.cpp"
     "climate/ClimateDiagnostics.cpp"
     "climate/ClimateV6FakeRuntime.cpp"

@@ -64,6 +64,8 @@ Stage25D adds versioned climate-v6 diagnostics without adding a control path. `O
 
 Stage25E adds a test-only fault-injection and soak virtual HIL through the same public application I/O seam used by future hardware. Coverage repeatedly exercises stale, invalid and unavailable samples, the exact sensor-timeout boundary, capability changes, deterministic recovery, periodic actuator rejection, fail-safe OFF rejection, fault latch/reset and multi-thousand-tick runs. Rejected actuator requests are never accepted as confirmed state; after a rejection or explicit reset the next runtime step starts with zero effective actuator context. No physical driver or firmware fault mode is introduced.
 
+Stage26A adds a hardware-neutral composite input layer beneath `ClimateSnapshotProvider`. Separate interfaces represent inside environment, outside environment, wall clock and schedule/config resolution, and `CompositeClimateSnapshotProvider` aggregates them into one existing `ClimateInputSnapshot`. Clock plus schedule/config are required context; unavailable inside/outside component reads degrade to invalid measurement fields so the existing runtime decides fail-closed behavior. Host fakes prove nominal aggregation, partial sensor loss, clock/config loss and full `ClimateApplication` behavior. No physical sensor library, bus or pin dependency is introduced.
+
 ## Not integrated yet
 
 `src/main.cpp` still runs the preserved legacy simulator/serial demonstration through the older

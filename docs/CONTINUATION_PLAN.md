@@ -132,11 +132,14 @@ remains test-only and adds no firmware fault mode. It verifies that a rejected c
 confirmed state and that the next runtime step after rejection/reset starts from zero effective
 actuator context.
 
-### Stage26A — hardware-ready composite input layer
+### Stage26A completed — hardware-ready composite input layer
 
-Introduce hardware-neutral component interfaces for inside environment, outside environment and
-clock/schedule/config sources, then aggregate them into one `ClimateInputSnapshot`. Implement and
-test only fake component sources at this stage. Do not select sensor libraries or buses yet.
+Hardware-neutral component interfaces now represent inside environment, outside environment, wall
+clock and schedule/config resolution. `CompositeClimateSnapshotProvider` aggregates them into the
+existing `ClimateInputSnapshot` without changing the climate core. Clock plus schedule/config are
+required context; unavailable inside/outside reads become invalid measurements and remain subject to
+the existing fail-closed runtime semantics. Host fakes cover nominal, partial-loss and application
+integration paths. No SCD41/BLE/RTC library, bus or pin selection is introduced.
 
 ### Stage26B — hardware-ready semantic output layer
 

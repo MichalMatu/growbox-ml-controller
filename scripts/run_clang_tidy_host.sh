@@ -47,6 +47,7 @@ SOURCES=(
   lib/environment_control/src/climate/ClimateTrendEstimator.cpp
   src/climate/ClimateIoAdapters.cpp
   src/climate/ClimateApplication.cpp
+  src/climate/ClimateCompositeInput.cpp
   src/climate/ClimateDiagnostics.cpp
   src/climate/ClimateDeterministicFake.cpp
 )
