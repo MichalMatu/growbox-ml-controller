@@ -1,0 +1,33 @@
+{
+  "id": "20260829-growbox-stage26b-semantic-output-v1",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "workflow_policy": "efficient-verification-v1",
+  "command_timeout": 7200,
+  "idle_timeout": 1200,
+  "task_timeout": 14400,
+  "memory_limit_mb": 8192,
+  "steps": [
+    {
+      "name": "apply-stage26b-semantic-output",
+      "verification_level": "work",
+      "timeout": 1800,
+      "command": "git fetch origin agent-control && git show origin/agent-control:.agent/task-assets/stage26/run_stage26b_semantic_output_v1.sh > /tmp/stage26b-v1.sh && bash /tmp/stage26b-v1.sh apply d5f3a382a4271237aff8dbd0f48b1910e1a53131"
+    },
+    {
+      "name": "focused-stage26b-semantic-output",
+      "verification_level": "focused",
+      "timeout": 1800,
+      "command": "git fetch origin agent-control && git show origin/agent-control:.agent/task-assets/stage26/run_stage26b_semantic_output_v1.sh > /tmp/stage26b-v1.sh && bash /tmp/stage26b-v1.sh focused d5f3a382a4271237aff8dbd0f48b1910e1a53131"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "full-regression-dual-idf-v5-5-4-and-publish-stage26b",
+      "verification_level": "full",
+      "timeout": 7200,
+      "command": "git fetch origin agent-control && git show origin/agent-control:.agent/task-assets/stage26/run_stage26b_semantic_output_v1.sh > /tmp/stage26b-v1.sh && bash /tmp/stage26b-v1.sh full d5f3a382a4271237aff8dbd0f48b1910e1a53131"
+    }
+  ]
+}
