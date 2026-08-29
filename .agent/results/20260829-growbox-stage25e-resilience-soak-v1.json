@@ -1,0 +1,107 @@
+{
+  "id": "20260829-growbox-stage25e-resilience-soak-v1",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "started_at": "2026-08-29T01:03:55.678464+00:00",
+  "command_timeout": 7200,
+  "edits": {},
+  "commands": [
+    {
+      "command": "git fetch origin agent-control && git show origin/agent-control:.agent/task-assets/stage25/run_stage25e_fault_soak_v1.sh > /tmp/stage25e-v1.sh && bash /tmp/stage25e-v1.sh apply 5439c34531fe9b6b0746b8c0db2ca3e5f56f3c6f",
+      "exit_code": 0,
+      "output": "From https://github.com/MichalMatu/growbox-ml-controller\n * branch            agent-control -> FETCH_HEAD\n   f7af9d4..a10d695  agent-control -> origin/agent-control\nFrom https://github.com/MichalMatu/growbox-ml-controller\n * branch            mvp/environment-controller -> FETCH_HEAD\n * branch            agent-control -> FETCH_HEAD\n   a10d695..95578b1  agent-control -> origin/agent-control\nHEAD is now at 5439c34 Add versioned climate v6 diagnostics\nclang-format.............................................................Passed\nclang-format.............................................................Passed\n  climate_fault_soak_tests\n  climate_fault_soak_tests\ntarget_compile_features(climate_fault_soak_tests PRIVATE cxx_std_17)\ntarget_compile_options(climate_fault_soak_tests PRIVATE -Wall -Wextra -Wpedantic)\n  target_link_libraries(climate_fault_soak_tests PRIVATE m)\nadd_test(NAME climate_fault_soak_tests COMMAND climate_fault_soak_tests)\n### Stage25E completed — fault-injection and soak virtual HIL\n M docs/CONTINUATION_PLAN.md\n M docs/CURRENT_STATUS.md\n M test/host/CMakeLists.txt\n?? test/test_climate_fault_soak/\n",
+      "elapsed_seconds": 5.586,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 8192,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 52.67,
+      "current_rss_mb": 52.67,
+      "stage_name": "apply-stage25e-resilience-soak-virtual-hil",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "stage_timeout": 1800,
+      "verification_level": "work"
+    },
+    {
+      "command": "git fetch origin agent-control && git show origin/agent-control:.agent/task-assets/stage25/run_stage25e_fault_soak_v1.sh > /tmp/stage25e-v1.sh && bash /tmp/stage25e-v1.sh focused",
+      "exit_code": 8,
+      "output": "From https://github.com/MichalMatu/growbox-ml-controller\n * branch            agent-control -> FETCH_HEAD\n   95578b1..88872d0  agent-control -> origin/agent-control\n-- Configuring done (0.3s)\n-- Generating done (0.7s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tests\n[ 12%] Building CXX object CMakeFiles/climate_fault_soak_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/test/test_climate_fault_soak/test_main.cpp.o\n[ 37%] Building CXX object CMakeFiles/climate_fault_soak_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/src/climate/ClimateApplication.cpp.o\n[ 37%] Building CXX object CMakeFiles/climate_fault_soak_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateControlLoop.cpp.o\n[ 50%] Building CXX object CMakeFiles/climate_fault_soak_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/src/climate/ClimateIoAdapters.cpp.o\n[ 62%] Building CXX object CMakeFiles/climate_fault_soak_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateFeatureEncoder.cpp.o\n[ 75%] Building CXX object CMakeFiles/climate_fault_soak_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateRuntimeController.cpp.o\n[ 87%] Building CXX object CMakeFiles/climate_fault_soak_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateTrendEstimator.cpp.o\n[100%] Linking CXX executable climate_fault_soak_tests\n[100%] Built target climate_fault_soak_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tests\n    Start 9: climate_fault_soak_tests\n1/1 Test #9: climate_fault_soak_tests .........Subprocess aborted***Exception:   0.45 sec\nAssertion failed: ((decision.rule.safety_interventions & RequiredSensorUnusable) != 0U), function testLongInputFaultCapabilityAndRecoveryCycle, file test_main.cpp, line 215.\n\n\n0% tests passed, 1 tests failed out of 1\n\nTotal Test time (real) =   0.46 sec\n\nThe following tests FAILED:\n\t  9 - climate_fault_soak_tests (Subprocess aborted)\nErrors while running CTest\n",
+      "elapsed_seconds": 8.332,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 8192,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 410.89,
+      "current_rss_mb": 108.25,
+      "stage_name": "focused-stage25e-resilience-soak-virtual-hil",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "stage_timeout": 1800,
+      "verification_level": "focused"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "apply-stage25e-resilience-soak-virtual-hil",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "verification_level": "work",
+      "outcome": "passed",
+      "elapsed_seconds": 5.586
+    },
+    {
+      "stage_name": "focused-stage25e-resilience-soak-virtual-hil",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "verification_level": "focused",
+      "outcome": "failed",
+      "elapsed_seconds": 8.332
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": " M docs/CONTINUATION_PLAN.md\n M docs/CURRENT_STATUS.md\n M test/host/CMakeLists.txt\n?? test/test_climate_fault_soak/\n",
+    "elapsed_seconds": 0.216
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "diff --git a/docs/CONTINUATION_PLAN.md b/docs/CONTINUATION_PLAN.md\nindex 3593bbf..a0c93ff 100644\n--- a/docs/CONTINUATION_PLAN.md\n+++ b/docs/CONTINUATION_PLAN.md\n@@ -122,11 +122,15 @@ and ML-shadow evaluations, the final safe request, confirmed applied state, I/O/\n actuator-fault latch state after each tick. The observer is a transparent provider decorator and\n diagnostics remain read-only: they do not feed policy, runtime state or actuator writes.\n \n-### Stage25E — fault-injection and soak virtual HIL\n-\n-Extend virtual HIL with repeated stale/invalid/unavailable inputs, timeout boundaries, recovery,\n-capability changes, actuator rejection, OFF rejection, latch/reset and long deterministic runs.\n-Prove again that rejected commands never become confirmed/effective applied state.\n+### Stage25E completed — fault-injection and soak virtual HIL\n+\n+Host-side virtual HIL now drives the public `ClimateSnapshotProvider -> ClimateApplication ->\n+ClimateRoleDriver` seam through repeated stale/invalid/unavailable inputs, the exact freshness\n+boundary (`age == timeout` versus `timeout + 1`), capability loss/recovery, periodic actuator\n+rejection, fail-safe OFF rejection, fault latch/reset and long deterministic soak runs. The harness\n+remains test-only and adds no firmware fault mode. It verifies that a rejected command never becomes\n+confirmed state and that the next runtime step after rejection/reset starts from zero effective\n+actuator context.\n \n ### Stage26A — hardware-ready composite input layer\n \ndiff --git a/docs/CURRENT_STATUS.md b/docs/CURRENT_STATUS.md\nindex 1e71627..36492b5 100644\n--- a/docs/CURRENT_STATUS.md\n+++ b/docs/CURRENT_STATUS.md\n@@ -62,6 +62,8 @@ Stage25C replaces the fixed smoke snapshot with `DeterministicClimateScenarioPro\n \n Stage25D adds versioned climate-v6 diagnostics without adding a control path. `ObservedClimateSnapshotProvider` transparently decorates any `ClimateSnapshotProvider` and records exactly the single sample attempt consumed by the controller. After each tick, diagnostics copy measurement value/validity/age, targets, schedule, capabilities, Rule and ML-shadow evaluations, final safe request, confirmed applied actions, I/O/runtime status and actuator-fault state from existing runtime evidence. The fake ESP-IDF runtime emits this as `climate_runtime_diagnostics` schema version 1; diagnostics never write policy, runtime or actuator state.\n \n+Stage25E adds a test-only fault-injection and soak virtual HIL through the same public application I/O seam used by future hardware. Coverage repeatedly exercises stale, invalid and unavailable samples, the exact sensor-timeout boundary, capability changes, deterministic recovery, periodic actuator rejection, fail-safe OFF rejection, fault latch/reset and multi-thousand-tick runs. Rejected actuator requests are never accepted as confirmed state; after a rejection or explicit reset the next runtime step starts with zero effective actuator context. No physical driver or firmware fault mode is introduced.\n+\n ## Not integrated yet\n \n `src/main.cpp` still runs the preserved legacy simulator/serial demonstration through the older\ndiff --git a/test/host/CMakeLists.txt b/test/host/CMakeLists.txt\nindex 5480f09..e3e2bb2 100644\n--- a/test/host/CMakeLists.txt\n+++ b/test/host/CMakeLists.txt\n@@ -150,6 +150,26 @@ target_include_directories(\n target_compile_features(climate_diagnostics_tests PRIVATE cxx_std_17)\n target_compile_options(climate_diagnostics_tests PRIVATE -Wall -Wextra -Wpedantic)\n \n+\n+add_executable(\n+  climate_fault_soak_tests\n+  \"${PROJECT_ROOT}/test/test_climate_fault_soak/test_main.cpp\"\n+  \"${PROJECT_ROOT}/src/climate/ClimateApplication.cpp\"\n+  \"${PROJECT_ROOT}/src/climate/ClimateIoAdapters.cpp\"\n+  \"${PROJECT_ROOT}/lib/environment_control/src/climate/ClimateControlLoop.cpp\"\n+  \"${PROJECT_ROOT}/lib/environment_control/src/climate/ClimateFeatureEncoder.cpp\"\n+  \"${PROJECT_ROOT}/lib/environment_control/src/climate/ClimateRuntimeController.cpp\"\n+  \"${PROJECT_ROOT}/lib/environment_control/src/climate/ClimateTrendEstimator.cpp\"\n+)\n+target_include_directories(\n+  climate_fault_soak_tests\n+  PRIVATE\n+    \"${PROJECT_ROOT}/src\"\n+    \"${PROJECT_ROOT}/lib/environment_control/src\"\n+)\n+target_compile_features(climate_fault_soak_tests PRIVATE cxx_std_17)\n+target_compile_options(climate_fault_soak_tests PRIVATE -Wall -Wextra -Wpedantic)\n+\n if(UNIX)\n   target_link_libraries(environment_control_tests PRIVATE m)\n   target_link_libraries(climate_v6_tests PRIVATE m)\n@@ -159,6 +179,7 @@ if(UNIX)\n   target_link_libraries(climate_io_adapter_tests PRIVATE m)\n   target_link_libraries(climate_application_composition_tests PRIVATE m)\n   target_link_libraries(climate_deterministic_fake_runtime_tests PRIVATE m)\n+  target_link_libraries(climate_fault_soak_tests PRIVATE m)\n   target_link_libraries(climate_diagnostics_tests PRIVATE m)\n endif()\n \n@@ -171,4 +192,5 @@ add_test(NAME climate_virtual_hil_tests COMMAND climate_virtual_hil_tests)\n add_test(NAME climate_io_adapter_tests COMMAND climate_io_adapter_tests)\n add_test(NAME climate_application_composition_tests COMMAND climate_application_composition_tests)\n add_test(NAME climate_deterministic_fake_runtime_tests COMMAND climate_deterministic_fake_runtime_tests)\n+add_test(NAME climate_fault_soak_tests COMMAND climate_fault_soak_tests)\n add_test(NAME climate_diagnostics_tests COMMAND climate_diagnostics_tests)\n",
+    "elapsed_seconds": 0.632
+  },
+  "failure_reason": "command_failed",
+  "finished_at": "2026-08-29T01:04:13.101306+00:00",
+  "workspace_checkpoint": {
+    "version": 2,
+    "task_id": "20260829-growbox-stage25e-resilience-soak-v1",
+    "reason": "task-exit",
+    "created_at": "2026-08-29T01:04:14.016159+00:00",
+    "base_head": "5439c34531fe9b6b0746b8c0db2ca3e5f56f3c6f",
+    "work_branch": "agent-work",
+    "path": "/Users/michal/agent-workspace/repos/growbox-ml-controller/checkpoints/20260829-growbox-stage25e-resilience-soak-v1/1787965453603899000-task-exit",
+    "tracked_patch": "tracked.patch",
+    "untracked_root": "untracked",
+    "untracked_files": [
+      "test/test_climate_fault_soak/test_main.cpp"
+    ],
+    "tracked_patch_bytes": 5596,
+    "untracked_bytes": 12036,
+    "total_bytes": 17632,
+    "status": " M docs/CONTINUATION_PLAN.md\n M docs/CURRENT_STATUS.md\n M test/host/CMakeLists.txt\n?? test/test_climate_fault_soak/\n"
+  },
+  "task_digest": "7815852ce3f8c394ca0ff5a164bdd1d27ebb1256b6018b4e27f7ed542bbbe566",
+  "idle_timeout": 1200,
+  "task_timeout": 14400,
+  "memory_limit_mb": 8192,
+  "attempt_id": "61f576e26afcb0bfb9681fbb",
+  "daemon_version": "4.10.2"
+}
