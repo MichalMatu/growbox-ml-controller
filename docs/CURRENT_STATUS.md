@@ -1,6 +1,6 @@
 # Current controller status
 
-Date: 2026-08-28
+Date: 2026-08-29
 Development branch: `mvp/environment-controller`
 Fresh-chat bootstrap: `docs/CONTINUATION_PLAN.md`
 
@@ -68,6 +68,8 @@ Stage26A adds a hardware-neutral composite input layer beneath `ClimateSnapshotP
 
 Stage26B adds a hardware-neutral semantic output mapping beneath `ClimateRoleDriver`. `MappedClimateRoleDriver` maps the six stable roles to configured endpoint identifiers and forwards only finite normalized levels. Enabled mappings propagate explicit OFF writes; disabled/unmapped roles accept OFF without I/O and reject nonzero commands. Host fakes prove deterministic mapping and partial rejection without adding a physical output backend.
 
+Stage26C closes the software-only pre-hardware gate. `scripts/check_pre_hardware_readiness.sh` audits the reversible legacy/climate-v6-fake boundary, Rule-authoritative fake runtime, neutral composite-input and semantic-output seams, diagnostics and the key host/HIL registrations. The release gate also requires the full non-hardware Python/schema/host/clang-tidy suite and both ESP-IDF v5.5.4 app modes. `docs/HARDWARE_BRINGUP_CHECKLIST.md` leaves SCD41 library/bus/pins, outside BLE model/protocol, RTC part and physical actuator backend/pins explicitly unresolved for manual freeze before Stage27. Simulator/fake PASS remains software evidence, not hardware validation.
+
 ## Not integrated yet
 
 `src/main.cpp` still runs the preserved legacy simulator/serial demonstration through the older
@@ -87,11 +89,8 @@ See `docs/MVP_HARDWARE_SENSOR_SET.md`.
 
 The detailed fresh-context plan is in `docs/CONTINUATION_PLAN.md`.
 
-1. Prove the strict IPO composition with interchangeable fake Input/Output implementations using
-   the same public interfaces intended for future hardware.
-2. Keep the legacy demo intact while proving the new climate-v6 application composition path.
-3. Add concrete SCD41 / BLE / RTC providers only after parts and libraries are frozen.
-4. Add concrete semantic actuator-role drivers.
-5. Bring up real hardware in Rule mode first.
-6. Run ML only in `MlShadow` while collecting real traces.
-7. Re-qualify ML from real data before considering active ML actuation.
+1. Manually freeze the unresolved physical choices in `docs/HARDWARE_BRINGUP_CHECKLIST.md`.
+2. Start Stage27 with real inputs plus fake outputs and verify freshness/error/schedule diagnostics.
+3. Add real outputs only after the input path is proven, and operate them in Rule mode first.
+4. Run ML only in `MlShadow` while collecting real traces.
+5. Re-qualify ML from real data before considering active ML actuation.

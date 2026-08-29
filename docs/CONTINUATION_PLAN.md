@@ -150,11 +150,14 @@ accept OFF without I/O but reject nonzero commands, making capability/config mis
 Host fakes cover deterministic role mapping, OFF, disabled mappings, normalization and partial
 endpoint rejection. No physical output backend, bus or pin dependency is introduced.
 
-### Stage26C — pre-hardware readiness gate
+### Stage26C completed — pre-hardware readiness gate
 
-Run the complete host/schema/static/ESP-IDF gate, audit the climate-v6 fake path end to end and add
-a hardware bring-up checklist. The checklist must leave unresolved BLE/RTC/pin/library choices
-explicit for manual freeze before physical work.
+The software-side readiness gate now audits the reversible app boundary, Rule-authoritative fake
+runtime, hardware-neutral input/output seams, diagnostics and the key host/HIL registrations. The
+complete host/schema/static gate plus both ESP-IDF v5.5.4 application modes are required before
+publication. `docs/HARDWARE_BRINGUP_CHECKLIST.md` records the Stage27 order and deliberately leaves
+SCD41 library/bus/pins, outside BLE model/protocol, RTC part and physical actuator backend/pins as
+manual freeze items. Passing Stage26C is not hardware validation.
 
 ### Stage27 — hardware bring-up
 
