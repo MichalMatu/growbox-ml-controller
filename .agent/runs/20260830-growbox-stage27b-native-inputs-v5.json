@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260830-growbox-stage27b-native-inputs-v5",
+  "task_digest": "0ee184389291eb83235f5c95e04d60df01ca96cc71560aac5e7b880155cc79b4",
+  "idle_timeout": 1200,
+  "task_timeout": 18000,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-30T13:07:50.622628+00:00",
+  "attempt_id": "d2c812ae1c13b231d8a2711e",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 77533,
+  "updated_at": "2026-08-30T13:07:50.622798+00:00",
+  "pid": 77533
+}
