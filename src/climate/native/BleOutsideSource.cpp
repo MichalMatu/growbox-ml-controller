@@ -9,6 +9,7 @@
 #include <nvs_flash.h>
 
 #include <cctype>
+#include <cstring>
 
 namespace growbox::app::climate_io::native {
 namespace {
@@ -44,7 +45,7 @@ BleOutsideSource::~BleOutsideSource() {
 bool BleOutsideSource::parseMac(const char* text,
                                 std::array<std::uint8_t, 6>& output) noexcept {
   output = {};
-  if (text == nullptr) {
+  if (text == nullptr || std::strlen(text) != 17U) {
     return false;
   }
   for (std::size_t i = 0U; i < output.size(); ++i) {
@@ -59,7 +60,7 @@ bool BleOutsideSource::parseMac(const char* text,
       return false;
     }
   }
-  return text[17] == '\0';
+  return true;
 }
 
 bool BleOutsideSource::matchesNimbleAddress(
@@ -125,19 +126,19 @@ void BleOutsideSource::onSync() {
 bool BleOutsideSource::startScan() noexcept {
   uint8_t own_address_type = 0U;
   if (ble_hs_id_infer_auto(0, &own_address_type) != 0) {
-    scanning_ = false;
+    scanning_.store(false, std::memory_order_relaxed);
     return false;
   }
 
-  ble_gap_disc_params params{};
+  struct ble_gap_disc_params params {};
   params.passive = 1U;
   params.filter_duplicates = 0U;
   params.filter_policy = 0U;
   params.limited = 0U;
   const int error =
       ble_gap_disc(own_address_type, BLE_HS_FOREVER, &params, &BleOutsideSource::gapEvent, this);
-  scanning_ = error == 0;
-  return scanning_;
+  scanning_.store(error == 0, std::memory_order_relaxed);
+  return error == 0;
 }
 
 int BleOutsideSource::gapEvent(struct ble_gap_event* event, void* context) {
@@ -149,7 +150,7 @@ int BleOutsideSource::gapEvent(struct ble_gap_event* event, void* context) {
     self->handleAdvertisement(event->disc.addr.val, event->disc.data,
                               event->disc.length_data);
   } else if (event->type == BLE_GAP_EVENT_DISC_COMPLETE) {
-    self->scanning_ = false;
+    self->scanning_.store(false, std::memory_order_relaxed);
     self->startScan();
   }
   return 0;
@@ -186,6 +187,24 @@ void BleOutsideSource::handleAdvertisement(const std::uint8_t* address,
   last_measurement_ms_ = now_ms;
   has_measurement_ = true;
   xSemaphoreGive(mutex_);
+}
+
+std::uint64_t BleOutsideSource::lastPacketSeenMs() const noexcept {
+  if (mutex_ == nullptr || xSemaphoreTake(mutex_, pdMS_TO_TICKS(20)) != pdTRUE) {
+    return 0U;
+  }
+  const std::uint64_t value = last_packet_seen_ms_;
+  xSemaphoreGive(mutex_);
+  return value;
+}
+
+std::uint64_t BleOutsideSource::lastValidMeasurementMs() const noexcept {
+  if (mutex_ == nullptr || xSemaphoreTake(mutex_, pdMS_TO_TICKS(20)) != pdTRUE) {
+    return 0U;
+  }
+  const std::uint64_t value = last_measurement_ms_;
+  xSemaphoreGive(mutex_);
+  return value;
 }
 
 bool BleOutsideSource::sample(std::uint64_t monotonic_ms,
