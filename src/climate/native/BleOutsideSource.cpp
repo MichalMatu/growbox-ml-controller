@@ -2,7 +2,6 @@
 
 #include <esp_err.h>
 #include <esp_timer.h>
-#include <host/ble_gap.h>
 #include <host/ble_hs.h>
 #include <nimble/nimble_port.h>
 #include <nimble/nimble_port_freertos.h>
