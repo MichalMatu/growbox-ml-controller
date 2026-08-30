@@ -23,6 +23,7 @@ stage27_files=(
   src/climate/native/BleOutsideSource.h
   test/test_stage27_native_inputs/test_main.cpp
   config/idf/sdkconfig.defaults.stage27
+  scripts/idf_gate_build.sh
   components/sensirion_scd4x/CMakeLists.txt
   components/sensirion_scd4x/README.growbox.md
   components/sensirion_scd4x/growbox_sensirion_i2c_hal.h
@@ -74,11 +75,13 @@ source_idf() {
 
 build_real() {
   rm -rf build/idf-gate-stage27-real
-  idf.py -B build/idf-gate-stage27-real \
-    -D 'SDKCONFIG_DEFAULTS=config/idf/sdkconfig.defaults;config/idf/sdkconfig.defaults.stage27' \
-    -D 'GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n16r8' \
-    -D 'GROWBOX_APP_MODE=climate-v6-real-inputs' \
-    build
+  IDF_GATE_BUILD_DIR=build/idf-gate-stage27-real \
+  IDF_GATE_PROFILE=esp32s3-devkitc1-n16r8 \
+  IDF_GATE_APP_MODE=climate-v6-real-inputs \
+  IDF_GATE_SDKCONFIG='config/idf/sdkconfig.defaults;config/idf/sdkconfig.defaults.stage27' \
+    bash scripts/idf_gate_build.sh
+  grep -qx 'CONFIG_BT_ENABLED=y' build/idf-gate-stage27-real/sdkconfig
+  grep -qx 'CONFIG_BT_NIMBLE_ENABLED=y' build/idf-gate-stage27-real/sdkconfig
 }
 
 case "$MODE" in
@@ -86,6 +89,7 @@ case "$MODE" in
     git fetch origin mvp/environment-controller agent-control
     git reset --hard origin/mvp/environment-controller
     git clean -fd
+    rm -f sdkconfig sdkconfig.old
     test "$(git rev-parse HEAD)" = "$EXPECTED"
     test -z "$(git status --porcelain)"
     vendor_scd4x
