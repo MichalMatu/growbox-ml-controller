@@ -27,6 +27,7 @@ idf_component_register(
     json
     bt
     esp_driver_i2c
+    esp_driver_gpio
     nvs_flash
     sensirion_scd4x
 )
