@@ -7,6 +7,7 @@
 #include <freertos/semphr.h>
 
 #include <array>
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 
@@ -26,14 +27,10 @@ public:
     return configured_;
   }
   bool scanning() const noexcept {
-    return scanning_;
+    return scanning_.load(std::memory_order_relaxed);
   }
-  std::uint64_t lastPacketSeenMs() const noexcept {
-    return last_packet_seen_ms_;
-  }
-  std::uint64_t lastValidMeasurementMs() const noexcept {
-    return last_measurement_ms_;
-  }
+  std::uint64_t lastPacketSeenMs() const noexcept;
+  std::uint64_t lastValidMeasurementMs() const noexcept;
 
 private:
   static int gapEvent(struct ble_gap_event* event, void* context);
@@ -50,7 +47,7 @@ private:
   std::array<std::uint8_t, 6> target_mac_{};
   SemaphoreHandle_t mutex_ = nullptr;
   bool configured_ = false;
-  bool scanning_ = false;
+  std::atomic_bool scanning_{false};
   bool has_measurement_ = false;
   std::uint64_t last_packet_seen_ms_ = 0U;
   std::uint64_t last_measurement_ms_ = 0U;
