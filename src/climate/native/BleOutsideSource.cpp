@@ -41,8 +41,7 @@ BleOutsideSource::~BleOutsideSource() {
   }
 }
 
-bool BleOutsideSource::parseMac(const char* text,
-                                std::array<std::uint8_t, 6>& output) noexcept {
+bool BleOutsideSource::parseMac(const char* text, std::array<std::uint8_t, 6>& output) noexcept {
   output = {};
   if (text == nullptr || std::strlen(text) != 17U) {
     return false;
@@ -62,9 +61,8 @@ bool BleOutsideSource::parseMac(const char* text,
   return true;
 }
 
-bool BleOutsideSource::matchesNimbleAddress(
-    const std::array<std::uint8_t, 6>& canonical,
-    const std::uint8_t* nimble_address) noexcept {
+bool BleOutsideSource::matchesNimbleAddress(const std::array<std::uint8_t, 6>& canonical,
+                                            const std::uint8_t* nimble_address) noexcept {
   if (nimble_address == nullptr) {
     return false;
   }
@@ -129,7 +127,7 @@ bool BleOutsideSource::startScan() noexcept {
     return false;
   }
 
-  struct ble_gap_disc_params params {};
+  struct ble_gap_disc_params params{};
   params.passive = 1U;
   params.filter_duplicates = 0U;
   params.filter_policy = 0U;
@@ -146,8 +144,7 @@ int BleOutsideSource::gapEvent(struct ble_gap_event* event, void* context) {
     return 0;
   }
   if (event->type == BLE_GAP_EVENT_DISC) {
-    self->handleAdvertisement(event->disc.addr.val, event->disc.data,
-                              event->disc.length_data);
+    self->handleAdvertisement(event->disc.addr.val, event->disc.data, event->disc.length_data);
   } else if (event->type == BLE_GAP_EVENT_DISC_COMPLETE) {
     self->scanning_.store(false, std::memory_order_relaxed);
     self->startScan();
@@ -155,8 +152,7 @@ int BleOutsideSource::gapEvent(struct ble_gap_event* event, void* context) {
   return 0;
 }
 
-void BleOutsideSource::handleAdvertisement(const std::uint8_t* address,
-                                           const std::uint8_t* data,
+void BleOutsideSource::handleAdvertisement(const std::uint8_t* address, const std::uint8_t* data,
                                            std::size_t size) noexcept {
   if (!matchesNimbleAddress(target_mac_, address)) {
     return;
@@ -209,8 +205,7 @@ std::uint64_t BleOutsideSource::lastValidMeasurementMs() const noexcept {
 bool BleOutsideSource::sample(std::uint64_t monotonic_ms,
                               OutsideEnvironmentSnapshot& output) noexcept {
   output = {};
-  if (!configured_ || mutex_ == nullptr ||
-      xSemaphoreTake(mutex_, pdMS_TO_TICKS(20)) != pdTRUE) {
+  if (!configured_ || mutex_ == nullptr || xSemaphoreTake(mutex_, pdMS_TO_TICKS(20)) != pdTRUE) {
     return false;
   }
   const bool has_measurement = has_measurement_;

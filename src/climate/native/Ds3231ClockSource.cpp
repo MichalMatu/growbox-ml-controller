@@ -31,8 +31,7 @@ bool Ds3231ClockSource::begin(NativeI2cBus& bus) noexcept {
   return available_;
 }
 
-bool Ds3231ClockSource::sample(std::uint64_t,
-                               ClimateWallClockSnapshot& output) noexcept {
+bool Ds3231ClockSource::sample(std::uint64_t, ClimateWallClockSnapshot& output) noexcept {
   output = {};
   if (device_ == nullptr) {
     available_ = false;
@@ -42,8 +41,8 @@ bool Ds3231ClockSource::sample(std::uint64_t,
 
   std::array<std::uint8_t, 7> registers{};
   const std::uint8_t time_register = kTimeRegister;
-  if (i2c_master_transmit_receive(device_, &time_register, 1U, registers.data(),
-                                  registers.size(), kTimeoutMs) != ESP_OK) {
+  if (i2c_master_transmit_receive(device_, &time_register, 1U, registers.data(), registers.size(),
+                                  kTimeoutMs) != ESP_OK) {
     available_ = false;
     trusted_ = false;
     return false;
@@ -51,8 +50,8 @@ bool Ds3231ClockSource::sample(std::uint64_t,
 
   std::uint8_t status = 0U;
   const std::uint8_t status_register = kStatusRegister;
-  if (i2c_master_transmit_receive(device_, &status_register, 1U, &status, 1U,
-                                  kTimeoutMs) != ESP_OK) {
+  if (i2c_master_transmit_receive(device_, &status_register, 1U, &status, 1U, kTimeoutMs) !=
+      ESP_OK) {
     available_ = false;
     trusted_ = false;
     return false;

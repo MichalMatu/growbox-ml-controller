@@ -85,8 +85,7 @@ BthomeV2DecodeStatus decodeBthomeV2(const std::uint8_t* data, std::size_t size,
 }
 
 bool findBthomeV2ServiceData(const std::uint8_t* advertisement, std::size_t size,
-                             const std::uint8_t*& payload,
-                             std::size_t& payload_size) noexcept {
+                             const std::uint8_t*& payload, std::size_t& payload_size) noexcept {
   payload = nullptr;
   payload_size = 0U;
   if (advertisement == nullptr) {

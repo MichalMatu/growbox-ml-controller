@@ -23,8 +23,7 @@ bool leapYear(std::uint16_t year) noexcept {
 }
 
 std::uint8_t daysInMonth(std::uint16_t year, std::uint8_t month) noexcept {
-  constexpr std::uint8_t kDays[] = {31U, 28U, 31U, 30U, 31U, 30U,
-                                    31U, 31U, 30U, 31U, 30U, 31U};
+  constexpr std::uint8_t kDays[] = {31U, 28U, 31U, 30U, 31U, 30U, 31U, 31U, 30U, 31U, 30U, 31U};
   if (month == 0U || month > 12U) {
     return 0U;
   }
@@ -63,8 +62,7 @@ bool decodeHour(std::uint8_t raw, std::uint8_t& hour) noexcept {
 
 } // namespace
 
-bool decodeDs3231Time(const std::array<std::uint8_t, 7>& registers,
-                      std::uint8_t status_register,
+bool decodeDs3231Time(const std::array<std::uint8_t, 7>& registers, std::uint8_t status_register,
                       Ds3231DecodedTime& output) noexcept {
   output = {};
   if ((status_register & kOscillatorStopFlag) != 0U) {
@@ -79,16 +77,14 @@ bool decodeDs3231Time(const std::array<std::uint8_t, 7>& registers,
   std::uint8_t year2 = 0U;
 
   if (!decodeBcd(registers[0], 0x7FU, second) || second > 59U ||
-      !decodeBcd(registers[1], 0x7FU, minute) || minute > 59U ||
-      !decodeHour(registers[2], hour) ||
-      !decodeBcd(registers[4], 0x3FU, day) ||
-      !decodeBcd(registers[5], 0x1FU, month) ||
+      !decodeBcd(registers[1], 0x7FU, minute) || minute > 59U || !decodeHour(registers[2], hour) ||
+      !decodeBcd(registers[4], 0x3FU, day) || !decodeBcd(registers[5], 0x1FU, month) ||
       !decodeBcd(registers[6], 0xFFU, year2)) {
     return false;
   }
 
-  const std::uint16_t year = static_cast<std::uint16_t>(
-      2000U + year2 + ((registers[5] & 0x80U) ? 100U : 0U));
+  const std::uint16_t year =
+      static_cast<std::uint16_t>(2000U + year2 + ((registers[5] & 0x80U) ? 100U : 0U));
   if (month < 1U || month > 12U || day < 1U || day > daysInMonth(year, month)) {
     return false;
   }
@@ -97,10 +93,9 @@ bool decodeDs3231Time(const std::array<std::uint8_t, 7>& registers,
   if (days < 0) {
     return false;
   }
-  const std::uint64_t seconds =
-      static_cast<std::uint64_t>(days) * 86400U +
-      static_cast<std::uint64_t>(hour) * 3600U +
-      static_cast<std::uint64_t>(minute) * 60U + second;
+  const std::uint64_t seconds = static_cast<std::uint64_t>(days) * 86400U +
+                                static_cast<std::uint64_t>(hour) * 3600U +
+                                static_cast<std::uint64_t>(minute) * 60U + second;
 
   output.year = year;
   output.month = month;

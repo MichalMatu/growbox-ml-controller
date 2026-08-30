@@ -8,9 +8,9 @@
 
 using growbox::app::climate_io::native::BthomeV2DecodeStatus;
 using growbox::app::climate_io::native::BthomeV2Measurement;
-using growbox::app::climate_io::native::Ds3231DecodedTime;
 using growbox::app::climate_io::native::decodeBthomeV2;
 using growbox::app::climate_io::native::decodeDs3231Time;
+using growbox::app::climate_io::native::Ds3231DecodedTime;
 using growbox::app::climate_io::native::findBthomeV2ServiceData;
 
 namespace {
@@ -20,11 +20,9 @@ bool closeEnough(float left, float right) {
 }
 
 void testLiteGraphFixture() {
-  constexpr std::array<std::uint8_t, 7> payload{{0x40U, 0x02U, 0xC4U, 0x09U,
-                                                 0x03U, 0xAEU, 0x15U}};
+  constexpr std::array<std::uint8_t, 7> payload{{0x40U, 0x02U, 0xC4U, 0x09U, 0x03U, 0xAEU, 0x15U}};
   BthomeV2Measurement decoded{};
-  assert(decodeBthomeV2(payload.data(), payload.size(), decoded) ==
-         BthomeV2DecodeStatus::Ok);
+  assert(decodeBthomeV2(payload.data(), payload.size(), decoded) == BthomeV2DecodeStatus::Ok);
   assert(decoded.has_temperature);
   assert(decoded.has_humidity);
   assert(closeEnough(decoded.temperature_c, 25.0F));
@@ -33,13 +31,22 @@ void testLiteGraphFixture() {
 
 void testAdvertisementExtraction() {
   constexpr std::array<std::uint8_t, 11> advertisement{{
-      0x02U, 0x01U, 0x06U,
-      0x07U, 0x16U, 0xD2U, 0xFCU, 0x40U, 0x02U, 0xC4U, 0x09U,
+      0x02U,
+      0x01U,
+      0x06U,
+      0x07U,
+      0x16U,
+      0xD2U,
+      0xFCU,
+      0x40U,
+      0x02U,
+      0xC4U,
+      0x09U,
   }};
   const std::uint8_t* payload = nullptr;
   std::size_t payload_size = 0U;
-  assert(findBthomeV2ServiceData(advertisement.data(), advertisement.size(), payload,
-                                 payload_size));
+  assert(
+      findBthomeV2ServiceData(advertisement.data(), advertisement.size(), payload, payload_size));
   assert(payload_size == 4U);
   BthomeV2Measurement decoded{};
   assert(decodeBthomeV2(payload, payload_size, decoded) ==
@@ -58,7 +65,13 @@ void testMalformedAndEncryptedDoNotDecode() {
 
 void testDs3231TrustedTime() {
   constexpr std::array<std::uint8_t, 7> registers{{
-      0x00U, 0x00U, 0x00U, 0x07U, 0x01U, 0x01U, 0x00U,
+      0x00U,
+      0x00U,
+      0x00U,
+      0x07U,
+      0x01U,
+      0x01U,
+      0x00U,
   }};
   Ds3231DecodedTime decoded{};
   assert(decodeDs3231Time(registers, 0x00U, decoded));
@@ -70,7 +83,13 @@ void testDs3231TrustedTime() {
 
 void testDs3231OsfAndInvalidBcd() {
   constexpr std::array<std::uint8_t, 7> valid{{
-      0x00U, 0x00U, 0x00U, 0x07U, 0x01U, 0x01U, 0x00U,
+      0x00U,
+      0x00U,
+      0x00U,
+      0x07U,
+      0x01U,
+      0x01U,
+      0x00U,
   }};
   Ds3231DecodedTime decoded{};
   assert(!decodeDs3231Time(valid, 0x80U, decoded));

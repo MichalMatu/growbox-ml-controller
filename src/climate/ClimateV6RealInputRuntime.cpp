@@ -54,8 +54,7 @@ public:
     output.capabilities.dehumidifier = true;
     output.capabilities.co2_doser = true;
 
-    const std::uint8_t hour =
-        static_cast<std::uint8_t>((clock.unix_time_s / 3600U) % 24U);
+    const std::uint8_t hour = static_cast<std::uint8_t>((clock.unix_time_s / 3600U) % 24U);
     const bool day = hour >= 6U && hour < 22U;
     output.targets.air_temperature_c = day ? 24.5F : 21.5F;
     output.targets.relative_humidity_pct = day ? 58.0F : 65.0F;
@@ -98,8 +97,7 @@ std::uint64_t monotonicMilliseconds() noexcept {
   ::growbox::climate::ClimateRuntimeController runtime(nullptr, runtimeConfig());
   ClimateApplication application(runtime, composite, output_driver);
 
-  ESP_LOGI(kTag,
-           "Stage27 real-input runtime: i2c=%d scd41=%d ds3231=%d ble=%d outputs=fake-locked",
+  ESP_LOGI(kTag, "Stage27 real-input runtime: i2c=%d scd41=%d ds3231=%d ble=%d outputs=fake-locked",
            i2c_ready, scd41_ready, rtc_ready, ble_ready);
 
   std::uint32_t diagnostic_tick = 0U;

@@ -28,7 +28,6 @@ BthomeV2DecodeStatus decodeBthomeV2(const std::uint8_t* data, std::size_t size,
                                     BthomeV2Measurement& output) noexcept;
 
 bool findBthomeV2ServiceData(const std::uint8_t* advertisement, std::size_t size,
-                             const std::uint8_t*& payload,
-                             std::size_t& payload_size) noexcept;
+                             const std::uint8_t*& payload, std::size_t& payload_size) noexcept;
 
 } // namespace growbox::app::climate_io::native

@@ -9,8 +9,7 @@ namespace growbox::app::climate_io::native {
 
 class NativeI2cBus final {
 public:
-  NativeI2cBus(int sda_gpio, int scl_gpio) noexcept
-      : sda_gpio_(sda_gpio), scl_gpio_(scl_gpio) {}
+  NativeI2cBus(int sda_gpio, int scl_gpio) noexcept : sda_gpio_(sda_gpio), scl_gpio_(scl_gpio) {}
   ~NativeI2cBus();
 
   NativeI2cBus(const NativeI2cBus&) = delete;

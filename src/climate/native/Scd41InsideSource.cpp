@@ -89,8 +89,7 @@ bool Scd41InsideSource::sample(std::uint64_t monotonic_ms,
   uint16_t co2 = 0U;
   int32_t temperature_mdeg_c = 0;
   int32_t humidity_mpercent = 0;
-  const int16_t read_error =
-      scd4x_read_measurement(&co2, &temperature_mdeg_c, &humidity_mpercent);
+  const int16_t read_error = scd4x_read_measurement(&co2, &temperature_mdeg_c, &humidity_mpercent);
   if (read_error != 0) {
     available_ = false;
     return fillCached(monotonic_ms, output);
