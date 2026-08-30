@@ -3,6 +3,7 @@
 extern "C" {
 #include "growbox_sensirion_i2c_hal.h"
 #include "scd4x_i2c.h"
+#include "sensirion_i2c_hal.h"
 }
 
 #include <driver/i2c_master.h>
