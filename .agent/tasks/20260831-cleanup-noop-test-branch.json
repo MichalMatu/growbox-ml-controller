@@ -1,0 +1,14 @@
+{
+  "id": "20260831-cleanup-noop-test-branch",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 60,
+  "idle_timeout": 30,
+  "task_timeout": 180,
+  "memory_limit_mb": 256,
+  "commands": [
+    "git ls-remote --exit-code --heads origin noop-test-ignore >/dev/null 2>&1 && git push origin --delete noop-test-ignore || true"
+  ]
+}
