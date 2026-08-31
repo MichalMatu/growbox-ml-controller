@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260831-v4113-clean-control-pycache",
+  "task_digest": "36ffb8604489ce3c27ef1bf6887bff8915e4a372baf95e263a87570b98d65d56",
+  "idle_timeout": 300,
+  "task_timeout": 240,
+  "memory_limit_mb": 128,
+  "started_at": "2026-08-31T21:29:23.487784+00:00",
+  "attempt_id": "c69fa661638d1b3970e64098",
+  "daemon_version": "4.11.3",
+  "daemon_pid": 46485,
+  "updated_at": "2026-08-31T21:29:23.487989+00:00",
+  "pid": 46485
+}
