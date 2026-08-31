@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260831-growbox-stage27c-dual-ble-runtime-wire-v1",
+  "task_digest": "914120b17a929deb949650d1991de1f3e6a6385e83060b39e63cd7ded1a79f30",
+  "idle_timeout": 1200,
+  "task_timeout": 10800,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-31T06:44:06.928568+00:00",
+  "attempt_id": "70186afd8df8a7eec91b212d",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 35163,
+  "updated_at": "2026-08-31T06:44:06.928717+00:00",
+  "pid": 35163
+}
