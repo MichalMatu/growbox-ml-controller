@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260831-growbox-stage27c-soak-diagnostics-source-v1",
+  "task_digest": "5d9176c8df063348791d13bd83bac7d2ca2bfd8cd2e4ccb1732daed475e35d9c",
+  "idle_timeout": 1200,
+  "task_timeout": 10800,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-31T08:11:50.845222+00:00",
+  "attempt_id": "2d51f9dc8c6beac1e359bd0a",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 54792,
+  "updated_at": "2026-08-31T08:11:50.845372+00:00",
+  "pid": 54792
+}
