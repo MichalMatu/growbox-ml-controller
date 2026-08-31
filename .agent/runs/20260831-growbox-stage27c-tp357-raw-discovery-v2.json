@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260831-growbox-stage27c-tp357-raw-discovery-v2",
+  "task_digest": "0f9f3103881b2172150cd670cc45d2e80ab26ae42a8260800029e2ba3a3d19e6",
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-31T04:53:26.516444+00:00",
+  "attempt_id": "9dbe31c1aafd9c0902f24f65",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 96996,
+  "updated_at": "2026-08-31T04:53:26.516626+00:00",
+  "pid": 96996
+}
