@@ -25,6 +25,15 @@ public:
   std::uint64_t lastSuccessfulMeasurementMs() const noexcept {
     return last_measurement_ms_;
   }
+  std::uint32_t readErrorCount() const noexcept {
+    return read_error_count_;
+  }
+  std::uint32_t invalidMeasurementCount() const noexcept {
+    return invalid_measurement_count_;
+  }
+  std::uint32_t successfulMeasurementCount() const noexcept {
+    return successful_measurement_count_;
+  }
 
 private:
   bool fillCached(std::uint64_t monotonic_ms, InsideEnvironmentSnapshot& output) const noexcept;
@@ -37,6 +46,9 @@ private:
   float temperature_c_ = 0.0F;
   float relative_humidity_pct_ = 0.0F;
   float co2_ppm_ = 0.0F;
+  std::uint32_t read_error_count_ = 0U;
+  std::uint32_t invalid_measurement_count_ = 0U;
+  std::uint32_t successful_measurement_count_ = 0U;
 };
 
 } // namespace growbox::app::climate_io::native

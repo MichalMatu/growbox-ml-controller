@@ -94,6 +94,7 @@ bool Scd41InsideSource::sample(std::uint64_t monotonic_ms,
   bool data_ready = false;
   const int16_t ready_error = scd4x_get_data_ready_status(&data_ready);
   if (ready_error != 0) {
+    ++read_error_count_;
     available_ = false;
     return fillCached(monotonic_ms, output);
   }
@@ -107,6 +108,7 @@ bool Scd41InsideSource::sample(std::uint64_t monotonic_ms,
   int32_t humidity_mpercent = 0;
   const int16_t read_error = scd4x_read_measurement(&co2, &temperature_mdeg_c, &humidity_mpercent);
   if (read_error != 0) {
+    ++read_error_count_;
     available_ = false;
     return fillCached(monotonic_ms, output);
   }
@@ -115,6 +117,7 @@ bool Scd41InsideSource::sample(std::uint64_t monotonic_ms,
   const float humidity_pct = static_cast<float>(humidity_mpercent) / 1000.0F;
   const float co2_ppm = static_cast<float>(co2);
   if (!plausible(temperature_c, humidity_pct, co2_ppm)) {
+    ++invalid_measurement_count_;
     return fillCached(monotonic_ms, output);
   }
 
@@ -123,6 +126,7 @@ bool Scd41InsideSource::sample(std::uint64_t monotonic_ms,
   co2_ppm_ = co2_ppm;
   last_measurement_ms_ = monotonic_ms;
   has_measurement_ = true;
+  ++successful_measurement_count_;
   return fillCached(monotonic_ms, output);
 }
 

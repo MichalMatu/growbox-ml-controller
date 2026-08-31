@@ -173,4 +173,58 @@ std::uint64_t BleClimateScanner::xiaomiLastValidMeasurementMs() const noexcept {
   return value;
 }
 
+std::uint32_t BleClimateScanner::tp357PacketCount() const noexcept {
+  if (mutex_ == nullptr || xSemaphoreTake(mutex_, pdMS_TO_TICKS(20)) != pdTRUE) {
+    return 0U;
+  }
+  const std::uint32_t value = state_.tp357PacketCount();
+  xSemaphoreGive(mutex_);
+  return value;
+}
+
+std::uint32_t BleClimateScanner::tp357AcceptedCount() const noexcept {
+  if (mutex_ == nullptr || xSemaphoreTake(mutex_, pdMS_TO_TICKS(20)) != pdTRUE) {
+    return 0U;
+  }
+  const std::uint32_t value = state_.tp357AcceptedCount();
+  xSemaphoreGive(mutex_);
+  return value;
+}
+
+std::uint32_t BleClimateScanner::tp357RejectedCount() const noexcept {
+  if (mutex_ == nullptr || xSemaphoreTake(mutex_, pdMS_TO_TICKS(20)) != pdTRUE) {
+    return 0U;
+  }
+  const std::uint32_t value = state_.tp357RejectedCount();
+  xSemaphoreGive(mutex_);
+  return value;
+}
+
+std::uint32_t BleClimateScanner::xiaomiPacketCount() const noexcept {
+  if (mutex_ == nullptr || xSemaphoreTake(mutex_, pdMS_TO_TICKS(20)) != pdTRUE) {
+    return 0U;
+  }
+  const std::uint32_t value = state_.xiaomiPacketCount();
+  xSemaphoreGive(mutex_);
+  return value;
+}
+
+std::uint32_t BleClimateScanner::xiaomiAcceptedCount() const noexcept {
+  if (mutex_ == nullptr || xSemaphoreTake(mutex_, pdMS_TO_TICKS(20)) != pdTRUE) {
+    return 0U;
+  }
+  const std::uint32_t value = state_.xiaomiAcceptedCount();
+  xSemaphoreGive(mutex_);
+  return value;
+}
+
+std::uint32_t BleClimateScanner::xiaomiRejectedCount() const noexcept {
+  if (mutex_ == nullptr || xSemaphoreTake(mutex_, pdMS_TO_TICKS(20)) != pdTRUE) {
+    return 0U;
+  }
+  const std::uint32_t value = state_.xiaomiRejectedCount();
+  xSemaphoreGive(mutex_);
+  return value;
+}
+
 } // namespace growbox::app::climate_io::native

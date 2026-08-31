@@ -43,6 +43,13 @@ public:
   std::uint64_t xiaomiLastPacketSeenMs() const noexcept;
   std::uint64_t xiaomiLastValidMeasurementMs() const noexcept;
 
+  std::uint32_t tp357PacketCount() const noexcept;
+  std::uint32_t tp357AcceptedCount() const noexcept;
+  std::uint32_t tp357RejectedCount() const noexcept;
+  std::uint32_t xiaomiPacketCount() const noexcept;
+  std::uint32_t xiaomiAcceptedCount() const noexcept;
+  std::uint32_t xiaomiRejectedCount() const noexcept;
+
 private:
   struct TargetState {
     std::array<std::uint8_t, 6> canonical_mac{};
@@ -53,6 +60,9 @@ private:
     float relative_humidity_pct = 0.0F;
     std::uint8_t battery_pct = 0U;
     bool has_battery = false;
+    std::uint32_t packet_count = 0U;
+    std::uint32_t accepted_count = 0U;
+    std::uint32_t rejected_count = 0U;
   };
 
   static bool parseMac(const char* text, std::array<std::uint8_t, 6>& output) noexcept;

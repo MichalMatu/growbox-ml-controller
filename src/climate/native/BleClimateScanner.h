@@ -34,6 +34,13 @@ public:
   std::uint64_t xiaomiLastPacketSeenMs() const noexcept;
   std::uint64_t xiaomiLastValidMeasurementMs() const noexcept;
 
+  std::uint32_t tp357PacketCount() const noexcept;
+  std::uint32_t tp357AcceptedCount() const noexcept;
+  std::uint32_t tp357RejectedCount() const noexcept;
+  std::uint32_t xiaomiPacketCount() const noexcept;
+  std::uint32_t xiaomiAcceptedCount() const noexcept;
+  std::uint32_t xiaomiRejectedCount() const noexcept;
+
 private:
   static int gapEvent(struct ble_gap_event* event, void* context);
   static void hostTask(void* parameter);

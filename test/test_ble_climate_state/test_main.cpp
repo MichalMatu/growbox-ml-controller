@@ -64,6 +64,9 @@ void testExactIdentityRoutesBothSensors() {
   assert(tp357.packet_seen_ms == 1000U);
   assert(tp357.valid_measurement_ms == 1000U);
   assert(tp357.age_ms == 250U);
+  assert(state.tp357PacketCount() == 1U);
+  assert(state.tp357AcceptedCount() == 1U);
+  assert(state.tp357RejectedCount() == 0U);
 
   assert(state.ingestNimbleAdvertisement(kXiaomiNimbleAddress.data(), kXiaomiAdvertisement.data(),
                                          kXiaomiAdvertisement.size(),
@@ -75,6 +78,9 @@ void testExactIdentityRoutesBothSensors() {
   assert(xiaomi.packet_seen_ms == 3000U);
   assert(xiaomi.valid_measurement_ms == 3000U);
   assert(xiaomi.age_ms == 400U);
+  assert(state.xiaomiPacketCount() == 1U);
+  assert(state.xiaomiAcceptedCount() == 1U);
+  assert(state.xiaomiRejectedCount() == 0U);
 }
 
 void testRejectedPacketsDoNotRefreshMeasurementFreshness() {
@@ -90,6 +96,9 @@ void testRejectedPacketsDoNotRefreshMeasurementFreshness() {
                                          2000U) == BleClimateIngestResult::PacketRejected);
   assert(state.tp357LastPacketSeenMs() == 2000U);
   assert(state.tp357LastValidMeasurementMs() == 1000U);
+  assert(state.tp357PacketCount() == 2U);
+  assert(state.tp357AcceptedCount() == 1U);
+  assert(state.tp357RejectedCount() == 1U);
   BleClimateReading tp357{};
   assert(state.sampleTp357(2500U, tp357));
   assert(tp357.age_ms == 1500U);
@@ -103,6 +112,9 @@ void testRejectedPacketsDoNotRefreshMeasurementFreshness() {
                                          4000U) == BleClimateIngestResult::PacketRejected);
   assert(state.xiaomiLastPacketSeenMs() == 4000U);
   assert(state.xiaomiLastValidMeasurementMs() == 3000U);
+  assert(state.xiaomiPacketCount() == 2U);
+  assert(state.xiaomiAcceptedCount() == 1U);
+  assert(state.xiaomiRejectedCount() == 1U);
 }
 
 void testInvalidConfigurationIsRejected() {

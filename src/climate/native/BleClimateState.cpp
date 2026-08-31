@@ -81,10 +81,12 @@ BleClimateIngestResult BleClimateState::ingestNimbleAdvertisement(
   }
 
   if (matchesNimbleAddress(tp357_.canonical_mac, nimble_address)) {
+    ++tp357_.packet_count;
     tp357_.last_packet_seen_ms = monotonic_ms;
     Tp357Measurement decoded{};
     if (decodeTp357Advertisement(advertisement, advertisement_size, decoded) !=
         Tp357DecodeStatus::Ok) {
+      ++tp357_.rejected_count;
       return BleClimateIngestResult::PacketRejected;
     }
     tp357_.temperature_c = decoded.temperature_c;
@@ -93,18 +95,22 @@ BleClimateIngestResult BleClimateState::ingestNimbleAdvertisement(
     tp357_.has_battery = true;
     tp357_.last_measurement_ms = monotonic_ms;
     tp357_.has_measurement = true;
+    ++tp357_.accepted_count;
     return BleClimateIngestResult::MeasurementAccepted;
   }
 
   if (matchesNimbleAddress(xiaomi_.canonical_mac, nimble_address)) {
+    ++xiaomi_.packet_count;
     xiaomi_.last_packet_seen_ms = monotonic_ms;
     const std::uint8_t* payload = nullptr;
     std::size_t payload_size = 0U;
     if (!findBthomeV2ServiceData(advertisement, advertisement_size, payload, payload_size)) {
+      ++xiaomi_.rejected_count;
       return BleClimateIngestResult::PacketRejected;
     }
     BthomeV2Measurement decoded{};
     if (decodeBthomeV2(payload, payload_size, decoded) != BthomeV2DecodeStatus::Ok) {
+      ++xiaomi_.rejected_count;
       return BleClimateIngestResult::PacketRejected;
     }
     xiaomi_.temperature_c = decoded.temperature_c;
@@ -113,6 +119,7 @@ BleClimateIngestResult BleClimateState::ingestNimbleAdvertisement(
     xiaomi_.has_battery = decoded.has_battery;
     xiaomi_.last_measurement_ms = monotonic_ms;
     xiaomi_.has_measurement = true;
+    ++xiaomi_.accepted_count;
     return BleClimateIngestResult::MeasurementAccepted;
   }
 
@@ -160,6 +167,30 @@ std::uint64_t BleClimateState::xiaomiLastPacketSeenMs() const noexcept {
 
 std::uint64_t BleClimateState::xiaomiLastValidMeasurementMs() const noexcept {
   return xiaomi_.last_measurement_ms;
+}
+
+std::uint32_t BleClimateState::tp357PacketCount() const noexcept {
+  return tp357_.packet_count;
+}
+
+std::uint32_t BleClimateState::tp357AcceptedCount() const noexcept {
+  return tp357_.accepted_count;
+}
+
+std::uint32_t BleClimateState::tp357RejectedCount() const noexcept {
+  return tp357_.rejected_count;
+}
+
+std::uint32_t BleClimateState::xiaomiPacketCount() const noexcept {
+  return xiaomi_.packet_count;
+}
+
+std::uint32_t BleClimateState::xiaomiAcceptedCount() const noexcept {
+  return xiaomi_.accepted_count;
+}
+
+std::uint32_t BleClimateState::xiaomiRejectedCount() const noexcept {
+  return xiaomi_.rejected_count;
 }
 
 } // namespace growbox::app::climate_io::native

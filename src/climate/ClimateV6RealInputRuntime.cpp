@@ -6,9 +6,11 @@
 #include "climate/native/Ds3231ClockSource.h"
 #include "climate/native/NativeI2cBus.h"
 #include "climate/native/Scd41InsideSource.h"
+#include "demo/protocol/HeapDiagnostics.h"
 
 #include <esp_err.h>
 #include <esp_log.h>
+#include <esp_system.h>
 #include <esp_timer.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -154,8 +156,10 @@ std::uint64_t monotonicMilliseconds() noexcept {
   ::growbox::climate::ClimateRuntimeController runtime(nullptr, runtimeConfig());
   ClimateApplication application(runtime, composite, output_driver);
 
+  const esp_reset_reason_t reset_reason = esp_reset_reason();
   ESP_LOGI(kTag, "Stage27 real-input runtime: i2c=%d scd41=%d ds3231=%d ble=%d outputs=fake-locked",
            i2c_ready, scd41_ready, rtc_ready, ble_ready);
+  ESP_LOGI(kTag, "Stage27 soak boot: reset_reason=%d", static_cast<int>(reset_reason));
 
   std::uint32_t diagnostic_tick = 0U;
   while (true) {
@@ -183,6 +187,34 @@ std::uint64_t monotonicMilliseconds() noexcept {
                static_cast<double>(xiaomi.relative_humidity_pct),
                static_cast<unsigned long long>(ble.xiaomiLastPacketSeenMs()),
                static_cast<unsigned long long>(ble.xiaomiLastValidMeasurementMs()));
+
+      InsideEnvironmentSnapshot scd_diag{};
+      static_cast<void>(scd41.sample(now_ms, scd_diag));
+      const auto heap = ::growbox::demo::wire::captureHeapSnapshot();
+      const float scd_t =
+          scd_diag.air_temperature_c.valid ? scd_diag.air_temperature_c.value : 0.0F;
+      const float scd_rh =
+          scd_diag.relative_humidity_pct.valid ? scd_diag.relative_humidity_pct.value : 0.0F;
+      const float scd_co2 = scd_diag.co2_ppm.valid ? scd_diag.co2_ppm.value : 0.0F;
+      const std::uint64_t scd_age_ms = scd_diag.co2_ppm.valid ? scd_diag.co2_ppm.age_ms : 0U;
+      ESP_LOGI(kTag,
+               "soak uptime_ms=%llu reset_reason=%d heap_internal=%u heap_internal_min=%u "
+               "heap_psram=%u heap_psram_min=%u scd_t=%.2f scd_rh=%.2f scd_co2=%.0f "
+               "scd_age_ms=%llu scd_read_errors=%u scd_invalid=%u scd_samples=%u "
+               "tp_age_ms=%llu tp_packets=%u tp_accepted=%u tp_rejected=%u "
+               "xiaomi_age_ms=%llu xiaomi_packets=%u xiaomi_accepted=%u xiaomi_rejected=%u "
+               "outputs=fake-locked",
+               static_cast<unsigned long long>(now_ms), static_cast<int>(reset_reason),
+               static_cast<unsigned>(heap.free_internal),
+               static_cast<unsigned>(heap.min_free_internal),
+               static_cast<unsigned>(heap.free_psram), static_cast<unsigned>(heap.min_free_psram),
+               static_cast<double>(scd_t), static_cast<double>(scd_rh),
+               static_cast<double>(scd_co2), static_cast<unsigned long long>(scd_age_ms),
+               scd41.readErrorCount(), scd41.invalidMeasurementCount(),
+               scd41.successfulMeasurementCount(), static_cast<unsigned long long>(tp357.age_ms),
+               ble.tp357PacketCount(), ble.tp357AcceptedCount(), ble.tp357RejectedCount(),
+               static_cast<unsigned long long>(xiaomi.age_ms), ble.xiaomiPacketCount(),
+               ble.xiaomiAcceptedCount(), ble.xiaomiRejectedCount());
     }
     vTaskDelay(pdMS_TO_TICKS(kTickIntervalMs));
   }
