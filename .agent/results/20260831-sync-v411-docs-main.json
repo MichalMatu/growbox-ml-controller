@@ -1,0 +1,154 @@
+{
+  "id": "20260831-sync-v411-docs-main",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": true,
+  "started_at": "2026-08-31T16:00:47.460111+00:00",
+  "command_timeout": 60,
+  "edits": {},
+  "commands": [
+    {
+      "command": "python3 - <<'PY'\nfrom pathlib import Path\np = Path('AGENTS.md')\ns = p.read_text()\nold = '- execution model: one shared supervisor across repositories, with at most one local task executing at a time'\nnew = '- execution model: one shared bounded-parallel supervisor; one task per repository at a time, with cross-repository overlap only when task resource admission permits it; the serial supervisor remains the fallback'\nassert old in s\ns = s.replace(old, new)\nneedle = 'The canonical Local Agent implementation and operational documentation live in `MichalMatu/local-agent`. If the control protocol changes, update this bootstrap section so future chats do not depend on remembered conversation context.\\n'\nassert needle in s\nextra = needle + '''\nResource classification is conservative. Omit `resources` for PlatformIO-heavy builds, USB, serial, flashing, hardware work, or uncertain machine-wide tooling; omission means full `machine` exclusivity. Use `resources: []` only for clearly software-only work that is safe to overlap, with an enabled `memory_limit_mb <= 1024` (normally 512 MiB for lightweight checks). Named resources are allowed only when the shared-machine interaction is understood. Read the actual running `daemon_version`, `self_revision`, `execution_model`, and `max_parallel_workers` from `.agent/status/daemon.json` rather than pinning a release number here.\n'''\ns = s.replace(needle, extra)\np.write_text(s)\nPY",
+      "exit_code": 0,
+      "output": "",
+      "elapsed_seconds": 1.404,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 256,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": null,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 5,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "git diff --check -- AGENTS.md",
+      "exit_code": 0,
+      "output": "",
+      "elapsed_seconds": 0.964,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 256,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": null,
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 5,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "git diff -- AGENTS.md",
+      "exit_code": 0,
+      "output": "diff --git a/AGENTS.md b/AGENTS.md\nindex bf16bf5..89c7939 100644\n--- a/AGENTS.md\n+++ b/AGENTS.md\n@@ -10,7 +10,7 @@ Repository identity:\n - local-agent repository id: `growbox-ml-controller`\n - control branch: `agent-control`\n - default source branch: `main`\n-- execution model: one shared supervisor across repositories, with at most one local task executing at a time\n+- execution model: one shared bounded-parallel supervisor; one task per repository at a time, with cross-repository overlap only when task resource admission permits it; the serial supervisor remains the fallback\n \n ### New chat bootstrap\n \n@@ -31,6 +31,8 @@ When starting work on this repository in a new chat/session:\n \n The canonical Local Agent implementation and operational documentation live in `MichalMatu/local-agent`. If the control protocol changes, update this bootstrap section so future chats do not depend on remembered conversation context.\n \n+Resource classification is conservative. Omit `resources` for PlatformIO-heavy builds, USB, serial, flashing, hardware work, or uncertain machine-wide tooling; omission means full `machine` exclusivity. Use `resources: []` only for clearly software-only work that is safe to overlap, with an enabled `memory_limit_mb <= 1024` (normally 512 MiB for lightweight checks). Named resources are allowed only when the shared-machine interaction is understood. Read the actual running `daemon_version`, `self_revision`, `execution_model`, and `max_parallel_workers` from `.agent/status/daemon.json` rather than pinning a release number here.\n+\n For substantial coding tasks, prefer `workflow_policy: \"efficient-verification-v1\"` with explicit `work` / `focused` stages and exactly one final `full` verification stage. Task payloads are immutable: a claimed or interrupted task is not replayed automatically, so changed work or an intentional retry must use a new unique task id. A successful local task proves execution and verification; source publication remains an explicit final step.\n \n ## Panel UI (`tools/panel/static/`) — układ pól\n",
+      "elapsed_seconds": 0.663,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 256,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": null,
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 5,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "git add AGENTS.md && git commit -m 'Update Local Agent v4.11 workflow contract'",
+      "exit_code": 0,
+      "output": "[agent-work 41392e1] Update Local Agent v4.11 workflow contract\n 1 file changed, 3 insertions(+), 1 deletion(-)\n",
+      "elapsed_seconds": 0.638,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 256,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 8.06,
+      "current_rss_mb": 8.06,
+      "stage_name": "command-4",
+      "stage_index": 4,
+      "stage_total": 5,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "git push origin HEAD:main",
+      "exit_code": 0,
+      "output": "To https://github.com/MichalMatu/growbox-ml-controller.git\n   229e8ae..41392e1  HEAD -> main\n",
+      "elapsed_seconds": 2.612,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 256,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 6.22,
+      "current_rss_mb": 6.22,
+      "stage_name": "command-5",
+      "stage_index": 5,
+      "stage_total": 5,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 5,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 1.404
+    },
+    {
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 5,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.964
+    },
+    {
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 5,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.663
+    },
+    {
+      "stage_name": "command-4",
+      "stage_index": 4,
+      "stage_total": 5,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.638
+    },
+    {
+      "stage_name": "command-5",
+      "stage_index": 5,
+      "stage_total": 5,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 2.612
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.256
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.163
+  },
+  "finished_at": "2026-08-31T16:00:56.888422+00:00",
+  "task_digest": "ac3f16fdb71ae62f6a24ffecb1a33c70a6e415441a56a1d7a29b8c2fe7636834",
+  "idle_timeout": 30,
+  "task_timeout": 240,
+  "memory_limit_mb": 256,
+  "attempt_id": "04f3787d68e4e861bf38841f",
+  "daemon_version": "4.10.2-parallel-staging"
+}
