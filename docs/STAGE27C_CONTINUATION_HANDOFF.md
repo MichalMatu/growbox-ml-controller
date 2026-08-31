@@ -227,7 +227,7 @@ Only after the whole requested Stage27C goal is proven should an autonomous Chat
 
 ## Local Agent model for the next chat
 
-Canonical implementation: `MichalMatu/local-agent`, branch `main`, release line v4.10.x.
+Canonical implementation: `MichalMatu/local-agent`, branch `main`. Do not pin a remembered release line here; read live `daemon_version` / `self_revision` and canonical `agent_version.py` when compatibility matters.
 
 Read:
 
@@ -262,7 +262,7 @@ Local Agent is the deterministic executor:
 
 ### Shared multi-repository execution
 
-The deployment uses one long-lived shared supervisor and short-lived repository workers. Global execution concurrency is one. A long Growbox task occupies the single execution slot and can block tasks for other registered repositories until that worker turn ends.
+The deployment uses one long-lived bounded-parallel supervisor and short-lived repository workers. Growbox still executes at most one claimed task at a time. Unrelated repositories may run concurrently when resource admission permits it. Long hardware/serial/soak tasks normally remain `machine`-exclusive, so they can still block other machine-exclusive work even though the executor is not globally serial.
 
 Never queue a second task while an exact task is active. Never use another repository's `agent-control` branch for Growbox work.
 

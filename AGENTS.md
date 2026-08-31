@@ -9,7 +9,7 @@ Canonical Local Agent source of truth:
 - repository: `MichalMatu/local-agent`
 - production/runtime branch: `main`
 - releases: `vX.Y.Z` tags matching `agent_version.py`
-- read the actual running `daemon_version`, `self_revision`, `execution_model`, and `max_parallel_workers` from `.agent/status/daemon.json`; do not pin a remembered daemon version here.
+- read repository-worker truth from `.agent/status/daemon.json`: `daemon_version`, `self_revision`, `execution_model` / `execution_variant`, current task state, and `supervisor_pid`; supervisor-wide fields such as `max_parallel_workers` are published by the shared supervisor and are not guaranteed to be repeated in every repository-worker status snapshot; do not pin a remembered daemon version here.
 
 Repository identity:
 

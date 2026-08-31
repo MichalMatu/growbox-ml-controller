@@ -68,7 +68,7 @@ Exact chunk task ids, attempt ids, digests, counters, uptime values, continuatio
 
 ## Local Agent and Chat Bridge
 
-Canonical executor repository: `MichalMatu/local-agent`, branch `main`, release line v4.10.x.
+Canonical executor repository: `MichalMatu/local-agent`, branch `main`. Do not pin a remembered release line here; read the live `daemon_version` / `self_revision` and canonical `agent_version.py` when compatibility matters.
 
 Read before autonomous execution:
 
@@ -86,7 +86,7 @@ Growbox control-plane state lives on this repository's `agent-control` branch:
 - `.agent/results/<task-id>.json`;
 - `.agent/status/daemon.json`.
 
-Global execution concurrency is one across registered repositories. Never queue a second task while an exact task is active. Task ids/payloads are immutable. Interrupted tasks are never automatically replayed.
+The autonomous planner loop is sequential for the active Growbox goal, and this repository executes at most one claimed task at a time. The shared production executor is bounded-parallel across repositories: unrelated repository tasks may overlap when their effective `resources` permit it. Never queue a second Growbox task for the same goal while its exact task is active. Task ids/payloads are immutable. Interrupted tasks are never automatically replayed.
 
 Evidence priority:
 
