@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260831-sync-v411-docs-main",
+  "task_digest": "ac3f16fdb71ae62f6a24ffecb1a33c70a6e415441a56a1d7a29b8c2fe7636834",
+  "idle_timeout": 30,
+  "task_timeout": 240,
+  "memory_limit_mb": 256,
+  "started_at": "2026-08-31T16:00:47.459959+00:00",
+  "attempt_id": "04f3787d68e4e861bf38841f",
+  "daemon_version": "4.10.2-parallel-staging",
+  "daemon_pid": 64994,
+  "updated_at": "2026-08-31T16:00:47.460226+00:00",
+  "pid": 64994
+}
