@@ -2,8 +2,8 @@
   "version": 1,
   "daemon_version": "4.11.0",
   "state": "idle",
-  "pid": 84153,
-  "updated_at": "2026-08-31T16:40:37.432679+00:00",
+  "pid": 85054,
+  "updated_at": "2026-08-31T16:42:35.279762+00:00",
   "self_revision": "866640447c4225edf47bb2cd82f24dfdf8759bdd",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -22,8 +22,8 @@
   "control_branch": "agent-control",
   "default_branch": "main",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 84153,
+  "worker_pid": 85054,
   "supervisor_pid": 71294,
-  "last_task_id": "20260831-local-agent-v4111-control-crash-recovery",
+  "last_task_id": "20260831-local-agent-v4111-control-crash-recovery-v2",
   "execution_variant": "parallel"
 }
