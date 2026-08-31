@@ -1,0 +1,13 @@
+{
+  "id": "20260831-parallel-live-machine-exclusive-c",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "command_timeout": 60,
+  "idle_timeout": 30,
+  "task_timeout": 180,
+  "memory_limit_mb": 512,
+  "commands": [
+    "python -c \"import datetime,time; print('MACHINE_EXCLUSIVE_START', datetime.datetime.now(datetime.timezone.utc).isoformat(), flush=True); time.sleep(15); print('MACHINE_EXCLUSIVE_END', datetime.datetime.now(datetime.timezone.utc).isoformat(), flush=True)\""
+  ]
+}
