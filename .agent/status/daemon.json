@@ -2,8 +2,8 @@
   "version": 1,
   "daemon_version": "4.10.2-parallel-staging",
   "state": "idle",
-  "pid": 56286,
-  "updated_at": "2026-08-31T15:37:44.763039+00:00",
+  "pid": 64281,
+  "updated_at": "2026-08-31T16:00:21.837559+00:00",
   "self_revision": "084e81b792cd01a261a0f0ee1a2a9b46b9964168",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -22,8 +22,8 @@
   "control_branch": "agent-control",
   "default_branch": "main",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 56286,
+  "worker_pid": 64281,
   "supervisor_pid": 54539,
-  "last_task_id": "20260831-cleanup-noop-test-branch",
+  "last_task_id": "20260831-sync-v411-docs-mvp",
   "execution_variant": "parallel_staging"
 }
