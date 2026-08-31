@@ -2,8 +2,8 @@
   "version": 1,
   "daemon_version": "4.11.3",
   "state": "idle",
-  "pid": 50187,
-  "updated_at": "2026-08-31T21:33:21.579604+00:00",
+  "pid": 51049,
+  "updated_at": "2026-08-31T21:34:37.852452+00:00",
   "self_revision": "24cdbe6d13af25fadb9f2f78e995e2fa6b62ed8d",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -22,8 +22,8 @@
   "control_branch": "agent-control",
   "default_branch": "main",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 50187,
+  "worker_pid": 51049,
   "supervisor_pid": 71830,
-  "last_task_id": "20260831-v4113-register-c6-repository",
+  "last_task_id": "20260831-v4113-register-c6-repository-v2",
   "execution_variant": "parallel"
 }
