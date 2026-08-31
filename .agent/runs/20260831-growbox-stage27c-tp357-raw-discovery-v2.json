@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 2,
+  "index": 3,
   "total": 4,
-  "command": "set -euo pipefail; python3 - <<'PY'\nfrom pathlib import Path\n\np = Path('src/climate/native/BleOutsideSource.cpp')\ns = p.read_text()\ns = s.replace('#include <esp_err.h>\\n', '#include <esp_err.h>\\n#include <esp_log.h>\\n')\nmarker = 'BleOutsideSource* g_instance = nullptr;\\n'\ninsert = '''BleOutsideSource* g_instance = nullptr;\nconstexpr char kTp357DebugTag[] = \"tp357_raw\";\nconstexpr std::array<std::uint8_t, 6> kTp357DebugMac{0xF7U, 0x5FU, 0x8DU, 0x0FU, 0x76U, 0x20U};\n'''\nassert marker in s and 'kTp357DebugMac' not in s\ns = s.replace(marker, insert)\nold = '''void BleOutsideSource::handleAdvertisement(const std::uint8_t* address, const std::uint8_t* data,\n                                           std::size_t size) noexcept {\n  if (!matchesNimbleAddress(target_mac_, address)) {\n'''\nnew = '''void BleOutsideSource::handleAdvertisement(const std::uint8_t* address, const std::uint8_t* data,\n                                           std::size_t size) noexcept {\n  if (matchesNimbleAddress(kTp357DebugMac, address)) {\n    static std::uint32_t logged_frames = 0U;\n    if (logged_frames < 12U && data != nullptr) {\n      constexpr char kHex[] = \"0123456789ABCDEF\";\n      char encoded[161]{};\n      const std::size_t clipped = size < 80U ? size : 80U;\n      for (std::size_t i = 0U; i < clipped; ++i) {\n        encoded[i * 2U] = kHex[(data[i] >> 4U) & 0x0FU];\n        encoded[i * 2U + 1U] = kHex[data[i] & 0x0FU];\n      }\n      encoded[clipped * 2U] = static_cast<char>(0);\n      ESP_LOGI(kTp357DebugTag, \"frame=%u len=%u data=%s\",\n               static_cast<unsigned>(++logged_frames), static_cast<unsigned>(size), encoded);\n    }\n  }\n\n  if (!matchesNimbleAddress(target_mac_, address)) {\n'''\nassert old in s\np.write_text(s.replace(old, new))\nPY\nrc=0; .venv/bin/pre-commit run clang-format --files src/climate/native/BleOutsideSource.cpp || rc=$?; test \"$rc\" -le 1; .venv/bin/pre-commit run --files src/climate/native/BleOutsideSource.cpp; git diff --check; grep -q 'kTp357DebugMac' src/climate/native/BleOutsideSource.cpp; ! git diff --numstat | grep -q '^-'",
-  "pid": 97070,
+  "command": "bash scripts/stage27c_crowpanel.sh clean && bash scripts/stage27c_crowpanel.sh build",
+  "pid": 97138,
   "timeout": 2400,
   "idle_timeout": 900,
   "memory_limit_mb": 8192,
-  "started_at": "2026-08-31T04:53:31.659339+00:00",
-  "stage_name": "command-2",
-  "stage_index": 2,
+  "started_at": "2026-08-31T04:53:34.904026+00:00",
+  "stage_name": "command-3",
+  "stage_index": 3,
   "stage_total": 4,
   "stage_phase": "commands",
   "task_id": "20260831-growbox-stage27c-tp357-raw-discovery-v2",
@@ -18,5 +18,5 @@
   "task_digest": "0f9f3103881b2172150cd670cc45d2e80ab26ae42a8260800029e2ba3a3d19e6",
   "daemon_version": "4.10.2",
   "daemon_pid": 96996,
-  "updated_at": "2026-08-31T04:53:31.852221+00:00"
+  "updated_at": "2026-08-31T04:53:34.943829+00:00"
 }
