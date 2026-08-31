@@ -1,0 +1,11 @@
+{
+  "id": "20260831-v4111-machine-exclusion-growbox",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "memory_limit_mb": 256,
+  "command_timeout": 60,
+  "commands": [
+    "python3 -c 'import datetime,time; print(\"START=\"+datetime.datetime.now(datetime.timezone.utc).isoformat()); time.sleep(15); print(\"END=\"+datetime.datetime.now(datetime.timezone.utc).isoformat())'"
+  ]
+}
