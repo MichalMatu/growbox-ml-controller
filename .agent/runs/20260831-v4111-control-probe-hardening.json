@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260831-v4111-control-probe-hardening",
+  "task_digest": "b24d25bd7e936d38d0f5915ae912b7f0ce9f88f4d90d49d8f464d2df98fe5b2c",
+  "idle_timeout": 600,
+  "task_timeout": 7200,
+  "memory_limit_mb": 1024,
+  "started_at": "2026-08-31T17:33:46.462526+00:00",
+  "attempt_id": "451500eb4bf2137b9a53096b",
+  "daemon_version": "4.11.0",
+  "daemon_pid": 16997,
+  "updated_at": "2026-08-31T17:33:46.462676+00:00",
+  "pid": 16997
+}
