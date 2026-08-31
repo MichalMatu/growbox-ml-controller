@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 1,
+  "index": 2,
   "total": 3,
-  "command": "git fetch origin mvp/environment-controller && git reset --hard origin/mvp/environment-controller && git clean -fd && test \"$(git rev-parse HEAD)\" = \"b0b63d8821687f38a7780d65f0b6d6110729fdfe\" && test -e /dev/cu.usbserial-110 && .venv/bin/pre-commit run --files config/idf/sdkconfig.defaults.stage27 && git diff --check",
-  "pid": 60817,
+  "command": "bash scripts/stage27c_crowpanel.sh clean && bash scripts/stage27c_crowpanel.sh build && grep -qx 'CONFIG_LOG_DEFAULT_LEVEL_INFO=y' build/idf-stage27c-crowpanel/sdkconfig && PORT=/dev/cu.usbserial-110 bash scripts/stage27c_crowpanel.sh flash",
+  "pid": 60864,
   "timeout": 2400,
   "idle_timeout": 900,
   "memory_limit_mb": 8192,
-  "started_at": "2026-08-31T03:10:11.528063+00:00",
-  "stage_name": "command-1",
-  "stage_index": 1,
+  "started_at": "2026-08-31T03:10:14.279420+00:00",
+  "stage_name": "command-2",
+  "stage_index": 2,
   "stage_total": 3,
   "stage_phase": "commands",
   "task_id": "20260831-growbox-stage27c-crowpanel-step2b-info-flash-v1",
@@ -18,5 +18,5 @@
   "task_digest": "c397154a498268c3f1bc71c894ed2a5cec39878e8c49f716b3a1995caaa5cfcf",
   "daemon_version": "4.10.2",
   "daemon_pid": 60761,
-  "updated_at": "2026-08-31T03:10:11.528478+00:00"
+  "updated_at": "2026-08-31T03:10:14.341969+00:00"
 }
