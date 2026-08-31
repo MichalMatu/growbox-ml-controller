@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260831-local-agent-v4111-readable-logs-retry",
+  "task_digest": "fc4c770b5b67b9aa3a3b682906175e6a7f96183bcc82f44e31d9a985decfa239",
+  "idle_timeout": 240,
+  "task_timeout": 1800,
+  "memory_limit_mb": 512,
+  "started_at": "2026-08-31T16:27:51.704811+00:00",
+  "attempt_id": "65c6135c63616c55e8f6405e",
+  "daemon_version": "4.11.0",
+  "daemon_pid": 77212,
+  "updated_at": "2026-08-31T16:27:51.705051+00:00",
+  "pid": 77212
+}
