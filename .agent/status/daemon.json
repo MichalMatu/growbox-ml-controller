@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "daemon_version": "4.11.0",
+  "daemon_version": "4.11.1",
   "state": "idle",
-  "pid": 24707,
-  "updated_at": "2026-08-31T17:48:41.567072+00:00",
-  "self_revision": "775c6c08dc03de329ec61c5e55781857673e4a6d",
+  "pid": 89668,
+  "updated_at": "2026-08-31T19:47:41.691085+00:00",
+  "self_revision": "72e1a51f98e7b2b6c2229175b18b5dcd928bd7d6",
   "poll_seconds": 15,
   "self_update_seconds": 60,
   "command_timeout_default": 900,
@@ -22,8 +22,7 @@
   "control_branch": "agent-control",
   "default_branch": "main",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 24707,
-  "supervisor_pid": 71294,
-  "last_task_id": "20260831-v4111-final-production-bootstrap",
-  "execution_variant": "parallel"
+  "worker_pid": 89668,
+  "supervisor_pid": 71830,
+  "control_id": "20260831-v4111-growbox-status-diagnostic"
 }
