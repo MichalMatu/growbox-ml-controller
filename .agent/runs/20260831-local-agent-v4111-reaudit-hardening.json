@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260831-local-agent-v4111-reaudit-hardening",
+  "task_digest": "f75c8d768c4b358004ef69069fad69e536eed541c3f50c4520c823167a2a221e",
+  "idle_timeout": 600,
+  "task_timeout": 5400,
+  "memory_limit_mb": 1024,
+  "started_at": "2026-08-31T17:01:23.763737+00:00",
+  "attempt_id": "1c40aa80e7d52e5865695674",
+  "daemon_version": "4.11.0",
+  "daemon_pid": 94298,
+  "updated_at": "2026-08-31T17:01:23.766877+00:00",
+  "pid": 94298
+}
