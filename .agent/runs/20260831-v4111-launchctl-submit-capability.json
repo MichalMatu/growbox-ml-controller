@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260831-v4111-launchctl-submit-capability",
   "task_digest": "86f44b4f8fa9390d872773163200926fb112bf2a0cb2626abc6c6a3e7b9ad675",
-  "idle_timeout": 300,
-  "task_timeout": 180,
-  "memory_limit_mb": 256,
-  "started_at": "2026-08-31T17:44:30.431893+00:00",
+  "status": "done",
+  "failure_reason": null,
+  "finished_at": "2026-08-31T17:44:34.761596+00:00",
   "attempt_id": "02561a387851a9e80b493a66",
   "daemon_version": "4.11.0",
   "daemon_pid": 24143,
-  "updated_at": "2026-08-31T17:44:30.432018+00:00",
+  "updated_at": "2026-08-31T17:44:35.581911+00:00",
   "pid": 24143
 }
