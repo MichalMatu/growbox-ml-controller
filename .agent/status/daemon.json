@@ -2,8 +2,8 @@
   "version": 1,
   "daemon_version": "4.11.0",
   "state": "idle",
-  "pid": 2881,
-  "updated_at": "2026-08-31T17:14:48.981817+00:00",
+  "pid": 11556,
+  "updated_at": "2026-08-31T17:23:13.049603+00:00",
   "self_revision": "866640447c4225edf47bb2cd82f24dfdf8759bdd",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -22,8 +22,8 @@
   "control_branch": "agent-control",
   "default_branch": "main",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 2881,
+  "worker_pid": 11556,
   "supervisor_pid": 71294,
-  "last_task_id": "20260831-local-agent-v4111-final-control-hardening",
+  "last_task_id": "20260831-v4111-production-diagnostic",
   "execution_variant": "parallel"
 }
