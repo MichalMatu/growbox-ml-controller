@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260831-growbox-stage27c-dual-ble-hardware-gate-v2",
+  "task_digest": "2447a9649c10c70b3ca37f0a8ae70b07dea3a8f5d0d8852538906f267a09da52",
+  "idle_timeout": 600,
+  "task_timeout": 2400,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-31T07:20:43.908283+00:00",
+  "attempt_id": "fcd0e732437e6d08258d6f62",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 47073,
+  "updated_at": "2026-08-31T07:20:43.908412+00:00",
+  "pid": 47073
+}
