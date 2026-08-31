@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260831-v4111-self-update-diagnosis",
+  "task_digest": "810dd8a731d90350fca59ffac35315b31c8fec3ba9725d40e3c87623ca6245e4",
+  "idle_timeout": 300,
+  "task_timeout": 600,
+  "memory_limit_mb": 512,
+  "started_at": "2026-08-31T17:23:54.408744+00:00",
+  "attempt_id": "c6b5dd63d750306a70df0e3e",
+  "daemon_version": "4.11.0",
+  "daemon_pid": 12141,
+  "updated_at": "2026-08-31T17:23:54.408883+00:00",
+  "pid": 12141
+}
