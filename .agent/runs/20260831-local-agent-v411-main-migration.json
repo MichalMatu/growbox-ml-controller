@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 2,
+  "index": 7,
   "total": 7,
-  "command": "git -C /Users/michal/local-agent fetch origin main --tags && git -C /Users/michal/local-agent merge --ff-only 866640447c4225edf47bb2cd82f24dfdf8759bdd",
-  "pid": 70845,
+  "command": "launchctl bootout gui/$(id -u)/com.michal.local-agent.v411-migrate >/dev/null 2>&1 || true; launchctl bootstrap gui/$(id -u) /Users/michal/Library/LaunchAgents/com.michal.local-agent.v411-migrate.plist",
+  "pid": 71011,
   "timeout": 180,
   "idle_timeout": 120,
   "memory_limit_mb": 256,
-  "started_at": "2026-08-31T16:13:56.101577+00:00",
-  "stage_name": "command-2",
-  "stage_index": 2,
+  "started_at": "2026-08-31T16:14:06.082459+00:00",
+  "stage_name": "command-7",
+  "stage_index": 7,
   "stage_total": 7,
   "stage_phase": "commands",
   "task_id": "20260831-local-agent-v411-main-migration",
@@ -18,5 +18,5 @@
   "task_digest": "9a826a3950c70d674bdaefa3f80e78f780d7b09fa8e99ce47aa4f389601248a6",
   "daemon_version": "4.10.2-parallel-staging",
   "daemon_pid": 70745,
-  "updated_at": "2026-08-31T16:13:56.385466+00:00"
+  "updated_at": "2026-08-31T16:14:06.738163+00:00"
 }
