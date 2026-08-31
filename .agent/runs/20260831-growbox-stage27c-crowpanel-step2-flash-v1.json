@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 2,
+  "index": 3,
   "total": 3,
-  "command": "PORT=/dev/cu.usbserial-110 bash scripts/stage27c_crowpanel.sh flash",
-  "pid": 58569,
+  "command": ".venv/bin/python - <<'PY'\nimport serial\nimport time\n\nport = '/dev/cu.usbserial-110'\ndeadline = time.monotonic() + 120.0\nprint(f'SERIAL_CAPTURE_BEGIN port={port} seconds=120', flush=True)\nwith serial.Serial(port, 115200, timeout=1.0) as ser:\n    while time.monotonic() < deadline:\n        raw = ser.readline()\n        if raw:\n            print(raw.decode('utf-8', errors='replace').rstrip(), flush=True)\nprint('SERIAL_CAPTURE_END', flush=True)\nPY",
+  "pid": 59038,
   "timeout": 1800,
   "idle_timeout": 600,
   "memory_limit_mb": 8192,
-  "started_at": "2026-08-31T02:57:09.844592+00:00",
-  "stage_name": "command-2",
-  "stage_index": 2,
+  "started_at": "2026-08-31T02:57:45.972848+00:00",
+  "stage_name": "command-3",
+  "stage_index": 3,
   "stage_total": 3,
   "stage_phase": "commands",
   "task_id": "20260831-growbox-stage27c-crowpanel-step2-flash-v1",
@@ -18,5 +18,5 @@
   "task_digest": "abfe7b22e064c06116050e2841954499332596ef327c8ec288b4d741d1f0bd7b",
   "daemon_version": "4.10.2",
   "daemon_pid": 58498,
-  "updated_at": "2026-08-31T02:57:09.977588+00:00"
+  "updated_at": "2026-08-31T02:57:46.030458+00:00"
 }
