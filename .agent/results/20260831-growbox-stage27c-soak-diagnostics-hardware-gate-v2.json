@@ -1,0 +1,82 @@
+{
+  "id": "20260831-growbox-stage27c-soak-diagnostics-hardware-gate-v2",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "started_at": "2026-08-31T08:52:01.336852+00:00",
+  "command_timeout": 1200,
+  "edits": {},
+  "commands": [
+    {
+      "command": "git fetch origin mvp/environment-controller && git reset --hard origin/mvp/environment-controller && git clean -fd && test \"$(git rev-parse HEAD)\" = \"cf957a7649ec02835f724951d34f0b408f5f6de2\" && test -e /dev/cu.usbserial-110 && test -z \"$(git status --short)\"",
+      "exit_code": 0,
+      "output": "From https://github.com/MichalMatu/growbox-ml-controller\n * branch            mvp/environment-controller -> FETCH_HEAD\nHEAD is now at cf957a7 Add Stage27C soak diagnostics\n",
+      "elapsed_seconds": 1.543,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 3.02,
+      "current_rss_mb": 3.02,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 2,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "set -euo pipefail; .venv/bin/python - <<'PY' | tee /tmp/stage27c-soak-diag-hw-v2.log\nimport serial\nimport time\n\nport = '/dev/cu.usbserial-110'\ndeadline = time.monotonic() + 120.0\nprint(f'SERIAL_CAPTURE_BEGIN port={port} seconds=120', flush=True)\nwith serial.Serial(port, 115200, timeout=1.0) as ser:\n    while time.monotonic() < deadline:\n        raw = ser.readline()\n        if raw:\n            line = raw.decode('utf-8', errors='replace').rstrip()\n            low = line.lower()\n            if 'climate_stage27' in line or 'guru meditation' in low or 'watchdog' in low or 'panic' in low:\n                print(line, flush=True)\nprint('SERIAL_CAPTURE_END', flush=True)\nPY\n.venv/bin/python - <<'PY'\nfrom pathlib import Path\nimport re\n\ntext = Path('/tmp/stage27c-soak-diag-hw-v2.log').read_text(errors='replace')\nassert not re.search(r'Guru Meditation|Task watchdog|panic|abort\\(\\)', text, re.IGNORECASE), 'crash/watchdog evidence present'\nassert 'outputs=fake-locked' in text\nassert 'rtc_available=1 rtc_trusted=1' in text\nassert 'ble_scanning=1' in text\npattern = re.compile(\n    r'soak uptime_ms=(\\d+) reset_reason=(\\d+) heap_internal=(\\d+) heap_internal_min=(\\d+) '\n    r'heap_psram=(\\d+) heap_psram_min=(\\d+) scd_t=([-+0-9.]+) scd_rh=([-+0-9.]+) '\n    r'scd_co2=([-+0-9.]+) scd_age_ms=(\\d+) scd_read_errors=(\\d+) scd_invalid=(\\d+) '\n    r'scd_samples=(\\d+) tp_age_ms=(\\d+) tp_packets=(\\d+) tp_accepted=(\\d+) tp_rejected=(\\d+) '\n    r'xiaomi_age_ms=(\\d+) xiaomi_packets=(\\d+) xiaomi_accepted=(\\d+) xiaomi_rejected=(\\d+) '\n    r'outputs=fake-locked'\n)\nrows = []\nfor m in pattern.finditer(text):\n    g = m.groups()\n    vals = [int(g[i]) for i in range(6)] + [float(g[i]) for i in range(6,9)] + [int(g[i]) for i in range(9,21)]\n    rows.append(vals)\nassert len(rows) >= 8, f'need at least 8 soak rows, got {len(rows)}'\nsteady = [r for r in rows if r[12] > 0 and r[15] > 0 and r[19] > 0]\nassert len(steady) >= 5, f'need at least 5 steady-state rows, got {len(steady)}'\n\nuptimes = [r[0] for r in steady]\nassert all(b > a for a, b in zip(uptimes, uptimes[1:])), uptimes\nassert len({r[1] for r in steady}) == 1, 'reset reason changed during steady-state capture'\n\nfor r in steady:\n    uptime, reset, hi, himin, hp, hpmin, scd_t, scd_rh, scd_co2, scd_age, scd_err, scd_invalid, scd_samples, tp_age, tp_packets, tp_acc, tp_rej, xi_age, xi_packets, xi_acc, xi_rej = r\n    assert hi > 0 and himin > 0 and himin <= hi\n    assert hp > 0 and hpmin > 0 and hpmin <= hp\n    assert -45.0 <= scd_t <= 130.0 and 0.0 <= scd_rh <= 100.0 and scd_co2 > 0.0\n    assert scd_age <= 30000\n    assert tp_packets > 0 and tp_acc > 0 and tp_acc <= tp_packets and tp_rej <= tp_packets\n    assert xi_packets > 0 and xi_acc > 0 and xi_acc <= xi_packets and xi_rej <= xi_packets\n    assert tp_age <= 60000 and xi_age <= 60000\n\nfor idx in (10,11,12,14,15,16,18,19,20):\n    seq = [r[idx] for r in steady]\n    assert all(b >= a for a, b in zip(seq, seq[1:])), (idx, seq)\n\nfirst, last = steady[0], steady[-1]\nprint(\n    'SOAK_DIAGNOSTICS_HARDWARE_GATE_PASS '\n    f'rows={len(rows)} steady_rows={len(steady)} '\n    f'uptime_start={first[0]} uptime_end={last[0]} reset_reason={last[1]} '\n    f'heap_internal_start={first[2]} heap_internal_end={last[2]} heap_internal_min={last[3]} '\n    f'heap_psram_start={first[4]} heap_psram_end={last[4]} heap_psram_min={last[5]} '\n    f'scd_samples={last[12]} scd_read_errors={last[10]} scd_invalid={last[11]} '\n    f'tp_packets={last[14]} tp_accepted={last[15]} tp_rejected={last[16]} '\n    f'xiaomi_packets={last[18]} xiaomi_accepted={last[19]} xiaomi_rejected={last[20]}'\n)\nPY\ntest \"$(git rev-parse HEAD)\" = \"cf957a7649ec02835f724951d34f0b408f5f6de2\" && test -z \"$(git status --short)\"",
+      "exit_code": 0,
+      "output": "SERIAL_CAPTURE_BEGIN port=/dev/cu.usbserial-110 seconds=120\nI (876116) climate_stage27: input_sampled=1 io_status=0 scd41_available=1 scd41_sample=1 rtc_available=1 rtc_trusted=1 ble_scanning=1 tp357_sample=1 tp357_t=24.10 tp357_rh=75.00 tp357_packet_ms=873448 tp357_valid_ms=873448 xiaomi_sample=1 xiaomi_t=25.16 xiaomi_rh=56.11 xiaomi_packet_ms=875312 xiaomi_valid_ms=875312 outputs=fake-locked\nI (876146) climate_stage27: soak uptime_ms=875399 reset_reason=1 heap_internal=260672 heap_internal_min=260672 heap_psram=8384992 heap_psram_min=8384992 scd_t=22.52 scd_rh=67.16 scd_co2=553 scd_age_ms=1020 scd_read_errors=0 scd_invalid=0 scd_samples=185 tp_age_ms=1951 tp_packets=208 tp_accepted=208 tp_rejected=0 xiaomi_age_ms=87 xiaomi_packets=765 xiaomi_accepted=381 xiaomi_rejected=384 outputs=fake-locked\nI (886286) climate_stage27: input_sampled=1 io_status=0 scd41_available=1 scd41_sample=1 rtc_available=1 rtc_trusted=1 ble_scanning=1 tp357_sample=1 tp357_t=24.10 tp357_rh=75.00 tp357_packet_ms=883430 tp357_valid_ms=883430 xiaomi_sample=1 xiaomi_t=25.16 xiaomi_rh=56.11 xiaomi_packet_ms=885338 xiaomi_valid_ms=885338 outputs=fake-locked\nI (886316) climate_stage27: soak uptime_ms=885569 reset_reason=1 heap_internal=260672 heap_internal_min=260672 heap_psram=8384992 heap_psram_min=8384992 scd_t=22.50 scd_rh=67.24 scd_co2=554 scd_age_ms=2030 scd_read_errors=0 scd_invalid=0 scd_samples=187 tp_age_ms=2139 tp_packets=211 tp_accepted=211 tp_rejected=0 xiaomi_age_ms=231 xiaomi_packets=775 xiaomi_accepted=386 xiaomi_rejected=389 outputs=fake-locked\nI (896456) climate_stage27: input_sampled=1 io_status=0 scd41_available=1 scd41_sample=1 rtc_available=1 rtc_trusted=1 ble_scanning=1 tp357_sample=1 tp357_t=24.10 tp357_rh=75.00 tp357_packet_ms=894407 tp357_valid_ms=894407 xiaomi_sample=1 xiaomi_t=25.16 xiaomi_rh=56.12 xiaomi_packet_ms=895358 xiaomi_valid_ms=895358 outputs=fake-locked\nI (896486) climate_stage27: soak uptime_ms=895739 reset_reason=1 heap_internal=260672 heap_internal_min=260672 heap_psram=8384992 heap_psram_min=8384992 scd_t=22.49 scd_rh=67.20 scd_co2=555 scd_age_ms=2030 scd_read_errors=0 scd_invalid=0 scd_samples=189 tp_age_ms=1332 tp_packets=214 tp_accepted=214 tp_rejected=0 xiaomi_age_ms=381 xiaomi_packets=784 xiaomi_accepted=390 xiaomi_rejected=394 outputs=fake-locked\nI (906626) climate_stage27: input_sampled=1 io_status=0 scd41_available=1 scd41_sample=1 rtc_available=1 rtc_trusted=1 ble_scanning=1 tp357_sample=1 tp357_t=24.10 tp357_rh=75.00 tp357_packet_ms=894407 tp357_valid_ms=894407 xiaomi_sample=1 xiaomi_t=25.17 xiaomi_rh=56.13 xiaomi_packet_ms=904379 xiaomi_valid_ms=903379 outputs=fake-locked\nI (906656) climate_stage27: soak uptime_ms=905909 reset_reason=1 heap_internal=260672 heap_internal_min=260672 heap_psram=8384992 heap_psram_min=8384992 scd_t=22.50 scd_rh=67.22 scd_co2=556 scd_age_ms=3040 scd_read_errors=0 scd_invalid=0 scd_samples=191 tp_age_ms=11502 tp_packets=214 tp_accepted=214 tp_rejected=0 xiaomi_age_ms=2530 xiaomi_packets=792 xiaomi_accepted=394 xiaomi_rejected=398 outputs=fake-locked\nI (916796) climate_stage27: input_sampled=1 io_status=0 scd41_available=1 scd41_sample=1 rtc_available=1 rtc_trusted=1 ble_scanning=1 tp357_sample=1 tp357_t=24.10 tp357_rh=75.00 tp357_packet_ms=915912 tp357_valid_ms=915912 xiaomi_sample=1 xiaomi_t=25.18 xiaomi_rh=56.14 xiaomi_packet_ms=914413 xiaomi_valid_ms=913412 outputs=fake-locked\nI (916826) climate_stage27: soak uptime_ms=916079 reset_reason=1 heap_internal=260672 heap_internal_min=260672 heap_psram=8384992 heap_psram_min=8384992 scd_t=22.50 scd_rh=67.28 scd_co2=554 scd_age_ms=4050 scd_read_errors=0 scd_invalid=0 scd_samples=193 tp_age_ms=167 tp_packets=216 tp_accepted=216 tp_rejected=0 xiaomi_age_ms=2667 xiaomi_packets=800 xiaomi_accepted=398 xiaomi_rejected=402 outputs=fake-locked\nI (926976) climate_stage27: input_sampled=1 io_status=0 scd41_available=1 scd41_sample=1 rtc_available=1 rtc_trusted=1 ble_scanning=1 tp357_sample=1 tp357_t=24.10 tp357_rh=75.00 tp357_packet_ms=924407 tp357_valid_ms=924407 xiaomi_sample=1 xiaomi_t=25.18 xiaomi_rh=56.14 xiaomi_packet_ms=925450 xiaomi_valid_ms=925450 outputs=fake-locked\nI (927006) climate_stage27: soak uptime_ms=926249 reset_reason=1 heap_internal=260672 heap_internal_min=260672 heap_psram=8384992 heap_psram_min=8384992 scd_t=22.48 scd_rh=67.28 scd_co2=553 scd_age_ms=0 scd_read_errors=0 scd_invalid=0 scd_samples=196 tp_age_ms=1842 tp_packets=222 tp_accepted=222 tp_rejected=0 xiaomi_age_ms=799 xiaomi_packets=809 xiaomi_accepted=402 xiaomi_rejected=407 outputs=fake-locked\nI (937146) climate_stage27: input_sampled=1 io_status=0 scd41_available=1 scd41_sample=1 rtc_available=1 rtc_trusted=1 ble_scanning=1 tp357_sample=1 tp357_t=24.10 tp357_rh=75.00 tp357_packet_ms=933433 tp357_valid_ms=933433 xiaomi_sample=1 xiaomi_t=25.16 xiaomi_rh=56.15 xiaomi_packet_ms=935488 xiaomi_valid_ms=935488 outputs=fake-locked\nI (937176) climate_stage27: soak uptime_ms=936429 reset_reason=1 heap_internal=260672 heap_internal_min=260672 heap_psram=8384992 heap_psram_min=8384992 scd_t=22.46 scd_rh=67.33 scd_co2=553 scd_age_ms=1020 scd_read_errors=0 scd_invalid=0 scd_samples=198 tp_age_ms=2996 tp_packets=224 tp_accepted=224 tp_rejected=0 xiaomi_age_ms=941 xiaomi_packets=816 xiaomi_accepted=405 xiaomi_rejected=411 outputs=fake-locked\nI (947316) climate_stage27: input_sampled=1 io_status=0 scd41_available=1 scd41_sample=1 rtc_available=1 rtc_trusted=1 ble_scanning=1 tp357_sample=1 tp357_t=24.10 tp357_rh=75.00 tp357_packet_ms=945914 tp357_valid_ms=945914 xiaomi_sample=1 xiaomi_t=25.18 xiaomi_rh=56.17 xiaomi_packet_ms=946516 xiaomi_valid_ms=945514 outputs=fake-locked\nI (947346) climate_stage27: soak uptime_ms=946599 reset_reason=1 heap_internal=260672 heap_internal_min=260672 heap_psram=8384992 heap_psram_min=8384992 scd_t=22.37 scd_rh=67.39 scd_co2=553 scd_age_ms=1020 scd_read_errors=0 scd_invalid=0 scd_samples=200 tp_age_ms=685 tp_packets=228 tp_accepted=228 tp_rejected=0 xiaomi_age_ms=1085 xiaomi_packets=826 xiaomi_accepted=410 xiaomi_rejected=416 outputs=fake-locked\nI (957486) climate_stage27: input_sampled=1 io_status=0 scd41_available=1 scd41_sample=1 rtc_available=1 rtc_trusted=1 ble_scanning=1 tp357_sample=1 tp357_t=24.10 tp357_rh=75.00 tp357_packet_ms=954406 tp357_valid_ms=954406 xiaomi_sample=1 xiaomi_t=25.16 xiaomi_rh=56.17 xiaomi_packet_ms=956549 xiaomi_valid_ms=953538 outputs=fake-locked\nI (957516) climate_stage27: soak uptime_ms=956769 reset_reason=1 heap_internal=260672 heap_internal_min=260672 heap_psram=8384992 heap_psram_min=8384992 scd_t=22.38 scd_rh=67.43 scd_co2=552 scd_age_ms=2030 scd_read_errors=0 scd_invalid=0 scd_samples=202 tp_age_ms=2363 tp_packets=230 tp_accepted=230 tp_rejected=0 xiaomi_age_ms=3231 xiaomi_packets=834 xiaomi_accepted=413 xiaomi_rejected=421 outputs=fake-locked\nI (967656) climate_stage27: input_sampled=1 io_status=0 scd41_available=1 scd41_sample=1 rtc_available=1 rtc_trusted=1 ble_scanning=1 tp357_sample=1 tp357_t=24.10 tp357_rh=75.00 tp357_packet_ms=964468 tp357_valid_ms=964468 xiaomi_sample=1 xiaomi_t=25.17 xiaomi_rh=56.19 xiaomi_packet_ms=966577 xiaomi_valid_ms=965574 outputs=fake-locked\nI (967686) climate_stage27: soak uptime_ms=966939 reset_reason=1 heap_internal=260672 heap_internal_min=260672 heap_psram=8384992 heap_psram_min=8384992 scd_t=22.40 scd_rh=67.41 scd_co2=552 scd_age_ms=3040 scd_read_errors=0 scd_invalid=0 scd_samples=204 tp_age_ms=2471 tp_packets=233 tp_accepted=233 tp_rejected=0 xiaomi_age_ms=1365 xiaomi_packets=843 xiaomi_accepted=417 xiaomi_rejected=426 outputs=fake-locked\nI (977826) climate_stage27: input_sampled=1 io_status=0 scd41_available=1 scd41_sample=1 rtc_available=1 rtc_trusted=1 ble_scanning=1 tp357_sample=1 tp357_t=24.10 tp357_rh=75.00 tp357_packet_ms=964468 tp357_valid_ms=964468 xiaomi_sample=1 xiaomi_t=25.16 xiaomi_rh=56.15 xiaomi_packet_ms=976607 xiaomi_valid_ms=975608 outputs=fake-locked\nI (977856) climate_stage27: soak uptime_ms=977109 reset_reason=1 heap_internal=260672 heap_internal_min=260672 heap_psram=8384992 heap_psram_min=8384992 scd_t=22.37 scd_rh=67.43 scd_co2=551 scd_age_ms=3040 scd_read_errors=0 scd_invalid=0 scd_samples=206 tp_age_ms=12641 tp_packets=233 tp_accepted=233 tp_rejected=0 xiaomi_age_ms=1501 xiaomi_packets=852 xiaomi_accepted=421 xiaomi_rejected=431 outputs=fake-locked\nI (988006) climate_stage27: input_sampled=1 io_status=0 scd41_available=1 scd41_sample=1 rtc_available=1 rtc_trusted=1 ble_scanning=1 tp357_sample=1 tp357_t=24.10 tp357_rh=75.00 tp357_packet_ms=985976 tp357_valid_ms=985976 xiaomi_sample=1 xiaomi_t=25.15 xiaomi_rh=56.20 xiaomi_packet_ms=986632 xiaomi_valid_ms=983630 outputs=fake-locked\nI (988036) climate_stage27: soak uptime_ms=987279 reset_reason=1 heap_internal=260672 heap_internal_min=260672 heap_psram=8384992 heap_psram_min=8384992 scd_t=22.32 scd_rh=67.50 scd_co2=551 scd_age_ms=0 scd_read_errors=0 scd_invalid=0 scd_samples=209 tp_age_ms=1303 tp_packets=238 tp_accepted=238 tp_rejected=0 xiaomi_age_ms=3649 xiaomi_packets=857 xiaomi_accepted=424 xiaomi_rejected=433 outputs=fake-locked\nSERIAL_CAPTURE_END\nSOAK_DIAGNOSTICS_HARDWARE_GATE_PASS rows=12 steady_rows=12 uptime_start=875399 uptime_end=987279 reset_reason=1 heap_internal_start=260672 heap_internal_end=260672 heap_internal_min=260672 heap_psram_start=8384992 heap_psram_end=8384992 heap_psram_min=8384992 scd_samples=209 scd_read_errors=0 scd_invalid=0 tp_packets=238 tp_accepted=238 tp_rejected=0 xiaomi_packets=857 xiaomi_accepted=424 xiaomi_rejected=433\n",
+      "elapsed_seconds": 120.907,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 17.7,
+      "current_rss_mb": 17.7,
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 2,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 2,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 1.543
+    },
+    {
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 2,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 120.907
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.296
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.875
+  },
+  "finished_at": "2026-08-31T08:54:08.504875+00:00",
+  "task_digest": "84adbe7e1d6eff0347a9e9066f733ca12e4bab52324fc32f13c0f15422ad4f60",
+  "idle_timeout": 600,
+  "task_timeout": 2400,
+  "memory_limit_mb": 4096,
+  "attempt_id": "8052f523530f043b623fec4c",
+  "daemon_version": "4.10.2"
+}
