@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260831-growbox-stage27c-crowpanel-step1-v1",
+  "task_digest": "257a699f5391af28ae09e65288c4aec7060a84137c267c4d73db43717122ed0a",
+  "idle_timeout": 1200,
+  "task_timeout": 10800,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-31T02:46:01.561025+00:00",
+  "attempt_id": "b6f43573970392a8936e8d0a",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 51524,
+  "updated_at": "2026-08-31T02:46:01.561211+00:00",
+  "pid": 51524
+}
