@@ -1,15 +1,15 @@
 # Agent notes — Growbox ML
 
-## Local Agent v4.10.2 — repository workflow
+## Local Agent — repository workflow
 
 This repository is registered in the shared `MichalMatu/local-agent` multi-repository supervisor.
 
 Canonical Local Agent source of truth:
 
 - repository: `MichalMatu/local-agent`
-- branch: `main`
-- release line: `v4.10.x`
-- current synchronized release: `4.10.2`
+- production/runtime branch: `main`
+- releases: `vX.Y.Z` tags matching `agent_version.py`
+- read the actual running `daemon_version`, `self_revision`, `execution_model`, and `max_parallel_workers` from `.agent/status/daemon.json`; do not pin a remembered daemon version here.
 
 Repository identity:
 
@@ -18,7 +18,7 @@ Repository identity:
 - control branch: `agent-control`
 - default source branch: `main`
 - current MVP work branch: `mvp/environment-controller`
-- execution model: one long-lived shared supervisor with short-lived repository workers and global execution concurrency fixed at one
+- execution model: one shared bounded-parallel supervisor with short-lived repository workers; one task per repository at a time, with cross-repository overlap only when resource admission permits it; `agent_multirepo.py` remains the serial fallback
 
 ### New chat bootstrap
 
@@ -36,17 +36,19 @@ When starting work on this repository in a new chat/session:
 10. Keep repository workspaces isolated. A Growbox task must not publish results through another repository's Local Agent control plane.
 11. Do not reopen completed Stage25/26 work. Current hardware direction and the Stage27 bootstrap are frozen in `docs/STAGE27_NATIVE_IDF_HANDOFF.md`.
 
-### v4.10 execution rules
+### Local Agent execution rules
 
 - Local Agent is a deterministic executor, not a coding model. The planner chooses the exact bounded work; the daemon executes declared local commands/changes and reports evidence.
 - The planner may also make bounded source changes directly through GitHub on the work branch when that is more efficient, then use Local Agent for real local synchronization/build/test verification. See the hybrid workflow below.
 - Machine-generated task content, commands, prompts, logs, code comments, documentation changes and commit messages authored for Local Agent execution must be English-only.
 - Task ids and payloads are immutable within this repository. Interrupted tasks are never automatically replayed.
 - `expected_head` is not implemented. If exact source identity matters, verify the expected Git SHA explicitly in an early task stage.
-- Repository workers execute at most one pending task per turn. The shared supervisor serializes work across repositories.
+- Repository workers execute at most one pending task per turn. Different repositories may run concurrently only when their effective task resources permit it; omitted or unsafe resource declarations remain fully machine-exclusive.
 - Repository-local workers must not perform supervisor-wide `restart` or `self_update` actions. Those are owned by the shared supervisor/launchd administration path.
 - A repository worker may report current daemon version/revision through `.agent/status/daemon.json`; use that evidence before attempting any maintenance action.
 - Use bounded task timeouts/memory. The canonical defaults are command 900 s, no-output 300 s, whole-task 1800 s and process-group RSS 4096 MiB unless the task has a justified override.
+- Resource classification is conservative: omit `resources` for PlatformIO-heavy builds, USB, serial, flashing, hardware work, or uncertain machine-wide tooling; omission means full `machine` exclusivity.
+- Use `resources: []` only for clearly software-only work that is safe to overlap, with an enabled `memory_limit_mb <= 1024` (normally 512 MiB for lightweight work). Named resources are allowed only when the shared-machine interaction is understood.
 - Successful stages must not leave background descendants.
 - Final results are durably spooled before remote publication; publication recovery must not re-execute commands.
 
