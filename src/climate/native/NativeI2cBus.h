@@ -18,6 +18,7 @@ public:
   esp_err_t begin() noexcept;
   esp_err_t addDevice(std::uint8_t address, std::uint32_t clock_hz,
                       i2c_master_dev_handle_t& device) noexcept;
+  esp_err_t probe(std::uint8_t address, int timeout_ms = 100) noexcept;
 
   bool ready() const noexcept {
     return bus_ != nullptr;

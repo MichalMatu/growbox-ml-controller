@@ -39,4 +39,11 @@ esp_err_t NativeI2cBus::addDevice(std::uint8_t address, std::uint32_t clock_hz,
   return i2c_master_bus_add_device(bus_, &config, &device);
 }
 
+esp_err_t NativeI2cBus::probe(std::uint8_t address, int timeout_ms) noexcept {
+  if (bus_ == nullptr) {
+    return ESP_ERR_INVALID_STATE;
+  }
+  return i2c_master_probe(bus_, address, timeout_ms);
+}
+
 } // namespace growbox::app::climate_io::native

@@ -7,10 +7,12 @@ extern "C" {
 }
 
 #include <driver/i2c_master.h>
+#include <esp_log.h>
 
 namespace growbox::app::climate_io::native {
 namespace {
 
+constexpr char kScd41Tag[] = "scd41";
 constexpr std::uint8_t kScd41Address = 0x62U;
 constexpr std::uint32_t kI2cClockHz = 100'000U;
 
@@ -48,6 +50,9 @@ bool Scd41InsideSource::begin(NativeI2cBus& bus) noexcept {
   sensirion_i2c_hal_init();
   scd4x_init(kScd41Address);
   const int16_t error = scd4x_start_periodic_measurement();
+  if (error != 0) {
+    ESP_LOGW(kScd41Tag, "start_periodic_measurement failed: %d", static_cast<int>(error));
+  }
   available_ = error == 0;
   started_ = available_;
   return available_;

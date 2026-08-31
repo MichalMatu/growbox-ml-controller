@@ -7,6 +7,7 @@
 #include "climate/native/NativeI2cBus.h"
 #include "climate/native/Scd41InsideSource.h"
 
+#include <esp_err.h>
 #include <esp_log.h>
 #include <esp_timer.h>
 #include <freertos/FreeRTOS.h>
@@ -83,6 +84,10 @@ std::uint64_t monotonicMilliseconds() noexcept {
 [[noreturn]] void runClimateV6RealInputRuntime() noexcept {
   native::NativeI2cBus i2c(GROWBOX_I2C_SDA_GPIO, GROWBOX_I2C_SCL_GPIO);
   const bool i2c_ready = i2c.begin() == ESP_OK;
+  const esp_err_t scd41_probe = i2c_ready ? i2c.probe(0x62U) : ESP_ERR_INVALID_STATE;
+  const esp_err_t rtc_probe = i2c_ready ? i2c.probe(0x68U) : ESP_ERR_INVALID_STATE;
+  ESP_LOGI(kTag, "I2C probe: scd41_0x62=%s ds3231_0x68=%s", esp_err_to_name(scd41_probe),
+           esp_err_to_name(rtc_probe));
 
   native::Scd41InsideSource inside;
   native::Ds3231ClockSource clock;
