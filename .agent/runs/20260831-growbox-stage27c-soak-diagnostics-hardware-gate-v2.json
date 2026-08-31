@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260831-growbox-stage27c-soak-diagnostics-hardware-gate-v2",
+  "task_digest": "84adbe7e1d6eff0347a9e9066f733ca12e4bab52324fc32f13c0f15422ad4f60",
+  "idle_timeout": 600,
+  "task_timeout": 2400,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-31T08:52:01.336775+00:00",
+  "attempt_id": "8052f523530f043b623fec4c",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 67206,
+  "updated_at": "2026-08-31T08:52:01.336913+00:00",
+  "pid": 67206
+}
