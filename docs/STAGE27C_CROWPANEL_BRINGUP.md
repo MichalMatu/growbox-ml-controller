@@ -5,6 +5,8 @@ Work branch: `mvp/environment-controller`
 
 This document freezes the physical Stage27C configuration for the user's actual Elecrow CrowPanel ESP32-S3 2.9-inch HAT setup. E-paper and front-panel UI remain intentionally deferred. Physical actuator outputs remain fake/locked.
 
+> **Continuation note:** current point-5 soak evidence, the intentionally interrupted chunk 03, exact continuation rules, and the Local Agent / Chat Bridge fresh-chat workflow are frozen in `docs/STAGE27C_CONTINUATION_HANDOFF.md`. A new ChatGPT conversation should read that file before resuming Stage27C.
+
 ## Board and bus
 
 - board: Elecrow CrowPanel ESP32-S3 2.9-inch e-paper HMI;
@@ -56,6 +58,6 @@ These values are evidence of independent sensor operation only. Do not calculate
 
 ## Remaining ordered validation
 
-5. Run a long unattended input soak with bounded diagnostics, uptime/heap/freshness/error counters and no e-paper work.
+5. Complete the long unattended input soak with bounded diagnostics, uptime/heap/freshness/error counters and no e-paper work. Two ~90-minute chunks already passed on firmware `cf957a7649ec02835f724951d34f0b408f5f6de2`; the next chunk was intentionally interrupted by the user and must be resumed only with a new unique task id. See `docs/STAGE27C_CONTINUATION_HANDOFF.md` for exact evidence and continuity rules.
 6. Perform only safe software-observable fault tests that do not require physical manipulation while unattended.
 7. Freeze terminal evidence and update Stage27C status. Physical output work remains out of scope.
