@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 2,
+  "index": 3,
   "total": 3,
-  "command": "set -euo pipefail; PORT=/dev/cu.usbserial-110 bash scripts/stage27c_crowpanel.sh flash",
-  "pid": 43988,
+  "command": "set -euo pipefail; .venv/bin/python - <<'PY' | tee /tmp/stage27c-dual-ble-hardware-gate-v1.log\nimport serial\nimport time\n\nport = '/dev/cu.usbserial-110'\ndeadline = time.monotonic() + 180.0\nprint(f'SERIAL_CAPTURE_BEGIN port={port} seconds=180', flush=True)\nwith serial.Serial(port, 115200, timeout=1.0) as ser:\n    while time.monotonic() < deadline:\n        raw = ser.readline()\n        if raw:\n            line = raw.decode('utf-8', errors='replace').rstrip()\n            if 'climate_stage27' in line or 'scd41' in line or 'Guru Meditation' in line or 'watchdog' in line.lower() or 'panic' in line.lower():\n                print(line, flush=True)\nprint('SERIAL_CAPTURE_END', flush=True)\nPY\n.venv/bin/python - <<'PY'\nfrom pathlib import Path\nimport re\n\ntext = Path('/tmp/stage27c-dual-ble-hardware-gate-v1.log').read_text(errors='replace')\nrequired = [\n    'I2C probe: scd41_0x62=ESP_OK ds3231_0x68=ESP_OK',\n    'Stage27 real-input runtime: i2c=1 scd41=1 ds3231=1 ble=1 outputs=fake-locked',\n    'scd41_sample=1',\n    'rtc_available=1 rtc_trusted=1',\n    'ble_scanning=1',\n    'tp357_sample=1',\n    'xiaomi_sample=1',\n    'outputs=fake-locked',\n]\nfor needle in required:\n    assert needle in text, f'missing hardware evidence: {needle}'\nassert not re.search(r'Guru Meditation|Task watchdog|panic|abort\\(\\)', text, re.IGNORECASE), 'crash/watchdog evidence present'\npattern = re.compile(\n    r'tp357_sample=1 tp357_t=([-+0-9.]+) tp357_rh=([-+0-9.]+) '\n    r'tp357_packet_ms=([0-9]+) tp357_valid_ms=([0-9]+) '\n    r'xiaomi_sample=1 xiaomi_t=([-+0-9.]+) xiaomi_rh=([-+0-9.]+) '\n    r'xiaomi_packet_ms=([0-9]+) xiaomi_valid_ms=([0-9]+)'\n)\nmatches = list(pattern.finditer(text))\nassert matches, 'no simultaneous valid TP357 + Xiaomi diagnostic line'\nm = matches[-1]\ntp_t, tp_rh, tp_packet, tp_valid, xi_t, xi_rh, xi_packet, xi_valid = m.groups()\ntp_t = float(tp_t); tp_rh = float(tp_rh); xi_t = float(xi_t); xi_rh = float(xi_rh)\ntp_packet = int(tp_packet); tp_valid = int(tp_valid); xi_packet = int(xi_packet); xi_valid = int(xi_valid)\nassert -50.0 <= tp_t <= 100.0 and 0.0 <= tp_rh <= 100.0\nassert -50.0 <= xi_t <= 100.0 and 0.0 <= xi_rh <= 100.0\nassert tp_packet > 0 and tp_valid > 0 and xi_packet > 0 and xi_valid > 0\nprint(f'HARDWARE_GATE_PASS tp357_t={tp_t:.2f} tp357_rh={tp_rh:.2f} tp357_packet_ms={tp_packet} tp357_valid_ms={tp_valid} xiaomi_t={xi_t:.2f} xiaomi_rh={xi_rh:.2f} xiaomi_packet_ms={xi_packet} xiaomi_valid_ms={xi_valid}')\nPY\ntest \"$(git rev-parse HEAD)\" = \"a1a05a91a6928f672a8f4f43963f979fefa7d79d\" && test -z \"$(git status --short)\"",
+  "pid": 44655,
   "timeout": 2400,
   "idle_timeout": 900,
   "memory_limit_mb": 8192,
-  "started_at": "2026-08-31T07:02:01.456159+00:00",
-  "stage_name": "command-2",
-  "stage_index": 2,
+  "started_at": "2026-08-31T07:03:00.843237+00:00",
+  "stage_name": "command-3",
+  "stage_index": 3,
   "stage_total": 3,
   "stage_phase": "commands",
   "task_id": "20260831-growbox-stage27c-dual-ble-hardware-gate-v1",
@@ -18,5 +18,5 @@
   "task_digest": "359449b379e0edcf7eb5a2061adaf318267ee5c4c0e6f567749a4c594345cc8e",
   "daemon_version": "4.10.2",
   "daemon_pid": 43914,
-  "updated_at": "2026-08-31T07:02:01.505909+00:00"
+  "updated_at": "2026-08-31T07:03:00.925724+00:00"
 }
