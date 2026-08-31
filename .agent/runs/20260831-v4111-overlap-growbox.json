@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260831-v4111-overlap-growbox",
+  "task_digest": "90327d1e60110143e7422b599d0b0c836c5190e66dda3c6e7c00c0d69c3e07ea",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 256,
+  "started_at": "2026-08-31T19:47:51.979269+00:00",
+  "attempt_id": "c7698207e6498ad4b037c528",
+  "daemon_version": "4.11.1",
+  "daemon_pid": 89668,
+  "updated_at": "2026-08-31T19:47:51.979417+00:00",
+  "pid": 89668
+}
