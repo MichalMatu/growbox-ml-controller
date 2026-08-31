@@ -1,0 +1,12 @@
+{
+  "id": "20260831-v4111-production-diagnostic",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "command_timeout": 180,
+  "task_timeout": 600,
+  "memory_limit_mb": 512,
+  "commands": [
+    "set -eu; echo '=== LOCAL AGENT CHECKOUT ==='; git -C /Users/michal/local-agent branch --show-current; git -C /Users/michal/local-agent rev-parse HEAD; cd /Users/michal/local-agent; /Users/michal/local-agent/.venv/bin/python -c 'import agent_version; print(agent_version.RELEASE_VERSION)'; echo '=== LAUNCHD ==='; launchctl print \"gui/$(id -u)/com.michal.local-agent\" 2>&1 | grep -E '\\bstate =|\\bpid =|path =|program =' || true; echo '=== PROCESSES ==='; ps -Ao pid,ppid,etime,command | grep -E 'agent_parallel.py|agent_parallel_worker.py|agent_multirepo.py|agent_repo_worker.py' | grep -v grep || true; echo '=== LOG TAIL ==='; tail -n 120 \"$HOME/Library/Logs/local-agent.log\" || true"
+  ]
+}
