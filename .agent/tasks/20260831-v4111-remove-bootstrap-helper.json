@@ -1,0 +1,11 @@
+{
+  "id": "20260831-v4111-remove-bootstrap-helper",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "memory_limit_mb": 256,
+  "command_timeout": 60,
+  "commands": [
+    "set -eu; LABEL=com.michal.local-agent-v4111-bootstrap; echo '=== BEFORE ==='; launchctl print \"gui/$(id -u)/$LABEL\" 2>&1 | head -n 20 || true; launchctl remove \"$LABEL\" 2>/dev/null || true; sleep 2; echo '=== AFTER ==='; launchctl print \"gui/$(id -u)/$LABEL\" 2>&1 | head -n 20 || true; echo '=== MAIN SUPERVISOR ==='; launchctl print \"gui/$(id -u)/com.michal.local-agent\" | grep -E 'state =|pid ='; echo '=== STATUS ==='; cat \"$HOME/Library/Application Support/local-agent/status.json\""
+  ]
+}
