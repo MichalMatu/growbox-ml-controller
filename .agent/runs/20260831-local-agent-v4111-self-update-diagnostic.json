@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260831-local-agent-v4111-self-update-diagnostic",
+  "task_digest": "c746fd6b26de250899820d41d5824b342b96f06be6ea1fdb36ec0fc182f76ad4",
+  "idle_timeout": 120,
+  "task_timeout": 300,
+  "memory_limit_mb": 256,
+  "started_at": "2026-08-31T16:36:56.263124+00:00",
+  "attempt_id": "e9a690e4afcddc2002037402",
+  "daemon_version": "4.11.0",
+  "daemon_pid": 82935,
+  "updated_at": "2026-08-31T16:36:56.263497+00:00",
+  "pid": 82935
+}
