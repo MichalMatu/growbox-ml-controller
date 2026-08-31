@@ -1,0 +1,57 @@
+{
+  "id": "20260831-v4113-register-c6-repository-v2",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "started_at": "2026-08-31T21:34:15.146904+00:00",
+  "command_timeout": 900,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; test \"$(PYTHONPATH=\"$HOME/local-agent\" \"$HOME/local-agent/.venv/bin/python\" -c 'import agent_version; print(agent_version.RELEASE_VERSION)')\" = '4.11.3'; HELPER=\"$HOME/agent-workspace/repos/growbox-ml-controller/control/.agent/patches/v4113_register_c6_repo.py\"; PYTHONDONTWRITEBYTECODE=1 \"$HOME/local-agent/.venv/bin/python\" -c 'import pathlib,sys; p=pathlib.Path(sys.argv[1]); compile(p.read_text(encoding=\"utf-8\"), str(p), \"exec\")' \"$HELPER\"; env -u LOCAL_AGENT_LEASE_FDS -u LOCAL_AGENT_LEASE_KEYS_DIGEST PYTHONDONTWRITEBYTECODE=1 \"$HOME/local-agent/.venv/bin/python\" \"$HELPER\"",
+      "exit_code": 0,
+      "output": "REGISTRY_ENTRY_ADDED\n$ /Users/michal/local-agent/.venv/bin/python /Users/michal/local-agent/agent_repo_admin.py --registry /Users/michal/Library/Application Support/local-agent/repositories.json provision --repository-id esp32-c6-zigbee\nOK esp32-c6-zigbee: control_created=True control_branch_created=True work_created=True\n$ /Users/michal/local-agent/.venv/bin/python /Users/michal/local-agent/agent_repo_admin.py --registry /Users/michal/Library/Application Support/local-agent/repositories.json validate --repository-id esp32-c6-zigbee\nOK esp32-c6-zigbee: MichalMatu/esp32_c6_zigbee\n$ /Users/michal/local-agent/.venv/bin/python /Users/michal/local-agent/agent_repo_admin.py --registry /Users/michal/Library/Application Support/local-agent/repositories.json list\nlitegraph\tMichalMatu/esp32s3_LiteGraph\tcontrol=/Users/michal/agent-workspace/repos/litegraph/control\twork=/Users/michal/agent-workspace/repos/litegraph/work\ngrowbox-ml-controller\tMichalMatu/growbox-ml-controller\tcontrol=/Users/michal/agent-workspace/repos/growbox-ml-controller/control\twork=/Users/michal/agent-workspace/repos/growbox-ml-controller/work\nmatrixhub\tMichalMatu/MatrixHub\tcontrol=/Users/michal/agent-workspace/repos/matrixhub/control\twork=/Users/michal/agent-workspace/repos/matrixhub/work\nesp32-c6-zigbee\tMichalMatu/esp32_c6_zigbee\tcontrol=/Users/michal/agent-workspace/repos/esp32-c6-zigbee/control\twork=/Users/michal/agent-workspace/repos/esp32-c6-zigbee/work\nESP32_C6_REPOSITORY_ONBOARDING_OK\n",
+      "elapsed_seconds": 9.846,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 256,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 49.19,
+      "current_rss_mb": 33.11,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 9.846
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.187
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.171
+  },
+  "finished_at": "2026-08-31T21:34:27.857541+00:00",
+  "task_digest": "db0f367afc6cb52e071800160a706c49ba205538bb530a1fa134061da62f5830",
+  "idle_timeout": 300,
+  "task_timeout": 1200,
+  "memory_limit_mb": 256,
+  "attempt_id": "c87d7b2f16a330348e2e4103",
+  "daemon_version": "4.11.3"
+}
