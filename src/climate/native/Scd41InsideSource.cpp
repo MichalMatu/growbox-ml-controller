@@ -49,6 +49,17 @@ bool Scd41InsideSource::begin(NativeI2cBus& bus) noexcept {
   growbox_sensirion_i2c_bind_device(device_);
   sensirion_i2c_hal_init();
   scd4x_init(kScd41Address);
+
+  // The SCD4x keeps measuring across an MCU-only reset. Stop any inherited
+  // periodic session first; the upstream call includes the required 500 ms
+  // settling delay when the stop command is accepted. An idle sensor may NACK
+  // the stop command, in which case starting a fresh session is still valid.
+  const int16_t stop_error = scd4x_stop_periodic_measurement();
+  if (stop_error != 0) {
+    ESP_LOGI(kScd41Tag, "pre-start stop_periodic_measurement returned %d; continuing",
+             static_cast<int>(stop_error));
+  }
+
   const int16_t error = scd4x_start_periodic_measurement();
   if (error != 0) {
     ESP_LOGW(kScd41Tag, "start_periodic_measurement failed: %d", static_cast<int>(error));
