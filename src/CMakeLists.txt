@@ -56,6 +56,7 @@ elseif(GROWBOX_APP_MODE STREQUAL "climate-v6-real-inputs")
       "climate/native/BthomeV2Decoder.cpp"
       "climate/native/Tp357Decoder.cpp"
       "climate/native/BleClimateState.cpp"
+      "climate/native/BleClimateScanner.cpp"
       "climate/native/Ds3231Codec.cpp"
       "climate/native/NativeI2cBus.cpp"
       "climate/native/Scd41InsideSource.cpp"
