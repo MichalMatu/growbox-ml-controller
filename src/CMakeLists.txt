@@ -61,7 +61,6 @@ elseif(GROWBOX_APP_MODE STREQUAL "climate-v6-real-inputs")
       "climate/native/NativeI2cBus.cpp"
       "climate/native/Scd41InsideSource.cpp"
       "climate/native/Ds3231ClockSource.cpp"
-      "climate/native/BleOutsideSource.cpp"
   )
 else()
   message(FATAL_ERROR "Unsupported GROWBOX_APP_MODE: ${GROWBOX_APP_MODE}")
@@ -72,7 +71,8 @@ if(NOT DEFINED GROWBOX_BOARD_PROFILE)
 endif()
 set(GROWBOX_I2C_SDA_GPIO "8" CACHE STRING "Stage27 shared I2C SDA GPIO")
 set(GROWBOX_I2C_SCL_GPIO "9" CACHE STRING "Stage27 shared I2C SCL GPIO")
-set(GROWBOX_BLE_OUTSIDE_MAC "" CACHE STRING "Stage27 outside BTHome sensor MAC")
+set(GROWBOX_BLE_TP357_MAC "" CACHE STRING "Stage27 TP357 inside sensor MAC")
+set(GROWBOX_BLE_XIAOMI_MAC "" CACHE STRING "Stage27 Xiaomi nearby BTHome sensor MAC")
 
 target_compile_definitions(
   ${COMPONENT_LIB}
@@ -82,5 +82,6 @@ target_compile_definitions(
     GROWBOX_APP_CLIMATE_V6_REAL_INPUTS=${GROWBOX_APP_CLIMATE_V6_REAL_INPUTS}
     GROWBOX_I2C_SDA_GPIO=${GROWBOX_I2C_SDA_GPIO}
     GROWBOX_I2C_SCL_GPIO=${GROWBOX_I2C_SCL_GPIO}
-    GROWBOX_BLE_OUTSIDE_MAC="${GROWBOX_BLE_OUTSIDE_MAC}"
+    GROWBOX_BLE_TP357_MAC="${GROWBOX_BLE_TP357_MAC}"
+    GROWBOX_BLE_XIAOMI_MAC="${GROWBOX_BLE_XIAOMI_MAC}"
 )

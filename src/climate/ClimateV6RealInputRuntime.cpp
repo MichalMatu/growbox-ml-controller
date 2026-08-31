@@ -2,7 +2,7 @@
 
 #include "climate/ClimateApplication.h"
 #include "climate/ClimateCompositeInput.h"
-#include "climate/native/BleOutsideSource.h"
+#include "climate/native/BleClimateScanner.h"
 #include "climate/native/Ds3231ClockSource.h"
 #include "climate/native/NativeI2cBus.h"
 #include "climate/native/Scd41InsideSource.h"
@@ -21,8 +21,11 @@
 #ifndef GROWBOX_I2C_SCL_GPIO
 #define GROWBOX_I2C_SCL_GPIO 9
 #endif
-#ifndef GROWBOX_BLE_OUTSIDE_MAC
-#define GROWBOX_BLE_OUTSIDE_MAC ""
+#ifndef GROWBOX_BLE_TP357_MAC
+#define GROWBOX_BLE_TP357_MAC ""
+#endif
+#ifndef GROWBOX_BLE_XIAOMI_MAC
+#define GROWBOX_BLE_XIAOMI_MAC ""
 #endif
 
 namespace growbox::app::climate_io {
@@ -36,6 +39,53 @@ public:
   bool apply(ClimateActuatorRole, float, std::uint64_t) noexcept override {
     return true;
   }
+};
+
+class Stage27InsideSource final : public InsideEnvironmentSource {
+public:
+  Stage27InsideSource(native::BleClimateScanner& ble, native::Scd41InsideSource& scd41) noexcept
+      : ble_(ble), scd41_(scd41) {}
+
+  bool sample(std::uint64_t monotonic_ms, InsideEnvironmentSnapshot& output) noexcept override {
+    output = {};
+
+    native::BleClimateReading tp357{};
+    const bool tp357_sampled = ble_.sampleTp357(monotonic_ms, tp357);
+    if (tp357_sampled) {
+      output.air_temperature_c = {tp357.temperature_c, true, tp357.age_ms};
+      output.relative_humidity_pct = {tp357.relative_humidity_pct, true, tp357.age_ms};
+    }
+
+    InsideEnvironmentSnapshot scd41{};
+    if (scd41_.sample(monotonic_ms, scd41) && scd41.co2_ppm.valid) {
+      output.co2_ppm = scd41.co2_ppm;
+    }
+
+    return tp357_sampled || output.co2_ppm.valid;
+  }
+
+private:
+  native::BleClimateScanner& ble_;
+  native::Scd41InsideSource& scd41_;
+};
+
+class Stage27NearbySource final : public OutsideEnvironmentSource {
+public:
+  explicit Stage27NearbySource(native::BleClimateScanner& ble) noexcept : ble_(ble) {}
+
+  bool sample(std::uint64_t monotonic_ms, OutsideEnvironmentSnapshot& output) noexcept override {
+    output = {};
+    native::BleClimateReading xiaomi{};
+    if (!ble_.sampleXiaomi(monotonic_ms, xiaomi)) {
+      return false;
+    }
+    output.air_temperature_c = {xiaomi.temperature_c, true, xiaomi.age_ms};
+    output.relative_humidity_pct = {xiaomi.relative_humidity_pct, true, xiaomi.age_ms};
+    return true;
+  }
+
+private:
+  native::BleClimateScanner& ble_;
 };
 
 class FixedStage27ScheduleConfigSource final : public ClimateScheduleConfigSource {
@@ -89,13 +139,15 @@ std::uint64_t monotonicMilliseconds() noexcept {
   ESP_LOGI(kTag, "I2C probe: scd41_0x62=%s ds3231_0x68=%s", esp_err_to_name(scd41_probe),
            esp_err_to_name(rtc_probe));
 
-  native::Scd41InsideSource inside;
+  native::Scd41InsideSource scd41;
   native::Ds3231ClockSource clock;
-  native::BleOutsideSource outside;
-  const bool scd41_ready = i2c_ready && inside.begin(i2c);
+  native::BleClimateScanner ble;
+  const bool scd41_ready = i2c_ready && scd41.begin(i2c);
   const bool rtc_ready = i2c_ready && clock.begin(i2c);
-  const bool ble_ready = outside.begin(GROWBOX_BLE_OUTSIDE_MAC);
+  const bool ble_ready = ble.begin(GROWBOX_BLE_TP357_MAC, GROWBOX_BLE_XIAOMI_MAC);
 
+  Stage27InsideSource inside(ble, scd41);
+  Stage27NearbySource outside(ble);
   FixedStage27ScheduleConfigSource schedule_config;
   CompositeClimateSnapshotProvider composite(inside, outside, clock, schedule_config);
   LockedFakeRoleDriver output_driver;
@@ -111,12 +163,26 @@ std::uint64_t monotonicMilliseconds() noexcept {
     ::growbox::climate::ClimateRuntimeDecision decision{};
     const auto result = application.tick(now_ms, decision);
     if ((diagnostic_tick++ % 10U) == 0U) {
+      native::BleClimateReading tp357{};
+      native::BleClimateReading xiaomi{};
+      const bool tp357_sampled = ble.sampleTp357(now_ms, tp357);
+      const bool xiaomi_sampled = ble.sampleXiaomi(now_ms, xiaomi);
       ESP_LOGI(kTag,
                "input_sampled=%d io_status=%u scd41_available=%d scd41_sample=%d "
-               "rtc_available=%d rtc_trusted=%d ble_scanning=%d ble_last_valid_ms=%llu",
-               result.input_sampled, static_cast<unsigned>(result.io_status), inside.available(),
-               inside.hasMeasurement(), clock.available(), clock.trusted(), outside.scanning(),
-               static_cast<unsigned long long>(outside.lastValidMeasurementMs()));
+               "rtc_available=%d rtc_trusted=%d ble_scanning=%d "
+               "tp357_sample=%d tp357_t=%.2f tp357_rh=%.2f tp357_packet_ms=%llu "
+               "tp357_valid_ms=%llu xiaomi_sample=%d xiaomi_t=%.2f xiaomi_rh=%.2f "
+               "xiaomi_packet_ms=%llu xiaomi_valid_ms=%llu outputs=fake-locked",
+               result.input_sampled, static_cast<unsigned>(result.io_status), scd41.available(),
+               scd41.hasMeasurement(), clock.available(), clock.trusted(), ble.scanning(),
+               tp357_sampled, static_cast<double>(tp357.temperature_c),
+               static_cast<double>(tp357.relative_humidity_pct),
+               static_cast<unsigned long long>(ble.tp357LastPacketSeenMs()),
+               static_cast<unsigned long long>(ble.tp357LastValidMeasurementMs()), xiaomi_sampled,
+               static_cast<double>(xiaomi.temperature_c),
+               static_cast<double>(xiaomi.relative_humidity_pct),
+               static_cast<unsigned long long>(ble.xiaomiLastPacketSeenMs()),
+               static_cast<unsigned long long>(ble.xiaomiLastValidMeasurementMs()));
     }
     vTaskDelay(pdMS_TO_TICKS(kTickIntervalMs));
   }
