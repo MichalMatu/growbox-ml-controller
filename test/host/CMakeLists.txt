@@ -207,6 +207,15 @@ target_include_directories(
 target_compile_features(climate_semantic_output_tests PRIVATE cxx_std_17)
 target_compile_options(climate_semantic_output_tests PRIVATE -Wall -Wextra -Wpedantic)
 
+add_executable(
+  tp357_decoder_tests
+  "${PROJECT_ROOT}/test/test_tp357_decoder/test_main.cpp"
+  "${PROJECT_ROOT}/src/climate/native/Tp357Decoder.cpp"
+)
+target_include_directories(tp357_decoder_tests PRIVATE "${PROJECT_ROOT}/src")
+target_compile_features(tp357_decoder_tests PRIVATE cxx_std_17)
+target_compile_options(tp357_decoder_tests PRIVATE -Wall -Wextra -Wpedantic)
+
 if(UNIX)
   target_link_libraries(environment_control_tests PRIVATE m)
   target_link_libraries(climate_v6_tests PRIVATE m)
@@ -235,3 +244,4 @@ add_test(NAME climate_fault_soak_tests COMMAND climate_fault_soak_tests)
 add_test(NAME climate_diagnostics_tests COMMAND climate_diagnostics_tests)
 add_test(NAME climate_composite_input_tests COMMAND climate_composite_input_tests)
 add_test(NAME climate_semantic_output_tests COMMAND climate_semantic_output_tests)
+add_test(NAME tp357_decoder_tests COMMAND tp357_decoder_tests)
