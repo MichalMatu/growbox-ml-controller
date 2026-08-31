@@ -3,7 +3,7 @@
 Date: 2026-08-31
 Work branch: `mvp/environment-controller`
 
-This document freezes the first physical Stage27C configuration for the user's actual Elecrow CrowPanel ESP32-S3 2.9-inch HAT setup. E-paper and front-panel UI remain intentionally deferred. Physical actuator outputs remain fake/locked.
+This document freezes the physical Stage27C configuration for the user's actual Elecrow CrowPanel ESP32-S3 2.9-inch HAT setup. E-paper and front-panel UI remain intentionally deferred. Physical actuator outputs remain fake/locked.
 
 ## Board and bus
 
@@ -21,12 +21,12 @@ The Stage27C build uses `config/idf/sdkconfig.defaults.n8r8` plus the existing S
 
 | Sensor | Identity/location | Stage27C role |
 | --- | --- | --- |
-| TP357 | BLE MAC `F7:5F:8D:0F:76:20`, physically inside growbox | intended primary inside temperature/RH source after the dual-BLE Stage27C adaptation |
-| Xiaomi LYWSD03MMC + PVVX/BTHome | BLE MAC `A4:C1:38:4F:24:CD`, physically on/near growbox | ambient BLE temperature/RH source |
-| SCD41 | I2C, physically near window | CO2 + local window-area temperature/RH diagnostic source |
+| TP357 | BLE MAC `F7:5F:8D:0F:76:20`, physically inside growbox | primary inside temperature/RH source |
+| Xiaomi LYWSD03MMC + PVVX/BTHome | BLE MAC `A4:C1:38:4F:24:CD`, physically on/near growbox | nearby ambient temperature/RH source exposed through the existing outside/ambient fields |
+| SCD41 | I2C, physically near window | CO2 source for the controller plus local window-area temperature/RH diagnostics |
 | DS3231 | I2C on HAT | trusted wall-clock source |
 
-Do not calculate calibration offsets between these sensors during the overnight test because they are intentionally placed in different physical locations.
+Do not calculate calibration offsets between these sensors because they are intentionally placed in different physical locations.
 
 ## Bring-up command
 
@@ -38,14 +38,24 @@ bash scripts/stage27c_crowpanel.sh monitor
 
 `PORT=/dev/cu...` may be supplied when automatic serial-port detection is ambiguous.
 
-Until the TP357 path is adapted into the native runtime, the Stage27C helper defaults `GROWBOX_BLE_OUTSIDE_MAC` to the Xiaomi BTHome sensor so the existing Stage27B BLE path can be physically validated first.
+The Stage27C helper configures both exact BLE identities:
+`GROWBOX_BLE_TP357_MAC=F7:5F:8D:0F:76:20` and
+`GROWBOX_BLE_XIAOMI_MAC=A4:C1:38:4F:24:CD`.
+One shared native NimBLE scanner routes advertisements by exact MAC; there is no strongest-RSSI sensor selection.
 
-## Ordered validation
+## Completed physical gates
 
-1. Build CrowPanel N8R8 firmware with I2C GPIO21/38 and fake/locked outputs.
-2. Flash and verify SCD41 + DS3231 discovery and plausible live readings.
-3. Adapt the proven LiteGraph TP357 manufacturer-data decoder into a pure native decoder and scan both configured BLE MACs concurrently.
-4. Map TP357 as the primary inside T/RH source while retaining SCD41 CO2 and its own local T/RH diagnostics; Xiaomi remains the ambient BLE source.
+Points 1-4 are closed on source HEAD `a1a05a91a6928f672a8f4f43963f979fefa7d79d` (`Wire Stage27C dual BLE runtime`).
+
+1. CrowPanel N8R8 build uses GPIO21/GPIO38 for the shared I2C bus, 8 MB flash, 8 MB octal PSRAM, no e-paper initialization and fake/locked physical outputs.
+2. Physical I2C bring-up established SCD41 at `0x62` and DS3231 at `0x68`. SCD41 MCU-only-reset recovery stops an inherited periodic session before starting a fresh one. Runtime evidence shows `scd41_available=1`, `scd41_sample=1`, `rtc_available=1` and `rtc_trusted=1`.
+3. TP357 manufacturer data was validated from the real exact-MAC device. The native decoder/router tracks packet-seen separately from valid-measurement freshness, and the shared scanner concurrently tracks TP357 and Xiaomi by exact MAC.
+4. Hardware gate `20260831-growbox-stage27c-dual-ble-hardware-gate-v2` passed a 90-second live capture. The final simultaneous line reported TP357 `23.90 C / 74.00 %RH` with `packet_ms=1154994`, `valid_ms=1154994`, and Xiaomi `25.06 C / 55.07 %RH` with `packet_ms=1155251`, `valid_ms=1154244`. The same line reported `scd41_sample=1`, `rtc_available=1`, `rtc_trusted=1`, `ble_scanning=1` and `outputs=fake-locked`; no panic or watchdog evidence was present.
+
+These values are evidence of independent sensor operation only. Do not calculate or apply cross-sensor temperature/RH offsets because the sensors are physically located in different places.
+
+## Remaining ordered validation
+
 5. Run a long unattended input soak with bounded diagnostics, uptime/heap/freshness/error counters and no e-paper work.
 6. Perform only safe software-observable fault tests that do not require physical manipulation while unattended.
 7. Freeze terminal evidence and update Stage27C status. Physical output work remains out of scope.
