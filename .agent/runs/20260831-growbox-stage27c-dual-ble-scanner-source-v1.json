@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260831-growbox-stage27c-dual-ble-scanner-source-v1",
+  "task_digest": "d871d4a2c248a15421318bb21316c83880f830757094e3dde7226fbe17d2d6c8",
+  "idle_timeout": 1200,
+  "task_timeout": 10800,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-31T06:25:59.247383+00:00",
+  "attempt_id": "1ca563d1c237f1d2f867b6fe",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 26630,
+  "updated_at": "2026-08-31T06:25:59.247563+00:00",
+  "pid": 26630
+}
