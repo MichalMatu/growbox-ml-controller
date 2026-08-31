@@ -1,0 +1,57 @@
+{
+  "id": "20260831-parallel-live-machine-exclusive-c",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "started_at": "2026-08-31T15:28:58.829106+00:00",
+  "command_timeout": 60,
+  "edits": {},
+  "commands": [
+    {
+      "command": "python -c \"import datetime,time; print('MACHINE_EXCLUSIVE_START', datetime.datetime.now(datetime.timezone.utc).isoformat(), flush=True); time.sleep(15); print('MACHINE_EXCLUSIVE_END', datetime.datetime.now(datetime.timezone.utc).isoformat(), flush=True)\"",
+      "exit_code": 0,
+      "output": "MACHINE_EXCLUSIVE_START 2026-08-31T15:29:00.440278+00:00\nMACHINE_EXCLUSIVE_END 2026-08-31T15:29:15.445082+00:00\n",
+      "elapsed_seconds": 15.317,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 512,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 14.09,
+      "current_rss_mb": 14.09,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 15.317
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.111
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.077
+  },
+  "finished_at": "2026-08-31T15:29:15.898220+00:00",
+  "task_digest": "a234f01f0496727c678c0472016aa165d549c4ce322bc3f61ec53d5bb32a1e92",
+  "idle_timeout": 30,
+  "task_timeout": 180,
+  "memory_limit_mb": 512,
+  "attempt_id": "9fbed94f9d72a2b3272723ac",
+  "daemon_version": "4.10.2-parallel-staging"
+}
