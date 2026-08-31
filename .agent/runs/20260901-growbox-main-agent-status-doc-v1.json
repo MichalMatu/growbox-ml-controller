@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260901-growbox-main-agent-status-doc-v1",
+  "task_digest": "588395f512727392342f1a6e23ac0046ac91d6cb8be3f0c2bfe40c4978c9f794",
+  "idle_timeout": 300,
+  "task_timeout": 240,
+  "memory_limit_mb": 256,
+  "started_at": "2026-08-31T22:10:07.866283+00:00",
+  "attempt_id": "8085213e7d3ee671b864866d",
+  "daemon_version": "4.11.4",
+  "daemon_pid": 71400,
+  "updated_at": "2026-08-31T22:10:07.873895+00:00",
+  "pid": 71400
+}
