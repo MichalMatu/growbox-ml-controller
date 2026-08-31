@@ -1,0 +1,12 @@
+{
+  "id": "20260831-v4111-operator-log-smoke",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 256,
+  "command_timeout": 90,
+  "commands": [
+    "set -eu; sleep 2; echo '=== OPERATOR LOG ==='; grep -E '\\[parallel\\].*(IDLE|TASK START|TASK DONE|TASK FAILED|parallel supervisor)' \"$HOME/Library/Logs/local-agent.log\" | tail -n 40; echo '=== RECENT RAW TAIL ==='; tail -n 40 \"$HOME/Library/Logs/local-agent.log\""
+  ]
+}
