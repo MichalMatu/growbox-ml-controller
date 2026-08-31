@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 3,
+  "index": 4,
   "total": 5,
-  "command": "set -euo pipefail; cmake -S test/host -B build/host-tests && cmake --build build/host-tests --target tp357_decoder_tests --parallel && ./build/host-tests/tp357_decoder_tests && ctest --test-dir build/host-tests -R '^tp357_decoder_tests$' --output-on-failure",
-  "pid": 7451,
+  "command": "set -euo pipefail; cmake --build build/host-tests --parallel && ctest --test-dir build/host-tests --output-on-failure && bash scripts/stage27c_crowpanel.sh clean && bash scripts/stage27c_crowpanel.sh build",
+  "pid": 7551,
   "timeout": 2400,
   "idle_timeout": 900,
   "memory_limit_mb": 8192,
-  "started_at": "2026-08-31T05:27:15.527646+00:00",
-  "stage_name": "command-3",
-  "stage_index": 3,
+  "started_at": "2026-08-31T05:27:20.816997+00:00",
+  "stage_name": "command-4",
+  "stage_index": 4,
   "stage_total": 5,
   "stage_phase": "commands",
   "task_id": "20260831-growbox-stage27c-tp357-decoder-v1",
@@ -18,5 +18,5 @@
   "task_digest": "0f9f6fd1cf4c8d401b3825ff3706061e6e83de09865e44ef5a9c8c8061e9d7c3",
   "daemon_version": "4.10.2",
   "daemon_pid": 7312,
-  "updated_at": "2026-08-31T05:27:15.670238+00:00"
+  "updated_at": "2026-08-31T05:27:20.897281+00:00"
 }
