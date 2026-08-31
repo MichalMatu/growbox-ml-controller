@@ -1,0 +1,57 @@
+{
+  "id": "20260831-parallel-live-growbox-a",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "started_at": "2026-08-31T15:27:47.890697+00:00",
+  "command_timeout": 60,
+  "edits": {},
+  "commands": [
+    {
+      "command": "python -c \"import datetime,time; print('PARALLEL_GROWBOX_START', datetime.datetime.now(datetime.timezone.utc).isoformat(), flush=True); time.sleep(20); print('PARALLEL_GROWBOX_END', datetime.datetime.now(datetime.timezone.utc).isoformat(), flush=True)\"",
+      "exit_code": 0,
+      "output": "PARALLEL_GROWBOX_START 2026-08-31T15:27:50.239857+00:00\nPARALLEL_GROWBOX_END 2026-08-31T15:28:10.244669+00:00\n",
+      "elapsed_seconds": 20.306,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 512,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 14.16,
+      "current_rss_mb": 10.78,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 20.306
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.116
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.086
+  },
+  "finished_at": "2026-08-31T15:28:10.715090+00:00",
+  "task_digest": "d0f6b577f5dddd781eb6cb6ebc70c203e3aa13c75cc7d9a36c961558dd1f8339",
+  "idle_timeout": 30,
+  "task_timeout": 180,
+  "memory_limit_mb": 512,
+  "attempt_id": "2a757dfa9c9d56636b1acab6",
+  "daemon_version": "4.10.2-parallel-staging"
+}
