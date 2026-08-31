@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260831-growbox-stage27c-points1-4-evidence-v2",
+  "task_digest": "0b33e7f0cdafd13dcb45b4d72fd4f2f8ae32847cbbfd509df081bb6d9e2d23dd",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-08-31T07:46:56.448758+00:00",
+  "attempt_id": "dc180c8ca9d33d677f1b84d1",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 50979,
+  "updated_at": "2026-08-31T07:46:56.449090+00:00",
+  "pid": 50979
+}
