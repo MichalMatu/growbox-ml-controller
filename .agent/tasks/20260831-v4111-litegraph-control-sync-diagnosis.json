@@ -1,0 +1,12 @@
+{
+  "id": "20260831-v4111-litegraph-control-sync-diagnosis",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "command_timeout": 90,
+  "task_timeout": 300,
+  "memory_limit_mb": 512,
+  "commands": [
+    "set -eu; CONTROL=\"$HOME/agent-workspace/repos/litegraph/control\"; echo '=== STATUS ==='; git -C \"$CONTROL\" status -sb; echo LOCAL_HEAD=$(git -C \"$CONTROL\" rev-parse HEAD); echo LOCAL_ORIGIN=$(git -C \"$CONTROL\" rev-parse origin/agent-control 2>/dev/null || true); echo REMOTE_HEAD=$(git -C \"$CONTROL\" ls-remote origin refs/heads/agent-control | awk '{print $1}'); echo '=== LOCAL CONTROL REQUEST ==='; if test -f \"$CONTROL/.agent/daemon/control.json\"; then cat \"$CONTROL/.agent/daemon/control.json\"; else echo '<missing>'; fi; echo '=== RECENT CONTROL HISTORY ==='; git -C \"$CONTROL\" log -n 12 --oneline -- .agent/daemon/control.json"
+  ]
+}
