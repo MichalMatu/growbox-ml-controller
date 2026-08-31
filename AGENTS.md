@@ -10,7 +10,7 @@ Repository identity:
 - local-agent repository id: `growbox-ml-controller`
 - control branch: `agent-control`
 - default source branch: `main`
-- execution model: one shared supervisor across repositories, with at most one local task executing at a time
+- execution model: one shared bounded-parallel supervisor; one task per repository at a time, with cross-repository overlap only when task resource admission permits it; the serial supervisor remains the fallback
 
 ### New chat bootstrap
 
@@ -30,6 +30,8 @@ When starting work on this repository in a new chat/session:
 `agent-control` is a control plane, not a development branch. Product/source changes belong on the requested source/work branch. The control branch is reserved for Local Agent queue, status, run, result, and daemon-control files under `.agent/`.
 
 The canonical Local Agent implementation and operational documentation live in `MichalMatu/local-agent`. If the control protocol changes, update this bootstrap section so future chats do not depend on remembered conversation context.
+
+Resource classification is conservative. Omit `resources` for PlatformIO-heavy builds, USB, serial, flashing, hardware work, or uncertain machine-wide tooling; omission means full `machine` exclusivity. Use `resources: []` only for clearly software-only work that is safe to overlap, with an enabled `memory_limit_mb <= 1024` (normally 512 MiB for lightweight checks). Named resources are allowed only when the shared-machine interaction is understood. Read the actual running `daemon_version`, `self_revision`, `execution_model`, and `max_parallel_workers` from `.agent/status/daemon.json` rather than pinning a release number here.
 
 For substantial coding tasks, prefer `workflow_policy: "efficient-verification-v1"` with explicit `work` / `focused` stages and exactly one final `full` verification stage. Task payloads are immutable: a claimed or interrupted task is not replayed automatically, so changed work or an intentional retry must use a new unique task id. A successful local task proves execution and verification; source publication remains an explicit final step.
 
