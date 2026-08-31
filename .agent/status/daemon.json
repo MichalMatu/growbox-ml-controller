@@ -2,8 +2,8 @@
   "version": 1,
   "daemon_version": "4.11.0",
   "state": "idle",
-  "pid": 76291,
-  "updated_at": "2026-08-31T16:27:10.854607+00:00",
+  "pid": 77212,
+  "updated_at": "2026-08-31T16:29:12.403867+00:00",
   "self_revision": "866640447c4225edf47bb2cd82f24dfdf8759bdd",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -22,8 +22,8 @@
   "control_branch": "agent-control",
   "default_branch": "main",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 76291,
+  "worker_pid": 77212,
   "supervisor_pid": 71294,
-  "last_task_id": "20260831-local-agent-v4111-readable-logs",
+  "last_task_id": "20260831-local-agent-v4111-readable-logs-retry",
   "execution_variant": "parallel"
 }
