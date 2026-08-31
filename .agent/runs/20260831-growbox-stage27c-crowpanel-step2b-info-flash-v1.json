@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260831-growbox-stage27c-crowpanel-step2b-info-flash-v1",
+  "task_digest": "c397154a498268c3f1bc71c894ed2a5cec39878e8c49f716b3a1995caaa5cfcf",
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-31T03:10:07.838805+00:00",
+  "attempt_id": "0ff61b687ec441e4f172ab91",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 60761,
+  "updated_at": "2026-08-31T03:10:07.838923+00:00",
+  "pid": 60761
+}
