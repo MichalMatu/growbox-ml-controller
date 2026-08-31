@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260831-v4111-machine-exclusion-growbox",
+  "task_digest": "65585236a4b6b190fb2c765b448974dac8a07dfa5e63ee5049ec7d5599047d66",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 256,
+  "started_at": "2026-08-31T19:54:25.144345+00:00",
+  "attempt_id": "3c1daea3e4a6d6e0b99f254b",
+  "daemon_version": "4.11.1",
+  "daemon_pid": 93411,
+  "updated_at": "2026-08-31T19:54:25.144477+00:00",
+  "pid": 93411
+}
