@@ -1,0 +1,13 @@
+{
+  "id": "20260831-v4111-launchctl-submit-capability",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 60,
+  "task_timeout": 180,
+  "memory_limit_mb": 256,
+  "commands": [
+    "set -eu; launchctl help submit 2>&1 | head -n 80"
+  ]
+}
