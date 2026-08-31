@@ -1,0 +1,15 @@
+{
+  "id": "20260831-growbox-stage27c-crowpanel-step2-flash-v1",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "command_timeout": 1800,
+  "idle_timeout": 600,
+  "task_timeout": 3600,
+  "memory_limit_mb": 8192,
+  "commands": [
+    "git fetch origin mvp/environment-controller && git reset --hard origin/mvp/environment-controller && test \"$(git rev-parse HEAD)\" = \"063ff4d004dce20c61307fe24114611ff5ae43f6\" && test -e /dev/cu.usbserial-110",
+    "PORT=/dev/cu.usbserial-110 bash scripts/stage27c_crowpanel.sh flash",
+    ".venv/bin/python - <<'PY'\nimport serial\nimport time\n\nport = '/dev/cu.usbserial-110'\ndeadline = time.monotonic() + 120.0\nprint(f'SERIAL_CAPTURE_BEGIN port={port} seconds=120', flush=True)\nwith serial.Serial(port, 115200, timeout=1.0) as ser:\n    while time.monotonic() < deadline:\n        raw = ser.readline()\n        if raw:\n            print(raw.decode('utf-8', errors='replace').rstrip(), flush=True)\nprint('SERIAL_CAPTURE_END', flush=True)\nPY"
+  ]
+}
