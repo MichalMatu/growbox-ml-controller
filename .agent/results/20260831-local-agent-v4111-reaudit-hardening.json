@@ -1,0 +1,89 @@
+{
+  "id": "20260831-local-agent-v4111-reaudit-hardening",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "started_at": "2026-08-31T17:01:23.763878+00:00",
+  "command_timeout": 1200,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -eu; cd /Users/michal/local-agent-v4.11.1-logging-staging; git fetch origin v4.11.1-logging-staging; git reset --hard d34e0ee9ecc8fa773fd374b9c91bf992566421cb; git clean -fd; test \"$(git branch --show-current)\" = v4.11.1-logging-staging; test \"$(git rev-parse HEAD)\" = d34e0ee9ecc8fa773fd374b9c91bf992566421cb; curl -fsSL https://raw.githubusercontent.com/MichalMatu/growbox-ml-controller/agent-control/.agent/patches/v4111_reaudit_hardening.py -o /tmp/v4111_reaudit_hardening.py; python3 /tmp/v4111_reaudit_hardening.py; git diff --check",
+      "exit_code": 0,
+      "output": "From https://github.com/MichalMatu/local-agent\n * branch            v4.11.1-logging-staging -> FETCH_HEAD\nHEAD is now at d34e0ee Recover interrupted control metadata before sync\n",
+      "elapsed_seconds": 3.012,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 1024,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 8.88,
+      "current_rss_mb": 8.88,
+      "stage_name": "apply-reaudit-hardening",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "stage_timeout": 300,
+      "verification_level": "work"
+    }
+  ],
+  "verification": [
+    {
+      "command": "set -eu; cd /Users/michal/local-agent-v4.11.1-logging-staging; env -u LOCAL_AGENT_LEASE_FDS -u LOCAL_AGENT_LEASE_KEYS_DIGEST /Users/michal/local-agent/.venv/bin/python -m py_compile agent_storage.py agentd.py agent_core.py agent_parallel.py agent_parallel_worker.py tests/test_agent_storage.py tests/test_agentd.py tests/test_agent_core.py; env -u LOCAL_AGENT_LEASE_FDS -u LOCAL_AGENT_LEASE_KEYS_DIGEST /Users/michal/local-agent/.venv/bin/python -m ruff check agent_storage.py agentd.py agent_core.py agent_parallel.py agent_parallel_worker.py tests/test_agent_storage.py tests/test_agentd.py tests/test_agent_core.py; env -u LOCAL_AGENT_LEASE_FDS -u LOCAL_AGENT_LEASE_KEYS_DIGEST /Users/michal/local-agent/.venv/bin/python -m unittest -q tests.test_agent_storage tests.test_agentd tests.test_agent_core tests.test_multirepo_crash_recovery tests.test_agent_parallel tests.test_agent_parallel_worker tests.test_parallel_control tests.test_parallel_process tests.test_parallel_once tests.test_parallel_integration; for i in 1 2 3; do echo SIGKILL_RECOVERY_RUN_$i; env -u LOCAL_AGENT_LEASE_FDS -u LOCAL_AGENT_LEASE_KEYS_DIGEST /Users/michal/local-agent/.venv/bin/python -m unittest -q tests.test_multirepo_crash_recovery.MultiRepositoryCrashRecoveryTests.test_worker_sigkill_keeps_lease_until_orphaned_command_exits; done; git diff --check",
+      "exit_code": 1,
+      "output": "/Users/michal/local-agent/.venv/bin/python: No module named ruff\n",
+      "elapsed_seconds": 3.803,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 1024,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": null,
+      "stage_name": "focused-recovery-and-logging-regression",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "verification",
+      "stage_timeout": 1200,
+      "verification_level": "focused"
+    }
+  ],
+  "stages": [
+    {
+      "stage_name": "apply-reaudit-hardening",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "verification_level": "work",
+      "outcome": "passed",
+      "elapsed_seconds": 3.012
+    },
+    {
+      "stage_name": "focused-recovery-and-logging-regression",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "verification",
+      "verification_level": "focused",
+      "outcome": "failed",
+      "elapsed_seconds": 3.803
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.807
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.812
+  },
+  "failure_reason": "verification_failed",
+  "finished_at": "2026-08-31T17:01:35.565757+00:00",
+  "task_digest": "f75c8d768c4b358004ef69069fad69e536eed541c3f50c4520c823167a2a221e",
+  "idle_timeout": 600,
+  "task_timeout": 5400,
+  "memory_limit_mb": 1024,
+  "attempt_id": "1c40aa80e7d52e5865695674",
+  "daemon_version": "4.11.0"
+}
