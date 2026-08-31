@@ -1,0 +1,57 @@
+{
+  "id": "20260831-v4111-final-production-bootstrap",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "started_at": "2026-08-31T17:45:27.838849+00:00",
+  "command_timeout": 1200,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -eu; REPO=/Users/michal/local-agent; TARGET=775c6c08dc03de329ec61c5e55781857673e4a6d; OLD=$(git -C \"$REPO\" rev-parse HEAD); test \"$(git -C \"$REPO\" branch --show-current)\" = main; test -z \"$(git -C \"$REPO\" status --porcelain --untracked-files=normal)\"; git -C \"$REPO\" fetch --quiet origin main; test \"$(git -C \"$REPO\" rev-parse origin/main)\" = \"$TARGET\"; git -C \"$REPO\" merge-base --is-ancestor \"$OLD\" \"$TARGET\"; git -C \"$REPO\" pull --ff-only --quiet origin main; test \"$(git -C \"$REPO\" rev-parse HEAD)\" = \"$TARGET\"; if ! (cd \"$REPO\" && env -u LOCAL_AGENT_LEASE_FDS -u LOCAL_AGENT_LEASE_KEYS_DIGEST \"$REPO/.venv/bin/python\" -c 'import agentd; ok,error=agentd._validate_installed_update(); print(\"VALIDATION_OK=\" + str(ok)); print(error if error else \"\"); raise SystemExit(0 if ok else 1)'); then git -C \"$REPO\" reset --hard \"$OLD\"; echo ROLLED_BACK_TO=$OLD; exit 1; fi; VERSION=$(cd \"$REPO\" && \"$REPO/.venv/bin/python\" -c 'import agent_version; print(agent_version.RELEASE_VERSION)'); test \"$VERSION\" = 4.11.1; LABEL=com.michal.local-agent-v4111-bootstrap; launchctl remove \"$LABEL\" >/dev/null 2>&1 || true; UID_NUM=$(id -u); launchctl submit -l \"$LABEL\" -- /bin/sh -c \"sleep 20; /bin/launchctl kickstart -k gui/$UID_NUM/com.michal.local-agent\"; echo OLD_SHA=$OLD; echo TARGET_SHA=$TARGET; echo VERSION=$VERSION; echo RESTART_HELPER=$LABEL; echo RESTART_DELAY_SECONDS=20",
+      "exit_code": 0,
+      "output": "VALIDATION_OK=True\n\nOLD_SHA=866640447c4225edf47bb2cd82f24dfdf8759bdd\nTARGET_SHA=775c6c08dc03de329ec61c5e55781857673e4a6d\nVERSION=4.11.1\nRESTART_HELPER=com.michal.local-agent-v4111-bootstrap\nRESTART_DELAY_SECONDS=20\n",
+      "elapsed_seconds": 175.38,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 1024,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 30.08,
+      "current_rss_mb": 30.08,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 175.38
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.257
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.939
+  },
+  "finished_at": "2026-08-31T17:48:27.953174+00:00",
+  "task_digest": "ffc0e3218abd4c2fd82ec7b187efbf5bc49dd7d07fb6a41b18c3d463e698bef3",
+  "idle_timeout": 600,
+  "task_timeout": 2400,
+  "memory_limit_mb": 1024,
+  "attempt_id": "db32d627d6b04ef681471da5",
+  "daemon_version": "4.11.0"
+}
