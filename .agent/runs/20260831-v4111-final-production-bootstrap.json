@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260831-v4111-final-production-bootstrap",
+  "task_digest": "ffc0e3218abd4c2fd82ec7b187efbf5bc49dd7d07fb6a41b18c3d463e698bef3",
+  "idle_timeout": 600,
+  "task_timeout": 2400,
+  "memory_limit_mb": 1024,
+  "started_at": "2026-08-31T17:45:27.838775+00:00",
+  "attempt_id": "db32d627d6b04ef681471da5",
+  "daemon_version": "4.11.0",
+  "daemon_pid": 24707,
+  "updated_at": "2026-08-31T17:45:27.838905+00:00",
+  "pid": 24707
+}
