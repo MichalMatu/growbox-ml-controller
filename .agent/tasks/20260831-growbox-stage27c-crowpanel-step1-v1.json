@@ -1,0 +1,15 @@
+{
+  "id": "20260831-growbox-stage27c-crowpanel-step1-v1",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "command_timeout": 5400,
+  "idle_timeout": 1200,
+  "task_timeout": 10800,
+  "memory_limit_mb": 8192,
+  "commands": [
+    "git fetch origin mvp/environment-controller && git reset --hard origin/mvp/environment-controller && git clean -fd && test \"$(git rev-parse HEAD)\" = \"063ff4d004dce20c61307fe24114611ff5ae43f6\" && test -z \"$(git status --porcelain)\" && .venv/bin/pre-commit run --files config/idf/sdkconfig.defaults.n8r8 scripts/stage27c_crowpanel.sh docs/STAGE27C_CROWPANEL_BRINGUP.md && git diff --check",
+    "bash scripts/stage27c_crowpanel.sh clean && bash scripts/stage27c_crowpanel.sh build && grep -E '^(CONFIG_ESPTOOLPY_FLASHSIZE_8MB|CONFIG_SPIRAM|CONFIG_SPIRAM_MODE_OCT|CONFIG_BT_NIMBLE_ENABLED)=' build/idf-stage27c-crowpanel/sdkconfig && grep -E '^(GROWBOX_BOARD_PROFILE|GROWBOX_APP_MODE|GROWBOX_I2C_SDA_GPIO|GROWBOX_I2C_SCL_GPIO|GROWBOX_BLE_OUTSIDE_MAC):' build/idf-stage27c-crowpanel/CMakeCache.txt",
+    ".venv/bin/python -m serial.tools.list_ports -v"
+  ]
+}
