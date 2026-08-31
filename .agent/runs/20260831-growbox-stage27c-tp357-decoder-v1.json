@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260831-growbox-stage27c-tp357-decoder-v1",
+  "task_digest": "0f9f6fd1cf4c8d401b3825ff3706061e6e83de09865e44ef5a9c8c8061e9d7c3",
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-08-31T05:27:07.908019+00:00",
+  "attempt_id": "22daa7e72d07565c178c1d07",
+  "daemon_version": "4.10.2",
+  "daemon_pid": 7312,
+  "updated_at": "2026-08-31T05:27:07.908160+00:00",
+  "pid": 7312
+}
