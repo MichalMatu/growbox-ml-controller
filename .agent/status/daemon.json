@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "daemon_version": "4.10.2-parallel-staging",
+  "daemon_version": "4.11.0",
   "state": "idle",
-  "pid": 70745,
-  "updated_at": "2026-08-31T16:14:34.372651+00:00",
-  "self_revision": "084e81b792cd01a261a0f0ee1a2a9b46b9964168",
+  "pid": 71688,
+  "updated_at": "2026-08-31T16:16:32.452385+00:00",
+  "self_revision": "866640447c4225edf47bb2cd82f24dfdf8759bdd",
   "poll_seconds": 15,
   "self_update_seconds": 60,
   "command_timeout_default": 900,
@@ -22,8 +22,8 @@
   "control_branch": "agent-control",
   "default_branch": "main",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 70745,
-  "supervisor_pid": 54539,
-  "last_task_id": "20260831-local-agent-v411-main-migration",
-  "execution_variant": "parallel_staging"
+  "worker_pid": 71688,
+  "supervisor_pid": 71294,
+  "last_task_id": "20260831-local-agent-v411-staging-cleanup",
+  "execution_variant": "parallel"
 }
