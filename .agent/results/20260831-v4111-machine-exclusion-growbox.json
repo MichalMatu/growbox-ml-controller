@@ -1,0 +1,57 @@
+{
+  "id": "20260831-v4111-machine-exclusion-growbox",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "started_at": "2026-08-31T19:54:25.144412+00:00",
+  "command_timeout": 60,
+  "edits": {},
+  "commands": [
+    {
+      "command": "python3 -c 'import datetime,time; print(\"START=\"+datetime.datetime.now(datetime.timezone.utc).isoformat()); time.sleep(15); print(\"END=\"+datetime.datetime.now(datetime.timezone.utc).isoformat())'",
+      "exit_code": 0,
+      "output": "START=2026-08-31T19:54:27.848770+00:00\nEND=2026-08-31T19:54:42.868061+00:00\n",
+      "elapsed_seconds": 15.478,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 256,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 14.14,
+      "current_rss_mb": 14.14,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 15.478
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.204
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.125
+  },
+  "finished_at": "2026-08-31T19:54:43.527145+00:00",
+  "task_digest": "65585236a4b6b190fb2c765b448974dac8a07dfa5e63ee5049ec7d5599047d66",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 256,
+  "attempt_id": "3c1daea3e4a6d6e0b99f254b",
+  "daemon_version": "4.11.1"
+}
