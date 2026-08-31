@@ -1,0 +1,34 @@
+{
+  "id": "20260831-local-agent-v4111-final-control-hardening",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": ["machine"],
+  "memory_limit_mb": 1024,
+  "command_timeout": 1800,
+  "idle_timeout": 600,
+  "task_timeout": 7200,
+  "workflow_policy": "efficient-verification-v1",
+  "steps": [
+    {
+      "name": "apply-final-control-hardening",
+      "verification_level": "work",
+      "timeout": 300,
+      "command": "set -eu; cd /Users/michal/local-agent-v4.11.1-logging-staging; git fetch origin v4.11.1-logging-staging; git reset --hard 0cb1fe60be0d4518df83904af88cb828d2dedf1e; git clean -fd; test \"$(git branch --show-current)\" = v4.11.1-logging-staging; test \"$(git rev-parse HEAD)\" = 0cb1fe60be0d4518df83904af88cb828d2dedf1e; curl -fsSL https://raw.githubusercontent.com/MichalMatu/growbox-ml-controller/agent-control/.agent/patches/v4111_final_control_hardening.py -o /tmp/v4111_final_control_hardening.py; python3 /tmp/v4111_final_control_hardening.py; git diff --check"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "focused-control-self-update-regression",
+      "verification_level": "focused",
+      "timeout": 1800,
+      "command": "set -eu; cd /Users/michal/local-agent-v4.11.1-logging-staging; env -u LOCAL_AGENT_LEASE_FDS -u LOCAL_AGENT_LEASE_KEYS_DIGEST /Users/michal/local-agent/.venv/bin/python -m py_compile agentd.py agent_parallel.py agent_repo_worker.py tests/test_agentd.py tests/test_parallel_control.py tests/test_agent_repo_control.py; test -x /tmp/local-agent-v4111-ruff/bin/ruff || { rm -rf /tmp/local-agent-v4111-ruff; python3 -m venv /tmp/local-agent-v4111-ruff; /tmp/local-agent-v4111-ruff/bin/python -m pip install --disable-pip-version-check -q ruff==0.12.11; }; /tmp/local-agent-v4111-ruff/bin/ruff check agentd.py agent_parallel.py agent_repo_worker.py tests/test_agentd.py tests/test_parallel_control.py tests/test_agent_repo_control.py; env -u LOCAL_AGENT_LEASE_FDS -u LOCAL_AGENT_LEASE_KEYS_DIGEST /Users/michal/local-agent/.venv/bin/python -m unittest -q tests.test_agentd tests.test_parallel_control tests.test_agent_repo_control tests.test_agent_storage tests.test_multirepo_crash_recovery tests.test_agent_parallel tests.test_parallel_process tests.test_parallel_integration; git diff --check"
+    },
+    {
+      "name": "full-release-gate-and-publish-final-staging",
+      "verification_level": "full",
+      "timeout": 3000,
+      "command": "set -eu; cd /Users/michal/local-agent-v4.11.1-logging-staging; env -u LOCAL_AGENT_LEASE_FDS -u LOCAL_AGENT_LEASE_KEYS_DIGEST /Users/michal/local-agent/.venv/bin/python -m py_compile agentd.py agent_config.py agent_core.py agent_runtime.py agent_process.py agent_repository.py agent_repo_worker.py agent_multirepo.py agent_parallel.py agent_parallel_worker.py agent_repo_admin.py agent_storage.py agentctl.py agent_version.py; /tmp/local-agent-v4111-ruff/bin/ruff check agentd.py agent_config.py agent_core.py agent_runtime.py agent_process.py agent_repository.py agent_repo_worker.py agent_multirepo.py agent_parallel.py agent_parallel_worker.py agent_repo_admin.py agent_storage.py agentctl.py agent_version.py tests; env -u LOCAL_AGENT_LEASE_FDS -u LOCAL_AGENT_LEASE_KEYS_DIGEST /Users/michal/local-agent/.venv/bin/python -m unittest discover -q; git diff --check; git status --short; git add agentd.py agent_parallel.py agent_repo_worker.py tests/test_agentd.py tests/test_parallel_control.py tests/test_agent_repo_control.py docs/RELEASE_NOTES_V4.11.1.md; git commit -m 'Harden self-update and control ACK durability'; git push origin HEAD:v4.11.1-logging-staging"
+    }
+  ]
+}
