@@ -1,0 +1,14 @@
+{
+  "id": "20260831-parallel-live-growbox-a",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "command_timeout": 60,
+  "idle_timeout": 30,
+  "task_timeout": 180,
+  "memory_limit_mb": 512,
+  "resources": [],
+  "commands": [
+    "python -c \"import datetime,time; print('PARALLEL_GROWBOX_START', datetime.datetime.now(datetime.timezone.utc).isoformat(), flush=True); time.sleep(20); print('PARALLEL_GROWBOX_END', datetime.datetime.now(datetime.timezone.utc).isoformat(), flush=True)\""
+  ]
+}
