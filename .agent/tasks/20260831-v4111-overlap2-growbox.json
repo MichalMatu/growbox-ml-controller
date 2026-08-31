@@ -1,0 +1,12 @@
+{
+  "id": "20260831-v4111-overlap2-growbox",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 256,
+  "command_timeout": 60,
+  "commands": [
+    "set -eu; SELF=/tmp/local-agent-v4111-overlap2-growbox-20260831-1949; PEER=/tmp/local-agent-v4111-overlap2-matrixhub-20260831-1949; rm -f \"$SELF\"; touch \"$SELF\"; echo START=$(date -u +%Y-%m-%dT%H:%M:%SZ); for i in $(seq 1 40); do if [ -e \"$PEER\" ]; then echo PEER_SEEN_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ); exit 0; fi; sleep 1; done; echo PEER_NOT_SEEN; exit 7"
+  ]
+}
