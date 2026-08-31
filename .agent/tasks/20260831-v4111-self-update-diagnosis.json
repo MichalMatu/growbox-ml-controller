@@ -1,0 +1,12 @@
+{
+  "id": "20260831-v4111-self-update-diagnosis",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "command_timeout": 180,
+  "task_timeout": 600,
+  "memory_limit_mb": 512,
+  "commands": [
+    "set -eu; echo '=== GIT STATE ==='; git -C /Users/michal/local-agent status --short; echo HEAD=$(git -C /Users/michal/local-agent rev-parse HEAD); echo ORIGIN_MAIN_LOCAL=$(git -C /Users/michal/local-agent rev-parse origin/main 2>/dev/null || true); echo ORIGIN_MAIN_REMOTE=$(git -C /Users/michal/local-agent ls-remote origin refs/heads/main | awk '{print $1}'); echo '=== REJECTED UPDATE ==='; find \"$HOME/Library/Application Support/local-agent\" -maxdepth 4 -name 'rejected-self-update.json' -print -exec cat {} \\; 2>/dev/null || true; echo '=== SELF UPDATE LOG ==='; grep -i 'self-update' \"$HOME/Library/Logs/local-agent.log\" | tail -n 80 || true; echo '=== ERROR LOG ==='; tail -n 80 \"$HOME/Library/Logs/local-agent-error.log\" || true"
+  ]
+}
