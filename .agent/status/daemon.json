@@ -3,7 +3,7 @@
   "daemon_version": "4.11.1",
   "state": "idle",
   "pid": 89668,
-  "updated_at": "2026-08-31T19:47:41.691085+00:00",
+  "updated_at": "2026-08-31T19:48:05.555939+00:00",
   "self_revision": "72e1a51f98e7b2b6c2229175b18b5dcd928bd7d6",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -24,5 +24,6 @@
   "execution_model": "multi_repository_worker",
   "worker_pid": 89668,
   "supervisor_pid": 71830,
-  "control_id": "20260831-v4111-growbox-status-diagnostic"
+  "last_task_id": "20260831-v4111-overlap-growbox",
+  "execution_variant": "parallel"
 }
