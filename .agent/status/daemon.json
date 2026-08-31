@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "daemon_version": "4.10.2",
+  "daemon_version": "4.10.2-parallel-staging",
   "state": "idle",
-  "pid": 127,
-  "updated_at": "2026-08-31T13:07:48.409901+00:00",
-  "self_revision": "c98d97025c97c682118ba29383956351d8459c77",
+  "pid": 51546,
+  "updated_at": "2026-08-31T15:28:19.250318+00:00",
+  "self_revision": "084e81b792cd01a261a0f0ee1a2a9b46b9964168",
   "poll_seconds": 15,
   "self_update_seconds": 60,
   "command_timeout_default": 900,
@@ -22,6 +22,8 @@
   "control_branch": "agent-control",
   "default_branch": "main",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 127,
-  "supervisor_pid": 1293
+  "worker_pid": 51546,
+  "supervisor_pid": 50794,
+  "last_task_id": "20260831-parallel-live-growbox-a",
+  "execution_variant": "parallel_staging"
 }
