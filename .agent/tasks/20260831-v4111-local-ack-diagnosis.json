@@ -1,0 +1,12 @@
+{
+  "id": "20260831-v4111-local-ack-diagnosis",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "command_timeout": 120,
+  "task_timeout": 300,
+  "memory_limit_mb": 512,
+  "commands": [
+    "set -eu; echo '=== REGISTRY ==='; cat \"$HOME/Library/Application Support/local-agent/repositories.json\"; echo '=== LOCAL ACK SEARCH ==='; find \"$HOME\" -path '*/.agent/daemon/acks/20260831-v4111-final-self-update.json' -print -exec cat {} \\; 2>/dev/null || true; echo '=== EXACT LOG ID ==='; grep -F '20260831-v4111-final-self-update' \"$HOME/Library/Logs/local-agent.log\" | tail -n 80 || true"
+  ]
+}
