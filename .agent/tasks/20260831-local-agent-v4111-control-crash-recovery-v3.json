@@ -1,0 +1,18 @@
+{
+  "id": "20260831-local-agent-v4111-control-crash-recovery-v3",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 512,
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 3000,
+  "commands": [
+    "set -eu; cd /Users/michal/local-agent-v4.11.1-logging-staging; git fetch origin v4.11.1-logging-staging; git reset --hard origin/v4.11.1-logging-staging; git clean -fd; test \"$(git rev-parse HEAD)\" = 769ac36c9b8eda637ec5eff15a27001efc5d6778; curl -fsSL https://raw.githubusercontent.com/MichalMatu/growbox-ml-controller/agent-control/.agent/patches/v4111_control_recovery.py -o /tmp/v4111_control_recovery.py; python3 /tmp/v4111_control_recovery.py",
+    "cd /Users/michal/local-agent-v4.11.1-logging-staging && git diff --check && env -u LOCAL_AGENT_LEASE_FDS -u LOCAL_AGENT_LEASE_KEYS_DIGEST /Users/michal/local-agent/.venv/bin/python -m py_compile agent_storage.py tests/test_agent_storage.py && env -u LOCAL_AGENT_LEASE_FDS -u LOCAL_AGENT_LEASE_KEYS_DIGEST /Users/michal/local-agent/.venv/bin/python -m unittest -q tests.test_agent_storage tests.test_multirepo_crash_recovery tests.test_agent_parallel tests.test_parallel_integration tests.test_parallel_process tests.test_parallel_control tests.test_parallel_once",
+    "cd /Users/michal/local-agent-v4.11.1-logging-staging && for i in 1 2 3; do echo CRASH_RECOVERY_RUN_$i; env -u LOCAL_AGENT_LEASE_FDS -u LOCAL_AGENT_LEASE_KEYS_DIGEST /Users/michal/local-agent/.venv/bin/python -m unittest -q tests.test_multirepo_crash_recovery.MultiRepositoryCrashRecoveryTests.test_worker_sigkill_keeps_lease_until_orphaned_command_exits || exit 1; done",
+    "cd /Users/michal/local-agent-v4.11.1-logging-staging && git status --short && git diff -- agent_storage.py tests/test_agent_storage.py docs/RELEASE_NOTES_V4.11.1.md",
+    "cd /Users/michal/local-agent-v4.11.1-logging-staging && git add agent_storage.py tests/test_agent_storage.py docs/RELEASE_NOTES_V4.11.1.md && git commit -m 'Recover interrupted control metadata before sync' && git push origin HEAD:v4.11.1-logging-staging"
+  ]
+}
