@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260902-growbox-stage27c-night-observability-v1",
+  "task_digest": "d8cc570eba01d3646dd884d06992fa9017c8577a135d0a33ffe6872aa42e38b4",
+  "idle_timeout": 1200,
+  "task_timeout": 10800,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-09-01T23:39:56.171273+00:00",
+  "attempt_id": "42b58ae432d6ef0838dfaa48",
+  "daemon_version": "4.12.2",
+  "daemon_pid": 5531,
+  "updated_at": "2026-09-01T23:39:56.171417+00:00",
+  "pid": 5531
+}
