@@ -78,6 +78,7 @@ bool BleClimateScanner::startScan() noexcept {
   uint8_t own_address_type = 0U;
   if (ble_hs_id_infer_auto(0, &own_address_type) != 0) {
     scanning_.store(false, std::memory_order_relaxed);
+    scan_start_error_count_.fetch_add(1U, std::memory_order_relaxed);
     return false;
   }
 
@@ -89,7 +90,12 @@ bool BleClimateScanner::startScan() noexcept {
   const int error =
       ble_gap_disc(own_address_type, BLE_HS_FOREVER, &params, &BleClimateScanner::gapEvent, this);
   scanning_.store(error == 0, std::memory_order_relaxed);
-  return error == 0;
+  if (error == 0) {
+    scan_start_count_.fetch_add(1U, std::memory_order_relaxed);
+    return true;
+  }
+  scan_start_error_count_.fetch_add(1U, std::memory_order_relaxed);
+  return false;
 }
 
 int BleClimateScanner::gapEvent(struct ble_gap_event* event, void* context) {
@@ -100,6 +106,8 @@ int BleClimateScanner::gapEvent(struct ble_gap_event* event, void* context) {
   if (event->type == BLE_GAP_EVENT_DISC) {
     self->handleAdvertisement(event->disc.addr.val, event->disc.data, event->disc.length_data);
   } else if (event->type == BLE_GAP_EVENT_DISC_COMPLETE) {
+    self->scan_complete_count_.fetch_add(1U, std::memory_order_relaxed);
+    self->scan_restart_count_.fetch_add(1U, std::memory_order_relaxed);
     self->scanning_.store(false, std::memory_order_relaxed);
     self->startScan();
   }
@@ -109,6 +117,7 @@ int BleClimateScanner::gapEvent(struct ble_gap_event* event, void* context) {
 void BleClimateScanner::handleAdvertisement(const std::uint8_t* address, const std::uint8_t* data,
                                             std::size_t size) noexcept {
   if (mutex_ == nullptr || xSemaphoreTake(mutex_, pdMS_TO_TICKS(20)) != pdTRUE) {
+    advertisement_lock_drop_count_.fetch_add(1U, std::memory_order_relaxed);
     return;
   }
   static_cast<void>(state_.ingestNimbleAdvertisement(address, data, size, monotonicMilliseconds()));

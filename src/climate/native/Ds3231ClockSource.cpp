@@ -31,7 +31,8 @@ bool Ds3231ClockSource::begin(NativeI2cBus& bus) noexcept {
   return available_;
 }
 
-bool Ds3231ClockSource::sample(std::uint64_t, ClimateWallClockSnapshot& output) noexcept {
+bool Ds3231ClockSource::sample(std::uint64_t monotonic_ms,
+                               ClimateWallClockSnapshot& output) noexcept {
   output = {};
   if (device_ == nullptr) {
     available_ = false;
@@ -43,6 +44,7 @@ bool Ds3231ClockSource::sample(std::uint64_t, ClimateWallClockSnapshot& output) 
   const std::uint8_t time_register = kTimeRegister;
   if (i2c_master_transmit_receive(device_, &time_register, 1U, registers.data(), registers.size(),
                                   kTimeoutMs) != ESP_OK) {
+    ++read_error_count_;
     available_ = false;
     trusted_ = false;
     return false;
@@ -52,14 +54,22 @@ bool Ds3231ClockSource::sample(std::uint64_t, ClimateWallClockSnapshot& output) 
   const std::uint8_t status_register = kStatusRegister;
   if (i2c_master_transmit_receive(device_, &status_register, 1U, &status, 1U, kTimeoutMs) !=
       ESP_OK) {
+    ++read_error_count_;
     available_ = false;
     trusted_ = false;
     return false;
   }
 
+  ++successful_read_count_;
+  last_successful_read_ms_ = monotonic_ms;
   available_ = true;
   Ds3231DecodedTime decoded{};
   trusted_ = decodeDs3231Time(registers, status, decoded);
+  if (trusted_) {
+    last_trusted_read_ms_ = monotonic_ms;
+  } else {
+    ++untrusted_read_count_;
+  }
   output.valid = trusted_;
   output.unix_time_s = trusted_ ? decoded.unix_time_s : 0U;
   return true;

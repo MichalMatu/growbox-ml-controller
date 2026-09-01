@@ -22,11 +22,31 @@ public:
   bool trusted() const noexcept {
     return trusted_;
   }
+  std::uint32_t successfulReadCount() const noexcept {
+    return successful_read_count_;
+  }
+  std::uint32_t readErrorCount() const noexcept {
+    return read_error_count_;
+  }
+  std::uint32_t untrustedReadCount() const noexcept {
+    return untrusted_read_count_;
+  }
+  std::uint64_t lastSuccessfulReadMs() const noexcept {
+    return last_successful_read_ms_;
+  }
+  std::uint64_t lastTrustedReadMs() const noexcept {
+    return last_trusted_read_ms_;
+  }
 
 private:
   i2c_master_dev_handle_t device_ = nullptr;
   bool available_ = false;
   bool trusted_ = false;
+  std::uint32_t successful_read_count_ = 0U;
+  std::uint32_t read_error_count_ = 0U;
+  std::uint32_t untrusted_read_count_ = 0U;
+  std::uint64_t last_successful_read_ms_ = 0U;
+  std::uint64_t last_trusted_read_ms_ = 0U;
 };
 
 } // namespace growbox::app::climate_io::native

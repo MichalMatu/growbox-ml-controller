@@ -41,6 +41,22 @@ public:
   std::uint32_t xiaomiAcceptedCount() const noexcept;
   std::uint32_t xiaomiRejectedCount() const noexcept;
 
+  std::uint32_t scanStartCount() const noexcept {
+    return scan_start_count_.load(std::memory_order_relaxed);
+  }
+  std::uint32_t scanStartErrorCount() const noexcept {
+    return scan_start_error_count_.load(std::memory_order_relaxed);
+  }
+  std::uint32_t scanRestartCount() const noexcept {
+    return scan_restart_count_.load(std::memory_order_relaxed);
+  }
+  std::uint32_t scanCompleteCount() const noexcept {
+    return scan_complete_count_.load(std::memory_order_relaxed);
+  }
+  std::uint32_t advertisementLockDropCount() const noexcept {
+    return advertisement_lock_drop_count_.load(std::memory_order_relaxed);
+  }
+
 private:
   static int gapEvent(struct ble_gap_event* event, void* context);
   static void hostTask(void* parameter);
@@ -54,6 +70,11 @@ private:
   BleClimateState state_{};
   bool configured_ = false;
   std::atomic_bool scanning_{false};
+  std::atomic<std::uint32_t> scan_start_count_{0U};
+  std::atomic<std::uint32_t> scan_start_error_count_{0U};
+  std::atomic<std::uint32_t> scan_restart_count_{0U};
+  std::atomic<std::uint32_t> scan_complete_count_{0U};
+  std::atomic<std::uint32_t> advertisement_lock_drop_count_{0U};
 };
 
 } // namespace growbox::app::climate_io::native
