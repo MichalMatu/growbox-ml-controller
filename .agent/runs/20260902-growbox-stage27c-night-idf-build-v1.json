@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260902-growbox-stage27c-night-idf-build-v1",
+  "task_digest": "b18719c0dab8c58a5446f22206e058bf6d963397ee333689faad4c035d3dfa69",
+  "idle_timeout": 1200,
+  "task_timeout": 6000,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-09-01T23:50:08.555828+00:00",
+  "attempt_id": "8274dc8187003ac4357f1fc9",
+  "daemon_version": "4.12.2",
+  "daemon_pid": 12818,
+  "updated_at": "2026-09-01T23:50:08.555970+00:00",
+  "pid": 12818
+}
