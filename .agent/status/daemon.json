@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "daemon_version": "4.11.4",
+  "daemon_version": "4.11.5",
   "state": "idle",
-  "pid": 71400,
-  "updated_at": "2026-08-31T22:10:28.539749+00:00",
-  "self_revision": "140f78d83f95dc2fde74bd3a69b7330d6b10803b",
+  "pid": 35642,
+  "updated_at": "2026-09-01T00:32:38.616149+00:00",
+  "self_revision": "1d019fa3ed7b8bed1fe3d5758105cd1141831ce7",
   "poll_seconds": 15,
   "self_update_seconds": 60,
   "command_timeout_default": 900,
@@ -22,8 +22,7 @@
   "control_branch": "agent-control",
   "default_branch": "main",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 71400,
+  "worker_pid": 35642,
   "supervisor_pid": 71830,
-  "last_task_id": "20260901-growbox-main-agent-status-doc-v1",
   "execution_variant": "parallel"
 }
