@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260902-growbox-stage27c-sd-power-hold-high-v1",
+  "task_digest": "923be32c133d1e327823b88c901c666ac067804fe2363905e6510a9bd4ee8fb2",
+  "idle_timeout": 600,
+  "task_timeout": 2400,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-09-02T14:51:45.527109+00:00",
+  "attempt_id": "26c601dc9514f40254e673b0",
+  "daemon_version": "4.12.2",
+  "daemon_pid": 23919,
+  "updated_at": "2026-09-02T14:51:45.527235+00:00",
+  "pid": 23919
+}
