@@ -1,0 +1,14 @@
+{
+  "id": "20260902-growbox-stage27c-sd-power-hold-capture-v2",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": ["machine"],
+  "command_timeout": 180,
+  "idle_timeout": 120,
+  "task_timeout": 300,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "set -euo pipefail; SHA=08298e95ae46e807667b860141f21cf75eeaa15c; git fetch origin mvp/environment-controller; git reset --hard origin/mvp/environment-controller; git clean -fd; test \"$(git rev-parse HEAD)\" = \"$SHA\"; PORT_S3=\"$(.venv/bin/python -c 'from tools.stage27c_soak import detect_ch340_port; print(detect_ch340_port())')\"; PORT_S3=\"$PORT_S3\" .venv/bin/python - <<'PY'\nimport os,time,serial\nport=os.environ['PORT_S3']\nend=time.monotonic()+40\nlines=[]\nwith serial.Serial(port,115200,timeout=0.2,rtscts=False,dsrdtr=False) as s:\n    s.rts=False; s.dtr=False\n    while time.monotonic()<end:\n        raw=s.readline()\n        if not raw: continue\n        line=raw.decode('utf-8','replace').rstrip()\n        if 'stage27_sd' in line:\n            print(line); lines.append(line)\nbefore=any('level before mount=1' in x for x in lines)\nafter=any('level after mount failure=1' in x for x in lines)\nfailed=any('SD mount failed' in x for x in lines)\nprint(f'[AGENT_PROGRESS] power_before_high={str(before).lower()}')\nprint(f'[AGENT_PROGRESS] power_after_failure_high={str(after).lower()}')\nprint(f'[AGENT_PROGRESS] mount_failed={str(failed).lower()}')\nif not (before and after and failed): raise SystemExit('Did not prove GPIO42 stayed high across failed mount retry')\nPY\ntest -z \"$(git status --short)\""
+  ]
+}
