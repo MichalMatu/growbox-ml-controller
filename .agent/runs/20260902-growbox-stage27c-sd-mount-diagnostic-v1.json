@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260902-growbox-stage27c-sd-mount-diagnostic-v1",
+  "task_digest": "8c51a71feb696128ad42fa6575869126b0c47d058284b22874c505c498d8d583",
+  "idle_timeout": 180,
+  "task_timeout": 600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-02T02:25:39.954780+00:00",
+  "attempt_id": "f951110da179c7fc68287d1a",
+  "daemon_version": "4.12.2",
+  "daemon_pid": 97505,
+  "updated_at": "2026-09-02T02:25:39.954903+00:00",
+  "pid": 97505
+}
