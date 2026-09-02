@@ -5,6 +5,7 @@
 #include <esp_vfs_fat.h>
 
 #include <cerrno>
+#include <cinttypes>
 #include <cstring>
 
 namespace growbox::app::climate_io::storage {
@@ -104,7 +105,8 @@ void Stage27FlashStorageBackend::close() noexcept {
 }
 
 bool Stage27FlashStorageBackend::openSegment() noexcept {
-  std::snprintf(session_path_, sizeof(session_path_), "%s/F%u.JL", kMountPoint, current_slot_);
+  std::snprintf(session_path_, sizeof(session_path_), "%s/F%" PRIu32 ".JL", kMountPoint,
+                current_slot_);
   file_ = std::fopen(session_path_, "w");
   if (file_ == nullptr) {
     ESP_LOGW(kTag, "Failed to open flash segment %s: errno=%d", session_path_, errno);
@@ -112,8 +114,8 @@ bool Stage27FlashStorageBackend::openSegment() noexcept {
   }
 
   const std::size_t header_length = std::strlen(session_header_);
-  const int marker_length =
-      std::fprintf(file_, "%s\n{\"t\":\"seg\",\"n\":%u}\n", session_header_, segment_number_);
+  const int marker_length = std::fprintf(file_, "%s\n{\"t\":\"seg\",\"n\":%" PRIu32 "}\n",
+                                         session_header_, segment_number_);
   if (marker_length < 0 || std::fflush(file_) != 0) {
     ESP_LOGW(kTag, "Failed to initialize flash segment %s: errno=%d", session_path_, errno);
     closeFile();
