@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260903-growbox-stage27c-short-soak-v2",
+  "task_digest": "d84ea20031e5a60465cf52eb2901b850197d78b769482dffcc3caf65cb63bf3e",
+  "idle_timeout": 300,
+  "task_timeout": 1500,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-02T23:53:13.223368+00:00",
+  "attempt_id": "34df1b5e4c4bbdb0ef828b60",
+  "daemon_version": "4.13.1",
+  "daemon_pid": 97217,
+  "updated_at": "2026-09-02T23:53:13.223541+00:00",
+  "pid": 97217
+}
