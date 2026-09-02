@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260903-growbox-stage27c-dead-storage-cleanup-v1",
+  "task_digest": "ae1dfb6f3c6938237a70964cbec37b74a924b417265443a109e4a48312908dfe",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-02T22:53:51.136771+00:00",
+  "attempt_id": "42de419de2a480323565ff66",
+  "daemon_version": "4.13.1",
+  "daemon_pid": 64889,
+  "updated_at": "2026-09-02T22:53:51.137439+00:00",
+  "pid": 64889
+}
