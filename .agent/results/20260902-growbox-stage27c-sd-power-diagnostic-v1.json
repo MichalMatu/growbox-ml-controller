@@ -1,0 +1,61 @@
+{
+  "id": "20260902-growbox-stage27c-sd-power-diagnostic-v1",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "started_at": "2026-09-02T03:25:50.640147+00:00",
+  "command_timeout": 300,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail\nSHA=a1a37a153ece90367f7850b0d4334f74b29c9cbf\ngit fetch origin mvp/environment-controller\ngit reset --hard origin/mvp/environment-controller\ngit clean -fd\ntest \"$(git rev-parse HEAD)\" = \"$SHA\"\nPORT_S3=\"$(.venv/bin/python -c 'from tools.stage27c_soak import detect_ch340_port; print(detect_ch340_port())')\"\nsource scripts/source_idf.sh\nPROBE=\"$(python -m esptool --port \"$PORT_S3\" chip_id 2>&1)\"\necho \"$PROBE\"\ngrep -q 'ESP32-S3' <<<\"$PROBE\"\necho \"[AGENT_PROGRESS] capture_sd_power_mount port=$PORT_S3\"\nPORT_S3=\"$PORT_S3\" .venv/bin/python - <<'PY'\nimport os, time, serial\nport=os.environ['PORT_S3']\nend=time.monotonic()+75\nseen_power=0\nseen_mount=0\nwith serial.Serial(port=port, baudrate=115200, timeout=1) as dev:\n    try:\n        dev.dtr=False\n        dev.rts=False\n    except Exception:\n        pass\n    while time.monotonic()<end:\n        raw=dev.readline()\n        if not raw:\n            continue\n        line=raw.decode('utf-8', errors='replace').rstrip()\n        if 'stage27_sd' in line or 'Stage27 soak boot' in line:\n            print(line, flush=True)\n        if 'SD power enabled on GPIO42' in line:\n            seen_power += 1\n        if 'SD mount failed' in line or 'SD mounted on SPI2' in line:\n            seen_mount += 1\nprint(f'[AGENT_PROGRESS] power_lines={seen_power} mount_lines={seen_mount}', flush=True)\nif seen_power == 0:\n    raise SystemExit('GPIO42 SD power-enable log not observed')\nif seen_mount == 0:\n    raise SystemExit('No SD mount result observed')\nPY\ntest -z \"$(git status --short)\"",
+      "exit_code": 1,
+      "output": "From https://github.com/MichalMatu/growbox-ml-controller\n * branch            mvp/environment-controller -> FETCH_HEAD\nHEAD is now at a1a37a1 Enable CrowPanel SD power gate\nChecking \"python3\" ...\nPython 3.13.9\n\"python3\" has been detected\nActivating ESP-IDF 5.5\nSetting IDF_PATH to '/Users/michal/esp/esp-idf'.\n* Checking python version ... 3.13.9\n* Checking python dependencies ... OK\n* Deactivating the current ESP-IDF environment (if any) ... OK\n* Establishing a new ESP-IDF environment ... OK\n* Identifying shell ... bash\n* Detecting outdated tools in system ... OK - no outdated tools found\n* Shell completion ... Autocompletion code generated\nWARNING: Failed to load shell autocompletion for bash version: 3.2.57(1)-release!\n\nDone! You can now compile ESP-IDF projects.\nGo to the project directory and run:\n\n  idf.py build\nesptool.py v4.12.0\nSerial port /dev/cu.usbserial-1130\nConnecting....\nDetecting chip type... ESP32-S3\nChip is ESP32-S3 (QFN56) (revision v0.2)\nFeatures: WiFi, BLE, Embedded PSRAM 8MB (AP_3v3)\nCrystal is 40MHz\nMAC: a0:85:e3:f9:fc:14\nUploading stub...\nRunning stub...\nStub running...\nWarning: ESP32-S3 has no Chip ID. Reading MAC instead.\nMAC: a0:85:e3:f9:fc:14\nHard resetting via RTS pin...\n[AGENT_PROGRESS] capture_sd_power_mount port=/dev/cu.usbserial-1130\nI (1388) climate_stage27: Stage27 soak boot: firmware_sha=a1a37a153ece90367f7850b0d4334f74b29c9cbf reset_reason=1\nW (1578) stage27_sd: SD mount failed at uptime=675: ESP_ERR_TIMEOUT\nW (32238) stage27_sd: SD mount failed at uptime=31329: ESP_ERR_TIMEOUT\nW (62918) stage27_sd: SD mount failed at uptime=61999: ESP_ERR_TIMEOUT\n[AGENT_PROGRESS] power_lines=0 mount_lines=3\nGPIO42 SD power-enable log not observed\n",
+      "elapsed_seconds": 83.211,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 112.33,
+      "output_policy": "stream",
+      "captured_output_chars": 1694,
+      "output_truncated": false,
+      "current_rss_mb": 16.86,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "failed",
+      "elapsed_seconds": 83.211
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.128
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.294
+  },
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-02T03:27:17.009805+00:00",
+  "task_digest": "4bb66286d73bb15ccc5e29f1fefed8e1d61ef0922c6cb1fa87c685e2c6cf11d3",
+  "idle_timeout": 180,
+  "task_timeout": 600,
+  "memory_limit_mb": 4096,
+  "attempt_id": "667f422a02a557e90424f30e",
+  "daemon_version": "4.12.2"
+}
