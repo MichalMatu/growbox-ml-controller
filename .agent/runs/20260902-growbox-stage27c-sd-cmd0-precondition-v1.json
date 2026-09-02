@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260902-growbox-stage27c-sd-cmd0-precondition-v1",
+  "task_digest": "4f79fe7893bb49c6878df807a7dce1ddc3776ba5350f36a4dee52815f430a08d",
+  "idle_timeout": 600,
+  "task_timeout": 3600,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-09-02T14:15:38.266269+00:00",
+  "attempt_id": "ab891086828219c490062ddf",
+  "daemon_version": "4.12.2",
+  "daemon_pid": 2420,
+  "updated_at": "2026-09-02T14:15:38.266486+00:00",
+  "pid": 2420
+}
