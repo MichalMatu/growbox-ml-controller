@@ -43,12 +43,14 @@ When starting work on this repository in a new chat/session:
 - Machine-generated task content, commands, prompts, logs, code comments, documentation changes and commit messages authored for Local Agent execution must be English-only.
 - Task ids and payloads are immutable within this repository. Interrupted tasks are never automatically replayed.
 - `expected_head` is not implemented. If exact source identity matters, verify the expected Git SHA explicitly in an early task stage.
-- Repository workers execute at most one pending task per turn. Different repositories may run concurrently only when their effective task resources permit it; omitted or unsafe resource declarations remain fully machine-exclusive.
+- Repository workers execute at most one pending task per turn. Different repositories may run concurrently only when their declared external resources permit it; every task must declare `resources` explicitly and invalid declarations are terminal task-contract errors.
 - Repository-local workers must not perform supervisor-wide `restart` or `self_update` actions. Those are owned by the shared supervisor/launchd administration path.
 - A repository worker may report current daemon version/revision through `.agent/status/daemon.json`; use that evidence before attempting any maintenance action.
 - Use bounded task timeouts/memory. The canonical defaults are command 900 s, no-output 300 s, whole-task 1800 s and process-group RSS 4096 MiB unless the task has a justified override.
-- Resource classification is conservative: omit `resources` for PlatformIO-heavy builds, USB, serial, flashing, hardware work, or uncertain machine-wide tooling; omission means full `machine` exclusivity.
-- Use `resources: []` only for clearly software-only work that is safe to overlap, with an enabled `memory_limit_mb <= 1024` (normally 512 MiB for lightweight work). Named resources are allowed only when the shared-machine interaction is understood.
+- Every task must declare `resources` explicitly; missing, malformed, duplicated, oversized, or non-canonical declarations are terminal task-contract errors with no compatibility fallback.
+- Use `resources: []` for repository-local software work, including builds/tests, when no exclusive external device or host-global state is used. `memory_limit_mb` is an independent RSS watchdog and does not determine resource classification.
+- Use stable named resources such as `board:growbox-s3` for USB, serial, flashing, monitor, and hardware work so only tasks sharing that concrete resource serialize.
+- Use `resources: ["machine"]` only for genuine whole-host operations such as global Local Agent maintenance or host-global toolchain mutation. Resource contention is a wait state and must continue with `NEXT`, not `STOP`.
 - Successful stages must not leave background descendants.
 - Final results are durably spooled before remote publication; publication recovery must not re-execute commands.
 
