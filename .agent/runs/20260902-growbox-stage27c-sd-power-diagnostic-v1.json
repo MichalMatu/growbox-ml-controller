@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260902-growbox-stage27c-sd-power-diagnostic-v1",
+  "task_digest": "4bb66286d73bb15ccc5e29f1fefed8e1d61ef0922c6cb1fa87c685e2c6cf11d3",
+  "idle_timeout": 180,
+  "task_timeout": 600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-02T03:25:50.640028+00:00",
+  "attempt_id": "667f422a02a557e90424f30e",
+  "daemon_version": "4.12.2",
+  "daemon_pid": 38035,
+  "updated_at": "2026-09-02T03:25:50.640247+00:00",
+  "pid": 38035
+}
