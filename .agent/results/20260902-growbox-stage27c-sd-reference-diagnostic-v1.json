@@ -1,0 +1,9 @@
+{
+  "id": "20260902-growbox-stage27c-sd-reference-diagnostic-v1",
+  "status": "failed",
+  "failure_reason": "invalid_task_file",
+  "started_at": null,
+  "finished_at": "2026-09-02T14:05:58.534967+00:00",
+  "daemon_version": "4.12.2",
+  "error": "JSONDecodeError: Expecting ',' delimiter: line 12 column 1148 (char 1449)"
+}
