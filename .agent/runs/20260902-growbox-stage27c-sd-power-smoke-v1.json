@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 1,
+  "index": 2,
   "total": 2,
-  "command": "set -euo pipefail\nSHA=a1a37a153ece90367f7850b0d4334f74b29c9cbf\ngit fetch origin mvp/environment-controller\ngit reset --hard origin/mvp/environment-controller\ngit clean -fd\ntest \"$(git rev-parse HEAD)\" = \"$SHA\"\ntest -z \"$(git status --short)\"\nPORT_S3=\"$(.venv/bin/python -c 'from tools.stage27c_soak import detect_ch340_port; print(detect_ch340_port())')\"\nsource scripts/source_idf.sh\nPROBE=\"$(python -m esptool --port \"$PORT_S3\" chip_id 2>&1)\"\necho \"$PROBE\"\ngrep -q 'ESP32-S3' <<<\"$PROBE\"\necho \"[AGENT_PROGRESS] verified_preflash_esp32s3_port=$PORT_S3\"\nPORT=\"$PORT_S3\" GROWBOX_FIRMWARE_GIT_SHA=\"$SHA\" bash scripts/stage27c_crowpanel.sh flash\necho \"[AGENT_PROGRESS] flash_complete sha=$SHA port=$PORT_S3\"\nsleep 3\nPORT_POST=\"$(.venv/bin/python -c 'from tools.stage27c_soak import detect_ch340_port; print(detect_ch340_port())')\"\nPOST_PROBE=\"$(python -m esptool --port \"$PORT_POST\" chip_id 2>&1)\"\necho \"$POST_PROBE\"\ngrep -q 'ESP32-S3' <<<\"$POST_PROBE\"\necho \"[AGENT_PROGRESS] verified_postflash_esp32s3_port=$PORT_POST\"",
-  "pid": 34727,
+  "command": "set -euo pipefail\nSHA=a1a37a153ece90367f7850b0d4334f74b29c9cbf\nPORT_S3=\"$(.venv/bin/python -c 'from tools.stage27c_soak import detect_ch340_port; print(detect_ch340_port())')\"\nOUT=build/stage27c-sd-power-smoke-20260902-a1a37a1\nrm -rf \"$OUT\"\n.venv/bin/python tools/stage27c_soak.py --port \"$PORT_S3\" --output-dir \"$OUT\" --duration 300 --progress-seconds 30 --expected-sha \"$SHA\" --max-scd-age-ms 15000 --max-tp-age-ms 60000 --max-xiaomi-age-ms 30000 --require-sd --strict\necho '[AGENT_PROGRESS] sd_power_smoke_summary'\ncat \"$OUT/summary.json\"\ntest -z \"$(git status --short)\"",
+  "pid": 35383,
   "timeout": 1800,
   "idle_timeout": 600,
   "memory_limit_mb": 8192,
-  "started_at": "2026-09-02T03:15:53.908580+00:00",
-  "stage_name": "command-1",
-  "stage_index": 1,
+  "started_at": "2026-09-02T03:16:46.574925+00:00",
+  "stage_name": "command-2",
+  "stage_index": 2,
   "stage_total": 2,
   "stage_phase": "commands",
   "task_id": "20260902-growbox-stage27c-sd-power-smoke-v1",
@@ -18,5 +18,5 @@
   "task_digest": "2d5f85cdbdbe4f3fb7da1f632eb3f9c6e0a01c4cc42075ffe31bddc879356469",
   "daemon_version": "4.12.2",
   "daemon_pid": 34660,
-  "updated_at": "2026-09-02T03:15:53.908923+00:00"
+  "updated_at": "2026-09-02T03:16:46.623214+00:00"
 }
