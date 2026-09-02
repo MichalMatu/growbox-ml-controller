@@ -1,0 +1,14 @@
+{
+  "id": "20260902-growbox-stage27c-sd-reference-diagnostic-v1",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": ["machine"],
+  "command_timeout": 300,
+  "idle_timeout": 180,
+  "task_timeout": 600,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "set -euo pipefail\nSHA=e749b4f0e89b9ab78e18f7a487c519b15a791207\ngit fetch origin mvp/environment-controller\ngit reset --hard origin/mvp/environment-controller\ngit clean -fd\ntest \"$(git rev-parse HEAD)\" = \"$SHA\"\nPORT_S3=\"$(.venv/bin/python -c 'from tools.stage27c_soak import detect_ch340_port; print(detect_ch340_port())')\"\nsource scripts/source_idf.sh\nPROBE=\"$(python -m esptool --port \"$PORT_S3\" chip_id 2>&1)\"\necho \"$PROBE\"\ngrep -q 'ESP32-S3' <<<\"$PROBE\"\necho \"[AGENT_PROGRESS] raw_sd_diag port=$PORT_S3 sha=$SHA\"\nPORT_S3=\"$PORT_S3\" .venv/bin/python - <<'PY'\nimport os, time, serial\nport=os.environ['PORT_S3']\nend=time.monotonic()+75\nlines=[]\nwith serial.Serial(port,115200,timeout=0.2) as s:\n    while time.monotonic()<end:\n        raw=s.readline()\n        if not raw:\n            continue\n        line=raw.decode('utf-8','replace').rstrip()\n        if 'stage27_sd' in line or 'Stage27 soak boot' in line or 'soak_v=2' in line:\n            lines.append(line)\nfor line in lines:\n    print(line)\nmount=[x for x in lines if 'SD mount failed' in x]\nprint(f'[AGENT_PROGRESS] stage27_sd_lines={sum("stage27_sd" in x for x in lines)} mount_failures={len(mount)}')\nif not mount:\n    raise SystemExit('No SD mount failure lines captured')\nPY\ntest -z \"$(git status --short)\""
+  ]
+}
