@@ -102,6 +102,7 @@ bool preconditionCardForIdfMount(int cs_pin) noexcept {
 
   std::uint8_t response = 0xFF;
   bool response_seen = false;
+  unsigned response_bytes = 0U;
   for (unsigned attempt = 0; attempt < 16U; ++attempt) {
     if (!transferProbeByte(device, 0xFF, response)) {
       ESP_LOGW(kTag, "SD precondition response read failed");
@@ -110,17 +111,18 @@ bool preconditionCardForIdfMount(int cs_pin) noexcept {
     }
     if ((response & 0x80U) == 0U) {
       response_seen = true;
+      response_bytes = attempt + 1U;
       break;
     }
   }
 
   cleanup();
   if (!response_seen || response != 0x01U) {
-    ESP_LOGW(kTag, "SD precondition CMD0 response=0x%02x", response);
+    ESP_LOGW(kTag, "SD precondition CMD0 response=0x%02x after=%u", response, response_bytes);
     return false;
   }
 
-  ESP_LOGI(kTag, "SD precondition CMD0 response=0x01");
+  ESP_LOGI(kTag, "SD precondition CMD0 response=0x01 after=%u", response_bytes);
   return true;
 }
 
