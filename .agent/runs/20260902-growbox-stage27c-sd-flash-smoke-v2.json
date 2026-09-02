@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260902-growbox-stage27c-sd-flash-smoke-v2",
+  "task_digest": "e1fc9ce65bf05678b30bdd6908971f097f99f0352222aceea592c2ef0218b602",
+  "idle_timeout": 600,
+  "task_timeout": 2700,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-09-02T02:07:17.843514+00:00",
+  "attempt_id": "c990b19b5a7ddb1dc501a92f",
+  "daemon_version": "4.12.2",
+  "daemon_pid": 93981,
+  "updated_at": "2026-09-02T02:07:17.843680+00:00",
+  "pid": 93981
+}
