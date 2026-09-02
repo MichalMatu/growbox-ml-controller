@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260902-growbox-stage27c-sd-session-open-fix-v1",
+  "task_digest": "5213e2cf8bd34c8f83a11eeb6d78296c477b6b4ed05772a73cec7bab6dac2eca",
+  "idle_timeout": 600,
+  "task_timeout": 2400,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-09-02T15:19:35.730478+00:00",
+  "attempt_id": "f71a6d3d450baa247862def1",
+  "daemon_version": "4.12.2",
+  "daemon_pid": 43674,
+  "updated_at": "2026-09-02T15:19:35.730750+00:00",
+  "pid": 43674
+}
