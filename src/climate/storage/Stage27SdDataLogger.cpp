@@ -141,13 +141,13 @@ bool Stage27SdDataLogger::begin(const char* firmware_sha) noexcept {
                esp_err_to_name(direction_error));
       return false;
     }
-    const esp_err_t level_error = gpio_set_level(power_gpio, 0);
+    const esp_err_t level_error = gpio_set_level(power_gpio, 1);
     if (level_error != ESP_OK) {
-      ESP_LOGE(kTag, "Failed to initialize SD power GPIO %d low: %s", pins_.power,
+      ESP_LOGE(kTag, "Failed to initialize SD power GPIO %d high: %s", pins_.power,
                esp_err_to_name(level_error));
       return false;
     }
-    ESP_LOGI(kTag, "SD power control initialized on GPIO%d", pins_.power);
+    ESP_LOGI(kTag, "SD power diagnostic: GPIO%d held HIGH continuously", pins_.power);
   }
 
   std::snprintf(firmware_sha_, sizeof(firmware_sha_), "%s",
@@ -254,10 +254,18 @@ bool Stage27SdDataLogger::mountStorage(
   mount_config.allocation_unit_size = 16U * 1024U;
 
   card_ = nullptr;
+  if (pins_.power >= 0) {
+    ESP_LOGI(kTag, "SD power diagnostic: level before mount=%d",
+             gpio_get_level(static_cast<gpio_num_t>(pins_.power)));
+  }
   const esp_err_t mount_error =
       esp_vfs_fat_sdspi_mount(kMountPoint, &host, &slot_config, &mount_config, &card_);
   if (mount_error != ESP_OK) {
     mount_errors_.fetch_add(1U, std::memory_order_relaxed);
+    if (pins_.power >= 0) {
+      ESP_LOGI(kTag, "SD power diagnostic: level after mount failure=%d",
+               gpio_get_level(static_cast<gpio_num_t>(pins_.power)));
+    }
     ESP_LOGW(kTag, "SD mount failed at uptime=%llu: %s",
              static_cast<unsigned long long>(snapshot.uptime_ms), esp_err_to_name(mount_error));
     card_ = nullptr;
@@ -385,9 +393,10 @@ void Stage27SdDataLogger::disableStoragePower() noexcept {
   if (pins_.power < 0) {
     return;
   }
-  const esp_err_t error = gpio_set_level(static_cast<gpio_num_t>(pins_.power), 0);
+  // Diagnostic only: keep the CrowPanel TF power/ground gate asserted continuously.
+  const esp_err_t error = gpio_set_level(static_cast<gpio_num_t>(pins_.power), 1);
   if (error != ESP_OK) {
-    ESP_LOGW(kTag, "Failed to disable SD power GPIO %d: %s", pins_.power, esp_err_to_name(error));
+    ESP_LOGW(kTag, "Failed to keep SD power GPIO %d high: %s", pins_.power, esp_err_to_name(error));
   }
 }
 
