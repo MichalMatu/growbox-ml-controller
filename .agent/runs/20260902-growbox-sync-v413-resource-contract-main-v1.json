@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260902-growbox-sync-v413-resource-contract-main-v1",
+  "task_digest": "1d657101f7a57a8357a7e77de884681ef144c5aaa8beb6cc188ad185b3ed1fe8",
+  "idle_timeout": 120,
+  "task_timeout": 600,
+  "memory_limit_mb": 256,
+  "started_at": "2026-09-02T16:54:25.084137+00:00",
+  "attempt_id": "47beedba11c3a5d3536f5fbd",
+  "daemon_version": "4.12.2",
+  "daemon_pid": 91079,
+  "updated_at": "2026-09-02T16:54:25.084264+00:00",
+  "pid": 91079
+}
