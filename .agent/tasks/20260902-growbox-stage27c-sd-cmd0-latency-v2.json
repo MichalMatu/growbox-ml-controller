@@ -1,0 +1,14 @@
+{
+  "id": "20260902-growbox-stage27c-sd-cmd0-latency-v2",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": ["machine"],
+  "command_timeout": 300,
+  "idle_timeout": 180,
+  "task_timeout": 600,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "set -euo pipefail\nSHA=de88b381f9c5442029dfe54efc05cbba813b94f8\ngit fetch origin mvp/environment-controller\ngit reset --hard origin/mvp/environment-controller\ngit clean -fd\ntest \"$(git rev-parse HEAD)\" = \"$SHA\"\nPORT_S3=\"$(.venv/bin/python -c 'from tools.stage27c_soak import detect_ch340_port; print(detect_ch340_port())')\"\nsource scripts/source_idf.sh\nPROBE=\"$(python -m esptool --port \"$PORT_S3\" chip_id 2>&1)\"\necho \"$PROBE\"\ngrep -q 'ESP32-S3' <<<\"$PROBE\"\nPORT_S3=\"$PORT_S3\" .venv/bin/python - <<'PY'\nimport os,re,time,serial\nport=os.environ['PORT_S3']\nend=time.monotonic()+12\nlines=[]\nwith serial.Serial(port,115200,timeout=0.1,rtscts=False,dsrdtr=False) as s:\n    s.rts=False\n    s.dtr=False\n    while time.monotonic()<end:\n        raw=s.readline()\n        if not raw:\n            continue\n        line=raw.decode('utf-8','replace').rstrip()\n        if 'stage27_sd' in line or 'Stage27 soak boot' in line:\n            lines.append(line)\n            print(line)\nvals=[]\nfor line in lines:\n    m=re.search(r'SD precondition CMD0 response=0x01 after=(\\d+)',line)\n    if m:\n        vals.append(int(m.group(1)))\nif not vals:\n    raise SystemExit('No CMD0 latency measurement captured')\nprint('[AGENT_PROGRESS] cmd0_response_bytes='+','.join(map(str,vals)))\nmount=[x for x in lines if 'SD mount failed' in x]\nprint('[AGENT_PROGRESS] mount_failures=%d' % len(mount))\nPY\ntest -z \"$(git status --short)\""
+  ]
+}
