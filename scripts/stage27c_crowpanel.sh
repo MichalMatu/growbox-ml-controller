@@ -34,6 +34,7 @@ idf_args=(
   -D "GROWBOX_SD_MISO_GPIO=13"
   -D "GROWBOX_SD_SCLK_GPIO=39"
   -D "GROWBOX_SD_CS_GPIO=10"
+  -D "GROWBOX_SD_POWER_GPIO=42"
 )
 
 resolved_port=""

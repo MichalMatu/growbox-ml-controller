@@ -49,6 +49,9 @@
 #ifndef GROWBOX_SD_CS_GPIO
 #define GROWBOX_SD_CS_GPIO 10
 #endif
+#ifndef GROWBOX_SD_POWER_GPIO
+#define GROWBOX_SD_POWER_GPIO -1
+#endif
 
 namespace growbox::app::climate_io {
 namespace {
@@ -168,8 +171,9 @@ std::uint64_t monotonicMilliseconds() noexcept {
   const bool rtc_ready = i2c_ready && clock.begin(i2c);
   const bool ble_ready = ble.begin(GROWBOX_BLE_TP357_MAC, GROWBOX_BLE_XIAOMI_MAC);
 
-  storage::Stage27SdDataLogger sd_logger(
-      {GROWBOX_SD_MOSI_GPIO, GROWBOX_SD_MISO_GPIO, GROWBOX_SD_SCLK_GPIO, GROWBOX_SD_CS_GPIO});
+  storage::Stage27SdDataLogger sd_logger({GROWBOX_SD_MOSI_GPIO, GROWBOX_SD_MISO_GPIO,
+                                          GROWBOX_SD_SCLK_GPIO, GROWBOX_SD_CS_GPIO,
+                                          GROWBOX_SD_POWER_GPIO});
   const bool sd_enabled = GROWBOX_STAGE27_SD_ENABLED != 0;
   const bool sd_logger_ready = sd_enabled && sd_logger.begin(GROWBOX_FIRMWARE_GIT_SHA);
 

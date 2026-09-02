@@ -1,5 +1,6 @@
 #include "climate/storage/Stage27SdDataLogger.h"
 
+#include <driver/gpio.h>
 #include <driver/sdspi_host.h>
 #include <driver/spi_master.h>
 #include <esp_err.h>
@@ -27,6 +28,24 @@ constexpr std::uint32_t kTaskStackBytes = 6144U;
 bool Stage27SdDataLogger::begin(const char* firmware_sha) noexcept {
   if (queue_ != nullptr || task_ != nullptr) {
     return true;
+  }
+
+  if (pins_.power >= 0) {
+    const auto power_gpio = static_cast<gpio_num_t>(pins_.power);
+    const esp_err_t direction_error = gpio_set_direction(power_gpio, GPIO_MODE_OUTPUT);
+    if (direction_error != ESP_OK) {
+      ESP_LOGE(kTag, "Failed to configure SD power GPIO %d: %s", pins_.power,
+               esp_err_to_name(direction_error));
+      return false;
+    }
+    const esp_err_t level_error = gpio_set_level(power_gpio, 1);
+    if (level_error != ESP_OK) {
+      ESP_LOGE(kTag, "Failed to enable SD power GPIO %d: %s", pins_.power,
+               esp_err_to_name(level_error));
+      return false;
+    }
+    vTaskDelay(pdMS_TO_TICKS(10));
+    ESP_LOGI(kTag, "SD power enabled on GPIO%d", pins_.power);
   }
 
   std::snprintf(firmware_sha_, sizeof(firmware_sha_), "%s",
@@ -138,8 +157,8 @@ bool Stage27SdDataLogger::mountStorage(
   }
 
   mounted_.store(true, std::memory_order_relaxed);
-  ESP_LOGI(kTag, "SD mounted on SPI2 MOSI=%d MISO=%d CLK=%d CS=%d", pins_.mosi, pins_.miso,
-           pins_.sclk, pins_.cs);
+  ESP_LOGI(kTag, "SD mounted on SPI2 MOSI=%d MISO=%d CLK=%d CS=%d POWER=%d", pins_.mosi, pins_.miso,
+           pins_.sclk, pins_.cs, pins_.power);
   return openSession(snapshot);
 }
 
@@ -173,10 +192,10 @@ bool Stage27SdDataLogger::openSession(
       "{\"type\":\"session\",\"schema\":\"growbox-log-v1\",\"firmware_sha\":\"%s\","
       "\"session_id\":\"%08" PRIx32 "\",\"reset_reason\":%" PRId32 ",\"start_uptime_ms\":%" PRIu64
       ",\"rtc_trusted\":%s,\"start_unix_time_s\":%" PRIu64
-      ",\"sd_spi\":{\"host\":2,\"mosi\":%d,\"miso\":%d,\"clk\":%d,\"cs\":%d}}\n",
+      ",\"sd_spi\":{\"host\":2,\"mosi\":%d,\"miso\":%d,\"clk\":%d,\"cs\":%d,\"power\":%d}}\n",
       firmware_sha_, session_id_, snapshot.reset_reason, snapshot.uptime_ms,
       snapshot.rtc_trusted ? "true" : "false", snapshot.unix_time_s, pins_.mosi, pins_.miso,
-      pins_.sclk, pins_.cs);
+      pins_.sclk, pins_.cs, pins_.power);
   if (header_written < 0 || std::fflush(file_) != 0) {
     write_errors_.fetch_add(1U, std::memory_order_relaxed);
     ESP_LOGW(kTag, "Failed to write session header: errno=%d", errno);

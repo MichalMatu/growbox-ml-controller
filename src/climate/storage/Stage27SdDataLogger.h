@@ -20,6 +20,7 @@ public:
     int miso = 13;
     int sclk = 39;
     int cs = 10;
+    int power = -1;
   };
 
   explicit Stage27SdDataLogger(Pins pins) noexcept : pins_(pins) {}
