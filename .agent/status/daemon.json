@@ -2,8 +2,8 @@
   "version": 1,
   "daemon_version": "4.12.2",
   "state": "idle",
-  "pid": 46196,
-  "updated_at": "2026-09-02T00:45:50.286661+00:00",
+  "pid": 59725,
+  "updated_at": "2026-09-02T01:29:57.984758+00:00",
   "self_revision": "20f3ab645d4be384a6f20073330f2744694b7c4b",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -22,7 +22,8 @@
   "control_branch": "agent-control",
   "default_branch": "main",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 46196,
+  "worker_pid": 59725,
   "supervisor_pid": 71830,
+  "last_task_id": "20260902-growbox-stage27c-sd-datalogger-v1",
   "execution_variant": "parallel"
 }
