@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260903-growbox-stage27c-sd-primary-smoke-v1",
+  "task_digest": "01a6d023f4d162a14fd3d30237af08027162fe6fea3a78ea8e662fcf7d0d0632",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-02T22:31:42.371732+00:00",
+  "attempt_id": "9ece4672dcd595e3d42baa10",
+  "daemon_version": "4.13.1",
+  "daemon_pid": 42499,
+  "updated_at": "2026-09-02T22:31:42.371890+00:00",
+  "pid": 42499
+}
