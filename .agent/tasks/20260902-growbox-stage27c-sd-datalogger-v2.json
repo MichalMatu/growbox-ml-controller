@@ -1,0 +1,35 @@
+{
+  "id": "20260902-growbox-stage27c-sd-datalogger-v2",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "workflow_policy": "efficient-verification-v1",
+  "resources": ["machine"],
+  "command_timeout": 5400,
+  "idle_timeout": 1200,
+  "task_timeout": 9000,
+  "memory_limit_mb": 8192,
+  "steps": [
+    {
+      "name": "reapply-sd-datalogger-with-portable-formatting",
+      "verification_level": "work",
+      "timeout": 1200,
+      "command": "set -euo pipefail\ngit fetch origin mvp/environment-controller agent-control\ngit reset --hard origin/mvp/environment-controller\ngit clean -fd\ntest \"$(git rev-parse HEAD)\" = \"08e9ead56e41feff3dc26b55123db912582dd141\"\ngit show origin/agent-control:.agent/task-assets/20260902-stage27c-sd-datalogger-v1.py | python3\ngit show origin/agent-control:.agent/task-assets/20260902-stage27c-sd-datalogger-v2.py | python3\n.venv/bin/pre-commit run clang-format --files src/climate/ClimateV6RealInputRuntime.cpp src/climate/native/Ds3231ClockSource.h src/climate/native/Ds3231ClockSource.cpp src/climate/telemetry/Stage27Telemetry.h src/climate/telemetry/Stage27Telemetry.cpp src/climate/storage/Stage27SdDataLogger.h src/climate/storage/Stage27SdDataLogger.cpp test/test_stage27_telemetry/test_main.cpp || true\n.venv/bin/pre-commit run --files scripts/stage27c_crowpanel.sh src/CMakeLists.txt test/host/CMakeLists.txt src/climate/ClimateV6RealInputRuntime.cpp src/climate/native/Ds3231ClockSource.h src/climate/native/Ds3231ClockSource.cpp src/climate/telemetry/Stage27Telemetry.h src/climate/telemetry/Stage27Telemetry.cpp src/climate/storage/Stage27SdDataLogger.h src/climate/storage/Stage27SdDataLogger.cpp test/test_stage27_telemetry/test_main.cpp tools/stage27c_soak.py tests/test_stage27c_soak.py\ngit diff --check"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "focused-sd-datalogger-v2",
+      "verification_level": "focused",
+      "timeout": 1500,
+      "command": "set -euo pipefail\n.venv/bin/python -m pytest tests/test_stage27c_soak.py -q\nbash -n scripts/stage27c_crowpanel.sh\ncmake -S test/host -B build/host-tests\ncmake --build build/host-tests --target stage27_telemetry_tests --parallel\nctest --test-dir build/host-tests -R '^stage27_telemetry_tests$' --output-on-failure\ngrep -q 'PRIu32' src/climate/telemetry/Stage27Telemetry.cpp\ngrep -q 'GROWBOX_STAGE27_SD_ENABLED=1' scripts/stage27c_crowpanel.sh\ngrep -q 'outputs=fake-locked' src/climate/ClimateV6RealInputRuntime.cpp\ngit diff --check"
+    },
+    {
+      "name": "full-build-publish-and-s3-port-preflight",
+      "verification_level": "full",
+      "timeout": 5400,
+      "output_policy": "summary",
+      "command": "set -euo pipefail\n.venv/bin/pre-commit run --all-files\n.venv/bin/python -m pytest tests/test_stage27c_soak.py -q\ncmake -S test/host -B build/host-tests\ncmake --build build/host-tests --parallel\nctest --test-dir build/host-tests --output-on-failure\ngit diff --check\ngit add scripts/stage27c_crowpanel.sh src/CMakeLists.txt test/host/CMakeLists.txt src/climate/ClimateV6RealInputRuntime.cpp src/climate/native/Ds3231ClockSource.h src/climate/native/Ds3231ClockSource.cpp src/climate/telemetry/Stage27Telemetry.h src/climate/telemetry/Stage27Telemetry.cpp src/climate/storage/Stage27SdDataLogger.h src/climate/storage/Stage27SdDataLogger.cpp test/test_stage27_telemetry/test_main.cpp tools/stage27c_soak.py tests/test_stage27c_soak.py\ngit commit -m 'Add Stage27C SD telemetry datalogger'\nNEW_SHA=\"$(git rev-parse HEAD)\"\necho \"[AGENT_PROGRESS] stage27c_sd_source_sha=$NEW_SHA\"\nbash scripts/stage27c_crowpanel.sh clean\nGROWBOX_FIRMWARE_GIT_SHA=\"$NEW_SHA\" bash scripts/stage27c_crowpanel.sh build\ngrep -q \"GROWBOX_FIRMWARE_GIT_SHA:STRING=$NEW_SHA\" build/idf-stage27c-crowpanel/CMakeCache.txt\ntest -f build/idf-stage27c-crowpanel/growbox_ml_controller.bin\necho '[AGENT_PROGRESS] stage27c_serial_port_inventory'\n.venv/bin/python - <<'PY'\nfrom serial.tools import list_ports\nfor port in sorted(list_ports.comports(), key=lambda item: item.device):\n    vid = f'{port.vid:04X}' if port.vid is not None else '----'\n    pid = f'{port.pid:04X}' if port.pid is not None else '----'\n    print(f'PORT device={port.device} vidpid={vid}:{pid} manufacturer={port.manufacturer!r} product={port.product!r} serial={port.serial_number!r} location={port.location!r}')\nPY\nCROWPANEL_PORT=\"$(.venv/bin/python -c 'from tools.stage27c_soak import detect_ch340_port; print(detect_ch340_port())')\"\necho \"CROWPANEL_CH340_PORT=$CROWPANEL_PORT\"\nPROBE=\"$(esptool.py --port \"$CROWPANEL_PORT\" chip_id 2>&1)\"\necho \"$PROBE\"\ngrep -q 'ESP32-S3' <<<\"$PROBE\"\necho \"CROWPANEL_ESP32S3_VERIFIED=$CROWPANEL_PORT\"\ngit push origin HEAD:mvp/environment-controller\ntest -z \"$(git status --short)\"\necho \"PUBLISHED_SHA=$NEW_SHA\""
+    }
+  ]
+}
