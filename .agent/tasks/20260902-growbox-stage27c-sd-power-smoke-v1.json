@@ -1,0 +1,15 @@
+{
+  "id": "20260902-growbox-stage27c-sd-power-smoke-v1",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": ["machine"],
+  "command_timeout": 1800,
+  "idle_timeout": 600,
+  "task_timeout": 2700,
+  "memory_limit_mb": 8192,
+  "commands": [
+    "set -euo pipefail\nSHA=a1a37a153ece90367f7850b0d4334f74b29c9cbf\ngit fetch origin mvp/environment-controller\ngit reset --hard origin/mvp/environment-controller\ngit clean -fd\ntest \"$(git rev-parse HEAD)\" = \"$SHA\"\ntest -z \"$(git status --short)\"\nPORT_S3=\"$(.venv/bin/python -c 'from tools.stage27c_soak import detect_ch340_port; print(detect_ch340_port())')\"\nsource scripts/source_idf.sh\nPROBE=\"$(python -m esptool --port \"$PORT_S3\" chip_id 2>&1)\"\necho \"$PROBE\"\ngrep -q 'ESP32-S3' <<<\"$PROBE\"\necho \"[AGENT_PROGRESS] verified_preflash_esp32s3_port=$PORT_S3\"\nPORT=\"$PORT_S3\" GROWBOX_FIRMWARE_GIT_SHA=\"$SHA\" bash scripts/stage27c_crowpanel.sh flash\necho \"[AGENT_PROGRESS] flash_complete sha=$SHA port=$PORT_S3\"\nsleep 3\nPORT_POST=\"$(.venv/bin/python -c 'from tools.stage27c_soak import detect_ch340_port; print(detect_ch340_port())')\"\nPOST_PROBE=\"$(python -m esptool --port \"$PORT_POST\" chip_id 2>&1)\"\necho \"$POST_PROBE\"\ngrep -q 'ESP32-S3' <<<\"$POST_PROBE\"\necho \"[AGENT_PROGRESS] verified_postflash_esp32s3_port=$PORT_POST\"",
+    "set -euo pipefail\nSHA=a1a37a153ece90367f7850b0d4334f74b29c9cbf\nPORT_S3=\"$(.venv/bin/python -c 'from tools.stage27c_soak import detect_ch340_port; print(detect_ch340_port())')\"\nOUT=build/stage27c-sd-power-smoke-20260902-a1a37a1\nrm -rf \"$OUT\"\n.venv/bin/python tools/stage27c_soak.py --port \"$PORT_S3\" --output-dir \"$OUT\" --duration 300 --progress-seconds 30 --expected-sha \"$SHA\" --max-scd-age-ms 15000 --max-tp-age-ms 60000 --max-xiaomi-age-ms 30000 --require-sd --strict\necho '[AGENT_PROGRESS] sd_power_smoke_summary'\ncat \"$OUT/summary.json\"\ntest -z \"$(git status --short)\""
+  ]
+}
