@@ -6,6 +6,8 @@
 #include "climate/native/Ds3231ClockSource.h"
 #include "climate/native/NativeI2cBus.h"
 #include "climate/native/Scd41InsideSource.h"
+#include "climate/storage/Stage27SdDataLogger.h"
+#include "climate/telemetry/Stage27Telemetry.h"
 #include "demo/protocol/HeapDiagnostics.h"
 
 #include <esp_err.h>
@@ -31,6 +33,21 @@
 #endif
 #ifndef GROWBOX_FIRMWARE_GIT_SHA
 #define GROWBOX_FIRMWARE_GIT_SHA "unknown"
+#endif
+#ifndef GROWBOX_STAGE27_SD_ENABLED
+#define GROWBOX_STAGE27_SD_ENABLED 0
+#endif
+#ifndef GROWBOX_SD_MOSI_GPIO
+#define GROWBOX_SD_MOSI_GPIO 40
+#endif
+#ifndef GROWBOX_SD_MISO_GPIO
+#define GROWBOX_SD_MISO_GPIO 13
+#endif
+#ifndef GROWBOX_SD_SCLK_GPIO
+#define GROWBOX_SD_SCLK_GPIO 39
+#endif
+#ifndef GROWBOX_SD_CS_GPIO
+#define GROWBOX_SD_CS_GPIO 10
 #endif
 
 namespace growbox::app::climate_io {
@@ -151,6 +168,11 @@ std::uint64_t monotonicMilliseconds() noexcept {
   const bool rtc_ready = i2c_ready && clock.begin(i2c);
   const bool ble_ready = ble.begin(GROWBOX_BLE_TP357_MAC, GROWBOX_BLE_XIAOMI_MAC);
 
+  storage::Stage27SdDataLogger sd_logger(
+      {GROWBOX_SD_MOSI_GPIO, GROWBOX_SD_MISO_GPIO, GROWBOX_SD_SCLK_GPIO, GROWBOX_SD_CS_GPIO});
+  const bool sd_enabled = GROWBOX_STAGE27_SD_ENABLED != 0;
+  const bool sd_logger_ready = sd_enabled && sd_logger.begin(GROWBOX_FIRMWARE_GIT_SHA);
+
   Stage27InsideSource inside(ble, scd41);
   Stage27NearbySource outside(ble);
   FixedStage27ScheduleConfigSource schedule_config;
@@ -160,8 +182,10 @@ std::uint64_t monotonicMilliseconds() noexcept {
   ClimateApplication application(runtime, composite, output_driver);
 
   const esp_reset_reason_t reset_reason = esp_reset_reason();
-  ESP_LOGI(kTag, "Stage27 real-input runtime: i2c=%d scd41=%d ds3231=%d ble=%d outputs=fake-locked",
-           i2c_ready, scd41_ready, rtc_ready, ble_ready);
+  ESP_LOGI(kTag,
+           "Stage27 real-input runtime: i2c=%d scd41=%d ds3231=%d ble=%d sd_enabled=%d "
+           "sd_logger=%d outputs=fake-locked",
+           i2c_ready, scd41_ready, rtc_ready, ble_ready, sd_enabled, sd_logger_ready);
   ESP_LOGI(kTag, "Stage27 soak boot: firmware_sha=%s reset_reason=%d", GROWBOX_FIRMWARE_GIT_SHA,
            static_cast<int>(reset_reason));
 
@@ -180,12 +204,82 @@ std::uint64_t monotonicMilliseconds() noexcept {
       static_cast<void>(scd41.sample(now_ms, scd_diag));
       const auto heap = ::growbox::demo::wire::captureHeapSnapshot();
       const auto task = ::growbox::demo::wire::captureTaskSnapshot();
-      const float scd_t =
+
+      telemetry::Stage27TelemetrySnapshot snapshot{};
+      snapshot.uptime_ms = now_ms;
+      snapshot.unix_time_s = clock.trusted() ? clock.lastTrustedUnixTimeS() : 0U;
+      snapshot.reset_reason = static_cast<std::int32_t>(reset_reason);
+      snapshot.input_sampled = result.input_sampled;
+      snapshot.io_status = static_cast<std::uint32_t>(result.io_status);
+      snapshot.heap_internal = heap.free_internal;
+      snapshot.heap_internal_min = heap.min_free_internal;
+      snapshot.heap_internal_largest = heap.largest_free_internal;
+      snapshot.heap_psram = heap.free_psram;
+      snapshot.heap_psram_min = heap.min_free_psram;
+      snapshot.heap_psram_largest = heap.largest_free_psram;
+      snapshot.stack_free = task.main_stack_free_bytes;
+
+      snapshot.scd_available = scd41.available();
+      snapshot.scd_sample = scd41.hasMeasurement();
+      snapshot.scd_temperature_c =
           scd_diag.air_temperature_c.valid ? scd_diag.air_temperature_c.value : 0.0F;
-      const float scd_rh =
+      snapshot.scd_humidity_pct =
           scd_diag.relative_humidity_pct.valid ? scd_diag.relative_humidity_pct.value : 0.0F;
-      const float scd_co2 = scd_diag.co2_ppm.valid ? scd_diag.co2_ppm.value : 0.0F;
-      const std::uint64_t scd_age_ms = scd_diag.co2_ppm.valid ? scd_diag.co2_ppm.age_ms : 0U;
+      snapshot.scd_co2_ppm = scd_diag.co2_ppm.valid ? scd_diag.co2_ppm.value : 0.0F;
+      snapshot.scd_age_ms = scd_diag.co2_ppm.valid ? scd_diag.co2_ppm.age_ms : 0U;
+      snapshot.scd_read_errors = scd41.readErrorCount();
+      snapshot.scd_invalid = scd41.invalidMeasurementCount();
+      snapshot.scd_samples = scd41.successfulMeasurementCount();
+
+      snapshot.rtc_available = clock.available();
+      snapshot.rtc_trusted = clock.trusted();
+      snapshot.rtc_reads = clock.successfulReadCount();
+      snapshot.rtc_read_errors = clock.readErrorCount();
+      snapshot.rtc_untrusted = clock.untrustedReadCount();
+      snapshot.rtc_last_success_ms = clock.lastSuccessfulReadMs();
+      snapshot.rtc_last_trusted_ms = clock.lastTrustedReadMs();
+
+      snapshot.ble_scanning = ble.scanning();
+      snapshot.ble_scan_starts = ble.scanStartCount();
+      snapshot.ble_scan_errors = ble.scanStartErrorCount();
+      snapshot.ble_scan_restarts = ble.scanRestartCount();
+      snapshot.ble_scan_completes = ble.scanCompleteCount();
+      snapshot.ble_adv_lock_drops = ble.advertisementLockDropCount();
+
+      snapshot.tp_sample = tp357_sampled;
+      snapshot.tp_temperature_c = tp357_sampled ? tp357.temperature_c : 0.0F;
+      snapshot.tp_humidity_pct = tp357_sampled ? tp357.relative_humidity_pct : 0.0F;
+      snapshot.tp_age_ms = tp357_sampled ? tp357.age_ms : 0U;
+      snapshot.tp_packets = ble.tp357PacketCount();
+      snapshot.tp_accepted = ble.tp357AcceptedCount();
+      snapshot.tp_rejected = ble.tp357RejectedCount();
+
+      snapshot.xiaomi_sample = xiaomi_sampled;
+      snapshot.xiaomi_temperature_c = xiaomi_sampled ? xiaomi.temperature_c : 0.0F;
+      snapshot.xiaomi_humidity_pct = xiaomi_sampled ? xiaomi.relative_humidity_pct : 0.0F;
+      snapshot.xiaomi_age_ms = xiaomi_sampled ? xiaomi.age_ms : 0U;
+      snapshot.xiaomi_packets = ble.xiaomiPacketCount();
+      snapshot.xiaomi_accepted = ble.xiaomiAcceptedCount();
+      snapshot.xiaomi_rejected = ble.xiaomiRejectedCount();
+
+      snapshot.runtime_status = static_cast<std::uint32_t>(decision.status);
+      snapshot.runtime_mode = static_cast<std::uint32_t>(decision.mode);
+      snapshot.rule_arbitration_interventions = decision.rule.arbitration_interventions;
+      snapshot.rule_safety_interventions = decision.rule.safety_interventions;
+      snapshot.applied_heater = decision.applied.heater;
+      snapshot.applied_cooler = decision.applied.cooler;
+      snapshot.applied_exhaust_fan = decision.applied.exhaust_fan;
+      snapshot.applied_humidifier = decision.applied.humidifier;
+      snapshot.applied_dehumidifier = decision.applied.dehumidifier;
+      snapshot.applied_co2_doser = decision.applied.co2_doser;
+
+      snapshot.sd_mounted = sd_logger.mounted();
+      snapshot.sd_mount_errors = sd_logger.mountErrorCount();
+      snapshot.sd_write_errors = sd_logger.writeErrorCount();
+      snapshot.sd_queue_drops = sd_logger.queueDropCount();
+      snapshot.sd_records_written = sd_logger.recordsWritten();
+      snapshot.sd_records_skipped = sd_logger.recordsSkipped();
+      snapshot.sd_last_write_ms = sd_logger.lastWriteMs();
 
       ESP_LOGI(
           kTag,
@@ -195,33 +289,54 @@ std::uint64_t monotonicMilliseconds() noexcept {
           "scd_available=%d scd_sample=%d scd_t=%.2f scd_rh=%.2f scd_co2=%.0f "
           "scd_age_ms=%llu scd_read_errors=%u scd_invalid=%u scd_samples=%u "
           "rtc_available=%d rtc_trusted=%d rtc_reads=%u rtc_read_errors=%u rtc_untrusted=%u "
-          "rtc_last_success_ms=%llu rtc_last_trusted_ms=%llu "
+          "rtc_last_success_ms=%llu rtc_last_trusted_ms=%llu rtc_unix_time_s=%llu "
           "ble_scanning=%d ble_scan_starts=%u ble_scan_errors=%u ble_scan_restarts=%u "
           "ble_scan_completes=%u ble_adv_lock_drops=%u "
-          "tp_sample=%d tp_age_ms=%llu tp_packets=%u tp_accepted=%u tp_rejected=%u "
-          "xiaomi_sample=%d xiaomi_age_ms=%llu xiaomi_packets=%u xiaomi_accepted=%u "
-          "xiaomi_rejected=%u outputs=fake-locked",
-          GROWBOX_FIRMWARE_GIT_SHA, static_cast<unsigned long long>(now_ms),
-          static_cast<int>(reset_reason), result.input_sampled,
-          static_cast<unsigned>(result.io_status), static_cast<unsigned>(heap.free_internal),
-          static_cast<unsigned>(heap.min_free_internal),
-          static_cast<unsigned>(heap.largest_free_internal), static_cast<unsigned>(heap.free_psram),
-          static_cast<unsigned>(heap.min_free_psram),
-          static_cast<unsigned>(heap.largest_free_psram),
-          static_cast<unsigned>(task.main_stack_free_bytes), scd41.available(),
-          scd41.hasMeasurement(), static_cast<double>(scd_t), static_cast<double>(scd_rh),
-          static_cast<double>(scd_co2), static_cast<unsigned long long>(scd_age_ms),
-          scd41.readErrorCount(), scd41.invalidMeasurementCount(),
-          scd41.successfulMeasurementCount(), clock.available(), clock.trusted(),
-          clock.successfulReadCount(), clock.readErrorCount(), clock.untrustedReadCount(),
-          static_cast<unsigned long long>(clock.lastSuccessfulReadMs()),
-          static_cast<unsigned long long>(clock.lastTrustedReadMs()), ble.scanning(),
-          ble.scanStartCount(), ble.scanStartErrorCount(), ble.scanRestartCount(),
-          ble.scanCompleteCount(), ble.advertisementLockDropCount(), tp357_sampled,
-          static_cast<unsigned long long>(tp357.age_ms), ble.tp357PacketCount(),
-          ble.tp357AcceptedCount(), ble.tp357RejectedCount(), xiaomi_sampled,
-          static_cast<unsigned long long>(xiaomi.age_ms), ble.xiaomiPacketCount(),
-          ble.xiaomiAcceptedCount(), ble.xiaomiRejectedCount());
+          "tp_sample=%d tp_t=%.2f tp_rh=%.2f tp_age_ms=%llu tp_packets=%u tp_accepted=%u "
+          "tp_rejected=%u xiaomi_sample=%d xiaomi_t=%.2f xiaomi_rh=%.2f "
+          "xiaomi_age_ms=%llu xiaomi_packets=%u xiaomi_accepted=%u xiaomi_rejected=%u "
+          "runtime_status=%u runtime_mode=%u rule_arb=%u rule_safety=%u "
+          "applied_heater=%.3f applied_cooler=%.3f applied_fan=%.3f applied_humidifier=%.3f "
+          "applied_dehumidifier=%.3f applied_co2=%.3f "
+          "sd_mounted=%d sd_mount_errors=%u sd_write_errors=%u sd_queue_drops=%u "
+          "sd_records_written=%u sd_records_skipped=%u sd_last_write_ms=%llu outputs=fake-locked",
+          GROWBOX_FIRMWARE_GIT_SHA, static_cast<unsigned long long>(snapshot.uptime_ms),
+          snapshot.reset_reason, snapshot.input_sampled, snapshot.io_status, snapshot.heap_internal,
+          snapshot.heap_internal_min, snapshot.heap_internal_largest, snapshot.heap_psram,
+          snapshot.heap_psram_min, snapshot.heap_psram_largest, snapshot.stack_free,
+          snapshot.scd_available, snapshot.scd_sample,
+          static_cast<double>(snapshot.scd_temperature_c),
+          static_cast<double>(snapshot.scd_humidity_pct), static_cast<double>(snapshot.scd_co2_ppm),
+          static_cast<unsigned long long>(snapshot.scd_age_ms), snapshot.scd_read_errors,
+          snapshot.scd_invalid, snapshot.scd_samples, snapshot.rtc_available, snapshot.rtc_trusted,
+          snapshot.rtc_reads, snapshot.rtc_read_errors, snapshot.rtc_untrusted,
+          static_cast<unsigned long long>(snapshot.rtc_last_success_ms),
+          static_cast<unsigned long long>(snapshot.rtc_last_trusted_ms),
+          static_cast<unsigned long long>(snapshot.unix_time_s), snapshot.ble_scanning,
+          snapshot.ble_scan_starts, snapshot.ble_scan_errors, snapshot.ble_scan_restarts,
+          snapshot.ble_scan_completes, snapshot.ble_adv_lock_drops, snapshot.tp_sample,
+          static_cast<double>(snapshot.tp_temperature_c),
+          static_cast<double>(snapshot.tp_humidity_pct),
+          static_cast<unsigned long long>(snapshot.tp_age_ms), snapshot.tp_packets,
+          snapshot.tp_accepted, snapshot.tp_rejected, snapshot.xiaomi_sample,
+          static_cast<double>(snapshot.xiaomi_temperature_c),
+          static_cast<double>(snapshot.xiaomi_humidity_pct),
+          static_cast<unsigned long long>(snapshot.xiaomi_age_ms), snapshot.xiaomi_packets,
+          snapshot.xiaomi_accepted, snapshot.xiaomi_rejected, snapshot.runtime_status,
+          snapshot.runtime_mode, snapshot.rule_arbitration_interventions,
+          snapshot.rule_safety_interventions, static_cast<double>(snapshot.applied_heater),
+          static_cast<double>(snapshot.applied_cooler),
+          static_cast<double>(snapshot.applied_exhaust_fan),
+          static_cast<double>(snapshot.applied_humidifier),
+          static_cast<double>(snapshot.applied_dehumidifier),
+          static_cast<double>(snapshot.applied_co2_doser), snapshot.sd_mounted,
+          snapshot.sd_mount_errors, snapshot.sd_write_errors, snapshot.sd_queue_drops,
+          snapshot.sd_records_written, snapshot.sd_records_skipped,
+          static_cast<unsigned long long>(snapshot.sd_last_write_ms));
+
+      if (sd_logger_ready) {
+        static_cast<void>(sd_logger.enqueue(snapshot));
+      }
     }
     vTaskDelay(pdMS_TO_TICKS(kTickIntervalMs));
   }

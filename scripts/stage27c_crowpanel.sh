@@ -13,6 +13,10 @@ SDKCONFIG_PATH="${STAGE27C_SDKCONFIG:-${BUILD_DIR}/sdkconfig}"
 BLE_TP357_MAC="${GROWBOX_BLE_TP357_MAC:-F7:5F:8D:0F:76:20}"
 BLE_XIAOMI_MAC="${GROWBOX_BLE_XIAOMI_MAC:-A4:C1:38:4F:24:CD}"
 FIRMWARE_GIT_SHA="${GROWBOX_FIRMWARE_GIT_SHA:-$(git rev-parse HEAD)}"
+STAGE27C_PYTHON="${STAGE27C_PYTHON:-$ROOT/.venv/bin/python}"
+if [[ ! -x "$STAGE27C_PYTHON" ]]; then
+  STAGE27C_PYTHON="$(command -v python3)"
+fi
 
 idf_args=(
   -B "$BUILD_DIR"
@@ -25,25 +29,58 @@ idf_args=(
   -D "GROWBOX_BLE_TP357_MAC=$BLE_TP357_MAC"
   -D "GROWBOX_BLE_XIAOMI_MAC=$BLE_XIAOMI_MAC"
   -D "GROWBOX_FIRMWARE_GIT_SHA=$FIRMWARE_GIT_SHA"
+  -D "GROWBOX_STAGE27_SD_ENABLED=1"
+  -D "GROWBOX_SD_MOSI_GPIO=40"
+  -D "GROWBOX_SD_MISO_GPIO=13"
+  -D "GROWBOX_SD_SCLK_GPIO=39"
+  -D "GROWBOX_SD_CS_GPIO=10"
 )
 
-port_args=()
-if [[ -n "${PORT:-}" ]]; then
-  port_args=(-p "$PORT")
-fi
+resolved_port=""
+resolve_crowpanel_port() {
+  if [[ -n "${PORT:-}" ]]; then
+    resolved_port="$PORT"
+  else
+    resolved_port="$($STAGE27C_PYTHON -c 'from tools.stage27c_soak import detect_ch340_port; print(detect_ch340_port())')"
+  fi
+  if [[ -z "$resolved_port" ]]; then
+    echo "Unable to resolve CrowPanel serial port" >&2
+    exit 2
+  fi
+  echo "CrowPanel serial port: $resolved_port" >&2
+}
+
+verify_esp32s3_port() {
+  local probe
+  if ! probe="$(esptool.py --port "$resolved_port" chip_id 2>&1)"; then
+    echo "$probe" >&2
+    echo "Unable to identify chip on $resolved_port; refusing to flash" >&2
+    exit 2
+  fi
+  echo "$probe" >&2
+  if ! grep -q "ESP32-S3" <<<"$probe"; then
+    echo "Port $resolved_port is not ESP32-S3; refusing to flash" >&2
+    exit 2
+  fi
+}
 
 case "$COMMAND" in
   build)
     idf.py "${idf_args[@]}" build
     ;;
   flash)
-    idf.py "${idf_args[@]}" "${port_args[@]}" build flash
+    resolve_crowpanel_port
+    verify_esp32s3_port
+    idf.py "${idf_args[@]}" -p "$resolved_port" build flash
     ;;
   monitor)
-    idf.py -B "$BUILD_DIR" "${port_args[@]}" monitor
+    resolve_crowpanel_port
+    idf.py -B "$BUILD_DIR" -p "$resolved_port" monitor
     ;;
   flash-monitor)
-    idf.py "${idf_args[@]}" "${port_args[@]}" build flash monitor
+    resolve_crowpanel_port
+    verify_esp32s3_port
+    idf.py "${idf_args[@]}" -p "$resolved_port" build flash monitor
     ;;
   clean)
     rm -rf "$BUILD_DIR"

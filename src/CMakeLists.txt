@@ -30,6 +30,10 @@ idf_component_register(
     esp_driver_gpio
     nvs_flash
     sensirion_scd4x
+    fatfs
+    sdmmc
+    esp_driver_spi
+    esp_driver_sdspi
 )
 
 target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_17)
@@ -53,6 +57,8 @@ elseif(GROWBOX_APP_MODE STREQUAL "climate-v6-real-inputs")
     ${COMPONENT_LIB}
     PRIVATE
       "climate/ClimateV6RealInputRuntime.cpp"
+      "climate/telemetry/Stage27Telemetry.cpp"
+      "climate/storage/Stage27SdDataLogger.cpp"
       "climate/native/BthomeV2Decoder.cpp"
       "climate/native/Tp357Decoder.cpp"
       "climate/native/BleClimateState.cpp"
@@ -74,6 +80,11 @@ set(GROWBOX_I2C_SCL_GPIO "9" CACHE STRING "Stage27 shared I2C SCL GPIO")
 set(GROWBOX_BLE_TP357_MAC "" CACHE STRING "Stage27 TP357 inside sensor MAC")
 set(GROWBOX_BLE_XIAOMI_MAC "" CACHE STRING "Stage27 Xiaomi nearby BTHome sensor MAC")
 set(GROWBOX_FIRMWARE_GIT_SHA "unknown" CACHE STRING "Exact Git SHA embedded in Stage27 firmware")
+set(GROWBOX_STAGE27_SD_ENABLED "0" CACHE STRING "Enable Stage27 SD telemetry logger")
+set(GROWBOX_SD_MOSI_GPIO "40" CACHE STRING "Stage27 SD SPI MOSI GPIO")
+set(GROWBOX_SD_MISO_GPIO "13" CACHE STRING "Stage27 SD SPI MISO GPIO")
+set(GROWBOX_SD_SCLK_GPIO "39" CACHE STRING "Stage27 SD SPI clock GPIO")
+set(GROWBOX_SD_CS_GPIO "10" CACHE STRING "Stage27 SD SPI chip-select GPIO")
 
 target_compile_definitions(
   ${COMPONENT_LIB}
@@ -86,4 +97,9 @@ target_compile_definitions(
     GROWBOX_BLE_TP357_MAC="${GROWBOX_BLE_TP357_MAC}"
     GROWBOX_BLE_XIAOMI_MAC="${GROWBOX_BLE_XIAOMI_MAC}"
     GROWBOX_FIRMWARE_GIT_SHA="${GROWBOX_FIRMWARE_GIT_SHA}"
+    GROWBOX_STAGE27_SD_ENABLED=${GROWBOX_STAGE27_SD_ENABLED}
+    GROWBOX_SD_MOSI_GPIO=${GROWBOX_SD_MOSI_GPIO}
+    GROWBOX_SD_MISO_GPIO=${GROWBOX_SD_MISO_GPIO}
+    GROWBOX_SD_SCLK_GPIO=${GROWBOX_SD_SCLK_GPIO}
+    GROWBOX_SD_CS_GPIO=${GROWBOX_SD_CS_GPIO}
 )

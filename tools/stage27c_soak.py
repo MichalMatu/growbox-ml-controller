@@ -137,6 +137,13 @@ class SoakSummary:
     max_rtc_untrusted: int = 0
     max_ble_scan_errors: int = 0
     max_ble_adv_lock_drops: int = 0
+    sd_fields_seen: bool = False
+    sd_unmounted_records: int = 0
+    max_sd_mount_errors: int = 0
+    max_sd_write_errors: int = 0
+    max_sd_queue_drops: int = 0
+    max_sd_records_skipped: int = 0
+    last_sd_records_written: int = 0
     _previous_counters: dict[str, int] = field(default_factory=dict, repr=False)
 
     def observe(self, record: dict[str, Any]) -> None:
@@ -191,6 +198,23 @@ class SoakSummary:
         self.max_ble_adv_lock_drops = max(
             self.max_ble_adv_lock_drops, int(record["ble_adv_lock_drops"])
         )
+        if "sd_mounted" in record:
+            self.sd_fields_seen = True
+            if int(record["sd_mounted"]) != 1:
+                self.sd_unmounted_records += 1
+            self.max_sd_mount_errors = max(
+                self.max_sd_mount_errors, int(record.get("sd_mount_errors", 0))
+            )
+            self.max_sd_write_errors = max(
+                self.max_sd_write_errors, int(record.get("sd_write_errors", 0))
+            )
+            self.max_sd_queue_drops = max(
+                self.max_sd_queue_drops, int(record.get("sd_queue_drops", 0))
+            )
+            self.max_sd_records_skipped = max(
+                self.max_sd_records_skipped, int(record.get("sd_records_skipped", 0))
+            )
+            self.last_sd_records_written = int(record.get("sd_records_written", 0))
         self.records += 1
 
     def violations(
@@ -199,6 +223,7 @@ class SoakSummary:
         max_scd_age_ms: int | None = None,
         max_tp_age_ms: int | None = None,
         max_xiaomi_age_ms: int | None = None,
+        require_sd: bool = False,
     ) -> list[str]:
         failures: list[str] = []
         hard_checks = {
@@ -220,6 +245,17 @@ class SoakSummary:
             "BLE advertisement lock drops": self.max_ble_adv_lock_drops > 0,
         }
         failures.extend(label for label, failed in hard_checks.items() if failed)
+        if require_sd:
+            sd_checks = {
+                "SD telemetry fields missing": not self.sd_fields_seen,
+                "SD logger not continuously mounted": self.sd_unmounted_records > 1,
+                "SD mount errors": self.max_sd_mount_errors > 0,
+                "SD write errors": self.max_sd_write_errors > 0,
+                "SD queue drops": self.max_sd_queue_drops > 0,
+                "SD records skipped": self.max_sd_records_skipped > 0,
+                "SD wrote no telemetry records": self.last_sd_records_written == 0,
+            }
+            failures.extend(label for label, failed in sd_checks.items() if failed)
         if max_scd_age_ms is not None and self.max_scd_age_ms > max_scd_age_ms:
             failures.append(f"SCD41 age exceeded {max_scd_age_ms} ms")
         if max_tp_age_ms is not None and self.max_tp_age_ms > max_tp_age_ms:
@@ -351,6 +387,7 @@ def capture(args: argparse.Namespace) -> tuple[SoakSummary, list[str]]:
                         max_scd_age_ms=args.max_scd_age_ms,
                         max_tp_age_ms=args.max_tp_age_ms,
                         max_xiaomi_age_ms=args.max_xiaomi_age_ms,
+                        require_sd=args.require_sd,
                     )
                     _write_summary(summary_path, summary, current_violations)
     finally:
@@ -363,6 +400,7 @@ def capture(args: argparse.Namespace) -> tuple[SoakSummary, list[str]]:
         max_scd_age_ms=args.max_scd_age_ms,
         max_tp_age_ms=args.max_tp_age_ms,
         max_xiaomi_age_ms=args.max_xiaomi_age_ms,
+        require_sd=args.require_sd,
     )
     _write_summary(summary_path, summary, violations)
     return summary, violations
@@ -382,6 +420,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--max-scd-age-ms", type=int)
     parser.add_argument("--max-tp-age-ms", type=int)
     parser.add_argument("--max-xiaomi-age-ms", type=int)
+    parser.add_argument(
+        "--require-sd",
+        action="store_true",
+        help="Require onboard SD logging to stay healthy after the initial mount window.",
+    )
     parser.add_argument(
         "--strict",
         action="store_true",

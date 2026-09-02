@@ -67,6 +67,7 @@ bool Ds3231ClockSource::sample(std::uint64_t monotonic_ms,
   trusted_ = decodeDs3231Time(registers, status, decoded);
   if (trusted_) {
     last_trusted_read_ms_ = monotonic_ms;
+    last_trusted_unix_time_s_ = decoded.unix_time_s;
   } else {
     ++untrusted_read_count_;
   }

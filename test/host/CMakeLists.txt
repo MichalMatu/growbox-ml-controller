@@ -217,6 +217,15 @@ target_compile_features(tp357_decoder_tests PRIVATE cxx_std_17)
 target_compile_options(tp357_decoder_tests PRIVATE -Wall -Wextra -Wpedantic)
 
 add_executable(
+  stage27_telemetry_tests
+  "${PROJECT_ROOT}/test/test_stage27_telemetry/test_main.cpp"
+  "${PROJECT_ROOT}/src/climate/telemetry/Stage27Telemetry.cpp"
+)
+target_include_directories(stage27_telemetry_tests PRIVATE "${PROJECT_ROOT}/src")
+target_compile_features(stage27_telemetry_tests PRIVATE cxx_std_17)
+target_compile_options(stage27_telemetry_tests PRIVATE -Wall -Wextra -Wpedantic)
+
+add_executable(
   ble_climate_state_tests
   "${PROJECT_ROOT}/test/test_ble_climate_state/test_main.cpp"
   "${PROJECT_ROOT}/src/climate/native/BleClimateState.cpp"
@@ -240,6 +249,7 @@ if(UNIX)
   target_link_libraries(climate_diagnostics_tests PRIVATE m)
   target_link_libraries(climate_composite_input_tests PRIVATE m)
   target_link_libraries(climate_semantic_output_tests PRIVATE m)
+  target_link_libraries(stage27_telemetry_tests PRIVATE m)
 endif()
 
 enable_testing()
@@ -256,4 +266,5 @@ add_test(NAME climate_diagnostics_tests COMMAND climate_diagnostics_tests)
 add_test(NAME climate_composite_input_tests COMMAND climate_composite_input_tests)
 add_test(NAME climate_semantic_output_tests COMMAND climate_semantic_output_tests)
 add_test(NAME tp357_decoder_tests COMMAND tp357_decoder_tests)
+add_test(NAME stage27_telemetry_tests COMMAND stage27_telemetry_tests)
 add_test(NAME ble_climate_state_tests COMMAND ble_climate_state_tests)

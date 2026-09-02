@@ -37,6 +37,9 @@ public:
   std::uint64_t lastTrustedReadMs() const noexcept {
     return last_trusted_read_ms_;
   }
+  std::uint64_t lastTrustedUnixTimeS() const noexcept {
+    return last_trusted_unix_time_s_;
+  }
 
 private:
   i2c_master_dev_handle_t device_ = nullptr;
@@ -47,6 +50,7 @@ private:
   std::uint32_t untrusted_read_count_ = 0U;
   std::uint64_t last_successful_read_ms_ = 0U;
   std::uint64_t last_trusted_read_ms_ = 0U;
+  std::uint64_t last_trusted_unix_time_s_ = 0U;
 };
 
 } // namespace growbox::app::climate_io::native

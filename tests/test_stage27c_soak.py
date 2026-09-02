@@ -47,6 +47,13 @@ def _line(**overrides: object) -> str:
         "xiaomi_packets": 50,
         "xiaomi_accepted": 25,
         "xiaomi_rejected": 25,
+        "sd_mounted": 1,
+        "sd_mount_errors": 0,
+        "sd_write_errors": 0,
+        "sd_queue_drops": 0,
+        "sd_records_written": 10,
+        "sd_records_skipped": 0,
+        "sd_last_write_ms": 900,
         "outputs": "fake-locked",
     }
     values.update(overrides)
@@ -134,3 +141,43 @@ def test_summary_detects_firmware_mismatch_and_age_thresholds() -> None:
     assert "unexpected firmware SHA" in violations
     assert "TP357 age exceeded 60000 ms" in violations
     assert "Xiaomi age exceeded 30000 ms" in violations
+
+
+def test_summary_can_require_healthy_sd_logging() -> None:
+    summary = SoakSummary(expected_sha="a" * 40)
+    first = parse_soak_line(_line(sd_mounted=0, sd_records_written=0))
+    second = parse_soak_line(_line(uptime_ms=11000, sd_mounted=1, sd_records_written=1))
+    assert first is not None and second is not None
+    summary.observe(first)
+    summary.observe(second)
+    assert summary.violations(require_sd=True) == []
+
+    failing = SoakSummary(expected_sha="a" * 40)
+    record = parse_soak_line(_line(sd_write_errors=1, sd_records_skipped=1))
+    assert record is not None
+    failing.observe(record)
+    violations = failing.violations(require_sd=True)
+    assert "SD write errors" in violations
+    assert "SD records skipped" in violations
+
+
+def test_historical_v2_record_without_sd_fields_still_observes() -> None:
+    line = _line()
+    for key in (
+        "sd_mounted",
+        "sd_mount_errors",
+        "sd_write_errors",
+        "sd_queue_drops",
+        "sd_records_written",
+        "sd_records_skipped",
+        "sd_last_write_ms",
+    ):
+        line = " ".join(token for token in line.split() if not token.startswith(f"{key}="))
+    record = parse_soak_line(line)
+    assert record is not None
+    summary = SoakSummary(expected_sha="a" * 40)
+    summary.observe(record)
+    assert summary.records == 1
+    assert summary.sd_fields_seen is False
+    assert summary.violations() == []
+    assert "SD telemetry fields missing" in summary.violations(require_sd=True)
