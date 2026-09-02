@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260902-growbox-stage27c-sd-cmd0-latency-v1",
+  "task_digest": "41ffe2fc883987e6a0e4b4bad08c72a3d7000decfb3a7f0b722da7c7c849f481",
+  "idle_timeout": 600,
+  "task_timeout": 2400,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-09-02T14:30:19.787576+00:00",
+  "attempt_id": "ae28c4f2c7904d65b5b2f9ee",
+  "daemon_version": "4.12.2",
+  "daemon_pid": 11614,
+  "updated_at": "2026-09-02T14:30:19.787768+00:00",
+  "pid": 11614
+}
