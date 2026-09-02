@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260902-growbox-stage27c-sd-datalogger-v1",
+  "task_digest": "a76efcac770953502cd76ce56dd51de6006a78551d33cf2e1592cc86e3c04450",
+  "idle_timeout": 1200,
+  "task_timeout": 9000,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-09-02T01:24:45.492566+00:00",
+  "attempt_id": "8a80888ee5a3e959f1cf5972",
+  "daemon_version": "4.12.2",
+  "daemon_pid": 59725,
+  "updated_at": "2026-09-02T01:24:45.492772+00:00",
+  "pid": 59725
+}
