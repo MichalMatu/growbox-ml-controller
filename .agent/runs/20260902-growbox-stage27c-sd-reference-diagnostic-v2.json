@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260902-growbox-stage27c-sd-reference-diagnostic-v2",
+  "task_digest": "1d6d065d0e91e6240f1c83f0ccbd41c3f1340bdff11125d146407efd3245cb28",
+  "idle_timeout": 180,
+  "task_timeout": 600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-02T14:07:44.530916+00:00",
+  "attempt_id": "081b99b6d1f95b3efb5e3716",
+  "daemon_version": "4.12.2",
+  "daemon_pid": 311,
+  "updated_at": "2026-09-02T14:07:44.531135+00:00",
+  "pid": 311
+}
