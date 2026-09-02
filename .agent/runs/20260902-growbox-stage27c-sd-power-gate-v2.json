@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260902-growbox-stage27c-sd-power-gate-v2",
+  "task_digest": "2d635c6362c593f0b033ef2c083e2b0d3dfa088f129e1c8afd60885e399fe339",
+  "idle_timeout": 1200,
+  "task_timeout": 6500,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-09-02T02:45:56.518854+00:00",
+  "attempt_id": "e57bd278b2e04d449f2aaa5c",
+  "daemon_version": "4.12.2",
+  "daemon_pid": 9486,
+  "updated_at": "2026-09-02T02:45:56.519025+00:00",
+  "pid": 9486
+}
