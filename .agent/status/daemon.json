@@ -2,9 +2,9 @@
   "version": 1,
   "daemon_version": "4.13.1",
   "state": "idle",
-  "pid": 42499,
-  "updated_at": "2026-09-02T22:36:56.525463+00:00",
-  "self_revision": "838fb36ec204c8f9e13057096a0b95f58126df0f",
+  "pid": 55872,
+  "updated_at": "2026-09-02T22:45:11.436970+00:00",
+  "self_revision": "334a6c373b179061dd8cb544743b26fae34c4e50",
   "poll_seconds": 15,
   "self_update_seconds": 60,
   "command_timeout_default": 900,
@@ -22,8 +22,7 @@
   "control_branch": "agent-control",
   "default_branch": "main",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 42499,
+  "worker_pid": 55872,
   "supervisor_pid": 71830,
-  "last_task_id": "20260903-growbox-stage27c-sd-primary-smoke-v1",
   "execution_variant": "parallel"
 }
