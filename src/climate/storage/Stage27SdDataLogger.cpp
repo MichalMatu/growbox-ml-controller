@@ -22,6 +22,8 @@ constexpr char kMountPoint[] = "/sdcard";
 constexpr char kDataDirectory[] = "/sdcard/growbox";
 constexpr std::size_t kRecordBufferBytes = 2048U;
 constexpr std::uint32_t kTaskStackBytes = 6144U;
+constexpr spi_host_device_t kSdSpiHost = SPI3_HOST;
+constexpr std::uint32_t kPowerOnDelayMs = 100U;
 
 } // namespace
 
@@ -38,14 +40,13 @@ bool Stage27SdDataLogger::begin(const char* firmware_sha) noexcept {
                esp_err_to_name(direction_error));
       return false;
     }
-    const esp_err_t level_error = gpio_set_level(power_gpio, 1);
+    const esp_err_t level_error = gpio_set_level(power_gpio, 0);
     if (level_error != ESP_OK) {
-      ESP_LOGE(kTag, "Failed to enable SD power GPIO %d: %s", pins_.power,
+      ESP_LOGE(kTag, "Failed to initialize SD power GPIO %d low: %s", pins_.power,
                esp_err_to_name(level_error));
       return false;
     }
-    vTaskDelay(pdMS_TO_TICKS(10));
-    ESP_LOGI(kTag, "SD power enabled on GPIO%d", pins_.power);
+    ESP_LOGI(kTag, "SD power control initialized on GPIO%d", pins_.power);
   }
 
   std::snprintf(firmware_sha_, sizeof(firmware_sha_), "%s",
@@ -110,6 +111,11 @@ bool Stage27SdDataLogger::ensureStorage(
 
 bool Stage27SdDataLogger::mountStorage(
     const telemetry::Stage27TelemetrySnapshot& snapshot) noexcept {
+  if (!enableStoragePower()) {
+    mount_errors_.fetch_add(1U, std::memory_order_relaxed);
+    return false;
+  }
+
   if (!spi_initialized_) {
     spi_bus_config_t bus_config{};
     bus_config.mosi_io_num = pins_.mosi;
@@ -119,20 +125,21 @@ bool Stage27SdDataLogger::mountStorage(
     bus_config.quadhd_io_num = -1;
     bus_config.max_transfer_sz = 4096;
 
-    const esp_err_t spi_error = spi_bus_initialize(SPI2_HOST, &bus_config, SPI_DMA_CH_AUTO);
-    if (spi_error != ESP_OK && spi_error != ESP_ERR_INVALID_STATE) {
+    const esp_err_t spi_error = spi_bus_initialize(kSdSpiHost, &bus_config, SPI_DMA_CH_AUTO);
+    if (spi_error != ESP_OK) {
       mount_errors_.fetch_add(1U, std::memory_order_relaxed);
-      ESP_LOGW(kTag, "SPI bus init failed: %s", esp_err_to_name(spi_error));
+      ESP_LOGW(kTag, "SPI3 bus init failed: %s", esp_err_to_name(spi_error));
+      disableStoragePower();
       return false;
     }
     spi_initialized_ = true;
   }
 
   sdmmc_host_t host = SDSPI_HOST_DEFAULT();
-  host.slot = SPI2_HOST;
+  host.slot = kSdSpiHost;
   sdspi_device_config_t slot_config = SDSPI_DEVICE_CONFIG_DEFAULT();
   slot_config.gpio_cs = static_cast<gpio_num_t>(pins_.cs);
-  slot_config.host_id = SPI2_HOST;
+  slot_config.host_id = kSdSpiHost;
   esp_vfs_fat_sdmmc_mount_config_t mount_config{};
   mount_config.format_if_mount_failed = false;
   mount_config.max_files = 2;
@@ -146,6 +153,8 @@ bool Stage27SdDataLogger::mountStorage(
     ESP_LOGW(kTag, "SD mount failed at uptime=%llu: %s",
              static_cast<unsigned long long>(snapshot.uptime_ms), esp_err_to_name(mount_error));
     card_ = nullptr;
+    releaseSpiBus();
+    disableStoragePower();
     return false;
   }
 
@@ -157,7 +166,7 @@ bool Stage27SdDataLogger::mountStorage(
   }
 
   mounted_.store(true, std::memory_order_relaxed);
-  ESP_LOGI(kTag, "SD mounted on SPI2 MOSI=%d MISO=%d CLK=%d CS=%d POWER=%d", pins_.mosi, pins_.miso,
+  ESP_LOGI(kTag, "SD mounted on SPI3 MOSI=%d MISO=%d CLK=%d CS=%d POWER=%d", pins_.mosi, pins_.miso,
            pins_.sclk, pins_.cs, pins_.power);
   return openSession(snapshot);
 }
@@ -192,10 +201,10 @@ bool Stage27SdDataLogger::openSession(
       "{\"type\":\"session\",\"schema\":\"growbox-log-v1\",\"firmware_sha\":\"%s\","
       "\"session_id\":\"%08" PRIx32 "\",\"reset_reason\":%" PRId32 ",\"start_uptime_ms\":%" PRIu64
       ",\"rtc_trusted\":%s,\"start_unix_time_s\":%" PRIu64
-      ",\"sd_spi\":{\"host\":2,\"mosi\":%d,\"miso\":%d,\"clk\":%d,\"cs\":%d,\"power\":%d}}\n",
+      ",\"sd_spi\":{\"host\":%d,\"mosi\":%d,\"miso\":%d,\"clk\":%d,\"cs\":%d,\"power\":%d}}\n",
       firmware_sha_, session_id_, snapshot.reset_reason, snapshot.uptime_ms,
-      snapshot.rtc_trusted ? "true" : "false", snapshot.unix_time_s, pins_.mosi, pins_.miso,
-      pins_.sclk, pins_.cs, pins_.power);
+      snapshot.rtc_trusted ? "true" : "false", snapshot.unix_time_s, static_cast<int>(kSdSpiHost),
+      pins_.mosi, pins_.miso, pins_.sclk, pins_.cs, pins_.power);
   if (header_written < 0 || std::fflush(file_) != 0) {
     write_errors_.fetch_add(1U, std::memory_order_relaxed);
     ESP_LOGW(kTag, "Failed to write session header: errno=%d", errno);
@@ -247,6 +256,43 @@ void Stage27SdDataLogger::closeMountedStorage() noexcept {
     card_ = nullptr;
   }
   mounted_.store(false, std::memory_order_relaxed);
+  releaseSpiBus();
+  disableStoragePower();
+}
+
+bool Stage27SdDataLogger::enableStoragePower() noexcept {
+  if (pins_.power < 0) {
+    return true;
+  }
+  const esp_err_t error = gpio_set_level(static_cast<gpio_num_t>(pins_.power), 1);
+  if (error != ESP_OK) {
+    ESP_LOGW(kTag, "Failed to enable SD power GPIO %d: %s", pins_.power, esp_err_to_name(error));
+    return false;
+  }
+  vTaskDelay(pdMS_TO_TICKS(kPowerOnDelayMs));
+  return true;
+}
+
+void Stage27SdDataLogger::disableStoragePower() noexcept {
+  if (pins_.power < 0) {
+    return;
+  }
+  const esp_err_t error = gpio_set_level(static_cast<gpio_num_t>(pins_.power), 0);
+  if (error != ESP_OK) {
+    ESP_LOGW(kTag, "Failed to disable SD power GPIO %d: %s", pins_.power, esp_err_to_name(error));
+  }
+}
+
+void Stage27SdDataLogger::releaseSpiBus() noexcept {
+  if (!spi_initialized_) {
+    return;
+  }
+  const esp_err_t error = spi_bus_free(kSdSpiHost);
+  if (error == ESP_OK) {
+    spi_initialized_ = false;
+    return;
+  }
+  ESP_LOGW(kTag, "SPI3 bus release failed: %s", esp_err_to_name(error));
 }
 
 } // namespace growbox::app::climate_io::storage

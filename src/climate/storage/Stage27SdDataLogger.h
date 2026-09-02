@@ -58,6 +58,9 @@ private:
   bool openSession(const telemetry::Stage27TelemetrySnapshot& snapshot) noexcept;
   bool writeRecord(const telemetry::Stage27TelemetrySnapshot& snapshot) noexcept;
   void closeMountedStorage() noexcept;
+  bool enableStoragePower() noexcept;
+  void disableStoragePower() noexcept;
+  void releaseSpiBus() noexcept;
 
   static constexpr std::uint32_t kQueueDepth = 16U;
   static constexpr std::uint64_t kMountRetryMs = 30'000U;
