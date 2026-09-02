@@ -80,8 +80,7 @@ bool Stage27SdStorageBackend::mount() noexcept {
     spi_initialized_ = true;
   }
 
-  if (use_cmd0_precondition_ &&
-      !crowpanel::runSdCmd0Precondition(kSpiHost, pins_.cs)) {
+  if (use_cmd0_precondition_ && !crowpanel::runSdCmd0Precondition(kSpiHost, pins_.cs)) {
     releaseSpiBus();
     disablePower();
     return false;
@@ -114,8 +113,8 @@ bool Stage27SdStorageBackend::mount() noexcept {
     return false;
   }
 
-  ESP_LOGI(kTag, "SD mounted SPI3 MOSI=%d MISO=%d CLK=%d CS=%d POWER=%d", pins_.mosi,
-           pins_.miso, pins_.sclk, pins_.cs, pins_.power);
+  ESP_LOGI(kTag, "SD mounted SPI3 MOSI=%d MISO=%d CLK=%d CS=%d POWER=%d", pins_.mosi, pins_.miso,
+           pins_.sclk, pins_.cs, pins_.power);
   return true;
 }
 
@@ -178,8 +177,7 @@ bool Stage27SdStorageBackend::enablePower() noexcept {
   }
   const esp_err_t error = gpio_set_level(static_cast<gpio_num_t>(pins_.power), 1);
   if (error != ESP_OK) {
-    ESP_LOGW(kTag, "Failed to enable SD power GPIO %d: %s", pins_.power,
-             esp_err_to_name(error));
+    ESP_LOGW(kTag, "Failed to enable SD power GPIO %d: %s", pins_.power, esp_err_to_name(error));
     return false;
   }
   vTaskDelay(pdMS_TO_TICKS(kPowerOnDelayMs));
@@ -192,8 +190,7 @@ void Stage27SdStorageBackend::disablePower() noexcept {
   }
   const esp_err_t error = gpio_set_level(static_cast<gpio_num_t>(pins_.power), 0);
   if (error != ESP_OK) {
-    ESP_LOGW(kTag, "Failed to disable SD power GPIO %d: %s", pins_.power,
-             esp_err_to_name(error));
+    ESP_LOGW(kTag, "Failed to disable SD power GPIO %d: %s", pins_.power, esp_err_to_name(error));
   }
 }
 

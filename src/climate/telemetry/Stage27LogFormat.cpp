@@ -52,14 +52,12 @@ std::size_t formatStage27SampleNdjson(char* buffer, std::size_t buffer_size,
       "{\"t\":\"s\",\"v\":2,\"u\":%" PRIu64 ",\"x\":%" PRIu64 ",\"i\":[%d,%" PRIu32
       "],\"scd\":[%d,%d,%.2f,%.2f,%.0f,%" PRIu64 "],"
       "\"tp\":[%d,%.2f,%.2f,%" PRIu64 "],\"xm\":[%d,%.2f,%.2f,%" PRIu64 "],"
-      "\"c\":[%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32
-      ",%.3f,%.3f,%.3f,%.3f,%.3f,%.3f]}",
+      "\"c\":[%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%.3f,%.3f,%.3f,%.3f,%.3f,%.3f]}",
       snapshot.uptime_ms, snapshot.unix_time_s, flag(snapshot.input_sampled), snapshot.io_status,
       flag(snapshot.scd_sample), flag(snapshot.scd_available),
       static_cast<double>(snapshot.scd_temperature_c),
       static_cast<double>(snapshot.scd_humidity_pct), static_cast<double>(snapshot.scd_co2_ppm),
-      snapshot.scd_age_ms, flag(snapshot.tp_sample),
-      static_cast<double>(snapshot.tp_temperature_c),
+      snapshot.scd_age_ms, flag(snapshot.tp_sample), static_cast<double>(snapshot.tp_temperature_c),
       static_cast<double>(snapshot.tp_humidity_pct), snapshot.tp_age_ms,
       flag(snapshot.xiaomi_sample), static_cast<double>(snapshot.xiaomi_temperature_c),
       static_cast<double>(snapshot.xiaomi_humidity_pct), snapshot.xiaomi_age_ms,
@@ -73,24 +71,25 @@ std::size_t formatStage27SampleNdjson(char* buffer, std::size_t buffer_size,
   return checkedLength(buffer, buffer_size, written);
 }
 
-std::size_t formatStage27HealthNdjson(char* buffer, std::size_t buffer_size,
-                                      const Stage27TelemetrySnapshot& snapshot,
-                                      const storage::Stage27StorageStatus& storage_status) noexcept {
+std::size_t
+formatStage27HealthNdjson(char* buffer, std::size_t buffer_size,
+                          const Stage27TelemetrySnapshot& snapshot,
+                          const storage::Stage27StorageStatus& storage_status) noexcept {
   if (buffer == nullptr || buffer_size == 0U) {
     return 0U;
   }
   const int written = std::snprintf(
       buffer, buffer_size,
       "{\"t\":\"h\",\"v\":2,\"u\":%" PRIu64 ","
-      "\"sys\":[%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32
-      ",%" PRIu32 "],"
+      "\"sys\":[%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32
+      "],"
       "\"scd\":[%d,%" PRIu32 ",%" PRIu32 ",%" PRIu32 "],"
       "\"rtc\":[%d,%d,%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu64 ",%" PRIu64 "],"
       "\"ble\":[%d,%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 "],"
       "\"tp\":[%" PRIu32 ",%" PRIu32 ",%" PRIu32 "],"
       "\"xm\":[%" PRIu32 ",%" PRIu32 ",%" PRIu32 "],"
-      "\"st\":[\"%s\",%d,%d,%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32
-      ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu64 "]}",
+      "\"st\":[\"%s\",%d,%d,%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32
+      ",%" PRIu32 ",%" PRIu32 ",%" PRIu64 "]}",
       snapshot.uptime_ms, snapshot.heap_internal, snapshot.heap_internal_min,
       snapshot.heap_internal_largest, snapshot.heap_psram, snapshot.heap_psram_min,
       snapshot.heap_psram_largest, snapshot.stack_free, flag(snapshot.scd_available),
@@ -99,9 +98,9 @@ std::size_t formatStage27HealthNdjson(char* buffer, std::size_t buffer_size,
       snapshot.rtc_read_errors, snapshot.rtc_untrusted, snapshot.rtc_last_success_ms,
       snapshot.rtc_last_trusted_ms, flag(snapshot.ble_scanning), snapshot.ble_scan_starts,
       snapshot.ble_scan_errors, snapshot.ble_scan_restarts, snapshot.ble_scan_completes,
-      snapshot.ble_adv_lock_drops, snapshot.tp_packets, snapshot.tp_accepted,
-      snapshot.tp_rejected, snapshot.xiaomi_packets, snapshot.xiaomi_accepted,
-      snapshot.xiaomi_rejected, storage::stage27StorageBackendName(storage_status.active_backend),
+      snapshot.ble_adv_lock_drops, snapshot.tp_packets, snapshot.tp_accepted, snapshot.tp_rejected,
+      snapshot.xiaomi_packets, snapshot.xiaomi_accepted, snapshot.xiaomi_rejected,
+      storage::stage27StorageBackendName(storage_status.active_backend),
       flag(storage_status.sd_mounted), flag(storage_status.flash_mounted),
       storage_status.sd_mount_errors, storage_status.flash_mount_errors,
       storage_status.write_errors, storage_status.queue_drops, storage_status.records_written,

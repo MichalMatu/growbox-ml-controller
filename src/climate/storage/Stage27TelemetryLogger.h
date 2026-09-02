@@ -24,8 +24,7 @@ public:
   };
 
   explicit Stage27TelemetryLogger(Config config) noexcept
-      : config_(config),
-        sd_backend_(config.sd_pins, config.sd_cmd0_precondition) {}
+      : config_(config), sd_backend_(config.sd_pins, config.sd_cmd0_precondition) {}
 
   bool begin(const char* firmware_sha) noexcept;
   bool enqueue(const telemetry::Stage27TelemetrySnapshot& snapshot) noexcept;

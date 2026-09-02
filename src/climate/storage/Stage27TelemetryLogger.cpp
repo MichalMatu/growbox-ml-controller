@@ -75,8 +75,8 @@ bool Stage27TelemetryLogger::enqueue(const telemetry::Stage27TelemetrySnapshot& 
 
 Stage27StorageStatus Stage27TelemetryLogger::status() const noexcept {
   Stage27StorageStatus result{};
-  result.active_backend = static_cast<Stage27StorageBackendKind>(
-      active_backend_kind_.load(std::memory_order_relaxed));
+  result.active_backend =
+      static_cast<Stage27StorageBackendKind>(active_backend_kind_.load(std::memory_order_relaxed));
   result.sd_mounted = sd_mounted_.load(std::memory_order_relaxed);
   result.flash_mounted = flash_mounted_.load(std::memory_order_relaxed);
   result.sd_mount_errors = sd_mount_errors_.load(std::memory_order_relaxed);
@@ -141,8 +141,7 @@ bool Stage27TelemetryLogger::ensureActiveStorage(
     return active_backend_ != nullptr;
   }
 
-  if (config_.sd_enabled && snapshot.uptime_ms >= next_sd_attempt_ms_ &&
-      tryActivateSd(snapshot)) {
+  if (config_.sd_enabled && snapshot.uptime_ms >= next_sd_attempt_ms_ && tryActivateSd(snapshot)) {
     return true;
   }
 
@@ -281,8 +280,7 @@ Stage27TelemetryLogger::PersistResult Stage27TelemetryLogger::persistSnapshot(
 
   char line[kRecordBufferBytes]{};
   if (sample_due) {
-    const std::size_t length =
-        telemetry::formatStage27SampleNdjson(line, sizeof(line), snapshot);
+    const std::size_t length = telemetry::formatStage27SampleNdjson(line, sizeof(line), snapshot);
     if (length == 0U) {
       ESP_LOGE(kTag, "Sample serialization overflow");
       return PersistResult::FormatError;
@@ -312,8 +310,9 @@ Stage27TelemetryLogger::PersistResult Stage27TelemetryLogger::persistSnapshot(
   return PersistResult::Ok;
 }
 
-Stage27TelemetryLogger::PersistResult Stage27TelemetryLogger::appendFormatted(
-    const char* line, std::size_t length, std::uint64_t now_ms) noexcept {
+Stage27TelemetryLogger::PersistResult
+Stage27TelemetryLogger::appendFormatted(const char* line, std::size_t length,
+                                        std::uint64_t now_ms) noexcept {
   if (active_backend_ == nullptr || !active_backend_->appendLine(line, length)) {
     return PersistResult::BackendError;
   }
