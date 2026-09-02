@@ -12,7 +12,7 @@ CONFIG_BT_NIMBLE_ROLE_CENTRAL=y
 # Stage27C hardware diagnostics are emitted with ESP_LOGI. Keep INFO compiled in for physical bring-up.
 CONFIG_LOG_DEFAULT_LEVEL_INFO=y
 
-# Stage27C SD logger uses descriptive per-session NDJSON filenames.
-# Keep FatFs long-filename support explicit so fopen() is not limited to 8.3 names.
-CONFIG_FATFS_LFN_HEAP=y
-CONFIG_FATFS_MAX_LFN=96
+# Stage27 log files deliberately use 8.3 names; metadata lives in the session record.
+# Avoid heap-backed long-filename state in the firmware.
+CONFIG_FATFS_LFN_NONE=y
+# CONFIG_FATFS_LFN_HEAP is not set

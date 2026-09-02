@@ -1,0 +1,68 @@
+name: Stage27C Storage Gate
+
+on:
+  push:
+    branches:
+      - mvp/environment-controller
+    paths:
+      - ".github/workflows/stage27c-storage-gate.yml"
+      - "config/idf/**"
+      - "scripts/stage27c_crowpanel.sh"
+      - "src/CMakeLists.txt"
+      - "src/climate/ClimateV6RealInputRuntime.cpp"
+      - "src/climate/storage/**"
+      - "src/climate/telemetry/**"
+      - "test/host/CMakeLists.txt"
+      - "test/test_stage27_telemetry/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  host-format-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Configure host tests
+        run: cmake -S test/host -B build/host-stage27c
+
+      - name: Build Stage27 log-format test
+        run: cmake --build build/host-stage27c --target stage27_telemetry_tests --parallel
+
+      - name: Run Stage27 log-format test
+        run: ctest --test-dir build/host-stage27c -R '^stage27_telemetry_tests$' --output-on-failure
+
+  crowpanel-storage-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - name: Check out source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Build CrowPanel storage variants with ESP-IDF 5.5.4
+        uses: espressif/esp-idf-ci-action@v1
+        with:
+          esp_idf_version: v5.5.4
+          target: esp32s3
+          path: .
+          command: |
+            export GROWBOX_FIRMWARE_GIT_SHA="$GITHUB_SHA"
+            bash scripts/stage27c_crowpanel.sh build
+            grep -q '^CONFIG_PARTITION_TABLE_CUSTOM=y$' build/idf-stage27c-crowpanel/sdkconfig
+            grep -q '^CONFIG_FATFS_LFN_NONE=y$' build/idf-stage27c-crowpanel/sdkconfig
+            grep -q '^CONFIG_WL_SECTOR_SIZE=4096$' build/idf-stage27c-crowpanel/sdkconfig
+            grep -q '^CONFIG_WL_SECTOR_MODE_SAFE=y$' build/idf-stage27c-crowpanel/sdkconfig
+            grep -q 'GROWBOX_SD_POWER_GPIO=42' build/idf-stage27c-crowpanel/compile_commands.json
+            grep -q 'GROWBOX_STAGE27_FLASH_FALLBACK_ENABLED=1' build/idf-stage27c-crowpanel/compile_commands.json
+            rm -rf build/idf-stage27c-flash-only
+            export GROWBOX_STAGE27_SD_ENABLED=0
+            export GROWBOX_STAGE27_FLASH_FALLBACK_ENABLED=1
+            export GROWBOX_SD_CMD0_PRECONDITION=0
+            export STAGE27C_BUILD_DIR=build/idf-stage27c-flash-only
+            bash scripts/stage27c_crowpanel.sh build
+            grep -q 'GROWBOX_STAGE27_SD_ENABLED=0' build/idf-stage27c-flash-only/compile_commands.json
+            grep -q 'GROWBOX_STAGE27_FLASH_FALLBACK_ENABLED=1' build/idf-stage27c-flash-only/compile_commands.json

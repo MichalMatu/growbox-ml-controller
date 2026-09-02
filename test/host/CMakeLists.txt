@@ -219,7 +219,7 @@ target_compile_options(tp357_decoder_tests PRIVATE -Wall -Wextra -Wpedantic)
 add_executable(
   stage27_telemetry_tests
   "${PROJECT_ROOT}/test/test_stage27_telemetry/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/telemetry/Stage27Telemetry.cpp"
+  "${PROJECT_ROOT}/src/climate/telemetry/Stage27LogFormat.cpp"
 )
 target_include_directories(stage27_telemetry_tests PRIVATE "${PROJECT_ROOT}/src")
 target_compile_features(stage27_telemetry_tests PRIVATE cxx_std_17)

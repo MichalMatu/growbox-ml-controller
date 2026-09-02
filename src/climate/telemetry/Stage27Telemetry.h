@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstddef>
 #include <cstdint>
 
 namespace growbox::app::climate_io::telemetry {
@@ -71,17 +70,6 @@ struct Stage27TelemetrySnapshot {
   float applied_humidifier = 0.0F;
   float applied_dehumidifier = 0.0F;
   float applied_co2_doser = 0.0F;
-
-  bool sd_mounted = false;
-  std::uint32_t sd_mount_errors = 0U;
-  std::uint32_t sd_write_errors = 0U;
-  std::uint32_t sd_queue_drops = 0U;
-  std::uint32_t sd_records_written = 0U;
-  std::uint32_t sd_records_skipped = 0U;
-  std::uint64_t sd_last_write_ms = 0U;
 };
-
-std::size_t formatStage27TelemetryNdjson(char* buffer, std::size_t buffer_size,
-                                         const Stage27TelemetrySnapshot& snapshot) noexcept;
 
 } // namespace growbox::app::climate_io::telemetry
