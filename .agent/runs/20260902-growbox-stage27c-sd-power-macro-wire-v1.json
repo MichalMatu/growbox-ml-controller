@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260902-growbox-stage27c-sd-power-macro-wire-v1",
+  "task_digest": "e5d7868a4fa918fea766953197dbd180de2b216a4b4e61dd6b7fce6ff28b2fa1",
+  "idle_timeout": 600,
+  "task_timeout": 2400,
+  "memory_limit_mb": 8192,
+  "started_at": "2026-09-02T15:04:17.379261+00:00",
+  "attempt_id": "36868373a30e295d14a460d8",
+  "daemon_version": "4.12.2",
+  "daemon_pid": 33825,
+  "updated_at": "2026-09-02T15:04:17.379412+00:00",
+  "pid": 33825
+}
