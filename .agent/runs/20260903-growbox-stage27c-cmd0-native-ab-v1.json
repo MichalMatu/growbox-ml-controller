@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260903-growbox-stage27c-cmd0-native-ab-v1",
+  "task_digest": "78c66f9faab84b5c605e82531da342b62ac3e3665ca65a6cf1e1bb93522f584f",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-03T04:14:24.692300+00:00",
+  "attempt_id": "02d3b49918fc0887d5a912b7",
+  "daemon_version": "4.15.0",
+  "daemon_pid": 84318,
+  "updated_at": "2026-09-03T04:14:24.692453+00:00",
+  "pid": 84318
+}
