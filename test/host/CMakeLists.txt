@@ -236,6 +236,35 @@ target_include_directories(ble_climate_state_tests PRIVATE "${PROJECT_ROOT}/src"
 target_compile_features(ble_climate_state_tests PRIVATE cxx_std_17)
 target_compile_options(ble_climate_state_tests PRIVATE -Wall -Wextra -Wpedantic)
 
+add_executable(
+  stage27_native_inputs_tests
+  "${PROJECT_ROOT}/test/test_stage27_native_inputs/test_main.cpp"
+  "${PROJECT_ROOT}/src/climate/native/BthomeV2Decoder.cpp"
+  "${PROJECT_ROOT}/src/climate/native/Ds3231Codec.cpp"
+)
+target_include_directories(stage27_native_inputs_tests PRIVATE "${PROJECT_ROOT}/src")
+target_compile_features(stage27_native_inputs_tests PRIVATE cxx_std_17)
+target_compile_options(stage27_native_inputs_tests PRIVATE -Wall -Wextra -Wpedantic)
+
+add_executable(
+  stage27_fault_freshness_tests
+  "${PROJECT_ROOT}/test/test_stage27_fault_freshness/test_main.cpp"
+  "${PROJECT_ROOT}/src/climate/native/BleClimateState.cpp"
+  "${PROJECT_ROOT}/src/climate/native/BthomeV2Decoder.cpp"
+  "${PROJECT_ROOT}/src/climate/native/Tp357Decoder.cpp"
+  "${PROJECT_ROOT}/lib/environment_control/src/climate/ClimateFeatureEncoder.cpp"
+  "${PROJECT_ROOT}/lib/environment_control/src/climate/ClimateRuntimeController.cpp"
+  "${PROJECT_ROOT}/lib/environment_control/src/climate/ClimateTrendEstimator.cpp"
+)
+target_include_directories(
+  stage27_fault_freshness_tests
+  PRIVATE
+    "${PROJECT_ROOT}/src"
+    "${PROJECT_ROOT}/lib/environment_control/src/climate"
+)
+target_compile_features(stage27_fault_freshness_tests PRIVATE cxx_std_17)
+target_compile_options(stage27_fault_freshness_tests PRIVATE -Wall -Wextra -Wpedantic)
+
 if(UNIX)
   target_link_libraries(environment_control_tests PRIVATE m)
   target_link_libraries(climate_v6_tests PRIVATE m)
@@ -250,6 +279,7 @@ if(UNIX)
   target_link_libraries(climate_composite_input_tests PRIVATE m)
   target_link_libraries(climate_semantic_output_tests PRIVATE m)
   target_link_libraries(stage27_telemetry_tests PRIVATE m)
+  target_link_libraries(stage27_fault_freshness_tests PRIVATE m)
 endif()
 
 enable_testing()
@@ -268,3 +298,5 @@ add_test(NAME climate_semantic_output_tests COMMAND climate_semantic_output_test
 add_test(NAME tp357_decoder_tests COMMAND tp357_decoder_tests)
 add_test(NAME stage27_telemetry_tests COMMAND stage27_telemetry_tests)
 add_test(NAME ble_climate_state_tests COMMAND ble_climate_state_tests)
+add_test(NAME stage27_native_inputs_tests COMMAND stage27_native_inputs_tests)
+add_test(NAME stage27_fault_freshness_tests COMMAND stage27_fault_freshness_tests)
