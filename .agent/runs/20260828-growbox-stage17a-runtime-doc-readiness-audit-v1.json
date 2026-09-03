@@ -1,9 +1,0 @@
-{
-  "event": "invalid_task_rejected",
-  "status": "failed",
-  "failure_reason": "invalid_task_file",
-  "updated_at": "2026-08-28T09:20:54.719487+00:00",
-  "task_id": "20260828-growbox-stage17a-runtime-doc-readiness-audit-v1",
-  "daemon_version": "4.10.2",
-  "pid": 81751
-}

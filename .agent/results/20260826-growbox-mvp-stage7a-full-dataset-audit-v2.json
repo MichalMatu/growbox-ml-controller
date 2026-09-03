@@ -1,9 +1,0 @@
-{
-  "id": "20260826-growbox-mvp-stage7a-full-dataset-audit-v2",
-  "status": "failed",
-  "failure_reason": "invalid_task_file",
-  "started_at": null,
-  "finished_at": "2026-08-26T12:52:52.771523+00:00",
-  "daemon_version": "4.9.6",
-  "error": "ValueError: steps verification_level must be work or focused, not full"
-}

@@ -1,9 +1,0 @@
-{
-  "id": "20260828-growbox-stage12d-dev-benchmark-v1",
-  "status": "failed",
-  "failure_reason": "invalid_task_file",
-  "started_at": null,
-  "finished_at": "2026-08-28T00:37:47.330489+00:00",
-  "daemon_version": "4.10.2",
-  "error": "ValueError: stage 'command-1' timeout 7200s cannot fit inside task_timeout=7200s with 60s finalization reserve"
-}

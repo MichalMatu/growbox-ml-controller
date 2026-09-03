@@ -1,9 +1,0 @@
-{
-  "id": "20260902-growbox-stage27c-sd-flash-smoke-v1",
-  "status": "failed",
-  "failure_reason": "invalid_task_file",
-  "started_at": null,
-  "finished_at": "2026-09-02T02:00:13.959310+00:00",
-  "daemon_version": "4.12.2",
-  "error": "ValueError: commands items must be non-empty strings"
-}

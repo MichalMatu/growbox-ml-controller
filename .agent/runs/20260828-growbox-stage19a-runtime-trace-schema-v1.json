@@ -1,9 +1,0 @@
-{
-  "event": "invalid_task_rejected",
-  "status": "failed",
-  "failure_reason": "invalid_task_file",
-  "updated_at": "2026-08-28T11:10:28.823311+00:00",
-  "task_id": "20260828-growbox-stage19a-runtime-trace-schema-v1",
-  "daemon_version": "4.10.2",
-  "pid": 6273
-}

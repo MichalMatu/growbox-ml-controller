@@ -1,9 +1,0 @@
-{
-  "id": "20260826-growbox-mvp-stage7a-full-dataset-audit-v3",
-  "status": "failed",
-  "failure_reason": "invalid_task_file",
-  "started_at": null,
-  "finished_at": "2026-08-26T12:53:54.372198+00:00",
-  "daemon_version": "4.9.6",
-  "error": "ValueError: efficient-verification-v1 requires exactly one full verification stage"
-}

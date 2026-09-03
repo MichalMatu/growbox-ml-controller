@@ -1,9 +1,0 @@
-{
-  "id": "20260827-growbox-mvp-stage10-overnight-dagger-v2",
-  "status": "failed",
-  "failure_reason": "invalid_task_file",
-  "started_at": null,
-  "finished_at": "2026-08-27T00:03:16.300777+00:00",
-  "daemon_version": "4.10.0",
-  "error": "JSONDecodeError: Invalid control character at: line 16 column 1013 (char 1472)"
-}
