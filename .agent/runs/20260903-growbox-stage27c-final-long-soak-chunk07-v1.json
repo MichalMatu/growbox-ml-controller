@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260903-growbox-stage27c-final-long-soak-chunk07-v1",
+  "task_digest": "3a19155861c543089687e20b2a510a81d16cfbf69cb29008e44046046604bb40",
+  "idle_timeout": 600,
+  "task_timeout": 7200,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-03T19:19:37.000595+00:00",
+  "attempt_id": "0bec593f3a5343948491a7bb",
+  "daemon_version": "4.15.0",
+  "daemon_pid": 13648,
+  "updated_at": "2026-09-03T19:19:37.000729+00:00",
+  "pid": 13648
+}
