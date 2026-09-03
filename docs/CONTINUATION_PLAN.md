@@ -1,84 +1,66 @@
 # Fresh-context continuation plan
 
 Date: 2026-09-01
+Updated: 2026-09-03
 Work branch: `mvp/environment-controller`
 Control branch: `agent-control`
-Primary current handoff: `docs/STAGE27C_CONTINUATION_HANDOFF.md`
-Historical Stage27 architecture handoff: `docs/STAGE27_NATIVE_IDF_HANDOFF.md`
+Primary current status: `docs/STAGE27C_FINAL_EVIDENCE.md`
+Physical bring-up record: `docs/STAGE27C_CROWPANEL_BRINGUP.md`
+Historical handoffs: `docs/STAGE27C_PRE_SOAK_HANDOFF.md`, `docs/STAGE27C_CONTINUATION_HANDOFF.md`
 
-This file is the bootstrap pointer for a new ChatGPT conversation. The detailed current Stage27C state is frozen in `docs/STAGE27C_CONTINUATION_HANDOFF.md`; read that file completely before planning or executing new work.
+This file is the bootstrap pointer for a fresh ChatGPT conversation.
 
 ## Current product state
 
-The architecture through Stage26 and the native Stage27A/Stage27B implementation are complete. Do not restart those stages unless fresh evidence demonstrates a regression.
+The architecture through Stage26, Stage27A/Stage27B implementation, and **Stage27C CrowPanel real-input validation are complete** for the requested scope.
 
-Current physical validation stage: **Stage27C CrowPanel real-input bring-up**.
+Do not restart Stage27A/B/C merely because the Local Agent is idle or because documentation HEAD advances.
 
-Frozen rules remain:
+Frozen boundaries at Stage27C closure:
 
 - 100% native ESP-IDF v5.5.4;
 - no Arduino component and no PlatformIO/Arduino migration;
-- e-paper/front-panel UI deferred;
-- physical outputs/relays fake/locked;
-- Rule remains authoritative;
-- ML remains shadow-only;
-- no cross-sensor temperature/RH offsets because the real sensors are in different physical locations.
-
-## Current Stage27C status
-
-Stage27C points 1-4 are complete on real hardware:
-
-- CrowPanel N8R8 profile and GPIO21/GPIO38 shared I2C are proven;
-- SCD41 and DS3231 are physically detected and operational;
-- SCD41 MCU-only reset recovery is implemented;
-- TP357 native BLE decoding is proven from the real exact-MAC device;
-- Xiaomi/PVVX/BTHome and TP357 are scanned concurrently by one native NimBLE scanner using exact MAC identities;
-- TP357 provides primary inside T/RH;
+- e-paper/front-panel UI deferred and not validated by Stage27C;
+- physical outputs/relays fake/locked and not validated by Stage27C;
+- Rule authoritative;
+- ML shadow-only;
+- TP357 exact-MAC device provides primary inside T/RH;
 - SCD41 provides controller CO2 plus local/window T/RH diagnostics;
-- Xiaomi provides nearby ambient T/RH through the neutral `outside_*` channel;
-- RTC trusted validity is separate from availability;
-- outputs remain fake/locked;
-- physical input gate passed with no panic/watchdog evidence.
+- Xiaomi/PVVX/BTHome exact-MAC device provides nearby ambient T/RH through neutral `outside_*` fields;
+- no cross-sensor T/RH offsets because the sensors are intentionally in different physical locations.
 
-The firmware revision that generated the current soak evidence is:
+## Final Stage27C evidence
 
-`cf957a7649ec02835f724951d34f0b408f5f6de2` — `Add Stage27C soak diagnostics`
+Exact firmware physically qualified and soaked:
 
-Later documentation-only commits may advance repository HEAD. Do not confuse docs HEAD with the firmware-under-test SHA.
+`a5726b89e94b9ac628249b780d6548a692c3fd2c` — `Disable Stage27C CMD0 precondition by default`
 
-## Stage27C point 5 status
+Do not confuse later test/documentation commits with the firmware-under-test identity.
 
-Long-soak diagnostics are implemented.
+Stage27C point 5 completed with seven accepted strict 5400-second SD-primary soak chunks, totaling 37,800 seconds (10.5 hours) of active capture on one preserved MCU uptime sequence. The accepted sequence finished at `last_uptime_ms=59019769` and `last_sd_records_written=6717`. Across accepted chunks there were zero resets, zero serial disconnects, zero parser errors, zero SD mount/write/drop/skip failures, zero SCD41 read/invalid errors, clean BLE scanning/freshness diagnostics, trusted RTC, fake/locked outputs, and the exact firmware SHA throughout.
 
-Two bounded ~90-minute chunks completed with terminal PASS on firmware `cf957a7649ec02835f724951d34f0b408f5f6de2`, preserving MCU uptime continuity and showing stable heap/PSRAM, zero SCD41 read/invalid errors, continuing TP357/Xiaomi traffic and fake/locked outputs.
+Stage27C point 6 audited existing host coverage and added only the missing stale-valid-measurement end-to-end assertion. Terminal task `20260903-growbox-stage27c-point6-host-validation-v2` passed the complete portable host suite `17/17` and the targeted Stage27C subset `3/3`.
 
-The third chunk task, `20260831-growbox-stage27c-long-soak-chunk03-v1`, was **intentionally interrupted by the user**. Its terminal failure is `interrupted_previous_attempt`; this is operator interruption, not firmware failure. Never replay or mutate that task id.
-
-The autonomous Stage27C loop is intentionally paused. Do not resume it merely because the executor is idle.
-
-Exact chunk task ids, attempt ids, digests, counters, uptime values, continuation rules and interruption semantics are in `docs/STAGE27C_CONTINUATION_HANDOFF.md`.
+Full per-chunk task IDs, uptime/SD counters, the rejected chunk-05 capture attempt, memory trend, point-6 evidence and the exact closure boundary are frozen in `docs/STAGE27C_FINAL_EVIDENCE.md`.
 
 ## Remaining Stage27C work
 
-1. Resume/complete point 5 only when the user explicitly asks to continue.
-2. Before continuing the soak, determine whether the same firmware and uptime continuity survived the pause. If not, start a clearly new soak session rather than silently combining incompatible uptime sequences.
-3. After soak closure, perform only safe software-observable point-6 fault/freshness tests unless physical manipulation is explicitly authorized.
-4. Freeze final point-7 evidence/status, distinguishing documentation HEAD from the exact flashed/tested firmware SHA.
-5. Keep physical outputs and e-paper outside this scope unless a new explicit goal opens them.
+None for the requested Stage27C scope.
+
+Do **not**:
+
+- resume or extend the Stage27C soak loop;
+- reflash/reset the board merely to collect more Stage27C evidence;
+- reopen completed storage fallback/recovery/CMD0 gates without a relevant firmware/storage change;
+- add e-paper/front-panel work under the old Stage27C goal;
+- enable or validate physical actuators under the old Stage27C goal;
+- promote ML from shadow-only under the old Stage27C goal.
+
+A new explicit goal is required for any of those scope expansions. If production firmware/runtime changes invalidate the frozen evidence, open a clearly new validation stage/session rather than silently attaching new results to Stage27C.
 
 ## Local Agent and Chat Bridge
 
-Canonical executor repository: `MichalMatu/local-agent`, branch `main`. Do not pin a remembered release line here. Read live runtime identity and compare it with canonical `MichalMatu/local-agent/main` when compatibility matters.
-
-Read before autonomous execution:
-
-- `MichalMatu/local-agent/AGENTS.md`;
-- `docs/OPERATIONS.md`;
-- `docs/AUTONOMOUS_CHAT_LOOP.md`;
-- `docs/MULTI_REPOSITORY.md` when scheduler/resource behavior matters;
-- `chat_bridge/README.md` when Chat Bridge operation matters.
-
-Local Agent is a deterministic executor. ChatGPT is the planner. The Chrome Chat Bridge only wakes one selected ChatGPT conversation and transports assistant control markers; it does not understand the project or choose work.
+Canonical executor repository: `MichalMatu/local-agent`, branch `main`. Read live runtime identity when compatibility matters rather than pinning a remembered release.
 
 Growbox control-plane state lives on this repository's `agent-control` branch:
 
@@ -87,30 +69,16 @@ Growbox control-plane state lives on this repository's `agent-control` branch:
 - `.agent/results/<task-id>.json`;
 - `.agent/status/daemon.json`.
 
-### Parallel execution model
+For any future Growbox goal:
 
-The autonomous planner loop remains sequential for the active Growbox goal, and Growbox executes at most one claimed task at a time. This is **not global serialization**: the production `agent_parallel.py` supervisor may execute unrelated repository tasks concurrently when resource admission permits it. The recommended production width is two workers; verify the actual live supervisor fields rather than assuming a remembered value.
+- use one immutable bounded task at a time for that goal;
+- never mutate/replay a terminal task id;
+- inspect exact terminal result before claiming completion or queueing the next dependent task;
+- classify hardware/USB/serial/flashing work conservatively;
+- keep software-only concurrency bounded by an explicit memory/resource contract;
+- verify fresh repository HEAD and daemon state instead of relying on historical idle snapshots.
 
-Repository-worker `.agent/status/daemon.json` may be an older idle snapshot and may not contain supervisor-wide fields such as `max_parallel_workers`. When scheduler identity or global concurrency matters, inspect the shared supervisor status as well as the Growbox worker status. Compare `daemon_version` / `self_revision` with canonical `MichalMatu/local-agent/main` instead of treating a stale worker heartbeat as the installed runtime version.
-
-Resource classification is conservative:
-
-- omitted, malformed or unsafe `resources` means full `machine` exclusivity;
-- `resources: []` is only for clearly software-only work and requires enabled `memory_limit_mb <= 1024`;
-- named resources serialize tasks sharing the same named resource;
-- hardware, USB, serial, flashing, PlatformIO-heavy or otherwise uncertain work remains `machine`-exclusive unless a narrower contract has been explicitly proven safe.
-
-For Stage27C, physical serial/soak work should therefore remain machine-exclusive by default. A software-only host-test task may opt into safe overlap when its resource and memory contract is explicit.
-
-Never queue a second Growbox task for the same active goal while its exact task is active. Task ids/payloads are immutable. Interrupted tasks are never automatically replayed.
-
-### Chat Bridge pacing
-
-After queueing a new autonomous task, prefer one early liveness re-check after about 30 seconds. Inspect terminal result first; otherwise inspect the exact run/attempt and daemon status. If execution is healthy, return to a longer interval appropriate to the expected duration. Do not leave a 30-second Bridge interval enabled across a healthy multi-minute or multi-hour task.
-
-This is planner pacing only. It must not alter Local Agent polling, duplicate execution or weaken one-active-task sequencing for the current Growbox goal.
-
-Evidence priority:
+Evidence priority remains:
 
 1. exact terminal result;
 2. exact live run/attempt;
@@ -118,31 +86,23 @@ Evidence priority:
 4. exact source/diff/test evidence;
 5. planner analysis.
 
-The full project-specific Local Agent + Chat Bridge handoff, including bridge markers and the SIGTERM interruption behavior observed on chunk 03, is in `docs/STAGE27C_CONTINUATION_HANDOFF.md`.
-
 ## First actions in a fresh chat
 
 1. Read `AGENTS.md`.
 2. Read this file.
-3. Read `docs/STAGE27C_CONTINUATION_HANDOFF.md` completely.
-4. Read `docs/STAGE27_NATIVE_IDF_HANDOFF.md` and `docs/STAGE27C_CROWPANEL_BRINGUP.md` for frozen architecture/physical details.
-5. Read canonical `MichalMatu/local-agent/docs/OPERATIONS.md`, `docs/AUTONOMOUS_CHAT_LOOP.md` and `docs/MULTI_REPOSITORY.md`; read `chat_bridge/README.md` if automatic wake-ups are to be used.
-6. Fetch fresh `mvp/environment-controller` HEAD.
-7. Fetch fresh Growbox `agent-control:.agent/status/daemon.json` and any newer exact run/result evidence.
-8. When runtime/scheduler identity matters, also inspect the shared supervisor status and compare its `daemon_version` / `self_revision` with canonical `MichalMatu/local-agent/main`.
-9. Treat any previously recorded idle/stopped/clean-queue state as historical context only; verify it again before writes/tasks.
-10. Do not replay `20260831-growbox-stage27c-long-soak-chunk03-v1`.
-11. Do not reopen Stage27A/B or Stage27C points 1-4 without regression evidence.
-12. Do not resume the soak/autonomous loop until the user explicitly asks to continue.
-13. When resuming, use one new immutable bounded task at a time for the Stage27C goal and keep outputs fake/locked.
-14. Classify task resources conservatively so unrelated repositories overlap only when it is genuinely safe.
+3. Read `docs/STAGE27C_FINAL_EVIDENCE.md` and `docs/STAGE27C_CROWPANEL_BRINGUP.md` before discussing Stage27C history.
+4. Read `docs/STAGE27_NATIVE_IDF_HANDOFF.md` if Stage27 architecture boundaries matter.
+5. Fetch fresh `mvp/environment-controller` HEAD.
+6. Fetch fresh Growbox `agent-control:.agent/status/daemon.json` when Local Agent work is requested.
+7. Treat `docs/STAGE27C_PRE_SOAK_HANDOFF.md` and `docs/STAGE27C_CONTINUATION_HANDOFF.md` as historical records, not instructions to resume the completed soak.
+8. Do not reopen Stage27A/B/C without regression evidence or a new explicit scope.
 
 ## Planner behavior expected by the user
 
 - communicate with the user in Polish;
 - keep repository documentation, code, commit messages, Local Agent task JSON and commands in English;
-- use repository evidence instead of asking the user to repeat information already frozen here;
-- be concise but exact about task id, attempt/result and commit SHA;
+- use repository evidence instead of asking the user to repeat frozen information;
+- be concise but exact about task ids, terminal results and commit SHAs;
 - prefer concrete progress over repeated generic audits;
 - never claim physical success without exact execution/hardware evidence;
-- preserve the native ESP-IDF and hardware-neutral architecture boundaries.
+- preserve native ESP-IDF and hardware-neutral architecture boundaries.
