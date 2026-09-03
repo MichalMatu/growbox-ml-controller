@@ -2,8 +2,8 @@
   "version": 1,
   "daemon_version": "4.15.0",
   "state": "idle",
-  "pid": 56904,
-  "updated_at": "2026-09-03T23:09:17.021708+00:00",
+  "pid": 60293,
+  "updated_at": "2026-09-03T23:14:22.686726+00:00",
   "self_revision": "3742045cc6492c49e2f94bdcc910ec92436edc38",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -23,8 +23,7 @@
   "default_branch": "main",
   "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 56904,
+  "worker_pid": 60293,
   "supervisor_pid": 59663,
-  "last_task_id": "20260904-growbox-stage28a-rf433-codec-diagnostic-v2",
   "execution_variant": "parallel"
 }
