@@ -6,7 +6,7 @@ Work branch: `mvp/environment-controller`
 
 This document freezes the physical Stage27C configuration for the user's actual Elecrow CrowPanel ESP32-S3 2.9-inch HAT setup. E-paper and front-panel UI remain intentionally deferred. Physical actuator outputs remain fake/locked.
 
-> **Current continuation note:** Stage27C pre-soak hardware/storage qualification is complete. The exact final firmware-under-test identity, storage fallback/recovery evidence, CMD0 A/B result, CI evidence, and the explicit stop-before-overnight-soak rule are recorded in `docs/STAGE27C_PRE_SOAK_HANDOFF.md`. The older `docs/STAGE27C_CONTINUATION_HANDOFF.md` remains historical context for the earlier long-soak session.
+> **Final status:** Stage27C points 1-7 are closed for the requested scope. The exact final firmware-under-test, seven accepted long-soak chunks, point-6 host validation and closure decision are frozen in `docs/STAGE27C_FINAL_EVIDENCE.md`. `docs/STAGE27C_PRE_SOAK_HANDOFF.md` and `docs/STAGE27C_CONTINUATION_HANDOFF.md` are historical handoffs and must not be used to resume the completed soak.
 
 ## Board and bus
 
@@ -82,19 +82,26 @@ CI for final firmware SHA `a5726b89e94b9ac628249b780d6548a692c3fd2c` also passed
 
 The device remains Rule-authoritative, ML shadow-only, and outputs fake/locked. No e-paper work was added.
 
-## Historical long-soak evidence
+## Completed final long soak and fault/freshness closure
 
-The earlier Stage27C session produced two valid ~90-minute long-soak chunks on firmware `cf957a7649ec02835f724951d34f0b408f5f6de2`, followed by an intentionally interrupted third task. That evidence remains historical and is documented in `docs/STAGE27C_CONTINUATION_HANDOFF.md`; it must not be silently treated as a continuous soak on the final firmware revision.
+The final firmware completed seven accepted strict 5400-second SD-primary soak chunks, totaling 37,800 seconds (10.5 hours) of active capture on one preserved MCU uptime sequence. All accepted chunks had zero resets, zero serial disconnects, zero parser errors, zero SD mount/write/drop/skip failures, zero SCD41 read/invalid errors, clean BLE scanning/freshness diagnostics, trusted RTC, fake/locked outputs and the exact firmware SHA throughout.
 
-## Next ordered validation
+The final accepted chunk ended at `last_uptime_ms=59019769` with `last_sd_records_written=6717`, `min_heap_internal=231588`, `min_heap_psram=8368044`, and `min_stack_free=10708`.
 
-Stage27C is now **ready for the separately approved overnight/final long soak on the final firmware revision**.
+Point 6 then audited existing fault/freshness tests and added only the missing end-to-end stale-valid-sample assertion. `20260903-growbox-stage27c-point6-host-validation-v2` passed the complete portable host suite `17/17` and the targeted Stage27C subset `3/3`.
 
-Do not start that soak automatically. It requires explicit user approval in a separate step. Until then:
+Full task IDs, per-chunk uptime/SD counters, the rejected chunk-05 capture attempt, memory trend, point-6 test evidence and the exact closure boundary are recorded in `docs/STAGE27C_FINAL_EVIDENCE.md`.
 
-- keep the microSD inserted for the normal SD-primary configuration;
-- do not reflash or reset merely to collect more evidence;
-- keep outputs fake/locked;
-- keep the Rule controller authoritative and ML shadow-only;
-- do not add e-paper/front-panel work;
-- do not reopen the completed fallback/recovery/CMD0 gates unless the firmware or storage implementation changes.
+## Closure boundary
+
+Stage27C is complete. Do not resume or extend its soak loop.
+
+Future work must open a new explicit goal if it changes any of the following boundaries:
+
+- e-paper/front-panel UI;
+- physical actuators/relays;
+- Rule-authoritative / ML-shadow-only policy;
+- sensor identities or physical role mapping;
+- final firmware/runtime behavior in a way that invalidates the frozen evidence.
+
+Documentation/test-only HEAD changes after closure do not change the physically soaked firmware identity `a5726b89e94b9ac628249b780d6548a692c3fd2c`.
