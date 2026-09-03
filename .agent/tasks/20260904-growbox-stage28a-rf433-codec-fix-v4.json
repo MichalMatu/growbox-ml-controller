@@ -1,0 +1,15 @@
+{
+  "id": "20260904-growbox-stage28a-rf433-codec-fix-v4",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "resources": [],
+  "memory_limit_mb": 4096,
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "commands": [
+    "set -euo pipefail\nEXPECTED=07bc0aa1a53a55ff920f1f9ef028c8602fcaa182\ntest \"$(git rev-parse HEAD)\" = \"$EXPECTED\"\ngit fetch -q origin agent-control mvp/environment-controller\ntest \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"\npython3 - <<'PY'\nimport json, subprocess\nfrom pathlib import Path\nraw = subprocess.check_output(['git','show','origin/agent-control:.agent/tasks/20260904-growbox-stage28a-rf433-codec-host-v1.json'], text=True)\ntask = json.loads(raw)\nsubprocess.run(['bash','-lc',task['commands'][0]], check=True)\npath = Path('test/test_rf433_protocol/test_main.cpp')\ntext = path.read_text(encoding='utf-8')\nneedle = 'assert(decoded.estimated_pulse_us == protocolSpec(protocol)->default_pulse_us);'\nreplacement = '''// The Stage28 RF transport uses a fixed 100 kHz RMT clock, so pulse lengths are\n    // represented in 10 us ticks. Protocol 10's nominal 365 us therefore round-trips\n    // as 370 us; verify the codec's quantized value rather than an unrepresentable ideal.\n    const auto nominal_pulse_us =\n        static_cast<std::uint32_t>(protocolSpec(protocol)->default_pulse_us);\n    const auto expected_quantized_pulse_us =\n        static_cast<std::uint16_t>(((nominal_pulse_us + 5U) / 10U) * 10U);\n    assert(decoded.estimated_pulse_us == expected_quantized_pulse_us);'''\nif needle not in text:\n    raise SystemExit('expected pulse assertion not found')\npath.write_text(text.replace(needle, replacement), encoding='utf-8')\nPY\ngit diff --check\ncmake -S test/host -B build/host-stage28a\ncmake --build build/host-stage28a --target rf433_protocol_tests -j2\nctest --test-dir build/host-stage28a -R '^rf433_protocol_tests$' --output-on-failure\ncmake --build build/host-stage28a -j2\nctest --test-dir build/host-stage28a --output-on-failure\ngit diff --check\ngit status --short\ngit add src/climate/rf433 test/test_rf433_protocol test/host/CMakeLists.txt\ngit commit -m 'Add portable RF433 codec and temporal policy'\ngit fetch -q origin mvp/environment-controller\ntest \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"\ngit push origin HEAD:mvp/environment-controller\nprintf 'STAGE28A_RF433_CODEC_FIX_OK commit=%s\\n' \"$(git rev-parse HEAD)\""
+  ]
+}
