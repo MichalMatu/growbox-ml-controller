@@ -171,3 +171,7 @@ The final acceptance combines:
 No e-paper/front-panel validation and no physical actuator/relay validation are claimed. Those remain outside Stage27C and require a new explicit goal.
 
 Do not reopen Stage27C solely because the repository documentation HEAD advances after this file. Reopen only if firmware/runtime behavior changes in a way that invalidates this evidence or if a new explicit hardware goal expands the scope.
+
+## Frozen milestone
+
+The tested and reviewed Stage27C closure is frozen by the annotated Git tag `stage27c-validated-2026-09-03`. The tag identifies the repository closure state; the exact physically soaked firmware remains `a5726b89e94b9ac628249b780d6548a692c3fd2c`.
