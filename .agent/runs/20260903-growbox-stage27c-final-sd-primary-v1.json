@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260903-growbox-stage27c-final-sd-primary-v1",
+  "task_digest": "949118c4b9d8421bf054c2129f2179513cd30acfcd0b43288428b51270b121fc",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-03T04:24:12.847813+00:00",
+  "attempt_id": "5dd2b85d74253cfce332a8d8",
+  "daemon_version": "4.15.0",
+  "daemon_pid": 91745,
+  "updated_at": "2026-09-03T04:24:12.851620+00:00",
+  "pid": 91745
+}
