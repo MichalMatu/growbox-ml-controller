@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260904-growbox-stage28b-rmt-loopback-compile-v1",
   "task_digest": "7aad13efdf263d1d4e4c4940b99d850c77f405357ab7caa30588c96563a96c32",
-  "idle_timeout": 300,
-  "task_timeout": 3600,
-  "memory_limit_mb": 4096,
-  "started_at": "2026-09-03T23:35:10.998977+00:00",
+  "status": "failed",
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-03T23:35:15.369225+00:00",
   "attempt_id": "9eda9040f2246204b629df76",
   "daemon_version": "4.15.0",
   "daemon_pid": 82362,
-  "updated_at": "2026-09-03T23:35:10.999220+00:00",
+  "updated_at": "2026-09-03T23:35:15.887412+00:00",
   "pid": 82362
 }
