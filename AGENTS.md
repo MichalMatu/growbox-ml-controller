@@ -15,10 +15,11 @@ Repository identity:
 
 - repository: `MichalMatu/growbox-ml-controller`
 - local-agent repository id: `growbox-ml-controller`
+- agent binding: `815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5`
 - control branch: `agent-control`
 - default source branch: `main`
 - current MVP work branch: `mvp/environment-controller`
-- execution model: one shared bounded-parallel supervisor with short-lived repository workers; one task per repository at a time, with cross-repository overlap only when resource admission permits it; `agent_multirepo.py` remains the serial fallback
+- execution model: one shared bounded-parallel supervisor with short-lived repository workers; one task per repository at a time, with cross-repository overlap only when resource admission permits it; `agent_multirepo.py` remains the serial fallback and enforces the same binding contract
 
 ### New chat bootstrap
 
@@ -26,19 +27,23 @@ When starting work on this repository in a new chat/session:
 
 1. Read this `AGENTS.md`, the current `README.md`, `docs/CONTINUATION_PLAN.md`, and `docs/STAGE27_NATIVE_IDF_HANDOFF.md` before proposing or executing changes.
 2. Inspect the exact GitHub branch relevant to the requested work. Do not assume `main` is the work branch.
-3. Inspect `.agent/status/daemon.json` on `agent-control` and verify `daemon_version` against `MichalMatu/local-agent/agent_version.py` when Local Agent compatibility matters.
-4. When exact daemon source identity matters, compare `.agent/status/daemon.json:self_revision` with `MichalMatu/local-agent/main`; do not infer synchronization from the version string alone.
-5. Use this repository's own `agent-control` branch for Local Agent tasks. Never send Growbox tasks through another repository's control branch.
-6. Submit immutable task requests under `.agent/tasks/<task-id>.json` on `agent-control` and set `work_branch` explicitly whenever the task must run on a non-default branch such as `mvp/environment-controller`.
-7. Follow execution through `.agent/runs/<task-id>.json` and `.agent/status/daemon.json`.
-8. Read the terminal result from `.agent/results/<task-id>.json` before reporting completion.
-9. Prefer remote run/status/result evidence over asking the user to copy local terminal logs when Local Agent can provide the state directly.
-10. Keep repository workspaces isolated. A Growbox task must not publish results through another repository's Local Agent control plane.
-11. Do not reopen completed Stage25/26 work. Current hardware direction and the Stage27 bootstrap are frozen in `docs/STAGE27_NATIVE_IDF_HANDOFF.md`.
+3. If Chat Bridge is active, require the wake envelope to identify exactly repository id `growbox-ml-controller`, repository `MichalMatu/growbox-ml-controller`, and agent binding `815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5`. Never infer or switch repository identity from remembered chat context; a different repository requires explicit Bridge Rebind.
+4. Inspect `.agent/status/daemon.json` on `agent-control` and verify `daemon_version` against `MichalMatu/local-agent/agent_version.py` when Local Agent compatibility matters.
+5. When exact daemon source identity matters, compare `.agent/status/daemon.json:self_revision` with `MichalMatu/local-agent/main`; do not infer synchronization from the version string alone.
+6. Use this repository's own `agent-control` branch for Local Agent tasks. Never send Growbox tasks through another repository's control branch.
+7. Verify `.agent/binding.json` on `agent-control` matches the repository identity above before queueing work when binding compatibility matters.
+8. Submit immutable task requests under `.agent/tasks/<task-id>.json` on `agent-control`, include exactly `"agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5"`, declare `resources`, and set `work_branch` explicitly whenever the task must run on a non-default branch such as `mvp/environment-controller`.
+9. Follow execution through `.agent/runs/<task-id>.json` and `.agent/status/daemon.json`.
+10. Read the terminal result from `.agent/results/<task-id>.json` before reporting completion.
+11. Prefer remote run/status/result evidence over asking the user to copy local terminal logs when Local Agent can provide the state directly.
+12. Keep repository workspaces isolated. A Growbox task must not publish results through another repository's Local Agent control plane.
+13. Do not reopen completed Stage25/26 work. Current hardware direction and the Stage27 bootstrap are frozen in `docs/STAGE27_NATIVE_IDF_HANDOFF.md`.
 
 ### Local Agent execution rules
 
 - Local Agent is a deterministic executor, not a coding model. The planner chooses the exact bounded work; the daemon executes declared local commands/changes and reports evidence.
+- Hard binding is fail-closed: local registry `agent_binding == .agent/binding.json agent_binding == task.agent_binding` is required before claim/execution on both parallel and serial fallback paths. Missing repository binding reports `unbound`; a control mismatch reports `binding_error`; missing/wrong task binding is terminally rejected before any task command runs.
+- Never change, guess, or borrow another repository's binding to make a task run. Chat Bridge repository changes require explicit operator Rebind.
 - The planner may also make bounded source changes directly through GitHub on the work branch when that is more efficient, then use Local Agent for real local synchronization/build/test verification. See the hybrid workflow below.
 - Machine-generated task content, commands, prompts, logs, code comments, documentation changes and commit messages authored for Local Agent execution must be English-only.
 - Task ids and payloads are immutable within this repository. Interrupted tasks are never automatically replayed.
@@ -100,7 +105,7 @@ Before any direct GitHub write to the work branch:
 
 After a direct GitHub **code/build/config** change:
 
-1. queue a new immutable Local Agent task with a new unique task id;
+1. queue a new immutable Local Agent task with a new unique task id and the exact Growbox `agent_binding` above;
 2. explicitly verify/synchronize to the intended remote SHA because `expected_head` is not implemented;
 3. run impact-appropriate focused tests/builds;
 4. run one final full verification when repository policy/change impact requires it;
@@ -118,6 +123,7 @@ The complete Stage27-specific version of this workflow is in `docs/STAGE27_NATIV
 
 The control branch is reserved for Local Agent state under `.agent/`, including:
 
+- `.agent/binding.json`
 - `.agent/tasks/`
 - `.agent/runs/`
 - `.agent/results/`
