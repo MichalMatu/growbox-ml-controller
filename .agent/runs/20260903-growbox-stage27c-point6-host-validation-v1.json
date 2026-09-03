@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260903-growbox-stage27c-point6-host-validation-v1",
+  "task_digest": "aa6d0a767e960f2ed597d70eac80a9b8bd467fadac3f6d8e37318626e8f2dcbf",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 1024,
+  "started_at": "2026-09-03T21:17:25.724915+00:00",
+  "attempt_id": "4ce03d6b87033d637aa68987",
+  "daemon_version": "4.15.0",
+  "daemon_pid": 35391,
+  "updated_at": "2026-09-03T21:17:25.725050+00:00",
+  "pid": 35391
+}
