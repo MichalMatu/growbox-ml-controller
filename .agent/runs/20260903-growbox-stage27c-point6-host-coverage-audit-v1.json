@@ -1,0 +1,9 @@
+{
+  "event": "invalid_task_rejected",
+  "status": "failed",
+  "failure_reason": "invalid_task_file",
+  "updated_at": "2026-09-03T20:51:46.468563+00:00",
+  "task_id": "20260903-growbox-stage27c-point6-host-coverage-audit-v1",
+  "daemon_version": "4.15.0",
+  "pid": 8198
+}
