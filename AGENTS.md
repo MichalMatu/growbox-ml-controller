@@ -8,9 +8,10 @@ Repository identity:
 
 - repository: `MichalMatu/growbox-ml-controller`
 - local-agent repository id: `growbox-ml-controller`
+- agent binding: `815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5`
 - control branch: `agent-control`
 - default source branch: `main`
-- execution model: one shared bounded-parallel supervisor; one task per repository at a time, with cross-repository overlap only when task resource admission permits it; the serial supervisor remains the fallback
+- execution model: one shared bounded-parallel supervisor; one task per repository at a time, with cross-repository overlap only when task resource admission permits it; the serial supervisor remains the fallback and enforces the same binding contract
 
 ### New chat bootstrap
 
@@ -18,18 +19,22 @@ When starting work on this repository in a new chat/session:
 
 1. Read this `AGENTS.md` and the current `README.md` before proposing or executing changes.
 2. Inspect the current GitHub state of the repository and the branch relevant to the requested work. Do not assume `main` is always the correct work branch; the README may identify an active integration branch.
-3. Use this repository's own `agent-control` branch for Local Agent tasks. Never send Growbox tasks through another repository's control branch (for example LiteGraph).
-4. Submit task requests under `.agent/tasks/<task-id>.json` on `agent-control`.
-5. Follow execution through `.agent/runs/<task-id>.json` and `.agent/status/daemon.json`.
-6. Read the terminal result from `.agent/results/<task-id>.json` before reporting completion.
-7. Prefer remote status/results from GitHub over asking the user to copy local terminal logs when Local Agent can provide the state directly.
-8. Keep repository workspaces isolated. A task for this repository must not read, modify, checkpoint, or publish results through another repository's Local Agent workspace.
+3. If Chat Bridge is active, require the wake envelope to identify exactly repository id `growbox-ml-controller`, repository `MichalMatu/growbox-ml-controller`, and agent binding `815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5`. Never infer or switch repository identity from remembered chat context; a different repository requires explicit Bridge Rebind.
+4. Use this repository's own `agent-control` branch for Local Agent tasks. Never send Growbox tasks through another repository's control branch (for example LiteGraph).
+5. Verify `.agent/binding.json` on `agent-control` matches the repository identity above before queueing work when binding compatibility matters.
+6. Submit task requests under `.agent/tasks/<task-id>.json` on `agent-control`; every executable task must contain exactly `"agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5"` and explicit `resources`.
+7. Follow execution through `.agent/runs/<task-id>.json` and `.agent/status/daemon.json`.
+8. Read the terminal result from `.agent/results/<task-id>.json` before reporting completion.
+9. Prefer remote status/results from GitHub over asking the user to copy local terminal logs when Local Agent can provide the state directly.
+10. Keep repository workspaces isolated. A task for this repository must not read, modify, checkpoint, or publish results through another repository's Local Agent workspace.
 
 ### Control branch contract
 
-`agent-control` is a control plane, not a development branch. Product/source changes belong on the requested source/work branch. The control branch is reserved for Local Agent queue, status, run, result, and daemon-control files under `.agent/`.
+`agent-control` is a control plane, not a development branch. Product/source changes belong on the requested source/work branch. The control branch is reserved for Local Agent binding, queue, status, run, result, and daemon-control files under `.agent/`.
 
 The canonical Local Agent implementation and operational documentation live in `MichalMatu/local-agent`. If the control protocol changes, update this bootstrap section so future chats do not depend on remembered conversation context.
+
+Hard binding is fail-closed. The executor requires local registry `agent_binding == .agent/binding.json agent_binding == task.agent_binding` before claim/execution. Missing repository binding reports `unbound`; a control mismatch reports `binding_error`; missing/wrong task binding is terminally rejected before any task command runs. Do not “repair” a task by changing or guessing its binding.
 
 Every task must declare `resources` explicitly. Missing or invalid declarations are terminal task-contract errors; there is no compatibility fallback to `machine`. Use `resources: []` for repository-local software work, including builds/tests, when no exclusive external device or host-global state is used. `memory_limit_mb` is an independent RSS watchdog and does not determine resource classification. Use stable named resources such as `board:growbox-s3` for USB/serial/flash/monitor/hardware work so only tasks sharing that concrete resource serialize. Use `resources: ["machine"]` only for genuine whole-host operations such as global Local Agent maintenance or host-global toolchain mutation. Resource contention is a wait state: the immutable task remains pending and is retried. Read repository-worker truth such as `daemon_version`, `self_revision`, `execution_model` / `execution_variant`, current task state, and `supervisor_pid` from `.agent/status/daemon.json`. Supervisor-wide fields such as `max_parallel_workers` are not guaranteed to be repeated in every repository-worker status snapshot; read the shared supervisor status when that field matters. Do not pin a Local Agent release number here.
 
