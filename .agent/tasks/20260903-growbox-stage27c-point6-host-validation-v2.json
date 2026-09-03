@@ -1,0 +1,20 @@
+{
+  "id": "20260903-growbox-stage27c-point6-host-validation-v2",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": ["machine"],
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "set -euo pipefail; EXPECTED_HEAD=2d2af78cd62c83b9438b45964cf4b1565abe2868; git fetch --quiet origin mvp/environment-controller; REMOTE_SHA=$(git rev-parse origin/mvp/environment-controller); echo EXPECTED_HEAD=$EXPECTED_HEAD; echo REMOTE_SHA=$REMOTE_SHA; test \"$REMOTE_SHA\" = \"$EXPECTED_HEAD\"; git reset --hard \"$EXPECTED_HEAD\"",
+    "set -euo pipefail; rm -rf build/host-tests-point6; cmake -S test/host -B build/host-tests-point6",
+    "set -euo pipefail; cmake --build build/host-tests-point6 --parallel",
+    "set -euo pipefail; ctest --test-dir build/host-tests-point6 --output-on-failure",
+    "set -euo pipefail; ctest --test-dir build/host-tests-point6 -R 'ble_climate_state_tests|stage27_native_inputs_tests|stage27_fault_freshness_tests' --output-on-failure",
+    "set -euo pipefail; git diff --name-only 10ec84336f941df19ff0d3df6ce220c31c7f143e HEAD; test -z \"$(git status --porcelain)\"; echo STAGE27C_POINT6_HOST_VALIDATION_OK"
+  ]
+}
