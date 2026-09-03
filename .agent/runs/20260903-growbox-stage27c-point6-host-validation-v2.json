@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 2,
+  "index": 3,
   "total": 6,
-  "command": "set -euo pipefail; rm -rf build/host-tests-point6; cmake -S test/host -B build/host-tests-point6",
-  "pid": 38503,
+  "command": "set -euo pipefail; cmake --build build/host-tests-point6 --parallel",
+  "pid": 38643,
   "timeout": 900,
   "idle_timeout": 300,
   "memory_limit_mb": 4096,
-  "started_at": "2026-09-03T21:21:35.082058+00:00",
-  "stage_name": "command-2",
-  "stage_index": 2,
+  "started_at": "2026-09-03T21:21:38.989939+00:00",
+  "stage_name": "command-3",
+  "stage_index": 3,
   "stage_total": 6,
   "stage_phase": "commands",
   "task_id": "20260903-growbox-stage27c-point6-host-validation-v2",
@@ -18,5 +18,5 @@
   "task_digest": "6a831960e3dc51c35edc68343c884130396a2ae51ec7c83951ea1e281fe6edd0",
   "daemon_version": "4.15.0",
   "daemon_pid": 38320,
-  "updated_at": "2026-09-03T21:21:35.196004+00:00"
+  "updated_at": "2026-09-03T21:21:39.065070+00:00"
 }
