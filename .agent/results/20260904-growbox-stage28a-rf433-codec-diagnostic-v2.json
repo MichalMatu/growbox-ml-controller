@@ -1,0 +1,81 @@
+{
+  "id": "20260904-growbox-stage28a-rf433-codec-diagnostic-v2",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "started_at": "2026-09-03T23:08:42.409021+00:00",
+  "command_timeout": 900,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail\ntest \"$(git rev-parse HEAD)\" = \"07bc0aa1a53a55ff920f1f9ef028c8602fcaa182\"\ngit fetch -q origin agent-control\npython3 - <<'PY'\nfrom pathlib import Path\nimport json\nimport subprocess\n\nraw = subprocess.check_output([\"git\", \"show\", \"origin/agent-control:.agent/tasks/20260904-growbox-stage28a-rf433-codec-host-v1.json\"], text=True)\ntask = json.loads(raw)\nsubprocess.run([\"bash\", \"-lc\", task[\"commands\"][0]], check=True)\npath = Path(\"test/test_rf433_protocol/test_main.cpp\")\ntext = path.read_text(encoding=\"utf-8\")\nif \"#include <cstdio>\" not in text:\n    text = text.replace(\"#include <cstdint>\", \"#include <cstdint>\\n#include <cstdio>\")\nneedle = \"assert(decoded.estimated_pulse_us == protocolSpec(protocol)->default_pulse_us);\"\nreplacement = \"if (decoded.estimated_pulse_us != protocolSpec(protocol)->default_pulse_us) {\\n      std::fprintf(stderr, \\\"RF433_PULSE_MISMATCH protocol=%u estimated=%u default=%u\\\\n\\\",\\n                   static_cast<unsigned>(protocol),\\n                   static_cast<unsigned>(decoded.estimated_pulse_us),\\n                   static_cast<unsigned>(protocolSpec(protocol)->default_pulse_us));\\n    }\"\nif needle not in text:\n    raise SystemExit(\"diagnostic assertion not found\")\npath.write_text(text.replace(needle, replacement), encoding=\"utf-8\")\nPY\ncmake -S test/host -B build/host-stage28a-diagnostic >/dev/null\ncmake --build build/host-stage28a-diagnostic --target rf433_protocol_tests -j2 >/dev/null\n./build/host-stage28a-diagnostic/rf433_protocol_tests\nprintf '%s\\n' 'STAGE28A_RF433_CODEC_DIAGNOSTIC_OK'\n",
+      "exit_code": 0,
+      "output": " M test/host/CMakeLists.txt\n?? src/climate/rf433/\n?? test/test_rf433_protocol/\nRF433_PULSE_MISMATCH protocol=10 estimated=370 default=365\nSTAGE28A_RF433_CODEC_DIAGNOSTIC_OK\n",
+      "elapsed_seconds": 16.989,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 131.05,
+      "output_policy": "stream",
+      "captured_output_chars": 173,
+      "output_truncated": false,
+      "current_rss_mb": 17.2,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 16.989
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": " M test/host/CMakeLists.txt\n?? src/climate/rf433/\n?? test/test_rf433_protocol/\n",
+    "elapsed_seconds": 0.209
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "diff --git a/test/host/CMakeLists.txt b/test/host/CMakeLists.txt\nindex e7bf8521..5d2d5395 100644\n--- a/test/host/CMakeLists.txt\n+++ b/test/host/CMakeLists.txt\n@@ -265,6 +265,16 @@ target_include_directories(\n target_compile_features(stage27_fault_freshness_tests PRIVATE cxx_std_17)\n target_compile_options(stage27_fault_freshness_tests PRIVATE -Wall -Wextra -Wpedantic)\n \n+\n+add_executable(\n+  rf433_protocol_tests\n+  \"${PROJECT_ROOT}/test/test_rf433_protocol/test_main.cpp\"\n+  \"${PROJECT_ROOT}/src/climate/rf433/Rf433ProtocolCodec.cpp\"\n+)\n+target_include_directories(rf433_protocol_tests PRIVATE \"${PROJECT_ROOT}/src\")\n+target_compile_features(rf433_protocol_tests PRIVATE cxx_std_17)\n+target_compile_options(rf433_protocol_tests PRIVATE -Wall -Wextra -Wpedantic)\n+\n if(UNIX)\n   target_link_libraries(environment_control_tests PRIVATE m)\n   target_link_libraries(climate_v6_tests PRIVATE m)\n@@ -300,3 +310,4 @@ add_test(NAME stage27_telemetry_tests COMMAND stage27_telemetry_tests)\n add_test(NAME ble_climate_state_tests COMMAND ble_climate_state_tests)\n add_test(NAME stage27_native_inputs_tests COMMAND stage27_native_inputs_tests)\n add_test(NAME stage27_fault_freshness_tests COMMAND stage27_fault_freshness_tests)\n+add_test(NAME rf433_protocol_tests COMMAND rf433_protocol_tests)\n",
+    "elapsed_seconds": 0.084
+  },
+  "finished_at": "2026-09-03T23:09:02.328035+00:00",
+  "workspace_checkpoint": {
+    "version": 2,
+    "task_id": "20260904-growbox-stage28a-rf433-codec-diagnostic-v2",
+    "reason": "task-exit",
+    "created_at": "2026-09-03T23:09:03.193780+00:00",
+    "base_head": "07bc0aa1a53a55ff920f1f9ef028c8602fcaa182",
+    "work_branch": "agent-work",
+    "path": "/Users/michal/agent-workspace/repos/growbox-ml-controller/checkpoints/20260904-growbox-stage28a-rf433-codec-diagnostic-v2/1788476942820320000-task-exit",
+    "tracked_patch": "tracked.patch",
+    "untracked_root": "untracked",
+    "untracked_files": [
+      "src/climate/rf433/Rf433ProtocolCodec.cpp",
+      "src/climate/rf433/Rf433ProtocolCodec.h",
+      "src/climate/rf433/Rf433TemporalPolicy.h",
+      "test/test_rf433_protocol/test_main.cpp"
+    ],
+    "tracked_patch_bytes": 1350,
+    "untracked_bytes": 24543,
+    "total_bytes": 25893,
+    "status": " M test/host/CMakeLists.txt\n?? src/climate/rf433/\n?? test/test_rf433_protocol/\n"
+  },
+  "task_digest": "a35da0ddb70f0f4d7327b53b754f14853f70406544ae588ef70d79d32d2aa937",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "attempt_id": "7c17e953e59cded61d8fe944",
+  "daemon_version": "4.15.0"
+}
