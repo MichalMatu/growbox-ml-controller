@@ -1,148 +1,118 @@
 # Current controller status
 
-Date: 2026-08-29
+Date: 2026-09-03
 Development branch: `mvp/environment-controller`
 Fresh-chat bootstrap: `docs/CONTINUATION_PLAN.md`
-Stage27 handoff: `docs/STAGE27_NATIVE_IDF_HANDOFF.md`
+Final Stage27C evidence: `docs/STAGE27C_FINAL_EVIDENCE.md`
+Validated milestone tag: `stage27c-validated-2026-09-03`
 
-This is the short source of truth for the current climate-controller product path. Historical
-simulator, browser-contract and repository-convergence documents remain for reproducibility, but
-they must not be read as the current climate runtime architecture.
+This is the short source of truth for the current climate-controller product path.
 
-## Authoritative climate path
+## Current state
 
-Climate-v6 is the active migration target for new controller work:
+The architecture through Stage26, native Stage27A/Stage27B implementation, and Stage27C CrowPanel real-input validation are complete for the requested scope.
 
-- schema v6 / contract `climate-mvp-v1`;
-- 44 runtime-observable input features;
-- 6 semantic ML-controlled outputs: heater, cooler, exhaust fan, humidifier, dehumidifier and CO2 doser;
-- bounded model shape `44 -> 32 -> 32 -> 6` retained for compatibility/research;
-- Rule remains the authoritative runtime policy;
-- `MlShadow` evaluates ML without changing the applied command;
-- `MlActive` is an explicit research opt-in and is not qualified for real growbox actuation;
-- deterministic arbitration and safety remain authoritative over every policy proposal;
-- effective-actuator state advances only from the final applied semantic command.
+The exact firmware physically qualified and used for the final continuous soak is:
 
-The scientific rationale and rejected alternatives are frozen in `docs/ML_DECISION_REPORT.md`.
+`a5726b89e94b9ac628249b780d6548a692c3fd2c` — `Disable Stage27C CMD0 precondition by default`
 
-## Software-only controller work completed through Stage26C
+Do not confuse later test/documentation commits or the milestone tag target with the firmware-under-test SHA.
 
-The C++ climate-v6 runtime and hardware-neutral seams are complete through the pre-hardware gate.
-Important completed pieces include:
+## Proven Stage27C hardware path
 
-- `ClimateFeatureEncoder` and `ClimateRuntimeController` with Rule / ML_SHADOW / ML_ACTIVE modes;
-- trend and effective-actuator state estimation;
-- Python/C++ golden parity;
-- validated trace schema, streaming NDJSON recording, deterministic replay and counterfactual ML;
-- `ClimateControlLoop` with fail-closed input handling, best-effort OFF on actuator rejection and an actuator fault latch;
-- deterministic fake runtime and long virtual-HIL fault/soak coverage;
-- versioned read-only climate diagnostics;
-- `ClimateApplication` as the constructor-injected composition root;
-- `CompositeClimateSnapshotProvider` with separate inside/outside/clock/config interfaces;
-- `MappedClimateRoleDriver` beneath the six stable semantic actuator roles;
-- `scripts/check_pre_hardware_readiness.sh` plus full ESP-IDF v5.5.4 dual-app-mode gate.
+Board and runtime:
 
-The last software-only pre-hardware publication before the Stage27 handoff was:
+- Elecrow CrowPanel ESP32-S3 N8R8;
+- 100% native ESP-IDF v5.5.4;
+- no Arduino component and no PlatformIO/Arduino migration;
+- shared native I2C on GPIO21/GPIO38;
+- SCD41 at `0x62`;
+- DS3231 at `0x68`;
+- one native NimBLE scanner for TP357 and Xiaomi/PVVX/BTHome using exact MAC identities;
+- microSD primary storage with flash fallback/recovery support;
+- e-paper/front-panel deferred;
+- physical outputs/relays fake/locked.
 
-`bbf8684d2817f630ddca08837ddc8860a28eb660` — `Add pre-hardware readiness gate`.
+Authoritative sensor mapping:
 
-The Stage27 handoff documentation is newer than that baseline and intentionally freezes the next hardware direction without yet claiming hardware validation.
+- TP357 exact-MAC device = primary inside temperature/RH;
+- SCD41 = controller CO2 plus local/window temperature/RH diagnostics;
+- Xiaomi/PVVX/BTHome exact-MAC device = nearby ambient temperature/RH through neutral `outside_*` fields;
+- DS3231 = wall clock with availability kept separate from trusted validity.
 
-## Hardware-neutral I/O seam remains authoritative
+No cross-sensor temperature/RH offsets are applied because the sensors are intentionally located in different physical positions.
 
-`src/climate/ClimateIoAdapters.*` is the application-side boundary for concrete hardware work.
+## Storage qualification
 
-- `ClimateSnapshotProvider` supplies runtime-observable measurements/configuration.
-- `CompositeClimateSnapshotProvider` aggregates inside, outside, wall-clock and schedule/config sources.
-- `ClimateInputAdapter` maps the snapshot into the existing processing path.
-- `ClimateRoleDriver` accepts normalized semantic role commands.
-- `MappedClimateRoleDriver` maps semantic roles to configured endpoint identifiers.
-- `ClimateControlLoop` owns confirmed previous actions, OFF recovery and the actuator fault latch.
-- Hardware providers/drivers must not duplicate policy, trend state or confirmed applied state.
+The final storage path is qualified on real hardware:
 
-The climate core must remain independent of SCD41, BLE, RTC, GPIO, e-paper, relay/PWM or board-specific details.
+- strict SD-primary operation passed;
+- flash fallback with SD physically absent passed;
+- live flash-to-SD recovery after hot insertion without reset passed;
+- native CMD0 A/B passed;
+- `GROWBOX_SD_CMD0_PRECONDITION=0` is the qualified default;
+- storage mount/write/drop/skip counters remained clean in final qualification and soak evidence.
 
-## Frozen Stage27 framework/platform direction
+## Final Stage27C soak
 
-The hardware implementation is now frozen to **100% native ESP-IDF**.
+Point 5 completed with seven accepted strict 5400-second chunks on one preserved MCU uptime sequence:
 
-- ESP-IDF v5.5.4 remains the baseline.
-- Do not add Arduino-ESP32 as a component.
-- Do not migrate to PlatformIO/Arduino.
-- `MichalMatu/esp32s3_LiteGraph` and `MichalMatu/MatrixHub` are donor/reference repositories only.
-- Reusable pure protocol/decoder/register/pin-map logic may be adapted, but Arduino runtime ownership must not move into growbox.
+- accepted active capture: `37,800 s` = `10.5 h`;
+- exact firmware SHA remained `a5726b89e94b9ac628249b780d6548a692c3fd2c`;
+- final accepted uptime: `59,019,769 ms`;
+- final SD record counter: `6717`;
+- resets: `0`;
+- serial disconnects: `0`;
+- parser errors: `0`;
+- SD mount/write/drop/skip failures: `0`;
+- SCD41 read/invalid errors: `0`;
+- BLE scanning/freshness diagnostics remained clean;
+- RTC remained trusted;
+- outputs remained fake/locked;
+- internal heap, largest block, PSRAM and stack minima remained stable.
 
-Preferred board:
+The isolated failed chunk-05 capture attempt is documented in `docs/STAGE27C_FINAL_EVIDENCE.md` and was not accepted into the final sequence.
 
-- Elecrow CrowPanel 2.9-inch e-paper ESP32-S3 used by LiteGraph, together with the user's existing HAT, **only if** the exact board/display/buttons can be supported cleanly in native ESP-IDF.
+## Fault/freshness qualification
 
-Fallback:
+Point 6 audited existing host coverage and added only the missing end-to-end stale-valid-measurement assertion.
 
-- plain inexpensive ESP32-S3 devboard;
-- display/rotary encoder may be added later and are not MVP blockers.
+Terminal validation:
 
-If native CrowPanel support becomes disproportionately complex or requires an Arduino compatibility layer, simplify the hardware and use the devboard rather than complicating the firmware.
+- full portable host suite: `17/17` PASS;
+- targeted Stage27C subset: `3/3` PASS.
 
-See `docs/STAGE27_NATIVE_IDF_HANDOFF.md` for the exact decision gate and source-audit plan.
+Covered behavior includes exact BLE identity filtering, rejected/malformed packet diagnostics without refreshing valid freshness, stale measurement timeout behavior, BTHome encrypted/unsupported rejection semantics, and DS3231 OSF/trust handling.
 
-## First Stage27 real input set
+## Controller policy boundary at closure
 
-Current selected direction:
+The hardware-neutral climate core remains authoritative.
 
-- inside: Sensirion SCD41 for air temperature, RH and CO2;
-- outside: BLE temperature/RH sensor, exact model/protocol to be frozen by the native source audit; Xiaomi/PVVX/BTHome code in the user's existing projects is a strong reference;
-- system time: DS3231 with backup battery;
-- outputs: remain fake/locked during first real-input bring-up.
+- Rule is the authoritative applied policy.
+- ML remains `MlShadow` only for real hardware use.
+- `MlActive` is not qualified for real growbox actuation.
+- deterministic arbitration and safety remain authoritative over every policy proposal.
+- physical actuator endpoints were not qualified by Stage27C.
+- e-paper/front-panel behavior was not qualified by Stage27C.
 
-SCD41 + DS3231 should preferably share one explicitly owned native ESP-IDF I2C bus when board wiring permits it. BLE should use native ESP-IDF NimBLE. RTC lost-power/oscillator-stop state must be represented as invalid time rather than silently accepted.
+## Frozen milestone
 
-## Stage27 begins with research, not an Arduino port
+Stage27C is frozen as tested and reviewed by the annotated Git tag:
 
-The next action is a native-feasibility/source audit before implementation:
+`stage27c-validated-2026-09-03`
 
-1. identify the exact CrowPanel 2.9 board/display controller/revision used by LiteGraph;
-2. inspect official Elecrow sources/schematic/pin map and native ESP-IDF examples where available;
-3. select a maintained native ESP-IDF SCD41/SCD4x driver compatible with IDF 5.5.4;
-4. select/implement native DS3231 access with trusted-time validity semantics;
-5. select native ESP-IDF NimBLE plus the exact outside sensor/protocol decoder;
-6. compare the donor repositories only for proven hardware behavior and reusable pure logic;
-7. classify each part as KEEP / ADAPT / REIMPLEMENT / DEFER / DROP;
-8. decide CrowPanel versus bare ESP32-S3 before writing the real hardware bundle.
+The tag freezes the repository closure state. The physically soaked firmware identity remains the separate SHA shown above.
 
-E-paper/buttons are useful but may be deferred. Sensor/control correctness is the priority.
+Do not resume, extend or reinterpret Stage27C merely because the branch advances later. Reopen it only if a relevant firmware/runtime change invalidates the evidence or a new explicit goal deliberately expands the scope.
 
-## Physical bring-up order
+## Next work
 
-After the native feasibility freeze:
+No Stage27C work remains.
 
-1. implement all selected real inputs while keeping outputs fake/locked;
-2. verify SCD41/BLE/DS3231 availability, validity, age/freshness and diagnostics;
-3. physically exercise stale/invalid/unavailable/lost-time behavior and confirm fail-closed semantics;
-4. only then add a physical output endpoint beneath `MappedClimateRoleDriver`, initially Rule-authoritative;
-5. bring up one semantic actuator role at a time;
-6. collect real traces with ML only in `MlShadow`;
-7. re-qualify ML from real data before considering active ML actuation.
+The next development goal must be opened explicitly as a new stage. The logical choices are:
 
-A successful build or fake-runtime test is not physical hardware evidence.
+1. qualify real physical actuator outputs beneath the existing `ClimateRoleDriver` / `MappedClimateRoleDriver` seam, one semantic role at a time, with Rule authoritative and fail-safe OFF behavior proven first;
+2. add the deferred CrowPanel e-paper/front-panel UI without coupling it to controller correctness;
+3. collect real operational traces with ML still shadow-only, then evaluate/retrain/re-qualify ML before any future `MlActive` hardware experiment.
 
-## Local Agent workflow update
-
-Future chats may use a hybrid workflow:
-
-- make a small clear change directly on the GitHub work branch when that is faster;
-- then use local-agent to synchronize to the exact resulting SHA and perform real local compile/test/verification;
-- for broad/refactoring/local-iteration work, let local-agent perform the edit itself;
-- never make direct branch edits concurrently with an active local-agent task touching that branch;
-- never treat a direct GitHub code commit as verified until local-agent evidence confirms the relevant tests/build;
-- docs-only direct commits do not automatically require a firmware build when they have no executable/config impact.
-
-The complete project-specific procedure is frozen in `docs/STAGE27_NATIVE_IDF_HANDOFF.md`. Canonical executor/evidence rules remain in `MichalMatu/local-agent/docs/AUTONOMOUS_CHAT_LOOP.md` and `docs/OPERATIONS.md`.
-
-## Next steps
-
-1. Read `docs/STAGE27_NATIVE_IDF_HANDOFF.md` in the next chat.
-2. Fetch fresh daemon state and the current remote work-branch HEAD.
-3. Perform the Stage27 native source/feasibility audit; do not reopen completed Stage25/26 work.
-4. Freeze exact native board/driver/protocol choices in repository docs.
-5. Implement the real SCD41 + BLE + DS3231 input bundle with fake outputs.
-6. Validate on physical hardware before enabling real actuator outputs.
+For a fresh chat, start from `docs/CONTINUATION_PLAN.md` and `docs/STAGE27C_FINAL_EVIDENCE.md`. Do not restart Stage27A/B/C.
