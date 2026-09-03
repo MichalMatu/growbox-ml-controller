@@ -265,6 +265,16 @@ target_include_directories(
 target_compile_features(stage27_fault_freshness_tests PRIVATE cxx_std_17)
 target_compile_options(stage27_fault_freshness_tests PRIVATE -Wall -Wextra -Wpedantic)
 
+
+add_executable(
+  rf433_protocol_tests
+  "${PROJECT_ROOT}/test/test_rf433_protocol/test_main.cpp"
+  "${PROJECT_ROOT}/src/climate/rf433/Rf433ProtocolCodec.cpp"
+)
+target_include_directories(rf433_protocol_tests PRIVATE "${PROJECT_ROOT}/src")
+target_compile_features(rf433_protocol_tests PRIVATE cxx_std_17)
+target_compile_options(rf433_protocol_tests PRIVATE -Wall -Wextra -Wpedantic)
+
 if(UNIX)
   target_link_libraries(environment_control_tests PRIVATE m)
   target_link_libraries(climate_v6_tests PRIVATE m)
@@ -300,3 +310,4 @@ add_test(NAME stage27_telemetry_tests COMMAND stage27_telemetry_tests)
 add_test(NAME ble_climate_state_tests COMMAND ble_climate_state_tests)
 add_test(NAME stage27_native_inputs_tests COMMAND stage27_native_inputs_tests)
 add_test(NAME stage27_fault_freshness_tests COMMAND stage27_fault_freshness_tests)
+add_test(NAME rf433_protocol_tests COMMAND rf433_protocol_tests)
