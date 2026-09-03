@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 2,
+  "index": 7,
   "total": 7,
-  "command": "echo '=== TEST FILES ==='; find . -maxdepth 5 -type f 2>/dev/null | grep -E '/test/|/tests/|test_|_test|CMakeLists.txt|pytest|unity' | sort | head -n 400 || true",
-  "pid": 20632,
+  "command": "echo '=== HOST TEST RUNNERS ==='; git grep -n -I -E 'ctest|pytest|unity|host.test|test_all|test-all|idf.py.*test|cmake.*test' -- .github CMakeLists.txt README.md docs 2>/dev/null || true; test -z \"$(git status --porcelain)\"",
+  "pid": 20768,
   "timeout": 900,
   "idle_timeout": 300,
   "memory_limit_mb": 1024,
-  "started_at": "2026-09-03T21:01:56.081676+00:00",
-  "stage_name": "command-2",
-  "stage_index": 2,
+  "started_at": "2026-09-03T21:02:02.055972+00:00",
+  "stage_name": "command-7",
+  "stage_index": 7,
   "stage_total": 7,
   "stage_phase": "commands",
   "task_id": "20260903-growbox-stage27c-point6-host-coverage-audit-v2",
@@ -18,5 +18,5 @@
   "task_digest": "6f6be11d21cb6497ecb0ec5e2cb80ce343c7d3eca6f586217da9ed174b49ee3a",
   "daemon_version": "4.15.0",
   "daemon_pid": 20401,
-  "updated_at": "2026-09-03T21:01:56.253710+00:00"
+  "updated_at": "2026-09-03T21:02:02.271507+00:00"
 }
