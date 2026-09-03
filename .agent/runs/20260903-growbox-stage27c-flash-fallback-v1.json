@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260903-growbox-stage27c-flash-fallback-v1",
+  "task_digest": "0b8d0f922c61c88391612abfbbc1d233b6958bdf32087f5d7b509de04f50d365",
+  "idle_timeout": 180,
+  "task_timeout": 1200,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-03T03:38:05.347058+00:00",
+  "attempt_id": "72654a4aedf6913269092d41",
+  "daemon_version": "4.15.0",
+  "daemon_pid": 59778,
+  "updated_at": "2026-09-03T03:38:05.347244+00:00",
+  "pid": 59778
+}
