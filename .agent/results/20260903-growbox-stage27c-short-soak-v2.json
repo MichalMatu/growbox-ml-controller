@@ -1,0 +1,11 @@
+{
+  "id": "20260903-growbox-stage27c-short-soak-v2",
+  "status": "failed",
+  "failure_reason": "interrupted_previous_attempt",
+  "task_digest": "d84ea20031e5a60465cf52eb2901b850197d78b769482dffcc3caf65cb63bf3e",
+  "attempt_id": "34df1b5e4c4bbdb0ef828b60",
+  "daemon_version": "4.13.1",
+  "started_at": "2026-09-02T23:53:13.105046+00:00",
+  "finished_at": "2026-09-03T01:02:16.213474+00:00",
+  "error": "Previous daemon instance ended while this task was claimed. Automatic replay was blocked."
+}
