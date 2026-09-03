@@ -1,11 +1,12 @@
 # Stage27C CrowPanel physical bring-up
 
 Date: 2026-08-31
+Updated: 2026-09-03
 Work branch: `mvp/environment-controller`
 
 This document freezes the physical Stage27C configuration for the user's actual Elecrow CrowPanel ESP32-S3 2.9-inch HAT setup. E-paper and front-panel UI remain intentionally deferred. Physical actuator outputs remain fake/locked.
 
-> **Continuation note:** current point-5 soak evidence, the intentionally interrupted chunk 03, exact continuation rules, and the Local Agent / Chat Bridge fresh-chat workflow are frozen in `docs/STAGE27C_CONTINUATION_HANDOFF.md`. A new ChatGPT conversation should read that file before resuming Stage27C.
+> **Current continuation note:** Stage27C pre-soak hardware/storage qualification is complete. The exact final firmware-under-test identity, storage fallback/recovery evidence, CMD0 A/B result, CI evidence, and the explicit stop-before-overnight-soak rule are recorded in `docs/STAGE27C_PRE_SOAK_HANDOFF.md`. The older `docs/STAGE27C_CONTINUATION_HANDOFF.md` remains historical context for the earlier long-soak session.
 
 ## Board and bus
 
@@ -14,6 +15,8 @@ This document freezes the physical Stage27C configuration for the user's actual 
 - shared primary I2C: SDA GPIO21, SCL GPIO38;
 - SCD41 address: `0x62`;
 - DS3231 address: `0x68`;
+- SD SPI: MOSI GPIO40, MISO GPIO13, SCLK GPIO39, CS GPIO10, power GPIO42;
+- current verified CH340 serial path: `/dev/cu.usbserial-1130` (rediscover before future use; the path is not guaranteed stable);
 - e-paper: not initialized by Stage27C climate bring-up;
 - physical growbox outputs: not enabled.
 
@@ -45,9 +48,11 @@ The Stage27C helper configures both exact BLE identities:
 `GROWBOX_BLE_XIAOMI_MAC=A4:C1:38:4F:24:CD`.
 One shared native NimBLE scanner routes advertisements by exact MAC; there is no strongest-RSSI sensor selection.
 
-## Completed physical gates
+The helper now defaults `GROWBOX_SD_CMD0_PRECONDITION=0`. The native no-shim path passed the physical A/B gate. The compatibility precondition remains available as an explicit override if future hardware evidence requires it.
 
-Points 1-4 are closed on source HEAD `a1a05a91a6928f672a8f4f43963f979fefa7d79d` (`Wire Stage27C dual BLE runtime`).
+## Completed physical input gates
+
+Points 1-4 were originally closed on source HEAD `a1a05a91a6928f672a8f4f43963f979fefa7d79d` (`Wire Stage27C dual BLE runtime`).
 
 1. CrowPanel N8R8 build uses GPIO21/GPIO38 for the shared I2C bus, 8 MB flash, 8 MB octal PSRAM, no e-paper initialization and fake/locked physical outputs.
 2. Physical I2C bring-up established SCD41 at `0x62` and DS3231 at `0x68`. SCD41 MCU-only-reset recovery stops an inherited periodic session before starting a fresh one. Runtime evidence shows `scd41_available=1`, `scd41_sample=1`, `rtc_available=1` and `rtc_trusted=1`.
@@ -56,8 +61,40 @@ Points 1-4 are closed on source HEAD `a1a05a91a6928f672a8f4f43963f979fefa7d79d` 
 
 These values are evidence of independent sensor operation only. Do not calculate or apply cross-sensor temperature/RH offsets because the sensors are physically located in different places.
 
-## Remaining ordered validation
+## Completed Stage27C pre-soak storage qualification
 
-5. Complete the long unattended input soak with bounded diagnostics, uptime/heap/freshness/error counters and no e-paper work. Two ~90-minute chunks already passed on firmware `cf957a7649ec02835f724951d34f0b408f5f6de2`; the next chunk was intentionally interrupted by the user and must be resumed only with a new unique task id. See `docs/STAGE27C_CONTINUATION_HANDOFF.md` for exact evidence and continuity rules.
-6. Perform only safe software-observable fault tests that do not require physical manipulation while unattended.
-7. Freeze terminal evidence and update Stage27C status. Physical output work remains out of scope.
+Final firmware-under-test SHA:
+
+`a5726b89e94b9ac628249b780d6548a692c3fd2c` — `Disable Stage27C CMD0 precondition by default`
+
+The following bounded physical gates are complete:
+
+1. SD-primary smoke: `20260903-growbox-stage27c-sd-primary-smoke-v2` passed on firmware `0cbd181f46661423d1983ad1805f11d6fecc5128`.
+2. Flash fallback with the SD card physically absent: `20260903-growbox-stage27c-flash-fallback-v3` passed. The expected cold-start sequence is one initial diagnostic row with `storage_backend=none`, followed by stable `storage_backend=flash`; fallback activation was `1`, write/drop/skip errors were zero, and records advanced.
+3. Live flash-to-SD recovery after hot insertion without reset: `20260903-growbox-stage27c-flash-to-sd-recovery-v1` passed with `sd_recoveries=1`, retained `fallbacks=1`, stable SD after recovery, records `24 -> 43`, no reset/disconnect, and zero storage write/drop/skip errors.
+4. CMD0 A/B: `20260903-growbox-stage27c-cmd0-native-ab-v1` built/flashed with `GROWBOX_SD_CMD0_PRECONDITION=0` and passed strict SD-required hardware validation. Therefore the helper default was changed from `1` to `0`.
+5. Final default-config SD-primary gate: `20260903-growbox-stage27c-final-sd-primary-v1` built/flashed exact firmware `a5726b89e94b9ac628249b780d6548a692c3fd2c` and passed a 300-second strict `--require-sd` soak. Terminal marker: `STAGE27C_FINAL_SD_PRIMARY_OK` with `records=30`, `last_sd_records_written=34`, `min_heap_internal=231780`, and `min_stack_free=10884`. SD mount/write errors, queue drops, skipped records, resets and serial disconnects were all zero.
+
+CI for final firmware SHA `a5726b89e94b9ac628249b780d6548a692c3fd2c` also passed:
+
+- GitHub Actions `CI`, run `33714883003`: success;
+- GitHub Actions `Stage27C Storage Gate`, run `33714883009`: success.
+
+The device remains Rule-authoritative, ML shadow-only, and outputs fake/locked. No e-paper work was added.
+
+## Historical long-soak evidence
+
+The earlier Stage27C session produced two valid ~90-minute long-soak chunks on firmware `cf957a7649ec02835f724951d34f0b408f5f6de2`, followed by an intentionally interrupted third task. That evidence remains historical and is documented in `docs/STAGE27C_CONTINUATION_HANDOFF.md`; it must not be silently treated as a continuous soak on the final firmware revision.
+
+## Next ordered validation
+
+Stage27C is now **ready for the separately approved overnight/final long soak on the final firmware revision**.
+
+Do not start that soak automatically. It requires explicit user approval in a separate step. Until then:
+
+- keep the microSD inserted for the normal SD-primary configuration;
+- do not reflash or reset merely to collect more evidence;
+- keep outputs fake/locked;
+- keep the Rule controller authoritative and ML shadow-only;
+- do not add e-paper/front-panel work;
+- do not reopen the completed fallback/recovery/CMD0 gates unless the firmware or storage implementation changes.
