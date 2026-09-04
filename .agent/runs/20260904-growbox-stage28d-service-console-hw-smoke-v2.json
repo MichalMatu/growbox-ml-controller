@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260904-growbox-stage28d-service-console-hw-smoke-v2",
+  "task_digest": "13e86ed13ba52dd6585b6a405c4751b3b13dd91095d58302abcf102693d4bdc1",
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-04T16:16:40.047818+00:00",
+  "attempt_id": "f57d8e80ba6bf2b129cc0d4c",
+  "daemon_version": "4.15.0",
+  "daemon_pid": 16908,
+  "updated_at": "2026-09-04T16:16:40.047966+00:00",
+  "pid": 16908
+}
