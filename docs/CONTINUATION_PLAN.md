@@ -18,4 +18,4 @@ Current RF receive settings remain `100 kHz`, `10 us` minimum signal and `20 ms`
 
 The pre-Stage28D hardening/golden work is complete. There is no unfinished overnight Local Agent task.
 
-Stage28D was explicitly started by the operator. Its first bounded slice only hardens semantic role-to-endpoint mapping invariants. Keep `remote_socket_1` neutral, keep the real runtime fake-locked, and do not introduce unattended 230 V control or physical-state acknowledgement semantics.
+Stage28D was explicitly started by the operator. Semantic role-to-endpoint mapping is fail-closed, and the second bounded software slice adds stable endpoint ID `1` for the neutral frozen `remote_socket_1` hardware registry. No semantic role is assigned yet. Keep the real runtime fake-locked; the next role/binary-output policy is an explicit product choice, not something to infer. Do not introduce unattended 230 V control or physical-state acknowledgement semantics.

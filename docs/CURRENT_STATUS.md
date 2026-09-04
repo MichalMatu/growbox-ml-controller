@@ -60,4 +60,4 @@ The pre-Stage28D golden gate is complete on firmware/source `316b58e76de609069dd
 
 ## Next work
 
-Stage28D is IN PROGRESS. The first software-only slice hardens semantic role-to-endpoint mapping validation while the real runtime remains fake-locked. No semantic role is yet assigned to `remote_socket_1`, and no physical RF output gate has been opened.
+Stage28D is IN PROGRESS. Semantic role-to-endpoint mapping now validates fail-closed, and a neutral RF433 registry maps stable climate endpoint ID `1` to the frozen `remote_socket_1` hardware configuration. No semantic role is yet assigned to that endpoint, the real runtime still uses `LockedFakeRoleDriver`, and no physical RF output gate has been opened. The next semantic role/binary-output choice must be explicit rather than inferred.

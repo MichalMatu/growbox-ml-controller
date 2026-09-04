@@ -5,6 +5,7 @@ idf_component_register(
     "climate/ClimateApplication.cpp"
     "climate/ClimateCompositeInput.cpp"
     "climate/ClimateSemanticOutput.cpp"
+    "climate/rf433/ClimateRf433EndpointRegistry.cpp"
     "climate/ClimateDeterministicFake.cpp"
     "climate/ClimateDiagnostics.cpp"
     "climate/ClimateV6FakeRuntime.cpp"

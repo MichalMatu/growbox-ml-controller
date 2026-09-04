@@ -332,7 +332,7 @@ A new conversation should do the following before changing anything:
 8. Fetch `agent-control:.agent/status/daemon.json` and verify repository/binding/current task.
 9. Keep the hardware-qualified firmware SHA `316b58e76de609069ddbf2667fe86f6218fb2143` distinct from any later docs-only HEAD.
 10. Do not restart Stage27 or Stage28C debugging without new evidence of regression.
-11. Do not start Stage28D merely because the handoff exists. Stage28D requires an explicit new user goal.
+11. Stage28D is already explicitly in progress. Continue only from the bounded scope recorded below and do not infer a semantic role for `remote_socket_1`.
 
 ## Stage28D progress
 
@@ -346,13 +346,15 @@ The operator explicitly started Stage28D on 2026-09-04. The first bounded slice 
 
 This slice does not assign `remote_socket_1` to heater, fan, humidifier or any other semantic role. The real-input runtime still uses `LockedFakeRoleDriver`; physical outputs remain `fake-locked`, and this task performs no RF transmit, flashing or mains-load actuation.
 
+The second bounded software-only slice adds a neutral RF433 endpoint registry: stable climate endpoint ID `1` resolves to the frozen `remote_socket_1` hardware configuration, while the registry itself contains no `ClimateActuatorRole` assignment. The registry is compiled by the firmware and covered by host tests; runtime output composition is still unchanged and fake-locked.
+
 ## What comes next
 
 There is no unfinished overnight Local Agent task. The overnight hardening goal is complete.
 
 Stage28D is now **IN PROGRESS**.
 
-If the operator explicitly authorizes Stage28D in the new conversation, first re-read the fresh active docs and exact source/daemon state, then define a bounded Stage28D plan before making semantic actuator-role changes. Preserve the frozen `remote_socket_1` hardware identity below the semantic layer and preserve fake-lock/no-unattended-mains safety until a later explicit physical-output gate proves otherwise.
+The neutral endpoint registry is now ready. The next semantic step must not guess which actuator role the physical `remote_socket_1` represents. A concrete role assignment and its binary-output policy require an explicit product-level choice; until then preserve `LockedFakeRoleDriver`, fake-lock/no-unattended-mains safety and the frozen hardware identity below the semantic layer.
 
 Do not silently bake a semantic role such as `exhaust_fan` into the frozen Stage28C hardware identity. Hardware identity and semantic role are separate layers.
 
@@ -378,4 +380,4 @@ Do not silently bake a semantic role such as `exhaust_fan` into the frozen Stage
 
 Use this if a fresh conversation needs a compact starting instruction:
 
-> Continue `MichalMatu/growbox-ml-controller` on branch `mvp/environment-controller`. First read `AGENTS.md`, `continuation.md`, `docs/CURRENT_STATUS.md`, `docs/PRESTAGE28D_GOLDEN_CHECKPOINT.md`, `docs/CONTINUATION_PLAN.md`, then fetch fresh HEAD and `agent-control:.agent/status/daemon.json`. Treat `316b58e76de609069ddbf2667fe86f6218fb2143` as the exact hardware-soaked Golden firmware SHA; later handoff/docs commits are docs-only. Stage27C and Stage28C are frozen, the known RF pair must not be rediscovered, outputs remain fake-locked, and Stage28D is NOT STARTED. Do not start Stage28D until I explicitly ask for it.
+> Continue `MichalMatu/growbox-ml-controller` on branch `mvp/environment-controller`. First read `AGENTS.md`, `continuation.md`, `docs/CURRENT_STATUS.md`, `docs/PRESTAGE28D_GOLDEN_CHECKPOINT.md`, `docs/CONTINUATION_PLAN.md`, then fetch fresh HEAD and `agent-control:.agent/status/daemon.json`. Treat `316b58e76de609069ddbf2667fe86f6218fb2143` as the exact hardware-soaked Golden firmware SHA. Stage27C and Stage28C are frozen. Stage28D is IN PROGRESS: semantic mapping validation and the neutral `remote_socket_1` endpoint registry are implemented, but no semantic actuator role is assigned, runtime outputs remain fake-locked, and no physical RF output gate is open.

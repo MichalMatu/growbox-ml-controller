@@ -1,4 +1,5 @@
 #include "climate/ClimateSemanticOutput.h"
+#include "climate/rf433/ClimateRf433EndpointRegistry.h"
 
 #include <cassert>
 #include <cmath>
@@ -43,7 +44,8 @@ ClimateSemanticOutputConfig mappedConfig() {
       ClimateActuatorRole::Dehumidifier, ClimateActuatorRole::Co2Doser,
   };
   for (std::size_t index = 0U; index < endpoint_ids.size(); ++index) {
-    assert(bindClimateRole(config, roles[index], endpoint_ids[index]));
+    const bool bound = bindClimateRole(config, roles[index], endpoint_ids[index]);
+    assert(bound);
   }
   assert(validateClimateSemanticOutputConfig(config) == ClimateSemanticOutputConfigStatus::Ok);
   return config;
@@ -92,7 +94,8 @@ void testExplicitOffReachesEveryEnabledEndpoint() {
 
 void testDisabledMappingAcceptsOffButRejectsNonzero() {
   ClimateSemanticOutputConfig config = mappedConfig();
-  assert(unbindClimateRole(config, ClimateActuatorRole::Humidifier));
+  const bool humidifier_unbound = unbindClimateRole(config, ClimateActuatorRole::Humidifier);
+  assert(humidifier_unbound);
 
   RecordingEndpoint endpoint;
   MappedClimateRoleDriver driver(config, endpoint);
@@ -142,9 +145,13 @@ void testPartialEndpointRejectionPropagatesWithoutSkippingOtherRoles() {
 
 void testBindingHelpersEnforceOneRolePerEndpoint() {
   ClimateSemanticOutputConfig config{};
-  assert(bindClimateRole(config, ClimateActuatorRole::Heater, 42U));
-  assert(!bindClimateRole(config, ClimateActuatorRole::ExhaustFan, 42U));
-  assert(!bindClimateRole(config, ClimateActuatorRole::Cooler, kUnmappedClimateEndpoint));
+  const bool heater_bound = bindClimateRole(config, ClimateActuatorRole::Heater, 42U);
+  const bool duplicate_rejected = !bindClimateRole(config, ClimateActuatorRole::ExhaustFan, 42U);
+  const bool unmapped_rejected =
+      !bindClimateRole(config, ClimateActuatorRole::Cooler, kUnmappedClimateEndpoint);
+  assert(heater_bound);
+  assert(duplicate_rejected);
+  assert(unmapped_rejected);
   assert(validateClimateSemanticOutputConfig(config) == ClimateSemanticOutputConfigStatus::Ok);
 
   const auto heater = config.roles[climateRoleIndex(ClimateActuatorRole::Heater)];
@@ -152,9 +159,31 @@ void testBindingHelpersEnforceOneRolePerEndpoint() {
   assert(heater.enabled && heater.endpoint == 42U);
   assert(!fan.enabled && fan.endpoint == kUnmappedClimateEndpoint);
 
-  assert(unbindClimateRole(config, ClimateActuatorRole::Heater));
-  assert(bindClimateRole(config, ClimateActuatorRole::ExhaustFan, 42U));
+  const bool heater_unbound = unbindClimateRole(config, ClimateActuatorRole::Heater);
+  const bool fan_bound = bindClimateRole(config, ClimateActuatorRole::ExhaustFan, 42U);
+  assert(heater_unbound);
+  assert(fan_bound);
   assert(validateClimateSemanticOutputConfig(config) == ClimateSemanticOutputConfigStatus::Ok);
+}
+
+void testNeutralRf433EndpointRegistryResolvesFrozenHardwareOnly() {
+  using namespace growbox::app::climate_io::rf433;
+
+  static_assert(kRemoteSocket1ClimateEndpoint != kUnmappedClimateEndpoint);
+  const ClimateRf433EndpointBinding* binding =
+      findClimateRf433Endpoint(kRemoteSocket1ClimateEndpoint);
+  assert(binding != nullptr);
+  assert(binding->endpoint == kRemoteSocket1ClimateEndpoint);
+  assert(binding->hardware == &kRemoteSocket1);
+  assert(findClimateRf433Endpoint(kUnmappedClimateEndpoint) == nullptr);
+  assert(findClimateRf433Endpoint(0U) == nullptr);
+
+  ClimateSemanticOutputConfig config{};
+  assert(validateClimateSemanticOutputConfig(config) == ClimateSemanticOutputConfigStatus::Ok);
+  for (const ClimateRoleEndpointMapping& role : config.roles) {
+    assert(!role.enabled);
+    assert(role.endpoint == kUnmappedClimateEndpoint);
+  }
 }
 
 void testInvalidSemanticConfigFailsClosedBeforeEndpointWrite() {
@@ -186,6 +215,7 @@ int main() {
   testEndpointAlwaysReceivesNormalizedFiniteLevel();
   testPartialEndpointRejectionPropagatesWithoutSkippingOtherRoles();
   testBindingHelpersEnforceOneRolePerEndpoint();
+  testNeutralRf433EndpointRegistryResolvesFrozenHardwareOnly();
   testInvalidSemanticConfigFailsClosedBeforeEndpointWrite();
   return 0;
 }
