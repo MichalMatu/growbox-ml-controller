@@ -37,10 +37,15 @@ ClimateSemanticOutputConfig mappedConfig() {
   ClimateSemanticOutputConfig config{};
   const std::array<ClimateEndpointId, kClimateActuatorRoleCount> endpoint_ids = {101U, 202U, 303U,
                                                                                  404U, 505U, 606U};
+  const std::array<ClimateActuatorRole, kClimateActuatorRoleCount> roles = {
+      ClimateActuatorRole::Heater,       ClimateActuatorRole::Cooler,
+      ClimateActuatorRole::ExhaustFan,   ClimateActuatorRole::Humidifier,
+      ClimateActuatorRole::Dehumidifier, ClimateActuatorRole::Co2Doser,
+  };
   for (std::size_t index = 0U; index < endpoint_ids.size(); ++index) {
-    config.roles[index].enabled = true;
-    config.roles[index].endpoint = endpoint_ids[index];
+    assert(bindClimateRole(config, roles[index], endpoint_ids[index]));
   }
+  assert(validateClimateSemanticOutputConfig(config) == ClimateSemanticOutputConfigStatus::Ok);
   return config;
 }
 
@@ -87,7 +92,7 @@ void testExplicitOffReachesEveryEnabledEndpoint() {
 
 void testDisabledMappingAcceptsOffButRejectsNonzero() {
   ClimateSemanticOutputConfig config = mappedConfig();
-  config.roles[climateRoleIndex(ClimateActuatorRole::Humidifier)] = {};
+  assert(unbindClimateRole(config, ClimateActuatorRole::Humidifier));
 
   RecordingEndpoint endpoint;
   MappedClimateRoleDriver driver(config, endpoint);
@@ -135,6 +140,43 @@ void testPartialEndpointRejectionPropagatesWithoutSkippingOtherRoles() {
   assert(endpoint.writes[2].endpoint == 303U);
 }
 
+void testBindingHelpersEnforceOneRolePerEndpoint() {
+  ClimateSemanticOutputConfig config{};
+  assert(bindClimateRole(config, ClimateActuatorRole::Heater, 42U));
+  assert(!bindClimateRole(config, ClimateActuatorRole::ExhaustFan, 42U));
+  assert(!bindClimateRole(config, ClimateActuatorRole::Cooler, kUnmappedClimateEndpoint));
+  assert(validateClimateSemanticOutputConfig(config) == ClimateSemanticOutputConfigStatus::Ok);
+
+  const auto heater = config.roles[climateRoleIndex(ClimateActuatorRole::Heater)];
+  const auto fan = config.roles[climateRoleIndex(ClimateActuatorRole::ExhaustFan)];
+  assert(heater.enabled && heater.endpoint == 42U);
+  assert(!fan.enabled && fan.endpoint == kUnmappedClimateEndpoint);
+
+  assert(unbindClimateRole(config, ClimateActuatorRole::Heater));
+  assert(bindClimateRole(config, ClimateActuatorRole::ExhaustFan, 42U));
+  assert(validateClimateSemanticOutputConfig(config) == ClimateSemanticOutputConfigStatus::Ok);
+}
+
+void testInvalidSemanticConfigFailsClosedBeforeEndpointWrite() {
+  ClimateSemanticOutputConfig unmapped{};
+  unmapped.roles[climateRoleIndex(ClimateActuatorRole::Heater)].enabled = true;
+  assert(validateClimateSemanticOutputConfig(unmapped) ==
+         ClimateSemanticOutputConfigStatus::EnabledRoleUnmapped);
+
+  ClimateSemanticOutputConfig duplicate{};
+  duplicate.roles[climateRoleIndex(ClimateActuatorRole::Heater)] = {true, 7U};
+  duplicate.roles[climateRoleIndex(ClimateActuatorRole::ExhaustFan)] = {true, 7U};
+  assert(validateClimateSemanticOutputConfig(duplicate) ==
+         ClimateSemanticOutputConfigStatus::DuplicateEndpoint);
+
+  RecordingEndpoint endpoint;
+  MappedClimateRoleDriver driver(duplicate, endpoint);
+  assert(driver.configStatus() == ClimateSemanticOutputConfigStatus::DuplicateEndpoint);
+  assert(!driver.apply(ClimateActuatorRole::Heater, 0.0F, 1U));
+  assert(!driver.apply(ClimateActuatorRole::Heater, 1.0F, 2U));
+  assert(endpoint.writes.empty());
+}
+
 } // namespace
 
 int main() {
@@ -143,5 +185,7 @@ int main() {
   testDisabledMappingAcceptsOffButRejectsNonzero();
   testEndpointAlwaysReceivesNormalizedFiniteLevel();
   testPartialEndpointRejectionPropagatesWithoutSkippingOtherRoles();
+  testBindingHelpersEnforceOneRolePerEndpoint();
+  testInvalidSemanticConfigFailsClosedBeforeEndpointWrite();
   return 0;
 }

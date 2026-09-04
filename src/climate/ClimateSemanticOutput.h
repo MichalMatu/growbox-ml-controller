@@ -23,6 +23,12 @@ struct ClimateSemanticOutputConfig {
   std::array<ClimateRoleEndpointMapping, kClimateActuatorRoleCount> roles{};
 };
 
+enum class ClimateSemanticOutputConfigStatus : std::uint8_t {
+  Ok = 0U,
+  EnabledRoleUnmapped,
+  DuplicateEndpoint,
+};
+
 constexpr std::size_t climateRoleIndex(ClimateActuatorRole role) noexcept {
   switch (role) {
   case ClimateActuatorRole::Heater:
@@ -41,6 +47,13 @@ constexpr std::size_t climateRoleIndex(ClimateActuatorRole role) noexcept {
   return kClimateActuatorRoleCount;
 }
 
+ClimateSemanticOutputConfigStatus
+validateClimateSemanticOutputConfig(const ClimateSemanticOutputConfig& config) noexcept;
+
+bool bindClimateRole(ClimateSemanticOutputConfig& config, ClimateActuatorRole role,
+                     ClimateEndpointId endpoint) noexcept;
+bool unbindClimateRole(ClimateSemanticOutputConfig& config, ClimateActuatorRole role) noexcept;
+
 class ClimateOutputEndpoint {
 public:
   virtual ~ClimateOutputEndpoint() = default;
@@ -52,7 +65,8 @@ class MappedClimateRoleDriver final : public ClimateRoleDriver {
 public:
   MappedClimateRoleDriver(ClimateSemanticOutputConfig config,
                           ClimateOutputEndpoint& endpoint) noexcept
-      : config_(config), endpoint_(endpoint) {}
+      : config_(config), config_status_(validateClimateSemanticOutputConfig(config_)),
+        endpoint_(endpoint) {}
 
   bool apply(ClimateActuatorRole role, float level, std::uint64_t monotonic_ms) noexcept override;
 
@@ -60,8 +74,13 @@ public:
     return config_;
   }
 
+  ClimateSemanticOutputConfigStatus configStatus() const noexcept {
+    return config_status_;
+  }
+
 private:
   ClimateSemanticOutputConfig config_{};
+  ClimateSemanticOutputConfigStatus config_status_{ClimateSemanticOutputConfigStatus::Ok};
   ClimateOutputEndpoint& endpoint_;
 };
 

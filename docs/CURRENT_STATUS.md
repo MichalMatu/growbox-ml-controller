@@ -6,7 +6,7 @@ Primary bootstrap: `/continuation.md`
 
 ## Current transition
 
-**Stage28A DONE -> Stage28B DONE -> Stage28C DONE -> pre-Stage28D golden gate COMPLETE -> Stage28D NOT STARTED**
+**Stage28A DONE -> Stage28B DONE -> Stage28C DONE -> pre-Stage28D golden gate COMPLETE -> Stage28D IN PROGRESS**
 
 Stage27C remains frozen and is not being reopened.
 
@@ -60,4 +60,4 @@ The pre-Stage28D golden gate is complete on firmware/source `316b58e76de609069dd
 
 ## Next work
 
-Stage28D remains intentionally NOT STARTED and must begin only as an explicit later step.
+Stage28D is IN PROGRESS. The first software-only slice hardens semantic role-to-endpoint mapping validation while the real runtime remains fake-locked. No semantic role is yet assigned to `remote_socket_1`, and no physical RF output gate has been opened.

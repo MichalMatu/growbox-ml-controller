@@ -8,7 +8,7 @@ The authoritative detailed handoff is `/continuation.md`.
 
 Current transition:
 
-**Stage28A DONE -> Stage28B DONE -> Stage28C DONE -> pre-Stage28D golden gate COMPLETE -> Stage28D NOT STARTED**
+**Stage28A DONE -> Stage28B DONE -> Stage28C DONE -> pre-Stage28D golden gate COMPLETE -> Stage28D IN PROGRESS**
 
 Stage27C remains frozen. Stage28C has frozen exactly one neutral RF433 remote/socket identity; detailed evidence is in `docs/STAGE28C_FINAL_EVIDENCE.md`.
 
@@ -18,4 +18,4 @@ Current RF receive settings remain `100 kHz`, `10 us` minimum signal and `20 ms`
 
 The pre-Stage28D hardening/golden work is complete. There is no unfinished overnight Local Agent task.
 
-Do not introduce semantic actuator-role mapping, unattended 230 V control or physical-state acknowledgement semantics unless the operator explicitly starts the relevant later stage. Stage28D must not start implicitly from a wake or from this handoff.
+Stage28D was explicitly started by the operator. Its first bounded slice only hardens semantic role-to-endpoint mapping invariants. Keep `remote_socket_1` neutral, keep the real runtime fake-locked, and do not introduce unattended 230 V control or physical-state acknowledgement semantics.

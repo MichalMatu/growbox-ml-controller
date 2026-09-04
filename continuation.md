@@ -12,7 +12,7 @@ This file is the primary handoff for a fresh ChatGPT conversation after the long
 
 Current transition:
 
-**Stage27C FROZEN -> Stage28A DONE -> Stage28B DONE -> Stage28C DONE -> pre-Stage28D golden gate COMPLETE -> Stage28D NOT STARTED**
+**Stage27C FROZEN -> Stage28A DONE -> Stage28B DONE -> Stage28C DONE -> pre-Stage28D golden gate COMPLETE -> Stage28D IN PROGRESS**
 
 Important SHA distinction:
 
@@ -334,11 +334,23 @@ A new conversation should do the following before changing anything:
 10. Do not restart Stage27 or Stage28C debugging without new evidence of regression.
 11. Do not start Stage28D merely because the handoff exists. Stage28D requires an explicit new user goal.
 
+## Stage28D progress
+
+The operator explicitly started Stage28D on 2026-09-04. The first bounded slice is software-only semantic binding hardening:
+
+- validate enabled role mappings before any endpoint write;
+- reject enabled mappings without a concrete endpoint;
+- reject one physical endpoint being assigned to multiple active semantic roles;
+- provide explicit bind/unbind helpers so mapping changes are transactional and reviewable;
+- fail closed before endpoint writes when the semantic mapping is invalid.
+
+This slice does not assign `remote_socket_1` to heater, fan, humidifier or any other semantic role. The real-input runtime still uses `LockedFakeRoleDriver`; physical outputs remain `fake-locked`, and this task performs no RF transmit, flashing or mains-load actuation.
+
 ## What comes next
 
 There is no unfinished overnight Local Agent task. The overnight hardening goal is complete.
 
-Stage28D remains intentionally **NOT STARTED**.
+Stage28D is now **IN PROGRESS**.
 
 If the operator explicitly authorizes Stage28D in the new conversation, first re-read the fresh active docs and exact source/daemon state, then define a bounded Stage28D plan before making semantic actuator-role changes. Preserve the frozen `remote_socket_1` hardware identity below the semantic layer and preserve fake-lock/no-unattended-mains safety until a later explicit physical-output gate proves otherwise.
 
