@@ -30,7 +30,7 @@ All are 32-bit protocol 2 captures with `560 us` captured pulse and requested ES
 
 Current physical sensor placement: TP357 BLE inside growbox, Xiaomi BLE outside growbox, directly connected ESP32 sensors inside growbox.
 
-A bounded USB service console is now part of the real-input runtime. It provides `help`, `status`, `sensors`, `rf list`, named manual RF ON/OFF commands and bounded `rf rx` capture. The lamp/humidifier captured profiles are present in the neutral hardware config at `560 us / repeat 10`; the fan retains its physically qualified `575 us / repeat 10` profile.
+A bounded primary-serial service console is now part of the real-input runtime. It provides `help`, `status`, `sensors`, `rf list`, named manual RF ON/OFF commands and bounded `rf rx` capture. The lamp/humidifier captured profiles are present in the neutral hardware config at `560 us / repeat 10`; the fan retains its physically qualified `575 us / repeat 10` profile.
 
 The next bounded hardware step is to flash a console build with the RF diagnostics transport enabled, verify the menu/read-only commands without transmitting, then perform manual ESP-to-socket ON/OFF validation for lamp, fan and humidifier. Physical device response is the acceptance criterion. Local TX completion or `SelfTx` alone is insufficient.
 

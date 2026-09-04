@@ -2,7 +2,6 @@
 
 #include "climate/rf433/Rf433HardwareConfig.h"
 
-#include <driver/usb_serial_jtag.h>
 #include <esp_heap_caps.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -11,6 +10,7 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
+#include <unistd.h>
 
 namespace growbox::app::climate_io::runtime {
 namespace {
@@ -53,17 +53,12 @@ bool Stage28ServiceConsole::begin() noexcept {
     return false;
   }
 
-  if (!usb_serial_jtag_is_driver_installed()) {
-    usb_serial_jtag_driver_config_t driver_config = USB_SERIAL_JTAG_DRIVER_CONFIG_DEFAULT();
-    driver_config.tx_buffer_size = 4096U;
-    driver_config.rx_buffer_size = 4096U;
-    if (usb_serial_jtag_driver_install(&driver_config) != ESP_OK) {
-      return false;
-    }
-  }
-
-  std::uint8_t discard[128]{};
-  while (usb_serial_jtag_read_bytes(discard, sizeof(discard), 0U) > 0) {
+  // Use the ESP-IDF primary standard-I/O console. On the qualified CrowPanel
+  // build this is the CH340-backed UART console, so logs and service commands
+  // share the same physical serial monitor. The default UART VFS read path is
+  // non-blocking, which keeps this poll-driven console bounded.
+  std::array<std::uint8_t, 128U> discard{};
+  while (::read(STDIN_FILENO, discard.data(), discard.size()) > 0) {
   }
 
   ready_ = true;
@@ -79,13 +74,13 @@ void Stage28ServiceConsole::poll(std::uint64_t now_ms) noexcept {
     return;
   }
 
-  std::uint8_t buffer[96]{};
-  const int received = usb_serial_jtag_read_bytes(buffer, sizeof(buffer), 0U);
+  std::array<std::uint8_t, 96U> buffer{};
+  const ssize_t received = ::read(STDIN_FILENO, buffer.data(), buffer.size());
   if (received <= 0) {
     return;
   }
 
-  for (int index = 0; index < received; ++index) {
+  for (ssize_t index = 0; index < received; ++index) {
     const char character = static_cast<char>(buffer[index]);
     if (character == '\r') {
       continue;
@@ -323,7 +318,15 @@ void Stage28ServiceConsole::writeText(const char* text) noexcept {
   if (!ready_ || text == nullptr) {
     return;
   }
-  static_cast<void>(usb_serial_jtag_write_bytes(text, std::strlen(text), pdMS_TO_TICKS(50)));
+  const std::size_t length = std::strlen(text);
+  std::size_t offset = 0U;
+  while (offset < length) {
+    const ssize_t written = ::write(STDOUT_FILENO, text + offset, length - offset);
+    if (written <= 0) {
+      break;
+    }
+    offset += static_cast<std::size_t>(written);
+  }
 }
 
 void Stage28ServiceConsole::writeFormatted(const char* format, ...) noexcept {

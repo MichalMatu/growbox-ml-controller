@@ -82,7 +82,7 @@ The pre-Stage28D golden gate is complete on firmware/source `316b58e76de609069dd
 
 ## Stage28D service console
 
-The real-input runtime now includes a bounded USB service console with `help`, `status`, `sensors`, `rf list`, named manual RF ON/OFF commands for lamp/fan/humidifier, and bounded one-shot `rf rx` capture. Read-only menu items also have safe numeric aliases `0..3`; no single-key alias performs actuation.
+The real-input runtime now includes a bounded primary-serial service console on the same ESP-IDF primary stdio/UART interface used by the normal CrowPanel CH340 monitor with `help`, `status`, `sensors`, `rf list`, named manual RF ON/OFF commands for lamp/fan/humidifier, and bounded one-shot `rf rx` capture. Read-only menu items also have safe numeric aliases `0..3`; no single-key alias performs actuation.
 
 The lamp and humidifier captured profiles are frozen in the neutral RF hardware config at `560 us / repeat 10`; their ESP-to-socket physical validation is still pending. The fan continues using the historically qualified `575 us / repeat 10` transmit profile. Manual RF commands use the existing Stage28 RF diagnostics transport and are unavailable when that transport is disabled.
 

@@ -55,7 +55,7 @@ STATUS: pending physical ESP -> socket validation
 
 ## Serial service commands
 
-The real-input firmware includes a bounded USB service console. The captured lamp and humidifier profiles are now also frozen in `Rf433HardwareConfig.h` for manual diagnostics, but their physical socket validation is still pending. The fan keeps the already-qualified `575 us / repeat 10` transmit profile.
+The real-input firmware includes a bounded primary-serial service console. The captured lamp and humidifier profiles are now also frozen in `Rf433HardwareConfig.h` for manual diagnostics, but their physical socket validation is still pending. The fan keeps the already-qualified `575 us / repeat 10` transmit profile.
 
 Useful commands:
 
