@@ -12,7 +12,6 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
-#include <unistd.h>
 
 namespace growbox::app::climate_io::runtime {
 namespace {
@@ -39,6 +38,7 @@ constexpr std::array<KnownRfDevice, 3U> kKnownRfDevices{{
 
 constexpr uart_port_t kServiceConsoleUart = static_cast<uart_port_t>(CONFIG_ESP_CONSOLE_UART_NUM);
 constexpr int kServiceConsoleRxBufferBytes = 1024;
+constexpr int kServiceConsoleTxBufferBytes = 2048;
 
 const KnownRfDevice* findKnownDevice(ServiceConsoleRfDevice id) noexcept {
   for (const KnownRfDevice& device : kKnownRfDevices) {
@@ -62,13 +62,13 @@ bool Stage28ServiceConsole::begin() noexcept {
     return false;
   }
 
-  // Keep output on ESP-IDF primary stdio, but receive commands through the
-  // primary console UART driver. The default stdin VFS path did not consume
-  // CH340 RX bytes on the qualified CrowPanel hardware. Direct non-blocking
-  // uart_read_bytes() keeps the service path bounded without changing logs.
+  // Use the configured primary console UART driver for service-console RX/TX.
+  // Normal ESP-IDF logging remains on its existing primary logger transport.
+  // Direct UART I/O avoids relying on newlib stdin/stdout routing on CrowPanel.
   if (!uart_is_driver_installed(kServiceConsoleUart)) {
     const esp_err_t install_result =
-        uart_driver_install(kServiceConsoleUart, kServiceConsoleRxBufferBytes, 0, 0, nullptr, 0);
+        uart_driver_install(kServiceConsoleUart, kServiceConsoleRxBufferBytes,
+                            kServiceConsoleTxBufferBytes, 0, nullptr, 0);
     if (install_result != ESP_OK) {
       return false;
     }
@@ -337,7 +337,7 @@ void Stage28ServiceConsole::writeText(const char* text) noexcept {
   const std::size_t length = std::strlen(text);
   std::size_t offset = 0U;
   while (offset < length) {
-    const ssize_t written = ::write(STDOUT_FILENO, text + offset, length - offset);
+    const int written = uart_write_bytes(kServiceConsoleUart, text + offset, length - offset);
     if (written <= 0) {
       break;
     }
