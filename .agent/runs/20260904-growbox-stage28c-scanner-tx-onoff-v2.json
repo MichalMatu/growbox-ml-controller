@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260904-growbox-stage28c-scanner-tx-onoff-v2",
+  "task_digest": "5b4be6ede2f09bd6b91ffd528b6566060b0027736682a1562a424f3d9f843e44",
+  "idle_timeout": 300,
+  "task_timeout": 2700,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-04T02:49:45.021406+00:00",
+  "attempt_id": "03d47e1d88fdc1e9cffe90bc",
+  "daemon_version": "4.15.0",
+  "daemon_pid": 27650,
+  "updated_at": "2026-09-04T02:49:45.021548+00:00",
+  "pid": 27650
+}
