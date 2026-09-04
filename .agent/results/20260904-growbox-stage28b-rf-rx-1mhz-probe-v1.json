@@ -1,0 +1,9 @@
+{
+  "id": "20260904-growbox-stage28b-rf-rx-1mhz-probe-v1",
+  "status": "failed",
+  "failure_reason": "invalid_task_file",
+  "started_at": null,
+  "finished_at": "2026-09-04T00:59:21.245054+00:00",
+  "daemon_version": "4.15.0",
+  "error": "JSONDecodeError: Invalid control character at: line 13 column 1033 (char 1396)"
+}
