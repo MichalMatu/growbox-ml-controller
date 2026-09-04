@@ -1,0 +1,58 @@
+{
+  "id": "20260904-growbox-stage28c-manual-onoff-capture-v1",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "started_at": "2026-09-04T02:37:33.072738+00:00",
+  "command_timeout": 300,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; git fetch -q origin agent-control; git show origin/agent-control:.agent/payloads/20260904-growbox-stage28c-manual-onoff-capture-v1/run.sh > /tmp/stage28c-manual-onoff-capture-v1.sh; bash /tmp/stage28c-manual-onoff-capture-v1.sh",
+      "exit_code": 125,
+      "output": "",
+      "elapsed_seconds": 0.0,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limited": false,
+      "not_started": true,
+      "budget_exhausted": true,
+      "budget_remaining_seconds": 358.611,
+      "required_budget_seconds": 360.0,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "not_started",
+      "elapsed_seconds": 0.0
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.071
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.068
+  },
+  "failure_reason": "task_budget_exhausted",
+  "finished_at": "2026-09-04T02:37:34.600505+00:00",
+  "task_digest": "f38774e3972f6d24afe89698d73db21493dc4c087e788e3538916f381acfc088",
+  "idle_timeout": 180,
+  "task_timeout": 360,
+  "memory_limit_mb": 4096,
+  "attempt_id": "3bcb69cec5ed77ebe0cb1b43",
+  "daemon_version": "4.15.0"
+}
