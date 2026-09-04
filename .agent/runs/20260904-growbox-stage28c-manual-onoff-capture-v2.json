@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260904-growbox-stage28c-manual-onoff-capture-v2",
+  "task_digest": "fa8881e9e602b9890fc7a6f7a1af2972dcdd8e3bc3c323ccc63014b4c3c1566b",
+  "idle_timeout": 180,
+  "task_timeout": 600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-04T02:39:09.871633+00:00",
+  "attempt_id": "372b127edc77ab667ea6d17f",
+  "daemon_version": "4.15.0",
+  "daemon_pid": 6222,
+  "updated_at": "2026-09-04T02:39:09.871737+00:00",
+  "pid": 6222
+}
