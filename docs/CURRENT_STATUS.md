@@ -1,118 +1,147 @@
 # Current controller status
 
-Date: 2026-09-03
+Date: 2026-09-04
 Development branch: `mvp/environment-controller`
-Fresh-chat bootstrap: `docs/CONTINUATION_PLAN.md`
-Final Stage27C evidence: `docs/STAGE27C_FINAL_EVIDENCE.md`
-Validated milestone tag: `stage27c-validated-2026-09-03`
+Primary fresh-chat bootstrap: `/continuation.md`
+Stage28B evidence: `docs/STAGE28B_FINAL_EVIDENCE.md`
+Stage27C frozen evidence: `docs/STAGE27C_FINAL_EVIDENCE.md`
+Validated Stage27C milestone tag: `stage27c-validated-2026-09-03`
 
 This is the short source of truth for the current climate-controller product path.
 
 ## Current state
 
-The architecture through Stage26, native Stage27A/Stage27B implementation, and Stage27C CrowPanel real-input validation are complete for the requested scope.
+Stage27C real-input qualification is complete and frozen. Stage28A and Stage28B RF433 work are also complete.
 
-The exact firmware physically qualified and used for the final continuous soak is:
+Current transition:
 
-`a5726b89e94b9ac628249b780d6548a692c3fd2c` — `Disable Stage27C CMD0 precondition by default`
+**Stage28A DONE -> Stage28B DONE -> Stage28C NEXT**
 
-Do not confuse later test/documentation commits or the milestone tag target with the firmware-under-test SHA.
+The final qualified Stage28B RF source commit is:
 
-## Proven Stage27C hardware path
+`a87169748ee2bd42bc4d35cfe3b2964b90f40eb8` — `Fix RF433 RMT receive timing limits`
 
-Board and runtime:
+Documentation-only commits may advance the work-branch HEAD after this SHA. Do not confuse later handoff/documentation commits with the firmware/source SHA physically rechecked for Stage28B.
 
-- Elecrow CrowPanel ESP32-S3 N8R8;
-- 100% native ESP-IDF v5.5.4;
-- no Arduino component and no PlatformIO/Arduino migration;
-- shared native I2C on GPIO21/GPIO38;
-- SCD41 at `0x62`;
-- DS3231 at `0x68`;
-- one native NimBLE scanner for TP357 and Xiaomi/PVVX/BTHome using exact MAC identities;
-- microSD primary storage with flash fallback/recovery support;
-- e-paper/front-panel deferred;
-- physical outputs/relays fake/locked.
+## Frozen Stage27C baseline
 
-Authoritative sensor mapping:
+Exact Stage27C firmware used for the final long qualification:
 
-- TP357 exact-MAC device = primary inside temperature/RH;
-- SCD41 = controller CO2 plus local/window temperature/RH diagnostics;
-- Xiaomi/PVVX/BTHome exact-MAC device = nearby ambient temperature/RH through neutral `outside_*` fields;
-- DS3231 = wall clock with availability kept separate from trusted validity.
+`a5726b89e94b9ac628249b780d6548a692c3fd2c`
 
-No cross-sensor temperature/RH offsets are applied because the sensors are intentionally located in different physical positions.
-
-## Storage qualification
-
-The final storage path is qualified on real hardware:
-
-- strict SD-primary operation passed;
-- flash fallback with SD physically absent passed;
-- live flash-to-SD recovery after hot insertion without reset passed;
-- native CMD0 A/B passed;
-- `GROWBOX_SD_CMD0_PRECONDITION=0` is the qualified default;
-- storage mount/write/drop/skip counters remained clean in final qualification and soak evidence.
-
-## Final Stage27C soak
-
-Point 5 completed with seven accepted strict 5400-second chunks on one preserved MCU uptime sequence:
-
-- accepted active capture: `37,800 s` = `10.5 h`;
-- exact firmware SHA remained `a5726b89e94b9ac628249b780d6548a692c3fd2c`;
-- final accepted uptime: `59,019,769 ms`;
-- final SD record counter: `6717`;
-- resets: `0`;
-- serial disconnects: `0`;
-- parser errors: `0`;
-- SD mount/write/drop/skip failures: `0`;
-- SCD41 read/invalid errors: `0`;
-- BLE scanning/freshness diagnostics remained clean;
-- RTC remained trusted;
-- outputs remained fake/locked;
-- internal heap, largest block, PSRAM and stack minima remained stable.
-
-The isolated failed chunk-05 capture attempt is documented in `docs/STAGE27C_FINAL_EVIDENCE.md` and was not accepted into the final sequence.
-
-## Fault/freshness qualification
-
-Point 6 audited existing host coverage and added only the missing end-to-end stale-valid-measurement assertion.
-
-Terminal validation:
-
-- full portable host suite: `17/17` PASS;
-- targeted Stage27C subset: `3/3` PASS.
-
-Covered behavior includes exact BLE identity filtering, rejected/malformed packet diagnostics without refreshing valid freshness, stale measurement timeout behavior, BTHome encrypted/unsupported rejection semantics, and DS3231 OSF/trust handling.
-
-## Controller policy boundary at closure
-
-The hardware-neutral climate core remains authoritative.
-
-- Rule is the authoritative applied policy.
-- ML remains `MlShadow` only for real hardware use.
-- `MlActive` is not qualified for real growbox actuation.
-- deterministic arbitration and safety remain authoritative over every policy proposal.
-- physical actuator endpoints were not qualified by Stage27C.
-- e-paper/front-panel behavior was not qualified by Stage27C.
-
-## Frozen milestone
-
-Stage27C is frozen as tested and reviewed by the annotated Git tag:
+Frozen milestone tag:
 
 `stage27c-validated-2026-09-03`
 
-The tag freezes the repository closure state. The physically soaked firmware identity remains the separate SHA shown above.
+Validated hardware/runtime baseline:
 
-Do not resume, extend or reinterpret Stage27C merely because the branch advances later. Reopen it only if a relevant firmware/runtime change invalidates the evidence or a new explicit goal deliberately expands the scope.
+- Elecrow CrowPanel ESP32-S3 N8R8;
+- native ESP-IDF v5.5.4;
+- SCD41 + DS3231 on shared I2C GPIO21/GPIO38;
+- native BLE exact-identity inputs;
+- microSD primary storage with flash fallback/recovery;
+- Rule authoritative;
+- ML shadow-only;
+- physical outputs fake/locked.
 
-## Next work
+Stage27C final accepted soak remains 10.5 h active strict SD-primary capture with zero resets, serial disconnects, parser failures or storage/sensor regressions in the accepted sequence. Do not reopen Stage27C unless later changes invalidate its evidence.
 
-No Stage27C work remains.
+## Stage28A — complete
 
-The next development goal must be opened explicitly as a new stage. The logical choices are:
+Native RF433 protocol/temporal layer is implemented under `src/climate/rf433/`.
 
-1. qualify real physical actuator outputs beneath the existing `ClimateRoleDriver` / `MappedClimateRoleDriver` seam, one semantic role at a time, with Rule authoritative and fail-safe OFF behavior proven first;
-2. add the deferred CrowPanel e-paper/front-panel UI without coupling it to controller correctness;
-3. collect real operational traces with ML still shadow-only, then evaluate/retrain/re-qualify ML before any future `MlActive` hardware experiment.
+Stage28A source milestone:
 
-For a fresh chat, start from `docs/CONTINUATION_PLAN.md` and `docs/STAGE27C_FINAL_EVIDENCE.md`. Do not restart Stage27A/B/C.
+`ac29122cbcf9d155fd08baa0df1014d71f04c135`
+
+The implementation is native C++/ESP-IDF and preserves the hardware-neutral semantic output boundary.
+
+## Stage28B — complete
+
+Native ESP-IDF RMT TX/RX loopback is implemented.
+
+Initial RMT source milestone:
+
+`56813b27f6dc1f93d4899974ffd47a1528d8b6b8`
+
+Final qualified source milestone:
+
+`a87169748ee2bd42bc4d35cfe3b2964b90f40eb8`
+
+Final RF hardware configuration:
+
+- TX GPIO8;
+- RX GPIO14;
+- TX/codec RMT resolution `100 kHz`;
+- RX RMT resolution `1 MHz`;
+- RX minimum signal/glitch filter `1,250 ns`;
+- RX maximum signal/idle threshold `12 ms`;
+- RX pulse durations converted back to codec ticks before decode.
+
+The original receive configuration failed at `rmt_receive()` with `ESP_ERR_INVALID_ARG (0x102)`. Bounded hardware diagnostics isolated the valid RX configuration above.
+
+Final terminal hardware task:
+
+`20260904-growbox-stage28b-final-hardware-recheck-v1`
+
+The final recheck passed the complete local-radio chain:
+
+`0xA55A/16/protocol1 requested -> TX queued -> TX started -> TX completed -> RX captured -> exact decode -> SelfTx`
+
+At final acceptance:
+
+- RX arm errors `0`;
+- RX timeouts `0`;
+- RX decode failures `0`;
+- RX ambiguous `0`;
+- RX interference `0`;
+- outputs `fake-locked`;
+- strict 180-second Stage27 regression `violations: []`.
+
+See `docs/STAGE28B_FINAL_EVIDENCE.md` for the detailed closure record.
+
+## Evidence boundary
+
+Stage28B proves the local RF path, not the physical state of a mains socket.
+
+These evidence levels remain separate:
+
+1. TX request accepted/completed;
+2. local receiver captured/decoded the expected frame (`SelfTx`);
+3. actual socket/load changed state.
+
+Level 3 still requires explicit physical validation.
+
+## Next work — Stage28C
+
+The exact next gate is to learn and freeze one original remote/socket pair.
+
+For one socket only, capture and record:
+
+- ON code;
+- OFF code;
+- bit length;
+- protocol;
+- pulse timing;
+- repeat behavior;
+- stable device/role label.
+
+Do not map the socket into a climate semantic role during Stage28C. Keep RF identity in the hardware/config layer.
+
+After Stage28C:
+
+- Stage28D: semantic integration, `exhaust_fan` first, `humidifier` second; lamp separate;
+- Stage28E: fail-safe/recovery and correct confirmation semantics;
+- Stage28F: bounded real socket/load validation and one-role soak.
+
+Rule remains authoritative and ML remains shadow-only throughout these gates.
+
+## Fresh-context start
+
+For a new ChatGPT conversation:
+
+1. read `/continuation.md` first;
+2. read `docs/STAGE28B_FINAL_EVIDENCE.md`;
+3. fetch fresh work-branch HEAD and Local Agent daemon state;
+4. verify exact Growbox repository/binding and daemon `idle`;
+5. start Stage28C only — do not repeat Stage28A/28B without evidence that later changes invalidated them.
