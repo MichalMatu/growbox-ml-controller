@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260904-growbox-prestage-golden-checkpoint-docs-v1",
+  "task_digest": "38221d99f09f68553455c7bfd5523f0d88f24b11bed91a3cac727a99a70608ff",
+  "idle_timeout": 600,
+  "task_timeout": 7200,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-04T07:38:52.860978+00:00",
+  "attempt_id": "0cab051371d1ec1c3e13d754",
+  "daemon_version": "4.15.0",
+  "daemon_pid": 13001,
+  "updated_at": "2026-09-04T07:38:52.861062+00:00",
+  "pid": 13001
+}
