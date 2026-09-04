@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260904-growbox-stage28d-service-console-v1",
+  "task_digest": "14bf7976a38f0c2d4867a2b6e66f95ae197a237dcc48c5abbc8c111c7e74771a",
+  "idle_timeout": 900,
+  "task_timeout": 10800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-04T15:48:04.936753+00:00",
+  "attempt_id": "5a2f4d8078cb46499b332298",
+  "daemon_version": "4.15.0",
+  "daemon_pid": 39242,
+  "updated_at": "2026-09-04T15:48:04.936864+00:00",
+  "pid": 39242
+}
