@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260904-growbox-stage28c-rx-hardening-v1",
+  "task_digest": "2379f1bf1996a3afaed6945d5e12a47018156ea9ead90c4b60f04ebd735922dc",
+  "idle_timeout": 300,
+  "task_timeout": 2700,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-04T03:18:13.907427+00:00",
+  "attempt_id": "3f17c3070ab948d8bcd69f33",
+  "daemon_version": "4.15.0",
+  "daemon_pid": 87414,
+  "updated_at": "2026-09-04T03:18:13.907501+00:00",
+  "pid": 87414
+}
