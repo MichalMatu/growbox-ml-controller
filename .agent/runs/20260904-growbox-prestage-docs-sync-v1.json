@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260904-growbox-prestage-docs-sync-v1",
   "task_digest": "46557cafd2eda9ce7863e0997be43a18674ea2fd35a7fb2fd353911a5d8a2418",
-  "idle_timeout": 300,
-  "task_timeout": 2700,
-  "memory_limit_mb": 4096,
-  "started_at": "2026-09-04T04:55:46.682802+00:00",
+  "status": "failed",
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-04T04:55:49.912318+00:00",
   "attempt_id": "d172d3d62ef14c428fe98c22",
   "daemon_version": "4.15.0",
   "daemon_pid": 62161,
-  "updated_at": "2026-09-04T04:55:46.682869+00:00",
+  "updated_at": "2026-09-04T04:55:50.441213+00:00",
   "pid": 62161
 }
