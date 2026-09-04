@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260904-growbox-fresh-chat-handoff-v1",
+  "task_digest": "757b9ad23d800f4ab9ec0461b645b41b0eb7058cb049a28649d0b2e12daf2399",
+  "idle_timeout": 600,
+  "task_timeout": 2400,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-04T13:19:16.660075+00:00",
+  "attempt_id": "39a38ba39c969d779539dd66",
+  "daemon_version": "4.15.0",
+  "daemon_pid": 65646,
+  "updated_at": "2026-09-04T13:19:16.660288+00:00",
+  "pid": 65646
+}
