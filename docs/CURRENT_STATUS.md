@@ -6,7 +6,7 @@ Primary bootstrap: `/continuation.md`
 
 ## Current transition
 
-**Stage28A DONE -> Stage28B DONE -> Stage28C DONE -> pre-Stage28D golden hardening active**
+**Stage28A DONE -> Stage28B DONE -> Stage28C DONE -> pre-Stage28D golden gate COMPLETE -> Stage28D NOT STARTED**
 
 Stage27C remains frozen and is not being reopened.
 
@@ -29,9 +29,9 @@ See `docs/STAGE28C_FINAL_EVIDENCE.md`.
 
 ## Current hardened implementation
 
-Current pre-stage source after software hardening:
+Golden firmware/source checkpoint:
 
-`60da0a4d2a99f3045596b6a8a8bf362a0c6e1aca`
+`316b58e76de609069ddbf2667fe86f6218fb2143`
 
 Notable post-freeze changes:
 
@@ -54,6 +54,10 @@ Rule remains authoritative and ML remains shadow-only. Physical outputs are stil
 
 Local `SelfTx` proves the local RF path only; it does not confirm the physical state of a mains socket or load.
 
+## Golden checkpoint
+
+The pre-Stage28D golden gate is complete on firmware/source `316b58e76de609069ddbf2667fe86f6218fb2143`. The exact SHA passed the full software gate and a 90-minute strict hardware soak with 526 records, zero resets/disconnects/parse errors/violations, stable memory, continuous SD progress, outputs fake-locked and no RF433 transmit observed. See `docs/PRESTAGE28D_GOLDEN_CHECKPOINT.md`.
+
 ## Next work
 
-Finish the golden pre-Stage28D gate: broad regressions, ESP-IDF build, documentation consistency and a bounded hardware soak with no semantic mains actuation. Only then begin Stage28D semantic integration.
+Stage28D remains intentionally NOT STARTED and must begin only as an explicit later step.

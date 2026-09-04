@@ -22,7 +22,7 @@ Do not restart Stage27A/B/C without new evidence that later code invalidated the
 
 ## Stage28 status
 
-**Stage28A DONE -> Stage28B DONE -> Stage28C DONE -> pre-Stage28D golden hardening active**
+**Stage28A DONE -> Stage28B DONE -> Stage28C DONE -> pre-Stage28D golden gate COMPLETE -> Stage28D NOT STARTED**
 
 ### Stage28A
 
@@ -80,19 +80,11 @@ Keep these distinct:
 
 Stages 28B/28C prove levels 1 and 2 for the qualified path and record a reliable TX setting. They do not turn local self-RX into physical socket-state acknowledgement.
 
-## Next gate
+## Golden gate complete
 
-Before Stage28D semantic integration, finish the pre-stage golden gate:
+The clean golden firmware/source checkpoint is `316b58e76de609069ddbf2667fe86f6218fb2143`. It passed the complete software gate and the same exact SHA passed a 5400-second strict real-hardware soak with 526 records, zero resets/disconnects/parse errors/violations, healthy sensor freshness, stable memory, continuous SD progress, outputs fake-locked and no RF433 transmit observed. Full evidence is in `docs/PRESTAGE28D_GOLDEN_CHECKPOINT.md`.
 
-1. documentation/source consistency;
-2. complete host regression and ESP-IDF build;
-3. static/format checks available in the repository;
-4. bounded real-hardware regression/soak with outputs fake-locked;
-5. record one clean checkpoint SHA.
-
-Only after that may Stage28D map the frozen hardware identity to a semantic actuator role. `exhaust_fan` remains the intended first semantic role, but it is not part of Stage28C hardware config.
-
-No unattended mains-load control is authorized by this handoff.
+Stage28D is intentionally NOT STARTED. No later semantic integration is implied by this checkpoint.
 
 ## Local Agent binding
 
