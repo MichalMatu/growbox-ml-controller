@@ -65,6 +65,9 @@
 #ifndef GROWBOX_RF433_LOOPBACK_AUTO_SMOKE
 #define GROWBOX_RF433_LOOPBACK_AUTO_SMOKE 0
 #endif
+#ifndef GROWBOX_RF433_REMOTE_CAPTURE_ENABLED
+#define GROWBOX_RF433_REMOTE_CAPTURE_ENABLED 0
+#endif
 #ifndef GROWBOX_RF433_TX_GPIO
 #define GROWBOX_RF433_TX_GPIO 8
 #endif
@@ -291,10 +294,55 @@ void logSoakRecord(const telemetry::Stage27TelemetrySnapshot& snapshot,
 
   std::uint32_t diagnostic_tick = 0U;
   bool rf_smoke_attempted = false;
+  bool rf_capture_ready_logged = false;
+  std::uint32_t rf_capture_id = 0U;
   while (true) {
     const std::uint64_t now_ms = monotonicMilliseconds();
+    if (rf_loopback_ready && GROWBOX_RF433_REMOTE_CAPTURE_ENABLED != 0) {
+      if (!rf_capture_ready_logged) {
+        rf_capture_ready_logged = true;
+        ESP_LOGI(kTag,
+                 "rf433_remote_capture_ready_v=1 rx_gpio=%d passive_rx_only=1 "
+                 "outputs=fake-locked",
+                 GROWBOX_RF433_RX_GPIO);
+      }
+
+      rf433::ReceiveEvidence capture{};
+      if (rf_loopback.receiveOnce(250U, capture)) {
+        const std::uint32_t capture_id = ++rf_capture_id;
+        ESP_LOGI(
+            kTag,
+            "rf433_remote_capture_v=1 capture_id=%lu rx_start_ms=%lu rx_finish_ms=%lu "
+            "symbol_count=%u overflow=%d decode_status=%u decoded_code=%lu "
+            "decoded_bits=%u decoded_protocol=%u estimated_pulse_us=%u "
+            "observed_repeats=%u candidate_count=%u outputs=fake-locked",
+            static_cast<unsigned long>(capture_id),
+            static_cast<unsigned long>(capture.rx_started_at_ms),
+            static_cast<unsigned long>(capture.rx_finished_at_ms),
+            static_cast<unsigned>(capture.symbol_count), capture.overflow,
+            static_cast<unsigned>(capture.decoded.status),
+            static_cast<unsigned long>(capture.decoded.frame.code),
+            capture.decoded.frame.bit_length, capture.decoded.frame.protocol,
+            capture.decoded.estimated_pulse_us, capture.decoded.observed_repeats,
+            capture.decoded.candidate_count);
+        for (std::size_t i = 0U; i < capture.symbol_count; ++i) {
+          const auto& symbol = capture.symbols[i];
+          ESP_LOGI(
+              kTag,
+              "rf433_remote_symbol_v=1 capture_id=%lu index=%u d0_us=%lu l0=%d "
+              "d1_us=%lu l1=%d",
+              static_cast<unsigned long>(capture_id), static_cast<unsigned>(i),
+              static_cast<unsigned long>(rf433::ticksToMicroseconds(symbol.duration0_ticks)),
+              symbol.level0,
+              static_cast<unsigned long>(rf433::ticksToMicroseconds(symbol.duration1_ticks)),
+              symbol.level1);
+        }
+      }
+    }
+
     if (rf_loopback_ready && GROWBOX_RF433_LOOPBACK_AUTO_SMOKE != 0 &&
-        !rf_smoke_attempted && now_ms >= 3'000U) {
+        GROWBOX_RF433_REMOTE_CAPTURE_ENABLED == 0 && !rf_smoke_attempted &&
+        now_ms >= 3'000U) {
       rf_smoke_attempted = true;
       rf433::LoopbackEvidence evidence{};
       const rf433::FrameConfig smoke{{0xA55AU, 16U, 1U}, 3U, 0U};

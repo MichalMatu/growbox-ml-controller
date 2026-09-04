@@ -41,6 +41,16 @@ struct LoopbackEvidence {
   TemporalRxClassification classification{TemporalRxClassification::NotDuringTx};
 };
 
+struct ReceiveEvidence {
+  bool rx_captured{false};
+  std::uint32_t rx_started_at_ms{0U};
+  std::uint32_t rx_finished_at_ms{0U};
+  std::size_t symbol_count{0U};
+  bool overflow{false};
+  DecodeResult decoded{};
+  std::array<PulseSymbol, kRxCaptureSymbolCapacity> symbols{};
+};
+
 class Rf433RmtLoopback final {
 public:
   struct Config {
@@ -58,6 +68,7 @@ public:
   bool transmitAndReceive(const FrameConfig& frame,
                           std::uint32_t timeout_ms,
                           LoopbackEvidence& evidence) noexcept;
+  bool receiveOnce(std::uint32_t timeout_ms, ReceiveEvidence& evidence) noexcept;
 
   const LoopbackDiagnostics& diagnostics() const noexcept { return diagnostics_; }
 
