@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260904-growbox-stage28d-service-console-uart-io-v1",
+  "task_digest": "9f36c5770245e8cab8240f884efa2f361c90c494b2617b8d0e7608ff18cd0cdb",
+  "idle_timeout": 900,
+  "task_timeout": 10800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-04T16:38:46.735632+00:00",
+  "attempt_id": "20445ab356a8a861b7067673",
+  "daemon_version": "4.15.0",
+  "daemon_pid": 77273,
+  "updated_at": "2026-09-04T16:38:46.739669+00:00",
+  "pid": 77273
+}
