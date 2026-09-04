@@ -28,6 +28,7 @@ idf_component_register(
     bt
     esp_driver_i2c
     esp_driver_gpio
+    esp_driver_rmt
     nvs_flash
     sensirion_scd4x
     fatfs
@@ -71,6 +72,8 @@ elseif(GROWBOX_APP_MODE STREQUAL "climate-v6-real-inputs")
       "climate/native/NativeI2cBus.cpp"
       "climate/native/Scd41InsideSource.cpp"
       "climate/native/Ds3231ClockSource.cpp"
+      "climate/rf433/Rf433ProtocolCodec.cpp"
+      "climate/rf433/Rf433RmtLoopback.cpp"
   )
 else()
   message(FATAL_ERROR "Unsupported GROWBOX_APP_MODE: ${GROWBOX_APP_MODE}")
@@ -92,6 +95,10 @@ set(GROWBOX_SD_MISO_GPIO "13" CACHE STRING "Stage27 SD SPI MISO GPIO")
 set(GROWBOX_SD_SCLK_GPIO "39" CACHE STRING "Stage27 SD SPI clock GPIO")
 set(GROWBOX_SD_CS_GPIO "10" CACHE STRING "Stage27 SD SPI chip-select GPIO")
 set(GROWBOX_SD_POWER_GPIO "-1" CACHE STRING "Stage27 SD power-enable GPIO")
+set(GROWBOX_RF433_LOOPBACK_ENABLED "0" CACHE STRING "Enable Stage28 RF433 loopback transport")
+set(GROWBOX_RF433_LOOPBACK_AUTO_SMOKE "0" CACHE STRING "Run one Stage28 RF433 boot loopback smoke")
+set(GROWBOX_RF433_TX_GPIO "8" CACHE STRING "Stage28 RF433 TX GPIO")
+set(GROWBOX_RF433_RX_GPIO "14" CACHE STRING "Stage28 RF433 RX GPIO")
 
 target_compile_definitions(
   ${COMPONENT_LIB}
@@ -112,4 +119,8 @@ target_compile_definitions(
     GROWBOX_SD_SCLK_GPIO=${GROWBOX_SD_SCLK_GPIO}
     GROWBOX_SD_CS_GPIO=${GROWBOX_SD_CS_GPIO}
     GROWBOX_SD_POWER_GPIO=${GROWBOX_SD_POWER_GPIO}
+    GROWBOX_RF433_LOOPBACK_ENABLED=${GROWBOX_RF433_LOOPBACK_ENABLED}
+    GROWBOX_RF433_LOOPBACK_AUTO_SMOKE=${GROWBOX_RF433_LOOPBACK_AUTO_SMOKE}
+    GROWBOX_RF433_TX_GPIO=${GROWBOX_RF433_TX_GPIO}
+    GROWBOX_RF433_RX_GPIO=${GROWBOX_RF433_RX_GPIO}
 )

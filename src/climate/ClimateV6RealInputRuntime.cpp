@@ -6,6 +6,7 @@
 #include "climate/native/Ds3231ClockSource.h"
 #include "climate/native/NativeI2cBus.h"
 #include "climate/native/Scd41InsideSource.h"
+#include "climate/rf433/Rf433RmtLoopback.h"
 #include "climate/storage/Stage27TelemetryLogger.h"
 #include "climate/telemetry/Stage27Telemetry.h"
 #include "demo/protocol/HeapDiagnostics.h"
@@ -57,6 +58,18 @@
 #endif
 #ifndef GROWBOX_SD_POWER_GPIO
 #define GROWBOX_SD_POWER_GPIO -1
+#endif
+#ifndef GROWBOX_RF433_LOOPBACK_ENABLED
+#define GROWBOX_RF433_LOOPBACK_ENABLED 0
+#endif
+#ifndef GROWBOX_RF433_LOOPBACK_AUTO_SMOKE
+#define GROWBOX_RF433_LOOPBACK_AUTO_SMOKE 0
+#endif
+#ifndef GROWBOX_RF433_TX_GPIO
+#define GROWBOX_RF433_TX_GPIO 8
+#endif
+#ifndef GROWBOX_RF433_RX_GPIO
+#define GROWBOX_RF433_RX_GPIO 14
 #endif
 
 namespace growbox::app::climate_io {
@@ -252,6 +265,11 @@ void logSoakRecord(const telemetry::Stage27TelemetrySnapshot& snapshot,
   const bool storage_logger_ready =
       storage_enabled && storage_logger.begin(GROWBOX_FIRMWARE_GIT_SHA);
 
+  rf433::Rf433RmtLoopback rf_loopback(
+      rf433::Rf433RmtLoopback::Config{GROWBOX_RF433_TX_GPIO, GROWBOX_RF433_RX_GPIO});
+  const bool rf_loopback_ready =
+      GROWBOX_RF433_LOOPBACK_ENABLED != 0 && rf_loopback.begin();
+
   Stage27InsideSource inside(ble, scd41);
   Stage27NearbySource outside(ble);
   FixedStage27ScheduleConfigSource schedule_config;
@@ -263,15 +281,58 @@ void logSoakRecord(const telemetry::Stage27TelemetrySnapshot& snapshot,
   const esp_reset_reason_t reset_reason = esp_reset_reason();
   ESP_LOGI(kTag,
            "Stage27 real-input runtime: i2c=%d scd41=%d ds3231=%d ble=%d sd=%d "
-           "flash_fallback=%d storage_logger=%d outputs=fake-locked",
+           "flash_fallback=%d storage_logger=%d rf433_loopback=%d rf433_tx_gpio=%d "
+           "rf433_rx_gpio=%d outputs=fake-locked",
            i2c_ready, scd41_ready, rtc_ready, ble_ready, storage_config.sd_enabled,
-           storage_config.flash_fallback_enabled, storage_logger_ready);
+           storage_config.flash_fallback_enabled, storage_logger_ready, rf_loopback_ready,
+           GROWBOX_RF433_TX_GPIO, GROWBOX_RF433_RX_GPIO);
   ESP_LOGI(kTag, "Stage27 soak boot: firmware_sha=%s reset_reason=%d", GROWBOX_FIRMWARE_GIT_SHA,
            static_cast<int>(reset_reason));
 
   std::uint32_t diagnostic_tick = 0U;
+  bool rf_smoke_attempted = false;
   while (true) {
     const std::uint64_t now_ms = monotonicMilliseconds();
+    if (rf_loopback_ready && GROWBOX_RF433_LOOPBACK_AUTO_SMOKE != 0 &&
+        !rf_smoke_attempted && now_ms >= 3'000U) {
+      rf_smoke_attempted = true;
+      rf433::LoopbackEvidence evidence{};
+      const rf433::FrameConfig smoke{{0xA55AU, 16U, 1U}, 3U, 0U};
+      const bool passed = rf_loopback.transmitAndReceive(smoke, 1'500U, evidence);
+      const auto& rf_diag = rf_loopback.diagnostics();
+      ESP_LOGI(
+          kTag,
+          "rf433_loopback_v=1 pass=%d tx_id=%llu requested_code=%lu requested_bits=%u "
+          "requested_protocol=%u requested_repeat=%u requested_pulse_us=%u tx_queued=%d "
+          "tx_started=%d tx_completed=%d tx_started_ms=%lu tx_completed_ms=%lu "
+          "rx_captured=%d rx_start_ms=%lu rx_finish_ms=%lu decode_status=%u "
+          "decoded_code=%lu decoded_bits=%u decoded_protocol=%u estimated_pulse_us=%u "
+          "observed_repeats=%u classification=%u tx_queue_errors=%lu tx_wait_errors=%lu "
+          "rx_arm_errors=%lu rx_timeouts=%lu rx_decode_failures=%lu rx_ambiguous=%lu "
+          "rx_self_tx=%lu rx_interference=%lu outputs=fake-locked",
+          passed, static_cast<unsigned long long>(evidence.tx_id),
+          static_cast<unsigned long>(smoke.key.code), smoke.key.bit_length,
+          smoke.key.protocol, smoke.repeat, smoke.pulse_us, evidence.tx_queued,
+          evidence.tx_started, evidence.tx_completed,
+          static_cast<unsigned long>(evidence.tx_started_at_ms),
+          static_cast<unsigned long>(evidence.tx_completed_at_ms), evidence.rx_captured,
+          static_cast<unsigned long>(evidence.rx_started_at_ms),
+          static_cast<unsigned long>(evidence.rx_finished_at_ms),
+          static_cast<unsigned>(evidence.decoded.status),
+          static_cast<unsigned long>(evidence.decoded.frame.code),
+          evidence.decoded.frame.bit_length, evidence.decoded.frame.protocol,
+          evidence.decoded.estimated_pulse_us, evidence.decoded.observed_repeats,
+          static_cast<unsigned>(evidence.classification),
+          static_cast<unsigned long>(rf_diag.tx_queue_errors),
+          static_cast<unsigned long>(rf_diag.tx_wait_errors),
+          static_cast<unsigned long>(rf_diag.rx_arm_errors),
+          static_cast<unsigned long>(rf_diag.rx_timeouts),
+          static_cast<unsigned long>(rf_diag.rx_decode_failures),
+          static_cast<unsigned long>(rf_diag.rx_ambiguous),
+          static_cast<unsigned long>(rf_diag.rx_self_tx),
+          static_cast<unsigned long>(rf_diag.rx_interference));
+    }
+
     ::growbox::climate::ClimateRuntimeDecision decision{};
     const auto result = application.tick(now_ms, decision);
     if ((diagnostic_tick++ % 10U) == 0U) {
