@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260904-growbox-stage28c-passive-capture-v2",
+  "task_digest": "d8c59f160786767675dda0dd4fa28ec289f074c95b1b159019d3f46652a8a183",
+  "idle_timeout": 300,
+  "task_timeout": 2700,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-04T02:28:51.200510+00:00",
+  "attempt_id": "f1c0e6c2cffaea5a457da69a",
+  "daemon_version": "4.15.0",
+  "daemon_pid": 77734,
+  "updated_at": "2026-09-04T02:28:51.200746+00:00",
+  "pid": 77734
+}
