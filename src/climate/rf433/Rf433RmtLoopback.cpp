@@ -12,10 +12,11 @@ namespace growbox::app::climate_io::rf433 {
 namespace {
 
 constexpr std::size_t kRmtMemorySymbols = 64U;
-// Stage28C RX hardening mirrors the proven receiver envelope from the same RF433
-// hardware: reject sub-10 us chatter and keep one burst open across repeat gaps.
+// Stage28C RX hardening: reject sub-10 us chatter. A 20 ms idle threshold is
+// hardware-qualified with the known 32-bit protocol-2 ON/OFF pair at repeat=10;
+// 300 ms did not terminate capture reliably on this receiver in the same setup.
 constexpr std::uint32_t kRxMinimumSignalNs = 10'000U;
-constexpr std::uint32_t kRxMaximumSignalNs = 300'000'000U;
+constexpr std::uint32_t kRxMaximumSignalNs = 20'000'000U;
 constexpr std::uint32_t kRxResolutionHz = kRmtResolutionHz;
 constexpr std::uint32_t kRxToCodecTickRatio = kRxResolutionHz / kRmtResolutionHz;
 static_assert(kRxResolutionHz % kRmtResolutionHz == 0U);
