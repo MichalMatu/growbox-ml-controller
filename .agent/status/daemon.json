@@ -1,9 +1,9 @@
 {
   "version": 1,
   "daemon_version": "4.15.0",
-  "state": "running",
+  "state": "idle",
   "pid": 95087,
-  "updated_at": "2026-09-04T01:35:18.408608+00:00",
+  "updated_at": "2026-09-04T01:49:37.130938+00:00",
   "self_revision": "d8f95a8b6e9fa4addb2367285c66a82d045a24be",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -14,7 +14,7 @@
   "task_timeout_default": 1800,
   "task_timeout_max": 21600,
   "memory_limit_mb_default": 4096,
-  "current_task_id": "20260904-growbox-stage28b-rf-rx-glitch-fix-v1",
+  "current_task_id": null,
   "current_attempt_id": null,
   "current_task_digest": null,
   "repository_id": "growbox-ml-controller",
@@ -25,6 +25,6 @@
   "execution_model": "multi_repository_worker",
   "worker_pid": 95087,
   "supervisor_pid": 83251,
-  "active_resources": [],
+  "last_task_id": "20260904-growbox-stage28b-rf-rx-glitch-fix-v1",
   "execution_variant": "parallel"
 }
