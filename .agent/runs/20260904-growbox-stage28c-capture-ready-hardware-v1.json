@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260904-growbox-stage28c-capture-ready-hardware-v1",
+  "task_digest": "221fd749a91919f78bc998fd3b6c37835ea803a0b1940fa11681fa48d079edf6",
+  "idle_timeout": 300,
+  "task_timeout": 2700,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-04T02:31:53.723301+00:00",
+  "attempt_id": "853a1b00e33673bbbf211404",
+  "daemon_version": "4.15.0",
+  "daemon_pid": 86840,
+  "updated_at": "2026-09-04T02:31:53.726263+00:00",
+  "pid": 86840
+}
