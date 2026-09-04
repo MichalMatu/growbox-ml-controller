@@ -56,6 +56,38 @@ void testRepeatedCapturePrefersExactFingerprint() {
   assert(decoded.estimated_pulse_us == 420U);
 }
 
+void testKnownRemoteSocketPairCodec() {
+  constexpr std::array<std::uint32_t, 2U> codes{{906118656U, 1040336384U}};
+  for (const std::uint32_t code : codes) {
+    const FrameConfig config{{code, 32U, 2U}, 10U, 575U};
+    EncodedFrame encoded{};
+    assert(encodeFrame(config, encoded) == CodecStatus::Ok);
+    assert(encoded.symbol_count == 33U);
+    assert(encoded.total_ticks == encoded.frame_ticks * 10U);
+
+    DecodeWorkspace workspace{};
+    const DecodeResult decoded =
+        decodeFrame(encoded.symbols.data(), encoded.symbol_count, workspace);
+    assert(decoded.status == DecodeStatus::Decoded);
+    assert(decoded.frame == config.key);
+    assert(decoded.estimated_pulse_us == 580U);
+
+    std::array<PulseSymbol, kRxCaptureSymbolCapacity> repeated{};
+    std::size_t repeated_count = 0U;
+    for (std::uint8_t repeat = 0U; repeat < 7U; ++repeat) {
+      for (std::size_t i = 0U; i < encoded.symbol_count; ++i) {
+        repeated[repeated_count++] = encoded.symbols[i];
+      }
+    }
+    DecodeWorkspace repeated_workspace{};
+    const DecodeResult repeated_decoded =
+        decodeFrame(repeated.data(), repeated_count, repeated_workspace);
+    assert(repeated_decoded.status == DecodeStatus::Decoded);
+    assert(repeated_decoded.frame == config.key);
+    assert(repeated_decoded.observed_repeats >= 7U);
+  }
+}
+
 void testValidationBounds() {
   EncodedFrame encoded{};
   assert(encodeFrame({{0U, 24U, 1U}, 3U, 350U}, encoded) ==
@@ -122,6 +154,7 @@ void testTemporalWrapAround() {
 int main() {
   testEncodeDecodeAllProtocols();
   testRepeatedCapturePrefersExactFingerprint();
+  testKnownRemoteSocketPairCodec();
   testValidationBounds();
   testCaptureTiming();
   testTemporalClassification();

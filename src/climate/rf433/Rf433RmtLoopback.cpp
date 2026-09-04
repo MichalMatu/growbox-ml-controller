@@ -12,10 +12,13 @@ namespace growbox::app::climate_io::rf433 {
 namespace {
 
 constexpr std::size_t kRmtMemorySymbols = 64U;
-constexpr std::uint32_t kRxMinimumSignalNs = 1'250U;
-constexpr std::uint32_t kRxMaximumSignalNs = 12'000'000U;
-constexpr std::uint32_t kRxResolutionHz = 1'000'000U;
+// Stage28C RX hardening mirrors the proven receiver envelope from the same RF433
+// hardware: reject sub-10 us chatter and keep one burst open across repeat gaps.
+constexpr std::uint32_t kRxMinimumSignalNs = 10'000U;
+constexpr std::uint32_t kRxMaximumSignalNs = 300'000'000U;
+constexpr std::uint32_t kRxResolutionHz = kRmtResolutionHz;
 constexpr std::uint32_t kRxToCodecTickRatio = kRxResolutionHz / kRmtResolutionHz;
+static_assert(kRxResolutionHz % kRmtResolutionHz == 0U);
 constexpr std::uint32_t kSelfTxGuardMs = 50U;
 
 }  // namespace

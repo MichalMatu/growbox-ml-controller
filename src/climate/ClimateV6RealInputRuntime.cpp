@@ -68,6 +68,21 @@
 #ifndef GROWBOX_RF433_REMOTE_CAPTURE_ENABLED
 #define GROWBOX_RF433_REMOTE_CAPTURE_ENABLED 0
 #endif
+#ifndef GROWBOX_RF433_LOOPBACK_SMOKE_CODE
+#define GROWBOX_RF433_LOOPBACK_SMOKE_CODE 0xA55A
+#endif
+#ifndef GROWBOX_RF433_LOOPBACK_SMOKE_BITS
+#define GROWBOX_RF433_LOOPBACK_SMOKE_BITS 16
+#endif
+#ifndef GROWBOX_RF433_LOOPBACK_SMOKE_PROTOCOL
+#define GROWBOX_RF433_LOOPBACK_SMOKE_PROTOCOL 1
+#endif
+#ifndef GROWBOX_RF433_LOOPBACK_SMOKE_REPEAT
+#define GROWBOX_RF433_LOOPBACK_SMOKE_REPEAT 3
+#endif
+#ifndef GROWBOX_RF433_LOOPBACK_SMOKE_PULSE_US
+#define GROWBOX_RF433_LOOPBACK_SMOKE_PULSE_US 0
+#endif
 #ifndef GROWBOX_RF433_TX_GPIO
 #define GROWBOX_RF433_TX_GPIO 8
 #endif
@@ -308,7 +323,7 @@ void logSoakRecord(const telemetry::Stage27TelemetrySnapshot& snapshot,
       }
 
       rf433::ReceiveEvidence capture{};
-      if (rf_loopback.receiveOnce(250U, capture)) {
+      if (rf_loopback.receiveOnce(750U, capture)) {
         const std::uint32_t capture_id = ++rf_capture_id;
         ESP_LOGI(
             kTag,
@@ -345,7 +360,12 @@ void logSoakRecord(const telemetry::Stage27TelemetrySnapshot& snapshot,
         now_ms >= 3'000U) {
       rf_smoke_attempted = true;
       rf433::LoopbackEvidence evidence{};
-      const rf433::FrameConfig smoke{{0xA55AU, 16U, 1U}, 3U, 0U};
+      const rf433::FrameConfig smoke{
+          {static_cast<std::uint32_t>(GROWBOX_RF433_LOOPBACK_SMOKE_CODE),
+           static_cast<std::uint8_t>(GROWBOX_RF433_LOOPBACK_SMOKE_BITS),
+           static_cast<std::uint8_t>(GROWBOX_RF433_LOOPBACK_SMOKE_PROTOCOL)},
+          static_cast<std::uint8_t>(GROWBOX_RF433_LOOPBACK_SMOKE_REPEAT),
+          static_cast<std::uint16_t>(GROWBOX_RF433_LOOPBACK_SMOKE_PULSE_US)};
       const bool passed = rf_loopback.transmitAndReceive(smoke, 1'500U, evidence);
       const auto& rf_diag = rf_loopback.diagnostics();
       ESP_LOGI(
