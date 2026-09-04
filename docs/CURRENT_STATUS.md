@@ -27,6 +27,26 @@ Identity/config freeze commit: `b3e90c92dd39c50c23ed618aba47e9fe8ddf26ec`.
 
 See `docs/STAGE28C_FINAL_EVIDENCE.md`.
 
+## RF433 device inventory
+
+The quick human-readable register for all learned device codes is `docs/RF433_DEVICE_CODES.md`.
+
+Current physical targets to capture/freeze next are:
+
+- lamp;
+- fan;
+- humidifier.
+
+Do not assign `remote_socket_1` to one of these devices by inference; identify it explicitly from physical evidence.
+
+## Current growbox sensor topology
+
+- TP357 BLE: inside growbox;
+- Xiaomi BLE: outside growbox;
+- sensors directly connected to ESP32: inside growbox.
+
+The detailed hardware/code table is maintained in `docs/RF433_DEVICE_CODES.md`.
+
 ## Current hardened implementation
 
 Golden firmware/source checkpoint:
@@ -60,4 +80,4 @@ The pre-Stage28D golden gate is complete on firmware/source `316b58e76de609069dd
 
 ## Next work
 
-Stage28D is IN PROGRESS. Semantic role-to-endpoint mapping now validates fail-closed, and a neutral RF433 registry maps stable climate endpoint ID `1` to the frozen `remote_socket_1` hardware configuration. No semantic role is yet assigned to that endpoint, the real runtime still uses `LockedFakeRoleDriver`, and no physical RF output gate has been opened. The next semantic role/binary-output choice must be explicit rather than inferred.
+Stage28D is IN PROGRESS. Semantic role-to-endpoint mapping now validates fail-closed, and a neutral RF433 registry maps stable climate endpoint ID `1` to the frozen `remote_socket_1` hardware configuration. No semantic role is yet assigned to that endpoint, the real runtime still uses `LockedFakeRoleDriver`, and no physical RF output gate has been opened. The next bounded hardware-data step is to capture and freeze ON/OFF identities for the lamp, fan and humidifier in `docs/RF433_DEVICE_CODES.md` before semantic role binding.
