@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260904-growbox-prestage-golden-audit-v1",
+  "task_digest": "7ff66b7367a07f0a4974b019a283b7f10e0a7394c3e2aa700b4aa79184a9e337",
+  "idle_timeout": 300,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-04T04:14:18.509715+00:00",
+  "attempt_id": "1f8230da69d84800d6dd6be0",
+  "daemon_version": "4.15.0",
+  "daemon_pid": 895,
+  "updated_at": "2026-09-04T04:14:18.509889+00:00",
+  "pid": 895
+}
