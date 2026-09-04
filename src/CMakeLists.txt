@@ -30,6 +30,7 @@ idf_component_register(
     esp_driver_i2c
     esp_driver_gpio
     esp_driver_rmt
+    esp_driver_uart
     nvs_flash
     sensirion_scd4x
     fatfs
@@ -111,7 +112,7 @@ set(GROWBOX_RF433_LOOPBACK_SMOKE_REPEAT "3" CACHE STRING "Stage28 RF433 loopback
 set(GROWBOX_RF433_LOOPBACK_SMOKE_PULSE_US "0" CACHE STRING "Stage28 RF433 loopback smoke pulse length; 0 uses protocol default")
 set(GROWBOX_RF433_TX_GPIO "8" CACHE STRING "Stage28 RF433 TX GPIO")
 set(GROWBOX_RF433_RX_GPIO "14" CACHE STRING "Stage28 RF433 RX GPIO")
-set(GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED "1" CACHE STRING "Enable Stage28 USB service console")
+set(GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED "1" CACHE STRING "Enable Stage28 primary-serial service console")
 
 target_compile_definitions(
   ${COMPONENT_LIB}

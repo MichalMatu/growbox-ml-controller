@@ -2,9 +2,11 @@
 
 #include "climate/rf433/Rf433HardwareConfig.h"
 
+#include <driver/uart.h>
 #include <esp_heap_caps.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <sdkconfig.h>
 
 #include <array>
 #include <cstdarg>
@@ -31,6 +33,13 @@ constexpr std::array<KnownRfDevice, 3U> kKnownRfDevices{{
      "captured-profile; physical socket validation pending"},
 }};
 
+#if !defined(CONFIG_ESP_CONSOLE_UART_NUM)
+#error "Stage28 service console requires an ESP-IDF UART primary console"
+#endif
+
+constexpr uart_port_t kServiceConsoleUart = static_cast<uart_port_t>(CONFIG_ESP_CONSOLE_UART_NUM);
+constexpr int kServiceConsoleRxBufferBytes = 1024;
+
 const KnownRfDevice* findKnownDevice(ServiceConsoleRfDevice id) noexcept {
   for (const KnownRfDevice& device : kKnownRfDevices) {
     if (device.id == id) {
@@ -53,12 +62,19 @@ bool Stage28ServiceConsole::begin() noexcept {
     return false;
   }
 
-  // Use the ESP-IDF primary standard-I/O console. On the qualified CrowPanel
-  // build this is the CH340-backed UART console, so logs and service commands
-  // share the same physical serial monitor. The default UART VFS read path is
-  // non-blocking, which keeps this poll-driven console bounded.
-  std::array<std::uint8_t, 128U> discard{};
-  while (::read(STDIN_FILENO, discard.data(), discard.size()) > 0) {
+  // Keep output on ESP-IDF primary stdio, but receive commands through the
+  // primary console UART driver. The default stdin VFS path did not consume
+  // CH340 RX bytes on the qualified CrowPanel hardware. Direct non-blocking
+  // uart_read_bytes() keeps the service path bounded without changing logs.
+  if (!uart_is_driver_installed(kServiceConsoleUart)) {
+    const esp_err_t install_result =
+        uart_driver_install(kServiceConsoleUart, kServiceConsoleRxBufferBytes, 0, 0, nullptr, 0);
+    if (install_result != ESP_OK) {
+      return false;
+    }
+  }
+  if (uart_flush_input(kServiceConsoleUart) != ESP_OK) {
+    return false;
   }
 
   ready_ = true;
@@ -75,12 +91,12 @@ void Stage28ServiceConsole::poll(std::uint64_t now_ms) noexcept {
   }
 
   std::array<std::uint8_t, 96U> buffer{};
-  const ssize_t received = ::read(STDIN_FILENO, buffer.data(), buffer.size());
+  const int received = uart_read_bytes(kServiceConsoleUart, buffer.data(), buffer.size(), 0U);
   if (received <= 0) {
     return;
   }
 
-  for (ssize_t index = 0; index < received; ++index) {
+  for (int index = 0; index < received; ++index) {
     const char character = static_cast<char>(buffer[index]);
     if (character == '\r') {
       continue;
