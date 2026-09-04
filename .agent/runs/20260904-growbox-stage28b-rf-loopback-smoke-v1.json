@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260904-growbox-stage28b-rf-loopback-smoke-v1",
+  "task_digest": "86ec5ea4a0a7fc07a1f6b61f940d42f770cbaef572d033648106ce46b4694420",
+  "idle_timeout": 300,
+  "task_timeout": 2400,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-04T00:16:35.686779+00:00",
+  "attempt_id": "43c79ae47cd2477e79548884",
+  "daemon_version": "4.15.0",
+  "daemon_pid": 17723,
+  "updated_at": "2026-09-04T00:16:35.687000+00:00",
+  "pid": 17723
+}
