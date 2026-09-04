@@ -92,7 +92,6 @@ void testKnownRemoteSocketPairCodec() {
   }
 }
 
-
 void testFrozenRemoteSocketHardwareConfig() {
   static_assert(kRemoteSocket1On.key.code == 906118656U);
   static_assert(kRemoteSocket1Off.key.code == 1040336384U);
@@ -119,15 +118,13 @@ void testHardwareQualifiedRmtReceiveContract() {
 
   const ProtocolSpec* protocol = protocolSpec(kRemoteSocket1On.key.protocol);
   assert(protocol != nullptr);
-  const std::uint8_t longest_multiplier = std::max(
-      {protocol->sync.high, protocol->sync.low, protocol->zero.high,
-       protocol->zero.low, protocol->one.high, protocol->one.low});
+  const std::uint8_t longest_multiplier =
+      std::max({protocol->sync.high, protocol->sync.low, protocol->zero.high, protocol->zero.low,
+                protocol->one.high, protocol->one.low});
   const std::uint64_t longest_symbol_ns =
-      static_cast<std::uint64_t>(longest_multiplier) *
-      kRemoteSocket1On.pulse_us * 1'000ULL;
+      static_cast<std::uint64_t>(longest_multiplier) * kRemoteSocket1On.pulse_us * 1'000ULL;
   assert(longest_symbol_ns < kRxMaximumSignalNs);
-  assert(kRxMinimumSignalNs <
-         static_cast<std::uint64_t>(kRemoteSocket1On.pulse_us) * 1'000ULL);
+  assert(kRxMinimumSignalNs < static_cast<std::uint64_t>(kRemoteSocket1On.pulse_us) * 1'000ULL);
 
   constexpr std::size_t symbols_per_frame = 33U;
   static_assert(symbols_per_frame * 7U <= kRxCaptureSymbolCapacity);
@@ -136,16 +133,11 @@ void testHardwareQualifiedRmtReceiveContract() {
 
 void testValidationBounds() {
   EncodedFrame encoded{};
-  assert(encodeFrame({{0U, 24U, 1U}, 3U, 350U}, encoded) ==
-         CodecStatus::InvalidCode);
-  assert(encodeFrame({{1U, 0U, 1U}, 3U, 350U}, encoded) ==
-         CodecStatus::InvalidBitLength);
-  assert(encodeFrame({{1U, 1U, 13U}, 3U, 350U}, encoded) ==
-         CodecStatus::InvalidProtocol);
-  assert(encodeFrame({{1U, 1U, 1U}, 0U, 350U}, encoded) ==
-         CodecStatus::InvalidRepeat);
-  assert(encodeFrame({{1U, 1U, 1U}, 3U, 20U}, encoded) ==
-         CodecStatus::InvalidPulseLength);
+  assert(encodeFrame({{0U, 24U, 1U}, 3U, 350U}, encoded) == CodecStatus::InvalidCode);
+  assert(encodeFrame({{1U, 0U, 1U}, 3U, 350U}, encoded) == CodecStatus::InvalidBitLength);
+  assert(encodeFrame({{1U, 1U, 13U}, 3U, 350U}, encoded) == CodecStatus::InvalidProtocol);
+  assert(encodeFrame({{1U, 1U, 1U}, 0U, 350U}, encoded) == CodecStatus::InvalidRepeat);
+  assert(encodeFrame({{1U, 1U, 1U}, 3U, 20U}, encoded) == CodecStatus::InvalidPulseLength);
 
   DecodeWorkspace workspace{};
   assert(decodeFrame(nullptr, 0U, workspace).status == DecodeStatus::InvalidCapture);
@@ -158,8 +150,7 @@ void testCaptureTiming() {
   const std::uint32_t duration =
       captureDurationMilliseconds(encoded.symbols.data(), encoded.symbol_count);
   assert(duration > 0U);
-  assert(captureStartMilliseconds(1000U, encoded.symbols.data(),
-                                  encoded.symbol_count) ==
+  assert(captureStartMilliseconds(1000U, encoded.symbols.data(), encoded.symbol_count) ==
          1000U - duration);
 }
 
@@ -171,17 +162,13 @@ void testTemporalClassification() {
       {},
   }};
 
-  assert(classifyTemporalRx(
-             {1030U, 1080U, DecodeStatus::Decoded, expected}, fingerprints) ==
+  assert(classifyTemporalRx({1030U, 1080U, DecodeStatus::Decoded, expected}, fingerprints) ==
          TemporalRxClassification::SelfTx);
-  assert(classifyTemporalRx(
-             {1030U, 1080U, DecodeStatus::Decoded, other}, fingerprints) ==
+  assert(classifyTemporalRx({1030U, 1080U, DecodeStatus::Decoded, other}, fingerprints) ==
          TemporalRxClassification::InterferenceDuringTx);
-  assert(classifyTemporalRx(
-             {1030U, 1080U, DecodeStatus::NoFrame, {}}, fingerprints) ==
+  assert(classifyTemporalRx({1030U, 1080U, DecodeStatus::NoFrame, {}}, fingerprints) ==
          TemporalRxClassification::InterferenceDuringTx);
-  assert(classifyTemporalRx(
-             {1200U, 1210U, DecodeStatus::Decoded, expected}, fingerprints) ==
+  assert(classifyTemporalRx({1200U, 1210U, DecodeStatus::Decoded, expected}, fingerprints) ==
          TemporalRxClassification::NotDuringTx);
 }
 
@@ -190,12 +177,11 @@ void testTemporalWrapAround() {
   const std::array<TxFingerprint, 1> fingerprints{{
       {true, 9U, frame, 0xFFFFFFF0U, 0x00000020U},
   }};
-  assert(classifyTemporalRx(
-             {0x00000005U, 0x00000010U, DecodeStatus::Decoded, frame},
-             fingerprints) == TemporalRxClassification::SelfTx);
+  assert(classifyTemporalRx({0x00000005U, 0x00000010U, DecodeStatus::Decoded, frame},
+                            fingerprints) == TemporalRxClassification::SelfTx);
 }
 
-}  // namespace
+} // namespace
 
 int main() {
   testEncodeDecodeAllProtocols();

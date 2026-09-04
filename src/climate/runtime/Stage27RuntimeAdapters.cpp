@@ -2,8 +2,7 @@
 
 namespace growbox::app::climate_io::runtime {
 
-bool LockedFakeRoleDriver::apply(ClimateActuatorRole, float,
-                                 std::uint64_t) noexcept {
+bool LockedFakeRoleDriver::apply(ClimateActuatorRole, float, std::uint64_t) noexcept {
   return true;
 }
 
@@ -19,8 +18,7 @@ bool Stage27InsideSource::sample(std::uint64_t monotonic_ms,
   const bool tp357_sampled = ble_.sampleTp357(monotonic_ms, tp357);
   if (tp357_sampled) {
     output.air_temperature_c = {tp357.temperature_c, true, tp357.age_ms};
-    output.relative_humidity_pct = {tp357.relative_humidity_pct, true,
-                                    tp357.age_ms};
+    output.relative_humidity_pct = {tp357.relative_humidity_pct, true, tp357.age_ms};
   }
 
   InsideEnvironmentSnapshot scd41{};
@@ -31,8 +29,7 @@ bool Stage27InsideSource::sample(std::uint64_t monotonic_ms,
   return tp357_sampled || output.co2_ppm.valid;
 }
 
-Stage27NearbySource::Stage27NearbySource(native::BleClimateScanner& ble) noexcept
-    : ble_(ble) {}
+Stage27NearbySource::Stage27NearbySource(native::BleClimateScanner& ble) noexcept : ble_(ble) {}
 
 bool Stage27NearbySource::sample(std::uint64_t monotonic_ms,
                                  OutsideEnvironmentSnapshot& output) noexcept {
@@ -42,14 +39,12 @@ bool Stage27NearbySource::sample(std::uint64_t monotonic_ms,
     return false;
   }
   output.air_temperature_c = {xiaomi.temperature_c, true, xiaomi.age_ms};
-  output.relative_humidity_pct = {xiaomi.relative_humidity_pct, true,
-                                  xiaomi.age_ms};
+  output.relative_humidity_pct = {xiaomi.relative_humidity_pct, true, xiaomi.age_ms};
   return true;
 }
 
-bool FixedStage27ScheduleConfigSource::resolve(
-    std::uint64_t, const ClimateWallClockSnapshot& clock,
-    ClimateScheduleConfigSnapshot& output) noexcept {
+bool FixedStage27ScheduleConfigSource::resolve(std::uint64_t, const ClimateWallClockSnapshot& clock,
+                                               ClimateScheduleConfigSnapshot& output) noexcept {
   if (!clock.valid) {
     return false;
   }
@@ -64,8 +59,7 @@ bool FixedStage27ScheduleConfigSource::resolve(
   output.capabilities.dehumidifier = true;
   output.capabilities.co2_doser = true;
 
-  const std::uint8_t hour =
-      static_cast<std::uint8_t>((clock.unix_time_s / 3600U) % 24U);
+  const std::uint8_t hour = static_cast<std::uint8_t>((clock.unix_time_s / 3600U) % 24U);
   const bool day = hour >= 6U && hour < 22U;
   output.targets.air_temperature_c = day ? 24.5F : 21.5F;
   output.targets.relative_humidity_pct = day ? 58.0F : 65.0F;
@@ -84,4 +78,4 @@ bool FixedStage27ScheduleConfigSource::resolve(
   return config;
 }
 
-}  // namespace growbox::app::climate_io::runtime
+} // namespace growbox::app::climate_io::runtime

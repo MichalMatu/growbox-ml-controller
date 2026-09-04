@@ -21,4 +21,4 @@ static_assert(kRxResolutionHz == 100'000U);
 static_assert(kRxMinimumSignalNs < kRxMaximumSignalNs);
 static_assert(kRxResolutionHz % kRmtResolutionHz == 0U);
 
-}  // namespace growbox::app::climate_io::rf433
+} // namespace growbox::app::climate_io::rf433

@@ -26,9 +26,9 @@ constexpr std::uint32_t kTolerancePercent = 30U;
 constexpr std::uint32_t kMinimumToleranceTicks = 2U;
 
 std::uint32_t roundedDivide(std::uint64_t numerator, std::uint32_t denominator) noexcept {
-  return denominator == 0U ? 0U
-                           : static_cast<std::uint32_t>((numerator + denominator / 2U) /
-                                                        denominator);
+  return denominator == 0U
+             ? 0U
+             : static_cast<std::uint32_t>((numerator + denominator / 2U) / denominator);
 }
 
 bool codeFits(std::uint32_t code, std::uint8_t bit_length) noexcept {
@@ -42,19 +42,14 @@ std::uint16_t effectivePulseUs(const FrameConfig& config, const ProtocolSpec& sp
   return config.pulse_us == 0U ? spec.default_pulse_us : config.pulse_us;
 }
 
-bool appendSymbol(EncodedFrame& output,
-                  const ProtocolSpec& spec,
-                  PulsePair pair,
+bool appendSymbol(EncodedFrame& output, const ProtocolSpec& spec, PulsePair pair,
                   std::uint16_t pulse_us) noexcept {
   if (output.symbol_count >= output.symbols.size()) {
     return false;
   }
-  const std::uint32_t first =
-      microsecondsToTicks(static_cast<std::uint64_t>(pulse_us) * pair.high);
-  const std::uint32_t second =
-      microsecondsToTicks(static_cast<std::uint64_t>(pulse_us) * pair.low);
-  if (first == 0U || second == 0U || first > kDurationLimitTicks ||
-      second > kDurationLimitTicks) {
+  const std::uint32_t first = microsecondsToTicks(static_cast<std::uint64_t>(pulse_us) * pair.high);
+  const std::uint32_t second = microsecondsToTicks(static_cast<std::uint64_t>(pulse_us) * pair.low);
+  if (first == 0U || second == 0U || first > kDurationLimitTicks || second > kDurationLimitTicks) {
     return false;
   }
   auto& symbol = output.symbols[output.symbol_count++];
@@ -71,9 +66,7 @@ struct PairMatch {
   std::uint64_t error{0U};
 };
 
-PairMatch matchPair(const PulseSymbol& symbol,
-                    const ProtocolSpec& spec,
-                    PulsePair pair,
+PairMatch matchPair(const PulseSymbol& symbol, const ProtocolSpec& spec, PulsePair pair,
                     std::uint32_t pulse_ticks_x1000) noexcept {
   const bool expected_first_level = !spec.inverted;
   if (symbol.level0 != expected_first_level || symbol.level1 == expected_first_level) {
@@ -88,35 +81,27 @@ PairMatch matchPair(const PulseSymbol& symbol,
   }
   const std::uint32_t first_tolerance =
       std::max(kMinimumToleranceTicks,
-               roundedDivide(static_cast<std::uint64_t>(expected_first) *
-                                 kTolerancePercent,
-                             100U));
-  const std::uint32_t second_tolerance =
-      std::max(kMinimumToleranceTicks,
-               roundedDivide(static_cast<std::uint64_t>(expected_second) *
-                                 kTolerancePercent,
-                             100U));
-  const std::uint32_t first_error =
-      symbol.duration0_ticks > expected_first ? symbol.duration0_ticks - expected_first
-                                              : expected_first - symbol.duration0_ticks;
-  const std::uint32_t second_error =
-      symbol.duration1_ticks > expected_second ? symbol.duration1_ticks - expected_second
-                                               : expected_second - symbol.duration1_ticks;
+               roundedDivide(static_cast<std::uint64_t>(expected_first) * kTolerancePercent, 100U));
+  const std::uint32_t second_tolerance = std::max(
+      kMinimumToleranceTicks,
+      roundedDivide(static_cast<std::uint64_t>(expected_second) * kTolerancePercent, 100U));
+  const std::uint32_t first_error = symbol.duration0_ticks > expected_first
+                                        ? symbol.duration0_ticks - expected_first
+                                        : expected_first - symbol.duration0_ticks;
+  const std::uint32_t second_error = symbol.duration1_ticks > expected_second
+                                         ? symbol.duration1_ticks - expected_second
+                                         : expected_second - symbol.duration1_ticks;
   if (first_error > first_tolerance || second_error > second_tolerance) {
     return {};
   }
   return {true, static_cast<std::uint64_t>(first_error) + second_error};
 }
 
-bool matchSync(const PulseSymbol& symbol,
-               const ProtocolSpec& spec,
-               std::uint32_t& pulse_ticks_x1000,
-               std::uint64_t& error) noexcept {
-  const std::uint32_t multiplier =
-      static_cast<std::uint32_t>(spec.sync.high) + spec.sync.low;
+bool matchSync(const PulseSymbol& symbol, const ProtocolSpec& spec,
+               std::uint32_t& pulse_ticks_x1000, std::uint64_t& error) noexcept {
+  const std::uint32_t multiplier = static_cast<std::uint32_t>(spec.sync.high) + spec.sync.low;
   pulse_ticks_x1000 = roundedDivide(
-      (static_cast<std::uint64_t>(symbol.duration0_ticks) + symbol.duration1_ticks) *
-          1000ULL,
+      (static_cast<std::uint64_t>(symbol.duration0_ticks) + symbol.duration1_ticks) * 1000ULL,
       multiplier);
   const std::uint32_t min_ticks_x1000 = microsecondsToTicks(kMinPulseUs) * 1000U;
   const std::uint32_t max_ticks_x1000 = microsecondsToTicks(kMaxPulseUs) * 1000U;
@@ -128,12 +113,8 @@ bool matchSync(const PulseSymbol& symbol,
   return match.valid;
 }
 
-bool decodeData(const PulseSymbol* symbols,
-                std::size_t start,
-                std::uint8_t bit_length,
-                const ProtocolSpec& spec,
-                std::uint32_t pulse_ticks_x1000,
-                std::uint32_t& code,
+bool decodeData(const PulseSymbol* symbols, std::size_t start, std::uint8_t bit_length,
+                const ProtocolSpec& spec, std::uint32_t pulse_ticks_x1000, std::uint32_t& code,
                 std::uint64_t& error) noexcept {
   code = 0U;
   error = 0U;
@@ -154,9 +135,7 @@ bool decodeData(const PulseSymbol* symbols,
   return true;
 }
 
-void addCandidate(DecodeWorkspace& workspace,
-                  FrameKey frame,
-                  std::uint32_t pulse_ticks_x1000,
+void addCandidate(DecodeWorkspace& workspace, FrameKey frame, std::uint32_t pulse_ticks_x1000,
                   std::uint64_t score) noexcept {
   for (std::size_t i = 0U; i < workspace.candidate_count; ++i) {
     auto& candidate = workspace.candidates[i];
@@ -181,20 +160,19 @@ void addCandidate(DecodeWorkspace& workspace,
   candidate.occurrences = 1U;
 }
 
-}  // namespace
+} // namespace
 
 const ProtocolSpec* protocolSpec(std::uint8_t protocol) noexcept {
   return protocol >= 1U && protocol <= kProtocolCount ? &kSpecs[protocol - 1U] : nullptr;
 }
 
 std::uint32_t microsecondsToTicks(std::uint64_t duration_us) noexcept {
-  return static_cast<std::uint32_t>(
-      (duration_us * kRmtResolutionHz + 500000ULL) / 1000000ULL);
+  return static_cast<std::uint32_t>((duration_us * kRmtResolutionHz + 500000ULL) / 1000000ULL);
 }
 
 std::uint32_t ticksToMicroseconds(std::uint64_t ticks) noexcept {
-  return static_cast<std::uint32_t>(
-      (ticks * 1000000ULL + kRmtResolutionHz / 2U) / kRmtResolutionHz);
+  return static_cast<std::uint32_t>((ticks * 1000000ULL + kRmtResolutionHz / 2U) /
+                                    kRmtResolutionHz);
 }
 
 CodecStatus validateFrameConfig(const FrameConfig& config) noexcept {
@@ -237,8 +215,7 @@ CodecStatus encodeFrame(const FrameConfig& config, EncodedFrame& output) noexcep
   const ProtocolSpec& spec = *protocolSpec(config.key.protocol);
   const std::uint16_t pulse_us = effectivePulseUs(config, spec);
   for (std::uint8_t offset = 0U; offset < config.key.bit_length; ++offset) {
-    const std::uint8_t shift =
-        static_cast<std::uint8_t>(config.key.bit_length - 1U - offset);
+    const std::uint8_t shift = static_cast<std::uint8_t>(config.key.bit_length - 1U - offset);
     const bool value = ((config.key.code >> shift) & 1U) != 0U;
     if (!appendSymbol(output, spec, value ? spec.one : spec.zero, pulse_us)) {
       output = {};
@@ -257,12 +234,10 @@ CodecStatus encodeFrame(const FrameConfig& config, EncodedFrame& output) noexcep
   return CodecStatus::Ok;
 }
 
-DecodeResult decodeFrame(const PulseSymbol* symbols,
-                         std::size_t symbol_count,
+DecodeResult decodeFrame(const PulseSymbol* symbols, std::size_t symbol_count,
                          DecodeWorkspace& workspace) noexcept {
   workspace = {};
-  if (symbols == nullptr || symbol_count == 0U ||
-      symbol_count > kRxCaptureSymbolCapacity) {
+  if (symbols == nullptr || symbol_count == 0U || symbol_count > kRxCaptureSymbolCapacity) {
     return {DecodeStatus::InvalidCapture};
   }
 
@@ -276,8 +251,7 @@ DecodeResult decodeFrame(const PulseSymbol* symbols,
         continue;
       }
 
-      const std::size_t max_bits =
-          std::min<std::size_t>(kMaxBitLength, sync_index);
+      const std::size_t max_bits = std::min<std::size_t>(kMaxBitLength, sync_index);
       std::uint8_t best_length = 0U;
       std::uint32_t best_code = 0U;
       std::uint64_t best_data_error = 0U;
@@ -285,13 +259,8 @@ DecodeResult decodeFrame(const PulseSymbol* symbols,
         const std::size_t start = sync_index - length;
         std::uint32_t code = 0U;
         std::uint64_t data_error = 0U;
-        if (!decodeData(symbols,
-                        start,
-                        static_cast<std::uint8_t>(length),
-                        spec,
-                        pulse_ticks_x1000,
-                        code,
-                        data_error)) {
+        if (!decodeData(symbols, start, static_cast<std::uint8_t>(length), spec, pulse_ticks_x1000,
+                        code, data_error)) {
           continue;
         }
         if (codeFits(code, static_cast<std::uint8_t>(length))) {
@@ -304,17 +273,12 @@ DecodeResult decodeFrame(const PulseSymbol* symbols,
         continue;
       }
 
-      const std::uint32_t pulse_us =
-          ticksToMicroseconds((pulse_ticks_x1000 + 500U) / 1000U);
-      const std::uint64_t default_error =
-          pulse_us > spec.default_pulse_us ? pulse_us - spec.default_pulse_us
-                                           : spec.default_pulse_us - pulse_us;
-      const std::uint64_t score =
-          (best_data_error + sync_error) * 1000ULL + default_error;
-      addCandidate(workspace,
-                   {best_code, best_length, protocol},
-                   pulse_ticks_x1000,
-                   score);
+      const std::uint32_t pulse_us = ticksToMicroseconds((pulse_ticks_x1000 + 500U) / 1000U);
+      const std::uint64_t default_error = pulse_us > spec.default_pulse_us
+                                              ? pulse_us - spec.default_pulse_us
+                                              : spec.default_pulse_us - pulse_us;
+      const std::uint64_t score = (best_data_error + sync_error) * 1000ULL + default_error;
+      addCandidate(workspace, {best_code, best_length, protocol}, pulse_ticks_x1000, score);
     }
   }
 
@@ -337,19 +301,18 @@ DecodeResult decodeFrame(const PulseSymbol* symbols,
   result.status = DecodeStatus::Decoded;
   result.frame = winner.frame;
   result.estimated_pulse_us =
-      static_cast<std::uint16_t>(
-          ticksToMicroseconds((winner.pulse_ticks_x1000 + 500U) / 1000U));
+      static_cast<std::uint16_t>(ticksToMicroseconds((winner.pulse_ticks_x1000 + 500U) / 1000U));
   result.observed_repeats = winner.occurrences;
-  result.candidate_count = static_cast<std::uint8_t>(
-      std::min<std::size_t>(workspace.candidate_count, 255U));
+  result.candidate_count =
+      static_cast<std::uint8_t>(std::min<std::size_t>(workspace.candidate_count, 255U));
 
   for (std::size_t i = 0U; i < workspace.candidate_count; ++i) {
     if (i == best) {
       continue;
     }
     const auto& candidate = workspace.candidates[i];
-    if (candidate.occurrences == winner.occurrences &&
-        candidate.score == winner.score && !(candidate.frame == winner.frame)) {
+    if (candidate.occurrences == winner.occurrences && candidate.score == winner.score &&
+        !(candidate.frame == winner.frame)) {
       result.status = DecodeStatus::Ambiguous;
       result.alternate = candidate.frame;
       break;
@@ -368,14 +331,12 @@ std::uint32_t captureDurationMilliseconds(const PulseSymbol* symbols,
     ticks += symbols[i].duration0_ticks;
     ticks += symbols[i].duration1_ticks;
   }
-  return static_cast<std::uint32_t>(
-      (ticks * 1000ULL + kRmtResolutionHz - 1ULL) / kRmtResolutionHz);
+  return static_cast<std::uint32_t>((ticks * 1000ULL + kRmtResolutionHz - 1ULL) / kRmtResolutionHz);
 }
 
-std::uint32_t captureStartMilliseconds(std::uint32_t finished_at_ms,
-                                       const PulseSymbol* symbols,
+std::uint32_t captureStartMilliseconds(std::uint32_t finished_at_ms, const PulseSymbol* symbols,
                                        std::size_t symbol_count) noexcept {
   return finished_at_ms - captureDurationMilliseconds(symbols, symbol_count);
 }
 
-}  // namespace growbox::app::climate_io::rf433
+} // namespace growbox::app::climate_io::rf433

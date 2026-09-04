@@ -27,15 +27,13 @@ struct TxFingerprint {
   std::uint32_t guard_until_ms{0U};
 };
 
-inline bool timeInClosedWindow(std::uint32_t value,
-                               std::uint32_t start,
+inline bool timeInClosedWindow(std::uint32_t value, std::uint32_t start,
                                std::uint32_t finish) noexcept {
   return static_cast<std::int32_t>(value - start) >= 0 &&
          static_cast<std::int32_t>(finish - value) >= 0;
 }
 
-inline bool closedTimeWindowsOverlap(std::uint32_t left_start,
-                                     std::uint32_t left_finish,
+inline bool closedTimeWindowsOverlap(std::uint32_t left_start, std::uint32_t left_finish,
                                      std::uint32_t right_start,
                                      std::uint32_t right_finish) noexcept {
   return timeInClosedWindow(left_start, right_start, right_finish) ||
@@ -44,21 +42,17 @@ inline bool closedTimeWindowsOverlap(std::uint32_t left_start,
 }
 
 template <typename FingerprintRange>
-TemporalRxClassification classifyTemporalRx(
-    const RxTemporalSample& sample,
-    const FingerprintRange& fingerprints) noexcept {
+TemporalRxClassification classifyTemporalRx(const RxTemporalSample& sample,
+                                            const FingerprintRange& fingerprints) noexcept {
   bool overlaps_tx = false;
   for (const auto& fingerprint : fingerprints) {
     if (!fingerprint.valid ||
-        !closedTimeWindowsOverlap(sample.capture_started_at_ms,
-                                  sample.capture_finished_at_ms,
-                                  fingerprint.started_at_ms,
-                                  fingerprint.guard_until_ms)) {
+        !closedTimeWindowsOverlap(sample.capture_started_at_ms, sample.capture_finished_at_ms,
+                                  fingerprint.started_at_ms, fingerprint.guard_until_ms)) {
       continue;
     }
     overlaps_tx = true;
-    if (sample.decode_status == DecodeStatus::Decoded &&
-        sample.frame == fingerprint.frame) {
+    if (sample.decode_status == DecodeStatus::Decoded && sample.frame == fingerprint.frame) {
       return TemporalRxClassification::SelfTx;
     }
   }
@@ -66,4 +60,4 @@ TemporalRxClassification classifyTemporalRx(
                      : TemporalRxClassification::NotDuringTx;
 }
 
-}  // namespace growbox::app::climate_io::rf433
+} // namespace growbox::app::climate_io::rf433

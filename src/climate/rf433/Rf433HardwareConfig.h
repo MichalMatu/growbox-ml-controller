@@ -27,4 +27,4 @@ inline constexpr RemoteSocketHardwareConfig kRemoteSocket1{
     kRemoteSocket1Off,
 };
 
-}  // namespace growbox::app::climate_io::rf433
+} // namespace growbox::app::climate_io::rf433

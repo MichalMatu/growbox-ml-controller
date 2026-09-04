@@ -57,8 +57,8 @@ void testMalformedPacketsCannotKeepStaleInsideClimateUsable() {
 
   ClimateControllerInput input{};
   input.state.measurements.air_temperature_c = {reading.temperature_c, true, reading.age_ms};
-  input.state.measurements.relative_humidity_pct =
-      {reading.relative_humidity_pct, true, reading.age_ms};
+  input.state.measurements.relative_humidity_pct = {reading.relative_humidity_pct, true,
+                                                    reading.age_ms};
   input.targets.air_temperature_c = 30.0F;
   input.targets.relative_humidity_pct = reading.relative_humidity_pct;
   input.capabilities.heater = true;

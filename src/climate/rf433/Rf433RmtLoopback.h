@@ -65,16 +65,16 @@ public:
   Rf433RmtLoopback& operator=(const Rf433RmtLoopback&) = delete;
 
   bool begin() noexcept;
-  bool transmitAndReceive(const FrameConfig& frame,
-                          std::uint32_t timeout_ms,
+  bool transmitAndReceive(const FrameConfig& frame, std::uint32_t timeout_ms,
                           LoopbackEvidence& evidence) noexcept;
   bool receiveOnce(std::uint32_t timeout_ms, ReceiveEvidence& evidence) noexcept;
 
-  const LoopbackDiagnostics& diagnostics() const noexcept { return diagnostics_; }
+  const LoopbackDiagnostics& diagnostics() const noexcept {
+    return diagnostics_;
+  }
 
 private:
-  static bool onRxDone(rmt_channel_handle_t channel,
-                       const rmt_rx_done_event_data_t* event,
+  static bool onRxDone(rmt_channel_handle_t channel, const rmt_rx_done_event_data_t* event,
                        void* user_data) noexcept;
 
   void close() noexcept;
@@ -99,4 +99,4 @@ private:
   LoopbackDiagnostics diagnostics_{};
 };
 
-}  // namespace growbox::app::climate_io::rf433
+} // namespace growbox::app::climate_io::rf433

@@ -14,7 +14,7 @@ namespace {
 
 constexpr std::uint32_t kRxToCodecTickRatio = kRxResolutionHz / kRmtResolutionHz;
 
-}  // namespace
+} // namespace
 
 Rf433RmtLoopback::Rf433RmtLoopback(Config config) noexcept : config_(config) {}
 
@@ -23,20 +23,17 @@ Rf433RmtLoopback::~Rf433RmtLoopback() {
 }
 
 std::uint32_t Rf433RmtLoopback::monotonicMilliseconds() noexcept {
-  return static_cast<std::uint32_t>(
-      static_cast<std::uint64_t>(esp_timer_get_time()) / 1000ULL);
+  return static_cast<std::uint32_t>(static_cast<std::uint64_t>(esp_timer_get_time()) / 1000ULL);
 }
 
-bool Rf433RmtLoopback::onRxDone(rmt_channel_handle_t,
-                                const rmt_rx_done_event_data_t* event,
+bool Rf433RmtLoopback::onRxDone(rmt_channel_handle_t, const rmt_rx_done_event_data_t* event,
                                 void* user_data) noexcept {
   auto* self = static_cast<Rf433RmtLoopback*>(user_data);
   if (self == nullptr || event == nullptr || self->rx_done_ == nullptr) {
     return false;
   }
 
-  self->rx_symbol_count_ =
-      std::min<std::size_t>(event->num_symbols, self->rx_symbols_.size());
+  self->rx_symbol_count_ = std::min<std::size_t>(event->num_symbols, self->rx_symbols_.size());
   self->rx_overflow_ = event->num_symbols > self->rx_symbols_.size();
 
   BaseType_t higher_priority_task_woken = pdFALSE;
@@ -47,8 +44,8 @@ bool Rf433RmtLoopback::onRxDone(rmt_channel_handle_t,
 bool Rf433RmtLoopback::begin() noexcept {
   close();
 
-  if (!GPIO_IS_VALID_OUTPUT_GPIO(config_.tx_gpio) ||
-      !GPIO_IS_VALID_GPIO(config_.rx_gpio) || config_.tx_gpio == config_.rx_gpio) {
+  if (!GPIO_IS_VALID_OUTPUT_GPIO(config_.tx_gpio) || !GPIO_IS_VALID_GPIO(config_.rx_gpio) ||
+      config_.tx_gpio == config_.rx_gpio) {
     return false;
   }
 
@@ -148,8 +145,7 @@ bool Rf433RmtLoopback::armReceive() noexcept {
   rmt_receive_config_t receive_config{};
   receive_config.signal_range_min_ns = kRxMinimumSignalNs;
   receive_config.signal_range_max_ns = kRxMaximumSignalNs;
-  if (rmt_receive(rx_channel_, rx_symbols_.data(),
-                  rx_symbols_.size() * sizeof(rx_symbols_[0]),
+  if (rmt_receive(rx_channel_, rx_symbols_.data(), rx_symbols_.size() * sizeof(rx_symbols_[0]),
                   &receive_config) != ESP_OK) {
     ++diagnostics_.rx_arm_errors;
     return false;
@@ -184,17 +180,17 @@ bool Rf433RmtLoopback::collectReceive(std::uint32_t timeout_ms,
   for (std::size_t i = 0U; i < received; ++i) {
     const rmt_symbol_word_t& input = rx_symbols_[i];
     evidence.symbols[i] = PulseSymbol{
-        static_cast<std::uint16_t>(
-            (input.duration0 + (kRxToCodecTickRatio / 2U)) / kRxToCodecTickRatio),
-        static_cast<std::uint16_t>(
-            (input.duration1 + (kRxToCodecTickRatio / 2U)) / kRxToCodecTickRatio),
+        static_cast<std::uint16_t>((input.duration0 + (kRxToCodecTickRatio / 2U)) /
+                                   kRxToCodecTickRatio),
+        static_cast<std::uint16_t>((input.duration1 + (kRxToCodecTickRatio / 2U)) /
+                                   kRxToCodecTickRatio),
         input.level0 != 0U,
         input.level1 != 0U,
     };
   }
 
-  evidence.rx_started_at_ms = captureStartMilliseconds(
-      evidence.rx_finished_at_ms, evidence.symbols.data(), received);
+  evidence.rx_started_at_ms =
+      captureStartMilliseconds(evidence.rx_finished_at_ms, evidence.symbols.data(), received);
   if (evidence.overflow) {
     evidence.decoded.status = DecodeStatus::InvalidCapture;
     ++diagnostics_.rx_decode_failures;
@@ -211,8 +207,7 @@ bool Rf433RmtLoopback::collectReceive(std::uint32_t timeout_ms,
   return true;
 }
 
-bool Rf433RmtLoopback::receiveOnce(std::uint32_t timeout_ms,
-                                   ReceiveEvidence& evidence) noexcept {
+bool Rf433RmtLoopback::receiveOnce(std::uint32_t timeout_ms, ReceiveEvidence& evidence) noexcept {
   evidence = {};
   if (timeout_ms == 0U || !armReceive()) {
     return false;
@@ -220,9 +215,8 @@ bool Rf433RmtLoopback::receiveOnce(std::uint32_t timeout_ms,
   return collectReceive(timeout_ms, evidence);
 }
 
-bool Rf433RmtLoopback::transmitAndReceive(const FrameConfig& frame,
-                                         std::uint32_t timeout_ms,
-                                         LoopbackEvidence& evidence) noexcept {
+bool Rf433RmtLoopback::transmitAndReceive(const FrameConfig& frame, std::uint32_t timeout_ms,
+                                          LoopbackEvidence& evidence) noexcept {
   evidence = {};
   ++diagnostics_.tx_requests;
 
@@ -255,11 +249,8 @@ bool Rf433RmtLoopback::transmitAndReceive(const FrameConfig& frame,
   rmt_transmit_config_t transmit_config{};
   for (std::uint8_t repeat = 0U; repeat < frame.repeat; ++repeat) {
     const esp_err_t queued =
-        rmt_transmit(tx_channel_,
-                     copy_encoder_,
-                     tx_symbols_.data(),
-                     encoded.symbol_count * sizeof(tx_symbols_[0]),
-                     &transmit_config);
+        rmt_transmit(tx_channel_, copy_encoder_, tx_symbols_.data(),
+                     encoded.symbol_count * sizeof(tx_symbols_[0]), &transmit_config);
     if (queued != ESP_OK) {
       ++diagnostics_.tx_queue_errors;
       return false;
@@ -277,8 +268,7 @@ bool Rf433RmtLoopback::transmitAndReceive(const FrameConfig& frame,
   evidence.tx_completed = true;
 
   ReceiveEvidence receive{};
-  if (!collectReceive(timeout_ms, receive) || !receive.rx_captured ||
-      receive.overflow) {
+  if (!collectReceive(timeout_ms, receive) || !receive.rx_captured || receive.overflow) {
     return false;
   }
 
@@ -296,14 +286,14 @@ bool Rf433RmtLoopback::transmitAndReceive(const FrameConfig& frame,
           static_cast<std::uint32_t>(evidence.tx_completed_at_ms + kSelfTxGuardMs),
       },
   }};
-  evidence.classification =
-      classifyTemporalRx(RxTemporalSample{
-                             evidence.rx_started_at_ms,
-                             evidence.rx_finished_at_ms,
-                             evidence.decoded.status,
-                             evidence.decoded.frame,
-                         },
-                         fingerprints);
+  evidence.classification = classifyTemporalRx(
+      RxTemporalSample{
+          evidence.rx_started_at_ms,
+          evidence.rx_finished_at_ms,
+          evidence.decoded.status,
+          evidence.decoded.frame,
+      },
+      fingerprints);
 
   if (evidence.classification == TemporalRxClassification::SelfTx) {
     ++diagnostics_.rx_self_tx;
@@ -317,4 +307,4 @@ bool Rf433RmtLoopback::transmitAndReceive(const FrameConfig& frame,
          evidence.classification == TemporalRxClassification::SelfTx;
 }
 
-}  // namespace growbox::app::climate_io::rf433
+} // namespace growbox::app::climate_io::rf433

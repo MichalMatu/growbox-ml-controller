@@ -11,19 +11,19 @@
 namespace growbox::app::climate_io::runtime {
 namespace {
 constexpr char kTag[] = "climate_stage27";
-}  // namespace
+} // namespace
 
-Stage27TelemetryReporter::Stage27TelemetryReporter(
-    native::BleClimateScanner& ble, native::Scd41InsideSource& scd41,
-    native::Ds3231ClockSource& clock,
-    storage::Stage27TelemetryLogger& storage_logger, bool storage_logger_ready,
-    std::int32_t reset_reason) noexcept
+Stage27TelemetryReporter::Stage27TelemetryReporter(native::BleClimateScanner& ble,
+                                                   native::Scd41InsideSource& scd41,
+                                                   native::Ds3231ClockSource& clock,
+                                                   storage::Stage27TelemetryLogger& storage_logger,
+                                                   bool storage_logger_ready,
+                                                   std::int32_t reset_reason) noexcept
     : ble_(ble), scd41_(scd41), clock_(clock), storage_logger_(storage_logger),
       storage_logger_ready_(storage_logger_ready), reset_reason_(reset_reason) {}
 
 void Stage27TelemetryReporter::record(
-    std::uint64_t now_ms,
-    const ::growbox::climate::ClimateLoopResult& loop_result,
+    std::uint64_t now_ms, const ::growbox::climate::ClimateLoopResult& loop_result,
     const ::growbox::climate::ClimateRuntimeDecision& decision) noexcept {
   native::BleClimateReading tp357{};
   native::BleClimateReading xiaomi{};
@@ -53,9 +53,8 @@ void Stage27TelemetryReporter::record(
   snapshot.scd_sample = scd41_.hasMeasurement();
   snapshot.scd_temperature_c =
       scd_diag.air_temperature_c.valid ? scd_diag.air_temperature_c.value : 0.0F;
-  snapshot.scd_humidity_pct = scd_diag.relative_humidity_pct.valid
-                                  ? scd_diag.relative_humidity_pct.value
-                                  : 0.0F;
+  snapshot.scd_humidity_pct =
+      scd_diag.relative_humidity_pct.valid ? scd_diag.relative_humidity_pct.value : 0.0F;
   snapshot.scd_co2_ppm = scd_diag.co2_ppm.valid ? scd_diag.co2_ppm.value : 0.0F;
   snapshot.scd_age_ms = scd_diag.co2_ppm.valid ? scd_diag.co2_ppm.age_ms : 0U;
   snapshot.scd_read_errors = scd41_.readErrorCount();
@@ -176,4 +175,4 @@ void Stage27TelemetryReporter::logRecord(
       static_cast<unsigned long long>(storage_status.last_write_ms));
 }
 
-}  // namespace growbox::app::climate_io::runtime
+} // namespace growbox::app::climate_io::runtime

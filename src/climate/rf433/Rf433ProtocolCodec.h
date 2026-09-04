@@ -37,15 +37,14 @@ struct FrameKey {
   std::uint8_t protocol{0U};
 
   bool operator==(const FrameKey& other) const noexcept {
-    return code == other.code && bit_length == other.bit_length &&
-           protocol == other.protocol;
+    return code == other.code && bit_length == other.bit_length && protocol == other.protocol;
   }
 };
 
 struct FrameConfig {
   FrameKey key{};
   std::uint8_t repeat{0U};
-  std::uint16_t pulse_us{0U};  // 0 selects the protocol default.
+  std::uint16_t pulse_us{0U}; // 0 selects the protocol default.
 };
 
 struct PulseSymbol {
@@ -103,16 +102,14 @@ struct DecodeWorkspace {
 const ProtocolSpec* protocolSpec(std::uint8_t protocol) noexcept;
 CodecStatus validateFrameConfig(const FrameConfig& config) noexcept;
 CodecStatus encodeFrame(const FrameConfig& config, EncodedFrame& output) noexcept;
-DecodeResult decodeFrame(const PulseSymbol* symbols,
-                         std::size_t symbol_count,
+DecodeResult decodeFrame(const PulseSymbol* symbols, std::size_t symbol_count,
                          DecodeWorkspace& workspace) noexcept;
 
 std::uint32_t microsecondsToTicks(std::uint64_t duration_us) noexcept;
 std::uint32_t ticksToMicroseconds(std::uint64_t ticks) noexcept;
 std::uint32_t captureDurationMilliseconds(const PulseSymbol* symbols,
                                           std::size_t symbol_count) noexcept;
-std::uint32_t captureStartMilliseconds(std::uint32_t finished_at_ms,
-                                       const PulseSymbol* symbols,
+std::uint32_t captureStartMilliseconds(std::uint32_t finished_at_ms, const PulseSymbol* symbols,
                                        std::size_t symbol_count) noexcept;
 
-}  // namespace growbox::app::climate_io::rf433
+} // namespace growbox::app::climate_io::rf433

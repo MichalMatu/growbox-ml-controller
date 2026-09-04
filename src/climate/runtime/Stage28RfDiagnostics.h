@@ -25,7 +25,9 @@ public:
   bool begin() noexcept;
   void tick(std::uint64_t now_ms) noexcept;
 
-  bool ready() const noexcept { return ready_; }
+  bool ready() const noexcept {
+    return ready_;
+  }
 
 private:
   void capturePassive() noexcept;
@@ -39,4 +41,4 @@ private:
   std::uint32_t capture_id_{0U};
 };
 
-}  // namespace growbox::app::climate_io::runtime
+} // namespace growbox::app::climate_io::runtime

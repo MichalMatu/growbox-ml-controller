@@ -103,9 +103,8 @@ std::uint64_t monotonicMilliseconds() noexcept {
 
 storage::Stage27TelemetryLogger::Config storageConfig() noexcept {
   storage::Stage27TelemetryLogger::Config config{};
-  config.sd_pins = {GROWBOX_SD_MOSI_GPIO, GROWBOX_SD_MISO_GPIO,
-                    GROWBOX_SD_SCLK_GPIO, GROWBOX_SD_CS_GPIO,
-                    GROWBOX_SD_POWER_GPIO};
+  config.sd_pins = {GROWBOX_SD_MOSI_GPIO, GROWBOX_SD_MISO_GPIO, GROWBOX_SD_SCLK_GPIO,
+                    GROWBOX_SD_CS_GPIO, GROWBOX_SD_POWER_GPIO};
   config.sd_enabled = GROWBOX_STAGE27_SD_ENABLED != 0;
   config.flash_fallback_enabled = GROWBOX_STAGE27_FLASH_FALLBACK_ENABLED != 0;
   config.sd_cmd0_precondition = GROWBOX_SD_CMD0_PRECONDITION != 0;
@@ -119,39 +118,34 @@ runtime::Stage28RfDiagnosticsConfig rfDiagnosticsConfig() noexcept {
   config.auto_smoke = GROWBOX_RF433_LOOPBACK_AUTO_SMOKE != 0;
   config.tx_gpio = GROWBOX_RF433_TX_GPIO;
   config.rx_gpio = GROWBOX_RF433_RX_GPIO;
-  config.smoke = {
-      {static_cast<std::uint32_t>(GROWBOX_RF433_LOOPBACK_SMOKE_CODE),
-       static_cast<std::uint8_t>(GROWBOX_RF433_LOOPBACK_SMOKE_BITS),
-       static_cast<std::uint8_t>(GROWBOX_RF433_LOOPBACK_SMOKE_PROTOCOL)},
-      static_cast<std::uint8_t>(GROWBOX_RF433_LOOPBACK_SMOKE_REPEAT),
-      static_cast<std::uint16_t>(GROWBOX_RF433_LOOPBACK_SMOKE_PULSE_US)};
+  config.smoke = {{static_cast<std::uint32_t>(GROWBOX_RF433_LOOPBACK_SMOKE_CODE),
+                   static_cast<std::uint8_t>(GROWBOX_RF433_LOOPBACK_SMOKE_BITS),
+                   static_cast<std::uint8_t>(GROWBOX_RF433_LOOPBACK_SMOKE_PROTOCOL)},
+                  static_cast<std::uint8_t>(GROWBOX_RF433_LOOPBACK_SMOKE_REPEAT),
+                  static_cast<std::uint16_t>(GROWBOX_RF433_LOOPBACK_SMOKE_PULSE_US)};
   return config;
 }
 
-}  // namespace
+} // namespace
 
 [[noreturn]] void runClimateV6RealInputRuntime() noexcept {
   native::NativeI2cBus i2c(GROWBOX_I2C_SDA_GPIO, GROWBOX_I2C_SCL_GPIO);
   const bool i2c_ready = i2c.begin() == ESP_OK;
-  const esp_err_t scd41_probe =
-      i2c_ready ? i2c.probe(0x62U) : ESP_ERR_INVALID_STATE;
-  const esp_err_t rtc_probe =
-      i2c_ready ? i2c.probe(0x68U) : ESP_ERR_INVALID_STATE;
-  ESP_LOGI(kTag, "I2C probe: scd41_0x62=%s ds3231_0x68=%s",
-           esp_err_to_name(scd41_probe), esp_err_to_name(rtc_probe));
+  const esp_err_t scd41_probe = i2c_ready ? i2c.probe(0x62U) : ESP_ERR_INVALID_STATE;
+  const esp_err_t rtc_probe = i2c_ready ? i2c.probe(0x68U) : ESP_ERR_INVALID_STATE;
+  ESP_LOGI(kTag, "I2C probe: scd41_0x62=%s ds3231_0x68=%s", esp_err_to_name(scd41_probe),
+           esp_err_to_name(rtc_probe));
 
   native::Scd41InsideSource scd41;
   native::Ds3231ClockSource clock;
   native::BleClimateScanner ble;
   const bool scd41_ready = i2c_ready && scd41.begin(i2c);
   const bool rtc_ready = i2c_ready && clock.begin(i2c);
-  const bool ble_ready =
-      ble.begin(GROWBOX_BLE_TP357_MAC, GROWBOX_BLE_XIAOMI_MAC);
+  const bool ble_ready = ble.begin(GROWBOX_BLE_TP357_MAC, GROWBOX_BLE_XIAOMI_MAC);
 
   const auto storage_config = storageConfig();
   storage::Stage27TelemetryLogger storage_logger(storage_config);
-  const bool storage_enabled =
-      storage_config.sd_enabled || storage_config.flash_fallback_enabled;
+  const bool storage_enabled = storage_config.sd_enabled || storage_config.flash_fallback_enabled;
   const bool storage_logger_ready =
       storage_enabled && storage_logger.begin(GROWBOX_FIRMWARE_GIT_SHA);
 
@@ -161,28 +155,26 @@ runtime::Stage28RfDiagnosticsConfig rfDiagnosticsConfig() noexcept {
   runtime::Stage27InsideSource inside(ble, scd41);
   runtime::Stage27NearbySource outside(ble);
   runtime::FixedStage27ScheduleConfigSource schedule_config;
-  CompositeClimateSnapshotProvider composite(inside, outside, clock,
-                                             schedule_config);
+  CompositeClimateSnapshotProvider composite(inside, outside, clock, schedule_config);
   runtime::LockedFakeRoleDriver output_driver;
-  ::growbox::climate::ClimateRuntimeController runtime_controller(
-      nullptr, runtime::defaultRuntimeConfig());
+  ::growbox::climate::ClimateRuntimeController runtime_controller(nullptr,
+                                                                  runtime::defaultRuntimeConfig());
   ClimateApplication application(runtime_controller, composite, output_driver);
 
   const esp_reset_reason_t reset_reason = esp_reset_reason();
-  runtime::Stage27TelemetryReporter telemetry_reporter(
-      ble, scd41, clock, storage_logger, storage_logger_ready,
-      static_cast<std::int32_t>(reset_reason));
+  runtime::Stage27TelemetryReporter telemetry_reporter(ble, scd41, clock, storage_logger,
+                                                       storage_logger_ready,
+                                                       static_cast<std::int32_t>(reset_reason));
 
   ESP_LOGI(kTag,
            "Stage27 real-input runtime: i2c=%d scd41=%d ds3231=%d ble=%d sd=%d "
            "flash_fallback=%d storage_logger=%d rf433_loopback=%d rf433_tx_gpio=%d "
            "rf433_rx_gpio=%d outputs=fake-locked",
-           i2c_ready, scd41_ready, rtc_ready, ble_ready,
-           storage_config.sd_enabled, storage_config.flash_fallback_enabled,
-           storage_logger_ready, rf_ready, GROWBOX_RF433_TX_GPIO,
-           GROWBOX_RF433_RX_GPIO);
-  ESP_LOGI(kTag, "Stage27 soak boot: firmware_sha=%s reset_reason=%d",
-           GROWBOX_FIRMWARE_GIT_SHA, static_cast<int>(reset_reason));
+           i2c_ready, scd41_ready, rtc_ready, ble_ready, storage_config.sd_enabled,
+           storage_config.flash_fallback_enabled, storage_logger_ready, rf_ready,
+           GROWBOX_RF433_TX_GPIO, GROWBOX_RF433_RX_GPIO);
+  ESP_LOGI(kTag, "Stage27 soak boot: firmware_sha=%s reset_reason=%d", GROWBOX_FIRMWARE_GIT_SHA,
+           static_cast<int>(reset_reason));
 
   std::uint32_t diagnostic_tick = 0U;
   while (true) {
@@ -199,4 +191,4 @@ runtime::Stage28RfDiagnosticsConfig rfDiagnosticsConfig() noexcept {
   }
 }
 
-}  // namespace growbox::app::climate_io
+} // namespace growbox::app::climate_io
