@@ -1,53 +1,63 @@
 # Fresh-context continuation plan
 
-Updated: 2026-09-03
+Updated: 2026-09-04
 Work branch: `mvp/environment-controller`
 Control branch: `agent-control`
 
 ## Primary bootstrap
 
-The authoritative handoff for the next ChatGPT conversation is now:
+The authoritative handoff for the next ChatGPT conversation is:
 
 `/continuation.md`
 
-Read that file first. It contains:
+Read that file first.
 
-- the frozen Stage27C baseline and exact tested firmware identity;
-- the `stage27c-validated-2026-09-03` milestone boundary;
-- the Stage28 RF433 physical-actuator roadmap;
-- the pinned `MichalMatu/esp32s3_LiteGraph` RF433 donor revision and relevant files;
-- the TX -> air -> RX self-loop qualification plan;
-- the Local Agent and Local Chat Bridge operating rules;
-- exact first actions for a fresh conversation.
+It now records:
 
-This file remains only as a compatibility pointer because older handoffs and chats refer to `docs/CONTINUATION_PLAN.md`.
+- the frozen Stage27C baseline;
+- completed Stage28A native RF433 codec/temporal work;
+- completed Stage28B native ESP-IDF RMT loopback qualification;
+- final qualified RF source SHA `a87169748ee2bd42bc4d35cfe3b2964b90f40eb8`;
+- final RX timing configuration (`1 MHz`, `1,250 ns`, `12 ms`);
+- final hardware recheck evidence;
+- the strict boundary between `SelfTx` evidence and real socket/load state;
+- the exact Stage28C next gate;
+- Local Agent binding and fresh-context startup rules.
+
+Detailed Stage28B closure evidence:
+
+`docs/STAGE28B_FINAL_EVIDENCE.md`
+
+Short current source of truth:
+
+`docs/CURRENT_STATUS.md`
+
+This file remains a compatibility pointer because older chats and handoffs refer to `docs/CONTINUATION_PLAN.md`.
 
 ## Frozen Stage27C status
 
-Stage27C CrowPanel real-input validation is complete. Do not resume or extend it under the old goal.
+Stage27C CrowPanel real-input validation is complete and must not be restarted under the old goal.
 
 Frozen annotated tag:
 
 `stage27c-validated-2026-09-03`
 
-Frozen coherent Stage27C closure commit:
+Frozen coherent closure commit:
 
 `b418520090d0feadc005701092c1b7ed3384afbf`
 
-Exact physically qualified firmware:
+Exact physically qualified Stage27C firmware:
 
 `a5726b89e94b9ac628249b780d6548a692c3fd2c`
 
-Detailed evidence remains in:
+## Stage28 transition
 
-- `docs/STAGE27C_FINAL_EVIDENCE.md`;
-- `docs/CURRENT_STATUS.md`;
-- `docs/STAGE27C_CROWPANEL_BRINGUP.md`.
+Stage28A: DONE.
 
-Historical pre-soak/soak handoffs are records only and must not be interpreted as instructions to restart Stage27C.
+Stage28B: DONE and physically rechecked.
 
-## New active direction
+Stage28C: NEXT.
 
-The next explicit product direction is Stage28: native ESP-IDF RF433 actuator bring-up using the transmitter and receiver already connected to the CrowPanel HAT and the user's 433 MHz sockets.
+Stage28C must capture and freeze one original remote/socket ON/OFF pair before semantic role integration or unattended real-load control.
 
-Start from `/continuation.md`; do not invent a new Stage28 plan from memory.
+Start from `/continuation.md`; do not reconstruct or restart Stage28A/28B from old chat memory.
