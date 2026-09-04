@@ -1,0 +1,15 @@
+{
+  "id": "20260904-growbox-stage28c-passive-capture-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "resources": [],
+  "memory_limit_mb": 4096,
+  "command_timeout": 1800,
+  "idle_timeout": 300,
+  "task_timeout": 2700,
+  "commands": [
+    "set -euo pipefail; git fetch -q origin agent-control; git show origin/agent-control:.agent/payloads/20260904-growbox-stage28c-passive-capture-v1/run.sh > /tmp/stage28c-passive-capture-v1.sh; bash /tmp/stage28c-passive-capture-v1.sh"
+  ]
+}
