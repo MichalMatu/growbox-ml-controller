@@ -1,0 +1,61 @@
+{
+  "id": "20260904-growbox-stage28c-passive-capture-v1",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "started_at": "2026-09-04T02:24:19.397541+00:00",
+  "command_timeout": 1800,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; git fetch -q origin agent-control; git show origin/agent-control:.agent/payloads/20260904-growbox-stage28c-passive-capture-v1/run.sh > /tmp/stage28c-passive-capture-v1.sh; bash /tmp/stage28c-passive-capture-v1.sh",
+      "exit_code": 1,
+      "output": "",
+      "elapsed_seconds": 1.115,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 3.02,
+      "output_policy": "stream",
+      "captured_output_chars": 0,
+      "output_truncated": false,
+      "current_rss_mb": 3.02,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "failed",
+      "elapsed_seconds": 1.115
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.083
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.069
+  },
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-04T02:24:22.310564+00:00",
+  "task_digest": "ea1b508896c574372e82a967bc906090522117413b9c4630aa7067ffe771dc43",
+  "idle_timeout": 300,
+  "task_timeout": 2700,
+  "memory_limit_mb": 4096,
+  "attempt_id": "4afe9c96f9d34f4f30757b52",
+  "daemon_version": "4.15.0"
+}
