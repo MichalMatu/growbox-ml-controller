@@ -5,240 +5,99 @@ Repository: `MichalMatu/growbox-ml-controller`
 Work branch: `mvp/environment-controller`
 Control branch: `agent-control`
 
-This is the primary bootstrap file for the next ChatGPT conversation. Read it first, then verify fresh branch/daemon state before doing any work.
+This is the primary bootstrap for a fresh conversation. Read it first, then verify the fresh work-branch HEAD and `agent-control:.agent/status/daemon.json` before doing work.
 
-## 1. Frozen Stage27C baseline
+## Frozen baseline
 
-Stage27C CrowPanel real-input validation is complete and frozen.
+Stage27C real-input qualification is complete and remains frozen.
 
-Annotated milestone tag:
+- validated tag: `stage27c-validated-2026-09-03`
+- Stage27C closure commit: `b418520090d0feadc005701092c1b7ed3384afbf`
+- physically soaked Stage27C firmware: `a5726b89e94b9ac628249b780d6548a692c3fd2c`
+- Rule authoritative
+- ML shadow-only
+- physical outputs remain fake/locked unless a later explicit gate says otherwise
 
-`stage27c-validated-2026-09-03`
+Do not restart Stage27A/B/C without new evidence that later code invalidated them.
 
-Stage27C closure commit:
+## Stage28 status
 
-`b418520090d0feadc005701092c1b7ed3384afbf`
+**Stage28A DONE -> Stage28B DONE -> Stage28C DONE -> pre-Stage28D golden hardening active**
 
-Exact physically soaked Stage27C firmware:
+### Stage28A
 
-`a5726b89e94b9ac628249b780d6548a692c3fd2c`
+Native RF433 codec and temporal classification are complete. Milestone: `ac29122cbcf9d155fd08baa0df1014d71f04c135`.
 
-Validated baseline remains:
+### Stage28B
 
-- Elecrow CrowPanel ESP32-S3 N8R8;
-- native ESP-IDF v5.5.4;
-- SCD41 + DS3231 on SDA21/SCL38;
-- microSD MOSI40/MISO13/CLK39/CS10/power42;
-- exact BLE identities already frozen in existing Stage27C docs;
-- Rule authoritative;
-- ML shadow-only;
-- physical outputs fake/locked.
+Native ESP-IDF RMT TX/RX local loopback is complete. Historical Stage28B qualified milestone: `a87169748ee2bd42bc4d35cfe3b2964b90f40eb8`.
 
-Do not restart Stage27A/B/C.
+### Stage28C
 
-## 2. Stage28 current state
+One remote/socket pair is frozen under the neutral hardware label `remote_socket_1`:
 
-Stage28 RF433 actuator work is active, but Stages 28A and 28B are now complete.
+- ON: decimal `906118656`, hex `0x36024600`
+- OFF: decimal `1040336384`, hex `0x3E024600`
+- bit length: `32`
+- protocol: `2`
+- pulse: `575 us`
+- validated transmit repeat: `10`
 
-### Stage28A — DONE
+`repeat=10` is a physically proven reliable TX setting. It is not claimed to be the exact measured repeat count of the original handheld remote.
 
-Native RF433 codec and temporal classification were implemented and tested.
+The final known-pair hardware recheck was performed on source `2cb4b8dffb0835460a9e9ba920d9bd888c99d992` and required exact ON/OFF decode, TX lifecycle completion, RX capture, no RX timeout, `SelfTx` classification and `outputs=fake-locked`. The board was restored to passive RX-only afterwards.
 
-Source milestone:
+The identity/config freeze commit is `b3e90c92dd39c50c23ed618aba47e9fe8ddf26ec`.
 
-`ac29122cbcf9d155fd08baa0df1014d71f04c135`
+Detailed closure: `docs/STAGE28C_FINAL_EVIDENCE.md`.
 
-Implemented under:
+## Current RF implementation after golden hardening
 
-`src/climate/rf433/`
+Post-Stage28C software hardening has advanced the source beyond the physical recheck SHA without changing the frozen RF identity:
 
-Key constraints retained:
+- `a215cae35bbdee155a40fce0c7481a87191a3716` — split real-input runtime responsibilities into Stage27 runtime adapters, telemetry reporter and Stage28 RF diagnostics; `ClimateV6RealInputRuntime.cpp` reduced to orchestration.
+- `60da0a4d2a99f3045596b6a8a8bf362a0c6e1aca` — deduplicated the RMT receive path and moved the hardware-qualified receive envelope into a host-testable contract.
 
-- protocols 1..12;
-- bits 1..32;
-- bounded repeat/pulse validation;
-- `FrameKey` identity;
-- `SelfTx` vs interference temporal classification;
-- no Arduino dependency.
+Current Stage28C receive contract:
 
-### Stage28B — DONE
+- RMT TX/codec resolution: `100 kHz`
+- RMT RX resolution: `100 kHz`
+- RX minimum signal / glitch threshold: `10 us` (`10,000 ns`)
+- RX maximum signal / idle threshold: `20 ms` (`20,000,000 ns`)
+- TX GPIO8, RX GPIO14
+- raw RX capacity remains 256 symbols
+- a 32-bit protocol-2 frame occupies 33 symbols; seven complete repeats fit, ten complete repeats exceed one raw capture buffer
 
-Native ESP-IDF RMT TX/RX local RF loopback is implemented and physically qualified.
+The 20 ms idle threshold was physically qualified because 300 ms did not terminate one-shot capture reliably in the same receiver environment. Do not revert to the old Stage28B `1 MHz / 1.25 us / 12 ms` settings.
 
-Initial RMT source commit:
-
-`56813b27f6dc1f93d4899974ffd47a1528d8b6b8`
-
-Final qualified RF source commit:
-
-`a87169748ee2bd42bc4d35cfe3b2964b90f40eb8` — `Fix RF433 RMT receive timing limits`
-
-Final hardware configuration:
-
-- TX GPIO8;
-- RX GPIO14;
-- TX/codec resolution `100 kHz`;
-- RX resolution `1 MHz`;
-- RX minimum signal/glitch filter `1,250 ns`;
-- RX maximum signal/idle threshold `12,000,000 ns`;
-- RX durations converted back to codec ticks before decode.
-
-Original RX configuration failed at `rmt_receive()` with `ESP_ERR_INVALID_ARG (0x102)`. The final configuration above was established by bounded hardware diagnostics and then committed permanently.
-
-Final hardware recheck task:
-
-`20260904-growbox-stage28b-final-hardware-recheck-v1`
-
-Exact firmware/source SHA under test:
-
-`a87169748ee2bd42bc4d35cfe3b2964b90f40eb8`
-
-Final local RF evidence:
-
-`requested 0xA55A/16/protocol1 -> TX queued -> TX started -> TX completed -> RX captured -> decoded 0xA55A/16/protocol1 -> SelfTx`
-
-Counters at acceptance:
-
-- RX arm errors `0`;
-- RX timeouts `0`;
-- RX decode failures `0`;
-- RX ambiguous `0`;
-- RX self-TX `1`;
-- RX interference `0`;
-- outputs remained `fake-locked`.
-
-The strict 180-second Stage27 regression capture reported `violations: []`.
-
-Detailed evidence:
-
-`docs/STAGE28B_FINAL_EVIDENCE.md`
-
-### Critical evidence boundary
-
-Stage28B proves local RF transport only. It does **not** prove that a mains socket changed state.
+## Evidence boundaries
 
 Keep these distinct:
 
-1. TX request accepted/completed;
-2. local RF receiver heard and decoded the transmitted frame (`SelfTx`);
-3. actual socket/load state changed.
+1. TX request accepted/completed.
+2. Local RF receiver captured and decoded the expected frame (`SelfTx`).
+3. Real remote socket/load state changed.
 
-Never promote level 1 or 2 to level 3 without explicit physical validation.
+Stages 28B/28C prove levels 1 and 2 for the qualified path and record a reliable TX setting. They do not turn local self-RX into physical socket-state acknowledgement.
 
-## 3. Next gate — Stage28C
+## Next gate
 
-Stage28C is the exact next task.
+Before Stage28D semantic integration, finish the pre-stage golden gate:
 
-Goal: learn and freeze **one** original remote/socket pair before semantic integration.
+1. documentation/source consistency;
+2. complete host regression and ESP-IDF build;
+3. static/format checks available in the repository;
+4. bounded real-hardware regression/soak with outputs fake-locked;
+5. record one clean checkpoint SHA.
 
-Capture separate ON and OFF identities from the original remote and freeze:
+Only after that may Stage28D map the frozen hardware identity to a semantic actuator role. `exhaust_fan` remains the intended first semantic role, but it is not part of Stage28C hardware config.
 
-- ON code;
-- OFF code;
-- bit length;
-- protocol;
-- pulse timing;
-- repeat behavior needed for reliable transmission;
-- stable human-readable device/role label.
+No unattended mains-load control is authorized by this handoff.
 
-Rules:
+## Local Agent binding
 
-- first target exactly one socket/device;
-- store RF identity in hardware/config layer, not Rule/ML policy code;
-- no semantic climate role mapping yet;
-- no unattended real-load control yet;
-- do not treat self-RX as socket-state acknowledgement.
-
-Stage28C should begin with a bounded receiver/capture task, then freeze one proven ON/OFF pair.
-
-## 4. Remaining Stage28 roadmap
-
-### Stage28D — semantic integration
-
-After 28C passes:
-
-- first role: `exhaust_fan`;
-- second role: `humidifier`;
-- lamp remains separate and must not be silently mapped to an unrelated climate role.
-
-RF hardware stays below `ClimateRoleDriver` / `MappedClimateRoleDriver`; do not duplicate Rule/ML policy.
-
-### Stage28E — fail-safe/recovery
-
-Before unattended operation prove:
-
-- defined boot command behavior;
-- stale/unusable sensor data cannot leave an unsafe Rule command active;
-- failed RF request is not recorded as confirmed physical state;
-- TX acceptance/completion and physical confirmation remain separate;
-- reset/restart semantics are explicit;
-- bounded repeated OFF recovery exists where appropriate;
-- Rule stays authoritative;
-- ML stays shadow-only;
-- one actuator at a time.
-
-### Stage28F — real socket/load gate
-
-Only after one remote ON/OFF pair is frozen:
-
-1. verify socket manually with original remote;
-2. send bounded ON/OFF from CrowPanel;
-3. verify TX/self-RX evidence;
-4. explicitly verify real socket/load response;
-5. repeat bounded transitions;
-6. then run one-role bounded soak.
-
-## 5. Local Agent / binding rules
-
-Growbox Local Agent binding:
-
-`815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5`
-
-Every Local Agent task JSON created for this project must contain exactly:
+Every task must contain exactly:
 
 `"agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5"`
 
-Repository scope is immutable for Growbox tasks:
-
-`MichalMatu/growbox-ml-controller`
-
-Do not infer, substitute, queue, cancel or execute work for another repository.
-
-Task rules:
-
-- work branch: `mvp/environment-controller`;
-- control branch: `agent-control`;
-- one active Growbox task at a time;
-- task IDs immutable;
-- hardware tasks use `resources: ["board:growbox-s3"]`;
-- software-only tasks use `resources: []`;
-- verify expected work-branch SHA manually before editing because `expected_head` is not implemented;
-- command-based source commit + push remains preferred for permanent Local Agent changes.
-
-A new ChatGPT conversation must use the Chat Bridge `LA_CHAT` value assigned to that new conversation. Do not reuse the old chat id blindly.
-
-## 6. First actions in the next conversation
-
-1. Read this file completely.
-2. Read `docs/STAGE28B_FINAL_EVIDENCE.md`.
-3. Read `docs/CURRENT_STATUS.md` for the short source-of-truth status.
-4. Fetch fresh `mvp/environment-controller` HEAD. The RF implementation to preserve is rooted at `a87169748ee2bd42bc4d35cfe3b2964b90f40eb8`; documentation-only commits may advance HEAD after it.
-5. Fetch fresh `agent-control:.agent/status/daemon.json`.
-6. Verify exact repository and agent binding.
-7. Require daemon `idle` before queueing anything.
-8. Do not repeat Stage28A/28B unless later source changes invalidated their evidence.
-9. Start the smallest Stage28C remote-capture task for one socket only.
-
-## 7. Scope guard
-
-Do not mix into Stage28 unless explicitly requested:
-
-- ML Active;
-- e-paper/front-panel UI;
-- multiple real actuators at once;
-- unrelated repository work;
-- Arduino compatibility layers.
-
-Current transition point is clean:
-
-**Stage28A DONE -> Stage28B DONE -> Stage28C NEXT.**
+Use `resources: []` for software-only work and `resources: ["board:growbox-s3"]` for USB/flash/serial/hardware work. Work only on this repository and `mvp/environment-controller` unless the operator explicitly changes scope.

@@ -4,60 +4,18 @@ Updated: 2026-09-04
 Work branch: `mvp/environment-controller`
 Control branch: `agent-control`
 
-## Primary bootstrap
+The authoritative handoff is `/continuation.md`.
 
-The authoritative handoff for the next ChatGPT conversation is:
+Current transition:
 
-`/continuation.md`
+**Stage28A DONE -> Stage28B DONE -> Stage28C DONE -> pre-Stage28D golden hardening active**
 
-Read that file first.
+Stage28C has frozen exactly one neutral RF433 remote/socket identity. Detailed evidence is in `docs/STAGE28C_FINAL_EVIDENCE.md`.
 
-It now records:
+Current hardened source at this checkpoint: `60da0a4d2a99f3045596b6a8a8bf362a0c6e1aca`.
 
-- the frozen Stage27C baseline;
-- completed Stage28A native RF433 codec/temporal work;
-- completed Stage28B native ESP-IDF RMT loopback qualification;
-- final qualified RF source SHA `a87169748ee2bd42bc4d35cfe3b2964b90f40eb8`;
-- final RX timing configuration (`1 MHz`, `1,250 ns`, `12 ms`);
-- final hardware recheck evidence;
-- the strict boundary between `SelfTx` evidence and real socket/load state;
-- the exact Stage28C next gate;
-- Local Agent binding and fresh-context startup rules.
+Current receive settings are `100 kHz`, `10 us` minimum signal and `20 ms` idle/max signal. Do not reconstruct the active implementation from historical Stage28B receive values.
 
-Detailed Stage28B closure evidence:
+Before Stage28D, complete one clean golden gate consisting of full software regressions, firmware build, documentation consistency and a bounded real-board soak with outputs fake-locked.
 
-`docs/STAGE28B_FINAL_EVIDENCE.md`
-
-Short current source of truth:
-
-`docs/CURRENT_STATUS.md`
-
-This file remains a compatibility pointer because older chats and handoffs refer to `docs/CONTINUATION_PLAN.md`.
-
-## Frozen Stage27C status
-
-Stage27C CrowPanel real-input validation is complete and must not be restarted under the old goal.
-
-Frozen annotated tag:
-
-`stage27c-validated-2026-09-03`
-
-Frozen coherent closure commit:
-
-`b418520090d0feadc005701092c1b7ed3384afbf`
-
-Exact physically qualified Stage27C firmware:
-
-`a5726b89e94b9ac628249b780d6548a692c3fd2c`
-
-## Stage28 transition
-
-Stage28A: DONE.
-
-Stage28B: DONE and physically rechecked.
-
-Stage28C: NEXT.
-
-Stage28C must capture and freeze one original remote/socket ON/OFF pair before semantic role integration or unattended real-load control.
-
-Start from `/continuation.md`; do not reconstruct or restart Stage28A/28B from old chat memory.
+Do not introduce semantic role mapping, unattended 230 V control or physical-state acknowledgement semantics as part of this pre-stage cleanup.

@@ -87,6 +87,21 @@ are not the architecture for new climate-v6 runtime work.
 
 Concrete SCD41/BLE/RTC/GPIO dependencies stay outside `lib/environment_control`.
 
+## Real-input runtime composition and RF433 boundary
+
+The ESP32-S3 real-input application is deliberately split so the top-level runtime remains orchestration rather than a god object:
+
+- `ClimateV6RealInputRuntime.cpp` wires lifecycle and the one-second application tick;
+- `runtime/Stage27RuntimeAdapters.*` owns Stage27 physical-source adapters and the locked fake role driver;
+- `runtime/Stage27TelemetryReporter.*` owns diagnostic snapshot construction/logging/storage enqueue;
+- `runtime/Stage28RfDiagnostics.*` owns passive RF capture and bounded self-loopback diagnostics;
+- `rf433/Rf433ProtocolCodec.*` owns portable protocol encode/decode;
+- `rf433/Rf433RmtLoopback.*` owns ESP-IDF RMT transport;
+- `rf433/Rf433HardwareConfig.h` owns frozen neutral remote/socket identities;
+- `rf433/Rf433RmtTuning.h` owns the hardware-qualified receive envelope that host tests lock.
+
+The current qualified RX envelope is 100 kHz resolution, 10 us minimum signal and 20 ms idle/max signal. Hardware identity remains below semantic role mapping. A local `SelfTx` classification is transport evidence, not physical socket-state acknowledgement.
+
 ## Verification layers
 
 - Python scientific/simulator tests;

@@ -34,3 +34,14 @@ The board was finally reflashed into passive RX-only diagnostics with auto-trans
 ## Boundary
 
 The frozen identity is hardware/config only. No semantic role (for example `exhaust_fan`) is assigned here, no Rule/ML mapping is introduced, and this freeze is not physical socket-state acknowledgement. Stage28C does not authorize unattended mains-load control.
+
+## Post-freeze golden hardening
+
+The physical known-pair recheck evidence above remains tied to source `2cb4b8dffb0835460a9e9ba920d9bd888c99d992`; later software-only refactors must not rewrite that historical fact.
+
+After the identity freeze, the implementation was cleaned up without changing the frozen pair:
+
+- `a215cae35bbdee155a40fce0c7481a87191a3716` split real-input runtime responsibilities into dedicated Stage27 adapter, telemetry reporter and Stage28 RF diagnostic components.
+- `60da0a4d2a99f3045596b6a8a8bf362a0c6e1aca` deduplicated RMT receive arm/collect logic and moved the hardware-qualified receive contract into `Rf433RmtTuning.h` so host tests can guard it.
+
+The current guarded receive contract is `100 kHz`, `10 us` minimum signal and `20 ms` idle/max signal. The RF protocol host suite also locks the neutral label, exact ON/OFF identities and the distinction between a reliable TX repeat setting and the unknown exact handheld repeat count.

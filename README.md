@@ -2,7 +2,7 @@
 
 ESP32-S3 environment-control research and product-development repository combining a portable C++ controller, TinyML inference, deterministic safety, simulation/calibration tooling, a scientific 3D twin, and browser-based hardware configuration.
 
-> **Current controller status:** climate-v6 runtime work continues on `mvp/environment-controller`. Rule is authoritative, ML is shadow/research-only, and the hardware-neutral I/O seam is now being integrated. See [docs/CURRENT_STATUS.md](docs/CURRENT_STATUS.md).
+> **Current controller status:** Stage28C has frozen one neutral RF433 remote/socket pair and the branch is in a pre-Stage28D golden-hardening gate. Rule is authoritative, ML is shadow/research-only, and physical outputs remain fake/locked for unattended work. See [docs/CURRENT_STATUS.md](docs/CURRENT_STATUS.md) and [docs/STAGE28C_FINAL_EVIDENCE.md](docs/STAGE28C_FINAL_EVIDENCE.md).
 
 ## Live demos
 
