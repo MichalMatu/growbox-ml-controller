@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260904-growbox-stage28b-rf-rx-1mhz-probe-v2",
+  "task_digest": "6335728764699a0af9ac0fe50add0c3562b892d4d8c738cb6d1c8cbf8e8d7e75",
+  "idle_timeout": 300,
+  "task_timeout": 2400,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-04T01:08:27.336554+00:00",
+  "attempt_id": "29f409ebee6752567d17c6fc",
+  "daemon_version": "4.15.0",
+  "daemon_pid": 62855,
+  "updated_at": "2026-09-04T01:08:27.336813+00:00",
+  "pid": 62855
+}
