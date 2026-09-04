@@ -59,6 +59,9 @@ elseif(GROWBOX_APP_MODE STREQUAL "climate-v6-real-inputs")
     ${COMPONENT_LIB}
     PRIVATE
       "climate/ClimateV6RealInputRuntime.cpp"
+      "climate/runtime/Stage27RuntimeAdapters.cpp"
+      "climate/runtime/Stage27TelemetryReporter.cpp"
+      "climate/runtime/Stage28RfDiagnostics.cpp"
       "climate/telemetry/Stage27LogFormat.cpp"
       "climate/storage/Stage27TelemetryLogger.cpp"
       "climate/storage/Stage27SdStorageBackend.cpp"
