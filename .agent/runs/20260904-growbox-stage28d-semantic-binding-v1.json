@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260904-growbox-stage28d-semantic-binding-v1",
   "task_digest": "8304794f747ff72c8b3f218376bcfd2250175711ffd4a22dae98eeab7d54811e",
-  "idle_timeout": 600,
-  "task_timeout": 5400,
-  "memory_limit_mb": 4096,
-  "started_at": "2026-09-04T13:35:25.006250+00:00",
+  "status": "failed",
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-04T13:35:28.459627+00:00",
   "attempt_id": "80ee567409815472c2a1e8f8",
   "daemon_version": "4.15.0",
   "daemon_pid": 75936,
-  "updated_at": "2026-09-04T13:35:25.006461+00:00",
+  "updated_at": "2026-09-04T13:35:28.968753+00:00",
   "pid": 75936
 }
