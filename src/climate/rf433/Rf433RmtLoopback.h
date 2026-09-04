@@ -78,6 +78,8 @@ private:
                        void* user_data) noexcept;
 
   void close() noexcept;
+  bool armReceive() noexcept;
+  bool collectReceive(std::uint32_t timeout_ms, ReceiveEvidence& evidence) noexcept;
   static std::uint32_t monotonicMilliseconds() noexcept;
 
   Config config_{};

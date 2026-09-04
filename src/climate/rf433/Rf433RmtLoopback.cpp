@@ -1,4 +1,5 @@
 #include "climate/rf433/Rf433RmtLoopback.h"
+#include "climate/rf433/Rf433RmtTuning.h"
 
 #include <algorithm>
 #include <array>
@@ -11,16 +12,7 @@
 namespace growbox::app::climate_io::rf433 {
 namespace {
 
-constexpr std::size_t kRmtMemorySymbols = 64U;
-// Stage28C RX hardening: reject sub-10 us chatter. A 20 ms idle threshold is
-// hardware-qualified with the known 32-bit protocol-2 ON/OFF pair at repeat=10;
-// 300 ms did not terminate capture reliably on this receiver in the same setup.
-constexpr std::uint32_t kRxMinimumSignalNs = 10'000U;
-constexpr std::uint32_t kRxMaximumSignalNs = 20'000'000U;
-constexpr std::uint32_t kRxResolutionHz = kRmtResolutionHz;
 constexpr std::uint32_t kRxToCodecTickRatio = kRxResolutionHz / kRmtResolutionHz;
-static_assert(kRxResolutionHz % kRmtResolutionHz == 0U);
-constexpr std::uint32_t kSelfTxGuardMs = 50U;
 
 }  // namespace
 
@@ -143,10 +135,8 @@ void Rf433RmtLoopback::close() noexcept {
   rx_overflow_ = false;
 }
 
-bool Rf433RmtLoopback::receiveOnce(std::uint32_t timeout_ms,
-                                   ReceiveEvidence& evidence) noexcept {
-  evidence = {};
-  if (!rx_enabled_ || rx_done_ == nullptr || timeout_ms == 0U) {
+bool Rf433RmtLoopback::armReceive() noexcept {
+  if (!rx_enabled_ || rx_done_ == nullptr) {
     return false;
   }
 
@@ -158,11 +148,19 @@ bool Rf433RmtLoopback::receiveOnce(std::uint32_t timeout_ms,
   rmt_receive_config_t receive_config{};
   receive_config.signal_range_min_ns = kRxMinimumSignalNs;
   receive_config.signal_range_max_ns = kRxMaximumSignalNs;
-  if (rmt_receive(rx_channel_,
-                  rx_symbols_.data(),
+  if (rmt_receive(rx_channel_, rx_symbols_.data(),
                   rx_symbols_.size() * sizeof(rx_symbols_[0]),
                   &receive_config) != ESP_OK) {
     ++diagnostics_.rx_arm_errors;
+    return false;
+  }
+  return true;
+}
+
+bool Rf433RmtLoopback::collectReceive(std::uint32_t timeout_ms,
+                                      ReceiveEvidence& evidence) noexcept {
+  evidence = {};
+  if (timeout_ms == 0U || rx_done_ == nullptr) {
     return false;
   }
 
@@ -172,9 +170,8 @@ bool Rf433RmtLoopback::receiveOnce(std::uint32_t timeout_ms,
   }
 
   evidence.rx_finished_at_ms = monotonicMilliseconds();
-  const std::size_t captured_symbol_count = rx_symbol_count_;
   const std::size_t received =
-      std::min<std::size_t>(captured_symbol_count, rx_symbols_.size());
+      std::min<std::size_t>(static_cast<std::size_t>(rx_symbol_count_), rx_symbols_.size());
   evidence.symbol_count = received;
   evidence.overflow = rx_overflow_;
   if (received == 0U) {
@@ -214,6 +211,15 @@ bool Rf433RmtLoopback::receiveOnce(std::uint32_t timeout_ms,
   return true;
 }
 
+bool Rf433RmtLoopback::receiveOnce(std::uint32_t timeout_ms,
+                                   ReceiveEvidence& evidence) noexcept {
+  evidence = {};
+  if (timeout_ms == 0U || !armReceive()) {
+    return false;
+  }
+  return collectReceive(timeout_ms, evidence);
+}
+
 bool Rf433RmtLoopback::transmitAndReceive(const FrameConfig& frame,
                                          std::uint32_t timeout_ms,
                                          LoopbackEvidence& evidence) noexcept {
@@ -239,19 +245,7 @@ bool Rf433RmtLoopback::transmitAndReceive(const FrameConfig& frame,
     output.level1 = input.level1 ? 1U : 0U;
   }
 
-  while (xSemaphoreTake(rx_done_, 0U) == pdTRUE) {
-  }
-  rx_symbol_count_ = 0U;
-  rx_overflow_ = false;
-
-  rmt_receive_config_t receive_config{};
-  receive_config.signal_range_min_ns = kRxMinimumSignalNs;
-  receive_config.signal_range_max_ns = kRxMaximumSignalNs;
-  if (rmt_receive(rx_channel_,
-                  rx_symbols_.data(),
-                  rx_symbols_.size() * sizeof(rx_symbols_[0]),
-                  &receive_config) != ESP_OK) {
-    ++diagnostics_.rx_arm_errors;
+  if (!armReceive()) {
     return false;
   }
 
@@ -282,44 +276,16 @@ bool Rf433RmtLoopback::transmitAndReceive(const FrameConfig& frame,
   }
   evidence.tx_completed = true;
 
-  if (xSemaphoreTake(rx_done_, pdMS_TO_TICKS(timeout_ms)) != pdTRUE) {
-    ++diagnostics_.rx_timeouts;
+  ReceiveEvidence receive{};
+  if (!collectReceive(timeout_ms, receive) || !receive.rx_captured ||
+      receive.overflow) {
     return false;
   }
 
-  evidence.rx_finished_at_ms = monotonicMilliseconds();
-  const std::size_t captured_symbol_count = rx_symbol_count_;
-  const std::size_t received =
-      std::min<std::size_t>(captured_symbol_count, rx_symbols_.size());
-  if (received == 0U || rx_overflow_) {
-    ++diagnostics_.rx_decode_failures;
-    return false;
-  }
-
-  evidence.rx_captured = true;
-  ++diagnostics_.rx_captures;
-
-  std::array<PulseSymbol, kRxCaptureSymbolCapacity> captured{};
-  for (std::size_t i = 0U; i < received; ++i) {
-    const rmt_symbol_word_t& input = rx_symbols_[i];
-    captured[i] = PulseSymbol{
-        static_cast<std::uint16_t>((input.duration0 + (kRxToCodecTickRatio / 2U)) / kRxToCodecTickRatio),
-        static_cast<std::uint16_t>((input.duration1 + (kRxToCodecTickRatio / 2U)) / kRxToCodecTickRatio),
-        input.level0 != 0U,
-        input.level1 != 0U,
-    };
-  }
-
-  evidence.rx_started_at_ms =
-      captureStartMilliseconds(evidence.rx_finished_at_ms, captured.data(), received);
-
-  DecodeWorkspace workspace{};
-  evidence.decoded = decodeFrame(captured.data(), received, workspace);
-  if (evidence.decoded.status == DecodeStatus::Ambiguous) {
-    ++diagnostics_.rx_ambiguous;
-  } else if (evidence.decoded.status != DecodeStatus::Decoded) {
-    ++diagnostics_.rx_decode_failures;
-  }
+  evidence.rx_captured = receive.rx_captured;
+  evidence.rx_started_at_ms = receive.rx_started_at_ms;
+  evidence.rx_finished_at_ms = receive.rx_finished_at_ms;
+  evidence.decoded = receive.decoded;
 
   const std::array<TxFingerprint, 1U> fingerprints{{
       TxFingerprint{

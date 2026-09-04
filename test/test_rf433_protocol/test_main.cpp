@@ -1,7 +1,9 @@
 #include "climate/rf433/Rf433HardwareConfig.h"
 #include "climate/rf433/Rf433ProtocolCodec.h"
+#include "climate/rf433/Rf433RmtTuning.h"
 #include "climate/rf433/Rf433TemporalPolicy.h"
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cstddef>
@@ -108,6 +110,30 @@ void testFrozenRemoteSocketHardwareConfig() {
   assert(validateFrameConfig(kRemoteSocket1.off) == CodecStatus::Ok);
 }
 
+void testHardwareQualifiedRmtReceiveContract() {
+  static_assert(kRmtResolutionHz == 100'000U);
+  static_assert(kRxResolutionHz == 100'000U);
+  static_assert(kRxMinimumSignalNs == 10'000U);
+  static_assert(kRxMaximumSignalNs == 20'000'000U);
+  static_assert(kSelfTxGuardMs == 50U);
+
+  const ProtocolSpec* protocol = protocolSpec(kRemoteSocket1On.key.protocol);
+  assert(protocol != nullptr);
+  const std::uint8_t longest_multiplier = std::max(
+      {protocol->sync.high, protocol->sync.low, protocol->zero.high,
+       protocol->zero.low, protocol->one.high, protocol->one.low});
+  const std::uint64_t longest_symbol_ns =
+      static_cast<std::uint64_t>(longest_multiplier) *
+      kRemoteSocket1On.pulse_us * 1'000ULL;
+  assert(longest_symbol_ns < kRxMaximumSignalNs);
+  assert(kRxMinimumSignalNs <
+         static_cast<std::uint64_t>(kRemoteSocket1On.pulse_us) * 1'000ULL);
+
+  constexpr std::size_t symbols_per_frame = 33U;
+  static_assert(symbols_per_frame * 7U <= kRxCaptureSymbolCapacity);
+  static_assert(symbols_per_frame * 10U > kRxCaptureSymbolCapacity);
+}
+
 void testValidationBounds() {
   EncodedFrame encoded{};
   assert(encodeFrame({{0U, 24U, 1U}, 3U, 350U}, encoded) ==
@@ -176,6 +202,7 @@ int main() {
   testRepeatedCapturePrefersExactFingerprint();
   testKnownRemoteSocketPairCodec();
   testFrozenRemoteSocketHardwareConfig();
+  testHardwareQualifiedRmtReceiveContract();
   testValidationBounds();
   testCaptureTiming();
   testTemporalClassification();
