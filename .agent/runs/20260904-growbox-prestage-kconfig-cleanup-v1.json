@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260904-growbox-prestage-kconfig-cleanup-v1",
+  "task_digest": "daaaf5c1edeb6ce46346457e74bc521bb96e188b639bd8836679df56d34e6c96",
+  "idle_timeout": 300,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-04T05:15:40.466174+00:00",
+  "attempt_id": "bd9186e53b34209ecfc6beb3",
+  "daemon_version": "4.15.0",
+  "daemon_pid": 73847,
+  "updated_at": "2026-09-04T05:15:40.466337+00:00",
+  "pid": 73847
+}
