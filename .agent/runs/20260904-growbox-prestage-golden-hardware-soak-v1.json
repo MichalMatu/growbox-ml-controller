@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260904-growbox-prestage-golden-hardware-soak-v1",
+  "task_digest": "45f8c2b1fb2db47c8e23f51eac2813f6091578e02afebd44e5e8a2f0d5b60fe9",
+  "idle_timeout": 600,
+  "task_timeout": 7800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-04T05:56:39.162076+00:00",
+  "attempt_id": "b762c237970ee162357d873e",
+  "daemon_version": "4.15.0",
+  "daemon_pid": 27628,
+  "updated_at": "2026-09-04T05:56:39.162350+00:00",
+  "pid": 27628
+}
