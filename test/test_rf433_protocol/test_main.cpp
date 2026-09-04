@@ -1,3 +1,4 @@
+#include "climate/rf433/Rf433HardwareConfig.h"
 #include "climate/rf433/Rf433ProtocolCodec.h"
 #include "climate/rf433/Rf433TemporalPolicy.h"
 
@@ -5,6 +6,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <string_view>
 
 using namespace growbox::app::climate_io::rf433;
 
@@ -88,6 +90,24 @@ void testKnownRemoteSocketPairCodec() {
   }
 }
 
+
+void testFrozenRemoteSocketHardwareConfig() {
+  static_assert(kRemoteSocket1On.key.code == 906118656U);
+  static_assert(kRemoteSocket1Off.key.code == 1040336384U);
+  static_assert(kRemoteSocket1On.key.bit_length == 32U);
+  static_assert(kRemoteSocket1Off.key.bit_length == 32U);
+  static_assert(kRemoteSocket1On.key.protocol == 2U);
+  static_assert(kRemoteSocket1Off.key.protocol == 2U);
+  static_assert(kRemoteSocket1On.pulse_us == 575U);
+  static_assert(kRemoteSocket1Off.pulse_us == 575U);
+  static_assert(kRemoteSocket1On.repeat == 10U);
+  static_assert(kRemoteSocket1Off.repeat == 10U);
+
+  assert(std::string_view(kRemoteSocket1.label) == "remote_socket_1");
+  assert(validateFrameConfig(kRemoteSocket1.on) == CodecStatus::Ok);
+  assert(validateFrameConfig(kRemoteSocket1.off) == CodecStatus::Ok);
+}
+
 void testValidationBounds() {
   EncodedFrame encoded{};
   assert(encodeFrame({{0U, 24U, 1U}, 3U, 350U}, encoded) ==
@@ -155,6 +175,7 @@ int main() {
   testEncodeDecodeAllProtocols();
   testRepeatedCapturePrefersExactFingerprint();
   testKnownRemoteSocketPairCodec();
+  testFrozenRemoteSocketHardwareConfig();
   testValidationBounds();
   testCaptureTiming();
   testTemporalClassification();
