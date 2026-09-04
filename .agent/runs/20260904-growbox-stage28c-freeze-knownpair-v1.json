@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260904-growbox-stage28c-freeze-knownpair-v1",
+  "task_digest": "22b3059ea07f94a27556d92ca14189f83a8c1e4fd64e67e1f3d64bb05e3778e4",
+  "idle_timeout": 300,
+  "task_timeout": 2700,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-04T03:54:19.283006+00:00",
+  "attempt_id": "c48fd038f19598d01ef20747",
+  "daemon_version": "4.15.0",
+  "daemon_pid": 73468,
+  "updated_at": "2026-09-04T03:54:19.283073+00:00",
+  "pid": 73468
+}
