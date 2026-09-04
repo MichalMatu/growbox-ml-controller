@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260904-growbox-stage28b-rf-rx-glitch-filter-probe-v1",
+  "task_digest": "d04178a611120813f77b0c45a15f62e8190a1429ddb29ce6adbee2967e0710c6",
+  "idle_timeout": 300,
+  "task_timeout": 2400,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-04T01:25:02.040523+00:00",
+  "attempt_id": "d56d726bca765e55d84eef98",
+  "daemon_version": "4.15.0",
+  "daemon_pid": 79783,
+  "updated_at": "2026-09-04T01:25:02.040679+00:00",
+  "pid": 79783
+}
