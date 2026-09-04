@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260904-growbox-prestage-golden-software-gate-v1",
+  "task_digest": "03be52d81a84fd4aec0721f97a4ac1032e498267e4d0d4cee2e980729d6df83e",
+  "idle_timeout": 600,
+  "task_timeout": 5400,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-04T05:26:39.138843+00:00",
+  "attempt_id": "121f1a142d9527f86249f45a",
+  "daemon_version": "4.15.0",
+  "daemon_pid": 89807,
+  "updated_at": "2026-09-04T05:26:39.138964+00:00",
+  "pid": 89807
+}
