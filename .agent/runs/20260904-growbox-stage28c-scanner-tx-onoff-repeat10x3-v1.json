@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260904-growbox-stage28c-scanner-tx-onoff-repeat10x3-v1",
   "task_digest": "eb332cbf845f6ac8c3087d7b7c4f0160de2c75dddc15343c75b018fc0fcd595f",
-  "idle_timeout": 300,
-  "task_timeout": 5400,
-  "memory_limit_mb": 4096,
-  "started_at": "2026-09-04T02:55:01.733066+00:00",
+  "status": "failed",
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-04T02:55:04.990989+00:00",
   "attempt_id": "c951a0d78ebb8570cce60b75",
   "daemon_version": "4.15.0",
   "daemon_pid": 44491,
-  "updated_at": "2026-09-04T02:55:01.733156+00:00",
+  "updated_at": "2026-09-04T02:55:05.205235+00:00",
   "pid": 44491
 }
