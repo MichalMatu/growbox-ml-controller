@@ -348,13 +348,21 @@ This slice does not assign `remote_socket_1` to heater, fan, humidifier or any o
 
 The second bounded software-only slice adds a neutral RF433 endpoint registry: stable climate endpoint ID `1` resolves to the frozen `remote_socket_1` hardware configuration, while the registry itself contains no `ClimateActuatorRole` assignment. The registry is compiled by the firmware and covered by host tests; runtime output composition is still unchanged and fake-locked.
 
+## Stage28D manual service console slice
+
+A bounded USB service console is now integrated into the real-input runtime. It is intentionally separate from semantic actuator binding and does not replace `LockedFakeRoleDriver`. The console provides read-only `help`, `status`, `sensors`, and `rf list` commands plus explicit named manual RF transmit commands for lamp, fan and humidifier and a bounded one-shot RF receive command. Safe numeric aliases `0..3` exist only for read-only menu actions.
+
+The neutral RF hardware config now also contains `remote_socket_2` (lamp captured profile, 560 us / repeat 10) and `remote_socket_3` (humidifier captured profile, 560 us / repeat 10). These are capture-derived service profiles pending physical validation. `remote_socket_1` remains the fan and keeps its separately qualified 575 us / repeat 10 transmit evidence. No new climate endpoint IDs or semantic roles are assigned by this slice.
+
+Manual RF service commands use the existing Stage28 RF diagnostics transport and therefore require that transport to be enabled in the hardware build. Console TX evidence must continue to be separated from physical socket/load observation.
+
 ## What comes next
 
 There is no unfinished overnight Local Agent task. The overnight hardening goal is complete.
 
 Stage28D is now **IN PROGRESS**.
 
-The neutral endpoint registry is now ready. The next semantic step must not guess which actuator role the physical `remote_socket_1` represents. A concrete role assignment and its binary-output policy require an explicit product-level choice; until then preserve `LockedFakeRoleDriver`, fake-lock/no-unattended-mains safety and the frozen hardware identity below the semantic layer.
+The neutral endpoint registry and manual service console are now ready. Before further semantic output work, hardware-smoke the console and manually validate the captured lamp/fan/humidifier ON/OFF commands with physical load observation. A later semantic step must still not guess actuator-role binding from hardware identity. Preserve `LockedFakeRoleDriver`, fake-lock/no-unattended-mains safety and the frozen hardware identities below the semantic layer.
 
 Do not silently bake a semantic role such as `exhaust_fan` into the frozen Stage28C hardware identity. Hardware identity and semantic role are separate layers.
 

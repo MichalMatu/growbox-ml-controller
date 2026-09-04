@@ -53,6 +53,28 @@ TX_REPEAT: 10
 STATUS: pending physical ESP -> socket validation
 ```
 
+## Serial service commands
+
+The real-input firmware includes a bounded USB service console. The captured lamp and humidifier profiles are now also frozen in `Rf433HardwareConfig.h` for manual diagnostics, but their physical socket validation is still pending. The fan keeps the already-qualified `575 us / repeat 10` transmit profile.
+
+Useful commands:
+
+```text
+help
+status
+sensors
+rf list
+rf lamp on
+rf lamp off
+rf fan on
+rf fan off
+rf humidifier on
+rf humidifier off
+rf rx 1000
+```
+
+Named RF transmit commands are accepted only when the RF diagnostics transport is ready. They are explicit operator service actions and do not unlock the automatic climate-output path. A `manual_rf_tx` line proves local transmit lifecycle only; physical device observation remains the acceptance criterion.
+
 ## Data to record for every learned device
 
 For each device record:

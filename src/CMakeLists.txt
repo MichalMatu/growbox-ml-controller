@@ -63,6 +63,8 @@ elseif(GROWBOX_APP_MODE STREQUAL "climate-v6-real-inputs")
       "climate/runtime/Stage27RuntimeAdapters.cpp"
       "climate/runtime/Stage27TelemetryReporter.cpp"
       "climate/runtime/Stage28RfDiagnostics.cpp"
+      "climate/runtime/Stage28ServiceConsole.cpp"
+      "climate/runtime/Stage28ServiceConsoleCommand.cpp"
       "climate/telemetry/Stage27LogFormat.cpp"
       "climate/storage/Stage27TelemetryLogger.cpp"
       "climate/storage/Stage27SdStorageBackend.cpp"
@@ -109,6 +111,7 @@ set(GROWBOX_RF433_LOOPBACK_SMOKE_REPEAT "3" CACHE STRING "Stage28 RF433 loopback
 set(GROWBOX_RF433_LOOPBACK_SMOKE_PULSE_US "0" CACHE STRING "Stage28 RF433 loopback smoke pulse length; 0 uses protocol default")
 set(GROWBOX_RF433_TX_GPIO "8" CACHE STRING "Stage28 RF433 TX GPIO")
 set(GROWBOX_RF433_RX_GPIO "14" CACHE STRING "Stage28 RF433 RX GPIO")
+set(GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED "1" CACHE STRING "Enable Stage28 USB service console")
 
 target_compile_definitions(
   ${COMPONENT_LIB}
@@ -139,4 +142,5 @@ target_compile_definitions(
     GROWBOX_RF433_LOOPBACK_SMOKE_PULSE_US=${GROWBOX_RF433_LOOPBACK_SMOKE_PULSE_US}
     GROWBOX_RF433_TX_GPIO=${GROWBOX_RF433_TX_GPIO}
     GROWBOX_RF433_RX_GPIO=${GROWBOX_RF433_RX_GPIO}
+    GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED=${GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED}
 )

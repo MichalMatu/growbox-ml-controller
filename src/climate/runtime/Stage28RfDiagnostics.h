@@ -24,6 +24,8 @@ public:
 
   bool begin() noexcept;
   void tick(std::uint64_t now_ms) noexcept;
+  bool manualTransmit(const rf433::FrameConfig& frame, rf433::LoopbackEvidence& evidence) noexcept;
+  bool manualReceive(std::uint32_t timeout_ms, rf433::ReceiveEvidence& evidence) noexcept;
 
   bool ready() const noexcept {
     return ready_;

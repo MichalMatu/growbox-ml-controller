@@ -32,6 +32,22 @@ void Stage28RfDiagnostics::tick(std::uint64_t now_ms) noexcept {
   }
 }
 
+bool Stage28RfDiagnostics::manualTransmit(const rf433::FrameConfig& frame,
+                                          rf433::LoopbackEvidence& evidence) noexcept {
+  evidence = {};
+  if (!ready_) {
+    return false;
+  }
+  static_cast<void>(loopback_.transmitAndReceive(frame, config_.smoke_timeout_ms, evidence));
+  return evidence.tx_completed;
+}
+
+bool Stage28RfDiagnostics::manualReceive(std::uint32_t timeout_ms,
+                                         rf433::ReceiveEvidence& evidence) noexcept {
+  evidence = {};
+  return ready_ && timeout_ms > 0U && loopback_.receiveOnce(timeout_ms, evidence);
+}
+
 void Stage28RfDiagnostics::capturePassive() noexcept {
   if (!capture_ready_logged_) {
     capture_ready_logged_ = true;

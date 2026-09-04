@@ -9,6 +9,7 @@
 #include "climate/runtime/Stage27RuntimeAdapters.h"
 #include "climate/runtime/Stage27TelemetryReporter.h"
 #include "climate/runtime/Stage28RfDiagnostics.h"
+#include "climate/runtime/Stage28ServiceConsole.h"
 #include "climate/storage/Stage27TelemetryLogger.h"
 
 #include <esp_err.h>
@@ -89,6 +90,9 @@
 #ifndef GROWBOX_RF433_RX_GPIO
 #define GROWBOX_RF433_RX_GPIO 14
 #endif
+#ifndef GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED
+#define GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED 1
+#endif
 
 namespace growbox::app::climate_io {
 namespace {
@@ -151,6 +155,10 @@ runtime::Stage28RfDiagnosticsConfig rfDiagnosticsConfig() noexcept {
 
   runtime::Stage28RfDiagnostics rf_diagnostics(rfDiagnosticsConfig());
   const bool rf_ready = rf_diagnostics.begin();
+  runtime::Stage28ServiceConsole service_console(
+      {GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED != 0, GROWBOX_FIRMWARE_GIT_SHA}, ble, scd41, clock,
+      rf_diagnostics);
+  const bool service_console_ready = service_console.begin();
 
   runtime::Stage27InsideSource inside(ble, scd41);
   runtime::Stage27NearbySource outside(ble);
@@ -169,16 +177,17 @@ runtime::Stage28RfDiagnosticsConfig rfDiagnosticsConfig() noexcept {
   ESP_LOGI(kTag,
            "Stage27 real-input runtime: i2c=%d scd41=%d ds3231=%d ble=%d sd=%d "
            "flash_fallback=%d storage_logger=%d rf433_loopback=%d rf433_tx_gpio=%d "
-           "rf433_rx_gpio=%d outputs=fake-locked",
+           "rf433_rx_gpio=%d service_console=%d outputs=fake-locked",
            i2c_ready, scd41_ready, rtc_ready, ble_ready, storage_config.sd_enabled,
            storage_config.flash_fallback_enabled, storage_logger_ready, rf_ready,
-           GROWBOX_RF433_TX_GPIO, GROWBOX_RF433_RX_GPIO);
+           GROWBOX_RF433_TX_GPIO, GROWBOX_RF433_RX_GPIO, service_console_ready);
   ESP_LOGI(kTag, "Stage27 soak boot: firmware_sha=%s reset_reason=%d", GROWBOX_FIRMWARE_GIT_SHA,
            static_cast<int>(reset_reason));
 
   std::uint32_t diagnostic_tick = 0U;
   while (true) {
     const std::uint64_t now_ms = monotonicMilliseconds();
+    service_console.poll(now_ms);
     rf_diagnostics.tick(now_ms);
 
     ::growbox::climate::ClimateRuntimeDecision decision{};

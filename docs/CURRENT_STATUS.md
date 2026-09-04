@@ -80,6 +80,14 @@ Local `SelfTx` proves the local RF path only; it does not confirm the physical s
 
 The pre-Stage28D golden gate is complete on firmware/source `316b58e76de609069ddbf2667fe86f6218fb2143`. The exact SHA passed the full software gate and a 90-minute strict hardware soak with 526 records, zero resets/disconnects/parse errors/violations, stable memory, continuous SD progress, outputs fake-locked and no RF433 transmit observed. See `docs/PRESTAGE28D_GOLDEN_CHECKPOINT.md`.
 
+## Stage28D service console
+
+The real-input runtime now includes a bounded USB service console with `help`, `status`, `sensors`, `rf list`, named manual RF ON/OFF commands for lamp/fan/humidifier, and bounded one-shot `rf rx` capture. Read-only menu items also have safe numeric aliases `0..3`; no single-key alias performs actuation.
+
+The lamp and humidifier captured profiles are frozen in the neutral RF hardware config at `560 us / repeat 10`; their ESP-to-socket physical validation is still pending. The fan continues using the historically qualified `575 us / repeat 10` transmit profile. Manual RF commands use the existing Stage28 RF diagnostics transport and are unavailable when that transport is disabled.
+
+Automatic climate outputs remain `LockedFakeRoleDriver` / fake-locked. Manual console RF transmit is an explicit service action, not semantic role binding and not physical load-state acknowledgement.
+
 ## Next work
 
-Stage28D is IN PROGRESS. Semantic role-to-endpoint mapping validates fail-closed, and stable climate endpoint ID `1` maps to `remote_socket_1`, now physically identified as the fan socket. No semantic actuator role is yet assigned in firmware, the real runtime still uses `LockedFakeRoleDriver`, and no unattended physical-output gate is open. The next bounded hardware step is manual ON/OFF validation of lamp, fan and humidifier using the identities in `docs/RF433_DEVICE_CODES.md`, with physical load observation as the acceptance criterion.
+Stage28D is IN PROGRESS. The next bounded hardware step is to flash a service-console build with the RF diagnostics transport enabled, smoke-test the menu/read-only commands without transmitting, then manually validate ON/OFF for lamp, fan and humidifier while observing each physical load. No unattended physical-output gate is open.

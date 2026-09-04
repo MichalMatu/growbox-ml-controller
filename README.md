@@ -2,7 +2,7 @@
 
 ESP32-S3 environment-control research and product-development repository combining a portable C++ controller, TinyML inference, deterministic safety, simulation/calibration tooling, a scientific 3D twin, and browser-based hardware configuration.
 
-> **Current controller status:** Stage28C has frozen one neutral RF433 remote/socket pair and the pre-Stage28D golden gate is complete. Stage28D is not started. Rule is authoritative, ML is shadow/research-only, and physical outputs remain fake/locked for unattended work. See [docs/CURRENT_STATUS.md](docs/CURRENT_STATUS.md), [docs/PRESTAGE28D_GOLDEN_CHECKPOINT.md](docs/PRESTAGE28D_GOLDEN_CHECKPOINT.md) and [docs/STAGE28C_FINAL_EVIDENCE.md](docs/STAGE28C_FINAL_EVIDENCE.md).
+> **Current controller status:** Stage28C and the pre-Stage28D golden gate are complete; Stage28D is in progress. A bounded USB service console now provides read-only diagnostics plus explicitly manual RF433 service commands while the climate runtime remains fake-locked for unattended outputs. See [docs/CURRENT_STATUS.md](docs/CURRENT_STATUS.md), [docs/RF433_DEVICE_CODES.md](docs/RF433_DEVICE_CODES.md) and [docs/PRESTAGE28D_GOLDEN_CHECKPOINT.md](docs/PRESTAGE28D_GOLDEN_CHECKPOINT.md).
 
 ## Live demos
 

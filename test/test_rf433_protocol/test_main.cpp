@@ -109,6 +109,30 @@ void testFrozenRemoteSocketHardwareConfig() {
   assert(validateFrameConfig(kRemoteSocket1.off) == CodecStatus::Ok);
 }
 
+void testCapturedServiceConsoleHardwareProfiles() {
+  static_assert(kRemoteSocket2On.key.code == 235030016U);
+  static_assert(kRemoteSocket2Off.key.code == 16926208U);
+  static_assert(kRemoteSocket3On.key.code == 637683200U);
+  static_assert(kRemoteSocket3Off.key.code == 771900928U);
+  static_assert(kRemoteSocket2On.key.bit_length == 32U);
+  static_assert(kRemoteSocket3On.key.bit_length == 32U);
+  static_assert(kRemoteSocket2On.key.protocol == 2U);
+  static_assert(kRemoteSocket3On.key.protocol == 2U);
+  static_assert(kRemoteSocket2On.pulse_us == 560U);
+  static_assert(kRemoteSocket2Off.pulse_us == 560U);
+  static_assert(kRemoteSocket3On.pulse_us == 560U);
+  static_assert(kRemoteSocket3Off.pulse_us == 560U);
+  static_assert(kRemoteSocket2On.repeat == 10U);
+  static_assert(kRemoteSocket3On.repeat == 10U);
+
+  assert(std::string_view(kRemoteSocket2.label) == "remote_socket_2");
+  assert(std::string_view(kRemoteSocket3.label) == "remote_socket_3");
+  assert(validateFrameConfig(kRemoteSocket2.on) == CodecStatus::Ok);
+  assert(validateFrameConfig(kRemoteSocket2.off) == CodecStatus::Ok);
+  assert(validateFrameConfig(kRemoteSocket3.on) == CodecStatus::Ok);
+  assert(validateFrameConfig(kRemoteSocket3.off) == CodecStatus::Ok);
+}
+
 void testHardwareQualifiedRmtReceiveContract() {
   static_assert(kRmtResolutionHz == 100'000U);
   static_assert(kRxResolutionHz == 100'000U);
@@ -188,6 +212,7 @@ int main() {
   testRepeatedCapturePrefersExactFingerprint();
   testKnownRemoteSocketPairCodec();
   testFrozenRemoteSocketHardwareConfig();
+  testCapturedServiceConsoleHardwareProfiles();
   testHardwareQualifiedRmtReceiveContract();
   testValidationBounds();
   testCaptureTiming();
