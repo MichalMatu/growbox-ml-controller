@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260904-growbox-prestage-rf-contract-hardening-v1",
+  "task_digest": "157e4854470f5a58043b369029c4c1493643e853c5daa14ec35232df0a6274b7",
+  "idle_timeout": 300,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-04T04:36:31.379616+00:00",
+  "attempt_id": "10261e1d29c5d5e59c4d922b",
+  "daemon_version": "4.15.0",
+  "daemon_pid": 45103,
+  "updated_at": "2026-09-04T04:36:31.379709+00:00",
+  "pid": 45103
+}
