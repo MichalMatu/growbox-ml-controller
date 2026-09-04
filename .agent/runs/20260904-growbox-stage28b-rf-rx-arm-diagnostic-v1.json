@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260904-growbox-stage28b-rf-rx-arm-diagnostic-v1",
+  "task_digest": "3709a138a6ed07e593b98d2c6ff500a47d7558b5635e20879e5181ebee4f6db9",
+  "idle_timeout": 300,
+  "task_timeout": 2400,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-04T00:29:52.413810+00:00",
+  "attempt_id": "8408f70388ce4a80552600e4",
+  "daemon_version": "4.15.0",
+  "daemon_pid": 31596,
+  "updated_at": "2026-09-04T00:29:52.414039+00:00",
+  "pid": 31596
+}
