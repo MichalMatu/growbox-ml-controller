@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260904-growbox-stage28b-rf-rx-glitch-fix-v1",
+  "task_digest": "9260de6dba1b0ce25f736a07bb11063588ee14d484ee612cb228476c7669589e",
+  "idle_timeout": 300,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-04T01:35:30.557182+00:00",
+  "attempt_id": "c0a26731055a7f89b5bf94f4",
+  "daemon_version": "4.15.0",
+  "daemon_pid": 95087,
+  "updated_at": "2026-09-04T01:35:30.565678+00:00",
+  "pid": 95087
+}
