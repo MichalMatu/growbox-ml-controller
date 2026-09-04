@@ -2,8 +2,8 @@
   "version": 1,
   "daemon_version": "4.15.0",
   "state": "idle",
-  "pid": 89807,
-  "updated_at": "2026-09-04T05:26:56.651786+00:00",
+  "pid": 94844,
+  "updated_at": "2026-09-04T05:31:59.601521+00:00",
   "self_revision": "c8251967dcd0b90fe26f14392eb56a67e39d542a",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -23,8 +23,7 @@
   "default_branch": "main",
   "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 89807,
+  "worker_pid": 94844,
   "supervisor_pid": 23848,
-  "last_task_id": "20260904-growbox-prestage-golden-software-gate-v1",
   "execution_variant": "parallel"
 }
