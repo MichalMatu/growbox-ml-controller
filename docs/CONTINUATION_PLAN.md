@@ -18,10 +18,18 @@ Current RF receive settings remain `100 kHz`, `10 us` minimum signal and `20 ms`
 
 The pre-Stage28D hardening/golden work is complete. There is no unfinished overnight Local Agent task.
 
-Stage28D was explicitly started by the operator. Semantic role-to-endpoint mapping is fail-closed, and the second bounded software slice adds stable endpoint ID `1` for the neutral frozen `remote_socket_1` hardware registry. No semantic role is assigned yet.
+Stage28D was explicitly started by the operator. Semantic role-to-endpoint mapping is fail-closed, and the second bounded software slice adds stable endpoint ID `1` for the neutral frozen `remote_socket_1` hardware registry. The operator has now explicitly identified that physical pair as the fan socket, but no semantic `ClimateActuatorRole` is assigned yet.
 
-The quick hardware/code register is `docs/RF433_DEVICE_CODES.md`. It records the frozen pair, current growbox sensor placement, and dedicated entries for the lamp, fan and humidifier. Capture/freeze those three ON/OFF identities there before semantic binding so RF identities do not remain only in chat history.
+The quick hardware/code register is `docs/RF433_DEVICE_CODES.md`. It now records all three captured identities:
+
+- lamp: ON `235030016`, OFF `16926208`;
+- fan / `remote_socket_1`: ON `906118656`, OFF `1040336384`;
+- humidifier: ON `637683200`, OFF `771900928`.
+
+All are 32-bit protocol 2 captures with `560 us` captured pulse and requested ESP TX repeat `10`. Preserve the separate Stage28C evidence that the fan pair was physically reliable with `575 us` and repeat `10`; do not rewrite that historical qualification as `560 us` until the new physical recheck proves it.
 
 Current physical sensor placement: TP357 BLE inside growbox, Xiaomi BLE outside growbox, directly connected ESP32 sensors inside growbox.
 
-Keep the real runtime fake-locked; the next role/binary-output policy is an explicit product choice, not something to infer. Do not introduce unattended 230 V control or physical-state acknowledgement semantics.
+The next bounded hardware step is manual ESP-to-socket ON/OFF validation for lamp, fan and humidifier, using physical device response as the acceptance criterion. Local TX completion or `SelfTx` alone is insufficient.
+
+Keep the real runtime fake-locked for unattended operation. Do not introduce unattended 230 V control or physical-state acknowledgement semantics during the manual validation step.
