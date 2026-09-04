@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260904-growbox-stage28c-knownpair-idle20-probe-v1",
+  "task_digest": "fcf525741e8c53aec2d86d74fcd3ada3d3d5fdf858099038a18f2049c657acb7",
+  "idle_timeout": 300,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-04T03:27:55.907257+00:00",
+  "attempt_id": "8ae17b07d46aae901168f140",
+  "daemon_version": "4.15.0",
+  "daemon_pid": 7288,
+  "updated_at": "2026-09-04T03:27:55.907398+00:00",
+  "pid": 7288
+}
