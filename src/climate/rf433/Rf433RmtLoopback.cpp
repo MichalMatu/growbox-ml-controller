@@ -12,8 +12,10 @@ namespace growbox::app::climate_io::rf433 {
 namespace {
 
 constexpr std::size_t kRmtMemorySymbols = 64U;
-constexpr std::uint32_t kRxMinimumSignalNs = 20'000U;
-constexpr std::uint32_t kRxMaximumSignalNs = 300'000'000U;
+constexpr std::uint32_t kRxMinimumSignalNs = 1'250U;
+constexpr std::uint32_t kRxMaximumSignalNs = 12'000'000U;
+constexpr std::uint32_t kRxResolutionHz = 1'000'000U;
+constexpr std::uint32_t kRxToCodecTickRatio = kRxResolutionHz / kRmtResolutionHz;
 constexpr std::uint32_t kSelfTxGuardMs = 50U;
 
 }  // namespace
@@ -73,7 +75,7 @@ bool Rf433RmtLoopback::begin() noexcept {
   rmt_rx_channel_config_t rx_config{};
   rx_config.gpio_num = static_cast<gpio_num_t>(config_.rx_gpio);
   rx_config.clk_src = RMT_CLK_SRC_DEFAULT;
-  rx_config.resolution_hz = kRmtResolutionHz;
+  rx_config.resolution_hz = kRxResolutionHz;
   rx_config.mem_block_symbols = kRmtMemorySymbols;
   if (rmt_new_rx_channel(&rx_config, &rx_channel_) != ESP_OK) {
     close();
@@ -226,8 +228,8 @@ bool Rf433RmtLoopback::transmitAndReceive(const FrameConfig& frame,
   for (std::size_t i = 0U; i < received; ++i) {
     const rmt_symbol_word_t& input = rx_symbols_[i];
     captured[i] = PulseSymbol{
-        static_cast<std::uint16_t>(input.duration0),
-        static_cast<std::uint16_t>(input.duration1),
+        static_cast<std::uint16_t>((input.duration0 + (kRxToCodecTickRatio / 2U)) / kRxToCodecTickRatio),
+        static_cast<std::uint16_t>((input.duration1 + (kRxToCodecTickRatio / 2U)) / kRxToCodecTickRatio),
         input.level0 != 0U,
         input.level1 != 0U,
     };
