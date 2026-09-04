@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260904-growbox-prestage-runtime-refactor-v1",
+  "task_digest": "201d7c190e9a73beb51485c5d0ab29ffb53962605a60678ece7c90494f875e48",
+  "idle_timeout": 300,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-04T04:30:06.355939+00:00",
+  "attempt_id": "d1dc55eff69db124ff7ac476",
+  "daemon_version": "4.15.0",
+  "daemon_pid": 35460,
+  "updated_at": "2026-09-04T04:30:06.356104+00:00",
+  "pid": 35460
+}
