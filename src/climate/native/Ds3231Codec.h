@@ -18,4 +18,7 @@ struct Ds3231DecodedTime {
 bool decodeDs3231Time(const std::array<std::uint8_t, 7>& registers, std::uint8_t status_register,
                       Ds3231DecodedTime& output) noexcept;
 
+bool encodeDs3231UtcTime(std::uint64_t unix_time_s,
+                         std::array<std::uint8_t, 7>& registers) noexcept;
+
 } // namespace growbox::app::climate_io::native
