@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260905-growbox-sd-durable-usb-v2",
+  "task_digest": "d6f30c9e1c1f43faf5a5ce00c64c6a424f3d8d38658510f197828781a0b16945",
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "memory_limit_mb": 6144,
+  "started_at": "2026-09-05T17:41:56.891274+00:00",
+  "attempt_id": "5e0218f8316c882feaeab3b9",
+  "daemon_version": "4.18.0",
+  "daemon_pid": 93216,
+  "updated_at": "2026-09-05T17:41:56.891546+00:00",
+  "pid": 93216
+}
