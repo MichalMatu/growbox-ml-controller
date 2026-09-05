@@ -17,6 +17,8 @@ constexpr float kHumidityFullScalePct = 18.0F;
 constexpr float kVpdFullScaleKpa = 0.7F;
 constexpr float kCo2FullScalePpm = 500.0F;
 constexpr float kOutsideImprovementMargin = 0.08F;
+constexpr float kAbsoluteHumidityBenefitDeadbandGm3 = 0.5F;
+constexpr float kAbsoluteHumidityBenefitFullScaleGm3 = 3.0F;
 constexpr float kMinimumTemperatureC = 8.0F;
 constexpr float kMaximumTemperatureC = 42.0F;
 constexpr float kMaximumHumidityPct = 95.0F;
@@ -36,6 +38,13 @@ bool usable(const MeasuredValue& value, std::uint64_t timeout_ms) noexcept {
 float level(float error, float deadband, float full_scale) noexcept {
   const float excess = std::max(0.0F, std::abs(error) - deadband);
   return clip01(excess / std::max(1.0e-9F, full_scale));
+}
+
+float absoluteHumidityGm3(float temperature_c, float relative_humidity_pct) noexcept {
+  const float humidity = std::clamp(relative_humidity_pct, 0.0F, 100.0F);
+  const float vapor_pressure_hpa =
+      saturationVapourPressureKpa(temperature_c) * 10.0F * humidity / 100.0F;
+  return 216.7F * vapor_pressure_hpa / (temperature_c + 273.15F);
 }
 
 bool anyActive(const ClimatePolicyRequest& request) noexcept {
@@ -92,32 +101,38 @@ ClimatePolicyRequest ruleRequest(const ClimateControllerInput& input) noexcept {
     request.dehumidifier = humidity_level;
   }
 
-  const bool outside_ok = usable(measurements.outside_temperature_c, input.sensor_timeout_ms) &&
-                          usable(measurements.outside_humidity_pct, input.sensor_timeout_ms);
-  if (outside_ok && input.capabilities.exhaust_fan) {
-    constexpr float kMixFraction = 0.20F;
-    const float mixed_temperature =
-        temperature + kMixFraction * (measurements.outside_temperature_c.value - temperature);
-    const float mixed_humidity =
-        humidity + kMixFraction * (measurements.outside_humidity_pct.value - humidity);
-    const float current_temp_score = std::abs(temperature_error) / 5.0F;
-    const float mixed_temp_score =
-        std::abs(mixed_temperature - input.targets.air_temperature_c) / 5.0F;
-    float current_humidity_error = humidity - input.targets.relative_humidity_pct;
-    float mixed_humidity_error = mixed_humidity - input.targets.relative_humidity_pct;
-    float humidity_scale = 20.0F;
-    if (input.humidity_control_mode == HumidityControlMode::Vpd) {
-      current_humidity_error = airVpdKpa(temperature, humidity) - input.targets.air_vpd_kpa;
-      mixed_humidity_error =
-          airVpdKpa(mixed_temperature, mixed_humidity) - input.targets.air_vpd_kpa;
-      humidity_scale = 0.7F;
+  const bool outside_temperature_ok =
+      usable(measurements.outside_temperature_c, input.sensor_timeout_ms);
+  const bool outside_humidity_ok =
+      usable(measurements.outside_humidity_pct, input.sensor_timeout_ms);
+  if (input.capabilities.exhaust_fan) {
+    if (outside_temperature_ok) {
+      constexpr float kMixFraction = 0.20F;
+      const float mixed_temperature =
+          temperature + kMixFraction * (measurements.outside_temperature_c.value - temperature);
+      const float current_temp_score = std::abs(temperature_error) / 5.0F;
+      const float mixed_temp_score =
+          std::abs(mixed_temperature - input.targets.air_temperature_c) / 5.0F;
+      const float temperature_improvement = current_temp_score - mixed_temp_score;
+      if (temperature_improvement > kOutsideImprovementMargin) {
+        request.exhaust_fan =
+            std::max(request.exhaust_fan, clip01(temperature_improvement / 0.75F));
+      }
     }
-    const float current_score =
-        current_temp_score + std::abs(current_humidity_error) / humidity_scale;
-    const float mixed_score = mixed_temp_score + std::abs(mixed_humidity_error) / humidity_scale;
-    const float improvement = current_score - mixed_score;
-    if (improvement > kOutsideImprovementMargin) {
-      request.exhaust_fan = clip01(improvement / 0.75F);
+
+    if (too_humid && outside_temperature_ok && outside_humidity_ok) {
+      const float inside_absolute_humidity = absoluteHumidityGm3(temperature, humidity);
+      const float intake_absolute_humidity =
+          absoluteHumidityGm3(measurements.outside_temperature_c.value,
+                              measurements.outside_humidity_pct.value);
+      const float drying_gap = inside_absolute_humidity - intake_absolute_humidity;
+      if (drying_gap > kAbsoluteHumidityBenefitDeadbandGm3) {
+        const float drying_benefit =
+            level(drying_gap, kAbsoluteHumidityBenefitDeadbandGm3,
+                  kAbsoluteHumidityBenefitFullScaleGm3);
+        request.exhaust_fan =
+            std::max(request.exhaust_fan, std::min(humidity_level, drying_benefit));
+      }
     }
   }
 
