@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260905-growbox-gate3-time-observability-verify-v2",
+  "task_digest": "6f2b6f638ad83cde08bdb2005fcaed7338c3cd1713b3e65ceff639634a145453",
+  "idle_timeout": 600,
+  "task_timeout": 7200,
+  "memory_limit_mb": 6144,
+  "started_at": "2026-09-05T06:46:20.210597+00:00",
+  "attempt_id": "bcac7604f339e58a4fec984a",
+  "daemon_version": "4.17.0",
+  "daemon_pid": 95154,
+  "updated_at": "2026-09-05T06:46:20.210798+00:00",
+  "pid": 95154
+}
