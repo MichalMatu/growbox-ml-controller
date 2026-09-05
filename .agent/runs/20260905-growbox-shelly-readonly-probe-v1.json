@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260905-growbox-shelly-readonly-probe-v1",
   "task_digest": "5b949773db0257cec176156203945ba790d8d4e48a4b0e3e6d0b2d94b18b0295",
-  "idle_timeout": 30,
-  "task_timeout": 120,
-  "memory_limit_mb": 1024,
-  "started_at": "2026-09-05T06:08:30.007476+00:00",
+  "status": "failed",
+  "failure_reason": "task_budget_exhausted",
+  "finished_at": "2026-09-05T06:08:31.800272+00:00",
   "attempt_id": "6c0740938fa0d0f6bafb3ce2",
   "daemon_version": "4.17.0",
   "daemon_pid": 68686,
-  "updated_at": "2026-09-05T06:08:30.007704+00:00",
+  "updated_at": "2026-09-05T06:08:32.020299+00:00",
   "pid": 68686
 }
