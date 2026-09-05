@@ -17,6 +17,24 @@ cmake -S test/host -B build/host-tests -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 cmake --build build/host-tests --parallel
 ctest --test-dir build/host-tests --output-on-failure
 
+echo "==> Stage28D bounded-output regression tests"
+HOST_CXX="${CXX:-c++}"
+"$HOST_CXX" -std=c++17 -Wall -Wextra -Wpedantic \
+  -Isrc -Ilib/environment_control/src \
+  test/test_stage28d_rf_output_endpoint/test_main.cpp \
+  src/climate/Stage28dRfOutputEndpoint.cpp \
+  src/climate/Stage28dOutputBindings.cpp \
+  src/climate/ClimateSemanticOutput.cpp \
+  src/climate/rf433/ClimateRf433EndpointRegistry.cpp \
+  -o /tmp/stage28d_rf_output_endpoint_tests
+/tmp/stage28d_rf_output_endpoint_tests
+"$HOST_CXX" -std=c++17 -Wall -Wextra -Wpedantic \
+  -Isrc \
+  test/test_stage28d_thermal_sequence/test_main.cpp \
+  src/climate/Stage28dThermalTestSequence.cpp \
+  -o /tmp/stage28d_thermal_sequence_tests
+/tmp/stage28d_thermal_sequence_tests
+
 if [[ "${SKIP_CLANG_TIDY:-}" != "1" ]]; then
   bash "${ROOT}/scripts/run_clang_tidy_host.sh"
 else
