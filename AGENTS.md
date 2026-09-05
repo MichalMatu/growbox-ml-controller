@@ -8,7 +8,7 @@ Canonical Local Agent source of truth:
 
 - repository: `MichalMatu/local-agent`
 - production/runtime branch: `main`
-- releases: `vX.Y.Z` tags matching `agent_version.py`
+- releases: `vX.Y.Z` tags matching `local_agent/version.py`
 - read repository-worker truth from `.agent/status/daemon.json`: `daemon_version`, `self_revision`, `execution_model` / `execution_variant`, current task state, and `supervisor_pid`; supervisor-wide fields such as `max_parallel_workers` are published by the shared supervisor and are not guaranteed to be repeated in every repository-worker status snapshot; do not pin a remembered daemon version here.
 
 Repository identity:
@@ -28,7 +28,7 @@ When starting work on this repository in a new chat/session:
 1. Read this `AGENTS.md`, the current `README.md`, `docs/CONTINUATION_PLAN.md`, and `docs/STAGE27_NATIVE_IDF_HANDOFF.md` before proposing or executing changes.
 2. Inspect the exact GitHub branch relevant to the requested work. Do not assume `main` is the work branch.
 3. If Chat Bridge is active, require the wake envelope to identify exactly repository id `growbox-ml-controller`, repository `MichalMatu/growbox-ml-controller`, and agent binding `815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5`. Never infer or switch repository identity from remembered chat context; a different repository requires explicit Bridge Rebind.
-4. Inspect `.agent/status/daemon.json` on `agent-control` and verify `daemon_version` against `MichalMatu/local-agent/agent_version.py` when Local Agent compatibility matters.
+4. Inspect `.agent/status/daemon.json` on `agent-control` and verify `daemon_version` against `MichalMatu/local-agent/local_agent/version.py` when Local Agent compatibility matters.
 5. When exact daemon source identity matters, compare `.agent/status/daemon.json:self_revision` with `MichalMatu/local-agent/main`; do not infer synchronization from the version string alone.
 6. Use this repository's own `agent-control` branch for Local Agent tasks. Never send Growbox tasks through another repository's control branch.
 7. Verify `.agent/binding.json` on `agent-control` matches the repository identity above before queueing work when binding compatibility matters.
