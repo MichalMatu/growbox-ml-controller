@@ -216,6 +216,38 @@ target_compile_features(stage28d_lamp_safety_tests PRIVATE cxx_std_17)
 target_compile_options(stage28d_lamp_safety_tests PRIVATE -Wall -Wextra -Wpedantic)
 
 add_executable(
+  climate_observability_metrics_tests
+  "${PROJECT_ROOT}/test/test_climate_observability_metrics/test_main.cpp"
+  "${PROJECT_ROOT}/src/climate/ClimateObservabilityMetrics.cpp"
+)
+target_include_directories(climate_observability_metrics_tests PRIVATE "${PROJECT_ROOT}/src")
+target_compile_features(climate_observability_metrics_tests PRIVATE cxx_std_17)
+target_compile_options(climate_observability_metrics_tests PRIVATE -Wall -Wextra -Wpedantic)
+
+add_executable(
+  europe_warsaw_time_tests
+  "${PROJECT_ROOT}/test/test_europe_warsaw_time/test_main.cpp"
+  "${PROJECT_ROOT}/src/climate/runtime/EuropeWarsawTime.cpp"
+)
+target_include_directories(europe_warsaw_time_tests PRIVATE "${PROJECT_ROOT}/src")
+target_compile_features(europe_warsaw_time_tests PRIVATE cxx_std_17)
+target_compile_options(europe_warsaw_time_tests PRIVATE -Wall -Wextra -Wpedantic)
+
+add_executable(
+  stage27_schedule_profile_tests
+  "${PROJECT_ROOT}/test/test_stage27_schedule_profile/test_main.cpp"
+  "${PROJECT_ROOT}/src/climate/runtime/Stage27ScheduleProfile.cpp"
+)
+target_include_directories(
+  stage27_schedule_profile_tests
+  PRIVATE
+    "${PROJECT_ROOT}/src"
+    "${PROJECT_ROOT}/lib/environment_control/src"
+)
+target_compile_features(stage27_schedule_profile_tests PRIVATE cxx_std_17)
+target_compile_options(stage27_schedule_profile_tests PRIVATE -Wall -Wextra -Wpedantic)
+
+add_executable(
   tp357_decoder_tests
   "${PROJECT_ROOT}/test/test_tp357_decoder/test_main.cpp"
   "${PROJECT_ROOT}/src/climate/native/Tp357Decoder.cpp"
@@ -305,6 +337,7 @@ if(UNIX)
   target_link_libraries(climate_composite_input_tests PRIVATE m)
   target_link_libraries(climate_semantic_output_tests PRIVATE m)
   target_link_libraries(stage28d_lamp_safety_tests PRIVATE m)
+  target_link_libraries(climate_observability_metrics_tests PRIVATE m)
   target_link_libraries(stage27_telemetry_tests PRIVATE m)
   target_link_libraries(stage27_fault_freshness_tests PRIVATE m)
 endif()
@@ -323,6 +356,9 @@ add_test(NAME climate_diagnostics_tests COMMAND climate_diagnostics_tests)
 add_test(NAME climate_composite_input_tests COMMAND climate_composite_input_tests)
 add_test(NAME climate_semantic_output_tests COMMAND climate_semantic_output_tests)
 add_test(NAME stage28d_lamp_safety_tests COMMAND stage28d_lamp_safety_tests)
+add_test(NAME climate_observability_metrics_tests COMMAND climate_observability_metrics_tests)
+add_test(NAME europe_warsaw_time_tests COMMAND europe_warsaw_time_tests)
+add_test(NAME stage27_schedule_profile_tests COMMAND stage27_schedule_profile_tests)
 add_test(NAME tp357_decoder_tests COMMAND tp357_decoder_tests)
 add_test(NAME stage27_telemetry_tests COMMAND stage27_telemetry_tests)
 add_test(NAME ble_climate_state_tests COMMAND ble_climate_state_tests)
