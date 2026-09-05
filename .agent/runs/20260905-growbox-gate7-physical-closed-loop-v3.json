@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260905-growbox-gate7-physical-closed-loop-v3",
+  "task_digest": "0d4969299accc1e3a88eeb7479dbf69038ac5c30789e81fceef7e41f8054c1e0",
+  "idle_timeout": 900,
+  "task_timeout": 3000,
+  "memory_limit_mb": 6144,
+  "started_at": "2026-09-05T11:26:19.786728+00:00",
+  "attempt_id": "84b88f6348df9dd26521e0fe",
+  "daemon_version": "4.17.0",
+  "daemon_pid": 62224,
+  "updated_at": "2026-09-05T11:26:19.786913+00:00",
+  "pid": 62224
+}
