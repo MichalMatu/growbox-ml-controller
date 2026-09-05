@@ -34,6 +34,12 @@ HOST_CXX="${CXX:-c++}"
   src/climate/Stage28dThermalTestSequence.cpp \
   -o /tmp/stage28d_thermal_sequence_tests
 /tmp/stage28d_thermal_sequence_tests
+"$HOST_CXX" -std=c++17 -Wall -Wextra -Wpedantic \
+  -Isrc -Ilib/environment_control/src \
+  test/test_stage28d_binary_role_arbiter/test_main.cpp \
+  src/climate/Stage28dBinaryRoleArbiter.cpp \
+  -o /tmp/stage28d_binary_role_arbiter_tests
+/tmp/stage28d_binary_role_arbiter_tests
 
 if [[ "${SKIP_CLANG_TIDY:-}" != "1" ]]; then
   bash "${ROOT}/scripts/run_clang_tidy_host.sh"
