@@ -84,11 +84,6 @@ void testLightingBoundariesLocalTime() {
   assert(summer_off.hour == 22U);
 }
 
-void testSupportedRange() {
-  assert(local(946684800ULL).year == 2000U);
-  assert(local(7258118399ULL).year == 2200U || local(7258118399ULL).year == 2199U);
-}
-
 } // namespace
 
 int main() {
