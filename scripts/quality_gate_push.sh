@@ -43,9 +43,13 @@ fi
 
 if [[ "${SKIP_IDF_BUILD:-}" != "1" ]]; then
   bash "${ROOT}/scripts/idf_gate_build.sh"
-  IDF_GATE_BUILD_DIR="build/idf-gate-real-inputs" \
-    IDF_GATE_APP_MODE="climate-v6-real-inputs" \
-    bash "${ROOT}/scripts/idf_gate_build.sh"
+  # The real-input runtime requires the Stage27C BLE/NimBLE sdkconfig and actual
+  # CrowPanel board profile. A generic legacy sdkconfig does not expose NimBLE headers.
+  STAGE27C_BUILD_DIR="build/idf-gate-real-inputs-crowpanel" \
+    GROWBOX_RF433_LOOPBACK_ENABLED=0 \
+    GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 \
+    GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 \
+    bash "${ROOT}/scripts/stage27c_crowpanel.sh" build
 else
   echo "==> idf builds skipped (SKIP_IDF_BUILD=1)"
 fi
