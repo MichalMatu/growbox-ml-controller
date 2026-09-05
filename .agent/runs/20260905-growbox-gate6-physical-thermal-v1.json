@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260905-growbox-gate6-physical-thermal-v1",
+  "task_digest": "de3f894e046ea5ded02a9b84e7858efa898e62f03eff763f2b9e5406025d7372",
+  "idle_timeout": 900,
+  "task_timeout": 3000,
+  "memory_limit_mb": 6144,
+  "started_at": "2026-09-05T07:45:22.651930+00:00",
+  "attempt_id": "046005596aee9fb58a092ceb",
+  "daemon_version": "4.17.0",
+  "daemon_pid": 68734,
+  "updated_at": "2026-09-05T07:45:22.652097+00:00",
+  "pid": 68734
+}
