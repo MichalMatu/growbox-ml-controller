@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260905-growbox-shelly-rf-power-calibration-20s-v1",
+  "task_digest": "4570ae6bab0dfcbf52cbd629baf8d63f558c4820021acc2f5a983cad7b579b83",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-05T06:23:45.757422+00:00",
+  "attempt_id": "f1500622bfe214c13844e56d",
+  "daemon_version": "4.17.0",
+  "daemon_pid": 79614,
+  "updated_at": "2026-09-05T06:23:45.757611+00:00",
+  "pid": 79614
+}
