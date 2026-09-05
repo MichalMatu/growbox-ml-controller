@@ -18,6 +18,10 @@ bool decodeBcd(std::uint8_t raw, std::uint8_t mask, std::uint8_t& value) noexcep
   return true;
 }
 
+std::uint8_t encodeBcd(std::uint8_t value) noexcept {
+  return static_cast<std::uint8_t>(((value / 10U) << 4U) | (value % 10U));
+}
+
 bool leapYear(std::uint16_t year) noexcept {
   return (year % 4U == 0U && year % 100U != 0U) || year % 400U == 0U;
 }
@@ -41,6 +45,25 @@ std::int64_t daysFromCivil(std::int64_t year, unsigned month, unsigned day) noex
   const unsigned doy = (153U * adjusted_month + 2U) / 5U + day - 1U;
   const unsigned doe = yoe * 365U + yoe / 4U - yoe / 100U + doy;
   return era * 146097 + static_cast<std::int64_t>(doe) - 719468;
+}
+
+void civilFromDays(std::int64_t days, std::int64_t& year, unsigned& month, unsigned& day) noexcept {
+  days += 719468;
+  const std::int64_t era = (days >= 0 ? days : days - 146096) / 146097;
+  const unsigned doe = static_cast<unsigned>(days - era * 146097);
+  const unsigned yoe = (doe - doe / 1460U + doe / 36524U - doe / 146096U) / 365U;
+  year = static_cast<std::int64_t>(yoe) + era * 400;
+  const unsigned doy = doe - (365U * yoe + yoe / 4U - yoe / 100U);
+  const unsigned mp = (5U * doy + 2U) / 153U;
+  day = doy - (153U * mp + 2U) / 5U + 1U;
+  month = mp < 10U ? mp + 3U : mp - 9U;
+  year += month <= 2U ? 1 : 0;
+}
+
+std::uint8_t weekdaySundayOne(std::int64_t days_since_epoch) noexcept {
+  const std::int64_t sunday_zero = (days_since_epoch + 4) % 7;
+  const std::int64_t normalized = sunday_zero >= 0 ? sunday_zero : sunday_zero + 7;
+  return static_cast<std::uint8_t>(normalized + 1);
 }
 
 bool decodeHour(std::uint8_t raw, std::uint8_t& hour) noexcept {
@@ -104,6 +127,45 @@ bool decodeDs3231Time(const std::array<std::uint8_t, 7>& registers, std::uint8_t
   output.minute = minute;
   output.second = second;
   output.unix_time_s = seconds;
+  return true;
+}
+
+bool encodeDs3231UtcTime(std::uint64_t unix_time_s,
+                         std::array<std::uint8_t, 7>& registers) noexcept {
+  registers = {};
+  const std::uint64_t days_u64 = unix_time_s / 86400ULL;
+  if (days_u64 > 1000000ULL) {
+    return false;
+  }
+
+  const std::int64_t days = static_cast<std::int64_t>(days_u64);
+  std::int64_t year64 = 0;
+  unsigned month_u = 0U;
+  unsigned day_u = 0U;
+  civilFromDays(days, year64, month_u, day_u);
+  if (year64 < 2000 || year64 > 2199 || month_u < 1U || month_u > 12U || day_u < 1U ||
+      day_u > 31U) {
+    return false;
+  }
+
+  const std::uint64_t seconds_of_day = unix_time_s % 86400ULL;
+  const std::uint8_t hour = static_cast<std::uint8_t>(seconds_of_day / 3600ULL);
+  const std::uint8_t minute = static_cast<std::uint8_t>((seconds_of_day / 60ULL) % 60ULL);
+  const std::uint8_t second = static_cast<std::uint8_t>(seconds_of_day % 60ULL);
+  const std::uint16_t year = static_cast<std::uint16_t>(year64);
+  const std::uint8_t month = static_cast<std::uint8_t>(month_u);
+  const std::uint8_t day = static_cast<std::uint8_t>(day_u);
+
+  registers[0] = encodeBcd(second);
+  registers[1] = encodeBcd(minute);
+  registers[2] = encodeBcd(hour);
+  registers[3] = encodeBcd(weekdaySundayOne(days));
+  registers[4] = encodeBcd(day);
+  registers[5] = encodeBcd(month);
+  if (year >= 2100U) {
+    registers[5] = static_cast<std::uint8_t>(registers[5] | 0x80U);
+  }
+  registers[6] = encodeBcd(static_cast<std::uint8_t>(year % 100U));
   return true;
 }
 
