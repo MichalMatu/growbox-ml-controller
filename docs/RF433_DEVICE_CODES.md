@@ -1,6 +1,6 @@
 # RF433 device codes and growbox hardware map
 
-Updated: 2026-09-04
+Updated: 2026-09-05
 Work branch: `mvp/environment-controller`
 
 This file is the quick human-readable source of truth for learned RF433 ON/OFF identities and the current growbox sensor/actuator topology.
@@ -11,15 +11,15 @@ Validated identities that are used by firmware must also be frozen in `src/clima
 
 | physical device | hardware label | endpoint id | ON code | OFF code | bits | protocol | captured pulse | requested TX repeat | physical TX status |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| fan | `remote_socket_1` | 1 | 906118656 (`0x36024600`) | 1040336384 (`0x3E024600`) | 32 | 2 | 560 us | 10 | already physically validated with 575 us / repeat 10 |
-| lamp | `remote_socket_2` | pending | 235030016 (`0x0E024600`) | 16926208 (`0x01024600`) | 32 | 2 | 560 us | 10 | capture recorded; ESP -> socket validation pending |
-| humidifier | `remote_socket_3` | pending | 637683200 (`0x26024600`) | 771900928 (`0x2E024600`) | 32 | 2 | 560 us | 10 | capture recorded; ESP -> socket validation pending |
+| fan | `remote_socket_1` | 1 | 906118656 (`0x36024600`) | 1040336384 (`0x3E024600`) | 32 | 2 | 560 us | 10 | physically validated with 575 us / repeat 10 |
+| lamp | `remote_socket_2` | pending | 235030016 (`0x0E024600`) | 16926208 (`0x01024600`) | 32 | 2 | 560 us | 10 | physically validated with 560 us / repeat 10 |
+| humidifier | `remote_socket_3` | pending | 637683200 (`0x26024600`) | 771900928 (`0x2E024600`) | 32 | 2 | 560 us | 10 | physically validated with 560 us / repeat 10 |
 
 The operator explicitly identified the previously frozen `remote_socket_1` pair as the fan on 2026-09-04.
 
 ### Fan pulse evidence note
 
-The newly supplied/captured fan pulse is `560 us`. The earlier Stage28C physical ESP transmit qualification for the same ON/OFF pair used `575 us` with repeat `10` and was reliable. Keep both facts until the next bounded physical socket test decides whether the common `560 us` profile is also reliable. Do not rewrite historical Stage28C evidence.
+The captured fan pulse is `560 us`. The physically qualified ESP transmit profile remains `575 us` with repeat `10`; this profile was rechecked successfully during the Stage28D bounded manual ON/OFF validation on 2026-09-05. Keep the captured `560 us` fact separate from the physically validated ESP transmit setting.
 
 ## Compact code list
 
@@ -30,8 +30,9 @@ OFF: 16926208   (0x01024600)
 BITS: 32
 PROTOCOL: 2
 CAPTURED_PULSE_US: 560
+PHYSICALLY_VALIDATED_TX_PULSE_US: 560
 TX_REPEAT: 10
-STATUS: pending physical ESP -> socket validation
+STATUS: ON/OFF pair and 560 us / repeat 10 physically validated in Stage28D
 
 FAN / remote_socket_1
 ON:  906118656  (0x36024600)
@@ -41,7 +42,7 @@ PROTOCOL: 2
 CAPTURED_PULSE_US: 560
 PHYSICALLY_VALIDATED_TX_PULSE_US: 575
 TX_REPEAT: 10
-STATUS: ON/OFF pair and 575 us / repeat 10 physically validated in Stage28C
+STATUS: ON/OFF pair and 575 us / repeat 10 physically validated and rechecked in Stage28D
 
 HUMIDIFIER / remote_socket_3
 ON:  637683200  (0x26024600)
@@ -49,13 +50,14 @@ OFF: 771900928  (0x2E024600)
 BITS: 32
 PROTOCOL: 2
 CAPTURED_PULSE_US: 560
+PHYSICALLY_VALIDATED_TX_PULSE_US: 560
 TX_REPEAT: 10
-STATUS: pending physical ESP -> socket validation
+STATUS: ON/OFF pair and 560 us / repeat 10 physically validated in Stage28D
 ```
 
 ## Serial service commands
 
-The real-input firmware includes a bounded primary-serial service console. The captured lamp and humidifier profiles are now also frozen in `Rf433HardwareConfig.h` for manual diagnostics, but their physical socket validation is still pending. The fan keeps the already-qualified `575 us / repeat 10` transmit profile.
+The real-input firmware includes a bounded primary-serial service console. The lamp, fan, and humidifier manual RF profiles are frozen in `Rf433HardwareConfig.h` for service diagnostics and have now been physically validated against their actual loads. The fan keeps the qualified `575 us / repeat 10` transmit profile; lamp and humidifier use `560 us / repeat 10`.
 
 Useful commands:
 
@@ -102,15 +104,15 @@ The exact repeat count emitted by an original handheld remote must not be claime
 
 The exact directly connected ESP32 sensor list remains defined by the active hardware/runtime configuration; this document records their physical placement as inside the growbox.
 
-## Next physical validation
+## Stage28D physical RF validation
 
-The next hardware step is a bounded manual ON/OFF test of each socket/device from the ESP32:
+Bounded manual service-console validation was completed on 2026-09-05 with firmware identity `af16aebde8f69d1a1257256c7711e9721c07c9d5` and automatic runtime outputs remaining `fake-locked` throughout.
 
-1. lamp: verify ON and OFF;
-2. fan: recheck ON and OFF and compare 560 us against the already qualified 575 us profile;
-3. humidifier: verify ON and OFF.
+- lamp / `remote_socket_2`: `560 us`, repeat `10`; local evidence task `20260905-growbox-stage28d-manual-rf-lamp-v2`; physical ON/OFF confirmed by the operator;
+- fan / `remote_socket_1`: `575 us`, repeat `10`; local evidence task `20260905-growbox-stage28d-manual-rf-fan-v1`; physical ON/OFF confirmed by the operator;
+- humidifier / `remote_socket_3`: `560 us`, repeat `10`; local evidence task `20260905-growbox-stage28d-manual-rf-humidifier-v1`; physical ON/OFF confirmed by the operator.
 
-Physical observation of the actual lamp/fan/humidifier state is the acceptance criterion. Local TX completion or `SelfTx` reception alone is not sufficient.
+The lamp was additionally exercised through repeated manual ON/OFF cycling and was physically confirmed reliable by the operator. Local TX completion and self-RX evidence were treated only as transport evidence; the acceptance criterion for all three devices was direct physical observation.
 
 ## Safety/evidence boundary
 
