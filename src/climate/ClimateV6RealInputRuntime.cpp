@@ -111,6 +111,7 @@ namespace {
 constexpr char kTag[] = "climate_stage27";
 constexpr std::uint64_t kTickIntervalMs = 1'000U;
 constexpr std::uint32_t kTelemetryEveryTicks = 10U;
+constexpr unsigned kSafeStateAttempts = 3U;
 
 std::uint64_t monotonicMilliseconds() noexcept {
   return static_cast<std::uint64_t>(esp_timer_get_time()) / 1000U;
@@ -175,6 +176,26 @@ private:
   bool real_enabled_{false};
 };
 
+bool forceSafeStateWithRetries(stage28d::Stage28dRfOutputEndpoint& endpoint,
+                               std::uint64_t monotonic_ms) noexcept {
+  for (unsigned attempt = 0U; attempt < kSafeStateAttempts; ++attempt) {
+    if (endpoint.initializeSafeState(monotonic_ms)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+runtime::Stage27PhysicalOutputSnapshot physicalOutputSnapshot(
+    const stage28d::Stage28dRfOutputEndpoint& endpoint, bool real_active) noexcept {
+  runtime::Stage27PhysicalOutputSnapshot snapshot{};
+  snapshot.real_outputs_active = real_active;
+  snapshot.light_on = endpoint.stateOn(stage28d::kScheduledLightEndpoint);
+  snapshot.exhaust_on = endpoint.stateOn(stage28d::kExhaustFanEndpoint);
+  snapshot.humidifier_on = endpoint.stateOn(stage28d::kHumidifierEndpoint);
+  return snapshot;
+}
+
 } // namespace
 
 [[noreturn]] void runClimateV6RealInputRuntime() noexcept {
@@ -211,16 +232,23 @@ private:
 
   bool real_output_ready = false;
   if (GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED != 0) {
-    real_output_ready = rf_ready && output_bindings_valid &&
-                        physical_endpoint.initializeSafeState(monotonicMilliseconds());
+    real_output_ready = rf_ready && output_bindings_valid;
+    if (real_output_ready) {
+      real_output_ready = forceSafeStateWithRetries(physical_endpoint, monotonicMilliseconds());
+    }
     if (!real_output_ready) {
       ESP_LOGE(kTag, "Real-output initialization failed; automatic outputs remain fake-locked");
     }
   }
 
+  if (GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED != 0 && !real_output_ready) {
+    ESP_LOGE(kTag, "Gate6 thermal sequence requested but real outputs are not safely armed");
+  }
+
   runtime::Stage28ServiceConsole service_console(
-      {GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED != 0, GROWBOX_FIRMWARE_GIT_SHA}, ble, scd41, clock,
-      rf_diagnostics);
+      {GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED != 0, GROWBOX_FIRMWARE_GIT_SHA,
+       &real_output_ready},
+      ble, scd41, clock, rf_diagnostics);
   const bool service_console_ready = service_console.begin();
 
   runtime::Stage27InsideSource inside(ble, scd41);
@@ -275,11 +303,17 @@ private:
           {point.scheduled_light_level, {point.temperature_c, true, 0U}, true, now_ms});
       physical_endpoint.setSafetyForceExhaust(lamp_decision.force_exhaust_on);
 
-      bool physical_ok = physical_endpoint.writeScheduledLight(lamp_decision.effective_lamp_on, now_ms);
+      bool physical_ok =
+          physical_endpoint.writeScheduledLight(lamp_decision.effective_lamp_on, now_ms);
       physical_ok = physical_endpoint.write(stage28d::kExhaustFanEndpoint,
                                              lamp_decision.force_exhaust_on ? 1.0F : 0.0F,
-                                             now_ms) && physical_ok;
-      physical_ok = physical_endpoint.write(stage28d::kHumidifierEndpoint, 0.0F, now_ms) && physical_ok;
+                                             now_ms) &&
+                    physical_ok;
+      physical_ok = physical_endpoint.write(stage28d::kHumidifierEndpoint, 0.0F, now_ms) &&
+                    physical_ok;
+
+      decision.applied.exhaust_fan = lamp_decision.force_exhaust_on ? 1.0F : 0.0F;
+      decision.applied.humidifier = 0.0F;
 
       if (point.phase != last_test_phase) {
         last_test_phase = point.phase;
@@ -295,11 +329,12 @@ private:
 
       if (!physical_ok) {
         ESP_LOGE(kTag, "Gate6 physical transition failed; forcing all outputs OFF");
-        static_cast<void>(physical_endpoint.initializeSafeState(now_ms));
+        const bool safe_off = forceSafeStateWithRetries(physical_endpoint, now_ms);
         output_driver.disableReal();
         real_output_ready = false;
+        ESP_LOGE(kTag, "GATE6_THERMAL_ABORT safe_off=%d outputs=fake-locked", safe_off);
       } else if (point.complete) {
-        const bool safe_off = physical_endpoint.initializeSafeState(now_ms);
+        const bool safe_off = forceSafeStateWithRetries(physical_endpoint, now_ms);
         thermal_test_finished_safe = safe_off;
         output_driver.disableReal();
         real_output_ready = false;
@@ -320,27 +355,38 @@ private:
       }
       const float scheduled_light = schedule_sampled ? schedule_snapshot.schedule.light_level : 0.0F;
       lamp_decision = lamp_safety.evaluate(
-          {scheduled_light, safety_temperature, schedule_snapshot.capabilities.exhaust_fan, now_ms});
+          {scheduled_light, safety_temperature, output_bindings_valid, now_ms});
 
       physical_endpoint.setSafetyForceExhaust(lamp_decision.force_exhaust_on);
       if (output_driver.realEnabled() &&
           !physical_endpoint.writeScheduledLight(lamp_decision.effective_lamp_on, now_ms)) {
         ESP_LOGE(kTag, "Lamp output apply failed; forcing safe state and locking real outputs");
-        static_cast<void>(physical_endpoint.initializeSafeState(now_ms));
+        const bool safe_off = forceSafeStateWithRetries(physical_endpoint, now_ms);
         output_driver.disableReal();
         real_output_ready = false;
+        ESP_LOGE(kTag, "Lamp output fault safe_off=%d outputs=fake-locked", safe_off);
       }
 
       loop_result = application.tick(now_ms, decision);
+      if (output_driver.realEnabled() && !loop_result.command_applied) {
+        ESP_LOGE(kTag, "Climate output apply failed; forcing safe state and locking real outputs");
+        const bool safe_off = forceSafeStateWithRetries(physical_endpoint, now_ms);
+        output_driver.disableReal();
+        real_output_ready = false;
+        ESP_LOGE(kTag, "Climate output fault safe_off=%d outputs=fake-locked", safe_off);
+      }
     }
 
     if ((diagnostic_tick++ % kTelemetryEveryTicks) == 0U) {
-      telemetry_reporter.record(now_ms, loop_result, decision);
+      const auto physical_outputs =
+          physicalOutputSnapshot(physical_endpoint, output_driver.realEnabled());
+      telemetry_reporter.record(now_ms, loop_result, decision, physical_outputs);
       ESP_LOGI(kTag,
                "stage28d_output real=%d lamp_known=%d lamp_on=%d fan_known=%d fan_on=%d "
                "humidifier_known=%d humidifier_on=%d safety_latched=%d force_fan=%d "
                "safety_reason=%u tx=%lu tx_errors=%lu",
-               output_driver.realEnabled(), physical_endpoint.stateKnown(stage28d::kScheduledLightEndpoint),
+               output_driver.realEnabled(),
+               physical_endpoint.stateKnown(stage28d::kScheduledLightEndpoint),
                physical_endpoint.stateOn(stage28d::kScheduledLightEndpoint),
                physical_endpoint.stateKnown(stage28d::kExhaustFanEndpoint),
                physical_endpoint.stateOn(stage28d::kExhaustFanEndpoint),
