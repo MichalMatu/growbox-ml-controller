@@ -1,13 +1,11 @@
 {
-  "event": "task_finished",
-  "task_id": "20260905-growbox-z-serial-port-probe-v2",
-  "task_digest": "693ad7e763885ccc6e24f861c71d29d76f18329999db408fe425e229145f0d3a",
+  "event": "result_republished",
   "status": "failed",
   "failure_reason": "command_failed",
-  "finished_at": "2026-09-05T22:14:02.965108+00:00",
   "attempt_id": "158b045c320de57e5fa5c9f7",
+  "task_digest": "693ad7e763885ccc6e24f861c71d29d76f18329999db408fe425e229145f0d3a",
+  "updated_at": "2026-09-05T22:16:56.550556+00:00",
+  "task_id": "20260905-growbox-z-serial-port-probe-v2",
   "daemon_version": "4.18.2",
-  "daemon_pid": 49654,
-  "updated_at": "2026-09-05T22:14:03.194620+00:00",
-  "pid": 49654
+  "pid": 52240
 }
