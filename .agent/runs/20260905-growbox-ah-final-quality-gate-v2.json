@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260905-growbox-ah-final-quality-gate-v2",
+  "task_digest": "0cb8ba07af11c59ae44cdf61ce9f240dcf03812cfce28c0f4f41c37aad5ce5f4",
+  "idle_timeout": 900,
+  "task_timeout": 10800,
+  "memory_limit_mb": 6144,
+  "started_at": "2026-09-05T21:57:45.556558+00:00",
+  "attempt_id": "ab9c4d610a29ab0d86d052af",
+  "daemon_version": "4.18.2",
+  "daemon_pid": 21362,
+  "updated_at": "2026-09-05T21:57:45.556733+00:00",
+  "pid": 21362
+}
