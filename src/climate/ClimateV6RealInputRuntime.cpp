@@ -198,12 +198,20 @@ bool forceSafeStateWithRetries(stage28d::Stage28dRfOutputEndpoint& endpoint,
 }
 
 runtime::Stage27PhysicalOutputSnapshot physicalOutputSnapshot(
-    const stage28d::Stage28dRfOutputEndpoint& endpoint, bool real_active) noexcept {
+    const stage28d::Stage28dRfOutputEndpoint& endpoint, bool real_active,
+    const stage28d::LampSafetyDecision& lamp_decision,
+    const stage28d::Stage28dBinaryRoleArbiter& binary_arbiter) noexcept {
   runtime::Stage27PhysicalOutputSnapshot snapshot{};
   snapshot.real_outputs_active = real_active;
   snapshot.light_on = endpoint.stateOn(stage28d::kScheduledLightEndpoint);
   snapshot.exhaust_on = endpoint.stateOn(stage28d::kExhaustFanEndpoint);
   snapshot.humidifier_on = endpoint.stateOn(stage28d::kHumidifierEndpoint);
+  snapshot.thermal_safety_latched = lamp_decision.thermal_latched;
+  snapshot.safety_force_exhaust = lamp_decision.force_exhaust_on;
+  snapshot.safety_reason = static_cast<std::uint32_t>(lamp_decision.reason);
+  snapshot.arbiter_transition_count = binary_arbiter.transitionCount();
+  snapshot.arbiter_dwell_hold_count = binary_arbiter.dwellHoldCount();
+  snapshot.arbiter_safety_override_count = binary_arbiter.safetyOverrideCount();
   return snapshot;
 }
 
@@ -394,8 +402,8 @@ runtime::Stage27PhysicalOutputSnapshot physicalOutputSnapshot(
     }
 
     if ((diagnostic_tick++ % kTelemetryEveryTicks) == 0U) {
-      const auto physical_outputs =
-          physicalOutputSnapshot(physical_endpoint, output_driver.realEnabled());
+      const auto physical_outputs = physicalOutputSnapshot(
+          physical_endpoint, output_driver.realEnabled(), lamp_decision, binary_arbiter);
       telemetry_reporter.record(now_ms, loop_result, decision, physical_outputs);
       ESP_LOGI(kTag,
                "stage28d_output real=%d lamp_known=%d lamp_on=%d fan_known=%d fan_on=%d "
