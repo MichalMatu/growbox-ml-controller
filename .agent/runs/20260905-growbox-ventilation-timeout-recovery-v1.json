@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260905-growbox-ventilation-timeout-recovery-v1",
+  "task_digest": "a14520b195d7702a9f20298e54807b7bfcffc988aa82ff122c59175b040ef599",
+  "idle_timeout": 300,
+  "task_timeout": 900,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-05T08:59:34.701685+00:00",
+  "attempt_id": "e0abfb317384b7692699af47",
+  "daemon_version": "4.17.0",
+  "daemon_pid": 39344,
+  "updated_at": "2026-09-05T08:59:34.701855+00:00",
+  "pid": 39344
+}
