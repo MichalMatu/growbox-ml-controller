@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260905-growbox-serial-port-probe-v1",
+  "task_digest": "44eb9d8344b89199d9ffb2d9791f8d5aa6498feff15a0af404df5a3e35dc9b93",
+  "idle_timeout": 60,
+  "task_timeout": 300,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-05T22:13:01.665289+00:00",
+  "attempt_id": "031742b314509269f8be739d",
+  "daemon_version": "4.18.2",
+  "daemon_pid": 48378,
+  "updated_at": "2026-09-05T22:13:01.665451+00:00",
+  "pid": 48378
+}
