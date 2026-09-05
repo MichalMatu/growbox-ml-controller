@@ -2,8 +2,8 @@
   "version": 1,
   "daemon_version": "4.18.1",
   "state": "idle",
-  "pid": 36437,
-  "updated_at": "2026-09-05T20:33:16.031280+00:00",
+  "pid": 42332,
+  "updated_at": "2026-09-05T20:38:21.073638+00:00",
   "self_revision": "b0a933e28c31ea5365663fd81d470fb9b9a79654",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -23,8 +23,7 @@
   "default_branch": "main",
   "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 36437,
+  "worker_pid": 42332,
   "supervisor_pid": 34531,
-  "last_task_id": "v4181-e2e-20260905T203231Z-probe-growbox-ml-controller",
   "execution_variant": "parallel"
 }
