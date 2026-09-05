@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260905-growbox-gate4-exact-sha-readonly-smoke-v1",
+  "task_digest": "cb78e4fd4387195d26b942eff6d367c4b48657201aa70832fd8535c427a419eb",
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "memory_limit_mb": 6144,
+  "started_at": "2026-09-05T06:49:41.695167+00:00",
+  "attempt_id": "4ecae12119b85d08f101cd25",
+  "daemon_version": "4.17.0",
+  "daemon_pid": 99727,
+  "updated_at": "2026-09-05T06:49:41.695304+00:00",
+  "pid": 99727
+}
