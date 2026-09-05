@@ -26,6 +26,7 @@ public:
   bool initializeSafeState(std::uint64_t monotonic_ms) noexcept;
   bool write(ClimateEndpointId endpoint, float normalized_level,
              std::uint64_t monotonic_ms) noexcept override;
+  bool forceOff(ClimateEndpointId endpoint, std::uint64_t monotonic_ms) noexcept override;
   bool writeScheduledLight(bool on, std::uint64_t monotonic_ms) noexcept;
   void setSafetyForceExhaust(bool force) noexcept { safety_force_exhaust_ = force; }
 
