@@ -1,9 +1,9 @@
 {
   "version": 1,
   "daemon_version": "4.17.0",
-  "state": "idle",
-  "pid": 67196,
-  "updated_at": "2026-09-05T06:05:55.197377+00:00",
+  "state": "running",
+  "pid": 68686,
+  "updated_at": "2026-09-05T06:08:26.292681+00:00",
   "self_revision": "6532ce82a5fcb2c0c8f8d698d1f6ce7f739dadd2",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -14,7 +14,7 @@
   "task_timeout_default": 1800,
   "task_timeout_max": 21600,
   "memory_limit_mb_default": 4096,
-  "current_task_id": null,
+  "current_task_id": "20260905-growbox-shelly-readonly-probe-v1",
   "current_attempt_id": null,
   "current_task_digest": null,
   "repository_id": "growbox-ml-controller",
@@ -23,7 +23,8 @@
   "default_branch": "main",
   "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 67196,
+  "worker_pid": 68686,
   "supervisor_pid": 68254,
+  "active_resources": [],
   "execution_variant": "parallel"
 }
