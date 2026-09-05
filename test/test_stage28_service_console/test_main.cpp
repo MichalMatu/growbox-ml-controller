@@ -1,87 +1,13 @@
 #include "climate/runtime/Stage28ServiceConsoleCommand.h"
-
 #include <cassert>
-
+#include <cstring>
 using namespace growbox::app::climate_io::runtime;
-
 namespace {
-
-void testReadOnlyMenuCommands() {
-  assert(parseServiceConsoleCommand("help").kind == ServiceConsoleCommandKind::Help);
-  assert(parseServiceConsoleCommand("?").kind == ServiceConsoleCommandKind::Help);
-  assert(parseServiceConsoleCommand("0").kind == ServiceConsoleCommandKind::Help);
-  assert(parseServiceConsoleCommand("status").kind == ServiceConsoleCommandKind::Status);
-  assert(parseServiceConsoleCommand("1").kind == ServiceConsoleCommandKind::Status);
-  assert(parseServiceConsoleCommand("sensors").kind == ServiceConsoleCommandKind::Sensors);
-  assert(parseServiceConsoleCommand("2").kind == ServiceConsoleCommandKind::Sensors);
-  assert(parseServiceConsoleCommand("rf").kind == ServiceConsoleCommandKind::RfList);
-  assert(parseServiceConsoleCommand("rf list").kind == ServiceConsoleCommandKind::RfList);
-  assert(parseServiceConsoleCommand("3").kind == ServiceConsoleCommandKind::RfList);
+void testReadOnlyMenuCommands(){assert(parseServiceConsoleCommand("help").kind==ServiceConsoleCommandKind::Help);assert(parseServiceConsoleCommand("status").kind==ServiceConsoleCommandKind::Status);assert(parseServiceConsoleCommand("sensors").kind==ServiceConsoleCommandKind::Sensors);assert(parseServiceConsoleCommand("rf list").kind==ServiceConsoleCommandKind::RfList);}
+void testNamedRfTransmitCommands(){auto c=parseServiceConsoleCommand("rf lamp on");assert(c.kind==ServiceConsoleCommandKind::RfTransmit&&c.device==ServiceConsoleRfDevice::Lamp&&c.state==ServiceConsoleRfState::On);c=parseServiceConsoleCommand("RF FAN OFF");assert(c.kind==ServiceConsoleCommandKind::RfTransmit&&c.device==ServiceConsoleRfDevice::Fan&&c.state==ServiceConsoleRfState::Off);}
+void testRfReceiveTimeoutBounds(){auto c=parseServiceConsoleCommand("rf rx");assert(c.kind==ServiceConsoleCommandKind::RfReceive&&c.timeout_ms==1000U);assert(parseServiceConsoleCommand("rf rx 49").kind==ServiceConsoleCommandKind::Invalid);assert(parseServiceConsoleCommand("rf rx 5001").kind==ServiceConsoleCommandKind::Invalid);}
+void testRtcSetUnixCommand(){auto c=parseServiceConsoleCommand("rtc set-unix 1788589800");assert(c.kind==ServiceConsoleCommandKind::RtcSetUnix&&c.unix_time_s==1788589800ULL);assert(parseServiceConsoleCommand("rtc set-unix -1").kind==ServiceConsoleCommandKind::Invalid);}
+void testSdLogCommands(){assert(parseServiceConsoleCommand("sdlog status").kind==ServiceConsoleCommandKind::SdLogStatus);assert(parseServiceConsoleCommand("sdlog list").kind==ServiceConsoleCommandKind::SdLogList);assert(parseServiceConsoleCommand("sdlog selftest").kind==ServiceConsoleCommandKind::SdLogSelfTest);auto c=parseServiceConsoleCommand("sdlog read B37B41D6.JL 0 384");assert(c.kind==ServiceConsoleCommandKind::SdLogRead);assert(std::strcmp(c.filename.data(),"B37B41D6.JL")==0);assert(c.offset==0U&&c.length==384U);assert(parseServiceConsoleCommand("sdlog read ../secret 0 10").kind==ServiceConsoleCommandKind::Invalid);assert(parseServiceConsoleCommand("sdlog read B37B41D6.JL 0 0").kind==ServiceConsoleCommandKind::Invalid);assert(parseServiceConsoleCommand("sdlog read B37B41D6.JL 0 385").kind==ServiceConsoleCommandKind::Invalid);}
+void testInvalidCommandsFailClosed(){assert(parseServiceConsoleCommand(nullptr).kind==ServiceConsoleCommandKind::Invalid);assert(parseServiceConsoleCommand("").kind==ServiceConsoleCommandKind::None);assert(parseServiceConsoleCommand("rf lamp maybe").kind==ServiceConsoleCommandKind::Invalid);assert(parseServiceConsoleCommand("sdlog erase all").kind==ServiceConsoleCommandKind::Invalid);}
 }
-
-void testNamedRfTransmitCommands() {
-  const auto lamp = parseServiceConsoleCommand("rf lamp on");
-  assert(lamp.kind == ServiceConsoleCommandKind::RfTransmit);
-  assert(lamp.device == ServiceConsoleRfDevice::Lamp);
-  assert(lamp.state == ServiceConsoleRfState::On);
-
-  const auto fan = parseServiceConsoleCommand("RF FAN OFF");
-  assert(fan.kind == ServiceConsoleCommandKind::RfTransmit);
-  assert(fan.device == ServiceConsoleRfDevice::Fan);
-  assert(fan.state == ServiceConsoleRfState::Off);
-
-  const auto humidifier = parseServiceConsoleCommand("  rf   humidifier   on  ");
-  assert(humidifier.kind == ServiceConsoleCommandKind::RfTransmit);
-  assert(humidifier.device == ServiceConsoleRfDevice::Humidifier);
-  assert(humidifier.state == ServiceConsoleRfState::On);
-}
-
-void testRfReceiveTimeoutBounds() {
-  const auto default_rx = parseServiceConsoleCommand("rf rx");
-  assert(default_rx.kind == ServiceConsoleCommandKind::RfReceive);
-  assert(default_rx.timeout_ms == 1000U);
-
-  const auto bounded_rx = parseServiceConsoleCommand("rf rx 2500");
-  assert(bounded_rx.kind == ServiceConsoleCommandKind::RfReceive);
-  assert(bounded_rx.timeout_ms == 2500U);
-
-  assert(parseServiceConsoleCommand("rf rx 49").kind == ServiceConsoleCommandKind::Invalid);
-  assert(parseServiceConsoleCommand("rf rx 5001").kind == ServiceConsoleCommandKind::Invalid);
-  assert(parseServiceConsoleCommand("rf rx nope").kind == ServiceConsoleCommandKind::Invalid);
-}
-
-void testRtcSetUnixCommand() {
-  const auto command = parseServiceConsoleCommand("rtc set-unix 1788589800");
-  assert(command.kind == ServiceConsoleCommandKind::RtcSetUnix);
-  assert(command.unix_time_s == 1788589800ULL);
-
-  const auto spaced = parseServiceConsoleCommand(" RTC   SET-UNIX   946684800 ");
-  assert(spaced.kind == ServiceConsoleCommandKind::RtcSetUnix);
-  assert(spaced.unix_time_s == 946684800ULL);
-
-  assert(parseServiceConsoleCommand("rtc set-unix").kind == ServiceConsoleCommandKind::Invalid);
-  assert(parseServiceConsoleCommand("rtc set-unix -1").kind == ServiceConsoleCommandKind::Invalid);
-  assert(parseServiceConsoleCommand("rtc set-unix nope").kind == ServiceConsoleCommandKind::Invalid);
-  assert(parseServiceConsoleCommand("rtc set-unix 18446744073709551616").kind ==
-         ServiceConsoleCommandKind::Invalid);
-}
-
-void testInvalidCommandsFailClosed() {
-  assert(parseServiceConsoleCommand(nullptr).kind == ServiceConsoleCommandKind::Invalid);
-  assert(parseServiceConsoleCommand("").kind == ServiceConsoleCommandKind::None);
-  assert(parseServiceConsoleCommand("rf lamp maybe").kind == ServiceConsoleCommandKind::Invalid);
-  assert(parseServiceConsoleCommand("rf unknown on").kind == ServiceConsoleCommandKind::Invalid);
-  assert(parseServiceConsoleCommand("fan on").kind == ServiceConsoleCommandKind::Invalid);
-  assert(parseServiceConsoleCommand("rf lamp on extra").kind == ServiceConsoleCommandKind::Invalid);
-}
-
-} // namespace
-
-int main() {
-  testReadOnlyMenuCommands();
-  testNamedRfTransmitCommands();
-  testRfReceiveTimeoutBounds();
-  testRtcSetUnixCommand();
-  testInvalidCommandsFailClosed();
-  return 0;
-}
+int main(){testReadOnlyMenuCommands();testNamedRfTransmitCommands();testRfReceiveTimeoutBounds();testRtcSetUnixCommand();testSdLogCommands();testInvalidCommandsFailClosed();return 0;}

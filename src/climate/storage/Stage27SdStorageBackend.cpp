@@ -1,5 +1,7 @@
 #include "climate/storage/Stage27SdStorageBackend.h"
 
+#include "climate/storage/Stage27FileDurability.h"
+
 #include "climate/storage/crowpanel/CrowPanelSdPrecondition.h"
 
 #include <driver/gpio.h>
@@ -24,6 +26,41 @@ constexpr char kMountPoint[] = "/sdcard";
 constexpr char kDataDirectory[] = "/sdcard/GBLOG";
 constexpr spi_host_device_t kSpiHost = SPI3_HOST;
 constexpr std::uint32_t kPowerOnDelayMs = 100U;
+
+bool writeLineDurably(std::FILE* file, const char* data, std::size_t length,
+                      const char* context) noexcept {
+  if (file == nullptr || data == nullptr || length == 0U) {
+    return false;
+  }
+
+  errno = 0;
+  const std::size_t written = std::fwrite(data, 1U, length, file);
+  if (written != length) {
+    const int error_number = errno;
+    ESP_LOGW(kTag, "%s fwrite short write expected=%u actual=%u errno=%d ferror=%d", context,
+             static_cast<unsigned>(length), static_cast<unsigned>(written), error_number,
+             std::ferror(file));
+    return false;
+  }
+  errno = 0;
+  if (std::fputc('\n', file) == EOF) {
+    ESP_LOGW(kTag, "%s newline write failed errno=%d ferror=%d", context, errno,
+             std::ferror(file));
+    return false;
+  }
+
+  const Stage27FileDurabilityResult durability = stage27FlushSyncAndStat(file);
+  if (!durability.ok) {
+    ESP_LOGW(kTag, "%s durability failed step=%s errno=%d", context,
+             stage27FileDurabilityStepName(durability.failed_step), durability.error_number);
+    return false;
+  }
+  if (durability.size_bytes == 0U) {
+    ESP_LOGW(kTag, "%s durability invariant failed: file size is zero after sync", context);
+    return false;
+  }
+  return true;
+}
 
 } // namespace
 
@@ -134,10 +171,7 @@ bool Stage27SdStorageBackend::beginSession(const char* session_header,
   }
 
   const std::size_t header_length = std::strlen(session_header);
-  const bool ok = std::fwrite(session_header, 1U, header_length, file_) == header_length &&
-                  std::fputc('\n', file_) != EOF && std::fflush(file_) == 0;
-  if (!ok) {
-    ESP_LOGW(kTag, "Failed to write SD session header: errno=%d", errno);
+  if (!writeLineDurably(file_, session_header, header_length, "session_header")) {
     closeFile();
     return false;
   }
@@ -150,12 +184,7 @@ bool Stage27SdStorageBackend::appendLine(const char* data, std::size_t length) n
   if (file_ == nullptr || data == nullptr || length == 0U) {
     return false;
   }
-  const bool ok = std::fwrite(data, 1U, length, file_) == length &&
-                  std::fputc('\n', file_) != EOF && std::fflush(file_) == 0;
-  if (!ok) {
-    ESP_LOGW(kTag, "SD telemetry write failed: errno=%d", errno);
-  }
-  return ok;
+  return writeLineDurably(file_, data, length, "telemetry_record");
 }
 
 void Stage27SdStorageBackend::close() noexcept {

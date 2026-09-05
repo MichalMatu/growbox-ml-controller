@@ -10,6 +10,8 @@
 #include <cstddef>
 #include <cstdint>
 
+namespace growbox::app::climate_io::storage { class Stage27TelemetryLogger; }
+
 namespace growbox::app::climate_io::runtime {
 
 class Stage28ServiceConsole final {
@@ -18,6 +20,7 @@ public:
     bool enabled{true};
     const char* firmware_sha{"unknown"};
     const bool* real_outputs_active{nullptr};
+    const storage::Stage27TelemetryLogger* storage_logger{nullptr};
   };
 
   Stage28ServiceConsole(Config config, native::BleClimateScanner& ble,
@@ -42,6 +45,10 @@ private:
   void handleRfTransmit(const ServiceConsoleCommand& command) noexcept;
   void handleRfReceive(const ServiceConsoleCommand& command) noexcept;
   void handleRtcSetUnix(const ServiceConsoleCommand& command, std::uint64_t now_ms) noexcept;
+  void printSdLogStatus() noexcept;
+  void printSdLogList() noexcept;
+  void handleSdLogRead(const ServiceConsoleCommand& command) noexcept;
+  void handleSdLogSelfTest() noexcept;
   void writeText(const char* text) noexcept;
   void writeFormatted(const char* format, ...) noexcept;
   void printPrompt() noexcept;

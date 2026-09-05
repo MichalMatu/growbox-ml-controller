@@ -266,7 +266,7 @@ runtime::Stage27PhysicalOutputSnapshot physicalOutputSnapshot(
 
   runtime::Stage28ServiceConsole service_console(
       {GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED != 0, GROWBOX_FIRMWARE_GIT_SHA,
-       &real_output_ready},
+       &real_output_ready, &storage_logger},
       ble, scd41, clock, rf_diagnostics);
   const bool service_console_ready = service_console.begin();
 

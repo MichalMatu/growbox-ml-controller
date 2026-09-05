@@ -44,6 +44,7 @@ idf_component_register(
     esp_driver_spi
     esp_driver_sdspi
     wear_levelling
+    mbedtls
 )
 
 target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_17)
@@ -76,6 +77,7 @@ elseif(GROWBOX_APP_MODE STREQUAL "climate-v6-real-inputs")
       "climate/runtime/Stage28ServiceConsoleCommand.cpp"
       "climate/telemetry/Stage27LogFormat.cpp"
       "climate/storage/Stage27TelemetryLogger.cpp"
+      "climate/storage/Stage27FileDurability.cpp"
       "climate/storage/Stage27SdStorageBackend.cpp"
       "climate/storage/Stage27FlashStorageBackend.cpp"
       "climate/storage/crowpanel/CrowPanelSdPrecondition.cpp"
