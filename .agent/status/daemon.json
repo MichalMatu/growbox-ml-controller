@@ -1,9 +1,9 @@
 {
   "version": 1,
   "daemon_version": "4.17.0",
-  "state": "idle",
-  "pid": 12754,
-  "updated_at": "2026-09-05T04:50:13.170709+00:00",
+  "state": "running",
+  "pid": 14411,
+  "updated_at": "2026-09-05T04:51:37.691495+00:00",
   "self_revision": "6532ce82a5fcb2c0c8f8d698d1f6ce7f739dadd2",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -14,7 +14,7 @@
   "task_timeout_default": 1800,
   "task_timeout_max": 21600,
   "memory_limit_mb_default": 4096,
-  "current_task_id": null,
+  "current_task_id": "20260905-growbox-stage28d-manual-rf-lamp-repeat-v1",
   "current_attempt_id": null,
   "current_task_digest": null,
   "repository_id": "growbox-ml-controller",
@@ -23,8 +23,10 @@
   "default_branch": "main",
   "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 12754,
+  "worker_pid": 14411,
   "supervisor_pid": 68254,
-  "last_task_id": "20260905-growbox-stage28d-manual-rf-lamp-v2",
+  "active_resources": [
+    "board:growbox-s3"
+  ],
   "execution_variant": "parallel"
 }
