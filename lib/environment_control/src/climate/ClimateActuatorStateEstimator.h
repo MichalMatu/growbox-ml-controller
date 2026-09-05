@@ -16,6 +16,9 @@ public:
   void reset() noexcept {
     state_ = {};
   }
+  void setState(const EstimatedEffectiveClimateActions& state) noexcept {
+    state_ = state;
+  }
   const EstimatedEffectiveClimateActions& state() const noexcept {
     return state_;
   }
