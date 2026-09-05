@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260905-growbox-fan-path-audit-v3",
   "task_digest": "0821a3713da3bd616fd666ed156e8dc883c3fa26b6d1743acd4f8c9e5beddcd8",
-  "idle_timeout": 60,
-  "task_timeout": 480,
-  "memory_limit_mb": 2048,
-  "started_at": "2026-09-05T20:26:12.931558+00:00",
+  "status": "failed",
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-05T20:26:15.669001+00:00",
   "attempt_id": "1506660657921c3c4bbc4538",
   "daemon_version": "4.18.0",
   "daemon_pid": 25887,
-  "updated_at": "2026-09-05T20:26:12.931694+00:00",
+  "updated_at": "2026-09-05T20:26:15.887734+00:00",
   "pid": 25887
 }
