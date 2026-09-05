@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260905-growbox-gate5-shelly-role-routing-v1",
+  "task_digest": "39a1b1aa9d248de0188de2783d80ad98838bd1db89445f04c59d1f22f9c25d37",
+  "idle_timeout": 600,
+  "task_timeout": 2400,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-05T06:53:01.775431+00:00",
+  "attempt_id": "03d94f6a53f86956e74df802",
+  "daemon_version": "4.17.0",
+  "daemon_pid": 8183,
+  "updated_at": "2026-09-05T06:53:01.775606+00:00",
+  "pid": 8183
+}
