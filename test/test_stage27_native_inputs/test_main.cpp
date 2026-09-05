@@ -11,6 +11,7 @@ using growbox::app::climate_io::native::BthomeV2Measurement;
 using growbox::app::climate_io::native::decodeBthomeV2;
 using growbox::app::climate_io::native::decodeDs3231Time;
 using growbox::app::climate_io::native::Ds3231DecodedTime;
+using growbox::app::climate_io::native::encodeDs3231UtcTime;
 using growbox::app::climate_io::native::findBthomeV2ServiceData;
 
 namespace {
@@ -81,6 +82,29 @@ void testDs3231TrustedTime() {
   assert(decoded.unix_time_s == 946684800ULL);
 }
 
+void testDs3231UtcEncoderRoundTrips() {
+  constexpr std::array<std::uint64_t, 5> epochs{{
+      946684800ULL,  // 2000-01-01 00:00:00 UTC
+      1774746000ULL, // 2026-03-29 01:00:00 UTC, Warsaw DST boundary
+      1788589800ULL, // 2026-09-05 06:30:00 UTC
+      1792890000ULL, // 2026-10-25 01:00:00 UTC, Warsaw DST boundary
+      4102444799ULL, // 2099-12-31 23:59:59 UTC
+  }};
+  for (const std::uint64_t epoch : epochs) {
+    std::array<std::uint8_t, 7> encoded{};
+    assert(encodeDs3231UtcTime(epoch, encoded));
+    Ds3231DecodedTime decoded{};
+    assert(decodeDs3231Time(encoded, 0x00U, decoded));
+    assert(decoded.unix_time_s == epoch);
+    assert((encoded[2] & 0x40U) == 0U); // always encode DS3231 in 24-hour mode
+  }
+}
+
+void testDs3231UtcEncoderRejectsUnsupportedCentury() {
+  std::array<std::uint8_t, 7> encoded{};
+  assert(!encodeDs3231UtcTime(7258118400ULL, encoded)); // 2200-01-01 00:00:00 UTC
+}
+
 void testDs3231OsfAndInvalidBcd() {
   constexpr std::array<std::uint8_t, 7> valid{{
       0x00U,
@@ -105,6 +129,8 @@ int main() {
   testAdvertisementExtraction();
   testMalformedAndEncryptedDoNotDecode();
   testDs3231TrustedTime();
+  testDs3231UtcEncoderRoundTrips();
+  testDs3231UtcEncoderRejectsUnsupportedCentury();
   testDs3231OsfAndInvalidBcd();
   return 0;
 }
