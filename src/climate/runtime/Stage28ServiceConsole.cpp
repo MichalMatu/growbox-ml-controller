@@ -47,7 +47,7 @@ constexpr uart_port_t kServiceConsoleUart = static_cast<uart_port_t>(CONFIG_ESP_
 constexpr int kServiceConsoleRxBufferBytes = 1024;
 constexpr int kServiceConsoleTxBufferBytes = 2048;
 constexpr char kSdLogDirectory[] = "/sdcard/GBLOG";
-constexpr char kSdSelfTestPath[] = "/sdcard/GBLOG/.SELFTEST";
+constexpr char kSdSelfTestPath[] = "/sdcard/GBLOG/STEST.TMP";
 constexpr std::size_t kSdReadMaxBytes = 384U;
 
 bool isLogFilename(const char* name) noexcept {
