@@ -26,11 +26,11 @@ struct KnownRfDevice {
 
 constexpr std::array<KnownRfDevice, 3U> kKnownRfDevices{{
     {ServiceConsoleRfDevice::Lamp, "lamp", &rf433::kRemoteSocket2,
-     "captured-profile; physical socket validation pending"},
+     "physically validated; Shelly signature about +97W"},
     {ServiceConsoleRfDevice::Fan, "fan", &rf433::kRemoteSocket1,
-     "physically validated at 575us/repeat10"},
+     "physically validated; Shelly signature about +2.9W"},
     {ServiceConsoleRfDevice::Humidifier, "humidifier", &rf433::kRemoteSocket3,
-     "captured-profile; physical socket validation pending"},
+     "physically validated; Shelly signature about +15.7W"},
 }};
 
 #if !defined(CONFIG_ESP_CONSOLE_UART_NUM)
@@ -58,6 +58,14 @@ Stage28ServiceConsole::Stage28ServiceConsole(Config config, native::BleClimateSc
                                              Stage28RfDiagnostics& rf_diagnostics) noexcept
     : config_(config), ble_(ble), scd41_(scd41), clock_(clock), rf_diagnostics_(rf_diagnostics) {}
 
+bool Stage28ServiceConsole::realOutputsActive() const noexcept {
+  return config_.real_outputs_active != nullptr && *config_.real_outputs_active;
+}
+
+const char* Stage28ServiceConsole::outputModeName() const noexcept {
+  return realOutputsActive() ? "real-bounded" : "fake-locked";
+}
+
 bool Stage28ServiceConsole::begin() noexcept {
   if (!config_.enabled) {
     return false;
@@ -77,7 +85,7 @@ bool Stage28ServiceConsole::begin() noexcept {
 
   ready_ = true;
   writeText("\r\n=== Growbox service console ===\r\n");
-  writeText("Manual service commands only. Automatic climate outputs remain fake-locked.\r\n");
+  writeFormatted("Automatic output mode: %s.\r\n", outputModeName());
   printHelp();
   printPrompt();
   return true;
@@ -180,6 +188,7 @@ void Stage28ServiceConsole::printHelp() noexcept {
   writeText("  rf rx [50..5000]                 capture/decode one RF frame\r\n");
   writeText("RTC stores UTC; lighting schedule converts UTC to Europe/Warsaw.\r\n");
   writeText("RF transmit commands require the RF diagnostics transport to be enabled.\r\n");
+  writeText("Manual RF TX is blocked while automatic outputs are real-bounded.\r\n");
   writeText("Manual TX is not physical load-state acknowledgement.\r\n");
 }
 
@@ -189,10 +198,10 @@ void Stage28ServiceConsole::printStatus(std::uint64_t now_ms) noexcept {
   const std::uint32_t free_psram =
       static_cast<std::uint32_t>(heap_caps_get_free_size(MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
   const UBaseType_t stack_watermark = uxTaskGetStackHighWaterMark(nullptr);
-  writeFormatted("status firmware_sha=%s uptime_ms=%llu outputs=fake-locked rf_ready=%d "
+  writeFormatted("status firmware_sha=%s uptime_ms=%llu outputs=%s rf_ready=%d "
                  "free_internal=%lu free_psram=%lu stack_high_water=%lu\r\n",
                  config_.firmware_sha != nullptr ? config_.firmware_sha : "unknown",
-                 static_cast<unsigned long long>(now_ms), rf_diagnostics_.ready(),
+                 static_cast<unsigned long long>(now_ms), outputModeName(), rf_diagnostics_.ready(),
                  static_cast<unsigned long>(free_internal), static_cast<unsigned long>(free_psram),
                  static_cast<unsigned long>(stack_watermark));
 }
@@ -281,8 +290,8 @@ void Stage28ServiceConsole::printSensors(std::uint64_t now_ms) noexcept {
 }
 
 void Stage28ServiceConsole::printRfList() noexcept {
-  writeFormatted("rf transport_ready=%d automatic_outputs=fake-locked\r\n",
-                 rf_diagnostics_.ready());
+  writeFormatted("rf transport_ready=%d automatic_outputs=%s\r\n", rf_diagnostics_.ready(),
+                 outputModeName());
   for (const KnownRfDevice& device : kKnownRfDevices) {
     writeFormatted("  %s label=%s on=%lu/0x%08lX off=%lu/0x%08lX bits=%u protocol=%u "
                    "pulse_us=%u repeat=%u status=%s\r\n",
@@ -297,6 +306,11 @@ void Stage28ServiceConsole::printRfList() noexcept {
 }
 
 void Stage28ServiceConsole::handleRfTransmit(const ServiceConsoleCommand& command) noexcept {
+  if (realOutputsActive()) {
+    writeText("error: manual RF TX blocked while automatic outputs are real-bounded\r\n");
+    return;
+  }
+
   const KnownRfDevice* device = findKnownDevice(command.device);
   if (device == nullptr) {
     writeText("error: RF device not found\r\n");
