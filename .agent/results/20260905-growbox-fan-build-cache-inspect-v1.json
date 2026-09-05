@@ -1,0 +1,60 @@
+{
+  "id": "20260905-growbox-fan-build-cache-inspect-v1",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "started_at": "2026-09-05T22:07:56.944234+00:00",
+  "command_timeout": 120,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; EXPECTED=dfc6dc86a47ad2158e36bb0d5241b0153dbce387; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; for f in build/idf-fan-short-diagnostic-v1/CMakeCache.txt build/idf-fan-short-safe-return-v1/CMakeCache.txt; do echo CACHE=$f; test -f \"$f\"; grep -E 'GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED|GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED|GROWBOX_RF433_LOOPBACK_ENABLED' \"$f\" || true; done",
+      "exit_code": 0,
+      "output": "CACHE=build/idf-fan-short-diagnostic-v1/CMakeCache.txt\nGROWBOX_RF433_LOOPBACK_ENABLED:STRING=1\nGROWBOX_STAGE28_REAL_OUTPUTS_ENABLED:STRING=1\nGROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED:STRING=0\nCACHE=build/idf-fan-short-safe-return-v1/CMakeCache.txt\nGROWBOX_RF433_LOOPBACK_ENABLED:STRING=1\nGROWBOX_STAGE28_REAL_OUTPUTS_ENABLED:STRING=0\nGROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED:STRING=0\n",
+      "elapsed_seconds": 0.868,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 2048,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 4.05,
+      "output_policy": "stream",
+      "captured_output_chars": 393,
+      "output_truncated": false,
+      "current_rss_mb": 4.05,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.868
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.071
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.068
+  },
+  "finished_at": "2026-09-05T22:07:59.356754+00:00",
+  "task_digest": "d0a80a1ceeece2c9b79b1fd7a29b25243a8c7562206d1b267adc8451d1dcfdda",
+  "idle_timeout": 60,
+  "task_timeout": 300,
+  "memory_limit_mb": 2048,
+  "attempt_id": "6d6c9c5bc66fe207f7bbf21b",
+  "daemon_version": "4.18.2"
+}
