@@ -46,6 +46,13 @@ ClimateControllerInput validInput() {
   return input;
 }
 
+ClimateRuntimeDecision evaluateRule(const ClimateControllerInput& input) {
+  ClimateRuntimeController runtime{};
+  ClimateRuntimeDecision decision{};
+  assert(runtime.step(input, 120'000U, decision) == ClimateRuntimeStatus::Ok);
+  return decision;
+}
+
 class FakeInputSource final : public ClimateInputSource {
 public:
   ClimateControllerInput input = validInput();
@@ -183,6 +190,102 @@ void testConfirmedBinaryStateBecomesRuntimeTruth() {
   assert(decision.effective_after.exhaust_fan > 0.6F);
 }
 
+void testHigherIntakeRhStillVentilatesWhenAbsoluteHumidityIsLower() {
+  ClimateControllerInput input = validInput();
+  input.state.measurements.air_temperature_c = {26.0F, true, 0U};
+  input.state.measurements.relative_humidity_pct = {70.0F, true, 0U};
+  input.state.measurements.outside_temperature_c = {20.0F, true, 0U};
+  input.state.measurements.outside_humidity_pct = {75.0F, true, 0U};
+  input.targets.air_temperature_c = 26.0F;
+  input.targets.relative_humidity_pct = 60.0F;
+
+  const ClimateRuntimeDecision decision = evaluateRule(input);
+  assert(decision.rule.safe.exhaust_fan > 0.0F);
+}
+
+void testLowerIntakeRhDoesNotClaimDryingWhenAbsoluteHumidityIsHigher() {
+  ClimateControllerInput input = validInput();
+  input.state.measurements.air_temperature_c = {26.0F, true, 0U};
+  input.state.measurements.relative_humidity_pct = {70.0F, true, 0U};
+  input.state.measurements.outside_temperature_c = {30.0F, true, 0U};
+  input.state.measurements.outside_humidity_pct = {60.0F, true, 0U};
+  input.targets.air_temperature_c = 26.0F;
+  input.targets.relative_humidity_pct = 60.0F;
+  input.capabilities.dehumidifier = false;
+
+  const ClimateRuntimeDecision decision = evaluateRule(input);
+  assert(near(decision.rule.safe.exhaust_fan, 0.0F));
+}
+
+void testStaleIntakeHumidityCannotCreateDryingVentilation() {
+  ClimateControllerInput input = validInput();
+  input.state.measurements.air_temperature_c = {26.0F, true, 0U};
+  input.state.measurements.relative_humidity_pct = {70.0F, true, 0U};
+  input.state.measurements.outside_temperature_c = {20.0F, true, 0U};
+  input.state.measurements.outside_humidity_pct = {75.0F, true, kDefaultSensorTimeoutMs + 1U};
+  input.targets.air_temperature_c = 26.0F;
+  input.targets.relative_humidity_pct = 60.0F;
+  input.capabilities.dehumidifier = false;
+
+  const ClimateRuntimeDecision decision = evaluateRule(input);
+  assert(near(decision.rule.safe.exhaust_fan, 0.0F));
+}
+
+void testTemperatureBenefitVentilatesIndependentlyOfMoisturePenalty() {
+  ClimateControllerInput input = validInput();
+  input.state.measurements.air_temperature_c = {30.0F, true, 0U};
+  input.state.measurements.relative_humidity_pct = {50.0F, true, 0U};
+  input.state.measurements.outside_temperature_c = {24.0F, true, 0U};
+  input.state.measurements.outside_humidity_pct = {90.0F, true, 0U};
+  input.targets.air_temperature_c = 24.0F;
+  input.targets.relative_humidity_pct = 50.0F;
+
+  const ClimateRuntimeDecision decision = evaluateRule(input);
+  assert(decision.rule.safe.exhaust_fan > 0.0F);
+}
+
+void testHighCo2SafetyVentilationRemainsIndependent() {
+  ClimateControllerInput input = validInput();
+  input.state.measurements.air_temperature_c = {24.0F, true, 0U};
+  input.state.measurements.relative_humidity_pct = {60.0F, true, 0U};
+  input.state.measurements.co2_ppm = {1900.0F, true, 0U};
+  input.state.measurements.outside_temperature_c.valid = false;
+  input.state.measurements.outside_humidity_pct.valid = false;
+  input.targets.air_temperature_c = 24.0F;
+  input.targets.relative_humidity_pct = 60.0F;
+
+  const ClimateRuntimeDecision decision = evaluateRule(input);
+  assert(near(decision.rule.safe.exhaust_fan, 1.0F));
+  assert(near(decision.rule.safe.co2_doser, 0.0F));
+}
+
+void testLowHumidityStillRequestsHumidifier() {
+  ClimateControllerInput input = validInput();
+  input.state.measurements.air_temperature_c = {24.0F, true, 0U};
+  input.state.measurements.relative_humidity_pct = {40.0F, true, 0U};
+  input.state.measurements.outside_temperature_c.valid = false;
+  input.state.measurements.outside_humidity_pct.valid = false;
+  input.targets.air_temperature_c = 24.0F;
+  input.targets.relative_humidity_pct = 60.0F;
+
+  const ClimateRuntimeDecision decision = evaluateRule(input);
+  assert(decision.rule.safe.humidifier > 0.0F);
+}
+
+void testVpdModeUsesAbsoluteHumidityForDryingBenefit() {
+  ClimateControllerInput input = validInput();
+  input.humidity_control_mode = HumidityControlMode::Vpd;
+  input.state.measurements.air_temperature_c = {26.0F, true, 0U};
+  input.state.measurements.relative_humidity_pct = {80.0F, true, 0U};
+  input.state.measurements.outside_temperature_c = {20.0F, true, 0U};
+  input.state.measurements.outside_humidity_pct = {85.0F, true, 0U};
+  input.targets.air_temperature_c = 26.0F;
+  input.targets.air_vpd_kpa = 1.2F;
+
+  const ClimateRuntimeDecision decision = evaluateRule(input);
+  assert(decision.rule.safe.exhaust_fan > 0.0F);
+}
+
 void testRejectedCommandAttemptsOffAndRecoversEstimator() {
   ClimateRuntimeController runtime{};
   FakeInputSource source{};
@@ -245,6 +348,13 @@ int main() {
   testInputFailureFailsClosed();
   testMlShadowNeverDrivesSink();
   testConfirmedBinaryStateBecomesRuntimeTruth();
+  testHigherIntakeRhStillVentilatesWhenAbsoluteHumidityIsLower();
+  testLowerIntakeRhDoesNotClaimDryingWhenAbsoluteHumidityIsHigher();
+  testStaleIntakeHumidityCannotCreateDryingVentilation();
+  testTemperatureBenefitVentilatesIndependentlyOfMoisturePenalty();
+  testHighCo2SafetyVentilationRemainsIndependent();
+  testLowHumidityStillRequestsHumidifier();
+  testVpdModeUsesAbsoluteHumidityForDryingBenefit();
   testRejectedCommandAttemptsOffAndRecoversEstimator();
   testDoubleActuatorFailureLatchesFault();
   return 0;
