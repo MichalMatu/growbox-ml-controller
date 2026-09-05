@@ -17,6 +17,12 @@ struct Stage27PhysicalOutputSnapshot {
   bool light_on{false};
   bool exhaust_on{false};
   bool humidifier_on{false};
+  bool thermal_safety_latched{false};
+  bool safety_force_exhaust{false};
+  std::uint32_t safety_reason{0U};
+  std::uint32_t arbiter_transition_count{0U};
+  std::uint32_t arbiter_dwell_hold_count{0U};
+  std::uint32_t arbiter_safety_override_count{0U};
 };
 
 class Stage27TelemetryReporter final {
