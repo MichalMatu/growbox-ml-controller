@@ -5,6 +5,7 @@ idf_component_register(
     "climate/ClimateApplication.cpp"
     "climate/ClimateCompositeInput.cpp"
     "climate/ClimateSemanticOutput.cpp"
+    "climate/ClimateObservabilityMetrics.cpp"
     "climate/rf433/ClimateRf433EndpointRegistry.cpp"
     "climate/Stage28dOutputBindings.cpp"
     "climate/Stage28dLampSafety.cpp"
@@ -63,6 +64,8 @@ elseif(GROWBOX_APP_MODE STREQUAL "climate-v6-real-inputs")
     ${COMPONENT_LIB}
     PRIVATE
       "climate/ClimateV6RealInputRuntime.cpp"
+      "climate/runtime/EuropeWarsawTime.cpp"
+      "climate/runtime/Stage27ScheduleProfile.cpp"
       "climate/runtime/Stage27RuntimeAdapters.cpp"
       "climate/runtime/Stage27TelemetryReporter.cpp"
       "climate/runtime/Stage28RfDiagnostics.cpp"
