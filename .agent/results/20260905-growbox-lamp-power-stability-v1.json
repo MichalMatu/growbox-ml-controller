@@ -1,0 +1,60 @@
+{
+  "id": "20260905-growbox-lamp-power-stability-v1",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "started_at": "2026-09-05T12:06:40.597762+00:00",
+  "command_timeout": 900,
+  "edits": {},
+  "commands": [
+    {
+      "command": "git fetch -q origin agent-control && git show origin/agent-control:.agent/payloads/20260905-growbox-lamp-power-stability-v1/run.sh > /tmp/lamp-power-stability-v1.sh && bash /tmp/lamp-power-stability-v1.sh",
+      "exit_code": 0,
+      "output": "LAMP_STABILITY_BASELINE power_w=2.20 voltage_v=243.9\nLAMP_STABILITY_SAMPLE t_s=15.0 power_w=98.80 voltage_v=243.1 reference_w=-1.00 consecutive_drop=0\nLAMP_STABILITY_SAMPLE t_s=25.0 power_w=98.70 voltage_v=243.1 reference_w=98.70 consecutive_drop=0\nLAMP_STABILITY_SAMPLE t_s=35.0 power_w=98.60 voltage_v=243.1 reference_w=98.70 consecutive_drop=0\nLAMP_STABILITY_SAMPLE t_s=45.1 power_w=98.60 voltage_v=243.3 reference_w=98.70 consecutive_drop=0\nLAMP_STABILITY_SAMPLE t_s=55.2 power_w=98.60 voltage_v=243.4 reference_w=98.70 consecutive_drop=0\nLAMP_STABILITY_SAMPLE t_s=65.2 power_w=98.60 voltage_v=243.5 reference_w=98.70 consecutive_drop=0\nLAMP_STABILITY_SAMPLE t_s=75.2 power_w=98.60 voltage_v=242.8 reference_w=98.70 consecutive_drop=0\nLAMP_STABILITY_SAMPLE t_s=85.3 power_w=98.50 voltage_v=243.2 reference_w=98.70 consecutive_drop=0\nLAMP_STABILITY_SAMPLE t_s=95.3 power_w=98.60 voltage_v=243.4 reference_w=98.70 consecutive_drop=0\nLAMP_STABILITY_SAMPLE t_s=105.3 power_w=98.50 voltage_v=243.7 reference_w=98.70 consecutive_drop=0\nLAMP_STABILITY_SAMPLE t_s=115.4 power_w=98.50 voltage_v=243.6 reference_w=98.70 consecutive_drop=0\nLAMP_STABILITY_SAMPLE t_s=125.4 power_w=98.50 voltage_v=243.6 reference_w=98.70 consecutive_drop=0\nLAMP_STABILITY_SAMPLE t_s=135.4 power_w=98.50 voltage_v=243.6 reference_w=98.70 consecutive_drop=0\nLAMP_STABILITY_SAMPLE t_s=145.4 power_w=98.50 voltage_v=243.6 reference_w=98.70 consecutive_drop=0\nLAMP_STABILITY_SAMPLE t_s=155.4 power_w=98.40 voltage_v=243.4 reference_w=98.70 consecutive_drop=0\nLAMP_STABILITY_SAMPLE t_s=165.5 power_w=98.40 voltage_v=243.4 reference_w=98.70 consecutive_drop=0\nLAMP_STABILITY_SAMPLE t_s=175.6 power_w=98.30 voltage_v=243.3 reference_w=98.70 consecutive_drop=0\nLAMP_STABILITY_SAMPLE t_s=185.7 power_w=98.40 voltage_v=243.4 reference_w=98.70 consecutive_drop=0\nLAMP_STABILITY_PASS {\"baseline_w\":2.2,\"final_w\":2.2,\"max_temp_c\":25.1,\"min_temp_c\":24.4,\"persistent_drop\":false,\"reference_w\":98.7,\"samples\":[{\"power_w\":98.8,\"t_s\":15.0,\"voltage_v\":243.1},{\"power_w\":98.7,\"t_s\":25.0,\"voltage_v\":243.1},{\"power_w\":98.6,\"t_s\":35.0,\"voltage_v\":243.1},{\"power_w\":98.6,\"t_s\":45.1,\"voltage_v\":243.3},{\"power_w\":98.6,\"t_s\":55.2,\"voltage_v\":243.4},{\"power_w\":98.6,\"t_s\":65.2,\"voltage_v\":243.5},{\"power_w\":98.6,\"t_s\":75.2,\"voltage_v\":242.8},{\"power_w\":98.5,\"t_s\":85.3,\"voltage_v\":243.2},{\"power_w\":98.6,\"t_s\":95.3,\"voltage_v\":243.4},{\"power_w\":98.5,\"t_s\":105.3,\"voltage_v\":243.7},{\"power_w\":98.5,\"t_s\":115.4,\"voltage_v\":243.6},{\"power_w\":98.5,\"t_s\":125.4,\"voltage_v\":243.6},{\"power_w\":98.5,\"t_s\":135.4,\"voltage_v\":243.6},{\"power_w\":98.5,\"t_s\":145.4,\"voltage_v\":243.6},{\"power_w\":98.4,\"t_s\":155.4,\"voltage_v\":243.4},{\"power_w\":98.4,\"t_s\":165.5,\"voltage_v\":243.4},{\"power_w\":98.3,\"t_s\":175.6,\"voltage_v\":243.3},{\"power_w\":98.4,\"t_s\":185.7,\"voltage_v\":243.4}],\"sha\":\"3dfc4b552f669f628d5c9bee455a34666915088c\"}\n",
+      "elapsed_seconds": 261.557,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 37.92,
+      "output_policy": "stream",
+      "captured_output_chars": 2856,
+      "output_truncated": false,
+      "current_rss_mb": 25.33,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 261.557
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.087
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.064
+  },
+  "finished_at": "2026-09-05T12:11:03.763399+00:00",
+  "task_digest": "503ad1cc8eee2f75827382cd2753321abf2ecd402996fe18c0c884080274096b",
+  "idle_timeout": 300,
+  "task_timeout": 1200,
+  "memory_limit_mb": 4096,
+  "attempt_id": "f386e23010201e7b927c8c21",
+  "daemon_version": "4.17.0"
+}
