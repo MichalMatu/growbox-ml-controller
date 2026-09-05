@@ -1,0 +1,61 @@
+{
+  "id": "20260905-growbox-ah-final-quality-gate-v1",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "started_at": "2026-09-05T21:49:52.522289+00:00",
+  "command_timeout": 7200,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; EXPECTED=3e2e195898c45734f459ac9a8f69dad9891ab4eb; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; export CMAKE_BUILD_PARALLEL_LEVEL=1; bash scripts/quality_gate_push.sh; git diff --check; test -z \"$(git status --porcelain)\"; printf 'AH_FINAL_FULL_QUALITY_GATE_PASS commit=%s outputs=fake-locked rf_tx=0\\n' \"$EXPECTED\"",
+      "exit_code": 1,
+      "output": "==> pytest\n........................................................................ [ 14%]\n............................F.F......................................... [ 29%]\n........................................................................ [ 44%]\n........................................................................ [ 59%]\n........................................................................ [ 74%]\n..................................sss................................... [ 89%]\n.....................................................                    [100%]\n=================================== FAILURES ===================================\n__________ test_committed_replay_fixture_matches_canonical_generator ___________\n\n    def test_committed_replay_fixture_matches_canonical_generator() -> None:\n>       assert DEFAULT_OUTPUT.read_text(encoding=\"utf-8\") == render_ndjson()\nE       assert '{\"applied\":{...min\":0.0}}}\\n' == '{\"applied\":{...min\":0.0}}}\\n'\nE         \nE         Skipping 22519 identical leading characters in diff, use -v to show\nE         - aust_fan\":1.0,\"heater\":1.0,\"humidifier\":0.0},\"capabilities\":{\"co2_doser\":true,\"cooler\":true,\"dehumidifier\":true,\"exhaust_fan\":true,\"heater\":true,\"humidifier\":true},\"contract\":{\"hash\":\"fe7d6b4362ad5ec0412ccb11d96112578fd3048d57d25e9d6492e9643ffad84a\",\"id\":\"climate-mvp-v1\",\"schema_version\":6},\"effective_after\":{\"co2_doser\":0.0,\"cooler\":0.0,\"dehumidifier\":0.3934693402873666,\"exhaust_fan\":0.7134952031398099,\"heater\":0.248522706924714,\"humidifier\":0.0},\"effective_before\":{\"co2_doser\":0.0,\"cooler\":0.0,\"dehum...\nE         \nE         ...Full output truncated (10 lines hidden), use '-vv' to show\n\ntests/test_climate_replay_fixture.py:21: AssertionError\n________ test_every_canonical_record_replays_without_policy_divergence _________\n\n    def test_every_canonical_record_replays_without_policy_divergence() -> None:\n        specs = _case_specs()\n        records = tuple(iter_climate_trace_ndjson_records(DEFAULT_OUTPUT))\n        assert len(records) == len(specs)\n        for spec, record in zip(specs, records, strict=True):\n            # A failing model cannot be re-invoked as a deterministic candidate; its\n            # recorded Rule fallback is replayed without a model. Fixed models are\n            # supplied so shadow/active ML outputs are checked as well.\n            model = _model(spec) if spec.model_behavior == \"fixed\" else None\n            divergence = replay_climate_trace_record(record, model=model)\n>           assert divergence is None, f\"{spec.name}: {divergence}\"\nE           AssertionError: high_humidity: ClimateReplayDivergence(step_index=1, field='rule.arbitrated.exhaust_fan', expected=0.18666666666666623, actual=1.0)\nE           assert ClimateReplayDivergence(step_index=1, field='rule.arbitrated.exhaust_fan', expected=0.18666666666666623, actual=1.0) is None\n\ntests/test_climate_replay_fixture.py:42: AssertionError\n=========================== short test summary info ============================\nSKIPPED [3] tests/test_panel_visual.py:92: playwright chromium unavailable: BrowserType.launch: Executable doesn't exist at /Users/michal/Library/Caches/ms-playwright/chromium_headless_shell-1148/chrome-mac/headless_shell\n╔════════════════════════════════════════════════════════════╗\n║ Looks like Playwright was just installed or updated.       ║\n║ Please run the following command to download new browsers: ║\n║                                                            ║\n║     playwright install                                     ║\n║                                                            ║\n║ <3 Playwright Team                                         ║\n╚════════════════════════════════════════════════════════════╝\nFAILED tests/test_climate_replay_fixture.py::test_committed_replay_fixture_matches_canonical_generator\nFAILED tests/test_climate_replay_fixture.py::test_every_canonical_record_replays_without_policy_divergence\n2 failed, 480 passed, 3 skipped, 9 deselected in 50.50s\n",
+      "elapsed_seconds": 52.301,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 6144,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 402.55,
+      "output_policy": "stream",
+      "captured_output_chars": 3985,
+      "output_truncated": false,
+      "current_rss_mb": 275.88,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "failed",
+      "elapsed_seconds": 52.301
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.108
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.064
+  },
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-05T21:50:46.324193+00:00",
+  "task_digest": "ff5ac239b4c62a0011aa787e9e342fd89fbef4e95042f50e63be4d305f577483",
+  "idle_timeout": 900,
+  "task_timeout": 10800,
+  "memory_limit_mb": 6144,
+  "attempt_id": "ec3a58a43fbf98eabce46268",
+  "daemon_version": "4.18.2"
+}
