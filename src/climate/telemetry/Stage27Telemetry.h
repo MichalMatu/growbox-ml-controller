@@ -64,6 +64,8 @@ struct Stage27TelemetrySnapshot {
   std::uint32_t runtime_mode = 0U;
   std::uint32_t rule_arbitration_interventions = 0U;
   std::uint32_t rule_safety_interventions = 0U;
+  float requested_exhaust_fan = 0.0F;
+  float requested_humidifier = 0.0F;
   float applied_heater = 0.0F;
   float applied_cooler = 0.0F;
   float applied_exhaust_fan = 0.0F;
@@ -78,6 +80,12 @@ struct Stage27TelemetrySnapshot {
   bool physical_light_on = false;
   bool physical_exhaust_on = false;
   bool physical_humidifier_on = false;
+  bool thermal_safety_latched = false;
+  bool safety_force_exhaust = false;
+  std::uint32_t safety_reason = 0U;
+  std::uint32_t arbiter_transition_count = 0U;
+  std::uint32_t arbiter_dwell_hold_count = 0U;
+  std::uint32_t arbiter_safety_override_count = 0U;
 };
 
 } // namespace growbox::app::climate_io::telemetry
