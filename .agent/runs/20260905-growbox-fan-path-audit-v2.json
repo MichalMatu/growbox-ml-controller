@@ -1,0 +1,9 @@
+{
+  "event": "invalid_task_rejected",
+  "status": "failed",
+  "failure_reason": "invalid_task_file",
+  "updated_at": "2026-09-05T20:25:15.012964+00:00",
+  "task_id": "20260905-growbox-fan-path-audit-v2",
+  "daemon_version": "4.18.0",
+  "pid": 24970
+}
