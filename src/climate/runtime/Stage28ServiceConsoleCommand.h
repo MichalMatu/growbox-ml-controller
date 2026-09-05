@@ -12,6 +12,7 @@ enum class ServiceConsoleCommandKind : std::uint8_t {
   RfList,
   RfTransmit,
   RfReceive,
+  RtcSetUnix,
   Invalid,
 };
 
@@ -31,6 +32,7 @@ struct ServiceConsoleCommand {
   ServiceConsoleRfDevice device{ServiceConsoleRfDevice::Lamp};
   ServiceConsoleRfState state{ServiceConsoleRfState::Off};
   std::uint32_t timeout_ms{1000U};
+  std::uint64_t unix_time_s{0U};
 };
 
 ServiceConsoleCommand parseServiceConsoleCommand(const char* line) noexcept;
