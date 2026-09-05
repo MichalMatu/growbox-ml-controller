@@ -97,6 +97,8 @@ void Stage27TelemetryReporter::record(
   snapshot.runtime_mode = static_cast<std::uint32_t>(decision.mode);
   snapshot.rule_arbitration_interventions = decision.rule.arbitration_interventions;
   snapshot.rule_safety_interventions = decision.rule.safety_interventions;
+  snapshot.requested_exhaust_fan = decision.rule.safe.exhaust_fan;
+  snapshot.requested_humidifier = decision.rule.safe.humidifier;
   snapshot.applied_heater = decision.applied.heater;
   snapshot.applied_cooler = decision.applied.cooler;
   snapshot.applied_exhaust_fan = decision.applied.exhaust_fan;
@@ -108,6 +110,12 @@ void Stage27TelemetryReporter::record(
   snapshot.physical_light_on = physical_outputs.light_on;
   snapshot.physical_exhaust_on = physical_outputs.exhaust_on;
   snapshot.physical_humidifier_on = physical_outputs.humidifier_on;
+  snapshot.thermal_safety_latched = physical_outputs.thermal_safety_latched;
+  snapshot.safety_force_exhaust = physical_outputs.safety_force_exhaust;
+  snapshot.safety_reason = physical_outputs.safety_reason;
+  snapshot.arbiter_transition_count = physical_outputs.arbiter_transition_count;
+  snapshot.arbiter_dwell_hold_count = physical_outputs.arbiter_dwell_hold_count;
+  snapshot.arbiter_safety_override_count = physical_outputs.arbiter_safety_override_count;
 
   const auto storage_status = storage_logger_.status();
   logRecord(snapshot, storage_status);
@@ -134,9 +142,12 @@ void Stage27TelemetryReporter::logRecord(
       "tp_rejected=%u xiaomi_sample=%d xiaomi_t=%.2f xiaomi_rh=%.2f "
       "xiaomi_age_ms=%llu xiaomi_packets=%u xiaomi_accepted=%u xiaomi_rejected=%u "
       "runtime_status=%u runtime_mode=%u rule_arb=%u rule_safety=%u "
+      "requested_fan=%.3f requested_humidifier=%.3f "
       "applied_heater=%.3f applied_cooler=%.3f applied_fan=%.3f applied_humidifier=%.3f "
       "applied_dehumidifier=%.3f applied_co2=%.3f "
       "physical_light=%d physical_fan=%d physical_humidifier=%d "
+      "thermal_latched=%d force_fan=%d safety_reason=%u "
+      "arbiter_transitions=%u arbiter_dwell_holds=%u arbiter_safety_overrides=%u "
       "storage_backend=%s storage_sd_mounted=%d storage_flash_mounted=%d "
       "storage_sd_mount_errors=%u storage_flash_mount_errors=%u storage_write_errors=%u "
       "storage_queue_drops=%u storage_records_written=%u storage_records_skipped=%u "
@@ -165,13 +176,17 @@ void Stage27TelemetryReporter::logRecord(
       static_cast<unsigned long long>(snapshot.xiaomi_age_ms), snapshot.xiaomi_packets,
       snapshot.xiaomi_accepted, snapshot.xiaomi_rejected, snapshot.runtime_status,
       snapshot.runtime_mode, snapshot.rule_arbitration_interventions,
-      snapshot.rule_safety_interventions, static_cast<double>(snapshot.applied_heater),
-      static_cast<double>(snapshot.applied_cooler),
+      snapshot.rule_safety_interventions, static_cast<double>(snapshot.requested_exhaust_fan),
+      static_cast<double>(snapshot.requested_humidifier),
+      static_cast<double>(snapshot.applied_heater), static_cast<double>(snapshot.applied_cooler),
       static_cast<double>(snapshot.applied_exhaust_fan),
       static_cast<double>(snapshot.applied_humidifier),
       static_cast<double>(snapshot.applied_dehumidifier),
       static_cast<double>(snapshot.applied_co2_doser), snapshot.physical_light_on,
       snapshot.physical_exhaust_on, snapshot.physical_humidifier_on,
+      snapshot.thermal_safety_latched, snapshot.safety_force_exhaust, snapshot.safety_reason,
+      snapshot.arbiter_transition_count, snapshot.arbiter_dwell_hold_count,
+      snapshot.arbiter_safety_override_count,
       storage::stage27StorageBackendName(storage_status.active_backend), storage_status.sd_mounted,
       storage_status.flash_mounted, storage_status.sd_mount_errors,
       storage_status.flash_mount_errors, storage_status.write_errors, storage_status.queue_drops,
