@@ -1,0 +1,15 @@
+{
+  "id": "20260905-growbox-fan-build-cache-inspect-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 2048,
+  "command_timeout": 120,
+  "idle_timeout": 60,
+  "task_timeout": 300,
+  "commands": [
+    "set -euo pipefail; EXPECTED=dfc6dc86a47ad2158e36bb0d5241b0153dbce387; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; for f in build/idf-fan-short-diagnostic-v1/CMakeCache.txt build/idf-fan-short-safe-return-v1/CMakeCache.txt; do echo CACHE=$f; test -f \"$f\"; grep -E 'GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED|GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED|GROWBOX_RF433_LOOPBACK_ENABLED' \"$f\" || true; done"
+  ]
+}
