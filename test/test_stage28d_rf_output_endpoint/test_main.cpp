@@ -63,11 +63,30 @@ void testSafetyForceExhaustOverridesRuleRequest() {
   assert(tx.codes[tx.count - 1U] == rf433::kRemoteSocket1.off.key.code);
 }
 
+void testEmergencyOffBypassesSafetyForce() {
+  FakeTransmitter tx;
+  Stage28dRfOutputEndpoint endpoint({true, 0.5F}, tx);
+  assert(endpoint.initializeSafeState(0U));
+  endpoint.setSafetyForceExhaust(true);
+  assert(endpoint.write(kExhaustFanEndpoint, 0.0F, 100U));
+  assert(endpoint.stateOn(kExhaustFanEndpoint));
+
+  assert(endpoint.forceOff(kExhaustFanEndpoint, 101U));
+  assert(!endpoint.stateOn(kExhaustFanEndpoint));
+  assert(tx.codes[tx.count - 1U] == rf433::kRemoteSocket1.off.key.code);
+
+  // The ordinary path still honors the safety force afterwards.
+  assert(endpoint.write(kExhaustFanEndpoint, 0.0F, 102U));
+  assert(endpoint.stateOn(kExhaustFanEndpoint));
+  assert(tx.codes[tx.count - 1U] == rf433::kRemoteSocket1.on.key.code);
+}
+
 void testScheduledLightUsesDedicatedPath() {
   FakeTransmitter tx;
   Stage28dRfOutputEndpoint endpoint({true, 0.5F}, tx);
   assert(endpoint.initializeSafeState(0U));
   assert(!endpoint.write(kScheduledLightEndpoint, 1.0F, 100U));
+  assert(!endpoint.forceOff(kScheduledLightEndpoint, 100U));
   assert(endpoint.writeScheduledLight(true, 100U));
   assert(endpoint.stateOn(kScheduledLightEndpoint));
   assert(tx.codes[tx.count - 1U] == rf433::kRemoteSocket2.on.key.code);
@@ -95,6 +114,7 @@ void testDisabledEndpointFailsClosed() {
   Stage28dRfOutputEndpoint endpoint({false, 0.5F}, tx);
   assert(!endpoint.initializeSafeState(0U));
   assert(!endpoint.write(kExhaustFanEndpoint, 1.0F, 100U));
+  assert(!endpoint.forceOff(kExhaustFanEndpoint, 100U));
   assert(!endpoint.writeScheduledLight(true, 100U));
   assert(tx.count == 0U);
 }
@@ -104,6 +124,7 @@ void testDisabledEndpointFailsClosed() {
 int main() {
   testSafeInitializationAndDeduplication();
   testSafetyForceExhaustOverridesRuleRequest();
+  testEmergencyOffBypassesSafetyForce();
   testScheduledLightUsesDedicatedPath();
   testTransmitFailureDoesNotAdvanceState();
   testDisabledEndpointFailsClosed();
