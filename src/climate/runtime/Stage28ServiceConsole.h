@@ -40,6 +40,7 @@ private:
   void printRfList() noexcept;
   void handleRfTransmit(const ServiceConsoleCommand& command) noexcept;
   void handleRfReceive(const ServiceConsoleCommand& command) noexcept;
+  void handleRtcSetUnix(const ServiceConsoleCommand& command, std::uint64_t now_ms) noexcept;
   void writeText(const char* text) noexcept;
   void writeFormatted(const char* format, ...) noexcept;
   void printPrompt() noexcept;
