@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260905-growbox-gate6-safe-return-recovery-v1",
+  "task_digest": "fe9fa9a0cbd736393f94b29fe6c316b79d5dbd8fb4631927047d7b7d5b6dce2f",
+  "idle_timeout": 600,
+  "task_timeout": 2400,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-05T08:19:38.803282+00:00",
+  "attempt_id": "8626af4efecdc5713cf38330",
+  "daemon_version": "4.17.0",
+  "daemon_pid": 4656,
+  "updated_at": "2026-09-05T08:19:38.803442+00:00",
+  "pid": 4656
+}
