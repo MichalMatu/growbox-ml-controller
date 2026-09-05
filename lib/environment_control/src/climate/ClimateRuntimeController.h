@@ -81,6 +81,14 @@ public:
 
   ClimateRuntimeStatus step(const ClimateControllerInput& input, std::uint64_t monotonic_ms,
                             ClimateRuntimeDecision& decision) noexcept;
+
+  // Reconcile a decision after the actuator sink reports the levels that were
+  // actually accepted. This rewinds the estimator to effective_before and
+  // advances it with the confirmed physical command instead of the proposal.
+  void reconcileApplied(const ClimatePolicyRequest& confirmed_applied,
+                        const ClimateCapabilities& capabilities,
+                        ClimateRuntimeDecision& decision) noexcept;
+
   void reset() noexcept;
 
 private:
