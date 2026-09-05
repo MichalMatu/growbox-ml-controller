@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260905-growbox-gate1-role-binding-v1",
+  "task_digest": "24827f69a470c91d71b2f567d63218afef09588740c8f72a9321547469bbd911",
+  "idle_timeout": 600,
+  "task_timeout": 5400,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-05T05:26:36.969922+00:00",
+  "attempt_id": "96d87b6d56ec276abaab7ed0",
+  "daemon_version": "4.17.0",
+  "daemon_pid": 37591,
+  "updated_at": "2026-09-05T05:26:36.970130+00:00",
+  "pid": 37591
+}
