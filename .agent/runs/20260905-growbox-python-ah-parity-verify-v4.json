@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260905-growbox-python-ah-parity-verify-v4",
+  "task_digest": "634ddc8a11b1c5cb4e96c5c1ccd474bed35015e7ae512d46f7311ebcc0fc8f60",
+  "idle_timeout": 180,
+  "task_timeout": 1500,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-05T21:11:24.973194+00:00",
+  "attempt_id": "af4f1d09540a9a9c1f560aa0",
+  "daemon_version": "4.18.2",
+  "daemon_pid": 78960,
+  "updated_at": "2026-09-05T21:11:24.973280+00:00",
+  "pid": 78960
+}
