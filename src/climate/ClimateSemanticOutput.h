@@ -59,6 +59,12 @@ public:
   virtual ~ClimateOutputEndpoint() = default;
   virtual bool write(ClimateEndpointId endpoint, float normalized_level,
                      std::uint64_t monotonic_ms) noexcept = 0;
+
+  // Emergency OFF is distinct from an ordinary zero request because an endpoint
+  // may have a safety override that intentionally keeps a role ON.
+  virtual bool forceOff(ClimateEndpointId endpoint, std::uint64_t monotonic_ms) noexcept {
+    return write(endpoint, 0.0F, monotonic_ms);
+  }
 };
 
 class MappedClimateRoleDriver final : public ClimateRoleDriver {
@@ -69,6 +75,7 @@ public:
         endpoint_(endpoint) {}
 
   bool apply(ClimateActuatorRole role, float level, std::uint64_t monotonic_ms) noexcept override;
+  bool forceSafeOff(ClimateActuatorRole role, std::uint64_t monotonic_ms) noexcept override;
 
   const ClimateSemanticOutputConfig& config() const noexcept {
     return config_;
