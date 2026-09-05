@@ -1,0 +1,31 @@
+{
+  "id": "20260905-growbox-gate7-binary-arbiter-verify-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 6144,
+  "command_timeout": 1800,
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "workflow_policy": "efficient-verification-v1",
+  "steps": [
+    {
+      "name": "focused-gate7-binary-arbiter",
+      "command": "set -euo pipefail; EXPECTED=3dfc4b552f669f628d5c9bee455a34666915088c; git fetch -q origin mvp/environment-controller; git reset --hard $EXPECTED >/dev/null; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; export CMAKE_BUILD_PARALLEL_LEVEL=1; rm -rf build/host-gate7-focused; cmake -S test/host -B build/host-gate7-focused -DCMAKE_BUILD_TYPE=Debug >/tmp/gate7-focused-cmake.log; cmake --build build/host-gate7-focused --target climate_control_loop_tests climate_io_adapter_tests climate_semantic_output_tests stage27_telemetry_tests --parallel 1; ./build/host-gate7-focused/climate_control_loop_tests; ./build/host-gate7-focused/climate_io_adapter_tests; ./build/host-gate7-focused/climate_semantic_output_tests; ./build/host-gate7-focused/stage27_telemetry_tests; CXXBIN=${CXX:-c++}; $CXXBIN -std=c++17 -Wall -Wextra -Wpedantic -Isrc -Ilib/environment_control/src test/test_stage28d_binary_role_arbiter/test_main.cpp src/climate/Stage28dBinaryRoleArbiter.cpp -o /tmp/stage28d_binary_role_arbiter_tests; /tmp/stage28d_binary_role_arbiter_tests; $CXXBIN -std=c++17 -Wall -Wextra -Wpedantic -Isrc -Ilib/environment_control/src test/test_stage28d_rf_output_endpoint/test_main.cpp src/climate/Stage28dRfOutputEndpoint.cpp src/climate/Stage28dOutputBindings.cpp src/climate/ClimateSemanticOutput.cpp src/climate/rf433/ClimateRf433EndpointRegistry.cpp -o /tmp/stage28d_rf_output_endpoint_tests; /tmp/stage28d_rf_output_endpoint_tests; git diff --check; test -z \"$(git status --porcelain)\"; printf 'GATE7_BINARY_ARBITER_FOCUSED_PASS commit=%s outputs=fake-locked rf_tx=0\\n' \"$EXPECTED\"",
+      "verification_level": "focused",
+      "timeout": 2400,
+      "output_policy": "stream"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "full-quality-gate",
+      "command": "set -euo pipefail; EXPECTED=3dfc4b552f669f628d5c9bee455a34666915088c; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; export CMAKE_BUILD_PARALLEL_LEVEL=1; bash scripts/quality_gate_push.sh; git diff --check; test -z \"$(git status --porcelain)\"; printf 'GATE7_BINARY_ARBITER_VERIFY_COMPLETE commit=%s outputs=fake-locked rf_tx=0\\n' \"$EXPECTED\"",
+      "verification_level": "full",
+      "timeout": 5400,
+      "output_policy": "stream"
+    }
+  ]
+}
