@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260905-growbox-gate6-integration-verify-v1",
+  "task_digest": "6a3ad46cf01e30abfe65f81eb6bb42920a020eedafa1c899d1aad10eb3608523",
+  "idle_timeout": 600,
+  "task_timeout": 7200,
+  "memory_limit_mb": 6144,
+  "started_at": "2026-09-05T07:04:20.518242+00:00",
+  "attempt_id": "f859421675cb3b4fc29b80c9",
+  "daemon_version": "4.17.0",
+  "daemon_pid": 16556,
+  "updated_at": "2026-09-05T07:04:20.518430+00:00",
+  "pid": 16556
+}
