@@ -75,4 +75,20 @@ bool MappedClimateRoleDriver::apply(ClimateActuatorRole role, float level,
   return endpoint_.write(mapping.endpoint, normalized, monotonic_ms);
 }
 
+bool MappedClimateRoleDriver::forceSafeOff(ClimateActuatorRole role,
+                                           std::uint64_t monotonic_ms) noexcept {
+  if (config_status_ != ClimateSemanticOutputConfigStatus::Ok) {
+    return false;
+  }
+  const std::size_t index = climateRoleIndex(role);
+  if (index >= config_.roles.size()) {
+    return false;
+  }
+  const ClimateRoleEndpointMapping& mapping = config_.roles[index];
+  if (!mapping.enabled || mapping.endpoint == kUnmappedClimateEndpoint) {
+    return true;
+  }
+  return endpoint_.forceOff(mapping.endpoint, monotonic_ms);
+}
+
 } // namespace growbox::app::climate_io
