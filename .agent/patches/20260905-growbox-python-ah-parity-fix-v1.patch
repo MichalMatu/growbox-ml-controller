@@ -9,7 +9,7 @@ diff --git a/tools/ml/climate_policy.py b/tools/ml/climate_policy.py
  
  
  @dataclass(frozen=True)
-@@ -70,6 +71,13 @@ def _level(error: float, deadband: float, full_scale: float) -> float:
+@@ -70,6 +71,12 @@ def _level(error: float, deadband: float, full_scale: float) -> float:
      return _clip(excess / max(1.0e-9, float(full_scale)))
  
  
@@ -22,7 +22,7 @@ diff --git a/tools/ml/climate_policy.py b/tools/ml/climate_policy.py
  def _usable(
      name: str,
      value: float,
-@@ -163,36 +171,37 @@ class ClimateRulePolicy:
+@@ -163,38 +171,39 @@ class ClimateRulePolicy:
          elif too_humid and caps.dehumidifier.available:
              values["dehumidifier"] = humidity_level
  
@@ -104,7 +104,7 @@ diff --git a/tests/test_climate_runtime.py b/tests/test_climate_runtime.py
  import numpy as np
  
  from tools.ml.climate_input import ClimateEffectiveActionEstimator, MeasurementStatus
-@@ -143,3 +145,73 @@ def test_required_sensor_fault_keeps_shadow_observational_only() -> None:
+@@ -143,2 +145,76 @@ def test_required_sensor_fault_keeps_shadow_observational_only() -> None:
      assert decision.ml_safe == ClimateAction()
      assert "required_sensor_unusable" in decision.ml_safety_interventions
 +
