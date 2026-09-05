@@ -1,0 +1,31 @@
+{
+  "id": "20260905-growbox-sd-storage-audit-v2",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 4096,
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "workflow_policy": "efficient-verification-v1",
+  "steps": [
+    {
+      "name": "sd-storage-root-cause-audit",
+      "command": "set -euo pipefail; EXPECTED=e744e1fdf430ac35165f61a21f4c4b7fbf8a7e4f; git fetch -q origin mvp/environment-controller; git reset --hard $EXPECTED >/dev/null; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; echo '[AUDIT] repo/head'; git remote get-url origin; git rev-parse HEAD; echo '[AUDIT] logger/storage implementation'; grep -RInE 'GBLOG|/sdcard/growbox|beginSession|appendLine|fopen|fwrite|fprintf|fflush|fsync|f_sync|fclose|Stage27SdDataLogger|Stage27TelemetryLogger|storage_error|drop' src scripts test CMakeLists.txt 2>/dev/null | head -n 800 || true; echo '[AUDIT] service console integration'; grep -RInE 'Stage28ServiceConsole|parseStage28ServiceConsoleCommand|service.*status|uart|USB_SERIAL|USB_CDC|console' src scripts test CMakeLists.txt 2>/dev/null | head -n 500 || true; echo '[AUDIT] relevant tests/targets'; grep -RInE 'stage27.*storage|stage27.*telemetry.*logger|stage28.*service.*console' test CMakeLists.txt 2>/dev/null | head -n 400 || true; echo '[AUDIT] concrete storage source'; for f in src/climate/storage/Stage27SdDataLogger.cpp src/climate/storage/Stage27SdDataLogger.h src/climate/Stage27TelemetryLogger.cpp src/climate/Stage27TelemetryLogger.h; do if [ -f \"$f\" ]; then echo \"--- $f\"; sed -n '1,320p' \"$f\"; fi; done; echo '[AUDIT] ESP-IDF fsync bridge'; if command -v idf.py >/dev/null 2>&1 && [ -n \"${IDF_PATH:-}\" ]; then grep -RInE 'fsync.*f_sync|f_sync.*fsync|_fsync_r|esp_vfs.*fsync' \"$IDF_PATH/components/fatfs\" \"$IDF_PATH/components/vfs\" 2>/dev/null | head -n 160 || true; fi; echo '[AUDIT] focused host configure'; rm -rf build/host-sd-audit-v2; cmake -S test/host -B build/host-sd-audit-v2 -DCMAKE_BUILD_TYPE=Debug >/tmp/sd-audit-v2-cmake.log; cmake --build build/host-sd-audit-v2 --target help | grep -Ei 'stage27.*(storage|telemetry)|stage28.*service' | head -n 120 || true; git diff --check; test -z \"$(git status --porcelain)\"; echo SD_STORAGE_AUDIT_V2_COMPLETE",
+      "verification_level": "focused",
+      "timeout": 1200,
+      "output_policy": "stream"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "audit-integrity-final",
+      "command": "set -euo pipefail; EXPECTED=e744e1fdf430ac35165f61a21f4c4b7fbf8a7e4f; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; git diff --check; echo SD_STORAGE_AUDIT_V2_FINAL_PASS",
+      "verification_level": "full",
+      "timeout": 300,
+      "output_policy": "stream"
+    }
+  ]
+}
