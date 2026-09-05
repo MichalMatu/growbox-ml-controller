@@ -1,0 +1,96 @@
+{
+  "id": "20260905-growbox-moisture-aware-ventilation-verify-v1",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "started_at": "2026-09-05T14:01:28.428359+00:00",
+  "command_timeout": 1800,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; EXPECTED=e744e1fdf430ac35165f61a21f4c4b7fbf8a7e4f; git fetch -q origin mvp/environment-controller; git reset --hard $EXPECTED >/dev/null; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; export CMAKE_BUILD_PARALLEL_LEVEL=1; rm -rf build/host-moisture-aware-focused; cmake -S test/host -B build/host-moisture-aware-focused -DCMAKE_BUILD_TYPE=Debug >/tmp/moisture-aware-focused-cmake.log; cmake --build build/host-moisture-aware-focused --target climate_control_loop_tests --parallel 1; ./build/host-moisture-aware-focused/climate_control_loop_tests; git diff --check; test -z \"$(git status --porcelain)\"; printf 'MOISTURE_AWARE_VENTILATION_FOCUSED_PASS commit=%s outputs=fake-locked rf_tx=0\\n' \"$EXPECTED\"",
+      "exit_code": 0,
+      "output": "[ 16%] Building CXX object CMakeFiles/climate_control_loop_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/test/test_climate_control_loop/test_main.cpp.o\n[ 33%] Building CXX object CMakeFiles/climate_control_loop_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateControlLoop.cpp.o\n[ 50%] Building CXX object CMakeFiles/climate_control_loop_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateFeatureEncoder.cpp.o\n[ 66%] Building CXX object CMakeFiles/climate_control_loop_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateRuntimeController.cpp.o\n[ 83%] Building CXX object CMakeFiles/climate_control_loop_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateTrendEstimator.cpp.o\n[100%] Linking CXX executable climate_control_loop_tests\n[100%] Built target climate_control_loop_tests\nMOISTURE_AWARE_VENTILATION_FOCUSED_PASS commit=e744e1fdf430ac35165f61a21f4c4b7fbf8a7e4f outputs=fake-locked rf_tx=0\n",
+      "elapsed_seconds": 3.832,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 6144,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 90.14,
+      "output_policy": "stream",
+      "captured_output_chars": 1178,
+      "output_truncated": false,
+      "current_rss_mb": 90.14,
+      "stage_name": "focused-moisture-aware-ventilation",
+      "stage_index": 1,
+      "stage_total": 2,
+      "stage_phase": "commands",
+      "stage_timeout": 2400,
+      "verification_level": "focused"
+    }
+  ],
+  "verification": [
+    {
+      "command": "set -euo pipefail; EXPECTED=e744e1fdf430ac35165f61a21f4c4b7fbf8a7e4f; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; export CMAKE_BUILD_PARALLEL_LEVEL=1; bash scripts/quality_gate_push.sh; git diff --check; test -z \"$(git status --porcelain)\"; printf 'MOISTURE_AWARE_VENTILATION_VERIFY_COMPLETE commit=%s outputs=fake-locked rf_tx=0\\n' \"$EXPECTED\"",
+      "exit_code": 8,
+      "output": "==> pytest\n........................................................................ [ 14%]\n........................................................................ [ 29%]\n........................................................................ [ 44%]\n........................................................................ [ 59%]\n........................................................................ [ 74%]\n...............................sss...................................... [ 89%]\n..................................................                       [100%]\n=========================== short test summary info ============================\nSKIPPED [3] tests/test_panel_visual.py:92: playwright chromium unavailable: BrowserType.launch: Executable doesn't exist at /Users/michal/Library/Caches/ms-playwright/chromium_headless_shell-1148/chrome-mac/headless_shell\n╔════════════════════════════════════════════════════════════╗\n║ Looks like Playwright was just installed or updated.       ║\n║ Please run the following command to download new browsers: ║\n║                                                            ║\n║     playwright install                                     ║\n║                                                            ║\n║ <3 Playwright Team                                         ║\n╚════════════════════════════════════════════════════════════╝\n479 passed, 3 skipped, 9 deselected in 49.53s\n==> host C++ tests\n-- Configuring done (0.1s)\n-- Generating done (0.1s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tests\n[  3%] Built target stage27_telemetry_tests\n[  5%] Built target climate_io_adapter_tests\n[  8%] Built target climate_diagnostics_tests\n[ 11%] Built target climate_observability_metrics_tests\n[ 14%] Built target europe_warsaw_time_tests\n[ 17%] Built target tp357_decoder_tests\n[ 23%] Built target environment_control_tests\n[ 25%] Built target stage27_schedule_profile_tests\n[ 26%] Building CXX object CMakeFiles/climate_runtime_parity_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateRuntimeController.cpp.o\n[ 29%] Built target stage28d_lamp_safety_tests\n[ 37%] Built target ble_climate_state_tests\n[ 37%] Built target stage27_native_inputs_tests\n[ 38%] Building CXX object CMakeFiles/climate_composite_input_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateRuntimeController.cpp.o\n[ 40%] Built target rf433_protocol_tests\n[ 41%] Building CXX object CMakeFiles/climate_v6_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateRuntimeController.cpp.o\n[ 42%] Building CXX object CMakeFiles/climate_deterministic_fake_runtime_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateRuntimeController.cpp.o\n[ 43%] Building CXX object CMakeFiles/climate_virtual_hil_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateRuntimeController.cpp.o\n[ 44%] Building CXX object CMakeFiles/climate_application_composition_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateRuntimeController.cpp.o\n[ 44%] Building CXX object CMakeFiles/stage27_fault_freshness_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateRuntimeController.cpp.o\n[ 45%] Building CXX object CMakeFiles/climate_control_loop_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/test/test_climate_control_loop/test_main.cpp.o\n[ 47%] Built target stage28_service_console_tests\n[ 53%] Built target climate_semantic_output_tests\n[ 54%] Building CXX object CMakeFiles/climate_control_loop_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateRuntimeController.cpp.o\n[ 55%] Building CXX object CMakeFiles/climate_fault_soak_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/lib/environment_control/src/climate/ClimateRuntimeController.cpp.o\n[ 55%] Linking CXX executable climate_runtime_parity_tests\n[ 56%] Linking CXX executable stage27_fault_freshness_tests\n[ 56%] Linking CXX executable climate_composite_input_tests\n[ 56%] Linking CXX executable climate_deterministic_fake_runtime_tests\n[ 57%] Linking CXX executable climate_v6_tests\n[ 58%] Linking CXX executable climate_fault_soak_tests\n[ 59%] Linking CXX executable climate_application_composition_tests\n[ 60%] Linking CXX executable climate_virtual_hil_tests\n[ 63%] Built target climate_runtime_parity_tests\n[ 69%] Built target stage27_fault_freshness_tests\n[ 71%] Built target climate_v6_tests\n[ 77%] Built target climate_deterministic_fake_runtime_tests\n[ 83%] Built target climate_composite_input_tests\n[ 88%] Built target climate_application_composition_tests\n[ 93%] Built target climate_fault_soak_tests\n[ 96%] Built target climate_virtual_hil_tests\n[ 97%] Linking CXX executable climate_control_loop_tests\n[100%] Built target climate_control_loop_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tests\n      Start  1: environment_control_tests\n 1/23 Test  #1: environment_control_tests ..................   Passed    0.01 sec\n      Start  2: climate_v6_tests\n 2/23 Test  #2: climate_v6_tests ...........................   Passed    0.31 sec\n      Start  3: climate_runtime_parity_tests\n 3/23 Test  #3: climate_runtime_parity_tests ...............***Failed    0.26 sec\nFAIL [high_humidity]: rule raw index=2 actual=1 expected=0.186667\nFAIL [high_humidity]: rule arbitrated index=2 actual=1 expected=0.186667\nFAIL [high_humidity]: rule safe index=2 actual=1 expected=0.186667\nFAIL [high_humidity]: applied action index=2 actual=1 expected=0.186667\nFAIL [high_humidity]: effective after index=2 actual=0.713495 expected=0.133186\nFAIL [vpd_shadow]: rule raw index=2 actual=0 expected=0.890818\nFAIL [vpd_shadow]: rule arbitrated index=2 actual=0 expected=0.890818\nFAIL [vpd_shadow]: rule safe index=2 actual=0 expected=0.890818\nFAIL [vpd_shadow]: applied action index=2 actual=0 expected=0.890818\nFAIL [vpd_shadow]: effective after index=2 actual=0 expected=0.635595\n10 climate runtime parity checks failed\n\n      Start  4: climate_control_loop_tests\n 4/23 Test  #4: climate_control_loop_tests .................   Passed    0.29 sec\n      Start  5: climate_virtual_hil_tests\n 5/23 Test  #5: climate_virtual_hil_tests ..................   Passed    0.30 sec\n      Start  6: climate_io_adapter_tests\n 6/23 Test  #6: climate_io_adapter_tests ...................   Passed    0.01 sec\n      Start  7: climate_application_composition_tests\n 7/23 Test  #7: climate_application_composition_tests ......   Passed    0.30 sec\n      Start  8: climate_deterministic_fake_runtime_tests\n 8/23 Test  #8: climate_deterministic_fake_runtime_tests ...   Passed    0.29 sec\n      Start  9: climate_fault_soak_tests\n 9/23 Test  #9: climate_fault_soak_tests ...................   Passed    0.31 sec\n      Start 10: climate_diagnostics_tests\n10/23 Test #10: climate_diagnostics_tests ..................   Passed    0.00 sec\n      Start 11: climate_composite_input_tests\n11/23 Test #11: climate_composite_input_tests ..............   Passed    0.30 sec\n      Start 12: climate_semantic_output_tests\n12/23 Test #12: climate_semantic_output_tests ..............   Passed    0.01 sec\n      Start 13: stage28d_lamp_safety_tests\n13/23 Test #13: stage28d_lamp_safety_tests .................   Passed    0.01 sec\n      Start 14: climate_observability_metrics_tests\n14/23 Test #14: climate_observability_metrics_tests ........   Passed    0.01 sec\n      Start 15: europe_warsaw_time_tests\n15/23 Test #15: europe_warsaw_time_tests ...................   Passed    0.01 sec\n      Start 16: stage27_schedule_profile_tests\n16/23 Test #16: stage27_schedule_profile_tests .............   Passed    0.00 sec\n      Start 17: tp357_decoder_tests\n17/23 Test #17: tp357_decoder_tests ........................   Passed    0.00 sec\n      Start 18: stage27_telemetry_tests\n18/23 Test #18: stage27_telemetry_tests ....................   Passed    0.00 sec\n      Start 19: ble_climate_state_tests\n19/23 Test #19: ble_climate_state_tests ....................   Passed    0.00 sec\n      Start 20: stage27_native_inputs_tests\n20/23 Test #20: stage27_native_inputs_tests ................   Passed    0.00 sec\n      Start 21: stage27_fault_freshness_tests\n21/23 Test #21: stage27_fault_freshness_tests ..............   Passed    0.30 sec\n      Start 22: stage28_service_console_tests\n22/23 Test #22: stage28_service_console_tests ..............   Passed    0.01 sec\n      Start 23: rf433_protocol_tests\n23/23 Test #23: rf433_protocol_tests .......................   Passed    0.02 sec\n\n96% tests passed, 1 tests failed out of 23\n\nTotal Test time (real) =   2.76 sec\n\nThe following tests FAILED:\n\t  3 - climate_runtime_parity_tests (Failed)\nErrors while running CTest\n",
+      "elapsed_seconds": 54.8,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 6144,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 438.64,
+      "output_policy": "stream",
+      "captured_output_chars": 9122,
+      "output_truncated": false,
+      "current_rss_mb": 14.2,
+      "stage_name": "full-quality-gate",
+      "stage_index": 2,
+      "stage_total": 2,
+      "stage_phase": "verification",
+      "stage_timeout": 5400,
+      "verification_level": "full"
+    }
+  ],
+  "stages": [
+    {
+      "stage_name": "focused-moisture-aware-ventilation",
+      "stage_index": 1,
+      "stage_total": 2,
+      "stage_phase": "commands",
+      "verification_level": "focused",
+      "outcome": "passed",
+      "elapsed_seconds": 3.832
+    },
+    {
+      "stage_name": "full-quality-gate",
+      "stage_index": 2,
+      "stage_total": 2,
+      "stage_phase": "verification",
+      "verification_level": "full",
+      "outcome": "failed",
+      "elapsed_seconds": 54.8
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.117
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.079
+  },
+  "failure_reason": "verification_failed",
+  "finished_at": "2026-09-05T14:02:29.167512+00:00",
+  "task_digest": "4c066b37c5237c0f597dabc18a5c2634381dcf333f1456416b4b14a341351387",
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "memory_limit_mb": 6144,
+  "attempt_id": "f3425b4a7fbf813fa120770d",
+  "daemon_version": "4.17.0"
+}
