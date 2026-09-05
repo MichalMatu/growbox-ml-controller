@@ -1,0 +1,85 @@
+{
+  "id": "20260905-growbox-sd-usb-retry-v6",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "started_at": "2026-09-05T18:13:02.978645+00:00",
+  "command_timeout": 1800,
+  "edits": {},
+  "commands": [
+    {
+      "command": "git fetch -q origin agent-control && git show origin/agent-control:.agent/payloads/20260905-growbox-sd-usb-retry-v5/run.sh > /tmp/sd-usb-retry-v6.sh && bash /tmp/sd-usb-retry-v6.sh",
+      "exit_code": 0,
+      "output": "recovered chunk ABCDEF12.JL offset=0 attempt=2\nUSB_RETRY_REGRESSION_PASS\n[agent-work 87e700a5] Retry SD USB chunks when console logs interleave\n 1 file changed, 37 insertions(+), 12 deletions(-)\nTo https://github.com/MichalMatu/growbox-ml-controller.git\n   5eba9bef..87e700a5  HEAD -> mvp/environment-controller\nrecovered chunk CC6D2B5D.JL offset=2048 attempt=2\nrecovered chunk CC6D2B5D.JL offset=4352 attempt=2\nrecovered chunk CC6D2B5D.JL offset=6656 attempt=2\nrecovered chunk CC6D2B5D.JL offset=8960 attempt=2\nrecovered chunk CC6D2B5D.JL offset=11264 attempt=2\nrecovered chunk CC6D2B5D.JL offset=13568 attempt=2\nrecovered chunk CC6D2B5D.JL offset=15872 attempt=2\nrecovered chunk 693DD8B7.JL offset=1024 attempt=2\nrecovered chunk 693DD8B7.JL offset=3328 attempt=2\nrecovered chunk 693DD8B7.JL offset=5632 attempt=2\nrecovered chunk 693DD8B7.JL offset=7936 attempt=2\nrecovered chunk 693DD8B7.JL offset=10240 attempt=2\nrecovered chunk 693DD8B7.JL offset=12544 attempt=2\nrecovered chunk BA3FF450.JL offset=256 attempt=2\nrecovered chunk BA3FF450.JL offset=2560 attempt=2\npulled B37B41D6.JL size=0 sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\npulled 67BFA765.JL size=0 sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\npulled 65ACD3D6.JL size=0 sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\npulled CC6D2B5D.JL size=16107 sha256=1c09c780b4c4c726e53c71e9455566b9f402b846eff139d82d5d22f495e8f8bd\npulled B805E252.JL size=884 sha256=4be254c78f91731e49d822b94f7568e7ab1790df1b347afb8b6fa273f068d2c9\npulled 693DD8B7.JL size=14407 sha256=e594f2da0aceee5a79f31a6bb29b21019e4e3792e67df9b839d35a8523540f64\npulled BA3FF450.JL size=4006 sha256=e66be3f45c403fc4ed322ce9224298671b9c2e010b8cf48881105963be3f18c7\npulled 1575EF88.JL size=644 sha256=453d66ab9dc460afc709c11bed65da6cb781985862bb2bff9cad60153d2da23e\nSD_USB_EXPORT_PASS [('BA3FF450.JL', 4006, 17, 'e66be3f45c403fc4ed322ce9224298671b9c2e010b8cf48881105963be3f18c7'), ('1575EF88.JL', 644, 3, '453d66ab9dc460afc709c11bed65da6cb781985862bb2bff9cad60153d2da23e'), ('693DD8B7.JL', 14407, 60, 'e594f2da0aceee5a79f31a6bb29b21019e4e3792e67df9b839d35a8523540f64'), ('CC6D2B5D.JL', 16107, 67, '1c09c780b4c4c726e53c71e9455566b9f402b846eff139d82d5d22f495e8f8bd'), ('B805E252.JL', 884, 4, '4be254c78f91731e49d822b94f7568e7ab1790df1b347afb8b6fa273f068d2c9')]\nSD_USB_RETRY_V5_COMPLETE commit=87e700a5688051bdc6a95cad722b60334319f76d firmware_running=5eba9bef297bd141814eda78d8aff55dc12231dd real_outputs=0 rf_transport=0 thermal_test=0\n",
+      "elapsed_seconds": 170.603,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 25.3,
+      "output_policy": "stream",
+      "captured_output_chars": 2534,
+      "output_truncated": false,
+      "current_rss_mb": 25.3,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 170.603
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "?? .agent-hw-artifacts/\n",
+    "elapsed_seconds": 0.091
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.063
+  },
+  "finished_at": "2026-09-05T18:15:55.193885+00:00",
+  "workspace_checkpoint": {
+    "version": 2,
+    "task_id": "20260905-growbox-sd-usb-retry-v6",
+    "reason": "task-exit",
+    "created_at": "2026-09-05T18:15:55.709420+00:00",
+    "base_head": "87e700a5688051bdc6a95cad722b60334319f76d",
+    "work_branch": "agent-work",
+    "path": "/Users/michal/agent-workspace/repos/growbox-ml-controller/checkpoints/20260905-growbox-sd-usb-retry-v6/1788632155570072000-task-exit",
+    "tracked_patch": "tracked.patch",
+    "untracked_root": "untracked",
+    "untracked_files": [
+      ".agent-hw-artifacts/sd-usb-retry-v5/1575EF88.JL",
+      ".agent-hw-artifacts/sd-usb-retry-v5/65ACD3D6.JL",
+      ".agent-hw-artifacts/sd-usb-retry-v5/67BFA765.JL",
+      ".agent-hw-artifacts/sd-usb-retry-v5/693DD8B7.JL",
+      ".agent-hw-artifacts/sd-usb-retry-v5/B37B41D6.JL",
+      ".agent-hw-artifacts/sd-usb-retry-v5/B805E252.JL",
+      ".agent-hw-artifacts/sd-usb-retry-v5/BA3FF450.JL",
+      ".agent-hw-artifacts/sd-usb-retry-v5/CC6D2B5D.JL"
+    ],
+    "tracked_patch_bytes": 0,
+    "untracked_bytes": 36048,
+    "total_bytes": 36048,
+    "status": "?? .agent-hw-artifacts/\n"
+  },
+  "task_digest": "07d8fb4073e8defede26c9816e9473e3e73c872917537771117fa9c75d1ef445",
+  "idle_timeout": 600,
+  "task_timeout": 2400,
+  "memory_limit_mb": 4096,
+  "attempt_id": "befc74cbdad0c8ff0cde3328",
+  "daemon_version": "4.18.0"
+}
