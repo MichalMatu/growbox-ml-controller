@@ -1,0 +1,77 @@
+{
+  "id": "20260905-growbox-python-ah-parity-fix-v2",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "started_at": "2026-09-05T21:09:01.294416+00:00",
+  "command_timeout": 900,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; EXPECTED=6c5deeeb3b69be47fd889d9ceb65efed1e44dae9; git fetch -q origin mvp/environment-controller agent-control; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; git show origin/agent-control:.agent/patches/20260905-growbox-python-ah-parity-fix-v1.patch > /tmp/growbox-ah.patch; git apply --check /tmp/growbox-ah.patch; git apply /tmp/growbox-ah.patch; .venv/bin/python tools/ml/generate_climate_runtime_parity.py; .venv/bin/python -m pytest tests/test_climate_runtime.py tests/test_climate_runtime_parity.py -q; cmake -S test/host -B build/host -DCMAKE_BUILD_TYPE=Release >/tmp/growbox-ah-cmake.log; cmake --build build/host --target climate_v6_tests climate_runtime_parity_tests -j2; ./build/host/climate_v6_tests; ./build/host/climate_runtime_parity_tests; git diff --check; git add tools/ml/climate_policy.py tests/test_climate_runtime.py tests/fixtures/climate_runtime_parity_generated.h; git diff --cached --check; git commit -m 'Align Python ventilation policy with absolute humidity'; git push origin HEAD:mvp/environment-controller; NEW_SHA=$(git rev-parse HEAD); test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$NEW_SHA\"; printf 'PYTHON_AH_PARITY_FIX_PASS sha=%s\\n' \"$NEW_SHA\"",
+      "exit_code": 1,
+      "output": "Traceback (most recent call last):\n  File \"/Users/michal/agent-workspace/repos/growbox-ml-controller/work/tools/ml/generate_climate_runtime_parity.py\", line 11, in <module>\n    from tools.ml.climate_input import ClimateTargets, MeasurementStatus\nModuleNotFoundError: No module named 'tools'\n",
+      "elapsed_seconds": 1.239,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 2.92,
+      "output_policy": "stream",
+      "captured_output_chars": 291,
+      "output_truncated": false,
+      "current_rss_mb": 2.92,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "failed",
+      "elapsed_seconds": 1.239
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": " M tests/test_climate_runtime.py\n M tools/ml/climate_policy.py\n",
+    "elapsed_seconds": 0.07
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "diff --git a/tests/test_climate_runtime.py b/tests/test_climate_runtime.py\nindex 3db585b6..6d3bdf1a 100644\n--- a/tests/test_climate_runtime.py\n+++ b/tests/test_climate_runtime.py\n@@ -1,5 +1,7 @@\n from __future__ import annotations\n \n+from dataclasses import replace\n+\n import numpy as np\n \n from tools.ml.climate_input import ClimateEffectiveActionEstimator, MeasurementStatus\n@@ -200,3 +202,77 @@ def test_required_sensor_fault_keeps_shadow_observational_only() -> None:\n     assert decision.rule_safe == ClimateAction()\n     assert decision.ml_safe == ClimateAction()\n     assert \"required_sensor_unusable\" in decision.ml_safety_interventions\n+\n+\n+def test_humidity_ventilation_uses_absolute_humidity_when_intake_rh_is_higher() -> None:\n+    episode = _episode()\n+    state = replace(\n+        episode.scenario.initial_state,\n+        air_temperature_c=27.0,\n+        relative_humidity_pct=70.0,\n+        outside_temperature_c=15.0,\n+        outside_humidity_pct=80.0,\n+    )\n+    profile = replace(\n+        episode.first_profile,\n+        targets=replace(\n+            episode.first_profile.targets,\n+            air_temperature_c=27.0,\n+            relative_humidity_pct=60.0,\n+        ),\n+    )\n+\n+    request = ClimateRulePolicy().choose(episode.scenario, state, profile)\n+\n+    assert request.exhaust_fan > 0.0\n+\n+\n+def test_humidity_ventilation_rejects_lower_rh_when_intake_absolute_humidity_is_higher() -> None:\n+    episode = _episode()\n+    state = replace(\n+        episode.scenario.initial_state,\n+        air_temperature_c=27.0,\n+        relative_humidity_pct=70.0,\n+        outside_temperature_c=35.0,\n+        outside_humidity_pct=55.0,\n+    )\n+    profile = replace(\n+        episode.first_profile,\n+        targets=replace(\n+            episode.first_profile.targets,\n+            air_temperature_c=27.0,\n+            relative_humidity_pct=60.0,\n+        ),\n+    )\n+\n+    request = ClimateRulePolicy().choose(episode.scenario, state, profile)\n+\n+    assert request.exhaust_fan == 0.0\n+\n+\n+def test_temperature_ventilation_does_not_require_fresh_intake_humidity() -> None:\n+    episode = _episode()\n+    state = replace(\n+        episode.scenario.initial_state,\n+        air_temperature_c=28.0,\n+        relative_humidity_pct=60.0,\n+        outside_temperature_c=20.0,\n+        outside_humidity_pct=95.0,\n+    )\n+    profile = replace(\n+        episode.first_profile,\n+        targets=replace(\n+            episode.first_profile.targets,\n+            air_temperature_c=24.0,\n+            relative_humidity_pct=60.0,\n+        ),\n+    )\n+\n+    request = ClimateRulePolicy().choose(\n+        episode.scenario,\n+        state,\n+        profile,\n+        status={\"outside_humidity_pct\": MeasurementStatus(valid=False)},\n+    )\n+\n+    assert request.exhaust_fan > 0.1\ndiff --git a/tools/ml/climate_policy.py b/tools/ml/climate_policy.py\nindex 14da2324..c1fc04ad 100644\n--- a/tools/ml/climate_policy.py\n+++ b/tools/ml/climate_policy.py\n@@ -19,6 +19,7 @@ from .climate_input import (\n )\n from .climate_scenarios import ClimateProfile\n from .climate_simulator import ClimateAction, ClimateScenario, ClimateState\n+from .physics.psychrometrics import sat_vapour_pressure_pa\n \n \n @dataclass(frozen=True)\n@@ -73,6 +74,12 @@ def _level(error: float, deadband: float, full_scale: float) -> float:\n     return _clip(excess / max(1.0e-9, float(full_scale)))\n \n \n+def _absolute_humidity_g_m3(temperature_c: float, relative_humidity_pct: float) -> float:\n+    humidity = min(100.0, max(0.0, float(relative_humidity_pct)))\n+    vapor_pressure_hpa = sat_vapour_pressure_pa(temperature_c) / 100.0 * humidity / 100.0\n+    return 216.7 * vapor_pressure_hpa / (float(temperature_c) + 273.15)\n+\n+\n def _usable(\n     name: str,\n     value: float,\n@@ -156,38 +163,39 @@ class ClimateRulePolicy:\n         elif too_humid and caps.dehumidifier.available:\n             values[\"dehumidifier\"] = humidity_level\n \n-        outside_ok = _usable(\n+        outside_temperature_ok = _usable(\n             \"outside_temperature_c\", state.outside_temperature_c, statuses, timeout\n-        ) and _usable(\"outside_humidity_pct\", state.outside_humidity_pct, statuses, timeout)\n-        if outside_ok and caps.exhaust_fan.available:\n-            mix_fraction = 0.20\n-            mixed_temperature = state.air_temperature_c + mix_fraction * (\n-                state.outside_temperature_c - state.air_temperature_c\n-            )\n-            mixed_humidity = state.relative_humidity_pct + mix_fraction * (\n-                state.outside_humidity_pct - state.relative_humidity_pct\n-            )\n-            current_temp_score = abs(temperature_error) / 5.0\n-            mixed_temp_score = abs(mixed_temperature - targets.air_temperature_c) / 5.0\n-            current_humidity_error, current_humidity_scale = _humidity_error(\n-                state.air_temperature_c,\n-                state.relative_humidity_pct,\n-                targets,\n-                profile.humidity_control_mode,\n-            )\n-            mixed_humidity_error, mixed_humidity_scale = _humidity_error(\n-                mixed_temperature,\n-                mixed_humidity,\n-                targets,\n-                profile.humidity_control_mode,\n-            )\n-            current_score = (\n-                current_temp_score + abs(current_humidity_error) / current_humidity_scale\n-            )\n-            mixed_score = mixed_temp_score + abs(mixed_humidity_error) / mixed_humidity_scale\n-            improvement = current_score - mixed_score\n-            if improvement > cfg.outside_improvement_margin:\n-                values[\"exhaust_fan\"] = _clip(improvement / 0.75)\n+        )\n+        outside_humidity_ok = _usable(\n+            \"outside_humidity_pct\", state.outside_humidity_pct, statuses, timeout\n+        )\n+        if caps.exhaust_fan.available:\n+            if outside_temperature_ok:\n+                mix_fraction = 0.20\n+                mixed_temperature = state.air_temperature_c + mix_fraction * (\n+                    state.outside_temperature_c - state.air_temperature_c\n+                )\n+                current_temp_score = abs(temperature_error) / 5.0\n+                mixed_temp_score = abs(mixed_temperature - targets.air_temperature_c) / 5.0\n+                temperature_improvement = current_temp_score - mixed_temp_score\n+                if temperature_improvement > cfg.outside_improvement_margin:\n+                    values[\"exhaust_fan\"] = max(\n+                        values[\"exhaust_fan\"], _clip(temperature_improvement / 0.75)\n+                    )\n+\n+            if too_humid and outside_temperature_ok and outside_humidity_ok:\n+                inside_absolute_humidity = _absolute_humidity_g_m3(\n+                    state.air_temperature_c, state.relative_humidity_pct\n+                )\n+                intake_absolute_humidity = _absolute_humidity_g_m3(\n+                    state.outside_temperature_c, state.outside_humidity_pct\n+                )\n+                drying_gap = inside_absolute_humidity - intake_absolute_humidity\n+                if drying_gap > 0.5:\n+                    drying_benefit = _level(drying_gap, 0.5, 3.0)\n+                    values[\"exhaust_fan\"] = max(\n+                        values[\"exhaust_fan\"], min(humidity_level, drying_benefit)\n+                    )\n \n         co2_ok = _usable(\"co2_ppm\", state.co2_ppm, statuses, timeout)\n         if targets.co2_enabled and co2_ok and caps.co2_doser.available:\n",
+    "elapsed_seconds": 0.018
+  },
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-05T21:09:03.932771+00:00",
+  "workspace_checkpoint": {
+    "version": 2,
+    "task_id": "20260905-growbox-python-ah-parity-fix-v2",
+    "reason": "task-exit",
+    "created_at": "2026-09-05T21:09:04.278980+00:00",
+    "base_head": "6c5deeeb3b69be47fd889d9ceb65efed1e44dae9",
+    "work_branch": "agent-work",
+    "path": "/Users/michal/agent-workspace/repos/growbox-ml-controller/checkpoints/20260905-growbox-python-ah-parity-fix-v2/1788642544149881000-task-exit",
+    "tracked_patch": "tracked.patch",
+    "untracked_root": "untracked",
+    "untracked_files": [],
+    "tracked_patch_bytes": 7562,
+    "untracked_bytes": 0,
+    "total_bytes": 7562,
+    "status": " M tests/test_climate_runtime.py\n M tools/ml/climate_policy.py\n"
+  },
+  "task_digest": "bd41859882f47fce20718e3414ba0160ec29b04286674c2b7b460f4ac329a286",
+  "idle_timeout": 180,
+  "task_timeout": 1500,
+  "memory_limit_mb": 4096,
+  "attempt_id": "811618df21a2d4b802413400",
+  "daemon_version": "4.18.2"
+}
