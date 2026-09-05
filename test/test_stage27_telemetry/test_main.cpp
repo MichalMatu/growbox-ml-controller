@@ -54,11 +54,20 @@ int main() {
   snapshot.xiaomi_packets = 50U;
   snapshot.xiaomi_accepted = 25U;
   snapshot.xiaomi_rejected = 25U;
-  snapshot.applied_exhaust_fan = 0.5F;
+  snapshot.requested_exhaust_fan = 0.29F;
+  snapshot.requested_humidifier = 0.14F;
+  snapshot.applied_exhaust_fan = 1.0F;
+  snapshot.applied_humidifier = 0.0F;
   snapshot.real_outputs_active = true;
   snapshot.physical_light_on = true;
-  snapshot.physical_exhaust_on = false;
-  snapshot.physical_humidifier_on = true;
+  snapshot.physical_exhaust_on = true;
+  snapshot.physical_humidifier_on = false;
+  snapshot.thermal_safety_latched = true;
+  snapshot.safety_force_exhaust = true;
+  snapshot.safety_reason = 4U;
+  snapshot.arbiter_transition_count = 7U;
+  snapshot.arbiter_dwell_hold_count = 11U;
+  snapshot.arbiter_safety_override_count = 2U;
 
   Stage27LogSessionMetadata session{};
   session.firmware_sha = "0123456789abcdef0123456789abcdef01234567";
@@ -77,14 +86,16 @@ int main() {
   assert(std::strstr(session_buffer, "\"backend\":\"sd\"") != nullptr);
   assert(std::strstr(session_buffer, "\"sample_ms\":10000") != nullptr);
 
-  char sample_buffer[512]{};
+  char sample_buffer[768]{};
   const auto sample_length =
       formatStage27SampleNdjson(sample_buffer, sizeof(sample_buffer), snapshot);
-  assert(sample_length > 0U && sample_length < 360U);
+  assert(sample_length > 0U && sample_length < 600U);
   assert(std::strstr(sample_buffer, "\"t\":\"s\"") != nullptr);
   assert(std::strstr(sample_buffer, "\"scd\":[1,1,24.25,59.50,721,4050]") != nullptr);
   assert(std::strstr(sample_buffer, "\"tp\":[1,23.80,71.00,15000]") != nullptr);
-  assert(std::strstr(sample_buffer, "\"o\":[1,1,0,1]") != nullptr);
+  assert(std::strstr(sample_buffer, "\"o\":[1,1,1,0]") != nullptr);
+  assert(std::strstr(sample_buffer,
+                     "\"a\":[0.290,1.000,0.140,0.000,1,1,4,7,11,2]") != nullptr);
 
   Stage27StorageStatus storage{};
   storage.active_backend = Stage27StorageBackendKind::Flash;
@@ -99,7 +110,7 @@ int main() {
       formatStage27HealthNdjson(health_buffer, sizeof(health_buffer), snapshot, storage);
   assert(health_length > 0U && health_length < 560U);
   assert(std::strstr(health_buffer, "\"t\":\"h\"") != nullptr);
-  assert(std::strstr(health_buffer, "\"o\":[1,1,0,1]") != nullptr);
+  assert(std::strstr(health_buffer, "\"o\":[1,1,1,0]") != nullptr);
   assert(std::strstr(health_buffer, "\"st\":[\"flash\",0,1,2") != nullptr);
 
   char too_small[32]{};
