@@ -19,6 +19,7 @@ from .climate_input import (
 )
 from .climate_scenarios import ClimateProfile
 from .climate_simulator import ClimateAction, ClimateScenario, ClimateState
+from .physics.psychrometrics import sat_vapour_pressure_pa
 
 
 @dataclass(frozen=True)
@@ -71,6 +72,12 @@ def apply_ml_request_deadzone(
 def _level(error: float, deadband: float, full_scale: float) -> float:
     excess = max(0.0, abs(float(error)) - float(deadband))
     return _clip(excess / max(1.0e-9, float(full_scale)))
+
+
+def _absolute_humidity_g_m3(temperature_c: float, relative_humidity_pct: float) -> float:
+    humidity = min(100.0, max(0.0, float(relative_humidity_pct)))
+    vapor_pressure_hpa = sat_vapour_pressure_pa(temperature_c) / 100.0 * humidity / 100.0
+    return 216.7 * vapor_pressure_hpa / (float(temperature_c) + 273.15)
 
 
 def _usable(
@@ -156,38 +163,39 @@ class ClimateRulePolicy:
         elif too_humid and caps.dehumidifier.available:
             values["dehumidifier"] = humidity_level
 
-        outside_ok = _usable(
+        outside_temperature_ok = _usable(
             "outside_temperature_c", state.outside_temperature_c, statuses, timeout
-        ) and _usable("outside_humidity_pct", state.outside_humidity_pct, statuses, timeout)
-        if outside_ok and caps.exhaust_fan.available:
-            mix_fraction = 0.20
-            mixed_temperature = state.air_temperature_c + mix_fraction * (
-                state.outside_temperature_c - state.air_temperature_c
-            )
-            mixed_humidity = state.relative_humidity_pct + mix_fraction * (
-                state.outside_humidity_pct - state.relative_humidity_pct
-            )
-            current_temp_score = abs(temperature_error) / 5.0
-            mixed_temp_score = abs(mixed_temperature - targets.air_temperature_c) / 5.0
-            current_humidity_error, current_humidity_scale = _humidity_error(
-                state.air_temperature_c,
-                state.relative_humidity_pct,
-                targets,
-                profile.humidity_control_mode,
-            )
-            mixed_humidity_error, mixed_humidity_scale = _humidity_error(
-                mixed_temperature,
-                mixed_humidity,
-                targets,
-                profile.humidity_control_mode,
-            )
-            current_score = (
-                current_temp_score + abs(current_humidity_error) / current_humidity_scale
-            )
-            mixed_score = mixed_temp_score + abs(mixed_humidity_error) / mixed_humidity_scale
-            improvement = current_score - mixed_score
-            if improvement > cfg.outside_improvement_margin:
-                values["exhaust_fan"] = _clip(improvement / 0.75)
+        )
+        outside_humidity_ok = _usable(
+            "outside_humidity_pct", state.outside_humidity_pct, statuses, timeout
+        )
+        if caps.exhaust_fan.available:
+            if outside_temperature_ok:
+                mix_fraction = 0.20
+                mixed_temperature = state.air_temperature_c + mix_fraction * (
+                    state.outside_temperature_c - state.air_temperature_c
+                )
+                current_temp_score = abs(temperature_error) / 5.0
+                mixed_temp_score = abs(mixed_temperature - targets.air_temperature_c) / 5.0
+                temperature_improvement = current_temp_score - mixed_temp_score
+                if temperature_improvement > cfg.outside_improvement_margin:
+                    values["exhaust_fan"] = max(
+                        values["exhaust_fan"], _clip(temperature_improvement / 0.75)
+                    )
+
+            if too_humid and outside_temperature_ok and outside_humidity_ok:
+                inside_absolute_humidity = _absolute_humidity_g_m3(
+                    state.air_temperature_c, state.relative_humidity_pct
+                )
+                intake_absolute_humidity = _absolute_humidity_g_m3(
+                    state.outside_temperature_c, state.outside_humidity_pct
+                )
+                drying_gap = inside_absolute_humidity - intake_absolute_humidity
+                if drying_gap > 0.5:
+                    drying_benefit = _level(drying_gap, 0.5, 3.0)
+                    values["exhaust_fan"] = max(
+                        values["exhaust_fan"], min(humidity_level, drying_benefit)
+                    )
 
         co2_ok = _usable("co2_ppm", state.co2_ppm, statuses, timeout)
         if targets.co2_enabled and co2_ok and caps.co2_doser.available:

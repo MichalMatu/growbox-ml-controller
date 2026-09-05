@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 import numpy as np
 
 from tools.ml.climate_input import ClimateEffectiveActionEstimator, MeasurementStatus
@@ -200,3 +202,77 @@ def test_required_sensor_fault_keeps_shadow_observational_only() -> None:
     assert decision.rule_safe == ClimateAction()
     assert decision.ml_safe == ClimateAction()
     assert "required_sensor_unusable" in decision.ml_safety_interventions
+
+
+def test_humidity_ventilation_uses_absolute_humidity_when_intake_rh_is_higher() -> None:
+    episode = _episode()
+    state = replace(
+        episode.scenario.initial_state,
+        air_temperature_c=27.0,
+        relative_humidity_pct=70.0,
+        outside_temperature_c=15.0,
+        outside_humidity_pct=80.0,
+    )
+    profile = replace(
+        episode.first_profile,
+        targets=replace(
+            episode.first_profile.targets,
+            air_temperature_c=27.0,
+            relative_humidity_pct=60.0,
+        ),
+    )
+
+    request = ClimateRulePolicy().choose(episode.scenario, state, profile)
+
+    assert request.exhaust_fan > 0.0
+
+
+def test_humidity_ventilation_rejects_lower_rh_when_intake_absolute_humidity_is_higher() -> None:
+    episode = _episode()
+    state = replace(
+        episode.scenario.initial_state,
+        air_temperature_c=27.0,
+        relative_humidity_pct=70.0,
+        outside_temperature_c=35.0,
+        outside_humidity_pct=55.0,
+    )
+    profile = replace(
+        episode.first_profile,
+        targets=replace(
+            episode.first_profile.targets,
+            air_temperature_c=27.0,
+            relative_humidity_pct=60.0,
+        ),
+    )
+
+    request = ClimateRulePolicy().choose(episode.scenario, state, profile)
+
+    assert request.exhaust_fan == 0.0
+
+
+def test_temperature_ventilation_does_not_require_fresh_intake_humidity() -> None:
+    episode = _episode()
+    state = replace(
+        episode.scenario.initial_state,
+        air_temperature_c=28.0,
+        relative_humidity_pct=60.0,
+        outside_temperature_c=20.0,
+        outside_humidity_pct=95.0,
+    )
+    profile = replace(
+        episode.first_profile,
+        targets=replace(
+            episode.first_profile.targets,
+            air_temperature_c=24.0,
+            relative_humidity_pct=60.0,
+        ),
+    )
+
+    request = ClimateRulePolicy().choose(
+        episode.scenario,
+        state,
+        profile,
+        status={"outside_humidity_pct": MeasurementStatus(valid=False)},
+    )
+
+    assert request.exhaust_fan > 0.1
