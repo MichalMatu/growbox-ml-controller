@@ -1,0 +1,31 @@
+{
+  "id": "20260905-growbox-gate6-hardening-verify-v2",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 6144,
+  "command_timeout": 1800,
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "workflow_policy": "efficient-verification-v1",
+  "steps": [
+    {
+      "name": "focused-gate6-hardening-v2",
+      "command": "set -euo pipefail; EXPECTED=d9d6b40038129e6499d0fd092b628f31f867e20b; git fetch -q origin mvp/environment-controller; git reset --hard $EXPECTED >/dev/null; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; bash -n scripts/stage27c_crowpanel.sh scripts/quality_gate_push.sh; export CMAKE_BUILD_PARALLEL_LEVEL=1; rm -rf build/host-gate6-hardening-v2 build/idf-gate6-bounded-verify-v2; cmake -S test/host -B build/host-gate6-hardening-v2 -DCMAKE_BUILD_TYPE=Debug >/tmp/gate6-hardening-v2-cmake.log; cmake --build build/host-gate6-hardening-v2 --target stage27_telemetry_tests --parallel 1; ./build/host-gate6-hardening-v2/stage27_telemetry_tests; GROWBOX_RF433_LOOPBACK_ENABLED=1 GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=1 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=1 GROWBOX_FIRMWARE_GIT_SHA=$EXPECTED STAGE27C_BUILD_DIR=build/idf-gate6-bounded-verify-v2 bash scripts/stage27c_crowpanel.sh build; grep -q '^GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED:STRING=1$' build/idf-gate6-bounded-verify-v2/CMakeCache.txt; grep -q '^GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED:STRING=1$' build/idf-gate6-bounded-verify-v2/CMakeCache.txt; grep -q '^GROWBOX_RF433_LOOPBACK_ENABLED:STRING=1$' build/idf-gate6-bounded-verify-v2/CMakeCache.txt; grep -q 'GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=1' build/idf-gate6-bounded-verify-v2/compile_commands.json; grep -q 'GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=1' build/idf-gate6-bounded-verify-v2/compile_commands.json; git diff --check; test -z \"$(git status --porcelain)\"; printf 'GATE6_HARDENING_V2_FOCUSED_PASS commit=%s bounded_build=1 rf_tx=0\\n' \"$EXPECTED\"",
+      "verification_level": "focused",
+      "timeout": 2400,
+      "output_policy": "stream"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "full-quality-gate-v2",
+      "command": "set -euo pipefail; EXPECTED=d9d6b40038129e6499d0fd092b628f31f867e20b; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; export CMAKE_BUILD_PARALLEL_LEVEL=1; bash scripts/quality_gate_push.sh; git diff --check; test -z \"$(git status --porcelain)\"; printf 'GATE6_HARDENING_V2_VERIFY_COMPLETE commit=%s real_outputs=0 rf_tx=0\\n' \"$EXPECTED\"",
+      "verification_level": "full",
+      "timeout": 5400,
+      "output_policy": "stream"
+    }
+  ]
+}
