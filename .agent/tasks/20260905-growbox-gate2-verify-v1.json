@@ -1,0 +1,31 @@
+{
+  "id": "20260905-growbox-gate2-verify-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 6144,
+  "command_timeout": 900,
+  "idle_timeout": 600,
+  "task_timeout": 5400,
+  "workflow_policy": "efficient-verification-v1",
+  "steps": [
+    {
+      "name": "focused-gate2-verification",
+      "command": "set -euo pipefail; EXPECTED=11b02749fd5896e47ec01d03bcca333be2dea810; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; export CMAKE_BUILD_PARALLEL_LEVEL=1; cmake -S test/host -B build/host-gate2-verify -DCMAKE_BUILD_TYPE=Debug >/tmp/gate2-verify-cmake.log; cmake --build build/host-gate2-verify --target stage28d_lamp_safety_tests --parallel 1; ./build/host-gate2-verify/stage28d_lamp_safety_tests; git diff --check",
+      "verification_level": "focused",
+      "timeout": 900,
+      "output_policy": "stream"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "full-quality-gate",
+      "command": "set -euo pipefail; EXPECTED=11b02749fd5896e47ec01d03bcca333be2dea810; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; export CMAKE_BUILD_PARALLEL_LEVEL=1; bash scripts/quality_gate_push.sh; git diff --check; printf 'GATE2_VERIFY_COMPLETE commit=%s outputs=fake-locked rf_tx=0\\n' \"$EXPECTED\"",
+      "verification_level": "full",
+      "timeout": 3600,
+      "output_policy": "stream"
+    }
+  ]
+}
