@@ -1,0 +1,60 @@
+{
+  "id": "20260905-growbox-serial-log-read-smoke-v1",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "started_at": "2026-09-05T20:20:38.123560+00:00",
+  "command_timeout": 300,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; test \"$(git rev-parse HEAD)\" = \"87e700a5688051bdc6a95cad722b60334319f76d\"; OUT=/tmp/growbox-serial-log-read-smoke-v1; rm -rf \"$OUT\"; mkdir -p \"$OUT\"; python3 scripts/growbox_log_pull.py status --timeout 8 | tee \"$OUT/status.txt\"; python3 scripts/growbox_log_pull.py list --timeout 8 | tee \"$OUT/list.txt\"; FILE=$(awk 'NF>=2 {name=$1} END {print name}' \"$OUT/list.txt\"); test -n \"$FILE\"; echo \"selected_file=$FILE\"; python3 scripts/growbox_log_pull.py pull \"$FILE\" --timeout 8 --out \"$OUT/raw\" | tee \"$OUT/pull.txt\"; test -f \"$OUT/raw/$FILE\"; wc -c \"$OUT/raw/$FILE\"; sha256sum \"$OUT/raw/$FILE\"; python3 - \"$OUT/raw/$FILE\" <<'PY'\nimport json, pathlib, sys\np=pathlib.Path(sys.argv[1])\nraw=p.read_bytes()\nlines=raw.splitlines()\nvalid=0; first=None; last=None; keys=set()\nfor line in lines:\n    try:\n        obj=json.loads(line)\n    except Exception:\n        continue\n    if isinstance(obj, dict):\n        valid += 1; first = obj if first is None else first; last = obj; keys.update(obj.keys())\nprint(f'bytes={len(raw)} lines={len(lines)} valid_json_lines={valid}')\nprint('keys=' + ','.join(sorted(keys)))\nprint('first_json=' + json.dumps(first, sort_keys=True, separators=(',',':'))[:1200] if first is not None else 'first_json=null')\nprint('last_json=' + json.dumps(last, sort_keys=True, separators=(',',':'))[:1200] if last is not None else 'last_json=null')\nPY",
+      "exit_code": 0,
+      "output": "sdlog_status available=1 active=sd sd_mounted=1 sd_mount_errors=0 write_errors=0 queue_drops=0 records_written=2 records_skipped=0 sd_recoveries=0 last_write_ms=692\nB37B41D6.JL\t0\n67BFA765.JL\t0\n65ACD3D6.JL\t0\nCC6D2B5D.JL\t16107\nB805E252.JL\t884\n693DD8B7.JL\t14407\nBA3FF450.JL\t4006\n1575EF88.JL\t211764\n8D92D09B.JL\t644\n2429AAC7.JL\t644\nselected_file=2429AAC7.JL\npulled 2429AAC7.JL size=644 sha256=d192ceda842a7d7dff35146287a041700238c61c4b4499947184d7b97eb49f82\n     644 /tmp/growbox-serial-log-read-smoke-v1/raw/2429AAC7.JL\nd192ceda842a7d7dff35146287a041700238c61c4b4499947184d7b97eb49f82  /tmp/growbox-serial-log-read-smoke-v1/raw/2429AAC7.JL\nbytes=644 lines=3 valid_json_lines=3\nkeys=a,backend,ble,c,fw,health_ms,i,o,reset,rtc,sample_ms,scd,schema,sid,st,sys,t,tp,u,u0,v,x,x0,xm\nfirst_json={\"backend\":\"sd\",\"fw\":\"5eba9bef297bd141814eda78d8aff55dc12231dd\",\"health_ms\":60000,\"reset\":1,\"rtc\":1,\"sample_ms\":10000,\"schema\":\"growbox-log-v2\",\"sid\":\"2429aac7\",\"t\":\"session\",\"u0\":692,\"x0\":1788639642}\nlast_json={\"ble\":[1,1,0,0,0,0],\"o\":[0,0,0,0],\"rtc\":[1,1,2,0,0,692,692],\"scd\":[1,0,0,0],\"st\":[\"sd\",1,0,0,0,0,0,1,0,0,0,692],\"sys\":[226508,226508,184320,8380556,8380556,8257536,9508],\"t\":\"h\",\"tp\":[0,0,0],\"u\":692,\"v\":2,\"xm\":[0,0,0]}\n",
+      "elapsed_seconds": 11.644,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 2048,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 23.28,
+      "output_policy": "stream",
+      "captured_output_chars": 1215,
+      "output_truncated": false,
+      "current_rss_mb": 23.2,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 11.644
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.076
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.067
+  },
+  "finished_at": "2026-09-05T20:20:51.322112+00:00",
+  "task_digest": "d00dd846302b51058af8355e914a15f701a4bb0ddcca8870b0a3b14e3c546cf9",
+  "idle_timeout": 60,
+  "task_timeout": 480,
+  "memory_limit_mb": 2048,
+  "attempt_id": "a13f71b2dd85163620c98460",
+  "daemon_version": "4.18.0"
+}
