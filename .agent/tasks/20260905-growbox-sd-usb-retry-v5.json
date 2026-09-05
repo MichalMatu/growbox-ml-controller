@@ -1,0 +1,16 @@
+{
+  "id": "20260905-growbox-sd-usb-retry-v5",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "resources": ["board:growbox-s3"],
+  "memory_limit_mb": 4096,
+  "command_timeout": 1800,
+  "idle_timeout": 600,
+  "task_timeout": 2400,
+  "workflow_policy": "efficient-verification-v1",
+  "commands": [
+    "git fetch -q origin agent-control && git show origin/agent-control:.agent/payloads/20260905-growbox-sd-usb-retry-v5/run.sh > /tmp/sd-usb-retry-v5.sh && bash /tmp/sd-usb-retry-v5.sh"
+  ]
+}
