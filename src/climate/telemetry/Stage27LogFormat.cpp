@@ -52,6 +52,7 @@ std::size_t formatStage27SampleNdjson(char* buffer, std::size_t buffer_size,
       "{\"t\":\"s\",\"v\":2,\"u\":%" PRIu64 ",\"x\":%" PRIu64 ",\"i\":[%d,%" PRIu32
       "],\"scd\":[%d,%d,%.2f,%.2f,%.0f,%" PRIu64 "],"
       "\"tp\":[%d,%.2f,%.2f,%" PRIu64 "],\"xm\":[%d,%.2f,%.2f,%" PRIu64 "],"
+      "\"o\":[%d,%d,%d,%d],"
       "\"c\":[%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%.3f,%.3f,%.3f,%.3f,%.3f,%.3f]}",
       snapshot.uptime_ms, snapshot.unix_time_s, flag(snapshot.input_sampled), snapshot.io_status,
       flag(snapshot.scd_sample), flag(snapshot.scd_available),
@@ -61,6 +62,8 @@ std::size_t formatStage27SampleNdjson(char* buffer, std::size_t buffer_size,
       static_cast<double>(snapshot.tp_humidity_pct), snapshot.tp_age_ms,
       flag(snapshot.xiaomi_sample), static_cast<double>(snapshot.xiaomi_temperature_c),
       static_cast<double>(snapshot.xiaomi_humidity_pct), snapshot.xiaomi_age_ms,
+      flag(snapshot.real_outputs_active), flag(snapshot.physical_light_on),
+      flag(snapshot.physical_exhaust_on), flag(snapshot.physical_humidifier_on),
       snapshot.runtime_status, snapshot.runtime_mode, snapshot.rule_arbitration_interventions,
       snapshot.rule_safety_interventions, static_cast<double>(snapshot.applied_heater),
       static_cast<double>(snapshot.applied_cooler),
@@ -88,6 +91,7 @@ formatStage27HealthNdjson(char* buffer, std::size_t buffer_size,
       "\"ble\":[%d,%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 "],"
       "\"tp\":[%" PRIu32 ",%" PRIu32 ",%" PRIu32 "],"
       "\"xm\":[%" PRIu32 ",%" PRIu32 ",%" PRIu32 "],"
+      "\"o\":[%d,%d,%d,%d],"
       "\"st\":[\"%s\",%d,%d,%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32
       ",%" PRIu32 ",%" PRIu32 ",%" PRIu64 "]}",
       snapshot.uptime_ms, snapshot.heap_internal, snapshot.heap_internal_min,
@@ -100,6 +104,8 @@ formatStage27HealthNdjson(char* buffer, std::size_t buffer_size,
       snapshot.ble_scan_errors, snapshot.ble_scan_restarts, snapshot.ble_scan_completes,
       snapshot.ble_adv_lock_drops, snapshot.tp_packets, snapshot.tp_accepted, snapshot.tp_rejected,
       snapshot.xiaomi_packets, snapshot.xiaomi_accepted, snapshot.xiaomi_rejected,
+      flag(snapshot.real_outputs_active), flag(snapshot.physical_light_on),
+      flag(snapshot.physical_exhaust_on), flag(snapshot.physical_humidifier_on),
       storage::stage27StorageBackendName(storage_status.active_backend),
       flag(storage_status.sd_mounted), flag(storage_status.flash_mounted),
       storage_status.sd_mount_errors, storage_status.flash_mount_errors,
