@@ -24,10 +24,9 @@ ClimateLoopResult ClimateControlLoop::tick(std::uint64_t monotonic_ms,
 
   if (actuator_fault_latched_) {
     decision = {};
-    const ClimatePolicyRequest off{};
     result.io_status = ClimateLoopIoStatus::ActuatorFaultLatched;
     result.fail_safe_attempted = true;
-    result.fail_safe_applied = actuator_sink_.apply(off, monotonic_ms);
+    result.fail_safe_applied = actuator_sink_.applyFailSafeOff(monotonic_ms);
     result.command_applied = result.fail_safe_applied;
     return result;
   }
@@ -40,8 +39,11 @@ ClimateLoopResult ClimateControlLoop::tick(std::uint64_t monotonic_ms,
   input.previous = previous_applied_;
 
   result.runtime_status = runtime_.step(input, monotonic_ms, decision);
-  result.command_applied = actuator_sink_.apply(decision.applied, monotonic_ms);
+  ClimatePolicyRequest confirmed_applied{};
+  result.command_applied =
+      actuator_sink_.applyAndReport(decision.applied, monotonic_ms, confirmed_applied);
   if (result.command_applied) {
+    runtime_.reconcileApplied(confirmed_applied, input.capabilities, decision);
     previous_applied_ = previousFromRequest(decision.applied);
     result.io_status =
         result.input_sampled ? ClimateLoopIoStatus::Ok : ClimateLoopIoStatus::InputUnavailable;
@@ -50,10 +52,9 @@ ClimateLoopResult ClimateControlLoop::tick(std::uint64_t monotonic_ms,
 
   result.io_status = ClimateLoopIoStatus::ActuatorApplyFailed;
   result.fail_safe_attempted = true;
-  const ClimatePolicyRequest off{};
-  result.fail_safe_applied = actuator_sink_.apply(off, monotonic_ms);
+  result.fail_safe_applied = actuator_sink_.applyFailSafeOff(monotonic_ms);
 
-  // The runtime already advanced its effective-action estimator before the sink
+  // The runtime advanced its effective-action estimator before the sink
   // acknowledgement. Reset it after any rejected command so an unconfirmed
   // actuator state never becomes future ML context.
   runtime_.reset();
