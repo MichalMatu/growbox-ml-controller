@@ -50,6 +50,22 @@ void testRfReceiveTimeoutBounds() {
   assert(parseServiceConsoleCommand("rf rx nope").kind == ServiceConsoleCommandKind::Invalid);
 }
 
+void testRtcSetUnixCommand() {
+  const auto command = parseServiceConsoleCommand("rtc set-unix 1788589800");
+  assert(command.kind == ServiceConsoleCommandKind::RtcSetUnix);
+  assert(command.unix_time_s == 1788589800ULL);
+
+  const auto spaced = parseServiceConsoleCommand(" RTC   SET-UNIX   946684800 ");
+  assert(spaced.kind == ServiceConsoleCommandKind::RtcSetUnix);
+  assert(spaced.unix_time_s == 946684800ULL);
+
+  assert(parseServiceConsoleCommand("rtc set-unix").kind == ServiceConsoleCommandKind::Invalid);
+  assert(parseServiceConsoleCommand("rtc set-unix -1").kind == ServiceConsoleCommandKind::Invalid);
+  assert(parseServiceConsoleCommand("rtc set-unix nope").kind == ServiceConsoleCommandKind::Invalid);
+  assert(parseServiceConsoleCommand("rtc set-unix 18446744073709551616").kind ==
+         ServiceConsoleCommandKind::Invalid);
+}
+
 void testInvalidCommandsFailClosed() {
   assert(parseServiceConsoleCommand(nullptr).kind == ServiceConsoleCommandKind::Invalid);
   assert(parseServiceConsoleCommand("").kind == ServiceConsoleCommandKind::None);
@@ -65,6 +81,7 @@ int main() {
   testReadOnlyMenuCommands();
   testNamedRfTransmitCommands();
   testRfReceiveTimeoutBounds();
+  testRtcSetUnixCommand();
   testInvalidCommandsFailClosed();
   return 0;
 }
