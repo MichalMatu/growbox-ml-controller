@@ -310,6 +310,16 @@ ClimateRuntimeStatus ClimateRuntimeController::step(const ClimateControllerInput
   return decision.status;
 }
 
+void ClimateRuntimeController::reconcileApplied(const ClimatePolicyRequest& confirmed_applied,
+                                                const ClimateCapabilities& capabilities,
+                                                ClimateRuntimeDecision& decision) noexcept {
+  const float timestep =
+      std::isfinite(config_.timestep_s) && config_.timestep_s > 0.0F ? config_.timestep_s : 10.0F;
+  effective_estimator_.setState(decision.effective_before);
+  decision.applied = clipped(confirmed_applied);
+  decision.effective_after = effective_estimator_.update(decision.applied, timestep, capabilities);
+}
+
 void ClimateRuntimeController::reset() noexcept {
   trend_estimator_.reset();
   effective_estimator_.reset();
