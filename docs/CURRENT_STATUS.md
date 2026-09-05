@@ -62,12 +62,33 @@ The manual tests ended with OFF commands and automatic runtime outputs remained 
 
 Do not restore the older Stage28B receive settings without new physical evidence.
 
-## Sensor topology
+## Stage28 reference test rig — sensor placement
 
-- TP357 BLE thermo/hygrometer: inside growbox;
-- Xiaomi BLE thermo/hygrometer: outside growbox;
-- SCD41 and other directly connected ESP32 sensors: inside/controller installation;
-- DS3231 provides RTC.
+The following physical arrangement is the frozen reference layout for the current mint growbox tests. Keep sensor positions stable during qualification and data collection unless a later experiment explicitly records a topology change.
+
+| sensor | physical placement | authoritative role | secondary role |
+| --- | --- | --- | --- |
+| TP357 BLE thermo/hygrometer | inside the growbox, slightly above the leaf canopy | primary inside temperature and relative humidity | primary thermal-safety temperature source |
+| SCD41 | inside the growbox, approximately at pot height | primary inside CO2 | backup/diagnostic temperature and relative humidity |
+| Xiaomi BLE thermo/hygrometer | outside the growbox, next to the air intake | incoming/outside temperature and relative humidity | ventilation-effectiveness context |
+| DS3231 | controller installation | RTC/timebase | lighting schedule time source |
+
+SCD41 installation note: the sensor is soldered to the HAT through approximately 5 cm leads, and the HAT itself is physically spaced from the ESP32-S3. Conductive heat transfer from the ESP32 into the SCD41 is therefore expected to be small in this test rig. Even so, SCD41 temperature/RH remain diagnostic/backup values rather than the authoritative inside T/RH source; TP357 remains authoritative for those channels.
+
+This topology intentionally gives the controller three different pieces of environmental context: growbox canopy conditions, growbox CO2/pot-height conditions, and the temperature/RH of the air available at the intake.
+
+## Current mint control baseline
+
+The current software-safety baseline for the mint test rig is:
+
+- exhaust fan is a binary actuator only: `OFF` or `ON`; no PWM/duty-cycle control is assumed;
+- TP357 inside temperature is the primary thermal-safety measurement;
+- lamp thermal cutoff: `28.0 °C` -> force lamp OFF regardless of the lighting timer and request exhaust fan ON;
+- nominal relative-humidity target: about `60% RH`, with an initial normal band of approximately `55-65% RH`;
+- high humidity around `70% RH` and above should be treated as a ventilation/dehumidification condition, subject to intake-air conditions and later arbitration rules;
+- normal light request remains schedule-driven and independent from the six Climate-v6 ML outputs.
+
+The recovery threshold/hysteresis hold duration for the 28 °C lamp cutoff must remain explicit configuration in Gate 2 rather than being hidden in the RF driver. Automatic physical outputs remain fake-locked until the corresponding software and supervised hardware gates pass.
 
 ## Frozen actuator semantics
 
