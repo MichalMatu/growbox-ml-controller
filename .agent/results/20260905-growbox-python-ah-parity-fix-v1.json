@@ -1,0 +1,61 @@
+{
+  "id": "20260905-growbox-python-ah-parity-fix-v1",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "started_at": "2026-09-05T21:06:17.922321+00:00",
+  "command_timeout": 900,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; EXPECTED=6c5deeeb3b69be47fd889d9ceb65efed1e44dae9; git fetch -q origin mvp/environment-controller agent-control; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; git show origin/agent-control:.agent/patches/20260905-growbox-python-ah-parity-fix-v1.patch > /tmp/growbox-ah.patch; git apply --check /tmp/growbox-ah.patch; git apply /tmp/growbox-ah.patch; .venv/bin/python tools/ml/generate_climate_runtime_parity.py; .venv/bin/python -m pytest tests/test_climate_runtime.py tests/test_climate_runtime_parity.py -q; cmake -S test/host -B build/host -DCMAKE_BUILD_TYPE=Release >/tmp/growbox-ah-cmake.log; cmake --build build/host --target climate_v6_tests climate_runtime_parity_tests -j2; ./build/host/climate_v6_tests; ./build/host/climate_runtime_parity_tests; git diff --check; git add tools/ml/climate_policy.py tests/test_climate_runtime.py tests/fixtures/climate_runtime_parity_generated.h; git diff --cached --check; git commit -m 'Align Python ventilation policy with absolute humidity'; git push origin HEAD:mvp/environment-controller; NEW_SHA=$(git rev-parse HEAD); test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$NEW_SHA\"; printf 'PYTHON_AH_PARITY_FIX_PASS sha=%s\\n' \"$NEW_SHA\"",
+      "exit_code": 128,
+      "output": "error: corrupt patch at line 25\n",
+      "elapsed_seconds": 1.193,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 7.41,
+      "output_policy": "stream",
+      "captured_output_chars": 32,
+      "output_truncated": false,
+      "current_rss_mb": 7.41,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "failed",
+      "elapsed_seconds": 1.193
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.098
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.076
+  },
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-05T21:06:20.762604+00:00",
+  "task_digest": "381f3ac8dc2811bcd0baf9e35c545443a721f4b8a935b2b6fb8b6117cbfbb4c2",
+  "idle_timeout": 180,
+  "task_timeout": 1500,
+  "memory_limit_mb": 4096,
+  "attempt_id": "1a8355f9b099a1c976a86019",
+  "daemon_version": "4.18.2"
+}
