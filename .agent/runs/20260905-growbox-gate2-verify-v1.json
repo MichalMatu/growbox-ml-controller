@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260905-growbox-gate2-verify-v1",
+  "task_digest": "d4577e0eefda45f1216075134be989dcfb224ea45555e4a0fe0f68ca5f192f5f",
+  "idle_timeout": 600,
+  "task_timeout": 5400,
+  "memory_limit_mb": 6144,
+  "started_at": "2026-09-05T05:58:57.807597+00:00",
+  "attempt_id": "5ecb8abcb66a759621312d5b",
+  "daemon_version": "4.17.0",
+  "daemon_pid": 60722,
+  "updated_at": "2026-09-05T05:58:57.807786+00:00",
+  "pid": 60722
+}
