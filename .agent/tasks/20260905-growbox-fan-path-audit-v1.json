@@ -1,0 +1,14 @@
+{
+  "id": "20260905-growbox-fan-path-audit-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "memory_limit_mb": 2048,
+  "command_timeout": 300,
+  "idle_timeout": 60,
+  "task_timeout": 480,
+  "commands": [
+    "set -euo pipefail; test \"$(git rev-parse HEAD)\" = \"87e700a5688051bdc6a95cad722b60334319f76d\"; printf '%s\\n' '=== HEAD ==='; git rev-parse HEAD; printf '%s\\n' '=== FAN PATH HITS ==='; rg -n --hidden --glob '!.git/**' --glob '!build/**' --glob '!.pio/**' 'requested_fan|applied_fan|physical_fan|fan_physical|arbiter_dwell_holds|arbiter_transitions|on_threshold|min_off|force_fan|fan.*threshold|fan.*dwell|BinaryArbiter|binary arbiter' . || true; printf '%s\\n' '=== RELEVANT FILES ==='; rg -l --hidden --glob '!.git/**' --glob '!build/**' --glob '!.pio/**' 'requested_fan|arbiter_dwell_holds|BinaryArbiter|on_threshold|min_off' . | sort || true; printf '%s\\n' '=== CLIMATE / ARBITER TESTS ==='; find . -maxdepth 5 -type f | grep -Ei '(climate|arbiter|environment|controller|actuat|fan).*(test|spec)|(test|spec).*(climate|arbiter|environment|controller|actuat|fan)' | sort | head -200 || true"
+  ]
+}
