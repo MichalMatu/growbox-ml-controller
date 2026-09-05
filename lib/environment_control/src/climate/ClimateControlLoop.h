@@ -23,6 +23,21 @@ class ClimateActuatorSink {
 public:
   virtual ~ClimateActuatorSink() = default;
   virtual bool apply(const ClimatePolicyRequest& request, std::uint64_t monotonic_ms) noexcept = 0;
+
+  // Default sinks are exact: the accepted request is the applied request.
+  // Hardware adapters with binary/dwell arbitration override this method.
+  virtual bool applyAndReport(const ClimatePolicyRequest& request, std::uint64_t monotonic_ms,
+                              ClimatePolicyRequest& confirmed_applied) noexcept {
+    const bool ok = apply(request, monotonic_ms);
+    confirmed_applied = ok ? request : ClimatePolicyRequest{};
+    return ok;
+  }
+
+  // Fail-safe OFF must bypass ordinary dwell/hysteresis in hardware adapters.
+  virtual bool applyFailSafeOff(std::uint64_t monotonic_ms) noexcept {
+    const ClimatePolicyRequest off{};
+    return apply(off, monotonic_ms);
+  }
 };
 
 struct ClimateLoopResult {
