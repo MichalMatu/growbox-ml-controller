@@ -1,0 +1,31 @@
+{
+  "id": "20260905-growbox-moisture-aware-ventilation-verify-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 6144,
+  "command_timeout": 1800,
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "workflow_policy": "efficient-verification-v1",
+  "steps": [
+    {
+      "name": "focused-moisture-aware-ventilation",
+      "command": "set -euo pipefail; EXPECTED=e744e1fdf430ac35165f61a21f4c4b7fbf8a7e4f; git fetch -q origin mvp/environment-controller; git reset --hard $EXPECTED >/dev/null; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; export CMAKE_BUILD_PARALLEL_LEVEL=1; rm -rf build/host-moisture-aware-focused; cmake -S test/host -B build/host-moisture-aware-focused -DCMAKE_BUILD_TYPE=Debug >/tmp/moisture-aware-focused-cmake.log; cmake --build build/host-moisture-aware-focused --target climate_control_loop_tests --parallel 1; ./build/host-moisture-aware-focused/climate_control_loop_tests; git diff --check; test -z \"$(git status --porcelain)\"; printf 'MOISTURE_AWARE_VENTILATION_FOCUSED_PASS commit=%s outputs=fake-locked rf_tx=0\\n' \"$EXPECTED\"",
+      "verification_level": "focused",
+      "timeout": 2400,
+      "output_policy": "stream"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "full-quality-gate",
+      "command": "set -euo pipefail; EXPECTED=e744e1fdf430ac35165f61a21f4c4b7fbf8a7e4f; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; export CMAKE_BUILD_PARALLEL_LEVEL=1; bash scripts/quality_gate_push.sh; git diff --check; test -z \"$(git status --porcelain)\"; printf 'MOISTURE_AWARE_VENTILATION_VERIFY_COMPLETE commit=%s outputs=fake-locked rf_tx=0\\n' \"$EXPECTED\"",
+      "verification_level": "full",
+      "timeout": 5400,
+      "output_policy": "stream"
+    }
+  ]
+}
