@@ -139,7 +139,29 @@ Initial reference signatures are therefore:
 - exhaust fan: approximately `3.2 W` contribution;
 - humidifier: approximately `15.4 W` contribution.
 
-Do not yet freeze ultra-tight production thresholds from this single calibration. Repeat measurements under different mains voltage and after warm-up, then derive tolerance bands from observed variation. Until that repeat dataset exists, treat these values as strong reference centers rather than exact constants.
+## 20-second settled repeat calibration — 2026-09-05
+
+A second supervised calibration repeated the same one-device-at-a-time sequence but waited a full `20 s` after every RF ON and every RF OFF before sampling Shelly. Each stable state was then represented by the median of nine Shelly samples.
+
+Results:
+
+| actuator | pre/OFF median | ON median after 20 s | OFF median after 20 s | ON delta | OFF delta | ON/OFF delta disagreement | observed mains |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| lamp | 2.2 W | 99.2 W | 2.2 W | +97.0 W | -97.0 W | 0.0 W | about 243.8 V |
+| exhaust fan | 2.3 W | 5.1 W | 2.2 W | +2.8 W | -2.9 W | 0.1 W | about 245.0 V |
+| humidifier | 2.2 W | 17.9 W | 2.2 W | +15.7 W | -15.7 W | 0.0 W | about 243.9 V |
+
+The all-controlled-loads-OFF baseline was `2.2 W` and the final state after the full repeat also returned to `2.2 W`.
+
+This repeat strongly confirms that the characteristic load signatures remain visible after Shelly and the loads have had ample time to settle. It also demonstrates why production confirmation must use tolerance ranges rather than one exact wattage constant: the low-power fan moved from approximately `3.2 W` contribution in the first short-settle calibration to approximately `2.8-2.9 W` in the 20-second calibration, while the much larger lamp and humidifier signatures remained within a few tenths of a watt of the first test.
+
+Practical initial centers from both supervised calibrations are therefore approximately:
+
+- lamp: `97.0-97.1 W` contribution;
+- exhaust fan: `2.8-3.2 W` contribution;
+- humidifier: `15.4-15.7 W` contribution.
+
+Do not freeze final acceptance bands from only two calibration cycles. Continue collecting signatures during supervised hardware tests, including mains voltage and settled state, and derive robust tolerance bands from the distribution. For low-power loads such as the fan, use a relative/wider tolerance and require a stable baseline because a small unrelated load change can be comparable with the fan signature.
 
 The calibration ended safely with lamp OFF, fan OFF and humidifier OFF; the Shelly master remained ON and final measured power returned to the `2.2 W` baseline.
 
