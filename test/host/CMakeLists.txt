@@ -38,7 +38,6 @@ target_include_directories(climate_v6_tests PRIVATE "${PROJECT_ROOT}/lib/environ
 target_compile_features(climate_v6_tests PRIVATE cxx_std_17)
 target_compile_options(climate_v6_tests PRIVATE -Wall -Wextra -Wpedantic)
 
-
 add_executable(
   climate_runtime_parity_tests
   "${PROJECT_ROOT}/test/test_climate_runtime_parity/test_main.cpp"
@@ -79,7 +78,6 @@ target_include_directories(climate_virtual_hil_tests PRIVATE "${PROJECT_ROOT}/li
 target_compile_features(climate_virtual_hil_tests PRIVATE cxx_std_17)
 target_compile_options(climate_virtual_hil_tests PRIVATE -Wall -Wextra -Wpedantic)
 
-
 add_executable(
   climate_io_adapter_tests
   "${PROJECT_ROOT}/test/test_climate_io_adapters/test_main.cpp"
@@ -93,7 +91,6 @@ target_include_directories(
 )
 target_compile_features(climate_io_adapter_tests PRIVATE cxx_std_17)
 target_compile_options(climate_io_adapter_tests PRIVATE -Wall -Wextra -Wpedantic)
-
 
 add_executable(
   climate_application_composition_tests
@@ -113,7 +110,6 @@ target_include_directories(
 )
 target_compile_features(climate_application_composition_tests PRIVATE cxx_std_17)
 target_compile_options(climate_application_composition_tests PRIVATE -Wall -Wextra -Wpedantic)
-
 
 add_executable(
   climate_deterministic_fake_runtime_tests
@@ -135,7 +131,6 @@ target_include_directories(
 target_compile_features(climate_deterministic_fake_runtime_tests PRIVATE cxx_std_17)
 target_compile_options(climate_deterministic_fake_runtime_tests PRIVATE -Wall -Wextra -Wpedantic)
 
-
 add_executable(
   climate_diagnostics_tests
   "${PROJECT_ROOT}/test/test_climate_diagnostics/test_main.cpp"
@@ -149,7 +144,6 @@ target_include_directories(
 )
 target_compile_features(climate_diagnostics_tests PRIVATE cxx_std_17)
 target_compile_options(climate_diagnostics_tests PRIVATE -Wall -Wextra -Wpedantic)
-
 
 add_executable(
   climate_fault_soak_tests
@@ -169,7 +163,6 @@ target_include_directories(
 )
 target_compile_features(climate_fault_soak_tests PRIVATE cxx_std_17)
 target_compile_options(climate_fault_soak_tests PRIVATE -Wall -Wextra -Wpedantic)
-
 
 add_executable(
   climate_composite_input_tests
@@ -191,7 +184,6 @@ target_include_directories(
 target_compile_features(climate_composite_input_tests PRIVATE cxx_std_17)
 target_compile_options(climate_composite_input_tests PRIVATE -Wall -Wextra -Wpedantic)
 
-
 add_executable(
   climate_semantic_output_tests
   "${PROJECT_ROOT}/test/test_climate_semantic_output/test_main.cpp"
@@ -208,6 +200,20 @@ target_include_directories(
 )
 target_compile_features(climate_semantic_output_tests PRIVATE cxx_std_17)
 target_compile_options(climate_semantic_output_tests PRIVATE -Wall -Wextra -Wpedantic)
+
+add_executable(
+  stage28d_lamp_safety_tests
+  "${PROJECT_ROOT}/test/test_stage28d_lamp_safety/test_main.cpp"
+  "${PROJECT_ROOT}/src/climate/Stage28dLampSafety.cpp"
+)
+target_include_directories(
+  stage28d_lamp_safety_tests
+  PRIVATE
+    "${PROJECT_ROOT}/src"
+    "${PROJECT_ROOT}/lib/environment_control/src"
+)
+target_compile_features(stage28d_lamp_safety_tests PRIVATE cxx_std_17)
+target_compile_options(stage28d_lamp_safety_tests PRIVATE -Wall -Wextra -Wpedantic)
 
 add_executable(
   tp357_decoder_tests
@@ -267,7 +273,6 @@ target_include_directories(
 target_compile_features(stage27_fault_freshness_tests PRIVATE cxx_std_17)
 target_compile_options(stage27_fault_freshness_tests PRIVATE -Wall -Wextra -Wpedantic)
 
-
 add_executable(
   stage28_service_console_tests
   "${PROJECT_ROOT}/test/test_stage28_service_console/test_main.cpp"
@@ -276,7 +281,6 @@ add_executable(
 target_include_directories(stage28_service_console_tests PRIVATE "${PROJECT_ROOT}/src")
 target_compile_features(stage28_service_console_tests PRIVATE cxx_std_17)
 target_compile_options(stage28_service_console_tests PRIVATE -Wall -Wextra -Wpedantic)
-
 
 add_executable(
   rf433_protocol_tests
@@ -300,6 +304,7 @@ if(UNIX)
   target_link_libraries(climate_diagnostics_tests PRIVATE m)
   target_link_libraries(climate_composite_input_tests PRIVATE m)
   target_link_libraries(climate_semantic_output_tests PRIVATE m)
+  target_link_libraries(stage28d_lamp_safety_tests PRIVATE m)
   target_link_libraries(stage27_telemetry_tests PRIVATE m)
   target_link_libraries(stage27_fault_freshness_tests PRIVATE m)
 endif()
@@ -317,6 +322,7 @@ add_test(NAME climate_fault_soak_tests COMMAND climate_fault_soak_tests)
 add_test(NAME climate_diagnostics_tests COMMAND climate_diagnostics_tests)
 add_test(NAME climate_composite_input_tests COMMAND climate_composite_input_tests)
 add_test(NAME climate_semantic_output_tests COMMAND climate_semantic_output_tests)
+add_test(NAME stage28d_lamp_safety_tests COMMAND stage28d_lamp_safety_tests)
 add_test(NAME tp357_decoder_tests COMMAND tp357_decoder_tests)
 add_test(NAME stage27_telemetry_tests COMMAND stage27_telemetry_tests)
 add_test(NAME ble_climate_state_tests COMMAND ble_climate_state_tests)
