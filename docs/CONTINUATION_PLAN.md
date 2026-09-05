@@ -17,7 +17,7 @@ Then fetch fresh `mvp/environment-controller` HEAD and `agent-control:.agent/sta
 
 ## Current transition
 
-**Stage27C FROZEN -> Stage28A DONE -> Stage28B DONE -> Stage28C DONE -> pre-Stage28D golden gate COMPLETE -> Stage28D manual RF path COMPLETE -> semantic/safety integration NEXT**
+**Stage27C FROZEN -> Stage28A DONE -> Stage28B DONE -> Stage28C DONE -> pre-Stage28D golden gate COMPLETE -> Stage28D manual RF path COMPLETE -> Gate 1 semantic binding COMPLETE -> Gate 2 lamp safety NEXT**
 
 The service-console firmware `af16aebde8f69d1a1257256c7711e9721c07c9d5` is hardware-qualified for the current manual diagnostic path.
 
@@ -52,17 +52,19 @@ The current Climate-v6 model receives `schedule.light_level` and the simulator a
 
 ## First incomplete gate
 
-Start with **software-only semantic/safety integration** while keeping the real runtime fake-locked:
+Gate 1 semantic binding is complete: endpoint 1 / `remote_socket_1` is frozen as `ExhaustFan`, endpoint 3 / `remote_socket_3` as `Humidifier`, and endpoint 2 / `remote_socket_2` is reserved for scheduled lighting outside the six Climate-v6 roles. Binding validation fails closed and automatic outputs remain fake-locked.
 
-1. bind fan endpoint to `ExhaustFan`;
-2. bind humidifier endpoint to `Humidifier`;
-3. create/use a dedicated scheduled-light endpoint/path for the lamp;
-4. implement an independent lamp over-temperature OFF override with recovery hysteresis;
-5. ensure high-temperature safety can demand maximum exhaust ventilation when available;
-6. ensure unknown/duplicate/missing mappings fail closed;
-7. add focused host tests proving mapping/arbitration without real RF TX.
+Start with **Gate 2 — software-only lamp timer + thermal safety**:
 
-Do not perform physical actuation in this first software slice.
+1. implement scheduled requested lamp ON/OFF state;
+2. add an independent over-temperature OFF override with configurable threshold;
+3. require recovery hysteresis / hold conditions before lamp re-enable;
+4. ensure high-temperature safety can demand maximum exhaust ventilation when available;
+5. fail safe when the required temperature input is stale or unusable;
+6. keep the lamp outside the normal Climate-v6 output roles;
+7. add focused host tests proving schedule/safety arbitration without real RF TX.
+
+Do not perform physical actuation in this software gate.
 
 ## Next hardware session after software qualification
 

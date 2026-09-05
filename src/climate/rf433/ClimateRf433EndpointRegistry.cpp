@@ -5,8 +5,10 @@
 namespace growbox::app::climate_io::rf433 {
 namespace {
 
-constexpr std::array<ClimateRf433EndpointBinding, 1U> kBindings{{
+constexpr std::array<ClimateRf433EndpointBinding, 3U> kBindings{{
     {kRemoteSocket1ClimateEndpoint, &kRemoteSocket1},
+    {kRemoteSocket2ClimateEndpoint, &kRemoteSocket2},
+    {kRemoteSocket3ClimateEndpoint, &kRemoteSocket3},
 }};
 
 } // namespace

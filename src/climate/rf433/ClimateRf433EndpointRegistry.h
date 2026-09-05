@@ -5,9 +5,11 @@
 
 namespace growbox::app::climate_io::rf433 {
 
-// Stable neutral endpoint identity for the Stage28C-frozen hardware pair.
-// Semantic actuator roles are assigned above this registry, never here.
+// Stable neutral endpoint identities for the three physically validated Stage28D loads.
+// Semantic actuator roles are assigned above this hardware registry.
 inline constexpr ClimateEndpointId kRemoteSocket1ClimateEndpoint = 1U;
+inline constexpr ClimateEndpointId kRemoteSocket2ClimateEndpoint = 2U;
+inline constexpr ClimateEndpointId kRemoteSocket3ClimateEndpoint = 3U;
 
 struct ClimateRf433EndpointBinding {
   ClimateEndpointId endpoint{kUnmappedClimateEndpoint};

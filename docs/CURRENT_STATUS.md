@@ -6,7 +6,7 @@ Primary roadmap/handoff: `docs/PROJECT_ROADMAP.md`
 
 ## Current transition
 
-**Stage27C FROZEN -> Stage28A DONE -> Stage28B DONE -> Stage28C DONE -> pre-Stage28D golden gate COMPLETE -> Stage28D manual RF path COMPLETE -> semantic/safety integration NEXT**
+**Stage27C FROZEN -> Stage28A DONE -> Stage28B DONE -> Stage28C DONE -> pre-Stage28D golden gate COMPLETE -> Stage28D manual RF path COMPLETE -> Gate 1 semantic binding COMPLETE -> Gate 2 lamp safety NEXT**
 
 Stage27C and the completed RF transport/identity work are not being reopened.
 
@@ -69,11 +69,13 @@ Do not restore the older Stage28B receive settings without new physical evidence
 - SCD41 and other directly connected ESP32 sensors: inside/controller installation;
 - DS3231 provides RTC.
 
-## Intended actuator semantics
+## Frozen actuator semantics
 
-- fan RF endpoint -> `ExhaustFan`;
-- humidifier RF endpoint -> `Humidifier`;
-- lamp RF endpoint -> scheduled lighting path, not a normal Climate-v6 ML output.
+- `remote_socket_1` / endpoint 1 -> `ExhaustFan`;
+- `remote_socket_3` / endpoint 3 -> `Humidifier`;
+- `remote_socket_2` / endpoint 2 -> dedicated scheduled-light path, not a normal Climate-v6 ML output.
+
+The Gate 1 validator fails closed for missing, duplicate, unknown, stale or scheduled-light-as-climate bindings. Automatic runtime outputs remain fake-locked.
 
 The lamp is a special layered actuator:
 
@@ -85,13 +87,12 @@ Climate-v6 already consumes `schedule.light_level`, and the simulator includes l
 
 Use `docs/PROJECT_ROADMAP.md` as the canonical plan. The next ordered gates are:
 
-1. software-only semantic binding for fan/humidifier plus a dedicated scheduled-light path;
-2. software-only lamp timer + over-temperature safety override with hysteresis;
-3. focused tests/build while physical outputs remain fake-locked;
-4. exact-SHA flash/read-only smoke;
-5. operator-present physical role-routing validation;
-6. supervised thermal-safety validation using deterministic temperature injection rather than deliberately overheating the growbox;
-7. short supervised closed-loop run;
-8. only then consider a separately authorized unattended real-output soak.
+1. software-only lamp timer + over-temperature safety override with hysteresis;
+2. focused tests/build while physical outputs remain fake-locked;
+3. exact-SHA flash/read-only smoke;
+4. operator-present physical role-routing validation;
+5. supervised thermal-safety validation using deterministic temperature injection rather than deliberately overheating the growbox;
+6. short supervised closed-loop run;
+7. only then consider a separately authorized unattended real-output soak.
 
 Do not skip directly from successful manual RF commands to unattended automatic control.

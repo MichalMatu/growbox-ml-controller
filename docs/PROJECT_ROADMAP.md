@@ -126,7 +126,7 @@ This is deliberately separate from whether a future model version should gain a 
 
 The growbox is ready for the next supervised physical session. Do not jump directly to unattended overnight actuation. Complete these gates in order.
 
-### Gate 1 — semantic binding, software only
+### Gate 1 — semantic binding, software only — COMPLETE
 
 Implement/freeze the hardware-to-role mapping without enabling real automatic TX:
 
@@ -136,7 +136,9 @@ Implement/freeze the hardware-to-role mapping without enabling real automatic TX
 
 Unknown/duplicate/missing bindings must fail closed. Keep the runtime output driver fake-locked.
 
-### Gate 2 — lamp timer + thermal safety, software only
+The frozen software contract assigns `remote_socket_1` to `ExhaustFan`, `remote_socket_3` to `Humidifier`, and reserves `remote_socket_2` as the dedicated scheduled-light endpoint. The Stage28D binding validator rejects missing, duplicate, unknown, stale or lamp-as-climate mappings. Automatic physical TX remains fake-locked.
+
+### Gate 2 — lamp timer + thermal safety, software only — NEXT
 
 Add the scheduled lamp state and independent thermal safety override. Cover at least:
 

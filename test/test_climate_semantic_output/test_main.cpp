@@ -1,4 +1,5 @@
 #include "climate/ClimateSemanticOutput.h"
+#include "climate/Stage28dOutputBindings.h"
 #include "climate/rf433/ClimateRf433EndpointRegistry.h"
 
 #include <cassert>
@@ -166,24 +167,82 @@ void testBindingHelpersEnforceOneRolePerEndpoint() {
   assert(validateClimateSemanticOutputConfig(config) == ClimateSemanticOutputConfigStatus::Ok);
 }
 
-void testNeutralRf433EndpointRegistryResolvesFrozenHardwareOnly() {
+void testNeutralRf433EndpointRegistryResolvesAllValidatedHardware() {
   using namespace growbox::app::climate_io::rf433;
 
-  static_assert(kRemoteSocket1ClimateEndpoint != kUnmappedClimateEndpoint);
-  const ClimateRf433EndpointBinding* binding =
-      findClimateRf433Endpoint(kRemoteSocket1ClimateEndpoint);
-  assert(binding != nullptr);
-  assert(binding->endpoint == kRemoteSocket1ClimateEndpoint);
-  assert(binding->hardware == &kRemoteSocket1);
+  static_assert(kRemoteSocket1ClimateEndpoint != kRemoteSocket2ClimateEndpoint);
+  static_assert(kRemoteSocket1ClimateEndpoint != kRemoteSocket3ClimateEndpoint);
+  static_assert(kRemoteSocket2ClimateEndpoint != kRemoteSocket3ClimateEndpoint);
+
+  const ClimateRf433EndpointBinding* fan = findClimateRf433Endpoint(kRemoteSocket1ClimateEndpoint);
+  const ClimateRf433EndpointBinding* lamp = findClimateRf433Endpoint(kRemoteSocket2ClimateEndpoint);
+  const ClimateRf433EndpointBinding* humidifier =
+      findClimateRf433Endpoint(kRemoteSocket3ClimateEndpoint);
+  assert(fan != nullptr && fan->hardware == &kRemoteSocket1);
+  assert(lamp != nullptr && lamp->hardware == &kRemoteSocket2);
+  assert(humidifier != nullptr && humidifier->hardware == &kRemoteSocket3);
   assert(findClimateRf433Endpoint(kUnmappedClimateEndpoint) == nullptr);
   assert(findClimateRf433Endpoint(0U) == nullptr);
+  assert(findClimateRf433Endpoint(99U) == nullptr);
+}
 
-  ClimateSemanticOutputConfig config{};
-  assert(validateClimateSemanticOutputConfig(config) == ClimateSemanticOutputConfigStatus::Ok);
-  for (const ClimateRoleEndpointMapping& role : config.roles) {
-    assert(!role.enabled);
-    assert(role.endpoint == kUnmappedClimateEndpoint);
+void testStage28dBindingsFreezeFanHumidifierAndScheduledLightRoles() {
+  using namespace growbox::app::climate_io::stage28d;
+
+  const ClimateSemanticOutputConfig config = makeClimateSemanticOutputConfig();
+  assert(validateOutputBindings(config) == OutputBindingStatus::Ok);
+
+  const ClimateRoleEndpointMapping fan =
+      config.roles[climateRoleIndex(ClimateActuatorRole::ExhaustFan)];
+  const ClimateRoleEndpointMapping humidifier =
+      config.roles[climateRoleIndex(ClimateActuatorRole::Humidifier)];
+  assert(fan.enabled && fan.endpoint == kExhaustFanEndpoint);
+  assert(humidifier.enabled && humidifier.endpoint == kHumidifierEndpoint);
+  assert(isScheduledLightEndpoint(kScheduledLightEndpoint));
+  assert(!isScheduledLightEndpoint(kExhaustFanEndpoint));
+  assert(!isScheduledLightEndpoint(kHumidifierEndpoint));
+
+  constexpr ClimateActuatorRole disabled_roles[] = {
+      ClimateActuatorRole::Heater,
+      ClimateActuatorRole::Cooler,
+      ClimateActuatorRole::Dehumidifier,
+      ClimateActuatorRole::Co2Doser,
+  };
+  for (ClimateActuatorRole role : disabled_roles) {
+    const ClimateRoleEndpointMapping mapping = config.roles[climateRoleIndex(role)];
+    assert(!mapping.enabled);
+    assert(mapping.endpoint == kUnmappedClimateEndpoint);
   }
+}
+
+void testStage28dBindingsFailClosedForMissingDuplicateUnknownAndLampCollision() {
+  using namespace growbox::app::climate_io::stage28d;
+
+  ClimateSemanticOutputConfig missing = makeClimateSemanticOutputConfig();
+  missing.roles[climateRoleIndex(ClimateActuatorRole::Humidifier)] = {};
+  assert(validateOutputBindings(missing) == OutputBindingStatus::HumidifierMissingOrWrong);
+
+  ClimateSemanticOutputConfig duplicate = makeClimateSemanticOutputConfig();
+  duplicate.roles[climateRoleIndex(ClimateActuatorRole::Humidifier)] = {true, kExhaustFanEndpoint};
+  assert(validateOutputBindings(duplicate) == OutputBindingStatus::ClimateConfigInvalid);
+
+  ClimateSemanticOutputConfig unknown = makeClimateSemanticOutputConfig();
+  unknown.roles[climateRoleIndex(ClimateActuatorRole::ExhaustFan)] = {true, 99U};
+  assert(validateOutputBindings(unknown) == OutputBindingStatus::ExhaustFanMissingOrWrong);
+
+  ClimateSemanticOutputConfig lamp_collision = makeClimateSemanticOutputConfig();
+  lamp_collision.roles[climateRoleIndex(ClimateActuatorRole::ExhaustFan)] = {
+      true, kScheduledLightEndpoint};
+  assert(validateOutputBindings(lamp_collision) ==
+         OutputBindingStatus::ScheduledLightRoutedToClimate);
+
+  ClimateSemanticOutputConfig unexpected = makeClimateSemanticOutputConfig();
+  unexpected.roles[climateRoleIndex(ClimateActuatorRole::Heater)] = {true, 88U};
+  assert(validateOutputBindings(unexpected) == OutputBindingStatus::UnexpectedClimateRole);
+
+  ClimateSemanticOutputConfig stale_disabled = makeClimateSemanticOutputConfig();
+  stale_disabled.roles[climateRoleIndex(ClimateActuatorRole::Cooler)] = {false, 77U};
+  assert(validateOutputBindings(stale_disabled) == OutputBindingStatus::UnexpectedClimateRole);
 }
 
 void testInvalidSemanticConfigFailsClosedBeforeEndpointWrite() {
@@ -215,7 +274,9 @@ int main() {
   testEndpointAlwaysReceivesNormalizedFiniteLevel();
   testPartialEndpointRejectionPropagatesWithoutSkippingOtherRoles();
   testBindingHelpersEnforceOneRolePerEndpoint();
-  testNeutralRf433EndpointRegistryResolvesFrozenHardwareOnly();
+  testNeutralRf433EndpointRegistryResolvesAllValidatedHardware();
+  testStage28dBindingsFreezeFanHumidifierAndScheduledLightRoles();
+  testStage28dBindingsFailClosedForMissingDuplicateUnknownAndLampCollision();
   testInvalidSemanticConfigFailsClosedBeforeEndpointWrite();
   return 0;
 }

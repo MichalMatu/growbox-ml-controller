@@ -198,6 +198,7 @@ add_executable(
   "${PROJECT_ROOT}/src/climate/ClimateIoAdapters.cpp"
   "${PROJECT_ROOT}/src/climate/ClimateSemanticOutput.cpp"
   "${PROJECT_ROOT}/src/climate/rf433/ClimateRf433EndpointRegistry.cpp"
+  "${PROJECT_ROOT}/src/climate/Stage28dOutputBindings.cpp"
 )
 target_include_directories(
   climate_semantic_output_tests
