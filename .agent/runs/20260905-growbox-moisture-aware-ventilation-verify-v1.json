@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260905-growbox-moisture-aware-ventilation-verify-v1",
+  "task_digest": "4c066b37c5237c0f597dabc18a5c2634381dcf333f1456416b4b14a341351387",
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "memory_limit_mb": 6144,
+  "started_at": "2026-09-05T14:01:28.428262+00:00",
+  "attempt_id": "f3425b4a7fbf813fa120770d",
+  "daemon_version": "4.17.0",
+  "daemon_pid": 18831,
+  "updated_at": "2026-09-05T14:01:28.428431+00:00",
+  "pid": 18831
+}
