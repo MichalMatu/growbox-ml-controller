@@ -73,6 +73,25 @@ bool parseUnsigned(std::string_view token, std::uint32_t& output) noexcept {
   return true;
 }
 
+bool parseUnsigned64(std::string_view token, std::uint64_t& output) noexcept {
+  if (token.empty()) {
+    return false;
+  }
+  std::uint64_t value = 0U;
+  for (const char character : token) {
+    if (character < '0' || character > '9') {
+      return false;
+    }
+    const std::uint64_t digit = static_cast<std::uint64_t>(character - '0');
+    if (value > (std::numeric_limits<std::uint64_t>::max() - digit) / 10U) {
+      return false;
+    }
+    value = value * 10U + digit;
+  }
+  output = value;
+  return true;
+}
+
 bool parseDevice(std::string_view token, ServiceConsoleRfDevice& device) noexcept {
   if (equalsIgnoreCase(token, "lamp")) {
     device = ServiceConsoleRfDevice::Lamp;
@@ -144,6 +163,17 @@ ServiceConsoleCommand parseServiceConsoleCommand(const char* line) noexcept {
       return command;
     }
     return invalidCommand();
+  }
+
+  if (count == 3U && equalsIgnoreCase(tokens[0], "rtc") &&
+      equalsIgnoreCase(tokens[1], "set-unix")) {
+    std::uint64_t unix_time_s = 0U;
+    if (!parseUnsigned64(tokens[2], unix_time_s)) {
+      return invalidCommand();
+    }
+    command.kind = ServiceConsoleCommandKind::RtcSetUnix;
+    command.unix_time_s = unix_time_s;
+    return command;
   }
 
   if (!equalsIgnoreCase(tokens[0], "rf")) {
