@@ -74,6 +74,27 @@ public:
   }
 };
 
+class QuantizingActuatorSink final : public ClimateActuatorSink {
+public:
+  ClimatePolicyRequest requested{};
+
+  bool apply(const ClimatePolicyRequest& request, std::uint64_t) noexcept override {
+    requested = request;
+    return true;
+  }
+
+  bool applyAndReport(const ClimatePolicyRequest& request, std::uint64_t monotonic_ms,
+                      ClimatePolicyRequest& confirmed_applied) noexcept override {
+    if (!apply(request, monotonic_ms)) {
+      confirmed_applied = {};
+      return false;
+    }
+    confirmed_applied = request;
+    confirmed_applied.exhaust_fan = request.exhaust_fan > 0.0F ? 1.0F : 0.0F;
+    return true;
+  }
+};
+
 class FixedInference final : public ClimateInferenceProvider {
 public:
   bool infer(const ClimateFeatureVector&, ClimatePolicyRequest& output) noexcept override {
@@ -139,6 +160,29 @@ void testMlShadowNeverDrivesSink() {
   assert(same(sink.requests.front(), decision.applied));
 }
 
+void testConfirmedBinaryStateBecomesRuntimeTruth() {
+  ClimateRuntimeController runtime{};
+  FakeInputSource source{};
+  source.input = validInput();
+  source.input.state.measurements.air_temperature_c = {24.0F, true, 0U};
+  source.input.state.measurements.relative_humidity_pct = {75.0F, true, 0U};
+  source.input.state.measurements.outside_temperature_c = {24.0F, true, 0U};
+  source.input.state.measurements.outside_humidity_pct = {50.0F, true, 0U};
+  source.input.targets.air_temperature_c = 24.0F;
+  source.input.targets.relative_humidity_pct = 60.0F;
+  QuantizingActuatorSink sink{};
+  ClimateControlLoop loop(runtime, source, sink);
+  ClimateRuntimeDecision decision{};
+
+  const ClimateLoopResult result = loop.tick(120'000U, decision);
+  assert(result.command_applied);
+  assert(sink.requested.exhaust_fan > 0.0F && sink.requested.exhaust_fan < 1.0F);
+  assert(decision.rule.safe.exhaust_fan > 0.0F && decision.rule.safe.exhaust_fan < 1.0F);
+  assert(near(decision.applied.exhaust_fan, 1.0F));
+  assert(near(loop.previousApplied().exhaust_fan, 1.0F));
+  assert(decision.effective_after.exhaust_fan > 0.6F);
+}
+
 void testRejectedCommandAttemptsOffAndRecoversEstimator() {
   ClimateRuntimeController runtime{};
   FakeInputSource source{};
@@ -200,6 +244,7 @@ int main() {
   testNominalRuleCommandReachesSink();
   testInputFailureFailsClosed();
   testMlShadowNeverDrivesSink();
+  testConfirmedBinaryStateBecomesRuntimeTruth();
   testRejectedCommandAttemptsOffAndRecoversEstimator();
   testDoubleActuatorFailureLatchesFault();
   return 0;
