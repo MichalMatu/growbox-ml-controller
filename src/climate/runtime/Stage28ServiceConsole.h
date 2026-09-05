@@ -17,6 +17,7 @@ public:
   struct Config {
     bool enabled{true};
     const char* firmware_sha{"unknown"};
+    const bool* real_outputs_active{nullptr};
   };
 
   Stage28ServiceConsole(Config config, native::BleClimateScanner& ble,
@@ -44,6 +45,8 @@ private:
   void writeText(const char* text) noexcept;
   void writeFormatted(const char* format, ...) noexcept;
   void printPrompt() noexcept;
+  bool realOutputsActive() const noexcept;
+  const char* outputModeName() const noexcept;
 
   Config config_{};
   native::BleClimateScanner& ble_;
