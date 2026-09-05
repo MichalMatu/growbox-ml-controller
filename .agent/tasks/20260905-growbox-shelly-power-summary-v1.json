@@ -1,0 +1,15 @@
+{
+  "id": "20260905-growbox-shelly-power-summary-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 1024,
+  "command_timeout": 60,
+  "idle_timeout": 30,
+  "task_timeout": 300,
+  "commands": [
+    "python3 - <<'PY'\nimport json\nfrom pathlib import Path\np=Path('/tmp/growbox_shelly_rf_power_calibration_v2.json')\nif not p.exists():\n    raise SystemExit('missing calibration file')\nd=json.loads(p.read_text())\nprint(f\"settle_seconds={d['settle_seconds']:.0f}\")\nprint(f\"baseline_w={d['baseline']['power_median_w']:.3f}\")\nfor name in ('lamp','fan','humidifier'):\n    x=d[name]\n    print(f\"{name} pre_w={x['pre']['power_median_w']:.3f} on_w={x['on']['power_median_w']:.3f} off_w={x['off']['power_median_w']:.3f} delta_on_w={x['delta_on_w']:.3f} delta_off_w={x['delta_off_w']:.3f} agreement_w={x['delta_agreement_w']:.3f} voltage_v={x['on']['voltage_median_v']:.2f}\")\nprint(f\"final_w={d['final']['power_median_w']:.3f}\")\nPY"
+  ]
+}
