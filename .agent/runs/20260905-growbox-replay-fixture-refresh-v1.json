@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260905-growbox-replay-fixture-refresh-v1",
+  "task_digest": "6315ab18c64795cf1b0f490891f08bf520fad6bab5168574daef3eaada1484cb",
+  "idle_timeout": 180,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-05T21:52:39.569795+00:00",
+  "attempt_id": "320eb85d07e2afa472f83574",
+  "daemon_version": "4.18.2",
+  "daemon_pid": 15290,
+  "updated_at": "2026-09-05T21:52:39.569863+00:00",
+  "pid": 15290
+}
