@@ -1,0 +1,18 @@
+{
+  "id": "20260905-growbox-replay-fixture-refresh-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "resources": [],
+  "memory_limit_mb": 4096,
+  "command_timeout": 900,
+  "idle_timeout": 180,
+  "task_timeout": 1800,
+  "commands": [
+    "set -euo pipefail; EXPECTED=3e2e195898c45734f459ac9a8f69dad9891ab4eb; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; PYTHONPATH=. .venv/bin/python tools/ml/generate_climate_replay_fixture.py",
+    "set -euo pipefail; PYTHONPATH=. .venv/bin/python -m pytest tests/test_climate_replay_fixture.py tests/test_climate_runtime.py tests/test_climate_runtime_parity.py -q",
+    "set -euo pipefail; git diff --check; test \"$(git diff --name-only)\" = \"tests/fixtures/climate_runtime_replay.ndjson\"; git add tests/fixtures/climate_runtime_replay.ndjson; git diff --cached --check; test \"$(git diff --cached --name-only)\" = \"tests/fixtures/climate_runtime_replay.ndjson\"",
+    "set -euo pipefail; git commit -m 'Refresh climate replay fixture for AH policy'; git push origin HEAD:mvp/environment-controller; NEW_SHA=$(git rev-parse HEAD); test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$NEW_SHA\"; printf 'REPLAY_FIXTURE_REFRESH_PASS sha=%s\\n' \"$NEW_SHA\""
+  ]
+}
