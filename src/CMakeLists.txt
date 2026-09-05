@@ -9,6 +9,8 @@ idf_component_register(
     "climate/rf433/ClimateRf433EndpointRegistry.cpp"
     "climate/Stage28dOutputBindings.cpp"
     "climate/Stage28dLampSafety.cpp"
+    "climate/Stage28dRfOutputEndpoint.cpp"
+    "climate/Stage28dThermalTestSequence.cpp"
     "climate/ClimateDeterministicFake.cpp"
     "climate/ClimateDiagnostics.cpp"
     "climate/ClimateV6FakeRuntime.cpp"
@@ -118,6 +120,8 @@ set(GROWBOX_RF433_LOOPBACK_SMOKE_PULSE_US "0" CACHE STRING "Stage28 RF433 loopba
 set(GROWBOX_RF433_TX_GPIO "8" CACHE STRING "Stage28 RF433 TX GPIO")
 set(GROWBOX_RF433_RX_GPIO "14" CACHE STRING "Stage28 RF433 RX GPIO")
 set(GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED "1" CACHE STRING "Enable Stage28 primary-serial service console")
+set(GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED "0" CACHE STRING "Enable bounded Stage28 real RF outputs")
+set(GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED "0" CACHE STRING "Enable bounded Gate6 thermal test sequence")
 
 target_compile_definitions(
   ${COMPONENT_LIB}
@@ -149,4 +153,6 @@ target_compile_definitions(
     GROWBOX_RF433_TX_GPIO=${GROWBOX_RF433_TX_GPIO}
     GROWBOX_RF433_RX_GPIO=${GROWBOX_RF433_RX_GPIO}
     GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED=${GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED}
+    GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=${GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED}
+    GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=${GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED}
 )
