@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260905-growbox-python-ah-parity-fix-v3",
   "task_digest": "21f70119c56c4b4aeefa17d7f0aa414eec7bf5b45616daf180b41f0681e4fc21",
-  "idle_timeout": 180,
-  "task_timeout": 1500,
-  "memory_limit_mb": 4096,
-  "started_at": "2026-09-05T21:10:04.615127+00:00",
+  "status": "failed",
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-05T21:10:07.269430+00:00",
   "attempt_id": "9be4210b8794a24f2a4b68e4",
   "daemon_version": "4.18.2",
   "daemon_pid": 77416,
-  "updated_at": "2026-09-05T21:10:04.615278+00:00",
+  "updated_at": "2026-09-05T21:10:07.487504+00:00",
   "pid": 77416
 }
