@@ -90,6 +90,31 @@ The current software-safety baseline for the mint test rig is:
 
 The recovery threshold/hysteresis hold duration for the 28 °C lamp cutoff must remain explicit configuration in Gate 2 rather than being hidden in the RF driver. Automatic physical outputs remain fake-locked until the corresponding software and supervised hardware gates pass.
 
+## Ventilation-effect inference — important control/learning principle
+
+The exhaust fan must not be treated as a generic periodic actuator. Outside of hard safety overrides, it should be requested only when the controller predicts that exchanging air will improve the current state.
+
+The reference sensor topology supports this directly:
+
+- TP357 gives authoritative inside temperature/RH near the canopy;
+- Xiaomi gives intake-air temperature/RH immediately outside the growbox;
+- SCD41 gives inside CO2, while outside CO2 is not measured directly.
+
+For temperature and humidity the controller can compare inside values with intake values before ventilation and then measure the actual response after `fan ON`. This allows it to learn practical effects such as `delta T/min`, `delta RH/min`, response delay and approximate ventilation effectiveness. A high inside RH alone is therefore not sufficient reason to ventilate if the intake air is even more humid; likewise, ventilation should not be used for cooling when intake air is hotter unless another higher-priority condition requires it.
+
+For CO2, the fan response provides indirect information about the effective outside/intake CO2 level. If inside CO2 rises after a controlled `fan OFF -> fan ON` transition, incoming air is effectively supplying more CO2 than the current growbox state; if it falls, incoming air is effectively lower in CO2. Initially this should be represented as an observed ventilation effect such as `delta CO2/min`, not as a falsely precise outside-CO2 concentration. Plant uptake/respiration, mixing, lamp state and other actuator changes can confound the estimate, so learning windows should record those conditions and prefer periods without simultaneous actuator transitions.
+
+The controller should therefore record at least:
+
+- pre-ventilation inside T/RH/CO2 and intake T/RH;
+- fan transition time and OFF/ON duration;
+- `delta T/min`, `delta RH/min`, `delta CO2/min` after fan activation;
+- response delay and stabilization behavior;
+- lamp/humidifier state during the observation window;
+- whether the observed fan effect improved or worsened each controlled variable.
+
+These learned response terms are useful to both deterministic rule arbitration and later ML features. In normal operation, when temperature, humidity/VPD and CO2 are all in an acceptable range, the default exhaust-fan state should be `OFF`. The hard thermal safety rule remains higher priority: at or above the configured thermal trip, lamp OFF and fan ON are required regardless of the learned ventilation-effect estimate.
+
 ## Frozen actuator semantics
 
 - `remote_socket_1` / endpoint 1 -> `ExhaustFan`;
