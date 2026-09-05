@@ -24,7 +24,8 @@ Stage27TelemetryReporter::Stage27TelemetryReporter(native::BleClimateScanner& bl
 
 void Stage27TelemetryReporter::record(
     std::uint64_t now_ms, const ::growbox::climate::ClimateLoopResult& loop_result,
-    const ::growbox::climate::ClimateRuntimeDecision& decision) noexcept {
+    const ::growbox::climate::ClimateRuntimeDecision& decision,
+    const Stage27PhysicalOutputSnapshot& physical_outputs) noexcept {
   native::BleClimateReading tp357{};
   native::BleClimateReading xiaomi{};
   const bool tp357_sampled = ble_.sampleTp357(now_ms, tp357);
@@ -103,6 +104,11 @@ void Stage27TelemetryReporter::record(
   snapshot.applied_dehumidifier = decision.applied.dehumidifier;
   snapshot.applied_co2_doser = decision.applied.co2_doser;
 
+  snapshot.real_outputs_active = physical_outputs.real_outputs_active;
+  snapshot.physical_light_on = physical_outputs.light_on;
+  snapshot.physical_exhaust_on = physical_outputs.exhaust_on;
+  snapshot.physical_humidifier_on = physical_outputs.humidifier_on;
+
   const auto storage_status = storage_logger_.status();
   logRecord(snapshot, storage_status);
   if (storage_logger_ready_) {
@@ -130,12 +136,13 @@ void Stage27TelemetryReporter::logRecord(
       "runtime_status=%u runtime_mode=%u rule_arb=%u rule_safety=%u "
       "applied_heater=%.3f applied_cooler=%.3f applied_fan=%.3f applied_humidifier=%.3f "
       "applied_dehumidifier=%.3f applied_co2=%.3f "
+      "physical_light=%d physical_fan=%d physical_humidifier=%d "
       "storage_backend=%s storage_sd_mounted=%d storage_flash_mounted=%d "
       "storage_sd_mount_errors=%u storage_flash_mount_errors=%u storage_write_errors=%u "
       "storage_queue_drops=%u storage_records_written=%u storage_records_skipped=%u "
       "storage_fallbacks=%u storage_sd_recoveries=%u storage_last_write_ms=%llu "
       "sd_mounted=%d sd_mount_errors=%u sd_write_errors=%u sd_queue_drops=%u "
-      "sd_records_written=%u sd_records_skipped=%u sd_last_write_ms=%llu outputs=fake-locked",
+      "sd_records_written=%u sd_records_skipped=%u sd_last_write_ms=%llu outputs=%s",
       GROWBOX_FIRMWARE_GIT_SHA, static_cast<unsigned long long>(snapshot.uptime_ms),
       snapshot.reset_reason, snapshot.input_sampled, snapshot.io_status, snapshot.heap_internal,
       snapshot.heap_internal_min, snapshot.heap_internal_largest, snapshot.heap_psram,
@@ -163,7 +170,8 @@ void Stage27TelemetryReporter::logRecord(
       static_cast<double>(snapshot.applied_exhaust_fan),
       static_cast<double>(snapshot.applied_humidifier),
       static_cast<double>(snapshot.applied_dehumidifier),
-      static_cast<double>(snapshot.applied_co2_doser),
+      static_cast<double>(snapshot.applied_co2_doser), snapshot.physical_light_on,
+      snapshot.physical_exhaust_on, snapshot.physical_humidifier_on,
       storage::stage27StorageBackendName(storage_status.active_backend), storage_status.sd_mounted,
       storage_status.flash_mounted, storage_status.sd_mount_errors,
       storage_status.flash_mount_errors, storage_status.write_errors, storage_status.queue_drops,
@@ -172,7 +180,8 @@ void Stage27TelemetryReporter::logRecord(
       static_cast<unsigned long long>(storage_status.last_write_ms), storage_status.sd_mounted,
       storage_status.sd_mount_errors, storage_status.write_errors, storage_status.queue_drops,
       storage_status.records_written, storage_status.records_skipped,
-      static_cast<unsigned long long>(storage_status.last_write_ms));
+      static_cast<unsigned long long>(storage_status.last_write_ms),
+      snapshot.real_outputs_active ? "real-bounded" : "fake-locked");
 }
 
 } // namespace growbox::app::climate_io::runtime
