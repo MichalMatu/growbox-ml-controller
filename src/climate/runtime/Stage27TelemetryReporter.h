@@ -12,6 +12,13 @@
 
 namespace growbox::app::climate_io::runtime {
 
+struct Stage27PhysicalOutputSnapshot {
+  bool real_outputs_active{false};
+  bool light_on{false};
+  bool exhaust_on{false};
+  bool humidifier_on{false};
+};
+
 class Stage27TelemetryReporter final {
 public:
   Stage27TelemetryReporter(native::BleClimateScanner& ble, native::Scd41InsideSource& scd41,
@@ -20,7 +27,8 @@ public:
                            bool storage_logger_ready, std::int32_t reset_reason) noexcept;
 
   void record(std::uint64_t now_ms, const ::growbox::climate::ClimateLoopResult& loop_result,
-              const ::growbox::climate::ClimateRuntimeDecision& decision) noexcept;
+              const ::growbox::climate::ClimateRuntimeDecision& decision,
+              const Stage27PhysicalOutputSnapshot& physical_outputs = {}) noexcept;
 
 private:
   void logRecord(const telemetry::Stage27TelemetrySnapshot& snapshot,
