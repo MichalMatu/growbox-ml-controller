@@ -1,9 +1,9 @@
 {
   "version": 1,
   "daemon_version": "4.18.1",
-  "state": "idle",
-  "pid": 34644,
-  "updated_at": "2026-09-05T20:32:04.626196+00:00",
+  "state": "running",
+  "pid": 36437,
+  "updated_at": "2026-09-05T20:32:59.282568+00:00",
   "self_revision": "b0a933e28c31ea5365663fd81d470fb9b9a79654",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -14,7 +14,7 @@
   "task_timeout_default": 1800,
   "task_timeout_max": 21600,
   "memory_limit_mb_default": 4096,
-  "current_task_id": null,
+  "current_task_id": "v4181-e2e-20260905T203231Z-probe-growbox-ml-controller",
   "current_attempt_id": null,
   "current_task_digest": null,
   "repository_id": "growbox-ml-controller",
@@ -23,8 +23,8 @@
   "default_branch": "main",
   "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 34644,
+  "worker_pid": 36437,
   "supervisor_pid": 34531,
-  "last_task_id": "20260905-growbox-fan-path-focused-audit-v4",
+  "active_resources": [],
   "execution_variant": "parallel"
 }
