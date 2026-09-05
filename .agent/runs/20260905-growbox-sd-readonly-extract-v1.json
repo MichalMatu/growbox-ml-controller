@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260905-growbox-sd-readonly-extract-v1",
+  "task_digest": "92fc7370613799d851e5284060368311a450388513b8899ab55ff6619b08952f",
+  "idle_timeout": 3600,
+  "task_timeout": 10800,
+  "memory_limit_mb": 6144,
+  "started_at": "2026-09-05T16:35:48.341154+00:00",
+  "attempt_id": "22451bcf16f64667d27af4a6",
+  "daemon_version": "4.18.0",
+  "daemon_pid": 32256,
+  "updated_at": "2026-09-05T16:35:48.341245+00:00",
+  "pid": 32256
+}
