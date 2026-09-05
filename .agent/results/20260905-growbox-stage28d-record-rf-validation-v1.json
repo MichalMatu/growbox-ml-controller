@@ -1,0 +1,60 @@
+{
+  "id": "20260905-growbox-stage28d-record-rf-validation-v1",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "started_at": "2026-09-05T04:58:35.514834+00:00",
+  "command_timeout": 600,
+  "edits": {},
+  "commands": [
+    {
+      "command": "git fetch -q origin agent-control && git show origin/agent-control:.agent/payloads/20260905-growbox-stage28d-record-rf-validation-v1/run.sh > /tmp/stage28d-record-rf-validation-v1.sh && bash /tmp/stage28d-record-rf-validation-v1.sh",
+      "exit_code": 0,
+      "output": "HEAD is now at 7f8ed858 Point Local Agent bootstrap to packaged release version\n| lamp | `remote_socket_2` | pending | 235030016 (`0x0E024600`) | 16926208 (`0x01024600`) | 32 | 2 | 560 us | 10 | physically validated with 560 us / repeat 10 |\n| fan | `remote_socket_1` | 1 | 906118656 (`0x36024600`) | 1040336384 (`0x3E024600`) | 32 | 2 | 560 us | 10 | already physically validated with 575 us / repeat 10 |\n| humidifier | `remote_socket_3` | pending | 637683200 (`0x26024600`) | 771900928 (`0x2E024600`) | 32 | 2 | 560 us | 10 | physically validated with 560 us / repeat 10 |\n- lamp / `remote_socket_2`: `560 us`, repeat `10`; local evidence task `20260905-growbox-stage28d-manual-rf-lamp-v2`; physical ON/OFF confirmed by the operator;\n- fan / `remote_socket_1`: `575 us`, repeat `10`; local evidence task `20260905-growbox-stage28d-manual-rf-fan-v1`; physical ON/OFF confirmed by the operator;\n- humidifier / `remote_socket_3`: `560 us`, repeat `10`; local evidence task `20260905-growbox-stage28d-manual-rf-humidifier-v1`; physical ON/OFF confirmed by the operator.\nRecording an RF code does not authorize unattended mains-load control. Local RF TX completion or local self-RX is not physical load-state acknowledgement. Runtime outputs remain fake-locked until the later explicit physical-output gate qualifies semantic role mapping and real actuation.\n[agent-work 1d60eec2] Record Stage28D physical RF validation\n 1 file changed, 14 insertions(+), 14 deletions(-)\nSTAGE28D_RF_PHYSICAL_VALIDATION_RECORDED commit=1d60eec27bc2d5b2459eec11ff84b5ecc64cb16d parent=7f8ed8588408fccdfcd2ed8b3531f40f530bb02f lamp=560x10 fan=575x10 humidifier=560x10 physical_observation=confirmed runtime_outputs=fake-locked\n",
+      "elapsed_seconds": 1.888,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 5.47,
+      "output_policy": "stream",
+      "captured_output_chars": 1706,
+      "output_truncated": false,
+      "current_rss_mb": 5.47,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 1.888
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.102
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.076
+  },
+  "finished_at": "2026-09-05T04:58:39.016104+00:00",
+  "task_digest": "7f2636973a0cf8416275d36654b51ebafc9d3d970b35132949538c111f3523a3",
+  "idle_timeout": 180,
+  "task_timeout": 900,
+  "memory_limit_mb": 4096,
+  "attempt_id": "cdbef50612fc5b1d80639231",
+  "daemon_version": "4.17.0"
+}
