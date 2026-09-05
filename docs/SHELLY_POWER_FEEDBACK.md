@@ -27,9 +27,61 @@ Verified read-only RPC endpoints:
 
 At the qualification read the relay was OFF and the plug reported `0.0 W` at approximately `244.4 V`. These values are evidence of the read-only probe only, not fixed operating values.
 
+## RPC usage from the Local Agent host
+
+Read device identity:
+
+```sh
+curl -fsS --max-time 5 http://192.168.0.16/rpc/Shelly.GetDeviceInfo
+```
+
+Read relay state and power telemetry:
+
+```sh
+curl -fsS --max-time 5 'http://192.168.0.16/rpc/Switch.GetStatus?id=0'
+```
+
+The most important response fields are:
+
+- `output`: physical Shelly relay state;
+- `apower`: active power in watts;
+- `voltage`: mains voltage;
+- `current`: current in amperes;
+- `aenergy.total`: accumulated consumed energy;
+- `temperature.tC`: Shelly internal temperature.
+
+Control the Shelly relay through the official `Switch.Set` RPC method:
+
+```sh
+curl -fsS -X POST \
+  -H 'Content-Type: application/json' \
+  -d '{"id":1,"method":"Switch.Set","params":{"id":0,"on":true},"tag":"growbox"}' \
+  http://192.168.0.16/rpc
+```
+
+Use `"on":false` for OFF. After every write, read `Switch.GetStatus?id=0` and verify the returned `output` state instead of assuming the write succeeded.
+
+Do not use `Switch.Toggle` in automated control because an explicit requested state is safer and deterministic.
+
 ## Intended growbox role
 
-The Shelly can be installed upstream of the current growbox loads and used as an independent power-feedback channel. During actuator calibration, measure the stable power delta for:
+The Shelly can be installed upstream of the current growbox loads and used as an independent power-feedback channel. It can remain upstream of a power strip: individual loads can still be identified from characteristic changes in total active power.
+
+The core measurement is a delta, not an absolute total:
+
+`device power contribution ~= stable power after command - stable power before command`
+
+For an ON transition:
+
+`delta_on_w = median(apower_after_on) - median(apower_before_on)`
+
+For the matching OFF transition:
+
+`delta_off_w = median(apower_before_off) - median(apower_after_off)`
+
+The ON and OFF deltas should be similar in magnitude. Agreement between both directions increases confidence that the RF-controlled load really changed state.
+
+During actuator calibration, measure the stable power delta for:
 
 - all controlled loads OFF (baseline);
 - lamp only ON;
@@ -37,13 +89,29 @@ The Shelly can be installed upstream of the current growbox loads and used as an
 - humidifier only ON;
 - useful combinations of the above.
 
-The resulting power signatures can provide physical feedback after an RF command. For example, an RF `lamp ON` transmission followed by no expected increase in Shelly active power is evidence that the physical load probably did not change state. Local RF TX completion alone must not be treated as physical acknowledgement.
+Use multiple Shelly samples before and after each transition, allow a short settling interval, and use a median/trimmed estimate rather than one instantaneous reading. Record mains voltage with each calibration because power can vary with supply voltage.
+
+The resulting characteristic wattage ranges can provide physical feedback after an RF command. For example, an RF `lamp ON` transmission followed by the calibrated positive lamp power delta is strong evidence that the lamp physically turned on. An RF TX completion followed by no expected power change is evidence of a failed or ineffective physical state transition.
 
 The power-feedback path should therefore be modeled as:
 
-`requested actuator state -> RF command -> expected power signature -> Shelly measured power -> physical-state confidence / anomaly`
+`requested actuator state -> RF command -> expected power delta/signature -> Shelly measured delta -> physical-state confidence / anomaly`
 
 Do not require exact wattage equality. Use calibrated ranges/tolerances and settling time because mains voltage, lamp driver behavior, fan load and humidifier duty can vary.
+
+A shared power strip is acceptable. If other constant loads are present, they become part of the baseline and cancel out in the before/after delta. If another load changes during the observation window, mark that sample ambiguous and do not use it as actuator-state confirmation.
+
+## Calibration sequence
+
+The safe reference sequence is:
+
+1. ensure the Shelly master is ON and read a stable baseline;
+2. send explicit RF OFF to lamp, fan and humidifier, then measure the all-controlled-loads-OFF baseline;
+3. for each device separately: collect pre-transition samples, send RF ON, wait for settling, collect post-ON samples, send RF OFF, wait for settling, collect post-OFF samples;
+4. derive characteristic ON and OFF power deltas and an initial tolerance band;
+5. end with lamp OFF, fan OFF and humidifier OFF, then record the final Shelly status.
+
+Never intentionally switch more than one actuator during a single calibration transition because that would make attribution ambiguous.
 
 ## Master-switch role
 
@@ -55,4 +123,4 @@ The normal high-temperature response remains actuator-specific:
 
 A master cutoff that removes power from both the lamp and the exhaust fan would defeat active cooling, and a master cutoff that also powers down the ESP32 controller would remove telemetry/control. Therefore master OFF is reserved for higher-level fault handling such as an unsafe/unexplained power signature, failed actuator shutdown, overload/fault conditions, or an explicit emergency action.
 
-Before enabling automatic Shelly relay writes, document exactly which loads and controller components are downstream of the plug and qualify the fail-safe behavior separately. Until that gate is explicitly opened, Shelly integration should remain read-only power telemetry.
+Before enabling automatic Shelly relay writes as a production safety action, document exactly which loads and controller components are downstream of the plug and qualify the fail-safe behavior separately. Shelly writes used during supervised calibration must be explicit and verified by readback.
