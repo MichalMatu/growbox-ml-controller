@@ -54,6 +54,14 @@ bool Stage28dRfOutputEndpoint::write(ClimateEndpointId endpoint, float normalize
   return applyBinary(endpoint, effective_on, monotonic_ms);
 }
 
+bool Stage28dRfOutputEndpoint::forceOff(ClimateEndpointId endpoint,
+                                       std::uint64_t monotonic_ms) noexcept {
+  if (!config_.enabled || endpoint == kScheduledLightEndpoint) {
+    return false;
+  }
+  return applyBinary(endpoint, false, monotonic_ms, true);
+}
+
 bool Stage28dRfOutputEndpoint::writeScheduledLight(bool on, std::uint64_t monotonic_ms) noexcept {
   if (!config_.enabled) {
     return false;
