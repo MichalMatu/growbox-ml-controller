@@ -70,6 +70,14 @@ struct Stage27TelemetrySnapshot {
   float applied_humidifier = 0.0F;
   float applied_dehumidifier = 0.0F;
   float applied_co2_doser = 0.0F;
+
+  // Physical-output observability. These fields describe the RF endpoint's
+  // internally confirmed transmitted state, not a direct load acknowledgement.
+  // Shelly power feedback remains the external physical confirmation channel.
+  bool real_outputs_active = false;
+  bool physical_light_on = false;
+  bool physical_exhaust_on = false;
+  bool physical_humidifier_on = false;
 };
 
 } // namespace growbox::app::climate_io::telemetry
