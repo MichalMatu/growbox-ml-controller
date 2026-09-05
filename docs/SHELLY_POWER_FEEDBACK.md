@@ -113,6 +113,36 @@ The safe reference sequence is:
 
 Never intentionally switch more than one actuator during a single calibration transition because that would make attribution ambiguous.
 
+## First measured power signatures — 2026-09-05
+
+A supervised Local Agent calibration was completed successfully with the Shelly master ON and the three RF loads exercised one at a time. The measurement sequence used multiple samples and median active power before and after each transition.
+
+Observed all-controlled-loads-OFF baseline:
+
+- `2.2 W` median;
+- about `243.8 V` mains during baseline;
+- final baseline after all tests returned to `2.2 W` exactly within measurement resolution.
+
+Observed characteristic signatures:
+
+| actuator | pre/OFF median | ON median | ON delta | OFF delta | observed mains |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| lamp | 2.2 W | 99.3 W | +97.1 W | -97.1 W | about 243.4 V |
+| exhaust fan | 2.2 W | 5.4 W | +3.2 W | -3.2 W | about 244.1 V |
+| humidifier | 2.2 W | 17.6 W | +15.4 W | -15.4 W | about 244.1 V |
+
+The ON and OFF deltas matched exactly for all three devices in this first calibration, which is strong evidence that the individual RF transitions corresponded to physical load changes measured independently by Shelly.
+
+Initial reference signatures are therefore:
+
+- lamp: approximately `97.1 W` contribution;
+- exhaust fan: approximately `3.2 W` contribution;
+- humidifier: approximately `15.4 W` contribution.
+
+Do not yet freeze ultra-tight production thresholds from this single calibration. Repeat measurements under different mains voltage and after warm-up, then derive tolerance bands from observed variation. Until that repeat dataset exists, treat these values as strong reference centers rather than exact constants.
+
+The calibration ended safely with lamp OFF, fan OFF and humidifier OFF; the Shelly master remained ON and final measured power returned to the `2.2 W` baseline.
+
 ## Master-switch role
 
 The Shelly relay may also be used as an emergency master cutoff, but it is not the normal thermal-control mechanism.
