@@ -1,9 +1,0 @@
-{
-  "id": "20260905-growbox-gate3-time-observability-verify-v1",
-  "status": "failed",
-  "failure_reason": "invalid_task_file",
-  "started_at": null,
-  "finished_at": "2026-09-05T06:45:21.855740+00:00",
-  "daemon_version": "4.17.0",
-  "error": "ValueError: workflow_policy 'efficient-verification-v1' requires structured stages; commands are not allowed"
-}
