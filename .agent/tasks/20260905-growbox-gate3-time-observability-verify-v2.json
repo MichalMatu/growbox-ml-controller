@@ -1,0 +1,31 @@
+{
+  "id": "20260905-growbox-gate3-time-observability-verify-v2",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 6144,
+  "command_timeout": 900,
+  "idle_timeout": 600,
+  "task_timeout": 7200,
+  "workflow_policy": "efficient-verification-v1",
+  "steps": [
+    {
+      "name": "focused-gate3-verification",
+      "command": "set -euo pipefail; EXPECTED=8710bf127ad895e262f604e1b4c59ea11b760667; git fetch -q origin mvp/environment-controller; git reset --hard $EXPECTED >/dev/null; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; export CMAKE_BUILD_PARALLEL_LEVEL=1; rm -rf build/host-gate3-verify; cmake -S test/host -B build/host-gate3-verify -DCMAKE_BUILD_TYPE=Debug; cmake --build build/host-gate3-verify --target stage27_native_inputs_tests europe_warsaw_time_tests stage27_schedule_profile_tests climate_observability_metrics_tests stage28_service_console_tests --parallel 1; ./build/host-gate3-verify/stage27_native_inputs_tests; ./build/host-gate3-verify/europe_warsaw_time_tests; ./build/host-gate3-verify/stage27_schedule_profile_tests; ./build/host-gate3-verify/climate_observability_metrics_tests; ./build/host-gate3-verify/stage28_service_console_tests; git diff --check; printf 'GATE3_FOCUSED_COMPLETE commit=%s outputs=fake-locked rf_tx=0\\n' \"$EXPECTED\"",
+      "verification_level": "focused",
+      "timeout": 1200,
+      "output_policy": "stream"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "full-quality-gate",
+      "command": "set -euo pipefail; EXPECTED=8710bf127ad895e262f604e1b4c59ea11b760667; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; export CMAKE_BUILD_PARALLEL_LEVEL=1; bash scripts/quality_gate_push.sh; git diff --check; test -z \"$(git status --porcelain)\"; printf 'GATE3_VERIFY_COMPLETE commit=%s outputs=fake-locked rf_tx=0\\n' \"$EXPECTED\"",
+      "verification_level": "full",
+      "timeout": 5400,
+      "output_policy": "stream"
+    }
+  ]
+}
