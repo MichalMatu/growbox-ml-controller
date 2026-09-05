@@ -43,8 +43,11 @@ fi
 
 if [[ "${SKIP_IDF_BUILD:-}" != "1" ]]; then
   bash "${ROOT}/scripts/idf_gate_build.sh"
+  IDF_GATE_BUILD_DIR="build/idf-gate-real-inputs" \
+    IDF_GATE_APP_MODE="climate-v6-real-inputs" \
+    bash "${ROOT}/scripts/idf_gate_build.sh"
 else
-  echo "==> idf build skipped (SKIP_IDF_BUILD=1)"
+  echo "==> idf builds skipped (SKIP_IDF_BUILD=1)"
 fi
 
 echo "quality gate (pre-push): OK"
