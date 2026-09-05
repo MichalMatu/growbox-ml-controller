@@ -1,0 +1,31 @@
+{
+  "id": "20260905-growbox-gate6-integration-verify-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 6144,
+  "command_timeout": 1200,
+  "idle_timeout": 600,
+  "task_timeout": 7200,
+  "workflow_policy": "efficient-verification-v1",
+  "steps": [
+    {
+      "name": "focused-gate6-integration",
+      "command": "set -euo pipefail; EXPECTED=f1aafc2680482a52016596e9f6bb3502ce99c127; git fetch -q origin mvp/environment-controller; git reset --hard $EXPECTED >/dev/null; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; CXX=${CXX:-c++}; $CXX -std=c++17 -Wall -Wextra -Wpedantic -Isrc -Ilib/environment_control/src test/test_stage28d_rf_output_endpoint/test_main.cpp src/climate/Stage28dRfOutputEndpoint.cpp src/climate/Stage28dOutputBindings.cpp src/climate/ClimateSemanticOutput.cpp src/climate/rf433/ClimateRf433EndpointRegistry.cpp -o /tmp/stage28d_rf_output_endpoint_tests; /tmp/stage28d_rf_output_endpoint_tests; $CXX -std=c++17 -Wall -Wextra -Wpedantic -Isrc test/test_stage28d_thermal_sequence/test_main.cpp src/climate/Stage28dThermalTestSequence.cpp -o /tmp/stage28d_thermal_sequence_tests; /tmp/stage28d_thermal_sequence_tests; git diff --check; printf 'GATE6_INTEGRATION_FOCUSED_PASS commit=%s real_outputs=0 rf_tx=0\\n' \"$EXPECTED\"",
+      "verification_level": "focused",
+      "timeout": 1200,
+      "output_policy": "stream"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "full-quality-gate",
+      "command": "set -euo pipefail; EXPECTED=f1aafc2680482a52016596e9f6bb3502ce99c127; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; export CMAKE_BUILD_PARALLEL_LEVEL=1; bash scripts/quality_gate_push.sh; git diff --check; test -z \"$(git status --porcelain)\"; printf 'GATE6_INTEGRATION_VERIFY_COMPLETE commit=%s real_outputs=0 rf_tx=0\\n' \"$EXPECTED\"",
+      "verification_level": "full",
+      "timeout": 5400,
+      "output_policy": "stream"
+    }
+  ]
+}
