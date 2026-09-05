@@ -15,6 +15,7 @@ public:
 
   bool begin(NativeI2cBus& bus) noexcept;
   bool sample(std::uint64_t monotonic_ms, ClimateWallClockSnapshot& output) noexcept override;
+  bool setUnixTimeUtc(std::uint64_t unix_time_s) noexcept;
 
   bool available() const noexcept {
     return available_;
@@ -27,6 +28,12 @@ public:
   }
   std::uint32_t readErrorCount() const noexcept {
     return read_error_count_;
+  }
+  std::uint32_t successfulWriteCount() const noexcept {
+    return successful_write_count_;
+  }
+  std::uint32_t writeErrorCount() const noexcept {
+    return write_error_count_;
   }
   std::uint32_t untrustedReadCount() const noexcept {
     return untrusted_read_count_;
@@ -47,6 +54,8 @@ private:
   bool trusted_ = false;
   std::uint32_t successful_read_count_ = 0U;
   std::uint32_t read_error_count_ = 0U;
+  std::uint32_t successful_write_count_ = 0U;
+  std::uint32_t write_error_count_ = 0U;
   std::uint32_t untrusted_read_count_ = 0U;
   std::uint64_t last_successful_read_ms_ = 0U;
   std::uint64_t last_trusted_read_ms_ = 0U;
