@@ -6,6 +6,8 @@ try:
 except ImportError:
     print("pyserial is required: python3 -m pip install pyserial", file=sys.stderr); raise SystemExit(2)
 FILE_RE=re.compile(r"sdlog_file name=([0-9A-Fa-f]{8}\.JL) size=(\d+)")
+CHUNK_BYTES=256
+CHUNK_RETRIES=8
 CHUNK_RE=re.compile(r"sdlog_chunk name=([0-9A-Fa-f]{8}\.JL) offset=(\d+) size=(\d+) file_size=(\d+) eof=(\d) crc32=([0-9A-Fa-f]{8}) b64=(\S*)")
 
 def choose_port(explicit):
@@ -18,9 +20,15 @@ def choose_port(explicit):
 
 class Console:
     def __init__(self, port, baud, timeout):
-        self.ser=serial.Serial(port, baudrate=baud, timeout=0.2, write_timeout=2)
+        self.ser=serial.Serial()
+        self.ser.port=port; self.ser.baudrate=baud; self.ser.timeout=0.2; self.ser.write_timeout=2
+        try:
+            self.ser.dtr=False; self.ser.rts=False
+        except Exception:
+            pass
+        self.ser.open()
         self.deadline=timeout
-        time.sleep(0.25); self.ser.reset_input_buffer()
+        time.sleep(2.5); self.ser.reset_input_buffer()
     def command_lines(self, command, terminal_prefix):
         self.ser.write((command+'\n').encode()); self.ser.flush(); end=time.monotonic()+self.deadline; lines=[]
         while time.monotonic()<end:
@@ -43,16 +51,33 @@ class Console:
             if m: out.append((m.group(1),int(m.group(2))))
         return out
     def chunk(self,name,offset,length):
-        lines=self.command_lines(f'sdlog read {name} {offset} {length}','sdlog_chunk')
-        for line in reversed(lines):
-            m=CHUNK_RE.fullmatch(line)
-            if m:
-                data=base64.b64decode(m.group(7),validate=True)
-                if len(data)!=int(m.group(3)): raise RuntimeError('chunk size mismatch')
-                if (zlib.crc32(data)&0xffffffff)!=int(m.group(6),16): raise RuntimeError('chunk CRC32 mismatch')
-                if int(m.group(2))!=offset: raise RuntimeError('chunk offset mismatch')
+        last_error='missing sdlog_chunk response'
+        for attempt in range(1,CHUNK_RETRIES+1):
+            try:
+                lines=self.command_lines(f'sdlog read {name} {offset} {length}','sdlog_chunk')
+            except TimeoutError as exc:
+                last_error=str(exc)
+                time.sleep(0.05)
+                continue
+            for line in reversed(lines):
+                m=CHUNK_RE.fullmatch(line)
+                if not m:
+                    continue
+                try:
+                    data=base64.b64decode(m.group(7),validate=True)
+                    if len(data)!=int(m.group(3)): raise ValueError('chunk size mismatch')
+                    if (zlib.crc32(data)&0xffffffff)!=int(m.group(6),16): raise ValueError('chunk CRC32 mismatch')
+                    if int(m.group(2))!=offset: raise ValueError('chunk offset mismatch')
+                except Exception as exc:
+                    last_error=str(exc)
+                    break
+                if attempt>1:
+                    print(f'recovered chunk {name} offset={offset} attempt={attempt}',file=sys.stderr)
                 return data,int(m.group(4)),bool(int(m.group(5)))
-        raise RuntimeError('missing sdlog_chunk response')
+            else:
+                last_error='missing/garbled sdlog_chunk response'
+            time.sleep(0.05)
+        raise RuntimeError(f'{name}: chunk offset={offset} failed after {CHUNK_RETRIES} attempts: {last_error}')
 
 def pull(console,name,expected_size,outdir):
     os.makedirs(outdir,exist_ok=True); partial=os.path.join(outdir,name+'.partial'); final=os.path.join(outdir,name)
@@ -61,7 +86,7 @@ def pull(console,name,expected_size,outdir):
     mode='ab' if offset else 'wb'
     with open(partial,mode) as f:
         while offset<expected_size:
-            data,file_size,eof=console.chunk(name,offset,min(384,expected_size-offset))
+            data,file_size,eof=console.chunk(name,offset,min(CHUNK_BYTES,expected_size-offset))
             if file_size<expected_size: raise RuntimeError(f'{name}: board size shrank {file_size} < {expected_size}')
             if not data: raise RuntimeError(f'{name}: zero-length chunk at {offset}')
             f.write(data); f.flush(); os.fsync(f.fileno()); offset+=len(data)
