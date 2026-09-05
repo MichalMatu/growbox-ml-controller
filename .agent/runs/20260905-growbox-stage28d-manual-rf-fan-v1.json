@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260905-growbox-stage28d-manual-rf-fan-v1",
+  "task_digest": "8fbd436d0498ac5763213dcd0c0827be31e0b7b6ed1c7e1edf6017a7927713c1",
+  "idle_timeout": 180,
+  "task_timeout": 900,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-05T04:55:07.285374+00:00",
+  "attempt_id": "efab79891b45f0b517b58e42",
+  "daemon_version": "4.17.0",
+  "daemon_pid": 17472,
+  "updated_at": "2026-09-05T04:55:07.285480+00:00",
+  "pid": 17472
+}
