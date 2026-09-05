@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260905-growbox-gate6-hardening-verify-v1",
+  "task_digest": "810ea7785c5dfb01cd621fc4aeda762e4c135fa31f3a21e6afdc4e228a4dbbd6",
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "memory_limit_mb": 6144,
+  "started_at": "2026-09-05T07:26:51.300358+00:00",
+  "attempt_id": "3fa5a9c04c81a2078534ce7f",
+  "daemon_version": "4.17.0",
+  "daemon_pid": 32279,
+  "updated_at": "2026-09-05T07:26:51.300510+00:00",
+  "pid": 32279
+}
