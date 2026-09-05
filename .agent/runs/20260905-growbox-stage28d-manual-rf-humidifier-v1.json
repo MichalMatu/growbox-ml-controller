@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260905-growbox-stage28d-manual-rf-humidifier-v1",
+  "task_digest": "c4a88c0c569626c3d8d56d513c6970e59132af3bbfc96d7be580389bdcdfc0fd",
+  "idle_timeout": 180,
+  "task_timeout": 900,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-05T04:56:46.720556+00:00",
+  "attempt_id": "e0a07b2cfc60bed72d4be85c",
+  "daemon_version": "4.17.0",
+  "daemon_pid": 18978,
+  "updated_at": "2026-09-05T04:56:46.720711+00:00",
+  "pid": 18978
+}
