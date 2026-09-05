@@ -1,6 +1,7 @@
 #include "climate/runtime/Stage28ServiceConsole.h"
 
 #include "climate/rf433/Rf433HardwareConfig.h"
+#include "climate/runtime/EuropeWarsawTime.h"
 
 #include <driver/uart.h>
 #include <esp_heap_caps.h>
@@ -62,9 +63,6 @@ bool Stage28ServiceConsole::begin() noexcept {
     return false;
   }
 
-  // Use the configured primary console UART driver for service-console RX/TX.
-  // Normal ESP-IDF logging remains on its existing primary logger transport.
-  // Direct UART I/O avoids relying on newlib stdin/stdout routing on CrowPanel.
   if (!uart_is_driver_installed(kServiceConsoleUart)) {
     const esp_err_t install_result =
         uart_driver_install(kServiceConsoleUart, kServiceConsoleRxBufferBytes,
@@ -160,6 +158,9 @@ void Stage28ServiceConsole::processLine(std::uint64_t now_ms) noexcept {
   case ServiceConsoleCommandKind::RfReceive:
     handleRfReceive(command);
     return;
+  case ServiceConsoleCommandKind::RtcSetUnix:
+    handleRtcSetUnix(command, now_ms);
+    return;
   case ServiceConsoleCommandKind::Invalid:
     writeText("error: unknown/invalid command; type 'help'\r\n");
     return;
@@ -172,10 +173,12 @@ void Stage28ServiceConsole::printHelp() noexcept {
   writeText("  1 | status                       firmware/runtime/heap/RF status\r\n");
   writeText("  2 | sensors                      SCD41, TP357, Xiaomi and RTC snapshot\r\n");
   writeText("  3 | rf | rf list                 list known RF433 devices/codes\r\n");
+  writeText("  rtc set-unix <epoch>             set DS3231 from UTC Unix seconds\r\n");
   writeText("  rf lamp on|off                   manual lamp socket transmit\r\n");
   writeText("  rf fan on|off                    manual fan socket transmit\r\n");
   writeText("  rf humidifier on|off             manual humidifier socket transmit\r\n");
   writeText("  rf rx [50..5000]                 capture/decode one RF frame\r\n");
+  writeText("RTC stores UTC; lighting schedule converts UTC to Europe/Warsaw.\r\n");
   writeText("RF transmit commands require the RF diagnostics transport to be enabled.\r\n");
   writeText("Manual TX is not physical load-state acknowledgement.\r\n");
 }
@@ -256,13 +259,25 @@ void Stage28ServiceConsole::printSensors(std::uint64_t now_ms) noexcept {
                    static_cast<unsigned long>(ble_.xiaomiRejectedCount()));
   }
 
+  EuropeWarsawLocalTime local{};
+  const bool local_valid = rtc.valid && resolveEuropeWarsawLocalTime(rtc.unix_time_s, local);
   writeFormatted("  rtc sampled=%d available=%d trusted=%d unix_time_s=%llu reads=%lu errors=%lu "
-                 "untrusted=%lu\r\n",
+                 "writes=%lu write_errors=%lu untrusted=%lu local_valid=%d",
                  rtc_sampled, clock_.available(), rtc.valid && clock_.trusted(),
                  static_cast<unsigned long long>(rtc.unix_time_s),
                  static_cast<unsigned long>(clock_.successfulReadCount()),
                  static_cast<unsigned long>(clock_.readErrorCount()),
-                 static_cast<unsigned long>(clock_.untrustedReadCount()));
+                 static_cast<unsigned long>(clock_.successfulWriteCount()),
+                 static_cast<unsigned long>(clock_.writeErrorCount()),
+                 static_cast<unsigned long>(clock_.untrustedReadCount()), local_valid);
+  if (local_valid) {
+    writeFormatted(" local=%04u-%02u-%02uT%02u:%02u:%02u offset_s=%ld dst=%d",
+                   static_cast<unsigned>(local.year), static_cast<unsigned>(local.month),
+                   static_cast<unsigned>(local.day), static_cast<unsigned>(local.hour),
+                   static_cast<unsigned>(local.minute), static_cast<unsigned>(local.second),
+                   static_cast<long>(local.utc_offset_seconds), local.daylight_saving);
+  }
+  writeText("\r\n");
 }
 
 void Stage28ServiceConsole::printRfList() noexcept {
@@ -328,6 +343,50 @@ void Stage28ServiceConsole::handleRfReceive(const ServiceConsoleCommand& command
                  static_cast<unsigned long>(evidence.decoded.frame.code),
                  evidence.decoded.frame.bit_length, evidence.decoded.frame.protocol,
                  evidence.decoded.estimated_pulse_us, evidence.decoded.observed_repeats);
+}
+
+void Stage28ServiceConsole::handleRtcSetUnix(const ServiceConsoleCommand& command,
+                                             std::uint64_t now_ms) noexcept {
+  if (!clock_.setUnixTimeUtc(command.unix_time_s)) {
+    writeFormatted("rtc_set_utc ok=0 requested_unix_s=%llu reason=write_failed\r\n",
+                   static_cast<unsigned long long>(command.unix_time_s));
+    return;
+  }
+
+  ClimateWallClockSnapshot readback{};
+  if (!clock_.sample(now_ms, readback) || !readback.valid) {
+    writeFormatted("rtc_set_utc ok=0 requested_unix_s=%llu reason=readback_untrusted\r\n",
+                   static_cast<unsigned long long>(command.unix_time_s));
+    return;
+  }
+
+  const std::uint64_t delta_s = readback.unix_time_s >= command.unix_time_s
+                                    ? readback.unix_time_s - command.unix_time_s
+                                    : command.unix_time_s - readback.unix_time_s;
+  if (delta_s > 1U) {
+    writeFormatted("rtc_set_utc ok=0 requested_unix_s=%llu readback_unix_s=%llu delta_s=%llu "
+                   "reason=readback_mismatch\r\n",
+                   static_cast<unsigned long long>(command.unix_time_s),
+                   static_cast<unsigned long long>(readback.unix_time_s),
+                   static_cast<unsigned long long>(delta_s));
+    return;
+  }
+
+  EuropeWarsawLocalTime local{};
+  const bool local_valid = resolveEuropeWarsawLocalTime(readback.unix_time_s, local);
+  writeFormatted("rtc_set_utc ok=1 requested_unix_s=%llu readback_unix_s=%llu delta_s=%llu "
+                 "trusted=1 local_valid=%d",
+                 static_cast<unsigned long long>(command.unix_time_s),
+                 static_cast<unsigned long long>(readback.unix_time_s),
+                 static_cast<unsigned long long>(delta_s), local_valid);
+  if (local_valid) {
+    writeFormatted(" local=%04u-%02u-%02uT%02u:%02u:%02u offset_s=%ld dst=%d",
+                   static_cast<unsigned>(local.year), static_cast<unsigned>(local.month),
+                   static_cast<unsigned>(local.day), static_cast<unsigned>(local.hour),
+                   static_cast<unsigned>(local.minute), static_cast<unsigned>(local.second),
+                   static_cast<long>(local.utc_offset_seconds), local.daylight_saving);
+  }
+  writeText("\r\n");
 }
 
 void Stage28ServiceConsole::writeText(const char* text) noexcept {
