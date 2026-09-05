@@ -32,7 +32,7 @@ When starting work on this repository in a new chat/session:
 5. When exact daemon source identity matters, compare `.agent/status/daemon.json:self_revision` with `MichalMatu/local-agent/main`; do not infer synchronization from the version string alone.
 6. Use this repository's own `agent-control` branch for Local Agent tasks. Never send Growbox tasks through another repository's control branch.
 7. Verify `.agent/binding.json` on `agent-control` matches the repository identity above before queueing work when binding compatibility matters.
-8. Submit immutable task requests under `.agent/tasks/<task-id>.json` on `agent-control`, include exactly `"agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5"`, declare `resources`, and set `work_branch` explicitly whenever the task must run on a non-default branch such as `mvp/environment-controller`.
+8. For local execution, submit immutable task requests under `.agent/tasks/<task-id>.json` on `agent-control`, include exactly `"agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5"`, declare `resources`, and set `work_branch` explicitly whenever the task must run on a non-default branch such as `mvp/environment-controller`.
 9. Follow execution through `.agent/runs/<task-id>.json` and `.agent/status/daemon.json`.
 10. Read the terminal result from `.agent/results/<task-id>.json` before reporting completion.
 11. Prefer remote run/status/result evidence over asking the user to copy local terminal logs when Local Agent can provide the state directly.
@@ -77,45 +77,13 @@ Rules:
 
 Use the narrowest meaningful verification while editing, then one broad final gate. Do not repeatedly run the complete suite after every small edit.
 
-### Hybrid direct-GitHub + Local Agent workflow
+### Direct GitHub work and local execution
 
-Direct GitHub source editing is an approved planner path when it reduces overhead. It does not replace Local Agent verification for executable changes.
+Use an available GitHub tool with write permission for bounded source/configuration/documentation changes when the exact diff and relevant CI can verify the outcome. A commit proves publication, not successful execution. Report the exact commit and completed checks. Do not create an artificial Local Agent task when GitHub evidence already provides the required verification.
 
-Prefer a direct GitHub commit for:
+Use Local Agent for Mac command execution, local builds/tests, device access and machine-specific evidence. A hybrid flow may edit through GitHub and run a read-only local verification task for the exact committed SHA; verify that SHA explicitly in an early stage (`expected_head` is not a supported task field). Check current daemon/run evidence before a direct write and avoid racing a local task that is modifying the same branch. Follow this repository's branch policy.
 
-- documentation/handoff changes;
-- small isolated code changes with an exact clear replacement;
-- small configuration/build metadata changes;
-- changes that are awkward to encode as a task patch but easy to review as one remote commit.
-
-Prefer Local Agent to perform the edit when:
-
-- many files must change together;
-- local search/refactoring/generation tools are useful;
-- the implementation needs tight edit/compile/test iteration;
-- the change is large enough that a direct GitHub sequence would create unnecessary intermediate commits.
-
-Before any direct GitHub write to the work branch:
-
-1. fetch fresh `.agent/status/daemon.json` and ensure no conflicting task is active;
-2. fetch the current remote work-branch HEAD;
-3. write product/source changes only to the work branch, never to `agent-control`;
-4. record the returned commit SHA;
-5. do not allow a direct remote edit to race with Local Agent publishing to the same work branch.
-
-After a direct GitHub **code/build/config** change:
-
-1. queue a new immutable Local Agent task with a new unique task id and the exact Growbox `agent_binding` above;
-2. explicitly verify/synchronize to the intended remote SHA because `expected_head` is not implemented;
-3. run impact-appropriate focused tests/builds;
-4. run one final full verification when repository policy/change impact requires it;
-5. inspect the exact terminal result before claiming the change works.
-
-A GitHub commit proves publication, not correctness. Docs-only changes with no executable/config impact do not automatically require a firmware build, but the resulting remote content/HEAD should still be checked.
-
-If verification fails and a fix is needed, either make another bounded direct GitHub fix or queue a new edit task. Never mutate/replay an old Local Agent task id.
-
-The complete Stage27-specific version of this workflow is in `docs/STAGE27_NATIVE_IDF_HANDOFF.md`.
+Local tasks retain their unique immutable ids, exact `agent_binding`, explicit `resources`, bounded limits and terminal result requirement. When Chat Bridge is active, both paths remain confined to its immutable repository binding. Use `STOP` only after the goal has the required CI or local result evidence. A different repository requires explicit operator Rebind. Canonical policy: `MichalMatu/local-agent/main/docs/AUTONOMOUS_CHAT_LOOP.md` and `docs/OPERATIONS.md`.
 
 ### Control branch contract
 

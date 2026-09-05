@@ -223,7 +223,7 @@ Before a direct write:
 4. write only to the work/source branch, never product code to `agent-control`;
 5. retain the returned commit SHA as the expected source revision.
 
-A direct GitHub code commit is **not considered verified merely because GitHub accepted it**. Queue a new immutable local-agent verification task that first explicitly checks/synchronizes to the intended remote SHA, then runs the appropriate focused tests and, when required, the final full ESP-IDF/repository gate.
+A direct GitHub code commit is **not considered verified merely because GitHub accepted it**. Verify the exact committed SHA through relevant CI when it covers the required checks. When Mac tooling, device access or missing CI coverage requires local execution, queue a new immutable verification task that checks the exact SHA and runs the appropriate focused and required full gates.
 
 ### Source-edit path B — local-agent performs the edit
 
@@ -244,7 +244,7 @@ A fast normal sequence may be:
 1. planner audits GitHub/source and fresh daemon state;
 2. planner commits a bounded change directly to `mvp/environment-controller`;
 3. planner records the exact new remote SHA;
-4. planner queues one local-agent task whose first stage verifies that exact SHA and whose purpose is focused build/test/audit (and full verification when warranted);
+4. planner checks relevant CI for that exact SHA, or queues one local task that verifies that SHA and runs the required focused/full checks when local execution is needed;
 5. planner follows the exact run/task digest/attempt;
 6. planner reads the terminal result before continuing;
 7. if verification finds a defect, either make another bounded direct GitHub fix or queue a new edit task, but always use a new local-agent task id;
@@ -262,7 +262,7 @@ Never edit remotely while local-agent is concurrently producing a commit on the 
 
 `expected_head` is not implemented. Assert expected source SHA explicitly in task commands/stages.
 
-For docs-only direct commits with no executable/configuration impact, a firmware build is not automatically required; still verify the remote branch/file content after the write. For code/build/config changes, local-agent verification is required before claiming the change works.
+For docs-only direct commits with no executable/configuration impact, a firmware build is not automatically required; still verify the remote branch/file content after the write. For code/build/config changes, relevant exact-commit CI or local execution evidence is required before claiming the change works. Hardware claims still require device evidence.
 
 ## Fresh-chat bootstrap
 
