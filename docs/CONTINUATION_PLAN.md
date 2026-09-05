@@ -1,37 +1,91 @@
 # Fresh-context continuation plan
 
-Updated: 2026-09-04
+Updated: 2026-09-05
 Work branch: `mvp/environment-controller`
 Control branch: `agent-control`
+Primary roadmap/handoff: `docs/PROJECT_ROADMAP.md`
 
-The authoritative detailed handoff is `/continuation.md`.
+## Read first in a new chat
 
-Current transition:
+1. `AGENTS.md`
+2. `docs/PROJECT_ROADMAP.md`
+3. `docs/CURRENT_STATUS.md`
+4. this file
+5. stage-specific evidence only when needed
 
-**Stage28A DONE -> Stage28B DONE -> Stage28C DONE -> pre-Stage28D golden gate COMPLETE -> Stage28D IN PROGRESS**
+Then fetch fresh `mvp/environment-controller` HEAD and `agent-control:.agent/status/daemon.json`. Never continue from remembered chat state alone.
 
-Stage27C remains frozen. Stage28C has frozen exactly one neutral RF433 remote/socket identity; detailed evidence is in `docs/STAGE28C_FINAL_EVIDENCE.md`.
+## Current transition
 
-The exact Golden firmware/source checkpoint is `316b58e76de609069ddbf2667fe86f6218fb2143`. That exact SHA passed the complete software gate and a strict 5400-second real-hardware soak. Later documentation-only commits may advance branch HEAD without becoming separately hardware-soaked firmware SHAs.
+**Stage27C FROZEN -> Stage28A DONE -> Stage28B DONE -> Stage28C DONE -> pre-Stage28D golden gate COMPLETE -> Stage28D manual RF path COMPLETE -> semantic/safety integration NEXT**
 
-Current RF receive settings remain `100 kHz`, `10 us` minimum signal and `20 ms` idle/max signal. Do not reconstruct the active implementation from historical Stage28B receive values.
+The service-console firmware `af16aebde8f69d1a1257256c7711e9721c07c9d5` is hardware-qualified for the current manual diagnostic path.
 
-The pre-Stage28D hardening/golden work is complete. There is no unfinished overnight Local Agent task.
+On 2026-09-05 the operator physically confirmed correct ON/OFF response for all three RF loads:
 
-Stage28D was explicitly started by the operator. Semantic role-to-endpoint mapping is fail-closed, and the second bounded software slice adds stable endpoint ID `1` for the neutral frozen `remote_socket_1` hardware registry. The operator has now explicitly identified that physical pair as the fan socket, but no semantic `ClimateActuatorRole` is assigned yet.
+- lamp: `235030016` / `16926208`, 560 us, repeat 10;
+- fan: `906118656` / `1040336384`, 575 us, repeat 10;
+- humidifier: `637683200` / `771900928`, 560 us, repeat 10.
 
-The quick hardware/code register is `docs/RF433_DEVICE_CODES.md`. It now records all three captured identities:
+Do not redo these manual RF identity tests unless new evidence invalidates them.
 
-- lamp: ON `235030016`, OFF `16926208`;
-- fan / `remote_socket_1`: ON `906118656`, OFF `1040336384`;
-- humidifier: ON `637683200`, OFF `771900928`.
+## Current locked boundary
 
-All are 32-bit protocol 2 captures with `560 us` captured pulse and requested ESP TX repeat `10`. Preserve the separate Stage28C evidence that the fan pair was physically reliable with `575 us` and repeat `10`; do not rewrite that historical qualification as `560 us` until the new physical recheck proves it.
+- rule policy authoritative;
+- ML shadow/research-only;
+- automatic physical outputs fake-locked;
+- no unattended real-output control authorized yet;
+- manual RF is only an explicit bounded operator-present diagnostic;
+- physical observation remains the acceptance criterion for mains-load actuation.
 
-Current physical sensor placement: TP357 BLE inside growbox, Xiaomi BLE outside growbox, directly connected ESP32 sensors inside growbox.
+## Architecture decision for current loads
 
-A bounded primary-serial service console is now part of the real-input runtime. It provides `help`, `status`, `sensors`, `rf list`, named manual RF ON/OFF commands and bounded `rf rx` capture. The lamp/humidifier captured profiles are present in the neutral hardware config at `560 us / repeat 10`; the fan retains its physically qualified `575 us / repeat 10` profile.
+- fan RF endpoint -> intended semantic role `ExhaustFan`;
+- humidifier RF endpoint -> intended semantic role `Humidifier`;
+- lamp stays under the lighting schedule/timer for normal operation.
 
-The next bounded hardware step is to flash a console build with the RF diagnostics transport enabled, verify the menu/read-only commands without transmitting, then perform manual ESP-to-socket ON/OFF validation for lamp, fan and humidifier. Physical device response is the acceptance criterion. Local TX completion or `SelfTx` alone is insufficient.
+Lamp safety is a separate higher-priority layer:
 
-Keep the real runtime fake-locked for unattended operation. Manual console RF commands are explicit service actions only; do not introduce unattended 230 V control or physical-state acknowledgement semantics during this validation step.
+`schedule/timer -> requested lamp state -> thermal safety override -> physical output`
+
+The current Climate-v6 model receives `schedule.light_level` and the simulator accounts for lamp heat, but lamp is not one of the six ML outputs. Do not add a seventh ML output merely to complete the next hardware gate.
+
+## First incomplete gate
+
+Start with **software-only semantic/safety integration** while keeping the real runtime fake-locked:
+
+1. bind fan endpoint to `ExhaustFan`;
+2. bind humidifier endpoint to `Humidifier`;
+3. create/use a dedicated scheduled-light endpoint/path for the lamp;
+4. implement an independent lamp over-temperature OFF override with recovery hysteresis;
+5. ensure high-temperature safety can demand maximum exhaust ventilation when available;
+6. ensure unknown/duplicate/missing mappings fail closed;
+7. add focused host tests proving mapping/arbitration without real RF TX.
+
+Do not perform physical actuation in this first software slice.
+
+## Next hardware session after software qualification
+
+When the software slice passes its focused/build gate:
+
+1. flash the exact qualified firmware and verify SHA, sensors, RF readiness and `outputs=fake-locked` before actuation;
+2. run one operator-present physical role-routing test per endpoint, each ending OFF;
+3. test the lamp thermal override using deterministic injected/simulated over-temperature rather than deliberately overheating the growbox;
+4. physically verify lamp forced OFF and fan forced ON under that injected condition;
+5. verify recovery hysteresis/hold behavior;
+6. run a short supervised real-sensor closed-loop session;
+7. only after all supervised gates pass, propose a separate unattended real-output soak for explicit operator approval.
+
+## Local Agent / Chat Bridge essentials
+
+Hard binding for every Growbox task:
+
+`"agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5"`
+
+Use `resources: []` for software/docs/build and `resources: ["board:growbox-s3"]` for USB/serial/flashing/hardware. Task IDs and payloads are immutable. `agent-control` holds task/run/result/status state; product/source changes belong on `mvp/environment-controller`.
+
+Chat Bridge only transports wakeups and pins repository identity. Local Agent deterministically executes queued tasks. ChatGPT remains the planner and must inspect terminal result evidence before claiming completion.
+
+Recommended first message in the fresh chat:
+
+`Continue Growbox from docs/PROJECT_ROADMAP.md. Verify fresh work-branch HEAD and Local Agent daemon first. Start from the first incomplete gate. Keep real automatic outputs fake-locked until the roadmap reaches a supervised hardware gate.`
