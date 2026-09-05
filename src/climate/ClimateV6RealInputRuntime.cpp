@@ -3,6 +3,7 @@
 #include "climate/ClimateApplication.h"
 #include "climate/ClimateCompositeInput.h"
 #include "climate/ClimateSemanticOutput.h"
+#include "climate/Stage28dBinaryRoleArbiter.h"
 #include "climate/Stage28dLampSafety.h"
 #include "climate/Stage28dOutputBindings.h"
 #include "climate/Stage28dRfOutputEndpoint.h"
@@ -158,8 +159,8 @@ private:
 
 class SwitchableRoleDriver final : public ClimateRoleDriver {
 public:
-  SwitchableRoleDriver(runtime::LockedFakeRoleDriver& fake_driver,
-                       MappedClimateRoleDriver& real_driver, bool real_enabled) noexcept
+  SwitchableRoleDriver(runtime::LockedFakeRoleDriver& fake_driver, ClimateRoleDriver& real_driver,
+                       bool real_enabled) noexcept
       : fake_driver_(fake_driver), real_driver_(real_driver), real_enabled_(real_enabled) {}
 
   bool apply(ClimateActuatorRole role, float level, std::uint64_t monotonic_ms) noexcept override {
@@ -167,12 +168,22 @@ public:
                          : fake_driver_.apply(role, level, monotonic_ms);
   }
 
+  float appliedLevel(ClimateActuatorRole role, float requested_level) const noexcept override {
+    return real_enabled_ ? real_driver_.appliedLevel(role, requested_level)
+                         : fake_driver_.appliedLevel(role, requested_level);
+  }
+
+  bool forceSafeOff(ClimateActuatorRole role, std::uint64_t monotonic_ms) noexcept override {
+    return real_enabled_ ? real_driver_.forceSafeOff(role, monotonic_ms)
+                         : fake_driver_.forceSafeOff(role, monotonic_ms);
+  }
+
   void disableReal() noexcept { real_enabled_ = false; }
   bool realEnabled() const noexcept { return real_enabled_; }
 
 private:
   runtime::LockedFakeRoleDriver& fake_driver_;
-  MappedClimateRoleDriver& real_driver_;
+  ClimateRoleDriver& real_driver_;
   bool real_enabled_{false};
 };
 
@@ -257,7 +268,11 @@ runtime::Stage27PhysicalOutputSnapshot physicalOutputSnapshot(
   CompositeClimateSnapshotProvider composite(inside, outside, clock, schedule_config);
   runtime::LockedFakeRoleDriver fake_output_driver;
   MappedClimateRoleDriver mapped_output_driver(semantic_output_config, physical_endpoint);
-  SwitchableRoleDriver output_driver(fake_output_driver, mapped_output_driver, real_output_ready);
+  stage28d::Stage28dBinaryRoleArbiter binary_arbiter(mapped_output_driver);
+  if (real_output_ready) {
+    binary_arbiter.synchronizeSafeOff(monotonicMilliseconds());
+  }
+  SwitchableRoleDriver output_driver(fake_output_driver, binary_arbiter, real_output_ready);
   ::growbox::climate::ClimateRuntimeController runtime_controller(nullptr,
                                                                   runtime::defaultRuntimeConfig());
   ClimateApplication application(runtime_controller, composite, output_driver);
@@ -358,6 +373,7 @@ runtime::Stage27PhysicalOutputSnapshot physicalOutputSnapshot(
           {scheduled_light, safety_temperature, output_bindings_valid, now_ms});
 
       physical_endpoint.setSafetyForceExhaust(lamp_decision.force_exhaust_on);
+      binary_arbiter.setSafetyForceExhaust(lamp_decision.force_exhaust_on);
       if (output_driver.realEnabled() &&
           !physical_endpoint.writeScheduledLight(lamp_decision.effective_lamp_on, now_ms)) {
         ESP_LOGE(kTag, "Lamp output apply failed; forcing safe state and locking real outputs");
@@ -384,7 +400,9 @@ runtime::Stage27PhysicalOutputSnapshot physicalOutputSnapshot(
       ESP_LOGI(kTag,
                "stage28d_output real=%d lamp_known=%d lamp_on=%d fan_known=%d fan_on=%d "
                "humidifier_known=%d humidifier_on=%d safety_latched=%d force_fan=%d "
-               "safety_reason=%u tx=%lu tx_errors=%lu",
+               "safety_reason=%u requested_fan=%.3f requested_humidifier=%.3f "
+               "applied_fan=%.3f applied_humidifier=%.3f arbiter_transitions=%lu "
+               "arbiter_dwell_holds=%lu arbiter_safety_overrides=%lu tx=%lu tx_errors=%lu",
                output_driver.realEnabled(),
                physical_endpoint.stateKnown(stage28d::kScheduledLightEndpoint),
                physical_endpoint.stateOn(stage28d::kScheduledLightEndpoint),
@@ -394,6 +412,13 @@ runtime::Stage27PhysicalOutputSnapshot physicalOutputSnapshot(
                physical_endpoint.stateOn(stage28d::kHumidifierEndpoint),
                lamp_decision.thermal_latched, lamp_decision.force_exhaust_on,
                static_cast<unsigned>(lamp_decision.reason),
+               static_cast<double>(decision.rule.safe.exhaust_fan),
+               static_cast<double>(decision.rule.safe.humidifier),
+               static_cast<double>(decision.applied.exhaust_fan),
+               static_cast<double>(decision.applied.humidifier),
+               static_cast<unsigned long>(binary_arbiter.transitionCount()),
+               static_cast<unsigned long>(binary_arbiter.dwellHoldCount()),
+               static_cast<unsigned long>(binary_arbiter.safetyOverrideCount()),
                static_cast<unsigned long>(physical_endpoint.transmitCount()),
                static_cast<unsigned long>(physical_endpoint.transmitErrorCount()));
     }
