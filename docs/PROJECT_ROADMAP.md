@@ -7,347 +7,281 @@ Control branch: `agent-control`
 Local Agent repository id: `growbox-ml-controller`
 Agent binding: `815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5`
 
-## Purpose and source-of-truth hierarchy
+## Source-of-truth order
 
-This file is the durable project-level roadmap and preferred orientation document for a fresh chat. It answers where the project came from, what is physically proven now, what remains locked and what the next gates are.
+For a fresh chat, read:
 
-For a fresh chat, use this order:
+1. `AGENTS.md`
+2. `docs/PROJECT_ROADMAP.md`
+3. `docs/CURRENT_STATUS.md`
+4. `docs/CONTINUATION_PLAN.md`
+5. `docs/OBSERVABILITY_AND_INFERENCE_PLAN.md`
+6. `docs/SHELLY_POWER_FEEDBACK.md`
+7. stage-specific evidence only when needed
 
-1. `AGENTS.md` — repository/Local Agent operating contract.
-2. `docs/PROJECT_ROADMAP.md` — project history, architecture decisions and ordered gates.
-3. `docs/CURRENT_STATUS.md` — concise current implementation/hardware state.
-4. `docs/CONTINUATION_PLAN.md` — immediate next-work checklist.
-5. `docs/OBSERVABILITY_AND_INFERENCE_PLAN.md` — derived-signal, physical-feedback and learning contract.
-6. `docs/SHELLY_POWER_FEEDBACK.md` — Shelly API/power-signature evidence.
-7. Stage-specific evidence documents only when needed.
-
-Before changing anything in a fresh chat, verify the current `mvp/environment-controller` HEAD and `agent-control:.agent/status/daemon.json`. Never continue from remembered chat state alone.
+Then fetch fresh `mvp/environment-controller` HEAD and `agent-control:.agent/status/daemon.json`. Never continue from remembered chat state alone.
 
 ## Project direction
 
-The project is a native ESP-IDF growbox environmental controller with real sensors, local RF433 actuators, deterministic safety logic, logging/telemetry and an ML policy path. The current priority is to move from proven sensing and RF transport to safely supervised real-actuator integration while preserving separate safety, schedule, deterministic control and ML responsibilities.
+The project is a native ESP-IDF growbox environmental controller using real sensors, local RF433 actuators, deterministic safety, telemetry/logging and a shadow ML path.
 
 Current policy boundary:
 
-- rule policy remains authoritative;
-- ML remains shadow/research-only until a later explicit qualification gate;
-- automatic physical outputs remain fake-locked until the ordered gates authorize them;
-- manual service RF is an explicit bounded diagnostic path;
-- local TX completion or `SelfTx` is never physical socket/load acknowledgement;
-- Shelly power feedback may provide independent physical load-state evidence during supervised tests;
-- unattended real-output operation requires a separate later authorization.
+- deterministic rule policy is authoritative;
+- ML remains shadow/research-only;
+- installed firmware returns to fake-locked after every bounded physical qualification;
+- real outputs are allowed only inside explicit bounded test/qualification tasks;
+- local RF TX completion is not physical load acknowledgement;
+- Shelly power is independent electrical evidence;
+- environmental response is required before claiming actual airflow/moisture effect;
+- unattended operation remains a separate future authorization decision.
 
-## Completed milestones
+## Completed platform milestones
 
-### Stage27C — real-input native ESP-IDF baseline — FROZEN
+### Stage27C - real-input native ESP-IDF baseline - FROZEN
 
-Validated real-input runtime with SCD41, DS3231 and BLE climate inputs. Outputs stayed fake-locked throughout qualification.
+Real SCD41, DS3231 and BLE inputs, SD telemetry and fake-locked outputs were qualified.
 
-### Stage28A — RF433 codec/classification — DONE
+### Stage28A - RF433 codec/classification - DONE
 
-Native protocol-2 RF433 codec and temporal classification were established.
+Native protocol-2 RF433 codec and temporal classification established.
 
-### Stage28B — ESP-IDF RMT TX/RX — DONE
+### Stage28B - ESP-IDF RMT TX/RX - DONE
 
-Native RMT transport and loopback were qualified. Historical Stage28B receive timing must not replace the later hardened receive contract.
+Native RMT transport and loopback qualified.
 
-### Stage28C — physical RF identity — DONE/FROZEN
+### Stage28C - physical RF identity - DONE/FROZEN
 
-The original frozen neutral socket pair was physically qualified and later identified by the operator as the fan socket.
+Current physical RF devices are frozen as:
 
-Fan profile:
+| role/load | ON | OFF | profile |
+| --- | ---: | ---: | --- |
+| fan / endpoint 1 | 906118656 | 1040336384 | protocol 2, 32 bit, 575 us, repeat 10 |
+| lamp / endpoint 2 | 235030016 | 16926208 | protocol 2, 32 bit, 560 us, repeat 10 |
+| humidifier / endpoint 3 | 637683200 | 771900928 | protocol 2, 32 bit, 560 us, repeat 10 |
 
-- ON `906118656` / `0x36024600`;
-- OFF `1040336384` / `0x3E024600`;
-- protocol 2, 32 bit;
-- reliable ESP TX profile `575 us`, repeat `10`.
+### Pre-Stage28D golden gate - COMPLETE
 
-### Pre-Stage28D golden gate — COMPLETE
+Golden source/firmware `316b58e76de609069ddbf2667fe86f6218fb2143` passed the complete software gate and a strict 5400-second real-hardware soak with outputs fake-locked.
 
-Golden source/firmware `316b58e76de609069ddbf2667fe86f6218fb2143` passed the complete software gate and a strict 5400-second real-hardware soak with real sensors/RTC/BLE/SD, no resets and outputs fake-locked.
+### Stage28D manual service path - COMPLETE
 
-Later executable service-console firmware was separately qualified. Do not call docs-only branch HEADs hardware-soaked firmware identities.
-
-### Stage28D — service console and physical RF validation — COMPLETE FOR MANUAL RF PATH
-
-Hardware-qualified service-console firmware identity:
+Hardware-qualified manual service-console firmware:
 
 `af16aebde8f69d1a1257256c7711e9721c07c9d5`
 
-On 2026-09-05 the operator physically observed successful ESP-to-socket ON/OFF control for all three current RF loads:
+Manual ON/OFF control for lamp, fan and humidifier was physically observed on 2026-09-05.
 
-| device | ON | OFF | protocol | physical TX profile | result |
-| --- | ---: | ---: | ---: | --- | --- |
-| lamp | 235030016 | 16926208 | 2 / 32 bit | 560 us, repeat 10 | physically confirmed |
-| fan | 906118656 | 1040336384 | 2 / 32 bit | 575 us, repeat 10 | physically confirmed |
-| humidifier | 637683200 | 771900928 | 2 / 32 bit | 560 us, repeat 10 | physically confirmed |
+## Gate 1 - semantic binding - COMPLETE
 
-The permanent RF register is `docs/RF433_DEVICE_CODES.md`.
+Frozen mapping:
 
-This proves the manual supervised ESP -> RF433 -> socket/load path for each device. It does not authorize unattended climate actuation.
+- endpoint 1 -> `ExhaustFan`;
+- endpoint 3 -> `Humidifier`;
+- endpoint 2 -> dedicated scheduled-light path.
 
-### Gate 1 — semantic binding — COMPLETE
+The validator fails closed for missing, duplicate, unknown, stale or scheduled-light-as-climate bindings.
 
-Frozen mappings:
-
-- `remote_socket_1` / endpoint 1 -> `ExhaustFan`;
-- `remote_socket_3` / endpoint 3 -> `Humidifier`;
-- `remote_socket_2` / endpoint 2 -> dedicated scheduled-light path outside normal Climate-v6 output roles.
-
-The binding validator fails closed for missing, duplicate, unknown, stale or lamp-as-climate mappings. Automatic outputs remain fake-locked.
-
-### Gate 2 — lamp timer + thermal safety — COMPLETE
+## Gate 2 - lamp timer + thermal safety - COMPLETE
 
 Source contract:
 
 `11b02749fd5896e47ec01d03bcca333be2dea810`
 
-Verification result:
+Frozen behavior:
 
-- focused `stage28d_lamp_safety_tests` passed;
-- Python `479 passed`, `3 skipped`, `9 deselected`;
-- host C++ `20/20` passed;
-- clang-tidy passed;
-- ESP-IDF/pre-push quality gate passed;
-- no RF TX occurred in the verification task and automatic outputs remained fake-locked.
-
-Frozen thermal-safety behavior:
-
-- trip at `28.0 C` -> lamp forced OFF;
-- exhaust fan forced ON when available;
+- trip at `>=28.0 C` -> lamp OFF;
+- exhaust fan requested ON when available;
 - recovery threshold `<=26.0 C`;
-- continuous `10 min` recovery hold before latch clear;
+- continuous recovery hold `10 min`;
 - hold resets above `26.0 C`;
 - stale/invalid/non-finite authoritative TP357 temperature fails closed for the lamp path.
 
+Focused tests, Python, host C++, clang-tidy and ESP-IDF/pre-push all passed.
+
+## Gate 3 - time, hardware profile and observability - COMPLETE
+
+Executable verification SHA:
+
+`8710bf127ad895e262f604e1b4c59ea11b760667`
+
+Completed:
+
+- DS3231 UTC storage;
+- bounded service-console RTC write/readback;
+- deterministic Europe/Warsaw CET/CEST conversion with DST tests;
+- local schedule `06:00-22:00`;
+- actual capability contract: exhaust + humidifier only for climate outputs;
+- SCD41 CO2 as ventilation input, not dosing capability;
+- deterministic dew point, absolute humidity, VPD and inside/intake gradients.
+
+## Gate 4 - exact-SHA read-only hardware smoke - COMPLETE
+
+Exact SHA `8710bf127ad895e262f604e1b4c59ea11b760667` was flashed and verified with live TP357, Xiaomi, SCD41, DS3231, RF readiness and healthy SD telemetry while outputs remained fake-locked.
+
+## Gate 5 - physical role routing with independent power evidence - COMPLETE
+
+Shelly reference baseline/signatures:
+
+- controlled-loads-OFF baseline about `2.2 W`;
+- lamp contribution about `+97.0 W`;
+- exhaust fan about `+2.9 W`;
+- humidifier about `+15.7 W`.
+
+Each role was physically confirmed and the test returned all RF loads OFF with Shelly master ON.
+
+## Gate 6 - deterministic physical thermal safety - COMPLETE
+
+A bounded injected-temperature sequence physically proved:
+
+- hot trip -> lamp OFF;
+- safety -> fan ON;
+- latch retained above recovery threshold;
+- `<=26 C` held continuously for 10 minutes before latch clear;
+- no humidifier cross-activation;
+- final fake-locked/all-OFF cleanup.
+
+Do not repeat the long thermal sequence unless safety code changes.
+
+## Ventilation-effect identification - COMPLETE
+
+A controlled fan OFF -> ON -> OFF experiment with TP357 inside, Xiaomi intake and SCD41 inside CO2 showed:
+
+- inside absolute humidity during fan ON about `-0.312 g/m3/min`;
+- inside CO2 about `-3.09 ppm/min`;
+- inside-minus-intake AH gradient reduced from about `3.27` to `0.96 g/m3`;
+- temperature effect was small.
+
+This establishes the key control principle:
+
+**moisture-exchange decisions should use absolute humidity/moisture content, not raw RH alone.**
+
+Outside CO2 is not measured. Store/learn observable CO2 response, not invented outdoor ppm.
+
+## Gate 7 - binary/dwell arbitration + physical closed loop - COMPLETE
+
+Hardware-qualified code identity:
+
+`3dfc4b552f669f628d5c9bee455a34666915088c`
+
+Architecture:
+
+`rule request -> binary/dwell arbiter -> confirmed actual applied -> RF endpoint -> telemetry`
+
+Default arbiter settings:
+
+- exhaust: ON `0.10`, OFF `0.03`, min ON/OFF `120 s`;
+- humidifier: ON `0.10`, OFF `0.03`, min ON/OFF `180 s`;
+- safety may force exhaust ON immediately;
+- clearing safety does not bypass min-ON;
+- emergency safe OFF bypasses dwell;
+- failed physical transition does not advance internal state.
+
+The control loop reconciles estimator state to confirmed actual applied levels so binary RF sockets are no longer represented by fractional applied values.
+
+Persisted telemetry includes requested/applied fan and humidifier state, thermal state and arbiter counters.
+
+### Short exact-SHA closed loop
+
+A 10-minute bounded real-output run passed:
+
+- 58 output records;
+- 52 healthy SD-backed records;
+- max requested fan about `0.317`;
+- 111 dwell holds;
+- no fan/humidifier transition because full threshold+dwell conditions were not satisfied;
+- TP357 about `24.2-26.1 C`;
+- final fake-locked/all-OFF cleanup at about `2.2 W`.
+
+### 30-minute exact-SHA bounded soak
+
+A subsequent 1800-second bounded real-output soak passed:
+
+- 174 output records;
+- 159 healthy SD-backed records;
+- 174 lamp-ON records;
+- 0 fan-ON records;
+- 0 humidifier-ON records;
+- max requested fan about `0.331`;
+- 111 dwell holds;
+- 0 transitions;
+- 0 safety overrides;
+- TP357 about `25.3-27.8 C`;
+- final fake-locked, all RF loads OFF, Shelly master ON, about `2.2 W`.
+
+The fan staying OFF is consistent with arbiter semantics: requests above threshold occurred while minimum-OFF dwell still blocked the transition and later request history did not satisfy conditions for a state change. Software regressions already cover sustained requests, hysteresis, dwell, safety immediate-ON and fail-safe OFF behavior.
+
+### Shelly transient behavior learned during Gate 7
+
+Shelly occasionally returned isolated low-power values while the physical lamp state remained unchanged. A separate lamp-stability run showed about `98.3-98.8 W` continuously for roughly three minutes with no persistent drop.
+
+Physical harness rule:
+
+- wait for state settling;
+- sample multiple times;
+- use a median/robust aggregate;
+- fail only on repeated/persistent signature mismatch;
+- still fail immediately on hard unsafe power or master-relay loss.
+
 ## Current physical topology
 
-### Environmental sensors
+### Sensors
 
-- TP357 BLE T/RH: inside growbox slightly above canopy; authoritative inside T/RH and thermal-safety temperature.
-- SCD41: inside at pot height; authoritative inside CO2, diagnostic/backup T/RH.
-- Xiaomi BLE T/RH: outside beside intake; intake-air T/RH context.
-- DS3231: controller RTC; intended to store UTC and feed the Europe/Warsaw lighting schedule after conversion.
+- TP357 BLE inside above canopy: authoritative inside T/RH and thermal safety;
+- SCD41 inside near pot height: primary inside CO2, diagnostic/backup T/RH;
+- Xiaomi BLE beside intake outside tent: intake T/RH;
+- DS3231: UTC RTC feeding Europe/Warsaw local schedule.
 
-### RF433 loads
+### Growbox
 
-- endpoint 1 -> exhaust fan;
-- endpoint 2 -> scheduled lamp;
-- endpoint 3 -> humidifier.
+- approximate dimensions `60 x 60 x 180 cm`;
+- approximate volume `0.648 m3`;
+- current plant: mint.
 
-### Independent power feedback
+## Current control baseline
 
-Shelly Plug S Gen3 is reachable from the Local Agent host at:
+- light schedule `06:00-22:00` Europe/Warsaw;
+- nominal day target about `24 C`;
+- nominal night target about `21-21.5 C`;
+- lamp hard trip `>=28 C`;
+- lamp recovery `<=26 C` continuously for 10 minutes;
+- RH target around `60%`, initial normal band about `55-65%`;
+- VPD target roughly `1.2 kPa` day and `0.9-1.0 kPa` night;
+- CO2 informs ventilation only; no dosing hardware;
+- no soil-moisture or PAR/PPFD sensor currently in the control contract.
 
-`192.168.0.16`
+## First incomplete control slice - moisture-aware ventilation policy
 
-It is currently upstream of the growbox power strip and exposes relay state, active power, voltage, current, accumulated energy and internal temperature through local RPC.
+The existing rule request still contains mixed raw-RH logic. This is now the first incomplete control-quality issue.
 
-Two supervised one-device-at-a-time power calibrations were completed. The repeat calibration waited `20 s` after every ON/OFF transition and sampled each settled state nine times.
+Required next software behavior:
 
-Observed reference contributions:
+1. use inside-versus-intake absolute humidity for moisture-exchange benefit;
+2. preserve temperature-exchange benefit separately;
+3. keep SCD41 CO2 as a ventilation context signal;
+4. never infer an exact outside CO2 concentration;
+5. preserve thermal-safety fan override above normal benefit scoring;
+6. leave Gate 7 binary/dwell arbitration unchanged unless a focused regression proves a defect;
+7. keep ML shadow-only.
 
-- controlled-loads-OFF baseline: about `2.2 W`;
-- lamp: about `97.0-97.1 W`;
-- exhaust fan: about `2.8-3.2 W`;
-- humidifier: about `15.4-15.7 W`.
+Required regression cases:
 
-The repeat returned to the same `2.2 W` baseline with all three RF loads OFF and Shelly master ON.
+- intake RH equal/higher but intake AH lower -> ventilation may still be drying-beneficial;
+- intake RH lower but intake AH higher -> no drying-benefit claim;
+- invalid/stale intake moisture -> no positive moisture-benefit inference;
+- thermal safety forces fan regardless of normal exchange score;
+- CO2 ventilation context does not enable a nonexistent CO2 doser.
 
-Use calibrated tolerance ranges rather than exact constants. Continue collecting settled signatures, especially for the low-power fan. `docs/SHELLY_POWER_FEEDBACK.md` is the durable reference.
+Verification sequence:
 
-## Lamp architecture decision
+- focused host tests first;
+- exactly one final full software quality gate;
+- outputs fake-locked and no board resource for software verification;
+- only after software PASS decide whether the changed policy needs a short new exact-SHA physical confirmation.
 
-The lamp is intentionally a different control layer from the normal climate outputs.
+Do not repeat completed RF routing, thermal recovery, lamp-stability or 30-minute soak tests without a new code change or explicit new hypothesis.
 
-Normal behavior:
-
-`schedule/timer -> requested lamp state -> thermal safety override -> physical lamp output`
-
-The current Climate-v6 model already consumes `schedule.light_level` and the simulator models lamp heat, but the model has six climate outputs and no lamp output. Do not force the lamp into `ClimateActuatorRole` merely to make it an ML output.
-
-Safety override has higher priority than schedule and ML.
-
-## CO2 and ventilation architecture decision
-
-SCD41 CO2 is a real input to ventilation decisions, but there is no CO2 enrichment/doser actuator. Do not advertise or enable a nonexistent CO2 doser.
-
-Normal exhaust-fan policy must not be blind periodic ventilation. Outside hard thermal safety, request ventilation when available evidence predicts exchange is useful.
-
-Priority:
-
-`thermal safety > humidity/VPD safety > CO2 replenishment > normal optimization > fan OFF`
-
-Examples:
-
-- if T/RH/VPD/CO2 are acceptable -> fan OFF;
-- thermal trip -> lamp OFF + fan ON regardless of learned effectiveness;
-- high inside moisture -> ventilate only when intake moisture content or learned response indicates drying benefit, unless higher-priority safety overrides;
-- low CO2 during lights-on -> ventilation may replenish CO2 when observed/predicted exchange is beneficial.
-
-## Existing-sensor observability and inference track
-
-The project should extract maximum information from already installed hardware before adding more sensors. The durable contract is `docs/OBSERVABILITY_AND_INFERENCE_PLAN.md`.
-
-Derived signals should include at least:
-
-- dew point;
-- absolute humidity/moisture content;
-- air VPD;
-- inside-versus-intake temperature/moisture gradients;
-- robust `dT/dt`, `dAbsoluteHumidity/dt`, `dCO2/dt` slopes;
-- actuator response delay/time constants;
-- Shelly power signatures and physical-state confidence;
-- sensor freshness/disagreement/confounder flags.
-
-Actuator-effect learning should use clean transitions and baseline slopes. For fan ventilation:
-
-`fan_effect(variable) ~= slope_ON(variable) - slope_OFF_baseline(variable)`
-
-This can reveal measured cooling, drying and CO2-exchange effects. For CO2 it may later support an effective intake-CO2/ACH model, but initially store observable ppm/min response rather than inventing a precise outdoor ppm value.
-
-Similarly collect lamp thermal contribution and humidifier moisture contribution when other actuators are stable.
-
-These observations are useful to deterministic arbitration first and later become strong ML features because they represent what the environment and hardware actually did, not merely what the controller requested.
-
-Hard deterministic safety can never be overruled by learned/inferred effects.
-
-## Ordered gates from current state
-
-### Gate 3 — time, hardware profile and observability foundations — NEXT
-
-#### Gate 3A — DS3231 UTC + Europe/Warsaw schedule
-
-- store UTC in DS3231;
-- add bounded RTC set/write/readback support;
-- add deterministic CET/CEST conversion for Europe/Warsaw with DST boundary host tests;
-- schedule lighting `06:00-22:00` Europe/Warsaw local time;
-- preserve trusted/untrusted RTC semantics.
-
-#### Gate 3B — actual hardware capability contract
-
-Runtime capabilities must reflect actual hardware:
-
-- heater false;
-- cooler false;
-- exhaust fan true;
-- humidifier true;
-- dehumidifier false;
-- CO2 doser false.
-
-Inspect `targets.co2_enabled` semantics before changing it. If it denotes enrichment/dosing, keep it false and implement a separate ventilation-CO2 policy.
-
-#### Gate 3C — observability plumbing, software only
-
-While outputs remain fake-locked, add or prepare pure derived metrics/telemetry needed for:
-
-- inside/intake moisture and temperature gradients;
-- environmental slopes;
-- actuator transition context;
-- confidence/invalid/ambiguous states;
-- later host-side Shelly correlation.
-
-Do not block safety/time qualification on a large ML model. Logging plus deterministic pure helpers is sufficient first.
-
-#### Gate 3 verification
-
-Run focused tests for time conversion, schedule boundaries, capability contract and derived-metric helpers, followed by exactly one final full quality gate. No real automatic RF TX.
-
-### Gate 4 — exact-SHA flash and read-only hardware smoke
-
-After Gate 3 passes:
-
-- flash exact qualified SHA;
-- verify firmware identity and `outputs=fake-locked`;
-- verify RF readiness and service console;
-- verify TP357, Xiaomi, SCD41 and DS3231;
-- set/read back DS3231 UTC;
-- verify Europe/Warsaw local schedule interpretation.
-
-### Gate 5 — bounded physical role-routing with independent feedback
-
-Prove one endpoint at a time, each ending OFF:
-
-1. `ExhaustFan` -> only fan;
-2. `Humidifier` -> only humidifier;
-3. scheduled light -> only lamp.
-
-For each transition record:
-
-- requested semantic state;
-- RF TX evidence;
-- Shelly before/after power and voltage;
-- expected power-signature match/confidence;
-- final safe OFF state.
-
-Shelly provides independent electrical evidence but does not replace environmental/physical response where relevant.
-
-### Gate 6 — supervised thermal-safety test without real overheating
-
-Use deterministic temperature injection rather than deliberately overheating the growbox. Verify physically:
-
-- lamp forced OFF at trip;
-- fan forced ON when available;
-- recovery remains latched until `<=26 C` continuously for `10 min`;
-- no chatter;
-- Shelly signatures agree with expected lamp/fan state transitions;
-- final state is explicitly safe.
-
-### Gate 7 — bounded ventilation-effect capture and short supervised closed loop
-
-Before/within the first closed-loop session, collect clean fan OFF -> ON -> OFF windows with:
-
-- TP357 inside T/RH;
-- Xiaomi intake T/RH;
-- SCD41 inside CO2;
-- derived absolute humidity/VPD;
-- pre-action baseline slopes;
-- post-action slopes;
-- lamp/humidifier states;
-- Shelly fan power confirmation;
-- response delay and confidence.
-
-Use this to establish the first measured ventilation-effect model. Learned effects remain advisory until repeatability is demonstrated.
-
-Then run a short conservative real-sensor closed-loop session and verify sensor freshness, requests, physical outputs, Shelly confirmation, telemetry and safety together.
-
-### Gate 8 — separate unattended real-output authorization
-
-Only after Gates 1-7 pass may a later task propose an unattended real-output soak. It requires separate explicit authorization and a bounded safety plan.
-
-## Local Agent and Chat Bridge — mental model
-
-### ChatGPT / planner
-
-The chat decides what bounded task should happen next, reads repository/control-plane evidence, writes or queues exact work and judges results. It must not claim success from intent alone.
-
-### Chat Bridge
-
-The wake envelope pins repository identity and immutable binding:
-
-- `LA_REPO=growbox-ml-controller`;
-- `LA_REPOSITORY=MichalMatu/growbox-ml-controller`;
-- `LA_AGENT=815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5`.
-
-A different repository requires explicit rebind. Never guess or silently switch repositories.
-
-Useful bridge controls:
-
-- `[LAB:NEXT=30s]` or another interval;
-- `[LAB:PAUSE]`;
-- `[LAB:STOP]`;
-- `[LAB:INTERVAL=AUTO]`.
-
-### Local Agent
-
-Local Agent is the deterministic local executor. It reads immutable tasks from `agent-control`, executes declared commands against the declared work branch and writes run/result/status evidence back to the control branch.
-
-Control-plane locations:
-
-- `.agent/tasks/<task-id>.json`;
-- `.agent/runs/<task-id>.json`;
-- `.agent/results/<task-id>.json`;
-- `.agent/status/daemon.json`.
+## Local Agent / Chat Bridge contract
 
 Every Growbox task must contain exactly:
 
@@ -355,26 +289,19 @@ Every Growbox task must contain exactly:
 
 Use:
 
-- `resources: []` for repository-local software/docs/build work;
-- `resources: ["board:growbox-s3"]` for USB/serial/flashing/hardware work.
+- `resources: []` for software/docs/build;
+- `resources: ["board:growbox-s3"]` for USB/serial/flashing/hardware.
 
-One task per repository at a time. Task IDs and payloads are immutable; a retry uses a new ID. `expected_head` is not implemented, so tasks that depend on an exact SHA must verify it explicitly.
-
-The work branch contains product/source changes. `agent-control` is only the execution/control plane.
+Task IDs and payloads are immutable. Retry with a new ID. Work branch contains product/source changes; `agent-control` is execution/control evidence only.
 
 ## Fresh-chat bootstrap
 
 A fresh chat should:
 
 1. honor the exact Bridge binding envelope;
-2. read `AGENTS.md`;
-3. read `docs/PROJECT_ROADMAP.md`;
-4. read `docs/CURRENT_STATUS.md` and `docs/CONTINUATION_PLAN.md`;
-5. read `docs/OBSERVABILITY_AND_INFERENCE_PLAN.md` when working on telemetry/feedback/learning;
-6. fetch fresh work-branch HEAD and daemon status;
-7. continue from the first incomplete gate;
-8. never reopen completed physical RF validation unless new evidence invalidates it.
-
-Recommended human instruction:
-
-`Continue Growbox from docs/PROJECT_ROADMAP.md. Verify fresh HEAD and Local Agent daemon first. Start from the first incomplete gate. Keep automatic physical outputs fake-locked until the roadmap explicitly reaches a supervised hardware gate.`
+2. read `AGENTS.md`, this roadmap, `CURRENT_STATUS` and `CONTINUATION_PLAN`;
+3. fetch fresh work HEAD and daemon status;
+4. treat Gates 1-7 as complete;
+5. continue with the moisture-aware ventilation policy slice;
+6. keep ML shadow-only;
+7. avoid repeating completed physical gates unless new evidence invalidates them.
