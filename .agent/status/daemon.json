@@ -2,8 +2,8 @@
   "version": 1,
   "daemon_version": "4.17.0",
   "state": "idle",
-  "pid": 8183,
-  "updated_at": "2026-09-05T06:57:28.964134+00:00",
+  "pid": 15618,
+  "updated_at": "2026-09-05T07:02:40.332854+00:00",
   "self_revision": "6532ce82a5fcb2c0c8f8d698d1f6ce7f739dadd2",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -23,8 +23,7 @@
   "default_branch": "main",
   "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 8183,
+  "worker_pid": 15618,
   "supervisor_pid": 68254,
-  "last_task_id": "20260905-growbox-gate5-shelly-role-routing-v1",
   "execution_variant": "parallel"
 }
