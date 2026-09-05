@@ -1,0 +1,60 @@
+{
+  "id": "20260905-growbox-gate5-shelly-role-routing-v1",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "started_at": "2026-09-05T06:53:01.775528+00:00",
+  "command_timeout": 1800,
+  "edits": {},
+  "commands": [
+    {
+      "command": "git fetch -q origin agent-control && git show origin/agent-control:.agent/payloads/20260905-growbox-gate5-shelly-role-routing-v1/run.sh > /tmp/gate5.sh && bash /tmp/gate5.sh",
+      "exit_code": 0,
+      "output": "HEAD is now at 8710bf12 Add Gate 3 host regression targets\nGATE5_PORT /dev/cu.usbserial-1130\nGATE5_BASELINE power_w=2.200 voltage_v=243.60\nGATE5_SIGNATURE device=lamp pre_w=2.200 on_w=99.200 off_w=2.200 delta_on_w=97.000 delta_off_w=97.000 pass=1\nGATE5_SIGNATURE device=fan pre_w=2.200 on_w=5.100 off_w=2.200 delta_on_w=2.900 delta_off_w=2.900 pass=1\nGATE5_SIGNATURE device=humidifier pre_w=2.300 on_w=18.000 off_w=2.200 delta_on_w=15.700 delta_off_w=15.800 pass=1\nGATE5_FINAL power_w=2.200 baseline_delta_w=0.000 cleanup_errors=0\nGATE5_ROLE_ROUTING_PASS sha=8710bf127ad895e262f604e1b4c59ea11b760667 lamp=pass fan=pass humidifier=pass final=all_off master=on\n",
+      "elapsed_seconds": 251.592,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 37.66,
+      "output_policy": "stream",
+      "captured_output_chars": 659,
+      "output_truncated": false,
+      "current_rss_mb": 23.53,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 251.592
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.09
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.083
+  },
+  "finished_at": "2026-09-05T06:57:15.024504+00:00",
+  "task_digest": "39a1b1aa9d248de0188de2783d80ad98838bd1db89445f04c59d1f22f9c25d37",
+  "idle_timeout": 600,
+  "task_timeout": 2400,
+  "memory_limit_mb": 4096,
+  "attempt_id": "03d94f6a53f86956e74df802",
+  "daemon_version": "4.17.0"
+}
