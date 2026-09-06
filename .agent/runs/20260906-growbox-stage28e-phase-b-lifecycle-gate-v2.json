@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 2,
+  "index": 3,
   "total": 3,
-  "command": "set -eu; HOST=build/host-stage28e-b-lifecycle-v2; rm -rf \"$HOST\"; cmake -S test/host -B \"$HOST\"; cmake --build \"$HOST\" --parallel 2; ctest --test-dir \"$HOST\" --output-on-failure; printf 'STAGE28E_B_LIFECYCLE_HOST_GATE_PASS\\n'",
-  "pid": 23659,
+  "command": "set -eu; BUILD=build/idf-stage28e-b-lifecycle-v2; rm -rf \"$BUILD\"; STAGE27C_BUILD_DIR=\"$BUILD\" GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 GROWBOX_RF433_LOOPBACK_ENABLED=0 ./scripts/stage27c_crowpanel.sh build; strings \"$BUILD/growbox_ml_controller.elf\" | grep -Fq 'stage28e_runtime_lifecycle entry_count='; strings \"$BUILD/growbox_ml_controller.elf\" | grep -Fq 'arbiter_construct instance_id='; . /Users/michal/esp/esp-idf/export.sh >/dev/null 2>&1; idf.py -B \"$BUILD\" size; printf 'STAGE28E_B_LIFECYCLE_FIRMWARE_GATE_PASS\\n'",
+  "pid": 24649,
   "timeout": 1200,
   "idle_timeout": 180,
   "memory_limit_mb": 4096,
-  "started_at": "2026-09-06T15:30:08.156106+00:00",
-  "stage_name": "command-2",
-  "stage_index": 2,
+  "started_at": "2026-09-06T15:30:31.903148+00:00",
+  "stage_name": "command-3",
+  "stage_index": 3,
   "stage_total": 3,
   "stage_phase": "commands",
   "task_id": "20260906-growbox-stage28e-phase-b-lifecycle-gate-v2",
@@ -18,5 +18,5 @@
   "task_digest": "b077667c94850f9f04a9567ab1a85ad56cc8891a849af20c8938020fe70be155",
   "daemon_version": "4.18.4",
   "daemon_pid": 23495,
-  "updated_at": "2026-09-06T15:30:08.251870+00:00"
+  "updated_at": "2026-09-06T15:30:31.982882+00:00"
 }
