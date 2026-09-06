@@ -1,0 +1,18 @@
+{
+  "id": "20260907-growbox-stage28e-phase-e1-telemetry-caps-audit-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 4096,
+  "command_timeout": 1800,
+  "idle_timeout": 300,
+  "task_timeout": 3600,
+  "commands": [
+    "set -euo pipefail; EXPECTED=5e750b972eeff4ac8c9149ef6ea708f703d2d755; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; git diff --check; echo STAGE28E_E1_AUDIT_EXACT_SHA_PASS=$EXPECTED",
+    "set -euo pipefail; IDF=/Users/michal/esp/esp-idf; echo STAGE28E_E1_TASK_API_BEGIN; grep -RInE 'xTaskCreate[^ (]*WithCaps|xTaskCreateStatic[^ (]*|TASK_CREATE_ALLOW_EXT_MEM|MALLOC_CAP_SPIRAM' \"$IDF/components/freertos\" | head -240; echo STAGE28E_E1_TASK_API_END; echo STAGE28E_E1_QUEUE_API_BEGIN; grep -RInE 'xQueueCreateStatic|xQueueGenericCreateStatic|StaticQueue_t|pucQueueStorageBuffer' \"$IDF/components/freertos\" | head -240; echo STAGE28E_E1_QUEUE_API_END",
+    "set -euo pipefail; IDF=/Users/michal/esp/esp-idf; echo STAGE28E_E1_EXTMEM_CONSTRAINTS_BEGIN; grep -RInE -C 6 'TASK_CREATE_ALLOW_EXT_MEM|external memory|external RAM|SPIRAM|MALLOC_CAP_SPIRAM' \"$IDF/components/freertos/esp_additions\" \"$IDF/components/freertos/FreeRTOS-Kernel\" \"$IDF/components/esp_psram\" 2>/dev/null | head -420; echo STAGE28E_E1_EXTMEM_CONSTRAINTS_END",
+    "set -euo pipefail; echo STAGE28E_E1_PROJECT_ALLOC_BEGIN; grep -nE 'xQueueCreate|xTaskCreate|taskStackBytes|kQueueDepth' src/climate/storage/Stage27TelemetryLogger.cpp src/climate/storage/Stage27TelemetryLogger.h; echo STAGE28E_E1_PROJECT_ALLOC_END; CFG=build/idf-stage28e-d2-control-owner-gate/sdkconfig; if [ -f \"$CFG\" ]; then grep -E '^CONFIG_(SPIRAM_USE_CAPS_ALLOC|SPIRAM_USE_MALLOC|SPIRAM_TRY_ALLOCATE_WIFI_LWIP|FREERTOS_TASK_CREATE_ALLOW_EXT_MEM)=' \"$CFG\" || true; grep -E '^# CONFIG_SPIRAM_USE_MALLOC is not set' \"$CFG\" || true; fi; echo STAGE28E_E1_TELEMETRY_CAPS_AUDIT_PASS"
+  ]
+}
