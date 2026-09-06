@@ -37,4 +37,9 @@ inline BootIdentity captureBootIdentity(const char* firmware_sha) noexcept {
   return identity;
 }
 
+inline const BootIdentity& bootIdentity(const char* firmware_sha) noexcept {
+  static const BootIdentity identity = captureBootIdentity(firmware_sha);
+  return identity;
+}
+
 } // namespace growbox::app::climate_io::runtime
