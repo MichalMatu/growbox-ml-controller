@@ -1,0 +1,116 @@
+{
+  "id": "20260906-growbox-stage28e-phase-a-baseline-v1",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "started_at": "2026-09-06T04:02:50.613392+00:00",
+  "command_timeout": 7200,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; EXPECTED=2218ad30401222537cb568541d80bc07adc2c0eb; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; printf 'STAGE28E_A_BASELINE_HEAD=%s\\n' \"$EXPECTED\"",
+      "exit_code": 0,
+      "output": "STAGE28E_A_BASELINE_HEAD=2218ad30401222537cb568541d80bc07adc2c0eb\n",
+      "elapsed_seconds": 1.0,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 6144,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 2.33,
+      "output_policy": "stream",
+      "captured_output_chars": 66,
+      "output_truncated": false,
+      "current_rss_mb": 2.33,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 4,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "set -euo pipefail; cmake -S test/host -B build/host-tests >/dev/null; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests --output-on-failure",
+      "exit_code": 0,
+      "output": "[  4%] Built target climate_runtime_parity_tests\n[  7%] Built target tp357_decoder_tests\n[ 10%] Built target stage27_native_inputs_tests\n[ 13%] Built target climate_observability_metrics_tests\n[ 17%] Built target stage28_service_console_tests\n[ 21%] Built target stage27_telemetry_tests\n[ 21%] Built target europe_warsaw_time_tests\n[ 23%] Built target climate_io_adapter_tests\n[ 26%] Built target stage28d_lamp_safety_tests\n[ 29%] Built target rf433_protocol_tests\n[ 39%] Built target climate_semantic_output_tests\n[ 42%] Built target environment_control_tests\n[ 43%] Built target climate_v6_tests\n[ 45%] Built target stage27_schedule_profile_tests\n[ 55%] Built target climate_application_composition_tests\n[ 55%] Built target stage27_file_durability_tests\n[ 59%] Built target climate_virtual_hil_tests\n[ 61%] Built target climate_diagnostics_tests\n[ 65%] Built target ble_climate_state_tests\n[ 70%] Built target climate_control_loop_tests\n[ 78%] Built target climate_deterministic_fake_runtime_tests\n[ 85%] Built target climate_fault_soak_tests\n[ 92%] Built target stage27_fault_freshness_tests\n[100%] Built target climate_composite_input_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-tests\n      Start  1: environment_control_tests\n 1/24 Test  #1: environment_control_tests ..................   Passed    0.01 sec\n      Start  2: climate_v6_tests\n 2/24 Test  #2: climate_v6_tests ...........................   Passed    0.01 sec\n      Start  3: climate_runtime_parity_tests\n 3/24 Test  #3: climate_runtime_parity_tests ...............   Passed    0.01 sec\n      Start  4: climate_control_loop_tests\n 4/24 Test  #4: climate_control_loop_tests .................   Passed    0.01 sec\n      Start  5: climate_virtual_hil_tests\n 5/24 Test  #5: climate_virtual_hil_tests ..................   Passed    0.01 sec\n      Start  6: climate_io_adapter_tests\n 6/24 Test  #6: climate_io_adapter_tests ...................   Passed    0.01 sec\n      Start  7: climate_application_composition_tests\n 7/24 Test  #7: climate_application_composition_tests ......   Passed    0.01 sec\n      Start  8: climate_deterministic_fake_runtime_tests\n 8/24 Test  #8: climate_deterministic_fake_runtime_tests ...   Passed    0.01 sec\n      Start  9: climate_fault_soak_tests\n 9/24 Test  #9: climate_fault_soak_tests ...................   Passed    0.01 sec\n      Start 10: climate_diagnostics_tests\n10/24 Test #10: climate_diagnostics_tests ..................   Passed    0.01 sec\n      Start 11: climate_composite_input_tests\n11/24 Test #11: climate_composite_input_tests ..............   Passed    0.01 sec\n      Start 12: climate_semantic_output_tests\n12/24 Test #12: climate_semantic_output_tests ..............   Passed    0.01 sec\n      Start 13: stage28d_lamp_safety_tests\n13/24 Test #13: stage28d_lamp_safety_tests .................   Passed    0.01 sec\n      Start 14: climate_observability_metrics_tests\n14/24 Test #14: climate_observability_metrics_tests ........   Passed    0.01 sec\n      Start 15: europe_warsaw_time_tests\n15/24 Test #15: europe_warsaw_time_tests ...................   Passed    0.01 sec\n      Start 16: stage27_schedule_profile_tests\n16/24 Test #16: stage27_schedule_profile_tests .............   Passed    0.01 sec\n      Start 17: tp357_decoder_tests\n17/24 Test #17: tp357_decoder_tests ........................   Passed    0.01 sec\n      Start 18: stage27_telemetry_tests\n18/24 Test #18: stage27_telemetry_tests ....................   Passed    0.01 sec\n      Start 19: ble_climate_state_tests\n19/24 Test #19: ble_climate_state_tests ....................   Passed    0.01 sec\n      Start 20: stage27_native_inputs_tests\n20/24 Test #20: stage27_native_inputs_tests ................   Passed    0.01 sec\n      Start 21: stage27_fault_freshness_tests\n21/24 Test #21: stage27_fault_freshness_tests ..............   Passed    0.01 sec\n      Start 22: stage27_file_durability_tests\n22/24 Test #22: stage27_file_durability_tests ..............   Passed    0.01 sec\n      Start 23: stage28_service_console_tests\n23/24 Test #23: stage28_service_console_tests ..............   Passed    0.01 sec\n      Start 24: rf433_protocol_tests\n24/24 Test #24: rf433_protocol_tests .......................   Passed    0.01 sec\n\n100% tests passed, 0 tests failed out of 24\n\nTotal Test time (real) =   0.19 sec\n",
+      "elapsed_seconds": 1.134,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 6144,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 1.88,
+      "output_policy": "stream",
+      "captured_output_chars": 4339,
+      "output_truncated": false,
+      "current_rss_mb": 1.88,
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 4,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "set -euo pipefail; printf '%s\\n' '=== static diagnostic surface ==='; rg -n 'heap_caps_get_|uxTaskGetStackHighWaterMark|esp_reset_reason|ESP_LOG[EWIDV]|std::string|String\\b|snprintf|vsnprintf' src/climate src/main.cpp | head -400; printf '%s\\n' '=== runtime object declarations ==='; sed -n '220,360p' src/climate/ClimateV6RealInputRuntime.cpp",
+      "exit_code": 127,
+      "output": "=== static diagnostic surface ===\n/bin/sh: rg: command not found\n",
+      "elapsed_seconds": 0.374,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 6144,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": null,
+      "output_policy": "stream",
+      "captured_output_chars": 65,
+      "output_truncated": false,
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 4,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 4,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 1.0
+    },
+    {
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 4,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 1.134
+    },
+    {
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 4,
+      "stage_phase": "commands",
+      "outcome": "failed",
+      "elapsed_seconds": 0.374
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.093
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.07
+  },
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-06T04:02:55.472607+00:00",
+  "task_digest": "b5765a6b2f4ba0b48b460baac7677dc902f1ea74b90dccbca76bf73062288cfd",
+  "idle_timeout": 900,
+  "task_timeout": 10800,
+  "memory_limit_mb": 6144,
+  "attempt_id": "16e26d36ee2adbb8b387e763",
+  "daemon_version": "4.18.4"
+}
