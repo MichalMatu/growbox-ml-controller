@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260906-growbox-stage28e-phase-c-freertos-allocation-contract-v1",
   "task_digest": "64d004760f6d7ea2611e9f648628e26928d45957a9e94eb75c846f10f9b821d8",
-  "idle_timeout": 300,
-  "task_timeout": 1800,
-  "memory_limit_mb": 4096,
-  "started_at": "2026-09-06T21:09:34.659693+00:00",
+  "status": "done",
+  "failure_reason": null,
+  "finished_at": "2026-09-06T21:09:38.070216+00:00",
   "attempt_id": "7c3fe2e9ce4024b11087b375",
   "daemon_version": "4.18.4",
   "daemon_pid": 13176,
-  "updated_at": "2026-09-06T21:09:34.659826+00:00",
+  "updated_at": "2026-09-06T21:09:38.411161+00:00",
   "pid": 13176
 }
