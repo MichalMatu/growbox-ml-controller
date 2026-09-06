@@ -1,0 +1,17 @@
+{
+  "id": "20260906-growbox-stage28e-phase-b-exit-gate-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 4096,
+  "command_timeout": 600,
+  "idle_timeout": 300,
+  "task_timeout": 900,
+  "commands": [
+    "set -euo pipefail; EXPECTED=e0fb5da17879569f791898ba793e1c02b195fab8; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; git diff --check; echo STAGE28E_B_EXIT_EXACT_SHA_PASS=$EXPECTED",
+    "set -euo pipefail; test -f docs/STAGE28E_PHASE_B_HANDOFF.md; grep -Fq 'b43516a2adcd320b3da2b4ee9051e442cceb5c93' docs/STAGE28E_PHASE_B_HANDOFF.md; grep -Fq 'previous_valid=1' docs/STAGE28E_PHASE_B_HANDOFF.md; grep -Fq 'reset reason `3`' docs/STAGE28E_PHASE_B_HANDOFF.md; grep -Fq '14 heartbeats' docs/STAGE28E_PHASE_B_HANDOFF.md; grep -Fq 'two successful heap-integrity checks' docs/STAGE28E_PHASE_B_HANDOFF.md; grep -Fq 'STAGE28E_B_HW_V3_SAFE_FAKE_LOCKED_PASS' docs/STAGE28E_PHASE_B_HANDOFF.md; grep -Fq 'Phase C next' docs/CURRENT_STATUS.md; grep -Fq 'docs/STAGE28E_PHASE_B_HANDOFF.md' docs/CONTINUATION_PLAN.md; echo STAGE28E_B_EXIT_DOCS_EVIDENCE_PASS",
+    "set -euo pipefail; grep -Fq 'GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST=0' docs/STAGE28E_PHASE_B_HANDOFF.md; grep -Fq 'Shelly master ON' docs/CURRENT_STATUS.md; grep -Fq 'Do not run a long soak before Phase G' docs/CURRENT_STATUS.md; git status --short; test -z \"$(git status --porcelain)\"; echo STAGE28E_PHASE_B_EXIT_GATE_PASS"
+  ]
+}
