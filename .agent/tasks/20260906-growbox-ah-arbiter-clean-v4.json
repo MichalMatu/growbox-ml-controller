@@ -1,0 +1,20 @@
+{
+  "id": "20260906-growbox-ah-arbiter-clean-v4",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": ["board:growbox-s3"],
+  "memory_limit_mb": 6144,
+  "command_timeout": 7200,
+  "idle_timeout": 3600,
+  "task_timeout": 10800,
+  "commands": [
+    "set -euo pipefail; EXPECTED=dfc6dc86a47ad2158e36bb0d5241b0153dbce387; git fetch -q origin mvp/environment-controller agent-control; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"",
+    "git show origin/agent-control:.agent/payloads/20260906-growbox-fan-30m-day-real-v1/run.py > /tmp/growbox-fan30-base.py",
+    "git show origin/agent-control:.agent/payloads/20260906-growbox-ah-arbiter-clean-v2/run.py > /tmp/growbox-ah-arbiter-clean-v2.py",
+    "git show origin/agent-control:.agent/payloads/20260906-growbox-ah-arbiter-clean-v4/run.py > /tmp/growbox-ah-arbiter-clean-v4.py",
+    ".venv/bin/python -m py_compile /tmp/growbox-fan30-base.py /tmp/growbox-ah-arbiter-clean-v2.py /tmp/growbox-ah-arbiter-clean-v4.py",
+    ".venv/bin/python /tmp/growbox-ah-arbiter-clean-v4.py"
+  ]
+}
