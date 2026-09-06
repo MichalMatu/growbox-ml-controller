@@ -141,7 +141,10 @@ export IDF_PATH='$IDF_DIR/esp-idf'
 export IDF_TOOLS_PATH='$IDF_DIR/idf-tools'
 export IDF_PYTHON_ENV_PATH='$SANDBOX_ROOT/idf-python'
 export PATH='$SANDBOX_ROOT/idf-python/bin:$IDF_DIR/esp-idf/tools':"\$PATH"
-eval "\$('$SANDBOX_ROOT/idf-python/bin/python' '$IDF_DIR/esp-idf/tools/idf_tools.py' export --format key-value)"
+# Use ESP-IDF's own activation logic. It honors IDF_TOOLS_PATH and the explicit
+# IDF_PYTHON_ENV_PATH above and keeps future 5.5.x export behavior in one place.
+# shellcheck disable=SC1091
+source '$IDF_DIR/esp-idf/export.sh'
 EOF
   chmod +x "$SANDBOX_ROOT/idf-export.sh"
 fi
