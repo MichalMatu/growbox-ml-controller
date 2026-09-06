@@ -82,6 +82,7 @@ jobs:
     needs: keys
     if: needs.keys.outputs.host_changed == 'true'
     runs-on: ubuntu-24.04
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
@@ -91,18 +92,76 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y clang-tidy zstd
       - run: tools/sandbox/build-host-pack.sh build/sandbox-host-pack
-      - uses: actions/upload-artifact@v4
+      - name: Upload complete host pack for GitHub validation
+        uses: actions/upload-artifact@v4
         with:
           name: growbox-host-${{ needs.keys.outputs.host_key }}
           path: build/sandbox-host-pack/**
           if-no-files-found: error
           compression-level: 0
           retention-days: 14
+      - name: Upload host manifest for Library transfer
+        uses: actions/upload-artifact@v4
+        with:
+          name: growbox-host-${{ needs.keys.outputs.host_key }}-manifest
+          path: build/sandbox-host-pack/manifest/**
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Upload host part 000
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-host-${{ needs.keys.outputs.host_key }}-part-000', path: build/sandbox-host-pack/part-000, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload host part 001
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-host-${{ needs.keys.outputs.host_key }}-part-001', path: build/sandbox-host-pack/part-001, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload host part 002
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-host-${{ needs.keys.outputs.host_key }}-part-002', path: build/sandbox-host-pack/part-002, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload host part 003
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-host-${{ needs.keys.outputs.host_key }}-part-003', path: build/sandbox-host-pack/part-003, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload host part 004
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-host-${{ needs.keys.outputs.host_key }}-part-004', path: build/sandbox-host-pack/part-004, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload host part 005
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-host-${{ needs.keys.outputs.host_key }}-part-005', path: build/sandbox-host-pack/part-005, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload host part 006
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-host-${{ needs.keys.outputs.host_key }}-part-006', path: build/sandbox-host-pack/part-006, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload host part 007
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-host-${{ needs.keys.outputs.host_key }}-part-007', path: build/sandbox-host-pack/part-007, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload host part 008
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-host-${{ needs.keys.outputs.host_key }}-part-008', path: build/sandbox-host-pack/part-008, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload host part 009
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-host-${{ needs.keys.outputs.host_key }}-part-009', path: build/sandbox-host-pack/part-009, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload host part 010
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-host-${{ needs.keys.outputs.host_key }}-part-010', path: build/sandbox-host-pack/part-010, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload host part 011
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-host-${{ needs.keys.outputs.host_key }}-part-011', path: build/sandbox-host-pack/part-011, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload host part 012
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-host-${{ needs.keys.outputs.host_key }}-part-012', path: build/sandbox-host-pack/part-012, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload host part 013
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-host-${{ needs.keys.outputs.host_key }}-part-013', path: build/sandbox-host-pack/part-013, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload host part 014
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-host-${{ needs.keys.outputs.host_key }}-part-014', path: build/sandbox-host-pack/part-014, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload host part 015
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-host-${{ needs.keys.outputs.host_key }}-part-015', path: build/sandbox-host-pack/part-015, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
 
   web-pack:
     needs: keys
     if: needs.keys.outputs.web_changed == 'true'
     runs-on: ubuntu-24.04
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - uses: actions/setup-node@v4
@@ -122,6 +181,7 @@ jobs:
     needs: keys
     if: needs.keys.outputs.idf_changed == 'true'
     runs-on: ubuntu-24.04
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
@@ -153,13 +213,70 @@ jobs:
           export IDF_TOOLS_PATH=/tmp/idf-tools
           . "$IDF_PATH/export.sh"
           tools/sandbox/build-idf-pack.sh build/sandbox-idf-pack
-      - uses: actions/upload-artifact@v4
+      - name: Upload complete IDF pack for GitHub validation
+        uses: actions/upload-artifact@v4
         with:
           name: growbox-idf-${{ needs.keys.outputs.idf_key }}
           path: build/sandbox-idf-pack/**
           if-no-files-found: error
           compression-level: 0
           retention-days: 14
+      - name: Upload IDF manifest for Library transfer
+        uses: actions/upload-artifact@v4
+        with:
+          name: growbox-idf-${{ needs.keys.outputs.idf_key }}-manifest
+          path: build/sandbox-idf-pack/manifest/**
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Upload IDF part 000
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-idf-${{ needs.keys.outputs.idf_key }}-part-000', path: build/sandbox-idf-pack/part-000, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload IDF part 001
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-idf-${{ needs.keys.outputs.idf_key }}-part-001', path: build/sandbox-idf-pack/part-001, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload IDF part 002
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-idf-${{ needs.keys.outputs.idf_key }}-part-002', path: build/sandbox-idf-pack/part-002, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload IDF part 003
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-idf-${{ needs.keys.outputs.idf_key }}-part-003', path: build/sandbox-idf-pack/part-003, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload IDF part 004
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-idf-${{ needs.keys.outputs.idf_key }}-part-004', path: build/sandbox-idf-pack/part-004, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload IDF part 005
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-idf-${{ needs.keys.outputs.idf_key }}-part-005', path: build/sandbox-idf-pack/part-005, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload IDF part 006
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-idf-${{ needs.keys.outputs.idf_key }}-part-006', path: build/sandbox-idf-pack/part-006, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload IDF part 007
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-idf-${{ needs.keys.outputs.idf_key }}-part-007', path: build/sandbox-idf-pack/part-007, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload IDF part 008
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-idf-${{ needs.keys.outputs.idf_key }}-part-008', path: build/sandbox-idf-pack/part-008, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload IDF part 009
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-idf-${{ needs.keys.outputs.idf_key }}-part-009', path: build/sandbox-idf-pack/part-009, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload IDF part 010
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-idf-${{ needs.keys.outputs.idf_key }}-part-010', path: build/sandbox-idf-pack/part-010, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload IDF part 011
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-idf-${{ needs.keys.outputs.idf_key }}-part-011', path: build/sandbox-idf-pack/part-011, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload IDF part 012
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-idf-${{ needs.keys.outputs.idf_key }}-part-012', path: build/sandbox-idf-pack/part-012, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload IDF part 013
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-idf-${{ needs.keys.outputs.idf_key }}-part-013', path: build/sandbox-idf-pack/part-013, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload IDF part 014
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-idf-${{ needs.keys.outputs.idf_key }}-part-014', path: build/sandbox-idf-pack/part-014, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
+      - name: Upload IDF part 015
+        uses: actions/upload-artifact@v4
+        with: {name: 'growbox-idf-${{ needs.keys.outputs.idf_key }}-part-015', path: build/sandbox-idf-pack/part-015, if-no-files-found: ignore, compression-level: 0, retention-days: 14}
 
   validate-packs:
     needs: [keys, host-pack, web-pack, idf-pack]
@@ -169,6 +286,7 @@ jobs:
       needs.web-pack.result == 'success' &&
       needs.idf-pack.result == 'success'
     runs-on: ubuntu-24.04
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - uses: actions/setup-node@v4
