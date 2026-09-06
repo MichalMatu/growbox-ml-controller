@@ -3,6 +3,7 @@
 #include "climate/runtime/Stage28eBreadcrumbs.h"
 
 #include <esp_log.h>
+#include <esp_system.h>
 #include <esp_timer.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -11,6 +12,11 @@
 #include <atomic>
 #include <cstdarg>
 #include <cstdio>
+#include <cstring>
+
+#ifndef GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST
+#define GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST 0
+#endif
 
 namespace growbox::app::climate_io::runtime {
 namespace {
@@ -52,6 +58,11 @@ private:
 AtomicModuleFilter g_filter;
 std::atomic<std::uint32_t> g_boot_id{0U};
 std::atomic<std::uint32_t> g_sequence{0U};
+
+#if GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST
+constexpr char kHeapIntegrityOkPrefix[] = "heap_integrity_ok check=";
+std::atomic<bool> g_breadcrumb_restart_selftest_fired{false};
+#endif
 
 esp_log_level_t toEspLogLevel(DiagnosticLogLevel level) noexcept {
   switch (level) {
@@ -116,6 +127,19 @@ void stage28eLogWrite(DiagnosticLogModule module, DiagnosticLogLevel level,
                 static_cast<unsigned long>(sequence), diagnosticLogLevelName(level),
                 diagnosticLogModuleName(module), task_name != nullptr ? task_name : "?",
                 static_cast<long>(core_id), message.data());
+
+#if GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST
+  const bool heap_integrity_success =
+      module == DiagnosticLogModule::Mem && level == DiagnosticLogLevel::Info &&
+      std::strncmp(message.data(), kHeapIntegrityOkPrefix, sizeof(kHeapIntegrityOkPrefix) - 1U) == 0;
+  if (heap_integrity_success && esp_reset_reason() != ESP_RST_SW &&
+      !g_breadcrumb_restart_selftest_fired.exchange(true, std::memory_order_relaxed)) {
+    esp_log_write(ESP_LOG_WARN, kTag,
+                  "stage28e_breadcrumb_restart_selftest action=esp_restart uptime_ms=%llu",
+                  static_cast<unsigned long long>(uptime_ms));
+    esp_restart();
+  }
+#endif
 }
 
 } // namespace growbox::app::climate_io::runtime
