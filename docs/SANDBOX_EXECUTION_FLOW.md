@@ -66,12 +66,12 @@ Used for firmware compilation and `clang-check`.
 Contains:
 
 - ESP-IDF 5.5.4
-- ESP32-S3 Xtensa toolchain
-- `esp-clang`
-- IDF tool downloads
+- the complete ESP-IDF tool set selected by the packed `idf-env.json` for the ESP32-S3 environment
+- `esp-clang` for the repository's clang static-analysis gate
+- the ESP-IDF tool-install metadata and `espidf.constraints.*.txt` required to reproduce/validate the environment offline
 - an offline wheelhouse for the IDF Python environment
 
-The IDF pack intentionally depends on the host pack's Python 3.11 runtime. This avoids storing a second CPython distribution.
+The IDF pack intentionally depends on the host pack's Python 3.11 runtime. This avoids storing a second CPython distribution. After restore, sandbox activation sources the official packed ESP-IDF `export.sh`; the pack builder verifies that activation before publishing the archive.
 
 ## Dependency keys
 
