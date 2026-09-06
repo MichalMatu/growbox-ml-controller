@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 4,
+  "index": 5,
   "total": 5,
-  "command": "set -euo pipefail; rm -rf build/host-tests-stage28e-d2; cmake -S test/host -B build/host-tests-stage28e-d2 >/tmp/stage28e-d2-host-config.log 2>&1; cmake --build build/host-tests-stage28e-d2 --parallel 1 >/tmp/stage28e-d2-host-build.log 2>&1; ctest --test-dir build/host-tests-stage28e-d2 --output-on-failure; echo STAGE28E_D2_HOST_TESTS_PASS",
-  "pid": 77250,
+  "command": "set -euo pipefail; test -z \"$(git status --porcelain)\"; git diff --check; echo STAGE28E_D2_GATE_PASS",
+  "pid": 78630,
   "timeout": 3600,
   "idle_timeout": 600,
   "memory_limit_mb": 6144,
-  "started_at": "2026-09-06T22:00:12.473446+00:00",
-  "stage_name": "command-4",
-  "stage_index": 4,
+  "started_at": "2026-09-06T22:00:50.453469+00:00",
+  "stage_name": "command-5",
+  "stage_index": 5,
   "stage_total": 5,
   "stage_phase": "commands",
   "task_id": "20260906-growbox-stage28e-phase-d2-control-owner-gate-v1",
@@ -18,5 +18,5 @@
   "task_digest": "c649e25835719fea28aa8d25af423214c0df148e9f1c4015aa306045049f9327",
   "daemon_version": "4.18.4",
   "daemon_pid": 70792,
-  "updated_at": "2026-09-06T22:00:12.490796+00:00"
+  "updated_at": "2026-09-06T22:00:50.541950+00:00"
 }
