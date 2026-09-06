@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260907-growbox-stage28e-phase-e2-storage-stack-hardware-v1",
+  "task_digest": "a032349a72a1bb4c7d601d692e721bc82d4c0d6123d103626ab0f7ced69f0132",
+  "idle_timeout": 900,
+  "task_timeout": 10800,
+  "memory_limit_mb": 6144,
+  "started_at": "2026-09-06T23:12:32.756719+00:00",
+  "attempt_id": "a12baab07d26385e228604f2",
+  "daemon_version": "4.18.4",
+  "daemon_pid": 52771,
+  "updated_at": "2026-09-06T23:12:32.756893+00:00",
+  "pid": 52771
+}
