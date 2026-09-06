@@ -16,6 +16,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: sandbox-pack-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   keys:
     runs-on: ubuntu-24.04
