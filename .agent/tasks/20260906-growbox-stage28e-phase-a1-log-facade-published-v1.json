@@ -1,0 +1,19 @@
+{
+  "id": "20260906-growbox-stage28e-phase-a1-log-facade-published-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 6144,
+  "command_timeout": 7200,
+  "idle_timeout": 900,
+  "task_timeout": 10800,
+  "commands": [
+    "set -euo pipefail; EXPECTED=3058625be2f35c121afcf82549d5c73068839ecd; git fetch -q origin mvp/environment-controller agent-control; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"",
+    "set -euo pipefail; TMP=$(mktemp -d); trap 'rm -rf \"$TMP\"' EXIT; git archive c055bb2d0568b3b826e2ec92b755051dfea3d258 | tar -x -C \"$TMP\"; git show origin/agent-control:.agent/payloads/20260906-growbox-stage28e-phase-a1-log-facade-v1/run.py > \"$TMP/run.py\"; (cd \"$TMP\" && python3 run.py); for f in src/CMakeLists.txt src/climate/runtime/Stage28eLog.h src/climate/runtime/Stage28eLog.cpp src/climate/ClimateV6RealInputRuntime.cpp; do test \"$(git hash-object \"$TMP/$f\")\" = \"$(git hash-object \"$f\")\"; done; echo STAGE28E_A1_LOG_FACADE_BLOBS_MATCH",
+    "set -euo pipefail; c++ -std=c++17 -Wall -Wextra -Wpedantic -Isrc test/test_stage28e_diagnostics_core/test_main.cpp -o /tmp/stage28e_diagnostics_core_tests; /tmp/stage28e_diagnostics_core_tests; cmake -S test/host -B build/host-tests >/dev/null; cmake --build build/host-tests --parallel >/dev/null; ctest --test-dir build/host-tests --output-on-failure",
+    "set -euo pipefail; export CMAKE_BUILD_PARALLEL_LEVEL=1; STAGE27C_BUILD_DIR=build/idf-stage28e-a1-log-facade-published-v1 GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_FIRMWARE_GIT_SHA=3058625be2f35c121afcf82549d5c73068839ecd bash scripts/stage27c_crowpanel.sh build; source scripts/source_idf.sh >/dev/null 2>&1; idf.py -B build/idf-stage28e-a1-log-facade-published-v1 size",
+    "set -euo pipefail; git diff --check; test -z \"$(git status --porcelain)\"; echo STAGE28E_A1_LOG_FACADE_PUBLISHED_PASS"
+  ]
+}
