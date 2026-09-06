@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260906-growbox-stage28e-phase-b-coredump-audit-v2",
+  "task_digest": "6eba77916486488f39c2a565f4197de218e5819cd8b5c5bc48baa3c80a8a3a11",
+  "idle_timeout": 120,
+  "task_timeout": 900,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-06T15:02:42.360986+00:00",
+  "attempt_id": "a9498dfc395b9f25b48370a6",
+  "daemon_version": "4.18.4",
+  "daemon_pid": 89769,
+  "updated_at": "2026-09-06T15:02:42.361146+00:00",
+  "pid": 89769
+}
