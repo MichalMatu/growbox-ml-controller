@@ -2,8 +2,8 @@
   "version": 1,
   "daemon_version": "4.18.4",
   "state": "idle",
-  "pid": 57403,
-  "updated_at": "2026-09-06T15:53:20.149227+00:00",
+  "pid": 67808,
+  "updated_at": "2026-09-06T15:58:37.488179+00:00",
   "self_revision": "bb3f4baabd91aecf5fe979c93c857b4f86991fab",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -23,8 +23,7 @@
   "default_branch": "main",
   "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 57403,
+  "worker_pid": 67808,
   "supervisor_pid": 91651,
-  "last_task_id": "20260906-growbox-stage28e-phase-b-health-gate-v1",
   "execution_variant": "parallel"
 }
