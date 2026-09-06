@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260906-growbox-stage28e-phase-b-lifecycle-gate-v2",
+  "task_digest": "b077667c94850f9f04a9567ab1a85ad56cc8891a849af20c8938020fe70be155",
+  "idle_timeout": 180,
+  "task_timeout": 2400,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-06T15:30:05.279468+00:00",
+  "attempt_id": "6fdb7b29f539fa146c9a398f",
+  "daemon_version": "4.18.4",
+  "daemon_pid": 23495,
+  "updated_at": "2026-09-06T15:30:05.280120+00:00",
+  "pid": 23495
+}
