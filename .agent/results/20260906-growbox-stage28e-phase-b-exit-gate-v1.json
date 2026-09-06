@@ -1,0 +1,88 @@
+{
+  "id": "20260906-growbox-stage28e-phase-b-exit-gate-v1",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "started_at": "2026-09-06T20:26:03.136092+00:00",
+  "command_timeout": 600,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; EXPECTED=e0fb5da17879569f791898ba793e1c02b195fab8; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; git diff --check; echo STAGE28E_B_EXIT_EXACT_SHA_PASS=$EXPECTED",
+      "exit_code": 0,
+      "output": "STAGE28E_B_EXIT_EXACT_SHA_PASS=e0fb5da17879569f791898ba793e1c02b195fab8\n",
+      "elapsed_seconds": 1.051,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 1.91,
+      "output_policy": "stream",
+      "captured_output_chars": 72,
+      "output_truncated": false,
+      "current_rss_mb": 1.91,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "set -euo pipefail; test -f docs/STAGE28E_PHASE_B_HANDOFF.md; grep -Fq 'b43516a2adcd320b3da2b4ee9051e442cceb5c93' docs/STAGE28E_PHASE_B_HANDOFF.md; grep -Fq 'previous_valid=1' docs/STAGE28E_PHASE_B_HANDOFF.md; grep -Fq 'reset reason `3`' docs/STAGE28E_PHASE_B_HANDOFF.md; grep -Fq '14 heartbeats' docs/STAGE28E_PHASE_B_HANDOFF.md; grep -Fq 'two successful heap-integrity checks' docs/STAGE28E_PHASE_B_HANDOFF.md; grep -Fq 'STAGE28E_B_HW_V3_SAFE_FAKE_LOCKED_PASS' docs/STAGE28E_PHASE_B_HANDOFF.md; grep -Fq 'Phase C next' docs/CURRENT_STATUS.md; grep -Fq 'docs/STAGE28E_PHASE_B_HANDOFF.md' docs/CONTINUATION_PLAN.md; echo STAGE28E_B_EXIT_DOCS_EVIDENCE_PASS",
+      "exit_code": 1,
+      "output": "",
+      "elapsed_seconds": 0.378,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": null,
+      "output_policy": "stream",
+      "captured_output_chars": 0,
+      "output_truncated": false,
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 1.051
+    },
+    {
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "failed",
+      "elapsed_seconds": 0.378
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.095
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.073
+  },
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-06T20:26:06.847072+00:00",
+  "task_digest": "83ba18152f8ba4c84f12b6c315e37bc6ab232e35d8d729529ac496969c9613f1",
+  "idle_timeout": 300,
+  "task_timeout": 900,
+  "memory_limit_mb": 4096,
+  "attempt_id": "be5a52e667ae6c9dadefd85f",
+  "daemon_version": "4.18.4"
+}
