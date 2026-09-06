@@ -3,18 +3,6 @@ set -euo pipefail
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 cd "$ROOT"
 
-# Source snapshots are created with git archive and intentionally do not carry .git.
-# Recreate a local-only repository so existing quality scripts that use
-# `git rev-parse --show-toplevel` work unchanged. The immutable upstream SHA
-# remains recorded in .sandbox-snapshot/git-sha.txt.
-if [[ ! -d .git && -f .sandbox-snapshot/git-sha.txt ]]; then
-  git init -q
-  git config user.name 'Growbox Sandbox'
-  git config user.email 'sandbox@local.invalid'
-  git add -A
-  git commit -q --no-gpg-sign -m "Sandbox snapshot $(cat .sandbox-snapshot/git-sha.txt)"
-fi
-
 if [[ $# -lt 1 ]]; then
   echo "usage: $0 <sandbox-root> [--host PACK] [--web PACK] [--idf PACK]" >&2
   exit 2
@@ -35,12 +23,34 @@ while [[ $# -gt 0 ]]; do
 done
 
 mkdir -p "$SANDBOX_ROOT/packs" "$SANDBOX_ROOT/bin"
+
+# Archives can preserve a numeric owner different from the sandbox process user.
+# Keep Git's safe.directory exception private to this sandbox instead of changing
+# the user's normal global Git configuration.
+GIT_SANDBOX_CONFIG="$SANDBOX_ROOT/gitconfig"
+rm -f "$GIT_SANDBOX_CONFIG"
+git config --file "$GIT_SANDBOX_CONFIG" --add safe.directory "$ROOT"
+export GIT_CONFIG_GLOBAL="$GIT_SANDBOX_CONFIG"
+
+# Source snapshots are created with git archive and intentionally do not carry .git.
+# Recreate a local-only repository so existing quality scripts that use
+# `git rev-parse --show-toplevel` work unchanged. The immutable upstream SHA
+# remains recorded in .sandbox-snapshot/git-sha.txt.
+if [[ ! -d .git && -f .sandbox-snapshot/git-sha.txt ]]; then
+  git init -q
+  git config user.name 'Growbox Sandbox'
+  git config user.email 'sandbox@local.invalid'
+  git add -A
+  git commit -q --no-gpg-sign -m "Sandbox snapshot $(cat .sandbox-snapshot/git-sha.txt)"
+fi
+
 ENV_FILE="$SANDBOX_ROOT/env.sh"
 : > "$ENV_FILE"
 cat >> "$ENV_FILE" <<EOF
 export GROWBOX_SANDBOX_ROOT='$SANDBOX_ROOT'
 export GROWBOX_SOURCE_ROOT='$ROOT'
 export PYTHONNOUSERSITE=1
+export GIT_CONFIG_GLOBAL='$GIT_SANDBOX_CONFIG'
 EOF
 
 expected_key() {
