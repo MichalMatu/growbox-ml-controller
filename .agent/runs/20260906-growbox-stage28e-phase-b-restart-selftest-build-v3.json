@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260906-growbox-stage28e-phase-b-restart-selftest-build-v3",
+  "task_digest": "24c703cc5984a6a1816884e644669a169490e75a02ac712731649d42eca3a587",
+  "idle_timeout": 180,
+  "task_timeout": 2400,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-06T16:35:57.286930+00:00",
+  "attempt_id": "4188bb5f9b2139df91d22257",
+  "daemon_version": "4.18.4",
+  "daemon_pid": 29907,
+  "updated_at": "2026-09-06T16:35:57.287089+00:00",
+  "pid": 29907
+}
