@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 4,
+  "index": 5,
   "total": 5,
-  "command": "set -euo pipefail; export CMAKE_BUILD_PARALLEL_LEVEL=1; STAGE27C_BUILD_DIR=build/idf-stage28e-a5-v1 GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_FIRMWARE_GIT_SHA=c284b811e8973f8d1628f1eab8e2a641be49d4dc bash scripts/stage27c_crowpanel.sh build; source scripts/source_idf.sh >/dev/null 2>&1; idf.py -B build/idf-stage28e-a5-v1 size",
-  "pid": 14362,
+  "command": "set -euo pipefail; git diff --check; echo STAGE28E_A5_LOCAL_PASS; git status --short",
+  "pid": 20487,
   "timeout": 7200,
   "idle_timeout": 900,
   "memory_limit_mb": 6144,
-  "started_at": "2026-09-06T06:23:31.679422+00:00",
-  "stage_name": "command-4",
-  "stage_index": 4,
+  "started_at": "2026-09-06T06:24:24.738508+00:00",
+  "stage_name": "command-5",
+  "stage_index": 5,
   "stage_total": 5,
   "stage_phase": "commands",
   "task_id": "20260906-growbox-stage28e-phase-a5-local-v1",
@@ -18,5 +18,5 @@
   "task_digest": "e384029bd84f218d4f04e2967732fd9af06a16067a180c6676294079952ed306",
   "daemon_version": "4.18.4",
   "daemon_pid": 13920,
-  "updated_at": "2026-09-06T06:23:31.696969+00:00"
+  "updated_at": "2026-09-06T06:24:24.765320+00:00"
 }
