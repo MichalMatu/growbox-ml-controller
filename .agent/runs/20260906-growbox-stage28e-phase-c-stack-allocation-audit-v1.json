@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260906-growbox-stage28e-phase-c-stack-allocation-audit-v1",
+  "task_digest": "39867a19fbe40d37d75553bed91121cdb72dd095f4651db39b3cd9c5db04f854",
+  "idle_timeout": 600,
+  "task_timeout": 3600,
+  "memory_limit_mb": 6144,
+  "started_at": "2026-09-06T21:07:49.913148+00:00",
+  "attempt_id": "0b330bd1a00ec9c53377bace",
+  "daemon_version": "4.18.4",
+  "daemon_pid": 11516,
+  "updated_at": "2026-09-06T21:07:49.913271+00:00",
+  "pid": 11516
+}
