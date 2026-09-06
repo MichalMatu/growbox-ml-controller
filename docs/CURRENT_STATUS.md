@@ -2,7 +2,7 @@
 
 Updated: 2026-09-06
 Development branch: `mvp/environment-controller`
-Latest handoff: `docs/STAGE28E_PHASE_B_HANDOFF.md`
+Latest handoff: `docs/STAGE28E_PHASE_C_HANDOFF.md`
 Stage28E execution guide: `docs/GUIDANCE.md`
 Prior Stage28D evidence: `docs/STAGE28D_AH_ARBITER_HANDOFF.md`
 Primary roadmap: `docs/PROJECT_ROADMAP.md`
@@ -10,9 +10,9 @@ Continuation checklist: `docs/CONTINUATION_PLAN.md`
 
 ## Current transition
 
-**Stage27C FROZEN -> Stage28A/B/C DONE -> Gates 1-6 COMPLETE -> Gate 7 previously qualified -> AH policy software COMPLETE -> Gate 7 runtime path REOPENED by V5 evidence -> Stage28E Phase A COMPLETE -> Phase B COMPLETE pending final docs-only exit gate -> Phase C next**
+**Stage27C FROZEN -> Stage28A/B/C DONE -> Gates 1-6 COMPLETE -> Gate 7 previously qualified -> AH policy software COMPLETE -> Gate 7 runtime path REOPENED by V5 evidence -> Stage28E Phase A COMPLETE -> Phase B COMPLETE -> Phase C COMPLETE pending final docs-only exit gate -> Phase D next**
 
-Stage28D functional work remains intentionally paused. The active program remains Stage28E A -> H. Phase A established low-overhead observability; Phase B added reset/crash/corruption/lifecycle evidence. Phase C now performs a quantitative memory/resource audit before any broad optimization or architecture change.
+Stage28D functional AH work remains paused. The active program remains Stage28E A -> H. Phase A established observability, Phase B added crash/reset/corruption/lifecycle evidence, and Phase C produced a quantitative memory/stack/allocation baseline. Phase D now hardens ownership/lifetime without changing control semantics.
 
 ## Phase identities
 
@@ -20,147 +20,132 @@ Phase A exit SHA:
 
 `384e415eaaec960add2b3b3fe94db5c052ca6497`
 
-Phase B hardware-validated source SHA:
+Phase B exit SHA:
 
-`b43516a2adcd320b3da2b4ee9051e442cceb5c93`
+`e0fb5da17879569f791898ba793e1c02b195fab8`
 
-Phase B evidence handoff creation commit:
+Phase C measurement source SHA:
 
-`d1df3bdca7eaf0683609c816c875bba326f05f97`
+`e0fb5da17879569f791898ba793e1c02b195fab8`
+
+Phase C handoff creation commit:
+
+`3215d5d1e3e85e6f9e6fa9e04f238e48c9a621ba`
 
 Always fetch fresh work-branch HEAD and Local Agent daemon state before editing or queueing work.
 
-## Phase B completed capability
+## Phase C quantitative baseline
 
-The firmware now provides:
+Exact default/safe firmware image:
 
-- 1 MiB flash coredump partition with ELF/CRC32/DRAM capture configuration;
-- boot-time coredump presence/validity/size reporting;
-- low-wear RTC no-init breadcrumbs with magic/version/checksum;
-- retained previous boot/log/fault/arbiter counters across software reset;
-- runtime entry count and arbiter instance/construction identity;
-- same-instance cumulative counter regression detection with explicit uint32 wrap handling;
-- corrected stack-HWM telemetry units for ESP-IDF 5.5.4;
-- periodic runtime heartbeat at the existing telemetry cadence;
-- periodic `heap_caps_check_integrity_all(false)` at roughly one-minute cadence;
-- diagnostic-only compile-time breadcrumb restart self-test, disabled by default.
+`743369 B`
 
-Key Phase B commits include:
+Static/linker memory:
 
-- `9e5ae78f4f4dc56426ecfefd5724c9861d810465` — coredump partition
-- `5f7cdab9811fe8df686565516ce326fbb23041ba` — coredump configuration
-- `2cf2a19bb9d1dfe4cfc51d477748d0c1b14332a6` — coredump boot marker
-- `c2627fe9cc0bca3352c2fa1f6c40b9075d28b3bb` — lifecycle identity
-- `1caf8557eecbec06dccf658ced65c285bf6c032b` — arbiter counter continuity sentinel
-- `d75e904f59d2a00b4648b1498a6157351c903ea8` — stack-HWM unit correction
-- `2d15ff26769103be7ebf461d4891c2d7c0116d2e` — heartbeat and heap integrity
-- `2c7cf143b7ebf253c29c1fe02148466accb23e95` — RTC breadcrumbs
-- `528357397c38dbfbb82af1f09df907cf8bc7b651` — bounded restart self-test
-- `b43516a2adcd320b3da2b4ee9051e442cceb5c93` — explicit build option plumbing for restart self-test
+- Flash Code `.text`: `479570 B`
+- Flash Data: `129284 B`
+- `.rodata`: `129028 B`
+- DIRAM used: `124771 B / 341760 B` (`36.51%`)
+- DIRAM remaining: `216989 B`
+- DIRAM `.data`: `20512 B`
+- DIRAM `.bss`: `6672 B`
+- IRAM: `16384 B / 16384 B`
+- RTC no-init breadcrumb: `112 B`
+- deliberate coredump stack: `1892 B`
 
-## Phase B bounded hardware evidence
+There is no evidence of a large hidden application `.bss` consumer.
 
-Final task:
+## Long-lived main-task stack ownership
 
-`20260906-growbox-stage28e-phase-b-hardware-diag-v3`
+`runClimateV6RealInputRuntime()` is `[[noreturn]]` and its compiler-reported static frame is:
 
-Exact source SHA:
+**`5296 B`**
 
-`b43516a2adcd320b3da2b4ee9051e442cceb5c93`
+Important automatic objects retained in that frame for the process lifetime:
 
-The diagnostic build was fake-locked with real RF outputs disabled. It performed one bounded `esp_restart()` after a successful periodic heap-integrity check.
+- `Stage28RfDiagnostics`: `1288 B`
+- `ClimateRuntimeController`: `872 B`
+- `Stage27TelemetryLogger`: `848 B`
+- `Stage28ServiceConsole`: `208 B`
+- `RuntimeTimingMetrics`: `200 B`
+- `BleClimateScanner`: `136 B`
+- `Stage28dBinaryRoleArbiter`: `136 B`
 
-Evidence after the software reset:
+`Stage28RfDiagnostics` contains fixed RF loopback symbol arrays, so its `1288 B` object cost exists even when RF loopback diagnostics are disabled.
 
-- reset reason `3` / `ESP_RST_SW`;
-- retained breadcrumb `previous_valid=1`;
-- previous breadcrumb boot sequence `1`;
-- previous arbiter instance `1` and construction count `1`;
-- previous arbiter continuity faults `0`;
-- 14 heartbeats observed across the two boot instances;
-- two successful heap-integrity checks;
-- no coredump present;
-- no `heap_integrity_failed`;
-- no `arbiter_counter_regression`;
-- no Guru Meditation / corrupt heap / stack-canary marker;
-- post-reset main HWM about `8064 B`;
-- internal RAM: free `217188 B`, minimum `216656 B`, largest `176128 B`;
-- PSRAM free `8363512 B`, minimum `8363512 B`, largest `8257536 B`;
-- outputs `fake-locked`;
-- Shelly master ON;
-- Shelly median power `65.5 W`.
+Measured `app_main` HWM was about `8064 B` in Phase B and reached `7984 B` in the Phase C bounded baseline from a configured `16384 B` stack. The stack is not currently critical, but the ownership pattern is quantitatively expensive and is the first Phase D target.
 
-The most important retained line was:
+Important transient frames:
 
-```text
-stage28e_breadcrumb previous_valid=1 write_seq=10 boot_seq=1 boot_id=33c2cde5 reset_reason=1 last_log_seq=8 last_log_uptime_ms=52331 last_log_module=1 last_log_level=2 fault_code=0 fault_seq=0 fault_uptime_ms=0 arbiter_instance=1 arbiter_constructions=1 arbiter_transitions=0 arbiter_dwell_holds=0 arbiter_safety_overrides=0 arbiter_continuity_faults=0
-```
+- service-console RF receive: `1648 B`
+- service-console SD log read: `1184 B`
+- telemetry storage `persistSnapshot()`: `1120 B`
+- telemetry reporter log formatting: `880 B`
+- telemetry reporter record: `592 B`
 
-This proves the breadcrumb can preserve prior runtime/arbiter state across the software-reset path that Phase B needs to diagnose.
+## FreeRTOS/internal-RAM allocation contract
 
-## Normal-firmware restore proof
+For this exact ESP-IDF 5.5.4 build:
 
-After the diagnostic run, the board was rebuilt and flashed from the same source SHA with:
+- ordinary `pvPortMalloc()` uses `MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT`;
+- `CONFIG_SPIRAM_USE_CAPS_ALLOC=y`;
+- `CONFIG_SPIRAM_USE_MALLOC` is not set;
+- `CONFIG_FREERTOS_TASK_CREATE_ALLOW_EXT_MEM=y`.
 
-`GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST=0`
+Therefore ordinary `xTaskCreate()` and `xQueueCreate()` consume internal RAM unless an explicit caps-aware API/path is chosen.
 
-The restore build was checked not to contain the restart-self-test marker.
+Telemetry storage currently has at least these internal-RAM costs:
 
-Final status:
+- `stage27_store` task stack: `7168 B` plus task control allocation;
+- `Stage27TelemetrySnapshot`: `296 B`;
+- queue depth: `16`;
+- queue payload: **`4736 B`** plus queue metadata/allocator overhead.
 
-- firmware SHA `b43516a2adcd320b3da2b4ee9051e442cceb5c93`;
-- reset reason `1` after flash/hardware reboot;
-- outputs `fake-locked`;
-- `rf_ready=0`;
-- internal RAM free/min/largest `217444 / 216824 / 176128 B`;
-- main HWM `8064 B`;
-- Shelly master ON;
-- Shelly median power `65.5 W`.
+Do not globally enable PSRAM malloc or move these blindly. Ownership first belongs to Phase D; measured placement optimization belongs to Phase E.
 
-Final task markers:
+## Phase C bounded hardware baseline
 
-- `STAGE28E_B_HW_V3_RUNTIME_PASS`
-- `STAGE28E_B_HW_V3_SAFE_FAKE_LOCKED_PASS`
-- `STAGE28E_B_HARDWARE_DIAG_V3_PASS`
+Task:
 
-## Firmware-size evidence
+`20260906-growbox-stage28e-phase-c-runtime-baseline-v1`
 
-Useful progression:
+Exact firmware/source SHA:
 
-- original Phase A baseline: `726061 B`
-- Phase A diagnostic implementation: `730821 B`
-- B1 coredump + boot marker: `739537 B`
-- lifecycle build: `739893 B`
-- counter sentinel build: `740285 B`
-- heartbeat/heap-integrity build: `741265 B`
-- RTC breadcrumb build: `743369 B`
-- diagnostic restart-self-test build: `743773 B`
+`e0fb5da17879569f791898ba793e1c02b195fab8`
 
-The restart self-test is compile-time disabled in the normal firmware.
+Safe configuration had real outputs, thermal test, RF loopback and breadcrumb restart self-test all disabled.
 
-## V5 issue remains open but is now diagnosable
+Representative runtime metrics through about 118 seconds:
 
-The decisive Stage28D functional evidence remains V5:
+- internal free: `217444 B`
+- internal minimum: `216808 B`
+- largest internal block: `176128 B`
+- PSRAM free: `8363512 B`
+- PSRAM minimum: `8363108 B`
+- largest PSRAM block: `8257536 B`
+- main HWM: `8064 B`, later `7984 B`
+- heartbeat count: `14`
+- heap-integrity successes: `2`
+- no heap-integrity failure/counter regression/crash/canary marker
+- Shelly master ON for all read-only samples
+- Shelly median power: `65.8 W`
+- final state: `fake-locked`
 
-`20260906-growbox-ah-arbiter-clean-v5`
+The internal minimum was only `636 B` below the steady current-free value and the largest block remained `176128 B`. The old approximately 1 KiB internal-memory observation was not reproduced in Phase A-C and is not accepted as the current product state.
 
-The unexplained cumulative dwell-hold decrease remains:
+Long-duration fragmentation/stability proof remains Phase G work.
+
+## V5 issue remains open but instrumented
+
+The prior Stage28D V5 anomaly remains cumulative `arbiter_dwell_holds` decreasing:
 
 `33 -> 43 -> 1 -> 11`
 
-Phase B did not reproduce a same-instance counter regression. The firmware can now distinguish:
+Phase B/C did not reproduce a same-instance regression. The firmware can now distinguish boot/reset, same-boot reconstruction, same-instance regression/corruption, coredump state, heap-integrity failure and liveness loss.
 
-- new boot/reset;
-- same-boot arbiter/runtime reconstruction;
-- same-instance cumulative counter regression;
-- prior state retained across a software reset;
-- heap-integrity failure;
-- missing runtime heartbeat;
-- coredump presence/absence.
+Do not change `Stage28dBinaryRoleArbiter::applyBinary()` based only on the old V5 trace. A-G must pass before the final physical path in Phase H.
 
-Do not change `Stage28dBinaryRoleArbiter::applyBinary()` based only on the old V5 trace. Phase C-G must complete before returning to the final physical actuator path in Phase H.
-
-## Latest safety boundary
+## Safety boundary
 
 Correct Growbox serial device:
 
@@ -183,13 +168,12 @@ Standing invariants:
 
 ## Immediate next work
 
-1. Run one docs-only exact-SHA Phase B exit gate on the fresh work-branch HEAD.
-2. Record that SHA as the formal Phase B exit SHA.
-3. Start **Stage28E Phase C — memory map, stack audit and resource baseline**.
-4. Phase C starts read-only: collect linker/static memory evidence and inventory long-lived runtime objects before changing architecture or allocator policy.
-5. Quantify `.data`, `.bss`, IRAM, flash text/rodata, static DRAM contributors, task HWM, large objects, storage location and allocation capability.
-6. Pay special attention to large locals inside the non-returning climate runtime function because they remain resident on `app_main` stack.
-7. Classify generic `malloc/new`, explicit PSRAM, internal/DMA and library-owned allocations.
-8. Decide from measured evidence whether the historical approximately 1 KiB internal-free observation was real, transient, minimum-ever, fragmentation-related or incorrect.
+1. Run one docs-only exact-SHA Phase C exit gate on fresh HEAD.
+2. Record the passing SHA as formal Phase C exit SHA.
+3. Start **Stage28E Phase D — architecture hardening and ownership cleanup**.
+4. First Phase D slice: introduce an explicit long-lived runtime owner for the existing object graph so the giant non-returning automatic frame no longer implicitly owns all runtime state.
+5. Preserve a single binary-arbiter instance and all Phase B lifecycle/continuity diagnostics.
+6. Do not combine the ownership refactor with PSRAM relocation, stack reductions, allocator-threshold changes or AH behavior changes.
+7. After each coherent slice run focused host tests, firmware build/size and compiler stack-frame comparison; use bounded fake-locked hardware only when needed to validate lifetime behavior.
 
-Do not run a long soak before Phase G and do not return to a real AH actuator transition before Phase H.
+Do not run the long soak before Phase G and do not return to a real AH actuator transition before Phase H.
