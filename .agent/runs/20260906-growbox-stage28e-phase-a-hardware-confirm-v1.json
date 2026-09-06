@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260906-growbox-stage28e-phase-a-hardware-confirm-v1",
+  "task_digest": "aff284d3742f62eb615027da42ef8dda2657e5791c33ebd9b604f7b5c5c61951",
+  "idle_timeout": 120,
+  "task_timeout": 600,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-06T07:22:54.643489+00:00",
+  "attempt_id": "eb5a11167a29de825ece23b6",
+  "daemon_version": "4.18.4",
+  "daemon_pid": 76300,
+  "updated_at": "2026-09-06T07:22:54.643701+00:00",
+  "pid": 76300
+}
