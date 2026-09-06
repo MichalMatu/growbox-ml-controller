@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260906-growbox-stage28e-phase-b-breadcrumbs-gate-v1",
+  "task_digest": "6169eb08687d05b5063d121a0a7bc1deab4e8cc96f2cde98d5e81174aba7b7f8",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-06T16:06:12.547376+00:00",
+  "attempt_id": "1dccf2c497940751d89048bf",
+  "daemon_version": "4.18.4",
+  "daemon_pid": 73171,
+  "updated_at": "2026-09-06T16:06:12.547461+00:00",
+  "pid": 73171
+}
