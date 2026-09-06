@@ -1,0 +1,89 @@
+{
+  "id": "20260906-growbox-stage28e-phase-d-runtime-io-owner-gate-v1",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "started_at": "2026-09-06T21:34:45.433058+00:00",
+  "command_timeout": 3600,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; EXPECTED=1aee13cb96eaebdf41a937c5622cce61f1a01b88; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; git diff --check; grep -Fq 'class RuntimeIoOwner final' src/climate/ClimateV6RealInputRuntime.cpp; grep -Fq 'static RuntimeIoOwner runtime_io_owner;' src/climate/ClimateV6RealInputRuntime.cpp; echo STAGE28E_D1_EXACT_SHA_PASS=$EXPECTED",
+      "exit_code": 0,
+      "output": "STAGE28E_D1_EXACT_SHA_PASS=1aee13cb96eaebdf41a937c5622cce61f1a01b88\n",
+      "elapsed_seconds": 1.041,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 6144,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 2.53,
+      "output_policy": "stream",
+      "captured_output_chars": 68,
+      "output_truncated": false,
+      "current_rss_mb": 2.53,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 5,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "set -euo pipefail; export CMAKE_BUILD_PARALLEL_LEVEL=1; BUILD=build/idf-stage28e-d1-runtime-owner-gate; rm -rf \"$BUILD\"; STAGE27C_BUILD_DIR=\"$BUILD\" GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST=0 GROWBOX_FIRMWARE_GIT_SHA=1aee13cb96eaebdf41a937c5622cce61f1a01b88 bash scripts/stage27c_crowpanel.sh build >/tmp/stage28e-d1-build.log 2>&1; . /Users/michal/esp/esp-idf/export.sh >/dev/null 2>&1; idf.py -B \"$BUILD\" size > /tmp/stage28e-d1-size.txt; cat /tmp/stage28e-d1-size.txt; grep -Fq 'Total image size:' /tmp/stage28e-d1-size.txt; echo STAGE28E_D1_FIRMWARE_BUILD_PASS",
+      "exit_code": 1,
+      "output": "Total image size: 743541 bytes (.bin may be padded larger)\nNote: The reported total sizes may be smaller than those in the technical reference manual due to reserved memory and application configuration. The total flash size available for the application is not included by default, as it cannot be reliably determined due to the presence of other data like the bootloader, partition table, and application partition size.\nExecuting action: size\nRunning ninja in directory /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/idf-stage28e-d1-runtime-owner-gate\nExecuting \"ninja all\"...\n[1/4] cd /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/idf-stage28e-d1-runtime-owner-gate/esp-idf/esptool_py && /Users/michal/.espressif/python_env/idf5.5_py3.13_env/bin/python /Users/michal/esp/esp-idf/components/partition_table/check_sizes.py --offset 0x8000 partition --type app /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/idf-stage28e-d1-runtime-owner-gate/partition_table/partition-table.bin /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/idf-stage28e-d1-runtime-owner-gate/growbox_ml_controller.bin\ngrowbox_ml_controller.bin binary size 0xb58f0 bytes. Smallest app partition is 0x400000 bytes. 0x34a710 bytes (82%) free.\n[2/4] Performing build step for 'bootloader'\n[1/1] cd /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/idf-stage28e-d1-runtime-owner-gate/bootloader/esp-idf/esptool_py && /Users/michal/.espressif/python_env/idf5.5_py3.13_env/bin/python /Users/michal/esp/esp-idf/components/partition_table/check_sizes.py --offset 0x8000 bootloader 0x0 /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/idf-stage28e-d1-runtime-owner-gate/bootloader/bootloader.bin\nBootloader binary size 0x48f0 bytes. 0x3710 bytes (43%) free.\n[3/4] No install step for 'bootloader'\n[4/4] Completed 'bootloader'\nRunning ninja in directory /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/idf-stage28e-d1-runtime-owner-gate\nExecuting \"ninja size\"...\n[0/1] cd /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/idf-stage28e-d1-runtime-owner-gate && /opt/homebrew/bin/cmake -D \"IDF_SIZE_TOOL=/Users/michal/.espressif/python_env/idf5.5_py3.13_env/bin/python;-m;esp_idf_size\" -D MAP_FILE=/Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/idf-stage28e-d1-runtime-owner-gate/growbox_ml_controller.map -D OUTPUT_JSON= -P /Users/michal/esp/esp-idf/tools/cmake/run_size_tool.cmake\n                            Memory Type Usage Summary                             \n┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓\n┃ Memory Type/Section ┃ Used [bytes] ┃ Used [%] ┃ Remain [bytes] ┃ Total [bytes] ┃\n┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩\n│ Flash Code          │       479734 │          │                │               │\n│    .text            │       479734 │          │                │               │\n│ Flash Data          │       129292 │          │                │               │\n│    .rodata          │       129036 │          │                │               │\n│    .appdesc         │          256 │          │                │               │\n│ DIRAM               │       127347 │    37.26 │         214413 │        341760 │\n│    .text            │        97587 │    28.55 │                │               │\n│    .data            │        20512 │      6.0 │                │               │\n│    .bss             │         9248 │     2.71 │                │               │\n│ IRAM                │        16384 │    100.0 │              0 │         16384 │\n│    .text            │        15356 │    93.73 │                │               │\n│    .vectors         │         1028 │     6.27 │                │               │\n│ RTC SLOW            │          144 │     1.76 │           8048 │          8192 │\n│    .rtc_noinit      │          112 │     1.37 │                │               │\n│    .force_slow      │           32 │     0.39 │                │               │\n│ RTC FAST            │           24 │     0.29 │           8168 │          8192 │\n│    .rtc_reserved    │           24 │     0.29 │                │               │\n└─────────────────────┴──────────────┴──────────┴────────────────┴───────────────┘\n",
+      "elapsed_seconds": 58.573,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 6144,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 135.39,
+      "output_policy": "stream",
+      "captured_output_chars": 4356,
+      "output_truncated": false,
+      "current_rss_mb": 87.97,
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 5,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 5,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 1.041
+    },
+    {
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 5,
+      "stage_phase": "commands",
+      "outcome": "failed",
+      "elapsed_seconds": 58.573
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.142
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.082
+  },
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-06T21:35:47.271500+00:00",
+  "task_digest": "2120cbf852f890d439d706fa375140a48c549e13f329c0b0f26f37e588cead1e",
+  "idle_timeout": 600,
+  "task_timeout": 7200,
+  "memory_limit_mb": 6144,
+  "attempt_id": "005bd686f70a38f2f9c2a6aa",
+  "daemon_version": "4.18.4"
+}
