@@ -104,8 +104,14 @@ if [[ -n "$WEB_PACK" ]]; then
 exec node '$WEB_DIR/pnpm/node_modules/pnpm/bin/pnpm.cjs' "\$@"
 EOF
   chmod +x "$SANDBOX_ROOT/bin/pnpm"
-  "$SANDBOX_ROOT/bin/pnpm" --dir web install \
-    --frozen-lockfile --offline --store-dir "$WEB_DIR/store"
+
+  # pnpm 11.10 performs its minimum-release-age supply-chain query even with
+  # --offline. In a sandbox restore the exact lockfile and pack have already
+  # been SHA-256 verified, so disable only that time-based registry check for
+  # this offline reconstruction. Normal development/CI policy is unchanged.
+  PNPM_CONFIG_MINIMUM_RELEASE_AGE=0 \
+    "$SANDBOX_ROOT/bin/pnpm" --dir web install \
+      --frozen-lockfile --offline --store-dir "$WEB_DIR/store"
   cat >> "$ENV_FILE" <<EOF
 export GROWBOX_SANDBOX_WEB_PACK='$WEB_DIR'
 export PATH='$SANDBOX_ROOT/bin':"\$PATH"
