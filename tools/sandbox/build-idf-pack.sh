@@ -35,6 +35,25 @@ else
   exit 1
 fi
 
+# idf_tools.py needs these files from the IDF_TOOLS_PATH root to reproduce the
+# selected target/tool set and to validate the Python environment. Without
+# idf-env.json it falls back to a broader tool set; without the constraints file
+# export/idf.py fails even when all tool binaries are already present.
+[[ -f "$IDF_TOOLS_PATH/idf-env.json" ]] || {
+  echo "Missing IDF environment metadata: $IDF_TOOLS_PATH/idf-env.json" >&2
+  exit 1
+}
+cp "$IDF_TOOLS_PATH/idf-env.json" "$STAGE/idf-tools/"
+
+shopt -s nullglob
+CONSTRAINTS=("$IDF_TOOLS_PATH"/espidf.constraints.*.txt)
+shopt -u nullglob
+(( ${#CONSTRAINTS[@]} > 0 )) || {
+  echo "Missing ESP-IDF constraints file under $IDF_TOOLS_PATH" >&2
+  exit 1
+}
+cp "${CONSTRAINTS[@]}" "$STAGE/idf-tools/"
+
 python -m pip list --format=freeze \
   | grep -vE '(@ file:|@ git\+|^-e )' \
   > "$STAGE/meta/idf-python-requirements.txt"
