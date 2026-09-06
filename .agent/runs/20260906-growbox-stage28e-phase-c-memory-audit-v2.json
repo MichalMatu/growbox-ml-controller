@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260906-growbox-stage28e-phase-c-memory-audit-v2",
+  "task_digest": "db3d54ef757aa8d8c1a99980fcef4d3c72720a89d872fef8b061ccc3870a969a",
+  "idle_timeout": 600,
+  "task_timeout": 3600,
+  "memory_limit_mb": 6144,
+  "started_at": "2026-09-06T21:04:57.680035+00:00",
+  "attempt_id": "31f8dbe855b3037e8f1c6511",
+  "daemon_version": "4.18.4",
+  "daemon_pid": 8570,
+  "updated_at": "2026-09-06T21:04:57.680221+00:00",
+  "pid": 8570
+}
