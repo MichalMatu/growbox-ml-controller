@@ -1,9 +1,9 @@
 # Fresh-context continuation plan
 
-Updated: 2026-09-06
+Updated: 2026-09-07
 Work branch: `mvp/environment-controller`
 Control branch: `agent-control`
-Latest handoff: `docs/STAGE28E_PHASE_C_HANDOFF.md`
+Latest handoff: `docs/STAGE28E_PHASE_D_HANDOFF.md`
 Stage28E execution guide: `docs/GUIDANCE.md`
 Prior Stage28D evidence: `docs/STAGE28D_AH_ARBITER_HANDOFF.md`
 Current status: `docs/CURRENT_STATUS.md`
@@ -13,126 +13,122 @@ Primary roadmap: `docs/PROJECT_ROADMAP.md`
 
 1. `AGENTS.md`
 2. `docs/GUIDANCE.md`
-3. `docs/STAGE28E_PHASE_C_HANDOFF.md`
+3. `docs/STAGE28E_PHASE_D_HANDOFF.md`
 4. `docs/PROJECT_ROADMAP.md`
 5. `docs/CURRENT_STATUS.md`
 6. this file
-7. `docs/STAGE28E_PHASE_B_HANDOFF.md` when Phase B reset/lifecycle detail is needed
-8. `docs/STAGE28E_PHASE_A_HANDOFF.md` when the original observability baseline is needed
-9. `docs/STAGE28D_AH_ARBITER_HANDOFF.md` when historical V5 details are needed
-10. `docs/OBSERVABILITY_AND_INFERENCE_PLAN.md` when changing ventilation, inference, telemetry or ML behavior
+7. `docs/STAGE28E_PHASE_C_HANDOFF.md` for the memory baseline
+8. `docs/STAGE28E_PHASE_B_HANDOFF.md` for reset/lifecycle diagnostics
+9. `docs/STAGE28D_AH_ARBITER_HANDOFF.md` for historical V5 details
+10. `docs/OBSERVABILITY_AND_INFERENCE_PLAN.md` when changing ventilation/inference/telemetry/ML behavior
 11. `docs/SHELLY_POWER_FEEDBACK.md` when changing physical-state supervision
 
 Then fetch fresh `mvp/environment-controller` HEAD, fresh `agent-control:.agent/status/daemon.json`, and the newest Local Agent result. Never continue from remembered chat state alone.
 
 ## Current transition
 
-**Stage27C FROZEN -> Stage28A/B/C DONE -> Gates 1-6 COMPLETE -> Gate 7 previously qualified -> AH policy software COMPLETE -> Gate 7 runtime path REOPENED by V5 -> Stage28E Phase A COMPLETE -> Phase B COMPLETE -> Phase C COMPLETE pending exact-SHA docs gate -> Phase D next**
+**Stage27C FROZEN -> Stage28E A COMPLETE -> B COMPLETE -> C COMPLETE -> D COMPLETE -> Phase E ACTIVE**
 
-Stage28D functional AH work stays paused until A-G pass. The final physical `AH/rule request -> binary arbiter -> RF -> physical fan` path belongs to Stage28E Phase H.
+Stage28D functional AH work stays paused until A-G pass. Final physical `AH/rule request -> binary arbiter -> RF -> physical fan` verification belongs to Phase H.
 
 ## Phase identities
 
-Phase A exit SHA:
+- Phase A exit SHA: `384e415eaaec960add2b3b3fe94db5c052ca6497`
+- Phase B exit SHA: `e0fb5da17879569f791898ba793e1c02b195fab8`
+- Phase C exit SHA: `7601f0beb95d27b2bf2360b760355c3c235871a1`
+- Phase D implementation SHA: `09340089767cde117d12acc049790a2b93778b8e`
+- Phase D complete evidence: `docs/STAGE28E_PHASE_D_HANDOFF.md`
 
-`384e415eaaec960add2b3b3fe94db5c052ca6497`
+## Phase D decisive result
 
-Phase B exit SHA:
+Phase C identified a `5296 B` compiler-reported frame in the non-returning main runtime function.
 
-`e0fb5da17879569f791898ba793e1c02b195fab8`
+D1 (`1aee13cb96eaebdf41a937c5622cce61f1a01b88`):
 
-Phase C measurement source SHA:
+- introduced `RuntimeIoOwner` for telemetry storage + RF diagnostics;
+- frame `5296 -> 3104 B`;
+- host `24/24 PASS`;
+- hardware HWM `10256 B`;
+- internal free/min/largest `214740 / 214208 / 172032 B`;
+- safe final state `fake-locked`.
 
-`e0fb5da17879569f791898ba793e1c02b195fab8`
+D2 (`09340089767cde117d12acc049790a2b93778b8e`):
 
-Phase C complete evidence:
+- introduced `RuntimeControlOwner` for controller/safety/thermal sequence;
+- frame `3104 -> 2032 B`;
+- total reduction `3264 B` (`~61.6%`);
+- host `24/24 PASS`;
+- image `743477 B`;
+- `.bss` `10216 B`;
+- hardware HWM `11336 B`;
+- internal free/min/largest `213900 / 213264 / 172032 B`;
+- PSRAM free/min/largest `8363512 / 8363108 / 8257536 B`;
+- 11 heartbeats, heap-integrity PASS;
+- Shelly master ON, median `65.5 W`;
+- no coredump/counter regression/crash/corrupt heap/stack canary;
+- safe final state `fake-locked`.
 
-`docs/STAGE28E_PHASE_C_HANDOFF.md`
+Phase D did not change allocator placement or control/AH/RF/safety semantics.
 
-## Phase C decisive findings
+## Phase E — measured optimization
 
-Static/default firmware baseline:
+Start with telemetry storage because Phase C quantified a concrete internal-RAM cost.
 
-- image `743369 B`
-- `.data` `20512 B`
-- `.bss` `6672 B`
-- DIRAM used `124771 B / 341760 B`
-- DIRAM remaining `216989 B`
-- coredump stack `1892 B`
+Current exact facts:
 
-No large hidden application `.bss` consumer was found.
-
-The main runtime ownership pattern is quantitatively significant:
-
-- `runClimateV6RealInputRuntime()` is `[[noreturn]]`;
-- compiler static frame: **`5296 B`**;
-- `Stage28RfDiagnostics`: `1288 B`;
-- `ClimateRuntimeController`: `872 B`;
-- `Stage27TelemetryLogger`: `848 B`;
-- these and many smaller objects remain resident on `app_main` stack for the firmware lifetime.
-
-Important transient frames:
-
-- service-console RF receive `1648 B`;
-- service-console SD read `1184 B`;
-- telemetry storage persist `1120 B`;
-- telemetry log formatting `880 B`.
-
-Exact ESP-IDF 5.5.4 FreeRTOS allocation contract:
-
-- ordinary `pvPortMalloc()` is `MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT`;
-- `CONFIG_SPIRAM_USE_MALLOC` is not set;
+- ordinary `pvPortMalloc()` uses `MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT` in this ESP-IDF 5.5.4 build;
 - `CONFIG_SPIRAM_USE_CAPS_ALLOC=y`;
-- external-memory task creation is available only through explicit caps-aware paths.
+- `CONFIG_SPIRAM_USE_MALLOC` is not set;
+- `CONFIG_FREERTOS_TASK_CREATE_ALLOW_EXT_MEM=y`;
+- storage task stack is `7168 B` via ordinary `xTaskCreate()`;
+- queue depth is `16`;
+- `sizeof(Stage27TelemetrySnapshot) = 296 B`;
+- queue payload alone is `4736 B` via ordinary `xQueueCreate()`.
 
-Telemetry storage therefore has explicit internal-RAM costs:
+### First Phase E slice
 
-- `stage27_store` stack `7168 B` plus task metadata;
-- `Stage27TelemetrySnapshot` `296 B`;
-- 16-entry queue payload **`4736 B`** plus queue overhead.
+1. Read exact installed ESP-IDF 5.5.4 task/queue/static/caps API contracts; do not guess names or support.
+2. Determine whether queue storage and/or task stack can be placed in external RAM safely.
+3. Preserve queue semantics, logger lifetime, storage reliability and task priority.
+4. Do not globally enable `CONFIG_SPIRAM_USE_MALLOC`.
+5. Do not move ISR/DMA/RMT-sensitive buffers blindly.
+6. Do not reduce `stage27_store` stack until real HWM and worst audited local frames justify the new size.
+7. Make one coherent measured change at a time.
+8. After each slice compare:
+   - internal current/min/largest block;
+   - PSRAM current/min/largest block;
+   - task HWM;
+   - firmware image/static memory;
+   - storage queue drops/errors and write behavior;
+   - loop/timing diagnostics.
+9. Run host/build/size first; bounded fake-locked hardware only after software PASS.
 
-Do not globally enable PSRAM malloc or blindly move the queue/task. Phase D first clarifies ownership; Phase E handles measured placement optimization.
+### Later Phase E candidates
 
-## Phase C bounded runtime baseline
+Only if measured evidence supports them:
 
-Task:
+- lower `stage27_store` stack from its current `7168 B` based on real HWM + frame margin;
+- reduce telemetry/JSON/string transient churn;
+- review service-console transient frames (`1648 B` RF receive, `1184 B` SD read);
+- evaluate exact NimBLE/IDF allocation configuration only with before/after measurements.
 
-`20260906-growbox-stage28e-phase-c-runtime-baseline-v1`
+## Phase F after E
 
-Exact SHA:
+Run the focused binary-arbiter continuity/regression proof. It must demonstrate that a continuous single instance cannot produce the historical cumulative drop `43 -> 1`; test dwell monotonicity and transition eligibility around the 120 s minimum-OFF boundary.
 
-`e0fb5da17879569f791898ba793e1c02b195fab8`
+Do not modify `applyBinary()` merely to make the old V5 trace disappear.
 
-Safe fake-locked evidence through about 118 seconds:
+## Phase G after F
 
-- internal free `217444 B`;
-- internal minimum `216808 B`;
-- largest internal block `176128 B`;
-- PSRAM free `8363512 B`;
-- PSRAM minimum `8363108 B`;
-- largest PSRAM block `8257536 B`;
-- main HWM `8064 B`, later `7984 B`;
-- 14 heartbeats;
-- two heap-integrity successes;
-- no corruption/crash/counter-regression marker;
-- Shelly master ON, median `65.8 W`;
-- final marker `STAGE28E_C_SAFE_FAKE_LOCKED_PASS`.
+Run bounded fake-locked runtime first, then the long-duration soak only after short stability is clean. Preserve evidence on any reset, coredump, heap-integrity fault, counter regression, stack alarm, watchdog, or unexplained boot/session change.
 
-The historical approximately 1 KiB internal-free observation was not reproduced in A-C. It is not the current accepted product baseline. Long-duration stability/fragmentation proof remains Phase G.
+## Phase H after G
 
-## V5 issue remains the functional problem to explain
+Only after A-G pass, run bounded physical E2E:
 
-Prior decisive Stage28D task:
+`AH/rule request -> binary arbiter -> RF -> physical fan`
 
-`20260906-growbox-ah-arbiter-clean-v5`
-
-Unexpected cumulative dwell-hold trace:
-
-`33 -> 43 -> 1 -> 11`
-
-Phase B/C did not reproduce the regression. Diagnostics now distinguish reset, same-boot reconstruction, same-instance counter regression, coredump state, heap corruption and liveness failure.
-
-Do not change `applyBinary()` from the historical trace alone.
+Capture request, arbiter state/dwell/identity, transition, RF result, physical/Shelly evidence, memory/stack/safety, then restore `fake-locked`.
 
 ## Serial and hardware invariants
 
@@ -144,12 +140,12 @@ Never touch:
 
 `/dev/cu.usbserial-10`
 
-For Local Agent tasks:
+For every Local Agent task:
 
-- every task must contain exactly `"agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5"`;
+- include exactly `"agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5"`;
 - use `resources: []` for software/docs/build work;
-- use `resources: ["board:growbox-s3"]` for serial/flashing/device work;
-- check fresh daemon state before editing the same branch or queueing hardware access.
+- use `resources: ["board:growbox-s3"]` only for device work;
+- check fresh daemon state before editing/queueing hardware work.
 
 Safety boundary:
 
@@ -160,55 +156,16 @@ Safety boundary:
 - manual RF blocked during `real-bounded`;
 - Shelly master ON;
 - no unattended real-output operation;
-- restore/prove fake-locked after bounded diagnostics.
+- restore/prove `fake-locked` after bounded diagnostics.
 
 ## Immediate next work
 
-### 1. Close Phase C formally
-
-Run one docs-only exact-SHA Local Agent gate on fresh work-branch HEAD. Verify:
-
-- exact local and remote SHA;
-- clean work tree and `git diff --check`;
-- `docs/STAGE28E_PHASE_C_HANDOFF.md` exists;
-- the handoff records image `743369 B`, frame `5296 B`, telemetry queue payload `4736 B`, current/min/largest runtime memory and safe fake-locked result;
-- `docs/CURRENT_STATUS.md` and this file point to Phase D next;
-- no build, flash or device action.
-
-Record the passing SHA as formal Phase C exit SHA.
-
-### 2. Start Phase D — ownership hardening
-
-First coherent slice:
-
-1. introduce an explicit long-lived owner for the current runtime object graph;
-2. remove the implicit lifetime coupling created by many automatic objects in the `[[noreturn]]` runtime function;
-3. preserve exactly one `Stage28dBinaryRoleArbiter` instance and all Phase B lifecycle/continuity diagnostics;
-4. do **not** change control/safety semantics, PSRAM placement, queue/task allocation policy or AH behavior in the same slice;
-5. run focused host tests, firmware build/size and `-fstack-usage` comparison;
-6. only after software PASS, use a bounded fake-locked runtime check if ownership/lifetime behavior needs hardware proof.
-
-Target architecture direction remains:
-
-```text
-SystemRuntime
-  SensorRuntime
-  ControlRuntime
-    RuleController
-    AhController
-    BinaryArbiter
-  OutputRuntime
-    RfOutput
-    ShellyFeedback
-  SafetyRuntime
-  DiagnosticsRuntime
-  TelemetryRuntime
-```
-
-This is a direction, not a requirement for a giant rewrite. Move one coherent responsibility at a time.
-
-Do not reduce stacks or move FreeRTOS allocations to PSRAM until Phase E and only from measured evidence.
+1. Run docs-only exact-SHA Phase D exit gate on fresh HEAD.
+2. Record that passing SHA as formal Phase D exit SHA.
+3. Start Phase E with a read-only ESP-IDF 5.5.4 caps-aware allocation/API audit for telemetry storage.
+4. Implement the smallest measured storage-memory optimization slice.
+5. Verify software first, hardware second.
 
 ## Recommended fresh-chat instruction
 
-`Read AGENTS.md, docs/GUIDANCE.md, docs/STAGE28E_PHASE_C_HANDOFF.md, docs/CURRENT_STATUS.md and docs/CONTINUATION_PLAN.md. Fetch fresh mvp/environment-controller HEAD plus Local Agent daemon/result first. Treat Phase C as complete only if its docs-only exact-SHA gate passed. Then continue Stage28E Phase D with a small ownership/lifetime refactor that preserves controller/arbiter/safety semantics; do not combine it with PSRAM relocation or Stage28D AH physical testing.`
+`Read AGENTS.md, docs/GUIDANCE.md, docs/STAGE28E_PHASE_D_HANDOFF.md, docs/CURRENT_STATUS.md and docs/CONTINUATION_PLAN.md. Fetch fresh mvp/environment-controller HEAD and Local Agent daemon/result first. Treat Phase D as complete only if its exact-SHA docs gate passed. Then continue Stage28E Phase E with measured telemetry-storage allocation optimization; do not globally enable PSRAM malloc, change AH behavior, or run the final physical actuator path before Phase H.`
