@@ -1,0 +1,18 @@
+{
+  "id": "20260906-growbox-stage28e-phase-a-baseline-v2",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 6144,
+  "command_timeout": 7200,
+  "idle_timeout": 900,
+  "task_timeout": 10800,
+  "commands": [
+    "set -euo pipefail; EXPECTED=2218ad30401222537cb568541d80bc07adc2c0eb; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; printf 'STAGE28E_A_BASELINE_V2_HEAD=%s\\n' \"$EXPECTED\"",
+    "set -euo pipefail; printf '%s\\n' '=== static diagnostic surface ==='; grep -R -nE 'heap_caps_get_|uxTaskGetStackHighWaterMark|esp_reset_reason|ESP_LOG[EWIDV]|std::string|String[[:space:]]|snprintf|vsnprintf' src/climate src/main.cpp | head -400 || true; printf '%s\\n' '=== runtime object declarations ==='; sed -n '220,380p' src/climate/ClimateV6RealInputRuntime.cpp",
+    "set -euo pipefail; printf '%s\\n' '=== PSRAM config ==='; cat config/idf/sdkconfig.defaults.n8r8; printf '%s\\n' '=== partition config ==='; cat config/idf/partitions_stage27c.csv; printf '%s\\n' '=== current status metrics ==='; grep -nE 'free_internal|free_psram|stack_high_water|heap_caps_get_|uxTaskGetStackHighWaterMark' src/climate/runtime/Stage28ServiceConsole.cpp || true",
+    "set -euo pipefail; EXPECTED=2218ad30401222537cb568541d80bc07adc2c0eb; BUILD=build/idf-stage28e-a-baseline-v2; export CMAKE_BUILD_PARALLEL_LEVEL=1 GROWBOX_FIRMWARE_GIT_SHA=$EXPECTED STAGE27C_BUILD_DIR=$BUILD GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 GROWBOX_RF433_LOOPBACK_ENABLED=0; bash scripts/stage27c_crowpanel.sh build; source scripts/source_idf.sh; printf '%s\\n' '=== idf size ==='; idf.py -B $BUILD size; printf '%s\\n' '=== idf size-components ==='; idf.py -B $BUILD size-components | head -120; test -z \"$(git status --porcelain)\""
+  ]
+}
