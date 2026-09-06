@@ -19,14 +19,31 @@ When starting work on this repository in a new chat/session:
 
 1. Read this `AGENTS.md` and the current `README.md` before proposing or executing changes.
 2. Inspect the current GitHub state of the repository and the branch relevant to the requested work. Do not assume `main` is always the correct work branch; the README may identify an active integration branch.
-3. If Chat Bridge is active, require the wake envelope to identify exactly repository id `growbox-ml-controller`, repository `MichalMatu/growbox-ml-controller`, and agent binding `815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5`. Never infer or switch repository identity from remembered chat context; a different repository requires explicit Bridge Rebind.
-4. Use this repository's own `agent-control` branch for Local Agent tasks. Never send Growbox tasks through another repository's control branch (for example LiteGraph).
-5. Verify `.agent/binding.json` on `agent-control` matches the repository identity above before queueing work when binding compatibility matters.
-6. For local execution, submit task requests under `.agent/tasks/<task-id>.json` on `agent-control`; every executable task must contain exactly `"agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5"` and explicit `resources`.
-7. Follow execution through `.agent/runs/<task-id>.json` and `.agent/status/daemon.json`.
-8. Read the terminal result from `.agent/results/<task-id>.json` before reporting completion.
-9. Prefer remote status/results from GitHub over asking the user to copy local terminal logs when Local Agent can provide the state directly.
-10. Keep repository workspaces isolated. A task for this repository must not read, modify, checkpoint, or publish results through another repository's Local Agent workspace.
+3. For repository-only software work, read `docs/SANDBOX_EXECUTION_FLOW.md` and prefer the exact ChatGPT Sandbox source snapshot plus matching dependency packs before creating a Local Agent task.
+4. If Chat Bridge is active, require the wake envelope to identify exactly repository id `growbox-ml-controller`, repository `MichalMatu/growbox-ml-controller`, and agent binding `815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5`. Never infer or switch repository identity from remembered chat context; a different repository requires explicit Bridge Rebind.
+5. Use this repository's own `agent-control` branch for Local Agent tasks. Never send Growbox tasks through another repository's control branch (for example LiteGraph).
+6. Verify `.agent/binding.json` on `agent-control` matches the repository identity above before queueing work when binding compatibility matters.
+7. For local execution, submit task requests under `.agent/tasks/<task-id>.json` on `agent-control`; every executable task must contain exactly `"agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5"` and explicit `resources`.
+8. Follow execution through `.agent/runs/<task-id>.json` and `.agent/status/daemon.json`.
+9. Read the terminal result from `.agent/results/<task-id>.json` before reporting completion.
+10. Prefer remote status/results from GitHub over asking the user to copy local terminal logs when Local Agent can provide the state directly.
+11. Keep repository workspaces isolated. A task for this repository must not read, modify, checkpoint, or publish results through another repository's Local Agent workspace.
+
+### ChatGPT Sandbox-first software execution
+
+For repository-only work, the default software worker is ChatGPT Sandbox, not Local Agent. GitHub `main` remains the source of truth. Persistent sandbox artifacts for this repository live only under `/GrowboxML/Sandbox/`; never reuse another repository's source snapshot or dependency pack implicitly.
+
+Use the exact `growbox-source-<sha>.tar.zst` snapshot for the Git SHA being worked on and materialize only the matching pack(s) needed by the changed surface:
+
+- `host` — Python 3.11, ML, portable C++ and host clang tooling
+- `web` — Node 22 / pnpm 11.10.0 frontend dependencies
+- `idf` — ESP-IDF 5.5.4, ESP32-S3 toolchain and `esp-clang`; load together with `host`
+
+After bootstrap, always source the generated sandbox `env.sh` and run `tools/sandbox/sandbox-doctor.sh` before claiming the environment is usable. Use `tools/sandbox/run-sandbox-check.sh host`, `web`, `idf` or `quality` for verification. Dependency-key mismatches are hard failures; do not bypass them or silently rebuild against a different source snapshot.
+
+Use Local Agent when the requested evidence actually depends on the Mac, USB/serial, flashing, a physical ESP32-S3, board E2E, screenshots that require the local desktop, or other machine-specific state. A successful sandbox IDF build is software evidence only and must never be reported as a flashed or hardware-tested board.
+
+Canonical details, Library layout and lifecycle: `docs/SANDBOX_EXECUTION_FLOW.md`.
 
 ### Control branch contract
 
@@ -96,6 +113,6 @@ Nie „optymalizuj” na jeden ekran kosztem pustych pól — lepiej zwarty pion
 
 Use an available GitHub tool with write permission for bounded source/configuration/documentation changes when the exact diff and relevant CI can verify the outcome. A commit proves publication, not successful execution. Report the exact commit and completed checks. Do not create an artificial Local Agent task when GitHub evidence already provides the required verification.
 
-Use Local Agent for Mac command execution, local builds/tests, device access and machine-specific evidence. A hybrid flow may edit through GitHub and run a read-only local verification task for the exact committed SHA; verify that SHA explicitly in an early stage (`expected_head` is not a supported task field). Check current daemon/run evidence before a direct write and avoid racing a local task that is modifying the same branch. Follow this repository's branch policy.
+For repository-only software execution, prefer the sandbox-first flow above. Use Local Agent for Mac command execution, local builds/tests when the sandbox pack cannot represent the required host state, device access and machine-specific evidence. A hybrid flow may edit through GitHub and run a read-only local verification task for the exact committed SHA; verify that SHA explicitly in an early stage (`expected_head` is not a supported task field). Check current daemon/run evidence before a direct write and avoid racing a local task that is modifying the same branch. Follow this repository's branch policy.
 
 Local tasks retain their unique immutable ids, exact `agent_binding`, explicit `resources`, bounded limits and terminal result requirement. When Chat Bridge is active, both paths remain confined to its immutable repository binding. Use `STOP` only after the goal has the required CI or local result evidence. A different repository requires explicit operator Rebind. Canonical policy: `MichalMatu/local-agent/main/docs/AUTONOMOUS_CHAT_LOOP.md` and `docs/OPERATIONS.md`.
