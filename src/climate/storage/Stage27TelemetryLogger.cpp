@@ -11,7 +11,6 @@ namespace growbox::app::climate_io::storage {
 namespace {
 
 constexpr char kTag[] = "stage27_store";
-constexpr std::uint32_t kTaskStackBytes = 7168U;
 constexpr std::size_t kRecordBufferBytes = 1024U;
 constexpr std::size_t kSessionBufferBytes = 512U;
 
@@ -49,7 +48,7 @@ bool Stage27TelemetryLogger::begin(const char* firmware_sha) noexcept {
     return false;
   }
 
-  if (xTaskCreate(&Stage27TelemetryLogger::taskEntry, "stage27_store", kTaskStackBytes, this,
+  if (xTaskCreate(&Stage27TelemetryLogger::taskEntry, "stage27_store", taskStackBytes(), this,
                   tskIDLE_PRIORITY + 1U, &task_) != pdPASS) {
     vQueueDelete(queue_);
     queue_ = nullptr;
