@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260906-growbox-ah-arbiter-clean-v3",
+  "task_digest": "834f976af6e8cf2cd9de975d07716aedf9d1c8dde8bc13d349d4c56dc41b54a8",
+  "idle_timeout": 3600,
+  "task_timeout": 10800,
+  "memory_limit_mb": 6144,
+  "started_at": "2026-09-06T01:05:28.773030+00:00",
+  "attempt_id": "cb03941d86166163b8323a3f",
+  "daemon_version": "4.18.2",
+  "daemon_pid": 21465,
+  "updated_at": "2026-09-06T01:05:28.773837+00:00",
+  "pid": 21465
+}
