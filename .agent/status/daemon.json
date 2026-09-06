@@ -1,9 +1,9 @@
 {
   "version": 1,
   "daemon_version": "4.18.4",
-  "state": "running",
+  "state": "idle",
   "pid": 57160,
-  "updated_at": "2026-09-06T04:02:46.885984+00:00",
+  "updated_at": "2026-09-06T04:03:12.602510+00:00",
   "self_revision": "9ba102134608810f53156ef6050db94835557957",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -14,7 +14,7 @@
   "task_timeout_default": 1800,
   "task_timeout_max": 21600,
   "memory_limit_mb_default": 4096,
-  "current_task_id": "20260906-growbox-stage28e-phase-a-baseline-v1",
+  "current_task_id": null,
   "current_attempt_id": null,
   "current_task_digest": null,
   "repository_id": "growbox-ml-controller",
@@ -25,6 +25,6 @@
   "execution_model": "multi_repository_worker",
   "worker_pid": 57160,
   "supervisor_pid": 4033,
-  "active_resources": [],
+  "last_task_id": "20260906-growbox-stage28e-phase-a-baseline-v1",
   "execution_variant": "parallel"
 }
