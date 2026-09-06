@@ -1,0 +1,18 @@
+{
+  "id": "20260907-growbox-stage28e-phase-f-arbiter-continuity-gate-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 4096,
+  "command_timeout": 1200,
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "commands": [
+    "set -euo pipefail; EXPECTED=d88c77d8eab5013a6f94baf60e1404f5b030efdc; BASE=0d4325f08033a38e4fd3769c38b1572e344a27ff; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; git diff --check; test \"$(git diff --name-only \"$BASE\" \"$EXPECTED\")\" = \"test/test_stage28d_binary_role_arbiter/test_main.cpp\"; git diff --exit-code \"$BASE\" \"$EXPECTED\" -- src/climate/Stage28dBinaryRoleArbiter.cpp src/climate/Stage28dBinaryRoleArbiter.h; grep -Fq 'testV5SameInstanceDwellContinuityProof' test/test_stage28d_binary_role_arbiter/test_main.cpp; grep -Fq \"arbiter.dwellHoldCount() == 44U\" test/test_stage28d_binary_role_arbiter/test_main.cpp; echo STAGE28E_F_PRODUCTION_UNCHANGED_EXACT_SHA_PASS=$EXPECTED",
+    "set -euo pipefail; OUT=build/stage28e-f-arbiter-proof; mkdir -p \"$OUT\"; c++ -std=c++17 -Wall -Wextra -Wpedantic -Isrc -Ilib/environment_control/src test/test_stage28d_binary_role_arbiter/test_main.cpp src/climate/Stage28dBinaryRoleArbiter.cpp -o \"$OUT/stage28d_binary_role_arbiter_proof\"; \"$OUT/stage28d_binary_role_arbiter_proof\"; echo STAGE28E_F_V5_SAME_INSTANCE_CONTINUITY_PROOF_PASS",
+    "set -euo pipefail; rm -rf build/host-tests-stage28e-f; cmake -S test/host -B build/host-tests-stage28e-f >/tmp/stage28e-f-host-config.log 2>&1; cmake --build build/host-tests-stage28e-f --parallel 1 >/tmp/stage28e-f-host-build.log 2>&1; ctest --test-dir build/host-tests-stage28e-f --output-on-failure; echo STAGE28E_F_EXISTING_HOST_24_PASS",
+    "set -euo pipefail; test -z \"$(git status --porcelain)\"; git diff --check; echo STAGE28E_F_ARBITER_CONTINUITY_GATE_PASS"
+  ]
+}
