@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260906-growbox-stage28e-phase-a1-log-facade-published-v1",
+  "task_digest": "2594986e01c4ef2bab4a459d2d1a108786154eb4f29b05172e07a6bd8666d80b",
+  "idle_timeout": 900,
+  "task_timeout": 10800,
+  "memory_limit_mb": 6144,
+  "started_at": "2026-09-06T07:04:46.855622+00:00",
+  "attempt_id": "e10b9a007fe312efb83ae28b",
+  "daemon_version": "4.18.4",
+  "daemon_pid": 54586,
+  "updated_at": "2026-09-06T07:04:46.855860+00:00",
+  "pid": 54586
+}
