@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260906-growbox-stage28e-phase-b-exit-gate-v1",
   "task_digest": "83ba18152f8ba4c84f12b6c315e37bc6ab232e35d8d729529ac496969c9613f1",
-  "idle_timeout": 300,
-  "task_timeout": 900,
-  "memory_limit_mb": 4096,
-  "started_at": "2026-09-06T20:26:03.135959+00:00",
+  "status": "failed",
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-06T20:26:06.847072+00:00",
   "attempt_id": "be5a52e667ae6c9dadefd85f",
   "daemon_version": "4.18.4",
   "daemon_pid": 68689,
-  "updated_at": "2026-09-06T20:26:03.136195+00:00",
+  "updated_at": "2026-09-06T20:26:07.131887+00:00",
   "pid": 68689
 }
