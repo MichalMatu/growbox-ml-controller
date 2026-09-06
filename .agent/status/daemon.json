@@ -1,9 +1,9 @@
 {
   "version": 1,
   "daemon_version": "4.18.2",
-  "state": "idle",
-  "pid": 53151,
-  "updated_at": "2026-09-06T00:15:10.932822+00:00",
+  "state": "running",
+  "pid": 54460,
+  "updated_at": "2026-09-06T00:16:36.936283+00:00",
   "self_revision": "062b95c096ca338d1d660c59ec8be793ff6bdadb",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -14,7 +14,7 @@
   "task_timeout_default": 1800,
   "task_timeout_max": 21600,
   "memory_limit_mb_default": 4096,
-  "current_task_id": null,
+  "current_task_id": "20260906-growbox-fan-30m-day-real-v1",
   "current_attempt_id": null,
   "current_task_digest": null,
   "repository_id": "growbox-ml-controller",
@@ -23,7 +23,10 @@
   "default_branch": "main",
   "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 53151,
+  "worker_pid": 54460,
   "supervisor_pid": 53038,
+  "active_resources": [
+    "board:growbox-s3"
+  ],
   "execution_variant": "parallel"
 }
