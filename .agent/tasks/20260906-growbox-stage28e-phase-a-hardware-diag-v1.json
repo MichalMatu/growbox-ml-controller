@@ -1,0 +1,18 @@
+{
+  "id": "20260906-growbox-stage28e-phase-a-hardware-diag-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": ["board:growbox-s3"],
+  "memory_limit_mb": 6144,
+  "command_timeout": 7200,
+  "idle_timeout": 900,
+  "task_timeout": 10800,
+  "commands": [
+    "set -euo pipefail; EXPECTED=3058625be2f35c121afcf82549d5c73068839ecd; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; test -e /dev/cu.usbserial-1130; echo STAGE28E_A_HW_PORT_OK=/dev/cu.usbserial-1130",
+    "set -euo pipefail; export CMAKE_BUILD_PARALLEL_LEVEL=1; export STAGE27C_BUILD_DIR=build/idf-stage28e-a-hardware-diag-v1; export GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0; export GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0; export GROWBOX_RF433_LOOPBACK_ENABLED=0; export GROWBOX_FIRMWARE_GIT_SHA=3058625be2f35c121afcf82549d5c73068839ecd; bash scripts/stage27c_crowpanel.sh build; PORT=/dev/cu.usbserial-1130 bash scripts/stage27c_crowpanel.sh flash",
+    ".venv/bin/python - <<'PY'\nimport re, serial, time\np='/dev/cu.usbserial-1130'\nh=serial.Serial(p,115200,timeout=0.1,write_timeout=1)\nh.dtr=False; h.rts=False\nend=time.monotonic()+35\nraw=bytearray()\nwhile time.monotonic()<end:\n    n=h.in_waiting\n    if n: raw.extend(h.read(n))\n    time.sleep(0.05)\nh.reset_input_buffer()\nfor _ in range(3):\n    h.write(b'status\\n'); h.flush(); time.sleep(1.5)\n    n=h.in_waiting\n    if n: raw.extend(h.read(n))\nh.close()\ntext=raw.decode(errors='replace')\nprint('STAGE28E_A_HW_SERIAL_BYTES', len(raw))\nprint(text[-30000:])\nstatus=[line for line in text.splitlines() if line.startswith('status ')]\ntiming=[line for line in text.splitlines() if line.startswith('timing ')]\ntasks=[line for line in text.splitlines() if line.startswith('task ')]\nif not status: raise SystemExit('missing status line')\nif not timing: raise SystemExit('missing timing line')\ns=status[-1]\nrequired=['firmware_sha=3058625be2f35c121afcf82549d5c73068839ecd','outputs=fake-locked','internal_free=','internal_min=','internal_largest=','psram_free=','psram_min=','psram_largest=','boot_id=','reset_reason=']\nfor token in required:\n    if token not in s: raise SystemExit('missing status token '+token)\nif not tasks: raise SystemExit('missing task diagnostics')\ndef num(line,key):\n    m=re.search(r'(?:^| )'+re.escape(key)+r'=(\\d+)', line)\n    return int(m.group(1)) if m else None\ncritical=[]\nfor line in tasks:\n    if 'severity=critical' in line: critical.append(line)\nif critical:\n    print('STAGE28E_A_HW_CRITICAL_STACK', *critical, sep='\\n')\n    raise SystemExit('critical stack margin')\nprint('STAGE28E_A_HW_STATUS', s)\nprint('STAGE28E_A_HW_TIMING', timing[-1])\nknown=[]\nfor line in tasks:\n    hwm=num(line,'hwm_bytes')\n    if hwm is not None: known.append((hwm,line))\nif known:\n    known.sort(key=lambda x:x[0])\n    print('STAGE28E_A_HW_LOWEST_HWM', known[0][1])\nprint('STAGE28E_A_HW_TASK_COUNT', len(tasks))\nprint('STAGE28E_A_HW_SAFE_FAKE_LOCKED_PASS')\nPY",
+    "set -euo pipefail; git diff --check; test -z \"$(git status --porcelain)\"; echo STAGE28E_A_HARDWARE_DIAG_PASS"
+  ]
+}
