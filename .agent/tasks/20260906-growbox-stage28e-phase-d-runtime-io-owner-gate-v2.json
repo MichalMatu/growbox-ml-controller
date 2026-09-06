@@ -1,0 +1,19 @@
+{
+  "id": "20260906-growbox-stage28e-phase-d-runtime-io-owner-gate-v2",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 6144,
+  "command_timeout": 3600,
+  "idle_timeout": 600,
+  "task_timeout": 7200,
+  "commands": [
+    "set -euo pipefail; EXPECTED=1aee13cb96eaebdf41a937c5622cce61f1a01b88; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; git diff --check; echo STAGE28E_D1_V2_EXACT_SHA_PASS=$EXPECTED",
+    "set -euo pipefail; export CMAKE_BUILD_PARALLEL_LEVEL=1; BUILD=build/idf-stage28e-d1-runtime-owner-gate; STAGE27C_BUILD_DIR=\"$BUILD\" GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST=0 GROWBOX_FIRMWARE_GIT_SHA=1aee13cb96eaebdf41a937c5622cce61f1a01b88 bash scripts/stage27c_crowpanel.sh build >/tmp/stage28e-d1-v2-build.log 2>&1; test -f \"$BUILD/growbox_ml_controller.elf\"; test -f \"$BUILD/growbox_ml_controller.bin\"; echo STAGE28E_D1_V2_FIRMWARE_BUILD_PASS; tail -20 /tmp/stage28e-d1-v2-build.log",
+    "set -euo pipefail; python3 - <<'PY'\nimport json, pathlib, shlex, subprocess\nbuild=pathlib.Path('build/idf-stage28e-d1-runtime-owner-gate')\ncc=json.loads((build/'compile_commands.json').read_text())\ne=next(x for x in cc if x['file'].endswith('/src/climate/ClimateV6RealInputRuntime.cpp'))\nargs=list(e.get('arguments') or shlex.split(e['command']))\nout='/tmp/stage28e_d1_runtime.o'\nfor i,a in enumerate(args):\n    if a=='-o' and i+1<len(args): args[i+1]=out\nargs.append('-fstack-usage')\nsubprocess.run(args,cwd=e['directory'],check=True)\nsus=list(pathlib.Path('/tmp').glob('stage28e_d1_runtime*.su'))\nif not sus: raise SystemExit('stack usage file missing')\nframe=None\nfor p in sus:\n    for line in p.read_text(errors='replace').splitlines():\n        if 'runClimateV6RealInputRuntime' not in line: continue\n        parts=line.rsplit('\\t',2)\n        if len(parts)==3:\n            frame=int(parts[1]); print('STAGE28E_D1_RUNTIME_FRAME_BYTES',frame)\nif frame is None: raise SystemExit('runtime frame not found')\nif frame >= 5296: raise SystemExit(f'frame did not improve: {frame}')\nif frame > 4000: raise SystemExit(f'frame reduction smaller than expected: {frame}')\nprint('STAGE28E_D1_STACK_REDUCTION_BYTES',5296-frame)\nprint('STAGE28E_D1_STACK_USAGE_PASS')\nPY",
+    "set -euo pipefail; rm -rf build/host-tests-stage28e-d1; cmake -S test/host -B build/host-tests-stage28e-d1 >/tmp/stage28e-d1-host-config.log 2>&1; cmake --build build/host-tests-stage28e-d1 --parallel 1 >/tmp/stage28e-d1-host-build.log 2>&1; ctest --test-dir build/host-tests-stage28e-d1 --output-on-failure; echo STAGE28E_D1_HOST_TESTS_PASS",
+    "set -euo pipefail; test -z \"$(git status --porcelain)\"; git diff --check; echo STAGE28E_D1_RUNTIME_IO_OWNER_GATE_V2_PASS"
+  ]
+}
