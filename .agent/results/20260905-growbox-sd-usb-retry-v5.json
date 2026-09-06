@@ -1,9 +1,0 @@
-{
-  "id": "20260905-growbox-sd-usb-retry-v5",
-  "status": "failed",
-  "failure_reason": "invalid_task_file",
-  "started_at": null,
-  "finished_at": "2026-09-05T18:12:12.322662+00:00",
-  "daemon_version": "4.18.0",
-  "error": "ValueError: workflow_policy 'efficient-verification-v1' requires structured stages; commands are not allowed"
-}
