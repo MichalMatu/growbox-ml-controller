@@ -16,6 +16,7 @@
 #include "climate/runtime/Stage27TelemetryReporter.h"
 #include "climate/runtime/Stage28RfDiagnostics.h"
 #include "climate/runtime/Stage28ServiceConsole.h"
+#include "climate/runtime/Stage28eLog.h"
 #include "climate/runtime/Stage28ePlatformDiagnostics.h"
 #include "climate/storage/Stage27TelemetryLogger.h"
 
@@ -295,6 +296,7 @@ runtime::Stage27PhysicalOutputSnapshot physicalOutputSnapshot(
   const auto& boot_identity = runtime::bootIdentity(GROWBOX_FIRMWARE_GIT_SHA);
   const esp_reset_reason_t reset_reason =
       static_cast<esp_reset_reason_t>(boot_identity.reset_reason);
+  runtime::configureStage28eLogging(boot_identity);
   runtime::Stage27TelemetryReporter telemetry_reporter(ble, scd41, clock, storage_logger,
                                                        storage_logger_ready,
                                                        static_cast<std::int32_t>(reset_reason));
@@ -310,11 +312,12 @@ runtime::Stage27PhysicalOutputSnapshot physicalOutputSnapshot(
            GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED != 0, real_output_ready,
            GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED != 0,
            real_output_ready ? "real-bounded" : "fake-locked");
-  ESP_LOGI(kTag,
-           "Stage27 soak boot: firmware_sha=%s boot_id=%08lx reset_reason=%d started_us=%llu",
-           boot_identity.firmware_sha, static_cast<unsigned long>(boot_identity.boot_id),
-           static_cast<int>(reset_reason),
-           static_cast<unsigned long long>(boot_identity.started_monotonic_us));
+  GROWBOX_STAGE28E_LOG_INFO(
+      runtime::DiagnosticLogModule::Sys,
+      "boot firmware_sha=%s reset_reason=%d started_us=%llu outputs=%s",
+      boot_identity.firmware_sha, static_cast<int>(reset_reason),
+      static_cast<unsigned long long>(boot_identity.started_monotonic_us),
+      real_output_ready ? "real-bounded" : "fake-locked");
 
   std::uint32_t diagnostic_tick = 0U;
   while (true) {
