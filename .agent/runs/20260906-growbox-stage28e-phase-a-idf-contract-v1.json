@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260906-growbox-stage28e-phase-a-idf-contract-v1",
+  "task_digest": "3370189d782779e230398f31cdea1740f38e42f770c944b5e30f082b8e3a44dd",
+  "idle_timeout": 120,
+  "task_timeout": 600,
+  "memory_limit_mb": 1024,
+  "started_at": "2026-09-06T04:17:16.253063+00:00",
+  "attempt_id": "84a41dc385132e9bb5876c3f",
+  "daemon_version": "4.18.4",
+  "daemon_pid": 73646,
+  "updated_at": "2026-09-06T04:17:16.253324+00:00",
+  "pid": 73646
+}
