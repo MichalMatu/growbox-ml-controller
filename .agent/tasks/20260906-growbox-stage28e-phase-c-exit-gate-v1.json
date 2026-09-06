@@ -1,0 +1,17 @@
+{
+  "id": "20260906-growbox-stage28e-phase-c-exit-gate-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 4096,
+  "command_timeout": 600,
+  "idle_timeout": 300,
+  "task_timeout": 900,
+  "commands": [
+    "set -euo pipefail; EXPECTED=7601f0beb95d27b2bf2360b760355c3c235871a1; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; git diff --check; echo STAGE28E_C_EXIT_EXACT_SHA_PASS=$EXPECTED",
+    "set -euo pipefail; test -f docs/STAGE28E_PHASE_C_HANDOFF.md; grep -Fq '743369 B' docs/STAGE28E_PHASE_C_HANDOFF.md; grep -Fq '5296 B' docs/STAGE28E_PHASE_C_HANDOFF.md; grep -Fq '4736 B' docs/STAGE28E_PHASE_C_HANDOFF.md; grep -Fq '217444 B' docs/STAGE28E_PHASE_C_HANDOFF.md; grep -Fq '216808 B' docs/STAGE28E_PHASE_C_HANDOFF.md; grep -Fq '176128 B' docs/STAGE28E_PHASE_C_HANDOFF.md; grep -Fq '65.8 W' docs/STAGE28E_PHASE_C_HANDOFF.md; grep -Fq 'Phase C therefore passes its measurement/baseline criteria' docs/STAGE28E_PHASE_C_HANDOFF.md; echo STAGE28E_C_EXIT_DOCS_EVIDENCE_PASS",
+    "set -euo pipefail; grep -Fq 'Phase D next' docs/CURRENT_STATUS.md; grep -Fq 'docs/STAGE28E_PHASE_C_HANDOFF.md' docs/CURRENT_STATUS.md; grep -Fq 'Phase D next' docs/CONTINUATION_PLAN.md; grep -Fq 'docs/STAGE28E_PHASE_C_HANDOFF.md' docs/CONTINUATION_PLAN.md; grep -Fq 'Do not reduce stacks or move FreeRTOS allocations to PSRAM until Phase E' docs/CONTINUATION_PLAN.md; echo STAGE28E_C_EXIT_GATE_PASS"
+  ]
+}
