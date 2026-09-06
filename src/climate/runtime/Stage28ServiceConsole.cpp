@@ -1,5 +1,6 @@
 #include "climate/runtime/Stage28ServiceConsole.h"
 
+#include "climate/runtime/Stage28ePlatformDiagnostics.h"
 #include "climate/rf433/Rf433HardwareConfig.h"
 #include "climate/runtime/EuropeWarsawTime.h"
 #include "climate/storage/Stage27FileDurability.h"
@@ -237,17 +238,28 @@ void Stage28ServiceConsole::printHelp() noexcept {
 }
 
 void Stage28ServiceConsole::printStatus(std::uint64_t now_ms) noexcept {
-  const std::uint32_t free_internal =
-      static_cast<std::uint32_t>(heap_caps_get_free_size(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT));
-  const std::uint32_t free_psram =
-      static_cast<std::uint32_t>(heap_caps_get_free_size(MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
-  const UBaseType_t stack_watermark = uxTaskGetStackHighWaterMark(nullptr);
-  writeFormatted("status firmware_sha=%s uptime_ms=%llu outputs=%s rf_ready=%d "
-                 "free_internal=%lu free_psram=%lu stack_high_water=%lu\r\n",
-                 config_.firmware_sha != nullptr ? config_.firmware_sha : "unknown",
-                 static_cast<unsigned long long>(now_ms), outputModeName(), rf_diagnostics_.ready(),
-                 static_cast<unsigned long>(free_internal), static_cast<unsigned long>(free_psram),
-                 static_cast<unsigned long>(stack_watermark));
+  const auto& boot = bootIdentity(config_.firmware_sha);
+  const RuntimeMemoryMetrics memory = sampleRuntimeMemoryMetrics();
+  const UBaseType_t stack_watermark_bytes = uxTaskGetStackHighWaterMark(nullptr);
+  writeFormatted(
+      "status firmware_sha=%s boot_id=%08lx reset_reason=%ld uptime_ms=%llu outputs=%s rf_ready=%d "
+      "internal_total=%lu internal_free=%lu internal_min=%lu internal_largest=%lu "
+      "psram_total=%lu psram_free=%lu psram_min=%lu psram_largest=%lu "
+      "free_internal=%lu free_psram=%lu stack_high_water=%lu current_task_stack_hwm_bytes=%lu\r\n",
+      boot.firmware_sha, static_cast<unsigned long>(boot.boot_id), static_cast<long>(boot.reset_reason),
+      static_cast<unsigned long long>(now_ms), outputModeName(), rf_diagnostics_.ready(),
+      static_cast<unsigned long>(memory.internal.total_bytes),
+      static_cast<unsigned long>(memory.internal.free_bytes),
+      static_cast<unsigned long>(memory.internal.minimum_free_bytes),
+      static_cast<unsigned long>(memory.internal.largest_free_block_bytes),
+      static_cast<unsigned long>(memory.psram.total_bytes),
+      static_cast<unsigned long>(memory.psram.free_bytes),
+      static_cast<unsigned long>(memory.psram.minimum_free_bytes),
+      static_cast<unsigned long>(memory.psram.largest_free_block_bytes),
+      static_cast<unsigned long>(memory.internal.free_bytes),
+      static_cast<unsigned long>(memory.psram.free_bytes),
+      static_cast<unsigned long>(stack_watermark_bytes),
+      static_cast<unsigned long>(stack_watermark_bytes));
 }
 
 void Stage28ServiceConsole::printSensors(std::uint64_t now_ms) noexcept {
