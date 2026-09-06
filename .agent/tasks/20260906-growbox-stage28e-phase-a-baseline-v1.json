@@ -1,0 +1,18 @@
+{
+  "id": "20260906-growbox-stage28e-phase-a-baseline-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 6144,
+  "command_timeout": 7200,
+  "idle_timeout": 900,
+  "task_timeout": 10800,
+  "commands": [
+    "set -euo pipefail; EXPECTED=2218ad30401222537cb568541d80bc07adc2c0eb; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; printf 'STAGE28E_A_BASELINE_HEAD=%s\\n' \"$EXPECTED\"",
+    "set -euo pipefail; cmake -S test/host -B build/host-tests >/dev/null; cmake --build build/host-tests --parallel; ctest --test-dir build/host-tests --output-on-failure",
+    "set -euo pipefail; printf '%s\\n' '=== static diagnostic surface ==='; rg -n 'heap_caps_get_|uxTaskGetStackHighWaterMark|esp_reset_reason|ESP_LOG[EWIDV]|std::string|String\\b|snprintf|vsnprintf' src/climate src/main.cpp | head -400; printf '%s\\n' '=== runtime object declarations ==='; sed -n '220,360p' src/climate/ClimateV6RealInputRuntime.cpp",
+    "set -euo pipefail; printf '%s\\n' '=== PSRAM config ==='; cat config/idf/sdkconfig.defaults.n8r8; printf '%s\\n' '=== partition config ==='; cat config/idf/partitions_stage27c.csv; printf '%s\\n' '=== current service-console status metrics ==='; rg -n 'free_internal|free_psram|stack_high_water|heap_caps_get_|uxTaskGetStackHighWaterMark' src/climate/runtime/Stage28ServiceConsole.cpp"
+  ]
+}
