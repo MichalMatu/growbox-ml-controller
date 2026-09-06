@@ -9,6 +9,11 @@ CONFIG_WL_SECTOR_SIZE_4096=y
 CONFIG_WL_SECTOR_SIZE=4096
 CONFIG_WL_SECTOR_MODE_SAFE=y
 
+# Stage28E Phase E measured stack right-sizing. The bounded fake-locked hardware baseline
+# used about 5.2 KiB of the 16 KiB main stack, including service-console status sampling.
+# Keep a conservative 12 KiB Stage27C-only main stack rather than changing the global default.
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=12288
+
 # Stage28E Phase A task diagnostics. uxTaskGetSystemState() is gated by this option.
 CONFIG_FREERTOS_USE_TRACE_FACILITY=y
 
