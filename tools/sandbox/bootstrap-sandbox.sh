@@ -3,6 +3,18 @@ set -euo pipefail
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 cd "$ROOT"
 
+# Source snapshots are created with git archive and intentionally do not carry .git.
+# Recreate a local-only repository so existing quality scripts that use
+# `git rev-parse --show-toplevel` work unchanged. The immutable upstream SHA
+# remains recorded in .sandbox-snapshot/git-sha.txt.
+if [[ ! -d .git && -f .sandbox-snapshot/git-sha.txt ]]; then
+  git init -q
+  git config user.name 'Growbox Sandbox'
+  git config user.email 'sandbox@local.invalid'
+  git add -A
+  git commit -q --no-gpg-sign -m "Sandbox snapshot $(cat .sandbox-snapshot/git-sha.txt)"
+fi
+
 if [[ $# -lt 1 ]]; then
   echo "usage: $0 <sandbox-root> [--host PACK] [--web PACK] [--idf PACK]" >&2
   exit 2
