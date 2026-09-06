@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260906-growbox-stage28e-phase-a-docs-gate-v2",
+  "task_digest": "8fbcef7bf5245fdd1815b374943cefdf3570c8a467f5df48d9f97988bf0e8a0a",
+  "idle_timeout": 120,
+  "task_timeout": 600,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-06T14:55:11.627474+00:00",
+  "attempt_id": "6985921d55a511a5b4427502",
+  "daemon_version": "4.18.4",
+  "daemon_pid": 83695,
+  "updated_at": "2026-09-06T14:55:11.627651+00:00",
+  "pid": 83695
+}
