@@ -1,220 +1,206 @@
 # Current controller status
 
-Updated: 2026-09-05
+Updated: 2026-09-06
 Development branch: `mvp/environment-controller`
-Primary roadmap/handoff: `docs/PROJECT_ROADMAP.md`
+Latest handoff: `docs/STAGE28D_AH_ARBITER_HANDOFF.md`
+Primary roadmap: `docs/PROJECT_ROADMAP.md`
 Continuation checklist: `docs/CONTINUATION_PLAN.md`
 Observability contract: `docs/OBSERVABILITY_AND_INFERENCE_PLAN.md`
 Shelly feedback reference: `docs/SHELLY_POWER_FEEDBACK.md`
 
 ## Current transition
 
-**Stage27C FROZEN -> Stage28A DONE -> Stage28B DONE -> Stage28C DONE -> pre-Stage28D golden gate COMPLETE -> Stage28D manual RF path COMPLETE -> Gates 1-7 COMPLETE -> next software slice: moisture-aware ventilation policy**
+**Stage27C FROZEN -> Stage28A/B/C DONE -> Gates 1-6 COMPLETE -> Gate 7 previously qualified -> absolute-humidity ventilation software COMPLETE -> Gate 7 runtime path REOPENED by V5 evidence**
 
-Do not reopen completed physical RF identity, deterministic thermal-safety, ventilation-identification, binary/dwell arbitration, short closed-loop or 30-minute bounded-soak tests unless new evidence invalidates them.
+The current priority is no longer implementing moisture-aware ventilation. That slice is already present. The immediate task is to diagnose why a valid non-safety fan request did not produce a binary transition after the expected dwell window.
 
-## Current safety state
+## Current source identity
 
-- Rule policy remains authoritative.
+At the 2026-09-06 handoff, the executable product HEAD before docs-only handoff updates was:
+
+`dfc6dc86a47ad2158e36bb0d5241b0153dbce387`
+
+Commit: `Refresh climate replay fixture for AH policy`
+
+Parent:
+
+`3e2e195898c45734f459ac9a8f69dad9891ab4eb`
+
+Commit: `Align Python ventilation policy with absolute humidity`
+
+Always fetch the fresh work-branch HEAD before making changes because documentation commits may now be above this executable identity.
+
+## Latest physical control-path evidence
+
+Task:
+
+`20260906-growbox-ah-arbiter-clean-v5`
+
+Exact terminal result:
+
+`.agent/results/20260906-growbox-ah-arbiter-clean-v5.json`
+
+Representative V5 non-safety state:
+
+- `requested_fan=0.111`;
+- `fan=0`;
+- `applied_fan=0.0`;
+- `safety=0`;
+- `force=0`;
+- `safety_reason=0`;
+- `arbiter_transitions=0`;
+- `tx_errors=0`;
+- inside AH about `15.10 g/m3`;
+- intake AH about `11.69 g/m3`;
+- AH gap about `3.41 g/m3`;
+- TP357 about `26.0 C / 62%`;
+- Xiaomi about `24.46 C / 52.35%`;
+- Shelly about `61.7 W`.
+
+The test terminated with:
+
+`AHV2_PRIMARY_ERROR type=RuntimeError detail=sustained req_fan>=0.10 after min-OFF expiry but fan did not transition ON`
+
+This is currently treated as strong evidence of a real runtime/control-path defect or unintended state reset. It is not classified as the earlier BLE/startup harness problem.
+
+## Critical V5 clue: arbiter state appears to reset
+
+Successive V5 samples reported cumulative `arbiter_dwell_holds` values:
+
+`33 -> 43 -> 1 -> 11`
+
+A cumulative counter should not decrease in one uninterrupted runtime instance.
+
+Therefore the next diagnosis must first investigate:
+
+- board/runtime reboot or restart;
+- arbiter object/state recreation;
+- repeated `synchronizeSafeOff()` or `forceSafeOff()` behavior;
+- monotonic-time discontinuity;
+- controller/applied-state reconciliation resetting the OFF dwell clock;
+- missing subsequent exhaust apply calls.
+
+Do not assume `Stage28dBinaryRoleArbiter::applyBinary()` itself is the root cause until these reset/reinitialization paths are excluded.
+
+## Latest safe hardware state
+
+V5 recovery passed:
+
+`AHV2_RECOVERY_PASS sha=dfc6dc86a47ad2158e36bb0d5241b0153dbce387 outputs=fake-locked lamp=on fan=off humidifier=off shelly_master=on power_w=61.700 port=/dev/cu.usbserial-1130`
+
+Last confirmed state:
+
+- exact executable SHA `dfc6dc86...`;
+- outputs fake-locked;
+- lamp ON;
+- fan OFF;
+- humidifier OFF;
+- Shelly master ON.
+
+## Serial-port invariant
+
+Correct Growbox/CrowPanel serial port:
+
+`/dev/cu.usbserial-1130`
+
+Never open, probe, monitor, flash or otherwise touch:
+
+`/dev/cu.usbserial-10`
+
+That port belongs to another project.
+
+## Completed platform and physical evidence
+
+### Native input/runtime baseline
+
+- ESP-IDF native implementation remains the product direction.
+- TP357 BLE, Xiaomi intake BLE, SCD41 and DS3231 paths are established.
+- Rule controller remains authoritative.
 - ML remains shadow/research-only.
-- Installed firmware has been returned to `outputs=fake-locked` after physical qualification.
-- Final controlled-load state after the 30-minute soak was lamp OFF, fan OFF, humidifier OFF, Shelly master ON, about `2.2 W`.
-- Real-output operation is allowed only inside explicit bounded hardware tasks with fail-closed cleanup.
-- Local RF TX completion is transport evidence, not physical load acknowledgement.
-- Shelly power is independent electrical evidence; environmental response is still required when claiming airflow/moisture effect.
 
-## Current exact hardware-qualified code identity
+### RF role routing
 
-Gate 7 physical closed-loop and bounded soak used exact source/firmware SHA:
+Frozen physical identities remain:
 
-`3dfc4b552f669f628d5c9bee455a34666915088c`
+- fan / endpoint 1: ON `906118656`, OFF `1040336384`, protocol 2, 32 bit, 575 us, repeat 10;
+- lamp / endpoint 2: ON `235030016`, OFF `16926208`, protocol 2, 32 bit, 560 us, repeat 10;
+- humidifier / endpoint 3: ON `637683200`, OFF `771900928`, protocol 2, 32 bit, 560 us, repeat 10.
 
-A later docs-only commit must not be described as a separately hardware-tested firmware identity.
+These role mappings have already been physically verified.
 
-## Gate 3 - time, profile and observability - COMPLETE
+### Thermal safety
 
-Executable SHA used for Gate 3 verification and read-only hardware smoke:
+Do not repeat the long deterministic thermal sequence unless safety code changes.
 
-`8710bf127ad895e262f604e1b4c59ea11b760667`
-
-Completed behavior:
-
-- DS3231 stores UTC;
-- service console supports bounded `rtc set-unix <epoch>` write/readback;
-- Europe/Warsaw CET/CEST conversion is deterministic and DST-boundary tested;
-- lighting schedule evaluates `06:00-22:00` in Europe/Warsaw local time;
-- actual hardware capabilities are fan + humidifier only for climate outputs;
-- SCD41 CO2 is an input, not a nonexistent CO2-doser capability;
-- dew point, absolute humidity, VPD and inside/intake gradients are available as deterministic observability metrics.
-
-Gate 3 verification passed focused tests, Python, host C++, clang-tidy and ESP-IDF/pre-push quality gates with outputs fake-locked and no RF TX.
-
-## Gate 4 - exact-SHA flash/read-only hardware smoke - COMPLETE
-
-Gate 4 passed on the CrowPanel/ESP32-S3 with exact SHA `8710bf127ad895e262f604e1b4c59ea11b760667`.
-
-Observed live sources included:
-
-- TP357 inside T/RH;
-- Xiaomi intake T/RH;
-- SCD41 inside CO2/T/RH;
-- DS3231 UTC with correct Europe/Warsaw conversion;
-- SD telemetry advancing with zero write errors and queue drops;
-- RF transport ready;
-- Shelly baseline about `2.2 W` with controlled loads OFF.
-
-Outputs remained fake-locked.
-
-## Gate 5 - physical role routing - COMPLETE
-
-Physical role routing was independently confirmed with Shelly power signatures:
-
-| role/load | observed contribution | result |
-| --- | ---: | --- |
-| scheduled lamp | about `+97.0 W` | PASS |
-| exhaust fan | about `+2.9 W` | PASS |
-| humidifier | about `+15.7 W` | PASS |
-
-The test ended at about `2.2 W`, all three controlled RF loads OFF and Shelly master ON.
-
-Frozen RF identities:
-
-- fan / `remote_socket_1`: ON `906118656`, OFF `1040336384`, protocol 2, 32 bit, 575 us, repeat 10;
-- lamp / `remote_socket_2`: ON `235030016`, OFF `16926208`, protocol 2, 32 bit, 560 us, repeat 10;
-- humidifier / `remote_socket_3`: ON `637683200`, OFF `771900928`, protocol 2, 32 bit, 560 us, repeat 10.
-
-## Gate 6 - deterministic physical thermal safety - COMPLETE
-
-Do not repeat the long thermal sequence unless the safety implementation changes.
-
-Physically proven behavior:
-
-- hot injected temperature trips the latch;
-- lamp is physically forced OFF;
-- exhaust fan is physically forced ON;
-- recovery remains latched above the recovery threshold;
-- `<=26 C` must remain continuous for 10 minutes before latch clear;
-- lamp may resume only after the recovery hold completes and schedule allows it;
-- humidifier did not spuriously activate;
-- test cleanup returned all controlled loads OFF and firmware to fake-locked mode.
-
-Safety thresholds remain:
+Frozen behavior:
 
 - trip `>=28.0 C`;
+- lamp forced OFF on trip;
+- exhaust may be forced ON immediately;
 - recovery threshold `<=26.0 C`;
-- continuous recovery hold `10 min`;
+- continuous recovery hold 10 minutes;
 - stale/invalid authoritative TP357 temperature fails closed for the lamp path.
 
-## Ventilation identification - COMPLETE
+### Ventilation efficacy
 
-A bounded fan OFF -> ON -> OFF identification run produced a clear moisture-exchange effect and negligible temperature effect.
+A previous physical fan OFF -> ON -> OFF experiment established approximately:
 
-Observed fan-on effect in that run:
+- inside AH slope while fan ON: `-0.312 g/m3/min`;
+- inside CO2 slope while fan ON: `-3.09 ppm/min`;
+- AH gradient reduction: `3.27 -> 0.96 g/m3`.
 
-- inside absolute humidity slope about `-0.312 g/m3/min`;
-- inside CO2 slope about `-3.09 ppm/min`;
-- inside-minus-intake absolute-humidity gradient reduced from about `3.27` to `0.96 g/m3`;
-- temperature changed little.
+The current issue is therefore not whether the physical fan itself works.
 
-Interpretation:
+## Binary arbiter architecture under investigation
 
-- ventilation moisture benefit must be evaluated using inside versus intake absolute humidity, not raw RH alone;
-- outside CO2 is unmeasured, so do not claim a precise outdoor ppm value;
-- use measured response slopes and confidence, not invented ACH/outdoor concentration.
+Control chain:
 
-## Gate 7 - binary/dwell arbitration and physical closed loop - COMPLETE
+`rule request -> Stage28dBinaryRoleArbiter -> confirmed actual applied -> RF endpoint -> telemetry`
 
-Exact qualified SHA:
+Default settings:
 
-`3dfc4b552f669f628d5c9bee455a34666915088c`
+- exhaust ON threshold `0.10`;
+- exhaust OFF threshold `0.03`;
+- exhaust min ON/OFF `120 s`;
+- humidifier min ON/OFF `180 s`;
+- thermal safety may bypass fan min-OFF to force immediate ON;
+- emergency safe OFF bypasses dwell;
+- failed RF transitions must not advance internal state.
 
-Architecture:
-
-`rule request -> binary/dwell arbiter -> confirmed actual applied -> RF endpoint -> telemetry`
-
-Default binary arbiter settings:
-
-- exhaust fan: ON threshold `0.10`, OFF threshold `0.03`, minimum ON `120 s`, minimum OFF `120 s`;
-- humidifier: ON threshold `0.10`, OFF threshold `0.03`, minimum ON `180 s`, minimum OFF `180 s`;
-- thermal safety may force fan ON immediately, bypassing minimum-OFF;
-- clearing thermal force does not bypass minimum-ON;
-- emergency safe OFF bypasses dwell and safety-force state at the physical endpoint.
-
-Confirmed-state semantics are now truthful: telemetry/estimator state reports binary actual application rather than fractional requests for RF sockets.
-
-Persisted actuator telemetry records requested versus applied state and arbiter counters.
-
-### Short closed-loop result
-
-A 10-minute real-output session passed with:
-
-- 58 output records;
-- 52 healthy SD-backed soak records;
-- lamp physically ON through the scheduled path;
-- no fan or humidifier transition because the requests did not satisfy the complete dwell/threshold history needed for a transition;
-- maximum requested fan about `0.317`;
-- 111 dwell holds;
-- zero RF TX errors;
-- TP357 about `24.2-26.1 C`;
-- final exact-SHA safe return to fake-locked, all RF loads OFF, about `2.2 W`, Shelly master ON.
-
-### 30-minute bounded soak result
-
-The bounded real-output soak also passed:
-
-- duration `1800 s`;
-- 174 output records;
-- 159 healthy SD-backed soak records;
-- lamp ON records `174`;
-- fan ON records `0`;
-- humidifier ON records `0`;
-- maximum requested fan about `0.331`;
-- arbiter dwell holds `111`;
-- arbiter transitions `0`;
-- safety overrides `0`;
-- TP357 about `25.3-27.8 C`;
-- storage write errors `0` and queue drops `0` in accepted telemetry;
-- final exact-SHA safe return: fake-locked, all controlled RF loads OFF, Shelly master ON, about `2.2 W`.
-
-Shelly occasionally returned isolated transient low-power medians while firmware state remained unchanged. Separate lamp-stability testing showed a stable physical lamp around `98.3-98.8 W` for about three minutes with no persistent drop. The closed-loop harness therefore requires repeated mismatches before failing instead of trusting one transient sample.
-
-## Storage status
-
-- SD primary path: `/sdcard/GBLOG/*.JL`, NDJSON;
-- SD sample interval: 10 s;
-- SD health interval: 60 s;
-- flash fallback: wear-levelled FAT partition `telemetry` mounted at `/flog`;
-- flash sample interval: 60 s;
-- flash health interval: 300 s;
-- SD retry/recovery path remains active;
-- queue depth 16;
-- health telemetry includes mount/write errors, queue drops, records written/skipped, fallback activations, recoveries and last write.
-
-Short `storage_backend=none` telemetry transients were observed during physical sessions, followed by healthy SD records with zero write errors/queue drops. The bounded harness treats transient non-SD state as recoverable but fails if healthy SD telemetry does not return within 45 seconds.
-
-## Current physical topology
-
-| sensor | placement | role |
-| --- | --- | --- |
-| TP357 BLE | inside, slightly above canopy | authoritative inside T/RH and thermal safety |
-| SCD41 | inside near pot height | primary inside CO2; backup/diagnostic T/RH |
-| Xiaomi BLE | outside beside intake | intake T/RH for exchange-benefit inference |
-| DS3231 | controller | UTC RTC / Europe-Warsaw schedule source |
-
-Current growbox: approximately `60 x 60 x 180 cm`, tent volume about `0.648 m3`, mint plant.
+This architecture was previously qualified, but V5 is newer contradictory runtime evidence and reopens the path until diagnosed.
 
 ## Immediate next work
 
-The first incomplete control-quality issue is moisture-aware ventilation policy.
+1. Fetch fresh work HEAD and Local Agent daemon status.
+2. Confirm no active task.
+3. Read V5 terminal result completely.
+4. Trace runtime reset/reinitialization and all binary-state reset paths.
+5. Inspect exact source around:
+   - `Stage28dBinaryRoleArbiter`;
+   - `ClimateV6RealInputRuntime`;
+   - application/controller output dispatch;
+   - safe-off and state-reconciliation paths;
+   - reset-reason/telemetry reporting.
+6. Add a focused regression reproducing the V5 request/dwell sequence and protecting against unintended state reset.
+7. Make the smallest evidence-backed fix.
+8. Run focused tests.
+9. Run exactly one final full software gate after the fix is stable.
+10. Only then perform a short bounded exact-SHA physical confirmation of:
 
-The existing rule request still contains mixed raw-RH logic. The next software slice should:
+   `AH request -> dwell expiry -> arbiter transition -> RF -> physical fan ON`
 
-1. use inside versus intake absolute humidity as the moisture-exchange benefit signal;
-2. keep temperature benefit scoring independent;
-3. preserve CO2 as ventilation context without inventing outside CO2;
-4. add regression tests for cases where outside RH is equal/higher but absolute humidity is lower and ventilation is still drying-beneficial;
-5. retain deterministic thermal safety above all normal ventilation decisions;
-6. keep ML shadow-only;
-7. verify the software slice with focused tests and exactly one final full quality gate before any new hardware qualification.
+11. Use Shelly as independent electrical evidence.
+12. End with verified fake-lock recovery and normal RTC/storage restoration.
 
-Do not run another physical soak simply to repeat Gate 7. A new hardware run should be tied to a meaningful control-code change or a new specific hypothesis.
+## Locked policy and safety boundary
+
+- native ESP-IDF only;
+- rule controller authoritative;
+- ML shadow/research-only;
+- no heater/cooler/dehumidifier/CO2 doser;
+- real outputs only in explicit bounded tests;
+- Shelly master stays ON;
+- lamp may be switched as required by a bounded test;
+- manual RF remains blocked while automatic outputs are real-bounded;
+- no unattended real-output mode yet;
+- do not repeat long completed physical gates without a new code change or explicit hypothesis.
