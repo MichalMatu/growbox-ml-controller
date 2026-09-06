@@ -2,7 +2,7 @@
 
 Updated: 2026-09-07
 Development branch: `mvp/environment-controller`
-Latest handoff: `docs/STAGE28E_PHASE_D_HANDOFF.md`
+Latest handoff: `docs/STAGE28E_PHASE_E_HANDOFF.md`
 Stage28E execution guide: `docs/GUIDANCE.md`
 Prior Stage28D evidence: `docs/STAGE28D_AH_ARBITER_HANDOFF.md`
 Primary roadmap: `docs/PROJECT_ROADMAP.md`
@@ -10,9 +10,9 @@ Continuation checklist: `docs/CONTINUATION_PLAN.md`
 
 ## Current transition
 
-**Stage27C FROZEN -> Stage28E Phase A COMPLETE -> B COMPLETE -> C COMPLETE -> D COMPLETE -> Phase E ACTIVE**
+**Stage27C FROZEN -> Stage28E Phase A COMPLETE -> B COMPLETE -> C COMPLETE -> D COMPLETE -> E COMPLETE -> Phase F NEXT**
 
-Stage28D functional AH work remains paused. The active program remains Stage28E A -> H. Phase E now performs measured memory/allocation/hot-path optimization. Do not return to the final physical AH actuator path before Phase H.
+Stage28D functional AH work remains paused. The active program remains Stage28E A -> H. Phase F is the focused binary-arbiter continuity/regression proof. Do not return to the final physical AH actuator path before Phase H.
 
 ## Phase identities
 
@@ -20,7 +20,9 @@ Stage28D functional AH work remains paused. The active program remains Stage28E 
 - Phase B exit SHA: `e0fb5da17879569f791898ba793e1c02b195fab8`
 - Phase C exit SHA: `7601f0beb95d27b2bf2360b760355c3c235871a1`
 - Phase D implementation SHA: `09340089767cde117d12acc049790a2b93778b8e`
-- Phase D evidence: `docs/STAGE28E_PHASE_D_HANDOFF.md`
+- Phase D formal docs exit SHA: `5e750b972eeff4ac8c9149ef6ea708f703d2d755`
+- Phase E implementation head: `4a8ce18edd8cc90e6300929d2d9f035c4ec49eb5`
+- Phase E evidence: `docs/STAGE28E_PHASE_E_HANDOFF.md`
 
 Always fetch fresh work-branch HEAD and Local Agent daemon state before editing or queueing work.
 
@@ -42,96 +44,109 @@ The historical approximately 1 KiB internal-RAM condition was not reproduced.
 
 ## Phase D completed ownership hardening
 
-D1 commit:
+D1 `1aee13cb96eaebdf41a937c5622cce61f1a01b88` introduced explicit process-lifetime ownership for telemetry storage and RF diagnostics.
 
-`1aee13cb96eaebdf41a937c5622cce61f1a01b88`
+D2 `09340089767cde117d12acc049790a2b93778b8e` introduced explicit process-lifetime ownership for `ClimateRuntimeController`, `LampSafetyController`, and `ThermalTestSequence`.
 
-D1 introduced explicit process-lifetime ownership for telemetry storage and RF diagnostics.
+Result:
 
-D1 evidence:
+- main runtime compiler frame `5296 -> 2032 B` (`-3264 B`, about `61.6%`);
+- D2 hardware main HWM `11336 B`;
+- D2 internal free/min/largest `213900 / 213264 / 172032 B`;
+- image `743477 B`;
+- `.bss` `10216 B`;
+- host tests `24/24 PASS`;
+- no coredump/counter regression/crash/corrupt heap/stack canary;
+- Shelly median about `65.5 W`;
+- safe final state `fake-locked`.
 
-- runtime frame `5296 -> 3104 B`
-- reduction `2192 B`
-- host tests `24/24 PASS`
-- image `743541 B`
-- `.bss` `9248 B`
-- hardware HWM `10256 B`
-- internal free/min/largest `214740 / 214208 / 172032 B`
-- 10 heartbeats, heap-integrity PASS
-- Shelly master ON, median `65.5 W`
-- safe final state `fake-locked`
+Phase D intentionally stopped at a `2032 B` compiler frame instead of moving progressively smaller automatic objects.
 
-D2 commit:
+## Phase E completed measured optimization
 
-`09340089767cde117d12acc049790a2b93778b8e`
+Full evidence: `docs/STAGE28E_PHASE_E_HANDOFF.md`.
 
-D2 introduced explicit process-lifetime ownership for `ClimateRuntimeController`, `LampSafetyController`, and `ThermalTestSequence`.
+### E1 — telemetry queue payload to PSRAM
 
-D2 evidence:
+Implementation SHA:
 
-- runtime frame `3104 -> 2032 B`
-- total reduction from Phase C: `3264 B` (`~61.6%`)
-- host tests `24/24 PASS`
-- image `743477 B`
-- `.bss` `10216 B`
-- hardware HWM `11336 B`
-- internal free/min/largest `213900 / 213264 / 172032 B`
-- PSRAM free/min/largest `8363512 / 8363108 / 8257536 B`
-- 11 heartbeats, heap-integrity PASS
-- no coredump, arbiter counter regression, crash, corrupt heap, or stack-canary marker
-- Shelly master ON, median `65.5 W`
-- safe final state `fake-locked`
+`4a5121abf2a93ba76bfc219575d2b52b8025fb03`
 
-Phase D intentionally stopped at a `2032 B` main runtime frame rather than moving progressively smaller automatic objects for marginal benefit. No allocator or PSRAM policy was changed in Phase D.
+- queue payload `16 x 296 B = 4736 B` uses explicit `MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT`;
+- `StaticQueue_t` metadata stays internal;
+- fallback remains the original internal `xQueueCreate()` path;
+- `CONFIG_SPIRAM_USE_MALLOC` remains disabled;
+- host tests `24/24 PASS`;
+- hardware marker `queue_psram=1 queue_bytes=4736`;
+- internal free/min/largest `218672 / 218140 / 176128 B`;
+- gain vs D2 `+4772 / +4876 B` free/min;
+- telemetry `12` writes, `0` queue drops, `0` write errors;
+- safe final state `fake-locked`.
 
-## Verified FreeRTOS/internal-RAM allocation contract
+### E2 — `stage27_store` stack right-sizing
 
-For this ESP-IDF 5.5.4 build:
+Implementation SHA:
 
-- ordinary `pvPortMalloc()` uses `MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT`;
+`c2aff0a14bbcca567de4083a284d3522fa52421e`
+
+- stack `7168 -> 6144 B`;
+- host tests `24/24 PASS`;
+- hardware internal free/min/largest `219568 / 219036 / 176128 B`;
+- gain vs E1 `+896 / +896 B` free/min;
+- worst observed `stage27_store` HWM `1884 B`, later `1820 B` in E3;
+- telemetry `12` writes, `0` drops, `0` write errors;
+- safe final state `fake-locked`.
+
+Do not reduce this stack further before longer Phase G evidence.
+
+### E3 — Stage27C main stack right-sizing
+
+Implementation SHA:
+
+`4a8ce18edd8cc90e6300929d2d9f035c4ec49eb5`
+
+- only Stage27C overlay changes main stack `16384 -> 12288 B`;
+- base project default stays `16384 B`;
+- generated Stage27C sdkconfig confirms `CONFIG_ESP_MAIN_TASK_STACK_SIZE=12288`;
+- host tests `24/24 PASS`;
+- image `743641 B`;
+- hardware internal free/min/largest `223792 / 223260 / 180224 B`;
+- gain vs E2 `+4224 / +4224 B` free/min;
+- cumulative gain vs D2 `+9892 B free`, `+9996 B min`, `+8192 B largest block`;
+- main worst observed HWM `7240 B` free;
+- `stage27_store` worst HWM `1820 B` free;
+- telemetry `12` writes, `0` drops, `0` write errors;
+- 11 heartbeats and heap-integrity PASS;
+- Shelly median `65.5 W`;
+- safe final state `fake-locked`.
+
+Phase E stops here. Further stack cuts have diminishing value and should wait for Phase G long-runtime evidence.
+
+## Verified allocation policy
+
+For this ESP-IDF 5.5.4 Stage27C build:
+
 - `CONFIG_SPIRAM_USE_CAPS_ALLOC=y`;
 - `CONFIG_SPIRAM_USE_MALLOC` is not set;
-- `CONFIG_FREERTOS_TASK_CREATE_ALLOW_EXT_MEM=y`.
+- `CONFIG_FREERTOS_TASK_CREATE_ALLOW_EXT_MEM=y`;
+- broad allocator policy was not changed;
+- RMT/ISR/DMA-sensitive buffers were not moved to PSRAM.
 
-Therefore ordinary `xTaskCreate()` and `xQueueCreate()` consume internal RAM unless an explicit caps-aware path is selected.
+## Phase F next goal
 
-Current telemetry-storage costs:
+Phase F must prove the Stage28D/V5 arbiter behavior from synthetic, single-instance evidence rather than inference.
 
-- `stage27_store` task stack: `7168 B` plus task control allocation;
-- `Stage27TelemetrySnapshot`: `296 B`;
-- queue depth: `16`;
-- queue payload: `4736 B` plus queue metadata/allocator overhead.
+Required proof:
 
-## Phase E active goal
+1. use one known binary-arbiter instance with lifecycle/boot identity visible;
+2. hold requests below threshold and around minimum-OFF dwell;
+3. prove cumulative dwell-hold counters remain monotonic within one instance except allowed integer wrap;
+4. prove the historical same-instance-style `43 -> 1` drop cannot arise from normal `applyBinary()` execution;
+5. after the full `120 s` minimum-OFF dwell, prove an eligible `0.111` request can transition ON;
+6. keep physical outputs `fake-locked`;
+7. do not change `applyBinary()` merely to fit historical V5 logs.
 
-Phase E is measured optimization, not broad configuration churn.
-
-First target: telemetry storage allocation placement and stack sizing.
-
-Required order:
-
-1. verify exact ESP-IDF 5.5.4 caps-aware task/queue/static APIs and constraints;
-2. decide which storage allocations are safe for PSRAM/external memory;
-3. do not move RMT/ISR/DMA-sensitive buffers blindly;
-4. do not globally enable `CONFIG_SPIRAM_USE_MALLOC`;
-5. preserve task semantics and storage reliability;
-6. compare internal free/min/largest, PSRAM usage, stack HWM, firmware size and timing before/after;
-7. use bounded fake-locked hardware verification after software PASS.
-
-Potential Phase E targets after telemetry storage:
-
-- reduce transient serialization/string churn only where measured;
-- evaluate `stage27_store` stack from real HWM before reducing it;
-- review service-console transient frames;
-- leave IDF/NimBLE changes evidence-driven only.
-
-## V5 issue remains open but instrumented
-
-The prior Stage28D anomaly remains:
-
-`arbiter_dwell_holds 33 -> 43 -> 1 -> 11`
-
-Phase B-D did not reproduce a same-instance regression. Do not change `Stage28dBinaryRoleArbiter::applyBinary()` based only on old V5 evidence. Phase F will run the focused continuity/regression proof.
+Long runtime soak remains Phase G. Final physical `AH/rule request -> binary arbiter -> RF -> physical fan` remains Phase H.
 
 ## Safety boundary
 
@@ -156,10 +171,10 @@ Standing invariants:
 
 ## Immediate next work
 
-1. Run one docs-only exact-SHA Phase D exit gate on the fresh work-branch HEAD.
-2. Record that SHA as the formal Phase D exit SHA.
-3. Start Phase E with a read-only ESP-IDF/API capability audit for telemetry task/queue allocation.
-4. Make the smallest measured optimization slice and run host/build/size checks.
-5. Run bounded fake-locked hardware only after software PASS.
+1. Run one docs-only exact-SHA Phase E exit gate on the fresh work-branch HEAD.
+2. Record that SHA as the formal Phase E exit SHA.
+3. Enter Phase F only after that gate passes.
+4. Build the focused synthetic arbiter continuity/regression diagnostic with no physical actuator output.
+5. Run focused host proof first, then only the bounded fake-locked runtime evidence required by Phase F.
 
 Do not run the long soak before Phase G and do not return to a real AH actuator transition before Phase H.
