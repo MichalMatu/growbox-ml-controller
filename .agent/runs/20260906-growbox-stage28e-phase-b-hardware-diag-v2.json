@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260906-growbox-stage28e-phase-b-hardware-diag-v2",
+  "task_digest": "29edf7246179e556f5349b7078f872f0f4eba9a263dd22561237f0a15abb9754",
+  "idle_timeout": 900,
+  "task_timeout": 10800,
+  "memory_limit_mb": 6144,
+  "started_at": "2026-09-06T16:40:21.882896+00:00",
+  "attempt_id": "2e2536db0c70da82cc01ff1f",
+  "daemon_version": "4.18.4",
+  "daemon_pid": 39143,
+  "updated_at": "2026-09-06T16:40:21.883032+00:00",
+  "pid": 39143
+}
