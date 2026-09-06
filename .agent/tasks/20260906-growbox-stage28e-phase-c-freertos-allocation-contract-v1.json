@@ -1,0 +1,16 @@
+{
+  "id": "20260906-growbox-stage28e-phase-c-freertos-allocation-contract-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 4096,
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "commands": [
+    "set -euo pipefail; EXPECTED=e0fb5da17879569f791898ba793e1c02b195fab8; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; git diff --check; echo STAGE28E_C_FREERTOS_ALLOC_EXACT_SHA_PASS=$EXPECTED",
+    "set -euo pipefail; IDF=/Users/michal/esp/esp-idf; echo STAGE28E_C_FREERTOS_ALLOC_SOURCES_BEGIN; grep -R -n -E 'pvPortMalloc|heap_caps_malloc|MALLOC_CAP_INTERNAL|MALLOC_CAP_SPIRAM|xTaskCreate' \"$IDF/components/freertos\" --include='*.c' --include='*.h' | grep -E 'heap_idf|tasks.c|queue.c|idf_additions|port' | head -240 || true; echo STAGE28E_C_FREERTOS_ALLOC_SOURCES_END; echo STAGE28E_C_SDKCONFIG_BEGIN; grep -E 'CONFIG_SPIRAM_(USE_MALLOC|MALLOC_ALWAYSINTERNAL|MALLOC_RESERVE_INTERNAL|USE_CAPS_ALLOC|TRY_ALLOCATE_WIFI_LWIP)|CONFIG_FREERTOS_TASK_CREATE_ALLOW_EXT_MEM' build/idf-stage28e-c-memory-audit-v1/sdkconfig || true; echo STAGE28E_C_SDKCONFIG_END; echo STAGE28E_C_FREERTOS_ALLOCATION_CONTRACT_PASS"
+  ]
+}
