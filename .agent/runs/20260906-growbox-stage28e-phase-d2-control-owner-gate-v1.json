@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 3,
+  "index": 4,
   "total": 5,
-  "command": "set -euo pipefail; python3 - <<'PY'\nimport json,pathlib,shlex,subprocess\nbuild=pathlib.Path('build/idf-stage28e-d2-control-owner-gate')\ncc=json.loads((build/'compile_commands.json').read_text())\ne=next(x for x in cc if x['file'].endswith('/src/climate/ClimateV6RealInputRuntime.cpp'))\nargs=list(e.get('arguments') or shlex.split(e['command']))\nout='/tmp/stage28e_d2_runtime.o'\nfor i,a in enumerate(args):\n    if a=='-o' and i+1<len(args): args[i+1]=out\nargs.append('-fstack-usage')\nsubprocess.run(args,cwd=e['directory'],check=True)\nframe=None\nfor p in pathlib.Path('/tmp').glob('stage28e_d2_runtime*.su'):\n    for line in p.read_text(errors='replace').splitlines():\n        if 'runClimateV6RealInputRuntime' not in line: continue\n        parts=line.rsplit('\\t',2)\n        if len(parts)==3:\n            frame=int(parts[1]); print('STAGE28E_D2_RUNTIME_FRAME_BYTES',frame)\nif frame is None: raise SystemExit('runtime frame missing')\nif frame >= 3104: raise SystemExit(f'D2 frame did not improve over D1: {frame}')\nprint('STAGE28E_D2_STACK_REDUCTION_FROM_D1_BYTES',3104-frame)\nprint('STAGE28E_D2_STACK_REDUCTION_FROM_PHASE_C_BYTES',5296-frame)\nprint('STAGE28E_D2_STACK_USAGE_PASS')\nPY",
-  "pid": 77212,
+  "command": "set -euo pipefail; rm -rf build/host-tests-stage28e-d2; cmake -S test/host -B build/host-tests-stage28e-d2 >/tmp/stage28e-d2-host-config.log 2>&1; cmake --build build/host-tests-stage28e-d2 --parallel 1 >/tmp/stage28e-d2-host-build.log 2>&1; ctest --test-dir build/host-tests-stage28e-d2 --output-on-failure; echo STAGE28E_D2_HOST_TESTS_PASS",
+  "pid": 77250,
   "timeout": 3600,
   "idle_timeout": 600,
   "memory_limit_mb": 6144,
-  "started_at": "2026-09-06T22:00:11.597995+00:00",
-  "stage_name": "command-3",
-  "stage_index": 3,
+  "started_at": "2026-09-06T22:00:12.473446+00:00",
+  "stage_name": "command-4",
+  "stage_index": 4,
   "stage_total": 5,
   "stage_phase": "commands",
   "task_id": "20260906-growbox-stage28e-phase-d2-control-owner-gate-v1",
@@ -18,5 +18,5 @@
   "task_digest": "c649e25835719fea28aa8d25af423214c0df148e9f1c4015aa306045049f9327",
   "daemon_version": "4.18.4",
   "daemon_pid": 70792,
-  "updated_at": "2026-09-06T22:00:11.669231+00:00"
+  "updated_at": "2026-09-06T22:00:12.490796+00:00"
 }
