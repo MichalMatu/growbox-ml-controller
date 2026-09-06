@@ -1,0 +1,19 @@
+{
+  "id": "20260906-growbox-stage28e-phase-a5-published-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 6144,
+  "command_timeout": 7200,
+  "idle_timeout": 900,
+  "task_timeout": 10800,
+  "commands": [
+    "set -euo pipefail; EXPECTED=c055bb2d0568b3b826e2ec92b755051dfea3d258; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"",
+    "set -euo pipefail; test \"$(git hash-object src/climate/runtime/Stage28eDiagnosticsCore.h)\" = \"6f3112b8c8165eed9b9457e846c457a70c0e027b\"; test \"$(git hash-object src/climate/runtime/Stage28ServiceConsole.h)\" = \"a42c3c8ec62dc74e970aef7fdd785f835d0fc093\"; test \"$(git hash-object src/climate/runtime/Stage28ServiceConsole.cpp)\" = \"0c90250d7d36a9565a64b62b483896dd5ab4d7ff\"; test \"$(git hash-object src/climate/ClimateV6RealInputRuntime.cpp)\" = \"0116682affcec0b846c028c2a4224ff69ec5f127\"; echo STAGE28E_A5_BLOBS_MATCH",
+    "set -euo pipefail; c++ -std=c++17 -Wall -Wextra -Wpedantic -Isrc test/test_stage28e_diagnostics_core/test_main.cpp -o /tmp/stage28e_diagnostics_core_tests; /tmp/stage28e_diagnostics_core_tests; cmake -S test/host -B build/host-tests >/dev/null; cmake --build build/host-tests --parallel >/dev/null; ctest --test-dir build/host-tests --output-on-failure",
+    "set -euo pipefail; export CMAKE_BUILD_PARALLEL_LEVEL=1; STAGE27C_BUILD_DIR=build/idf-stage28e-a5-published-v1 GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_FIRMWARE_GIT_SHA=c055bb2d0568b3b826e2ec92b755051dfea3d258 bash scripts/stage27c_crowpanel.sh build; source scripts/source_idf.sh >/dev/null 2>&1; idf.py -B build/idf-stage28e-a5-published-v1 size",
+    "set -euo pipefail; git diff --check; test -z \"$(git status --porcelain)\"; echo STAGE28E_A5_PUBLISHED_PASS"
+  ]
+}
