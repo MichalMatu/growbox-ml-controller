@@ -1,9 +1,9 @@
 {
   "version": 1,
   "daemon_version": "4.18.4",
-  "state": "idle",
-  "pid": 86324,
-  "updated_at": "2026-09-06T05:57:56.494906+00:00",
+  "state": "waiting_resource",
+  "pid": 89223,
+  "updated_at": "2026-09-06T06:01:54.709710+00:00",
   "self_revision": "9ba102134608810f53156ef6050db94835557957",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -23,8 +23,13 @@
   "default_branch": "main",
   "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 86324,
+  "worker_pid": 89223,
   "supervisor_pid": 4033,
-  "last_task_id": "20260906-growbox-stage28e-phase-a4-core-api-v1",
+  "pending_task_id": "20260906-growbox-stage28e-phase-a4-local-v2",
+  "blocked_resources": [
+    "machine"
+  ],
+  "waiting_since": "2026-09-06T06:01:54.709392+00:00",
+  "retrying": true,
   "execution_variant": "parallel"
 }
