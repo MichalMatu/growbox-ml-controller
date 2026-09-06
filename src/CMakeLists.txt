@@ -75,6 +75,7 @@ elseif(GROWBOX_APP_MODE STREQUAL "climate-v6-real-inputs")
       "climate/runtime/Stage28RfDiagnostics.cpp"
       "climate/runtime/Stage28ServiceConsole.cpp"
       "climate/runtime/Stage28ServiceConsoleCommand.cpp"
+      "climate/runtime/Stage28eLog.cpp"
       "climate/telemetry/Stage27LogFormat.cpp"
       "climate/storage/Stage27TelemetryLogger.cpp"
       "climate/storage/Stage27FileDurability.cpp"
@@ -125,6 +126,7 @@ set(GROWBOX_RF433_RX_GPIO "14" CACHE STRING "Stage28 RF433 RX GPIO")
 set(GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED "1" CACHE STRING "Enable Stage28 primary-serial service console")
 set(GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED "0" CACHE STRING "Enable bounded Stage28 real RF outputs")
 set(GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED "0" CACHE STRING "Enable bounded Gate6 thermal test sequence")
+set(GROWBOX_STAGE28E_LOG_COMPILE_LEVEL "2" CACHE STRING "Stage28E diagnostic compile-time log level 0=ERROR..4=TRACE")
 
 target_compile_definitions(
   ${COMPONENT_LIB}
@@ -158,4 +160,5 @@ target_compile_definitions(
     GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED=${GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED}
     GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=${GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED}
     GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=${GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED}
+    GROWBOX_STAGE28E_LOG_COMPILE_LEVEL=${GROWBOX_STAGE28E_LOG_COMPILE_LEVEL}
 )
