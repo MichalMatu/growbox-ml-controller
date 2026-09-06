@@ -1,0 +1,18 @@
+{
+  "id": "20260906-growbox-stage28e-phase-a1-log-contract-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 2048,
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "commands": [
+    "set -euo pipefail; EXPECTED=c055bb2d0568b3b826e2ec92b755051dfea3d258; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"",
+    "set -euo pipefail; CFG=build/idf-stage28e-a5-published-v1/sdkconfig; test -f \"$CFG\"; grep -E '^CONFIG_LOG_(DEFAULT_LEVEL|MAXIMUM_LEVEL|DYNAMIC_LEVEL_CONTROL|MODE_|COLORS)' \"$CFG\" || true",
+    "set -euo pipefail; source scripts/source_idf.sh >/dev/null 2>&1; IDF=${IDF_PATH:?}; grep -R -n -E 'ESP_LOG_LEVEL_LOCAL|esp_log_writev|esp_log_write|esp_log_level_get|esp_log_level_set' \"$IDF/components/log/include\" \"$IDF/components/log\" | head -220",
+    "set -euo pipefail; source scripts/source_idf.sh >/dev/null 2>&1; IDF=${IDF_PATH:?}; grep -R -n -E '#define ESP_LOG[EWIDV]|#define ESP_LOG_LEVEL' \"$IDF/components/log/include\" | head -220"
+  ]
+}
