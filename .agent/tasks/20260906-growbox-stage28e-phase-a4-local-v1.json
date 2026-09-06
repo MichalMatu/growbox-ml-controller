@@ -1,0 +1,19 @@
+{
+  "id": "20260906-growbox-stage28e-phase-a4-local-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "resources": [],
+  "memory_limit_mb": 6144,
+  "command_timeout": 7200,
+  "idle_timeout": 900,
+  "task_timeout": 10800,
+  "commands": [
+    "set -euo pipefail; EXPECTED=85b594d546bbd3f8886c432f90f26c2e79eda0b1; git fetch -q origin mvp/environment-controller agent-control; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"",
+    "set -euo pipefail; git show origin/agent-control:.agent/payloads/20260906-growbox-stage28e-phase-a4-v1/run.py > /tmp/growbox-stage28e-a4-v1.py; python3 /tmp/growbox-stage28e-a4-v1.py; git diff --check; git diff -- config/idf/sdkconfig.defaults.stage27c src/climate/storage/Stage27TelemetryLogger.h src/climate/storage/Stage27TelemetryLogger.cpp src/climate/runtime/Stage28ServiceConsole.cpp",
+    "set -euo pipefail; cmake -S test/host -B build/host-tests >/dev/null; cmake --build build/host-tests --parallel >/dev/null; ctest --test-dir build/host-tests --output-on-failure",
+    "set -euo pipefail; export CMAKE_BUILD_PARALLEL_LEVEL=1; STAGE27C_BUILD_DIR=build/idf-stage28e-a4-v1 GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_FIRMWARE_GIT_SHA=85b594d546bbd3f8886c432f90f26c2e79eda0b1 bash scripts/stage27c_crowpanel.sh build; grep -E '^CONFIG_FREERTOS_USE_TRACE_FACILITY=' build/idf-stage28e-a4-v1/sdkconfig; source scripts/source_idf.sh >/dev/null 2>&1; idf.py -B build/idf-stage28e-a4-v1 size",
+    "set -euo pipefail; git diff --check; echo STAGE28E_A4_LOCAL_PASS; git status --short"
+  ]
+}
