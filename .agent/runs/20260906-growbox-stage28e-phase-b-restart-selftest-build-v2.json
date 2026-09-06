@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 2,
+  "index": 3,
   "total": 3,
-  "command": "set -euo pipefail; export CMAKE_BUILD_PARALLEL_LEVEL=1; BUILD=build/idf-stage28e-b-restart-selftest-default-v2; rm -rf \"$BUILD\"; STAGE27C_BUILD_DIR=\"$BUILD\" GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST=0 GROWBOX_FIRMWARE_GIT_SHA=b43516a2adcd320b3da2b4ee9051e442cceb5c93 bash scripts/stage27c_crowpanel.sh build; if strings \"$BUILD/growbox_ml_controller.elf\" | grep -Fq 'stage28e_breadcrumb_restart_selftest action=esp_restart'; then echo 'self-test marker unexpectedly present in default build' >&2; exit 1; fi; . /Users/michal/esp/esp-idf/export.sh >/dev/null 2>&1; idf.py -B \"$BUILD\" size; echo STAGE28E_B_RESTART_SELFTEST_DEFAULT_BUILD_PASS",
-  "pid": 16635,
+  "command": "set -euo pipefail; export CMAKE_BUILD_PARALLEL_LEVEL=1; BUILD=build/idf-stage28e-b-restart-selftest-enabled-v2; rm -rf \"$BUILD\"; STAGE27C_BUILD_DIR=\"$BUILD\" GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST=1 GROWBOX_FIRMWARE_GIT_SHA=b43516a2adcd320b3da2b4ee9051e442cceb5c93 bash scripts/stage27c_crowpanel.sh build; strings \"$BUILD/growbox_ml_controller.elf\" | grep -Fq 'stage28e_breadcrumb_restart_selftest action=esp_restart'; grep -Fq 'GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST:STRING=1' \"$BUILD/CMakeCache.txt\"; echo STAGE28E_B_RESTART_SELFTEST_ENABLED_BUILD_PASS",
+  "pid": 22819,
   "timeout": 1800,
   "idle_timeout": 180,
   "memory_limit_mb": 4096,
-  "started_at": "2026-09-06T16:32:53.091466+00:00",
-  "stage_name": "command-2",
-  "stage_index": 2,
+  "started_at": "2026-09-06T16:33:46.000835+00:00",
+  "stage_name": "command-3",
+  "stage_index": 3,
   "stage_total": 3,
   "stage_phase": "commands",
   "task_id": "20260906-growbox-stage28e-phase-b-restart-selftest-build-v2",
@@ -18,5 +18,5 @@
   "task_digest": "686fbd574504320ae44db50f9b4d6acb325ec4c1dfbbb145b857cd078a9c5569",
   "daemon_version": "4.18.4",
   "daemon_pid": 16418,
-  "updated_at": "2026-09-06T16:32:53.166796+00:00"
+  "updated_at": "2026-09-06T16:33:46.081618+00:00"
 }
