@@ -30,6 +30,8 @@ public:
   bool enqueue(const telemetry::Stage27TelemetrySnapshot& snapshot) noexcept;
   Stage27StorageStatus status() const noexcept;
 
+  static constexpr std::uint32_t taskStackBytes() noexcept { return 7168U; }
+
 private:
   enum class PersistResult : std::uint8_t {
     Ok,
