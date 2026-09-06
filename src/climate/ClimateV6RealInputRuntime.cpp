@@ -264,9 +264,11 @@ runtime::Stage27PhysicalOutputSnapshot physicalOutputSnapshot(
     ESP_LOGE(kTag, "Gate6 thermal sequence requested but real outputs are not safely armed");
   }
 
+  runtime::RuntimeTimingMetrics runtime_timing{};
+  runtime_timing.loop_active.budget_us = kTickIntervalMs * 1000U;
   runtime::Stage28ServiceConsole service_console(
       {GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED != 0, GROWBOX_FIRMWARE_GIT_SHA,
-       &real_output_ready, &storage_logger},
+       &real_output_ready, &storage_logger, &runtime_timing},
       ble, scd41, clock, rf_diagnostics);
   const bool service_console_ready = service_console.begin();
 
@@ -316,14 +318,21 @@ runtime::Stage27PhysicalOutputSnapshot physicalOutputSnapshot(
 
   std::uint32_t diagnostic_tick = 0U;
   while (true) {
-    const std::uint64_t now_ms = monotonicMilliseconds();
+    const std::uint64_t loop_started_us = static_cast<std::uint64_t>(esp_timer_get_time());
+    const std::uint64_t now_ms = loop_started_us / 1000U;
+    const std::uint64_t console_started_us = static_cast<std::uint64_t>(esp_timer_get_time());
     service_console.poll(now_ms);
+    runtime_timing.service_console.observe(
+        static_cast<std::uint64_t>(esp_timer_get_time()) - console_started_us);
+    const std::uint64_t rf_started_us = static_cast<std::uint64_t>(esp_timer_get_time());
     rf_diagnostics.tick(now_ms);
+    runtime_timing.rf_tick.observe(static_cast<std::uint64_t>(esp_timer_get_time()) - rf_started_us);
 
     ::growbox::climate::ClimateLoopResult loop_result{};
     ::growbox::climate::ClimateRuntimeDecision decision{};
     stage28d::LampSafetyDecision lamp_decision{};
 
+    const std::uint64_t control_started_us = static_cast<std::uint64_t>(esp_timer_get_time());
     if (GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED != 0 && real_output_ready &&
         !thermal_test_finished_safe) {
       const auto point = thermal_test_sequence.sample(now_ms - thermal_test_started_ms);
@@ -405,8 +414,12 @@ runtime::Stage27PhysicalOutputSnapshot physicalOutputSnapshot(
         ESP_LOGE(kTag, "Climate output fault safe_off=%d outputs=fake-locked", safe_off);
       }
     }
+    runtime_timing.control_cycle.observe(
+        static_cast<std::uint64_t>(esp_timer_get_time()) - control_started_us);
 
     if ((diagnostic_tick++ % kTelemetryEveryTicks) == 0U) {
+      const std::uint64_t telemetry_started_us =
+          static_cast<std::uint64_t>(esp_timer_get_time());
       const auto physical_outputs = physicalOutputSnapshot(
           physical_endpoint, output_driver.realEnabled(), lamp_decision, binary_arbiter);
       telemetry_reporter.record(now_ms, loop_result, decision, physical_outputs);
@@ -434,8 +447,12 @@ runtime::Stage27PhysicalOutputSnapshot physicalOutputSnapshot(
                static_cast<unsigned long>(binary_arbiter.safetyOverrideCount()),
                static_cast<unsigned long>(physical_endpoint.transmitCount()),
                static_cast<unsigned long>(physical_endpoint.transmitErrorCount()));
+      runtime_timing.telemetry.observe(
+          static_cast<std::uint64_t>(esp_timer_get_time()) - telemetry_started_us);
     }
 
+    runtime_timing.loop_active.observe(
+        static_cast<std::uint64_t>(esp_timer_get_time()) - loop_started_us);
     vTaskDelay(pdMS_TO_TICKS(kTickIntervalMs));
   }
 }
