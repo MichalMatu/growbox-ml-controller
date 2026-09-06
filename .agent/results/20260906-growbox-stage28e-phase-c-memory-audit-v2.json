@@ -1,0 +1,116 @@
+{
+  "id": "20260906-growbox-stage28e-phase-c-memory-audit-v2",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "started_at": "2026-09-06T21:04:57.680130+00:00",
+  "command_timeout": 1800,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; EXPECTED=e0fb5da17879569f791898ba793e1c02b195fab8; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; test -f build/idf-stage28e-c-memory-audit-v1/growbox_ml_controller.elf; git diff --check; echo STAGE28E_C_AUDIT_V2_EXACT_SHA_PASS=$EXPECTED",
+      "exit_code": 0,
+      "output": "STAGE28E_C_AUDIT_V2_EXACT_SHA_PASS=e0fb5da17879569f791898ba793e1c02b195fab8\n",
+      "elapsed_seconds": 1.042,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 6144,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 2.06,
+      "output_policy": "stream",
+      "captured_output_chars": 76,
+      "output_truncated": false,
+      "current_rss_mb": 2.06,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "set -euo pipefail; BUILD=build/idf-stage28e-c-memory-audit-v1; ELF=\"$BUILD/growbox_ml_controller.elf\"; NM=$(find /Users/michal/.espressif/tools -type f -path '*/bin/xtensa-esp32s3-elf-nm' -perm -111 2>/dev/null | head -1); READELF=$(find /Users/michal/.espressif/tools -type f -path '*/bin/xtensa-esp32s3-elf-readelf' -perm -111 2>/dev/null | head -1); test -n \"$NM\"; test -x \"$NM\"; echo STAGE28E_C_NM=$NM; \"$NM\" -S --size-sort --radix=d \"$ELF\" > /tmp/stage28e-c-nm.txt; python3 - <<'PY'\nfrom pathlib import Path\nrows=[]\nfor line in Path('/tmp/stage28e-c-nm.txt').read_text(errors='replace').splitlines():\n    p=line.split(None,4)\n    if len(p)<4: continue\n    try: size=int(p[1])\n    except ValueError: continue\n    typ=p[2]; name=p[3] if len(p)==4 else p[4]\n    if typ in 'BbDdSsGgCc': rows.append((size,typ,name))\nprint('STAGE28E_C_TOP_STATIC_SYMBOLS_BEGIN')\nfor size,typ,name in sorted(rows,reverse=True)[:80]: print(f'{size:8d} {typ} {name}')\nprint('STAGE28E_C_TOP_STATIC_SYMBOLS_END')\nPY\nif test -n \"$READELF\" && test -x \"$READELF\"; then \"$READELF\" -S --wide \"$ELF\" | grep -E ' \\.(data|bss|iram0.text|dram0.data|dram0.bss|flash.text|flash.rodata|rtc)' || true; fi; echo STAGE28E_C_SYMBOL_AUDIT_PASS",
+      "exit_code": 0,
+      "output": "STAGE28E_C_NM=/Users/michal/.espressif/tools/xtensa-esp-elf/esp-14.2.0_20260121/xtensa-esp-elf/bin/xtensa-esp32s3-elf-nm\nSTAGE28E_C_TOP_STATIC_SYMBOLS_BEGIN\n    4192 D port_IntStack\n    2532 D r_ip_funcs_ro\n    1892 b s_coredump_stack\n    1808 d esp_err_msg_table\n    1232 D rtc_io_desc\n     976 D r_modules_funcs_ro\n     740 D phy_param\n     608 d llm_hci_command_handler_tab_ro\n     588 b s_reg_dump$0\n     536 d err_code_list\n     512 d intr_desc_table\n     500 b pxReadyTasksLists\n     420 d llcp_pdu_handler\n     396 D esp_isr_names\n     364 D __default_global_locale\n     312 B __sf\n     280 D r_plf_funcs_ro\n     257 D _ctype_\n     256 d sbox\n     256 d crc7_table\n     256 D __chclass\n     252 d osi_funcs_ro\n     248 d core_err_code_list\n     248 d ble_att_rx_dispatch\n     248 b s_log_cache\n     240 D _impure_data\n     220 D soc_memory_regions\n     200 D __mprec_tens\n     196 D GPIO_PIN_MUX_REG\n     192 d s_fd_table\n     184 d s_ipc_mutex_buffer\n     184 d s_ipc_ack_buffer\n     180 d io_mode_str\n     176 d curve_secp256r1\n     176 d ble_hs_hci_evt_le_dispatch\n     176 D npl_funcs_ro\n     168 d uart_context\n     160 d reason$1\n     156 d s_stub_table\n     152 b s_extra_info\n     132 D spi_periph_signal\n     130 B lld_rpa_res_list\n     128 d ExCvt\n     128 D phy_init_data\n     124 D esp_flash_chip_winbond\n     124 D esp_flash_chip_th\n     124 D esp_flash_chip_mxic_opi\n     124 D esp_flash_chip_mxic\n     124 D esp_flash_chip_issi\n     124 D esp_flash_chip_generic\n     124 D esp_flash_chip_gd\n     124 D esp_flash_chip_boya\n     120 d s_context\n     120 d _ZN7growbox3app10climate_io5rf43312_GLOBAL__N_1L6kSpecsE\n     112 d s_fake_stack_frame\n     112 d s_config\n     112 b _ZN7growbox3app10climate_io7runtime12_GLOBAL__N_121g_stage28e_breadcrumbE\n     108 d ble_l2cap_sig_dispatch\n     108 D __state_table\n     108 D __action_table\n     100 d s_mainbus\n     100 D temperature_sensor_attributes\n      96 d ble_hs_hci_evt_dispatch\n      96 D ilg_int_st_bits\n      96 D __month_lengths\n      92 d opiflash_cmd_def_mxic$1\n      92 b s_common_recursive_mutex\n      92 b s_common_mutex\n      92 B ble_isr_state\n      92 B __lock___tz_mutex\n      92 B __lock___sinit_recursive_mutex\n      92 B __lock___sfp_recursive_mutex\n      92 B __lock___malloc_recursive_mutex\n      92 B __lock___env_recursive_mutex\n      92 B __lock___dd_hash_mutex\n      92 B __lock___atexit_recursive_mutex\n      92 B __lock___at_quick_exit_mutex\n      92 B __lock___arc4random_mutex\n      88 d tzinfo\n      88 d esp_flash_gpspi_host\nSTAGE28E_C_TOP_STATIC_SYMBOLS_END\n  [ 1] .rtc.text         PROGBITS        600fe000 0d0090 000000 00   W  0   0  1\n  [ 2] .rtc.force_fast   PROGBITS        600fe000 0d0090 000000 00   W  0   0  1\n  [ 3] .rtc_noinit       NOBITS          50000000 0d0000 000070 00  WA  0   0  8\n  [ 4] .rtc.force_slow   PROGBITS        50000070 0d0070 000020 00  WA  0   0  4\n  [ 5] .rtc_reserved     NOBITS          600fffe8 0d0fe8 000018 00  WA  0   0  8\n  [ 7] .iram0.text       PROGBITS        40374404 03e404 01b92f 00  AX  0   0  4\n  [ 9] .dram0.data       PROGBITS        3fc9fe00 038e00 005020 00  WA  0   0 16\n  [11] .dram0.bss        NOBITS          3fca4e20 03de20 001a10 00  WA  0   0  8\n  [12] .flash.text       PROGBITS        42000020 05a020 075152 00  AX  0   0  4\n  [13] .flash_rodata_dummy NOBITS          3c000020 001020 080000 00  WA  0   0  1\n  [15] .flash.rodata     PROGBITS        3c080120 001120 01f804 00  WA  0   0 16\n  [17] .iram0.text_end   NOBITS          4038fd33 059d33 0000cd 00  WA  0   0  1\nSTAGE28E_C_SYMBOL_AUDIT_PASS\n",
+      "elapsed_seconds": 3.308,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 6144,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 17.77,
+      "output_policy": "stream",
+      "captured_output_chars": 3561,
+      "output_truncated": false,
+      "current_rss_mb": 17.77,
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "set -euo pipefail; python3 - <<'PY'\nfrom pathlib import Path\npaths=[Path('src/climate/ClimateV6RealInputRuntime.cpp'),Path('src/climate/runtime/Stage27RuntimeAdapters.h'),Path('src/climate/runtime/Stage27RuntimeAdapters.cpp'),Path('src/climate/Stage28dBinaryRoleArbiter.h'),Path('src/climate/runtime/Stage27TelemetryReporter.h'),Path('src/climate/storage/Stage27TelemetryLogger.h'),Path('src/climate/native/BleClimateScanner.h')]\nprint('STAGE28E_C_SOURCE_INVENTORY_BEGIN')\nfor p in paths:\n    print(f'--- {p} ---')\n    txt=p.read_text(errors='replace').splitlines()\n    for i,line in enumerate(txt,1):\n        s=line.strip()\n        if ('runClimateV6RealInputRuntime' in s or 'MappedClimateRoleDriver ' in s or 'Stage28dBinaryRoleArbiter ' in s or 'SwitchableRoleDriver ' in s or 'Stage27Telemetry' in s or 'Stage27InsideSource' in s or 'Stage27NearbySource' in s or 'LockedFakeRoleDriver' in s or 'BleClimateScanner ' in s or 'std::array<' in s or 'std::vector<' in s or 'std::string' in s or 'malloc' in s or 'calloc' in s or 'realloc' in s or 'new ' in s or 'heap_caps_' in s or 'xTaskCreate' in s or 'xTaskCreateStatic' in s):\n            print(f'{i}: {s}')\nprint('STAGE28E_C_SOURCE_INVENTORY_END')\nPY\nprintf 'STAGE28E_C_ALLOC_CALLS_BEGIN\\n'; grep -R -n -E 'heap_caps_(malloc|calloc|realloc)|(^|[^a-zA-Z])malloc\\(|(^|[^a-zA-Z])calloc\\(|(^|[^a-zA-Z])realloc\\(|new[[:space:]]|xTaskCreate|xTaskCreateStatic|std::vector<|std::string' src/climate src/demo 2>/dev/null | head -300 || true; printf 'STAGE28E_C_ALLOC_CALLS_END\\n'; echo STAGE28E_C_MEMORY_AUDIT_V2_PASS",
+      "exit_code": 0,
+      "output": "STAGE28E_C_SOURCE_INVENTORY_BEGIN\n--- src/climate/ClimateV6RealInputRuntime.cpp ---\n16: #include \"climate/runtime/Stage27TelemetryReporter.h\"\n21: #include \"climate/storage/Stage27TelemetryLogger.h\"\n123: storage::Stage27TelemetryLogger::Config storageConfig() noexcept {\n124: storage::Stage27TelemetryLogger::Config config{};\n162: class SwitchableRoleDriver final : public ClimateRoleDriver {\n164: SwitchableRoleDriver(runtime::LockedFakeRoleDriver& fake_driver, ClimateRoleDriver& real_driver,\n187: runtime::LockedFakeRoleDriver& fake_driver_;\n222: [[noreturn]] void runClimateV6RealInputRuntime() noexcept {\n232: native::BleClimateScanner ble;\n238: storage::Stage27TelemetryLogger storage_logger(storage_config);\n276: runtime::Stage27InsideSource inside(ble, scd41);\n277: runtime::Stage27NearbySource outside(ble);\n280: runtime::LockedFakeRoleDriver fake_output_driver;\n281: MappedClimateRoleDriver mapped_output_driver(semantic_output_config, physical_endpoint);\n282: stage28d::Stage28dBinaryRoleArbiter binary_arbiter(mapped_output_driver);\n286: SwitchableRoleDriver output_driver(fake_output_driver, binary_arbiter, real_output_ready);\n300: runtime::Stage27TelemetryReporter telemetry_reporter(ble, scd41, clock, storage_logger,\n--- src/climate/runtime/Stage27RuntimeAdapters.h ---\n11: class LockedFakeRoleDriver final : public ClimateRoleDriver {\n16: class Stage27InsideSource final : public InsideEnvironmentSource {\n18: Stage27InsideSource(native::BleClimateScanner& ble, native::Scd41InsideSource& scd41) noexcept;\n27: class Stage27NearbySource final : public OutsideEnvironmentSource {\n29: explicit Stage27NearbySource(native::BleClimateScanner& ble) noexcept;\n--- src/climate/runtime/Stage27RuntimeAdapters.cpp ---\n8: bool LockedFakeRoleDriver::apply(ClimateActuatorRole, float, std::uint64_t) noexcept {\n12: Stage27InsideSource::Stage27InsideSource(native::BleClimateScanner& ble,\n16: bool Stage27InsideSource::sample(std::uint64_t monotonic_ms,\n35: Stage27NearbySource::Stage27NearbySource(native::BleClimateScanner& ble) noexcept : ble_(ble) {}\n37: bool Stage27NearbySource::sample(std::uint64_t monotonic_ms,\n--- src/climate/Stage28dBinaryRoleArbiter.h ---\n24: class Stage28dBinaryRoleArbiter final : public ClimateRoleDriver {\n--- src/climate/runtime/Stage27TelemetryReporter.h ---\n8: #include \"climate/storage/Stage27TelemetryLogger.h\"\n9: #include \"climate/telemetry/Stage27Telemetry.h\"\n28: class Stage27TelemetryReporter final {\n30: Stage27TelemetryReporter(native::BleClimateScanner& ble, native::Scd41InsideSource& scd41,\n32: storage::Stage27TelemetryLogger& storage_logger,\n40: void logRecord(const telemetry::Stage27TelemetrySnapshot& snapshot,\n46: storage::Stage27TelemetryLogger& storage_logger_;\n--- src/climate/storage/Stage27TelemetryLogger.h ---\n6: #include \"climate/telemetry/Stage27Telemetry.h\"\n17: class Stage27TelemetryLogger {\n26: explicit Stage27TelemetryLogger(Config config) noexcept\n30: bool enqueue(const telemetry::Stage27TelemetrySnapshot& snapshot) noexcept;\n45: bool ensureActiveStorage(const telemetry::Stage27TelemetrySnapshot& snapshot) noexcept;\n46: bool tryActivateSd(const telemetry::Stage27TelemetrySnapshot& snapshot) noexcept;\n47: bool tryActivateFlash(const telemetry::Stage27TelemetrySnapshot& snapshot) noexcept;\n51: PersistResult ensureActiveSession(const telemetry::Stage27TelemetrySnapshot& snapshot) noexcept;\n52: PersistResult persistSnapshot(const telemetry::Stage27TelemetrySnapshot& snapshot) noexcept;\n--- src/climate/native/BleClimateScanner.h ---\n16: class BleClimateScanner {\nSTAGE28E_C_SOURCE_INVENTORY_END\nSTAGE28E_C_ALLOC_CALLS_BEGIN\nsrc/climate/runtime/Stage28ServiceConsole.cpp:296:      heap_caps_malloc(task_bytes, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));\nsrc/climate/runtime/Stage28ServiceConsoleCommand.cpp:18:bool equalsIgnoreCase(std::string_view left, std::string_view right) noexcept {\nsrc/climate/runtime/Stage28ServiceConsoleCommand.cpp:24:std::size_t splitTokens(std::string_view line, std::array<std::string_view, 5U>& tokens) noexcept {\nsrc/climate/runtime/Stage28ServiceConsoleCommand.cpp:36:bool parseUnsigned(std::string_view token, std::uint32_t& output) noexcept {\nsrc/climate/runtime/Stage28ServiceConsoleCommand.cpp:46:bool parseUnsigned64(std::string_view token, std::uint64_t& output) noexcept {\nsrc/climate/runtime/Stage28ServiceConsoleCommand.cpp:57:bool parseDevice(std::string_view token, ServiceConsoleRfDevice& device) noexcept {\nsrc/climate/runtime/Stage28ServiceConsoleCommand.cpp:63:bool parseState(std::string_view token, ServiceConsoleRfState& state) noexcept {\nsrc/climate/runtime/Stage28ServiceConsoleCommand.cpp:68:bool copyLogFilename(std::string_view token, std::array<char,16U>& output) noexcept {\nsrc/climate/runtime/Stage28ServiceConsoleCommand.cpp:85:  const std::string_view input(line);\nsrc/climate/runtime/Stage28ServiceConsoleCommand.cpp:86:  std::array<std::string_view,5U> tokens{};\nsrc/climate/storage/Stage27TelemetryLogger.cpp:51:  if (xTaskCreate(&Stage27TelemetryLogger::taskEntry, \"stage27_store\", taskStackBytes(), this,\nsrc/climate/storage/Stage27SdDataLogger.cpp:161:  if (xTaskCreate(&Stage27SdDataLogger::taskEntry, \"stage27_sd\", kTaskStackBytes, this,\nsrc/demo/SerialJsonProtocol.cpp:38:        static_cast<char*>(heap_caps_malloc(kLineCapacity, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));\nsrc/demo/SerialJsonProtocol.cpp:40:      line_ = static_cast<char*>(heap_caps_malloc(kLineCapacity, MALLOC_CAP_8BIT));\nSTAGE28E_C_ALLOC_CALLS_END\nSTAGE28E_C_MEMORY_AUDIT_V2_PASS\n",
+      "elapsed_seconds": 0.473,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 6144,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 1.55,
+      "output_policy": "stream",
+      "captured_output_chars": 5491,
+      "output_truncated": false,
+      "current_rss_mb": 1.55,
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 1.042
+    },
+    {
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 3.308
+    },
+    {
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.473
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.091
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.076
+  },
+  "finished_at": "2026-09-06T21:05:04.340053+00:00",
+  "task_digest": "db3d54ef757aa8d8c1a99980fcef4d3c72720a89d872fef8b061ccc3870a969a",
+  "idle_timeout": 600,
+  "task_timeout": 3600,
+  "memory_limit_mb": 6144,
+  "attempt_id": "31f8dbe855b3037e8f1c6511",
+  "daemon_version": "4.18.4"
+}
