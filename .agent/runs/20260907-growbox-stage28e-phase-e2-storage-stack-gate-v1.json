@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 2,
+  "index": 3,
   "total": 4,
-  "command": "set -euo pipefail; export CMAKE_BUILD_PARALLEL_LEVEL=1; BUILD=build/idf-stage28e-e2-storage-stack-gate; rm -rf \"$BUILD\"; STAGE27C_BUILD_DIR=\"$BUILD\" GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST=0 GROWBOX_FIRMWARE_GIT_SHA=c2aff0a14bbcca567de4083a284d3522fa52421e bash scripts/stage27c_crowpanel.sh build >/tmp/stage28e-e2-build.log 2>&1; test -f \"$BUILD/growbox_ml_controller.elf\"; . /Users/michal/esp/esp-idf/export.sh >/dev/null 2>&1; idf.py -B \"$BUILD\" size; echo STAGE28E_E2_STACK_FIRMWARE_BUILD_PASS",
-  "pid": 42863,
+  "command": "set -euo pipefail; rm -rf build/host-tests-stage28e-e2; cmake -S test/host -B build/host-tests-stage28e-e2 >/tmp/stage28e-e2-host-config.log 2>&1; cmake --build build/host-tests-stage28e-e2 --parallel 1 >/tmp/stage28e-e2-host-build.log 2>&1; ctest --test-dir build/host-tests-stage28e-e2 --output-on-failure; echo STAGE28E_E2_STACK_HOST_TESTS_PASS",
+  "pid": 48963,
   "timeout": 3600,
   "idle_timeout": 600,
   "memory_limit_mb": 6144,
-  "started_at": "2026-09-06T23:06:28.229340+00:00",
-  "stage_name": "command-2",
-  "stage_index": 2,
+  "started_at": "2026-09-06T23:07:20.859447+00:00",
+  "stage_name": "command-3",
+  "stage_index": 3,
   "stage_total": 4,
   "stage_phase": "commands",
   "task_id": "20260907-growbox-stage28e-phase-e2-storage-stack-gate-v1",
@@ -18,5 +18,5 @@
   "task_digest": "4210e267e8d850875aa78106acd1ff9bb40d3a860db282bf01394e10d5684fe2",
   "daemon_version": "4.18.4",
   "daemon_pid": 42695,
-  "updated_at": "2026-09-06T23:06:28.320596+00:00"
+  "updated_at": "2026-09-06T23:07:20.889995+00:00"
 }
