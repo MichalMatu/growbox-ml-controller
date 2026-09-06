@@ -10,7 +10,7 @@ This is the latest fresh-chat handoff and overrides older statements that Gate 7
 
 ## Fresh source identity
 
-At handoff time the product branch HEAD was:
+At handoff time the executable product lineage under test was:
 
 `dfc6dc86a47ad2158e36bb0d5241b0153dbce387`
 
@@ -22,9 +22,9 @@ Parent:
 
 Commit: `Align Python ventilation policy with absolute humidity`
 
-The absolute-humidity ventilation policy software slice and its replay fixture are already present at this HEAD. Do not restart that implementation slice from the older roadmap text.
+The absolute-humidity ventilation policy software slice and its replay fixture are already present at this executable identity. Do not restart that implementation slice from the older roadmap text.
 
-Always fetch fresh branch HEAD before continuing.
+Documentation-only handoff commits were added afterward, so always fetch fresh branch HEAD and distinguish the current docs HEAD from the executable SHA that V5 actually tested.
 
 ## Local Agent contract
 
@@ -39,7 +39,27 @@ Use:
 
 Before editing or queueing a task, read fresh `agent-control:.agent/status/daemon.json` and ensure there is no active task touching the same branch/resource.
 
-At handoff the worker was idle and on Local Agent 4.18.4, but the next chat must fetch fresh daemon evidence rather than trusting this remembered version.
+## Local Agent update timeline relevant to V4/V5
+
+The Local Agent was updated several times during this investigation. Treat that as relevant environmental context, but keep the timing precise.
+
+Observed from this repository's own `agent-control` evidence:
+
+- V4 (`20260906-growbox-ah-arbiter-clean-v4`) finished on Local Agent `4.18.2`, daemon PID `29617`, at `2026-09-06T01:14:19Z`.
+- V5 (`20260906-growbox-ah-arbiter-clean-v5`) started after the update to `4.18.3` and finished on Local Agent `4.18.3`, daemon PID `56140`, at `2026-09-06T02:00:00Z`.
+- The same daemon PID `56140` was observed while V5 was running and in its terminal run record. There is no current evidence that the Local Agent daemon restarted or self-updated during the V5 task itself.
+- After V5, the repository worker was later observed on Local Agent `4.18.4` with a different worker PID.
+
+Therefore:
+
+- Local Agent updates are worth recording and checking as part of environmental diagnosis;
+- the update from `4.18.2 -> 4.18.3` happened before V5;
+- the update from `4.18.3 -> 4.18.4` happened after V5;
+- neither observed update, by itself, explains the in-test `arbiter_dwell_holds 43 -> 1` discontinuity.
+
+Do not exclude an execution-environment interaction without evidence, but do not blame the Local Agent update unless logs show a task/USB/process interruption during the exact V5 window.
+
+The next chat must fetch fresh daemon evidence rather than trusting any remembered version number.
 
 ## Serial-port invariant
 
@@ -59,7 +79,7 @@ Latest recovery marker from task `20260906-growbox-ah-arbiter-clean-v5`:
 
 Therefore the last confirmed hardware state was:
 
-- exact SHA `dfc6dc86...`;
+- exact executable SHA `dfc6dc86...`;
 - outputs `fake-locked`;
 - lamp ON;
 - fan OFF;
@@ -171,18 +191,19 @@ Therefore do **not** jump directly to the conclusion that `Stage28dBinaryRoleArb
 
 Primary diagnostic hypotheses now include:
 
-1. board/runtime reset or restart during the V5 window;
+1. ESP32 board/runtime reset or restart during the V5 window;
 2. arbiter object/state being recreated or synchronized/reset unexpectedly;
 3. monotonic-time discontinuity or incorrect timestamp propagation;
 4. a repeated safe-off/reconciliation path resetting the OFF dwell clock;
 5. the controller/application no longer invoking the exhaust apply path as expected after the request is generated;
-6. only after excluding the above, a defect in `applyBinary()` dwell/threshold logic itself.
+6. Local Agent / host / serial execution interruption during the test window, but only if exact run evidence supports it;
+7. only after excluding the above, a defect in `applyBinary()` dwell/threshold logic itself.
 
 Treat these as hypotheses, not conclusions.
 
-## Code inspection starting point
+## Code and runtime inspection starting point
 
-Inspect exact `dfc6dc86...` versions of:
+Inspect exact executable `dfc6dc86...` versions of:
 
 - `src/climate/Stage28dBinaryRoleArbiter.cpp`
 - `src/climate/Stage28dBinaryRoleArbiter.h`
@@ -191,6 +212,14 @@ Inspect exact `dfc6dc86...` versions of:
 - runtime controller/output reconciliation code reached by the exhaust request
 - RF endpoint safe-state paths
 - telemetry/reset-reason reporting
+
+Also correlate the V5 serial/log stream with:
+
+- ESP reset-reason telemetry;
+- firmware boot markers;
+- serial disconnect/reconnect events;
+- flash/reset operations that were part of the harness;
+- Local Agent task heartbeat/daemon identity over the same timestamps.
 
 Current arbiter defaults:
 
@@ -211,23 +240,24 @@ Do not start with another hardware run.
 1. Fetch fresh product HEAD and daemon status.
 2. Read V5 terminal result completely.
 3. Audit reset/reinitialization evidence first, especially the `dwell_holds 43 -> 1` discontinuity.
-4. Trace every path that can:
+4. Correlate board boot/reset telemetry with the Local Agent V5 task timeline before changing product code.
+5. Trace every path that can:
    - call `forceSafeOff()`;
    - call `synchronizeSafeOff()`;
    - recreate/reinitialize the arbiter;
    - restart the runtime/controller;
    - reset/reconcile applied actuator state;
    - change monotonic timing assumptions.
-5. Add a focused host/runtime regression that reproduces the exact V5 request/dwell/state sequence, including protection against unintended state reset.
-6. Make the smallest product fix supported by evidence.
-7. Run focused tests.
-8. Run exactly one final full software quality gate after the fix is stable.
-9. Only then perform a short bounded exact-SHA hardware confirmation of:
+6. Add a focused host/runtime regression that reproduces the exact V5 request/dwell/state sequence, including protection against unintended state reset.
+7. Make the smallest product fix supported by evidence.
+8. Run focused tests.
+9. Run exactly one final full software quality gate after the fix is stable.
+10. Only then perform a short bounded exact-SHA hardware confirmation of:
 
    `AH request -> dwell expiry -> arbiter transition -> RF -> physical fan ON`
 
-10. Use independent Shelly power evidence and zero RF TX errors.
-11. Finish with safe exact-SHA fake-lock recovery and restore normal RTC/storage.
+11. Use independent Shelly power evidence and zero RF TX errors.
+12. Finish with safe exact-SHA fake-lock recovery and restore normal RTC/storage.
 
 ## Physical-output rules
 
@@ -241,4 +271,4 @@ Do not start with another hardware run.
 
 A new chat should begin with:
 
-`Read AGENTS.md, docs/STAGE28D_AH_ARBITER_HANDOFF.md, docs/PROJECT_ROADMAP.md, docs/CURRENT_STATUS.md and docs/CONTINUATION_PLAN.md. Fetch fresh mvp/environment-controller HEAD and agent-control daemon/result evidence. Treat V5 as the newest control-path evidence, with special attention to the arbiter_dwell_holds 43 -> 1 discontinuity. Diagnose reset/reinitialization before running more hardware.`
+`Read AGENTS.md, docs/STAGE28D_AH_ARBITER_HANDOFF.md, docs/PROJECT_ROADMAP.md, docs/CURRENT_STATUS.md and docs/CONTINUATION_PLAN.md. Fetch fresh mvp/environment-controller HEAD and agent-control daemon/result evidence. Treat V5 as the newest control-path evidence. Note that Local Agent updates occurred around the investigation, but V5 itself ran to completion on daemon 4.18.3 / PID 56140; correlate board reset/boot telemetry with the V5 timeline before blaming either the arbiter or Local Agent. Diagnose the arbiter_dwell_holds 43 -> 1 discontinuity before running more hardware.`
