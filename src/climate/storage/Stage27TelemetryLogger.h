@@ -54,6 +54,8 @@ private:
                                 std::uint64_t now_ms) noexcept;
 
   static constexpr std::uint32_t kQueueDepth = 16U;
+  static constexpr std::uint32_t kQueueStorageBytes =
+      kQueueDepth * sizeof(telemetry::Stage27TelemetrySnapshot);
   static constexpr std::uint64_t kMountRetryMs = 60'000U;
 
   Config config_{};
@@ -70,6 +72,8 @@ private:
   std::uint32_t session_id_ = 0U;
   char firmware_sha_[48]{};
 
+  StaticQueue_t queue_control_{};
+  std::uint8_t* queue_storage_ = nullptr;
   QueueHandle_t queue_ = nullptr;
   TaskHandle_t task_ = nullptr;
 
