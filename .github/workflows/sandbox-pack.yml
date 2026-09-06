@@ -1,0 +1,199 @@
+name: Sandbox Pack
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_all:
+        description: Rebuild all dependency packs
+        required: false
+        default: true
+        type: boolean
+  push:
+    branches:
+      - main
+      - 'work/**'
+
+permissions:
+  contents: read
+
+jobs:
+  keys:
+    runs-on: ubuntu-24.04
+    outputs:
+      host_key: ${{ steps.keys.outputs.host_key }}
+      web_key: ${{ steps.keys.outputs.web_key }}
+      idf_key: ${{ steps.keys.outputs.idf_key }}
+      host_changed: ${{ steps.changes.outputs.host_changed }}
+      web_changed: ${{ steps.changes.outputs.web_changed }}
+      idf_changed: ${{ steps.changes.outputs.idf_changed }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 2
+      - id: keys
+        run: |
+          echo "host_key=$(tools/sandbox/dependency-key.sh host)" >> "$GITHUB_OUTPUT"
+          echo "web_key=$(tools/sandbox/dependency-key.sh web)" >> "$GITHUB_OUTPUT"
+          echo "idf_key=$(tools/sandbox/dependency-key.sh idf)" >> "$GITHUB_OUTPUT"
+      - id: changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.force_all }}" == "true" ]]; then
+            echo "host_changed=true" >> "$GITHUB_OUTPUT"
+            echo "web_changed=true" >> "$GITHUB_OUTPUT"
+            echo "idf_changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if git rev-parse HEAD^ >/dev/null 2>&1; then
+            git diff --name-only HEAD^ HEAD > /tmp/changed
+          else
+            git ls-files > /tmp/changed
+          fi
+
+          grep -Eq '^(requirements-lock\.txt|requirements-dev\.txt|pyproject\.toml|\.pre-commit-config\.yaml|tools/sandbox/(build-host-pack|finalize-pack|unpack-pack|bootstrap-sandbox|sandbox-doctor|run-sandbox-check|dependency-key)\.sh|\.github/workflows/sandbox-pack\.yml)$' /tmp/changed \
+            && echo "host_changed=true" >> "$GITHUB_OUTPUT" || echo "host_changed=false" >> "$GITHUB_OUTPUT"
+          grep -Eq '^(web/package\.json|web/pnpm-lock\.yaml|web/pnpm-workspace\.yaml|tools/sandbox/(build-web-pack|finalize-pack|unpack-pack|bootstrap-sandbox|sandbox-doctor|run-sandbox-check|dependency-key)\.sh|\.github/workflows/sandbox-pack\.yml)$' /tmp/changed \
+            && echo "web_changed=true" >> "$GITHUB_OUTPUT" || echo "web_changed=false" >> "$GITHUB_OUTPUT"
+          grep -Eq '^(tools/sandbox/(build-idf-pack|finalize-pack|unpack-pack|bootstrap-sandbox|sandbox-doctor|run-sandbox-check|dependency-key)\.sh|\.github/workflows/sandbox-pack\.yml)$' /tmp/changed \
+            && echo "idf_changed=true" >> "$GITHUB_OUTPUT" || echo "idf_changed=false" >> "$GITHUB_OUTPUT"
+          cat /tmp/changed
+
+  source:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - run: sudo apt-get update && sudo apt-get install -y zstd
+      - run: tools/sandbox/create-source-snapshot.sh build/sandbox-source
+      - uses: actions/upload-artifact@v4
+        with:
+          name: growbox-source-${{ github.sha }}
+          path: build/sandbox-source/*
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+
+  host-pack:
+    needs: keys
+    if: needs.keys.outputs.host_changed == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.11'
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-tidy zstd
+      - run: tools/sandbox/build-host-pack.sh build/sandbox-host-pack
+      - uses: actions/upload-artifact@v4
+        with:
+          name: growbox-host-${{ needs.keys.outputs.host_key }}
+          path: build/sandbox-host-pack/**
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+
+  web-pack:
+    needs: keys
+    if: needs.keys.outputs.web_changed == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: sudo apt-get update && sudo apt-get install -y zstd
+      - run: tools/sandbox/build-web-pack.sh build/sandbox-web-pack
+      - uses: actions/upload-artifact@v4
+        with:
+          name: growbox-web-${{ needs.keys.outputs.web_key }}
+          path: build/sandbox-web-pack/**
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+
+  idf-pack:
+    needs: keys
+    if: needs.keys.outputs.idf_changed == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.11'
+      - name: Install ESP-IDF host prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            git wget flex bison gperf cmake ninja-build ccache \
+            libffi-dev libssl-dev dfu-util libusb-1.0-0 rsync zstd
+      - name: Install exact ESP-IDF 5.5.4 toolchain
+        run: |
+          git clone --branch v5.5.4 --depth 1 --recursive --shallow-submodules \
+            https://github.com/espressif/esp-idf.git /tmp/esp-idf
+          export IDF_PATH=/tmp/esp-idf
+          export IDF_TOOLS_PATH=/tmp/idf-tools
+          "$IDF_PATH/install.sh" esp32s3
+          python "$IDF_PATH/tools/idf_tools.py" install esp-clang
+      - name: Build current firmware before packing
+        run: |
+          export IDF_PATH=/tmp/esp-idf
+          export IDF_TOOLS_PATH=/tmp/idf-tools
+          . "$IDF_PATH/export.sh"
+          idf.py -B build/idf-pack-check -D GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n8 build
+      - name: Build IDF offline pack
+        run: |
+          export IDF_PATH=/tmp/esp-idf
+          export IDF_TOOLS_PATH=/tmp/idf-tools
+          . "$IDF_PATH/export.sh"
+          tools/sandbox/build-idf-pack.sh build/sandbox-idf-pack
+      - uses: actions/upload-artifact@v4
+        with:
+          name: growbox-idf-${{ needs.keys.outputs.idf_key }}
+          path: build/sandbox-idf-pack/**
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+
+  validate-packs:
+    needs: [keys, host-pack, web-pack, idf-pack]
+    if: |
+      always() &&
+      needs.host-pack.result == 'success' &&
+      needs.web-pack.result == 'success' &&
+      needs.idf-pack.result == 'success'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: sudo apt-get update && sudo apt-get install -y zstd cmake ninja-build
+      - uses: actions/download-artifact@v4
+        with:
+          name: growbox-host-${{ needs.keys.outputs.host_key }}
+          path: /tmp/growbox-packs/host
+      - uses: actions/download-artifact@v4
+        with:
+          name: growbox-web-${{ needs.keys.outputs.web_key }}
+          path: /tmp/growbox-packs/web
+      - uses: actions/download-artifact@v4
+        with:
+          name: growbox-idf-${{ needs.keys.outputs.idf_key }}
+          path: /tmp/growbox-packs/idf
+      - name: Bootstrap only from produced packs
+        run: |
+          tools/sandbox/bootstrap-sandbox.sh /tmp/growbox-sandbox \
+            --host /tmp/growbox-packs/host \
+            --web /tmp/growbox-packs/web \
+            --idf /tmp/growbox-packs/idf
+      - name: Verify packed environment
+        run: |
+          source /tmp/growbox-sandbox/env.sh
+          tools/sandbox/sandbox-doctor.sh
+      - name: Run full sandbox quality profile
+        run: |
+          source /tmp/growbox-sandbox/env.sh
+          tools/sandbox/run-sandbox-check.sh quality
