@@ -1,15 +1,42 @@
 #include "climate/Stage28dBinaryRoleArbiter.h"
 
 #include <algorithm>
+#include <atomic>
 #include <cmath>
 
+#if defined(ESP_PLATFORM)
+#include <esp_log.h>
+#endif
+
 namespace growbox::app::climate_io::stage28d {
+namespace {
+
+std::atomic<std::uint32_t> g_binary_arbiter_construction_count{0U};
+
+std::uint32_t nextBinaryArbiterInstanceId() noexcept {
+  return g_binary_arbiter_construction_count.fetch_add(1U, std::memory_order_relaxed) + 1U;
+}
+
+#if defined(ESP_PLATFORM)
+constexpr char kLifecycleTag[] = "stage28e_lifecycle";
+#endif
+
+} // namespace
 
 Stage28dBinaryRoleArbiter::Stage28dBinaryRoleArbiter(ClimateRoleDriver& downstream,
                                                      BinaryRoleArbiterConfig config) noexcept
-    : downstream_(downstream), config_(config) {
+    : downstream_(downstream), config_(config), instance_id_(nextBinaryArbiterInstanceId()) {
   config_.exhaust_fan = sanitized(config_.exhaust_fan);
   config_.humidifier = sanitized(config_.humidifier);
+#if defined(ESP_PLATFORM)
+  ESP_LOGI(kLifecycleTag, "arbiter_construct instance_id=%lu construction_count=%lu self=%p",
+           static_cast<unsigned long>(instance_id_),
+           static_cast<unsigned long>(constructionCount()), static_cast<void*>(this));
+#endif
+}
+
+std::uint32_t Stage28dBinaryRoleArbiter::constructionCount() noexcept {
+  return g_binary_arbiter_construction_count.load(std::memory_order_relaxed);
 }
 
 float Stage28dBinaryRoleArbiter::normalized(float value) noexcept {

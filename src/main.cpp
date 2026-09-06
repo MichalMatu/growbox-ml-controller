@@ -12,9 +12,22 @@
 #include <esp_err.h>
 
 #include <cstddef>
+#include <cstdint>
 #include <cstdio>
 
 namespace {
+
+std::uint32_t g_runtime_entry_count = 0U;
+
+const char* runtimeModeName() noexcept {
+#if GROWBOX_APP_CLIMATE_V6_FAKE
+  return "climate-v6-fake";
+#elif GROWBOX_APP_CLIMATE_V6_REAL_INPUTS
+  return "climate-v6-real-inputs";
+#else
+  return "legacy";
+#endif
+}
 
 void emitCoreDumpBootDiagnostics() noexcept {
   std::size_t dump_address = 0U;
@@ -26,6 +39,12 @@ void emitCoreDumpBootDiagnostics() noexcept {
               present, present && check_result == ESP_OK,
               static_cast<unsigned long>(dump_size), static_cast<long>(get_result),
               static_cast<long>(check_result));
+}
+
+void emitRuntimeLifecycleDiagnostics() noexcept {
+  ++g_runtime_entry_count;
+  std::printf("stage28e_runtime_lifecycle entry_count=%lu mode=%s\n",
+              static_cast<unsigned long>(g_runtime_entry_count), runtimeModeName());
 }
 
 } // namespace
@@ -49,7 +68,6 @@ void emitCoreDumpBootDiagnostics() noexcept {
 #include "demo/protocol/JsonLineWriter.h"
 
 #include <array>
-#include <cstdint>
 #include <cstring>
 
 #ifndef GROWBOX_BOARD_PROFILE
@@ -155,6 +173,7 @@ void runControllerStep() noexcept {
 
 extern "C" void app_main() {
   emitCoreDumpBootDiagnostics();
+  emitRuntimeLifecycleDiagnostics();
 #if GROWBOX_APP_CLIMATE_V6_FAKE
   growbox::app::climate_io::runClimateV6FakeRuntime();
 #elif GROWBOX_APP_CLIMATE_V6_REAL_INPUTS

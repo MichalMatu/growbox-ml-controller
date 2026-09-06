@@ -45,6 +45,8 @@ public:
   std::uint32_t transitionCount() const noexcept { return transition_count_; }
   std::uint32_t dwellHoldCount() const noexcept { return dwell_hold_count_; }
   std::uint32_t safetyOverrideCount() const noexcept { return safety_override_count_; }
+  std::uint32_t instanceId() const noexcept { return instance_id_; }
+  static std::uint32_t constructionCount() noexcept;
 
 private:
   struct BinaryState {
@@ -63,6 +65,7 @@ private:
 
   ClimateRoleDriver& downstream_;
   BinaryRoleArbiterConfig config_{};
+  std::uint32_t instance_id_{0U};
   BinaryState exhaust_{};
   BinaryState humidifier_{};
   bool safety_force_exhaust_{false};

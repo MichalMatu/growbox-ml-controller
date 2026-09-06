@@ -47,6 +47,17 @@ public:
   }
 };
 
+void testInstanceIdentityIsMonotonic() {
+  FakeDriver downstream{};
+  const std::uint32_t before = Stage28dBinaryRoleArbiter::constructionCount();
+  Stage28dBinaryRoleArbiter first(downstream);
+  Stage28dBinaryRoleArbiter second(downstream);
+
+  assert(first.instanceId() != 0U);
+  assert(second.instanceId() > first.instanceId());
+  assert(Stage28dBinaryRoleArbiter::constructionCount() >= before + 2U);
+}
+
 void testFanUsesHysteresisAndMinimumDwell() {
   FakeDriver downstream{};
   Stage28dBinaryRoleArbiter arbiter(downstream);
@@ -150,6 +161,7 @@ void testFailSafeOffBypassesDwell() {
 } // namespace
 
 int main() {
+  testInstanceIdentityIsMonotonic();
   testFanUsesHysteresisAndMinimumDwell();
   testThermalSafetyBypassesMinimumOffButNotMinimumOn();
   testHumidifierUsesLongerDwell();
