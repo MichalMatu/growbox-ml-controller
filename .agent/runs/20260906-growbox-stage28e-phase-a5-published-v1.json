@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 3,
+  "index": 4,
   "total": 5,
-  "command": "set -euo pipefail; c++ -std=c++17 -Wall -Wextra -Wpedantic -Isrc test/test_stage28e_diagnostics_core/test_main.cpp -o /tmp/stage28e_diagnostics_core_tests; /tmp/stage28e_diagnostics_core_tests; cmake -S test/host -B build/host-tests >/dev/null; cmake --build build/host-tests --parallel >/dev/null; ctest --test-dir build/host-tests --output-on-failure",
-  "pid": 27203,
+  "command": "set -euo pipefail; export CMAKE_BUILD_PARALLEL_LEVEL=1; STAGE27C_BUILD_DIR=build/idf-stage28e-a5-published-v1 GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_FIRMWARE_GIT_SHA=c055bb2d0568b3b826e2ec92b755051dfea3d258 bash scripts/stage27c_crowpanel.sh build; source scripts/source_idf.sh >/dev/null 2>&1; idf.py -B build/idf-stage28e-a5-published-v1 size",
+  "pid": 27418,
   "timeout": 7200,
   "idle_timeout": 900,
   "memory_limit_mb": 6144,
-  "started_at": "2026-09-06T06:36:06.507025+00:00",
-  "stage_name": "command-3",
-  "stage_index": 3,
+  "started_at": "2026-09-06T06:36:08.484692+00:00",
+  "stage_name": "command-4",
+  "stage_index": 4,
   "stage_total": 5,
   "stage_phase": "commands",
   "task_id": "20260906-growbox-stage28e-phase-a5-published-v1",
@@ -18,5 +18,5 @@
   "task_digest": "7fa77809759a434e42d6422a83459d59596519e3c0761189650710404a0e02d6",
   "daemon_version": "4.18.4",
   "daemon_pid": 27010,
-  "updated_at": "2026-09-06T06:36:06.526133+00:00"
+  "updated_at": "2026-09-06T06:36:08.586222+00:00"
 }
