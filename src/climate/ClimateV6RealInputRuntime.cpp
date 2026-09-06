@@ -120,7 +120,7 @@ std::uint64_t monotonicMilliseconds() noexcept {
   return static_cast<std::uint64_t>(esp_timer_get_time()) / 1000U;
 }
 
-storage::Stage27TelemetryLogger::Config storageConfig() noexcept {
+storage::Stage27TelemetryLogger::Config makeStorageConfig() noexcept {
   storage::Stage27TelemetryLogger::Config config{};
   config.sd_pins = {GROWBOX_SD_MOSI_GPIO, GROWBOX_SD_MISO_GPIO, GROWBOX_SD_SCLK_GPIO,
                     GROWBOX_SD_CS_GPIO, GROWBOX_SD_POWER_GPIO};
@@ -217,6 +217,33 @@ runtime::Stage27PhysicalOutputSnapshot physicalOutputSnapshot(
   return snapshot;
 }
 
+class RuntimeIoOwner final {
+public:
+  RuntimeIoOwner() noexcept
+      : storage_config_(makeStorageConfig()), storage_logger_(storage_config_),
+        rf_diagnostics_(rfDiagnosticsConfig()) {}
+
+  RuntimeIoOwner(const RuntimeIoOwner&) = delete;
+  RuntimeIoOwner& operator=(const RuntimeIoOwner&) = delete;
+
+  const storage::Stage27TelemetryLogger::Config& storageConfig() const noexcept {
+    return storage_config_;
+  }
+
+  storage::Stage27TelemetryLogger& storageLogger() noexcept {
+    return storage_logger_;
+  }
+
+  runtime::Stage28RfDiagnostics& rfDiagnostics() noexcept {
+    return rf_diagnostics_;
+  }
+
+private:
+  storage::Stage27TelemetryLogger::Config storage_config_{};
+  storage::Stage27TelemetryLogger storage_logger_;
+  runtime::Stage28RfDiagnostics rf_diagnostics_;
+};
+
 } // namespace
 
 [[noreturn]] void runClimateV6RealInputRuntime() noexcept {
@@ -234,12 +261,13 @@ runtime::Stage27PhysicalOutputSnapshot physicalOutputSnapshot(
   const bool rtc_ready = i2c_ready && clock.begin(i2c);
   const bool ble_ready = ble.begin(GROWBOX_BLE_TP357_MAC, GROWBOX_BLE_XIAOMI_MAC);
 
-  const auto storage_config = storageConfig();
-  storage::Stage27TelemetryLogger storage_logger(storage_config);
+  static RuntimeIoOwner runtime_io_owner;
+  const auto& storage_config = runtime_io_owner.storageConfig();
+  auto& storage_logger = runtime_io_owner.storageLogger();
   const bool storage_enabled = storage_config.sd_enabled || storage_config.flash_fallback_enabled;
   const bool storage_logger_ready =
       storage_enabled && storage_logger.begin(GROWBOX_FIRMWARE_GIT_SHA);
-  runtime::Stage28RfDiagnostics rf_diagnostics(rfDiagnosticsConfig());
+  auto& rf_diagnostics = runtime_io_owner.rfDiagnostics();
   const bool rf_ready = rf_diagnostics.begin();
   DiagnosticsRfTransmitter rf_transmitter(rf_diagnostics);
 
