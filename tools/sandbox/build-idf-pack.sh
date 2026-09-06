@@ -18,9 +18,21 @@ if [[ "$VERSION" != v5.5.4* && "$VERSION" != 5.5.4* ]]; then
   exit 1
 fi
 
+# Install the complete tool set selected by this ESP-IDF installation, not just
+# the compiler used by a single esp32s3 build. The official export path validates
+# every tool recorded in idf-env.json (including debugger tools), so an offline
+# pack must preserve that complete environment. esp-clang is an additional tool
+# used by this repository's clang-check profile.
+python "$IDF_PATH/tools/idf_tools.py" install
 python "$IDF_PATH/tools/idf_tools.py" install esp-clang
 # shellcheck disable=SC1090
 source "$IDF_PATH/export.sh"
+
+# Fail while constructing the pack if the ESP-IDF environment itself cannot be
+# exported. This prevents publishing an archive which compiles in the producer
+# job only because the runner happens to contain extra tools.
+python "$IDF_PATH/tools/idf_tools.py" export --format key-value \
+  > "$STAGE/meta/idf-export.txt"
 
 rsync -a --delete \
   --exclude='.git' \
@@ -37,7 +49,7 @@ fi
 
 # idf_tools.py needs these files from the IDF_TOOLS_PATH root to reproduce the
 # selected target/tool set and to validate the Python environment. Without
-# idf-env.json it falls back to a broader tool set; without the constraints file
+# idf-env.json it loses the install selection; without the constraints file
 # export/idf.py fails even when all tool binaries are already present.
 [[ -f "$IDF_TOOLS_PATH/idf-env.json" ]] || {
   echo "Missing IDF environment metadata: $IDF_TOOLS_PATH/idf-env.json" >&2
