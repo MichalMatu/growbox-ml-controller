@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260906-growbox-stage28e-phase-b-coredump-boot-marker-build-v1",
+  "task_digest": "03f9a1366ee3b3a7736dda18cc99181605236d4889a754fb8ad93f5e99312043",
+  "idle_timeout": 180,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-06T15:22:12.655982+00:00",
+  "attempt_id": "dfb55dea6d2a083d9372d3de",
+  "daemon_version": "4.18.4",
+  "daemon_pid": 11713,
+  "updated_at": "2026-09-06T15:22:12.656083+00:00",
+  "pid": 11713
+}
