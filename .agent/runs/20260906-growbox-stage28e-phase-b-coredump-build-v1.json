@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260906-growbox-stage28e-phase-b-coredump-build-v1",
+  "task_digest": "0d729afa705e9b421225f9d72e9ead4608c66cd6e68fe9e6aeb808a863cee776",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-06T15:13:42.361774+00:00",
+  "attempt_id": "730e4b59e5d1bac83cc19330",
+  "daemon_version": "4.18.4",
+  "daemon_pid": 99807,
+  "updated_at": "2026-09-06T15:13:42.361835+00:00",
+  "pid": 99807
+}
