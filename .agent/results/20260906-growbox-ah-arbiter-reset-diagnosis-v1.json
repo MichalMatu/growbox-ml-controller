@@ -1,9 +1,0 @@
-{
-  "id": "20260906-growbox-ah-arbiter-reset-diagnosis-v1",
-  "status": "failed",
-  "failure_reason": "invalid_task_file",
-  "started_at": null,
-  "finished_at": "2026-09-06T03:44:25.650562+00:00",
-  "daemon_version": "4.18.4",
-  "error": "ValueError: resources must be declared explicitly"
-}
