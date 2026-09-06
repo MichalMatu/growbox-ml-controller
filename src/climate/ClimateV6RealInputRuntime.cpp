@@ -244,6 +244,32 @@ private:
   runtime::Stage28RfDiagnostics rf_diagnostics_;
 };
 
+class RuntimeControlOwner final {
+public:
+  RuntimeControlOwner() noexcept
+      : runtime_controller_(nullptr, runtime::defaultRuntimeConfig()) {}
+
+  RuntimeControlOwner(const RuntimeControlOwner&) = delete;
+  RuntimeControlOwner& operator=(const RuntimeControlOwner&) = delete;
+
+  ::growbox::climate::ClimateRuntimeController& runtimeController() noexcept {
+    return runtime_controller_;
+  }
+
+  stage28d::LampSafetyController& lampSafety() noexcept {
+    return lamp_safety_;
+  }
+
+  stage28d::ThermalTestSequence& thermalTestSequence() noexcept {
+    return thermal_test_sequence_;
+  }
+
+private:
+  ::growbox::climate::ClimateRuntimeController runtime_controller_;
+  stage28d::LampSafetyController lamp_safety_;
+  stage28d::ThermalTestSequence thermal_test_sequence_;
+};
+
 } // namespace
 
 [[noreturn]] void runClimateV6RealInputRuntime() noexcept {
@@ -312,11 +338,11 @@ private:
     binary_arbiter.synchronizeSafeOff(monotonicMilliseconds());
   }
   SwitchableRoleDriver output_driver(fake_output_driver, binary_arbiter, real_output_ready);
-  ::growbox::climate::ClimateRuntimeController runtime_controller(nullptr,
-                                                                  runtime::defaultRuntimeConfig());
+  static RuntimeControlOwner runtime_control_owner;
+  auto& runtime_controller = runtime_control_owner.runtimeController();
   ClimateApplication application(runtime_controller, composite, output_driver);
-  stage28d::LampSafetyController lamp_safety;
-  stage28d::ThermalTestSequence thermal_test_sequence;
+  auto& lamp_safety = runtime_control_owner.lampSafety();
+  auto& thermal_test_sequence = runtime_control_owner.thermalTestSequence();
   const std::uint64_t thermal_test_started_ms = monotonicMilliseconds();
   stage28d::ThermalTestPhase last_test_phase = stage28d::ThermalTestPhase::Complete;
   bool thermal_test_finished_safe = false;
