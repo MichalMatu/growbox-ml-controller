@@ -1,0 +1,18 @@
+{
+  "id": "20260907-growbox-stage28e-phase-e-exit-gate-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 4096,
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "commands": [
+    "set -euo pipefail; EXPECTED=0d4325f08033a38e4fd3769c38b1572e344a27ff; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; git diff --check; echo STAGE28E_E_EXIT_EXACT_SHA_PASS=$EXPECTED",
+    "set -euo pipefail; test -f docs/STAGE28E_PHASE_E_HANDOFF.md; grep -Fq 'Phase E implementation and bounded hardware verification are complete' docs/STAGE28E_PHASE_E_HANDOFF.md; grep -Fq '223792 / 223260 / 180224 B' docs/STAGE28E_PHASE_E_HANDOFF.md; grep -Fq '+9892 B' docs/STAGE28E_PHASE_E_HANDOFF.md; grep -Fq 'Next phase: **Stage28E Phase F' docs/STAGE28E_PHASE_E_HANDOFF.md; grep -Fq 'E COMPLETE -> Phase F NEXT' docs/CURRENT_STATUS.md; grep -Fq 'Latest handoff: `docs/STAGE28E_PHASE_E_HANDOFF.md`' docs/CURRENT_STATUS.md; grep -Fq 'Latest handoff: `docs/STAGE28E_PHASE_E_HANDOFF.md`' docs/CONTINUATION_PLAN.md; grep -Fq 'Phase F — focused binary-arbiter continuity/regression proof' docs/CONTINUATION_PLAN.md; echo STAGE28E_E_EXIT_DOCS_PASS",
+    "set -euo pipefail; grep -Fq 'heap_caps_malloc(kQueueStorageBytes, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT)' src/climate/storage/Stage27TelemetryLogger.cpp; grep -Fq 'taskStackBytes() noexcept { return 6144U; }' src/climate/storage/Stage27TelemetryLogger.h; grep -Fq 'CONFIG_ESP_MAIN_TASK_STACK_SIZE=12288' config/idf/sdkconfig.defaults.stage27c; grep -Fq '# CONFIG_SPIRAM_USE_MALLOC is not set' config/idf/sdkconfig.defaults.n8r8 || true; grep -Fq 'thermal trip `>=28 C`' docs/STAGE28E_PHASE_E_HANDOFF.md; grep -Fq 'recovery `<=26 C` continuously for 10 minutes' docs/STAGE28E_PHASE_E_HANDOFF.md; grep -Fq 'final fake-locked hardware policy' docs/STAGE28E_PHASE_E_HANDOFF.md; git diff --check; echo STAGE28E_E_EXIT_SAFETY_AND_SOURCE_PASS",
+    "set -euo pipefail; test -z \"$(git status --porcelain)\"; git diff --check; echo STAGE28E_E_EXIT_GATE_PASS"
+  ]
+}
