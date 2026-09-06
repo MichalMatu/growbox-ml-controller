@@ -1,8 +1,12 @@
 #include "climate/runtime/Stage27TelemetryReporter.h"
 
+#include "climate/runtime/Stage28eLog.h"
 #include "demo/protocol/HeapDiagnostics.h"
 
+#include <esp_heap_caps.h>
 #include <esp_log.h>
+
+#include <limits>
 
 #ifndef GROWBOX_FIRMWARE_GIT_SHA
 #define GROWBOX_FIRMWARE_GIT_SHA "unknown"
@@ -11,6 +15,13 @@
 namespace growbox::app::climate_io::runtime {
 namespace {
 constexpr char kTag[] = "climate_stage27";
+constexpr std::uint32_t kHeapIntegrityEveryReports = 6U;
+
+void incrementSaturating(std::uint32_t& value) noexcept {
+  if (value != std::numeric_limits<std::uint32_t>::max()) {
+    ++value;
+  }
+}
 } // namespace
 
 Stage27TelemetryReporter::Stage27TelemetryReporter(native::BleClimateScanner& ble,
@@ -35,6 +46,34 @@ void Stage27TelemetryReporter::record(
   static_cast<void>(scd41_.sample(now_ms, scd_diag));
   const auto heap = ::growbox::demo::wire::captureHeapSnapshot();
   const auto task = ::growbox::demo::wire::captureTaskSnapshot();
+
+  incrementSaturating(heartbeat_sequence_);
+  GROWBOX_STAGE28E_LOG_INFO(DiagnosticLogModule::Watchdog,
+                            "heartbeat seq=%lu uptime_ms=%llu internal_free=%u internal_min=%u",
+                            static_cast<unsigned long>(heartbeat_sequence_),
+                            static_cast<unsigned long long>(now_ms), heap.free_internal,
+                            heap.min_free_internal);
+
+  if ((heartbeat_sequence_ % kHeapIntegrityEveryReports) == 0U) {
+    incrementSaturating(heap_integrity_check_count_);
+    const bool heap_ok = heap_caps_check_integrity_all(false);
+    if (!heap_ok) {
+      incrementSaturating(heap_integrity_failure_count_);
+      GROWBOX_STAGE28E_LOG_ERROR(
+          DiagnosticLogModule::Mem,
+          "heap_integrity_failed check=%lu failures=%lu uptime_ms=%llu internal_free=%u "
+          "internal_largest=%u",
+          static_cast<unsigned long>(heap_integrity_check_count_),
+          static_cast<unsigned long>(heap_integrity_failure_count_),
+          static_cast<unsigned long long>(now_ms), heap.free_internal, heap.largest_free_internal);
+    } else {
+      GROWBOX_STAGE28E_LOG_INFO(
+          DiagnosticLogModule::Mem,
+          "heap_integrity_ok check=%lu uptime_ms=%llu internal_free=%u internal_largest=%u",
+          static_cast<unsigned long>(heap_integrity_check_count_),
+          static_cast<unsigned long long>(now_ms), heap.free_internal, heap.largest_free_internal);
+    }
+  }
 
   telemetry::Stage27TelemetrySnapshot snapshot{};
   snapshot.uptime_ms = now_ms;

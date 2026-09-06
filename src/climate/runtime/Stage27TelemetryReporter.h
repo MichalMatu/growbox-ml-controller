@@ -46,6 +46,9 @@ private:
   storage::Stage27TelemetryLogger& storage_logger_;
   bool storage_logger_ready_{false};
   std::int32_t reset_reason_{0};
+  std::uint32_t heartbeat_sequence_{0U};
+  std::uint32_t heap_integrity_check_count_{0U};
+  std::uint32_t heap_integrity_failure_count_{0U};
 };
 
 } // namespace growbox::app::climate_io::runtime
