@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260906-growbox-stage28e-phase-b-counter-sentinel-gate-v1",
+  "task_digest": "e68a4733f143322984a83e325a5f9041f85f370af54ae1d387b112b8b1d5d68c",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-06T15:38:31.793688+00:00",
+  "attempt_id": "09662942a9aa8e87352dbe98",
+  "daemon_version": "4.18.4",
+  "daemon_pid": 35453,
+  "updated_at": "2026-09-06T15:38:31.793822+00:00",
+  "pid": 35453
+}
