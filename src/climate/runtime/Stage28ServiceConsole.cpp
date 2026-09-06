@@ -321,6 +321,26 @@ void Stage28ServiceConsole::printStatus(std::uint64_t now_ms) noexcept {
       static_cast<unsigned long>(stack_watermark_bytes), static_cast<unsigned long>(task_total),
       static_cast<unsigned long>(task_captured), task_status != nullptr);
 
+  if (config_.timing_metrics != nullptr) {
+    const RuntimeTimingMetrics& timing = *config_.timing_metrics;
+    writeFormatted(
+        "timing loop_samples=%llu loop_max_us=%llu loop_overruns=%llu loop_budget_us=%llu "
+        "control_samples=%llu control_max_us=%llu rf_samples=%llu rf_max_us=%llu "
+        "telemetry_samples=%llu telemetry_max_us=%llu console_samples=%llu console_max_us=%llu\r\n",
+        static_cast<unsigned long long>(timing.loop_active.sample_count),
+        static_cast<unsigned long long>(timing.loop_active.max_us),
+        static_cast<unsigned long long>(timing.loop_active.overrun_count),
+        static_cast<unsigned long long>(timing.loop_active.budget_us),
+        static_cast<unsigned long long>(timing.control_cycle.sample_count),
+        static_cast<unsigned long long>(timing.control_cycle.max_us),
+        static_cast<unsigned long long>(timing.rf_tick.sample_count),
+        static_cast<unsigned long long>(timing.rf_tick.max_us),
+        static_cast<unsigned long long>(timing.telemetry.sample_count),
+        static_cast<unsigned long long>(timing.telemetry.max_us),
+        static_cast<unsigned long long>(timing.service_console.sample_count),
+        static_cast<unsigned long long>(timing.service_console.max_us));
+  }
+
   for (UBaseType_t index = 0U; index < task_captured; ++index) {
     const TaskStatus_t& task = task_status[index];
     const std::uint32_t configured_stack_bytes = knownConfiguredTaskStackBytes(task.pcTaskName);
