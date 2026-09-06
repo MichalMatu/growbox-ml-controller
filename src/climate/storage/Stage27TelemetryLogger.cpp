@@ -2,6 +2,7 @@
 
 #include "climate/telemetry/Stage27LogFormat.h"
 
+#include <esp_heap_caps.h>
 #include <esp_log.h>
 #include <esp_random.h>
 
@@ -42,7 +43,19 @@ bool Stage27TelemetryLogger::begin(const char* firmware_sha) noexcept {
     }
   }
 
-  queue_ = xQueueCreate(kQueueDepth, sizeof(telemetry::Stage27TelemetrySnapshot));
+  queue_storage_ = static_cast<std::uint8_t*>(
+      heap_caps_malloc(kQueueStorageBytes, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
+  if (queue_storage_ != nullptr) {
+    queue_ = xQueueCreateStatic(kQueueDepth, sizeof(telemetry::Stage27TelemetrySnapshot),
+                                queue_storage_, &queue_control_);
+  }
+  if (queue_ == nullptr) {
+    if (queue_storage_ != nullptr) {
+      heap_caps_free(queue_storage_);
+      queue_storage_ = nullptr;
+    }
+    queue_ = xQueueCreate(kQueueDepth, sizeof(telemetry::Stage27TelemetrySnapshot));
+  }
   if (queue_ == nullptr) {
     ESP_LOGE(kTag, "Failed to allocate telemetry storage queue");
     return false;
@@ -52,12 +65,19 @@ bool Stage27TelemetryLogger::begin(const char* firmware_sha) noexcept {
                   tskIDLE_PRIORITY + 1U, &task_) != pdPASS) {
     vQueueDelete(queue_);
     queue_ = nullptr;
+    if (queue_storage_ != nullptr) {
+      heap_caps_free(queue_storage_);
+      queue_storage_ = nullptr;
+    }
     ESP_LOGE(kTag, "Failed to create telemetry storage task");
     return false;
   }
 
-  ESP_LOGI(kTag, "Telemetry storage started: sd=%d flash_fallback=%d cmd0_compat=%d",
-           config_.sd_enabled, config_.flash_fallback_enabled, config_.sd_cmd0_precondition);
+  ESP_LOGI(kTag,
+           "Telemetry storage started: sd=%d flash_fallback=%d cmd0_compat=%d queue_psram=%d "
+           "queue_bytes=%u",
+           config_.sd_enabled, config_.flash_fallback_enabled, config_.sd_cmd0_precondition,
+           queue_storage_ != nullptr, static_cast<unsigned>(kQueueStorageBytes));
   return true;
 }
 
