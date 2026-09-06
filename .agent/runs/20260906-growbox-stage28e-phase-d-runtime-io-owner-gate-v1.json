@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260906-growbox-stage28e-phase-d-runtime-io-owner-gate-v1",
+  "task_digest": "2120cbf852f890d439d706fa375140a48c549e13f329c0b0f26f37e588cead1e",
+  "idle_timeout": 600,
+  "task_timeout": 7200,
+  "memory_limit_mb": 6144,
+  "started_at": "2026-09-06T21:34:45.432925+00:00",
+  "attempt_id": "005bd686f70a38f2f9c2a6aa",
+  "daemon_version": "4.18.4",
+  "daemon_pid": 38604,
+  "updated_at": "2026-09-06T21:34:45.433160+00:00",
+  "pid": 38604
+}
