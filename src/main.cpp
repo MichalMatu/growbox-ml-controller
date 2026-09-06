@@ -4,9 +4,14 @@
 #ifndef GROWBOX_APP_CLIMATE_V6_REAL_INPUTS
 #define GROWBOX_APP_CLIMATE_V6_REAL_INPUTS 0
 #endif
+#ifndef GROWBOX_FIRMWARE_GIT_SHA
+#define GROWBOX_FIRMWARE_GIT_SHA "unknown"
+#endif
 
 #include "climate/ClimateV6FakeRuntime.h"
 #include "climate/ClimateV6RealInputRuntime.h"
+#include "climate/runtime/Stage28eBreadcrumbs.h"
+#include "climate/runtime/Stage28ePlatformDiagnostics.h"
 
 #include <esp_core_dump.h>
 #include <esp_err.h>
@@ -39,6 +44,38 @@ void emitCoreDumpBootDiagnostics() noexcept {
               present, present && check_result == ESP_OK,
               static_cast<unsigned long>(dump_size), static_cast<long>(get_result),
               static_cast<long>(check_result));
+}
+
+void emitBreadcrumbBootDiagnostics() noexcept {
+  using namespace growbox::app::climate_io::runtime;
+  const Stage28eBreadcrumbState raw_previous = readStage28eBreadcrumb();
+  const bool previous_valid = stage28eBreadcrumbValid(raw_previous);
+  const Stage28eBreadcrumbState previous = previous_valid ? raw_previous : Stage28eBreadcrumbState{};
+  std::printf(
+      "stage28e_breadcrumb previous_valid=%d write_seq=%lu boot_seq=%lu boot_id=%08lx "
+      "reset_reason=%ld last_log_seq=%lu last_log_uptime_ms=%llu last_log_module=%lu "
+      "last_log_level=%lu fault_code=%lu fault_seq=%lu fault_uptime_ms=%llu "
+      "arbiter_instance=%lu arbiter_constructions=%lu arbiter_transitions=%lu "
+      "arbiter_dwell_holds=%lu arbiter_safety_overrides=%lu arbiter_continuity_faults=%lu\n",
+      previous_valid, static_cast<unsigned long>(previous.write_sequence),
+      static_cast<unsigned long>(previous.boot_sequence),
+      static_cast<unsigned long>(previous.boot_id), static_cast<long>(previous.reset_reason),
+      static_cast<unsigned long>(previous.last_log_sequence),
+      static_cast<unsigned long long>(previous.last_log_uptime_ms),
+      static_cast<unsigned long>(previous.last_log_module),
+      static_cast<unsigned long>(previous.last_log_level),
+      static_cast<unsigned long>(previous.last_fault_code),
+      static_cast<unsigned long>(previous.last_fault_sequence),
+      static_cast<unsigned long long>(previous.last_fault_uptime_ms),
+      static_cast<unsigned long>(previous.arbiter_instance_id),
+      static_cast<unsigned long>(previous.arbiter_construction_count),
+      static_cast<unsigned long>(previous.arbiter_transition_count),
+      static_cast<unsigned long>(previous.arbiter_dwell_hold_count),
+      static_cast<unsigned long>(previous.arbiter_safety_override_count),
+      static_cast<unsigned long>(previous.arbiter_continuity_fault_count));
+
+  const BootIdentity& boot = bootIdentity(GROWBOX_FIRMWARE_GIT_SHA);
+  beginStage28eBreadcrumb(boot.boot_id, boot.reset_reason);
 }
 
 void emitRuntimeLifecycleDiagnostics() noexcept {
@@ -173,6 +210,7 @@ void runControllerStep() noexcept {
 
 extern "C" void app_main() {
   emitCoreDumpBootDiagnostics();
+  emitBreadcrumbBootDiagnostics();
   emitRuntimeLifecycleDiagnostics();
 #if GROWBOX_APP_CLIMATE_V6_FAKE
   growbox::app::climate_io::runClimateV6FakeRuntime();

@@ -1,5 +1,7 @@
 #include "climate/runtime/Stage28eLog.h"
 
+#include "climate/runtime/Stage28eBreadcrumbs.h"
+
 #include <esp_log.h>
 #include <esp_timer.h>
 #include <freertos/FreeRTOS.h>
@@ -99,10 +101,13 @@ void stage28eLogWrite(DiagnosticLogModule module, DiagnosticLogLevel level,
   message.back() = '\0';
 
   const std::int64_t monotonic_us = esp_timer_get_time();
-  const std::uint64_t uptime_ms = monotonic_us > 0 ? static_cast<std::uint64_t>(monotonic_us) / 1000U : 0U;
+  const std::uint64_t uptime_ms =
+      monotonic_us > 0 ? static_cast<std::uint64_t>(monotonic_us) / 1000U : 0U;
   const std::uint32_t sequence = g_sequence.fetch_add(1U, std::memory_order_relaxed) + 1U;
   const char* task_name = pcTaskGetName(nullptr);
   const BaseType_t core_id = xPortGetCoreID();
+
+  recordStage28eBreadcrumbLog(sequence, uptime_ms, module, level);
 
   esp_log_write(toEspLogLevel(level), kTag,
                 "u=%llu b=%08lx s=%lu %s/%s %s/c%ld %s",

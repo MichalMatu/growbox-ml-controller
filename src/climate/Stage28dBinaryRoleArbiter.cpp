@@ -6,7 +6,10 @@
 #include <limits>
 
 #if defined(ESP_PLATFORM)
+#include "climate/runtime/Stage28eBreadcrumbs.h"
+
 #include <esp_log.h>
+#include <esp_timer.h>
 #endif
 
 namespace growbox::app::climate_io::stage28d {
@@ -20,6 +23,21 @@ std::uint32_t nextBinaryArbiterInstanceId() noexcept {
 
 #if defined(ESP_PLATFORM)
 constexpr char kLifecycleTag[] = "stage28e_lifecycle";
+
+std::uint64_t arbiterUptimeMs() noexcept {
+  const std::int64_t monotonic_us = esp_timer_get_time();
+  return monotonic_us > 0 ? static_cast<std::uint64_t>(monotonic_us) / 1000U : 0U;
+}
+
+void recordArbiterBreadcrumb(std::uint32_t instance_id, std::uint32_t construction_count,
+                             std::uint32_t transition_count, std::uint32_t dwell_hold_count,
+                             std::uint32_t safety_override_count,
+                             std::uint32_t continuity_fault_count,
+                             bool continuity_fault) noexcept {
+  runtime::recordStage28eBreadcrumbArbiter(
+      arbiterUptimeMs(), instance_id, construction_count, transition_count, dwell_hold_count,
+      safety_override_count, continuity_fault_count, continuity_fault);
+}
 #endif
 
 } // namespace
@@ -33,6 +51,8 @@ Stage28dBinaryRoleArbiter::Stage28dBinaryRoleArbiter(ClimateRoleDriver& downstre
   ESP_LOGI(kLifecycleTag, "arbiter_construct instance_id=%lu construction_count=%lu self=%p",
            static_cast<unsigned long>(instance_id_),
            static_cast<unsigned long>(constructionCount()), static_cast<void*>(this));
+  recordArbiterBreadcrumb(instance_id_, constructionCount(), transition_count_, dwell_hold_count_,
+                          safety_override_count_, continuity_fault_count_, false);
 #endif
 }
 
@@ -54,6 +74,11 @@ void Stage28dBinaryRoleArbiter::checkCounterContinuity() noexcept {
   if (!counter_snapshot_initialized_) {
     last_counter_snapshot_ = current;
     counter_snapshot_initialized_ = true;
+#if defined(ESP_PLATFORM)
+    recordArbiterBreadcrumb(instance_id_, constructionCount(), current.transitions,
+                            current.dwell_holds, current.safety_overrides,
+                            continuity_fault_count_, false);
+#endif
     return;
   }
 
@@ -63,7 +88,8 @@ void Stage28dBinaryRoleArbiter::checkCounterContinuity() noexcept {
       binaryArbiterCounterRegressed(last_counter_snapshot_.dwell_holds, current.dwell_holds);
   const bool safety_regressed = binaryArbiterCounterRegressed(
       last_counter_snapshot_.safety_overrides, current.safety_overrides);
-  if (transition_regressed || dwell_regressed || safety_regressed) {
+  const bool continuity_fault = transition_regressed || dwell_regressed || safety_regressed;
+  if (continuity_fault) {
     if (continuity_fault_count_ != std::numeric_limits<std::uint32_t>::max()) {
       ++continuity_fault_count_;
     }
@@ -82,6 +108,11 @@ void Stage28dBinaryRoleArbiter::checkCounterContinuity() noexcept {
 #endif
   }
   last_counter_snapshot_ = current;
+#if defined(ESP_PLATFORM)
+  recordArbiterBreadcrumb(instance_id_, constructionCount(), current.transitions,
+                          current.dwell_holds, current.safety_overrides,
+                          continuity_fault_count_, continuity_fault);
+#endif
 }
 
 float Stage28dBinaryRoleArbiter::normalized(float value) noexcept {

@@ -14,6 +14,7 @@ idf_component_register(
     "climate/Stage28dThermalTestSequence.cpp"
     "climate/ClimateDeterministicFake.cpp"
     "climate/ClimateDiagnostics.cpp"
+    "climate/runtime/Stage28eBreadcrumbs.cpp"
     "climate/ClimateV6FakeRuntime.cpp"
     "demo/DummyEnvironmentSimulator.cpp"
     "demo/SerialJsonProtocol.cpp"
