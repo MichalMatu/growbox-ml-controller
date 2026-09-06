@@ -184,6 +184,14 @@ struct TimingAccumulator {
   }
 };
 
+struct RuntimeTimingMetrics {
+  TimingAccumulator service_console{};
+  TimingAccumulator rf_tick{};
+  TimingAccumulator control_cycle{};
+  TimingAccumulator telemetry{};
+  TimingAccumulator loop_active{};
+};
+
 struct BootIdentity {
   std::uint32_t boot_id{0U};
   std::int32_t reset_reason{0};
