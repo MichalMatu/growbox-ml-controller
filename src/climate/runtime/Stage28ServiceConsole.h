@@ -4,6 +4,7 @@
 #include "climate/native/Ds3231ClockSource.h"
 #include "climate/native/Scd41InsideSource.h"
 #include "climate/runtime/Stage28RfDiagnostics.h"
+#include "climate/runtime/Stage28eDiagnosticsCore.h"
 #include "climate/runtime/Stage28ServiceConsoleCommand.h"
 
 #include <array>
@@ -21,6 +22,7 @@ public:
     const char* firmware_sha{"unknown"};
     const bool* real_outputs_active{nullptr};
     const storage::Stage27TelemetryLogger* storage_logger{nullptr};
+    const RuntimeTimingMetrics* timing_metrics{nullptr};
   };
 
   Stage28ServiceConsole(Config config, native::BleClimateScanner& ble,
