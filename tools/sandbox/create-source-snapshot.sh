@@ -26,7 +26,10 @@ printf '11.10.0\n' > "$TMP/.sandbox-snapshot/pnpm-version.txt"
 
 ARCHIVE="$OUT/${NAME}.tar.zst"
 tar -C "$TMP" -cf - . | zstd -T0 -10 -q -o "$ARCHIVE"
-sha256sum "$ARCHIVE" > "${ARCHIVE}.sha256"
+(
+  cd "$OUT"
+  sha256sum "${NAME}.tar.zst" > "${NAME}.tar.zst.sha256"
+)
 
 echo "$ARCHIVE"
 cat "${ARCHIVE}.sha256"
