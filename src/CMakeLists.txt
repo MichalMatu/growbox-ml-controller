@@ -45,6 +45,7 @@ idf_component_register(
     esp_driver_sdspi
     wear_levelling
     mbedtls
+    espcoredump
 )
 
 target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_17)

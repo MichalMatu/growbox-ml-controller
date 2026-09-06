@@ -8,10 +8,31 @@
 #include "climate/ClimateV6FakeRuntime.h"
 #include "climate/ClimateV6RealInputRuntime.h"
 
+#include <esp_core_dump.h>
+#include <esp_err.h>
+
+#include <cstddef>
+#include <cstdio>
+
+namespace {
+
+void emitCoreDumpBootDiagnostics() noexcept {
+  std::size_t dump_address = 0U;
+  std::size_t dump_size = 0U;
+  const esp_err_t get_result = esp_core_dump_image_get(&dump_address, &dump_size);
+  const bool present = get_result == ESP_OK && dump_size > 0U;
+  const esp_err_t check_result = present ? esp_core_dump_image_check() : get_result;
+  std::printf("stage28e_coredump present=%d valid=%d size=%lu get_err=%ld check_err=%ld\n",
+              present, present && check_result == ESP_OK,
+              static_cast<unsigned long>(dump_size), static_cast<long>(get_result),
+              static_cast<long>(check_result));
+}
+
+} // namespace
+
 #if !GROWBOX_APP_CLIMATE_V6_FAKE && !GROWBOX_APP_CLIMATE_V6_REAL_INPUTS
 #include <cJSON.h>
 #include <driver/usb_serial_jtag.h>
-#include <esp_err.h>
 
 #include <esp_idf_version.h>
 #include <esp_timer.h>
@@ -133,6 +154,7 @@ void runControllerStep() noexcept {
 #endif
 
 extern "C" void app_main() {
+  emitCoreDumpBootDiagnostics();
 #if GROWBOX_APP_CLIMATE_V6_FAKE
   growbox::app::climate_io::runClimateV6FakeRuntime();
 #elif GROWBOX_APP_CLIMATE_V6_REAL_INPUTS
