@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 3,
+  "index": 4,
   "total": 4,
-  "command": "set -euo pipefail; rm -rf build/host-tests-stage28e-e2; cmake -S test/host -B build/host-tests-stage28e-e2 >/tmp/stage28e-e2-host-config.log 2>&1; cmake --build build/host-tests-stage28e-e2 --parallel 1 >/tmp/stage28e-e2-host-build.log 2>&1; ctest --test-dir build/host-tests-stage28e-e2 --output-on-failure; echo STAGE28E_E2_STACK_HOST_TESTS_PASS",
-  "pid": 48963,
+  "command": "set -euo pipefail; test -z \"$(git status --porcelain)\"; git diff --check; echo STAGE28E_E2_STACK_GATE_PASS",
+  "pid": 49963,
   "timeout": 3600,
   "idle_timeout": 600,
   "memory_limit_mb": 6144,
-  "started_at": "2026-09-06T23:07:20.859447+00:00",
-  "stage_name": "command-3",
-  "stage_index": 3,
+  "started_at": "2026-09-06T23:07:58.812527+00:00",
+  "stage_name": "command-4",
+  "stage_index": 4,
   "stage_total": 4,
   "stage_phase": "commands",
   "task_id": "20260907-growbox-stage28e-phase-e2-storage-stack-gate-v1",
@@ -18,5 +18,5 @@
   "task_digest": "4210e267e8d850875aa78106acd1ff9bb40d3a860db282bf01394e10d5684fe2",
   "daemon_version": "4.18.4",
   "daemon_pid": 42695,
-  "updated_at": "2026-09-06T23:07:20.889995+00:00"
+  "updated_at": "2026-09-06T23:07:58.902370+00:00"
 }
