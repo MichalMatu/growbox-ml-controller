@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260906-growbox-stage28e-phase-c-runtime-size-stack-v1",
+  "task_digest": "81acd82e95f7d793cb458c650b4611c7aea557366a7f00a6ca239849b5cef7d5",
+  "idle_timeout": 600,
+  "task_timeout": 3600,
+  "memory_limit_mb": 6144,
+  "started_at": "2026-09-06T21:06:19.908499+00:00",
+  "attempt_id": "6e79a7a556a095ae25623e7b",
+  "daemon_version": "4.18.4",
+  "daemon_pid": 10178,
+  "updated_at": "2026-09-06T21:06:19.909208+00:00",
+  "pid": 10178
+}
