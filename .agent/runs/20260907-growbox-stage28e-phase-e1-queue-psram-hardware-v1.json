@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260907-growbox-stage28e-phase-e1-queue-psram-hardware-v1",
+  "task_digest": "3d3ab2c275e9d81d20747ccc89c7216d843fb8124a72fca9c8dcc00d188755af",
+  "idle_timeout": 900,
+  "task_timeout": 10800,
+  "memory_limit_mb": 6144,
+  "started_at": "2026-09-06T22:40:03.201917+00:00",
+  "attempt_id": "66ea1429f39081d9a7772a1d",
+  "daemon_version": "4.18.4",
+  "daemon_pid": 19959,
+  "updated_at": "2026-09-06T22:40:03.202081+00:00",
+  "pid": 19959
+}
