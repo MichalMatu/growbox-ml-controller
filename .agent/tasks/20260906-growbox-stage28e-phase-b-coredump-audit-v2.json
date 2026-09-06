@@ -1,0 +1,17 @@
+{
+  "id": "20260906-growbox-stage28e-phase-b-coredump-audit-v2",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 2048,
+  "command_timeout": 600,
+  "idle_timeout": 120,
+  "task_timeout": 900,
+  "commands": [
+    "set -eu; EXPECTED=384e415eaaec960add2b3b3fe94db5c052ca6497; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; printf 'PHASE_B_START_SHA=%s\\n' \"$EXPECTED\"; printf '%s\\n' '--- partition table ---'; cat config/idf/partitions_stage27c.csv; printf '%s\\n' '--- project coredump config references ---'; grep -R -n -E 'ESP_COREDUMP|COREDUMP' config sdkconfig.defaults* CMakeLists.txt 2>/dev/null || true",
+    "set -eu; . /Users/michal/esp/esp-idf/export.sh >/dev/null 2>&1; printf '%s\\n' '--- IDF version ---'; idf.py --version; printf '%s\\n' '--- coredump Kconfig symbols ---'; find /Users/michal/esp/esp-idf/components/espcoredump -maxdepth 3 -type f -print | grep -E '/Kconfig|\\.h$' | sort | while IFS= read -r f; do grep -n -E 'config ESP_COREDUMP|ESP_COREDUMP_' \"$f\" 2>/dev/null && printf 'FILE=%s\\n' \"$f\" || true; done; printf '%s\\n' '--- partition subtype references ---'; grep -R -n -E 'coredump|COREDUMP' /Users/michal/esp/esp-idf/components/partition_table /Users/michal/esp/esp-idf/components/espcoredump 2>/dev/null | head -n 220",
+    "set -eu; python3 -c \"import csv; from pathlib import Path; p=Path('config/idf/partitions_stage27c.csv'); rows=[]; flash=8*1024*1024;\nfor raw in p.read_text().splitlines():\n s=raw.strip();\n if (not s) or s.startswith('#'): continue\n parts=[x.strip() for x in next(csv.reader([raw]))];\n if len(parts)<5: continue\n name,typ,sub,off,size=parts[:5];\n def n(x):\n  x=x.strip().lower(); mul=1\n  if x.endswith('k'): mul=1024; x=x[:-1]\n  elif x.endswith('m'): mul=1024*1024; x=x[:-1]\n  return int(x,0)*mul\n rows.append((name,typ,sub,n(off),n(size)))\nend=max(o+z for _,_,_,o,z in rows); print('FLASH_BYTES',flash,hex(flash)); [print('PART',nme,typ,sub,hex(off),hex(sz),hex(off+sz)) for nme,typ,sub,off,sz in rows]; print('HIGHEST_PART_END',hex(end)); print('TAIL_FREE_BYTES',flash-end,hex(flash-end)); print('TAIL_FREE_ALIGNED_4K',hex(((flash-end)//0x1000)*0x1000))\"; printf '%s\\n' '--- current generated sdkconfig coredump values if present ---'; find . -maxdepth 4 -type f -name sdkconfig -print | sort | while IFS= read -r f; do printf 'SDKCONFIG=%s\\n' \"$f\"; grep -E '^CONFIG_ESP_COREDUMP|^# CONFIG_ESP_COREDUMP' \"$f\" || true; done; printf '%s\\n' 'STAGE28E_PHASE_B_COREDUMP_AUDIT_PASS'"
+  ]
+}
