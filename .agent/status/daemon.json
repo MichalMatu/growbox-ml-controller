@@ -1,9 +1,9 @@
 {
   "version": 1,
   "daemon_version": "4.18.2",
-  "state": "running",
+  "state": "idle",
   "pid": 99087,
-  "updated_at": "2026-09-06T00:52:25.789051+00:00",
+  "updated_at": "2026-09-06T00:52:44.377414+00:00",
   "self_revision": "667aff8674e82a3a3ba116ba8aa4b621d80d5117",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -14,7 +14,7 @@
   "task_timeout_default": 1800,
   "task_timeout_max": 21600,
   "memory_limit_mb_default": 4096,
-  "current_task_id": "20260906-growbox-safety-reason-audit-v1",
+  "current_task_id": null,
   "current_attempt_id": null,
   "current_task_digest": null,
   "repository_id": "growbox-ml-controller",
@@ -25,6 +25,6 @@
   "execution_model": "multi_repository_worker",
   "worker_pid": 99087,
   "supervisor_pid": 80135,
-  "active_resources": [],
+  "last_task_id": "20260906-growbox-safety-reason-audit-v1",
   "execution_variant": "parallel"
 }
