@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260906-growbox-stage28e-phase-a5-local-v1",
+  "task_digest": "e384029bd84f218d4f04e2967732fd9af06a16067a180c6676294079952ed306",
+  "idle_timeout": 900,
+  "task_timeout": 10800,
+  "memory_limit_mb": 6144,
+  "started_at": "2026-09-06T06:23:25.825701+00:00",
+  "attempt_id": "9d0aceec3b116b25d1a376c2",
+  "daemon_version": "4.18.4",
+  "daemon_pid": 13920,
+  "updated_at": "2026-09-06T06:23:25.825869+00:00",
+  "pid": 13920
+}
