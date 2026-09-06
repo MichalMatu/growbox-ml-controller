@@ -2,7 +2,7 @@
 
 Updated: 2026-09-06
 Development branch: `mvp/environment-controller`
-Latest handoff: `docs/STAGE28E_PHASE_A_HANDOFF.md`
+Latest handoff: `docs/STAGE28E_PHASE_B_HANDOFF.md`
 Stage28E execution guide: `docs/GUIDANCE.md`
 Prior Stage28D evidence: `docs/STAGE28D_AH_ARBITER_HANDOFF.md`
 Primary roadmap: `docs/PROJECT_ROADMAP.md`
@@ -10,123 +10,155 @@ Continuation checklist: `docs/CONTINUATION_PLAN.md`
 
 ## Current transition
 
-**Stage27C FROZEN -> Stage28A/B/C DONE -> Gates 1-6 COMPLETE -> Gate 7 previously qualified -> AH policy software COMPLETE -> Gate 7 runtime path REOPENED by V5 evidence -> Stage28E Phase A observability COMPLETE pending docs-only exit gate -> Phase B next**
+**Stage27C FROZEN -> Stage28A/B/C DONE -> Gates 1-6 COMPLETE -> Gate 7 previously qualified -> AH policy software COMPLETE -> Gate 7 runtime path REOPENED by V5 evidence -> Stage28E Phase A COMPLETE -> Phase B COMPLETE pending final docs-only exit gate -> Phase C next**
 
-Stage28D functional work remains intentionally paused. The current program is Stage28E A -> H, with Phase A providing the observability foundation needed to diagnose the V5 runtime discontinuity from evidence rather than inference.
+Stage28D functional work remains intentionally paused. The active program remains Stage28E A -> H. Phase A established low-overhead observability; Phase B added reset/crash/corruption/lifecycle evidence. Phase C now performs a quantitative memory/resource audit before any broad optimization or architecture change.
 
-## Current Phase A source identity
+## Phase identities
 
-Phase A implementation/hardware diagnostic executable:
+Phase A exit SHA:
 
-`3058625be2f35c121afcf82549d5c73068839ecd`
+`384e415eaaec960add2b3b3fe94db5c052ca6497`
 
-Phase A starting point:
+Phase B hardware-validated source SHA:
 
-`2218ad30401222537cb568541d80bc07adc2c0eb`
+`b43516a2adcd320b3da2b4ee9051e442cceb5c93`
 
-The first Phase A closing documentation commit is:
+Phase B evidence handoff creation commit:
 
-`32b664a0fcebc1ecbc5863ca07d3200e3d4603ef`
+`d1df3bdca7eaf0683609c816c875bba326f05f97`
 
-Always fetch fresh work-branch HEAD before editing because additional Phase A documentation commits and the final docs-only exit gate may be above this SHA.
+Always fetch fresh work-branch HEAD and Local Agent daemon state before editing or queueing work.
 
-## Phase A completed capability
+## Phase B completed capability
 
-The firmware now exposes:
+The firmware now provides:
 
-- structured Stage28E logging with fixed buffers, compile-time gating and module filters;
-- firmware SHA, boot/session ID, reset reason and uptime;
-- internal RAM total/current/minimum/largest-block metrics;
-- PSRAM total/current/minimum/largest-block metrics;
-- task/core/priority/configured-stack/HWM/severity snapshots;
-- aggregate service-console, RF, control, telemetry and main-loop timing with overrun count.
+- 1 MiB flash coredump partition with ELF/CRC32/DRAM capture configuration;
+- boot-time coredump presence/validity/size reporting;
+- low-wear RTC no-init breadcrumbs with magic/version/checksum;
+- retained previous boot/log/fault/arbiter counters across software reset;
+- runtime entry count and arbiter instance/construction identity;
+- same-instance cumulative counter regression detection with explicit uint32 wrap handling;
+- corrected stack-HWM telemetry units for ESP-IDF 5.5.4;
+- periodic runtime heartbeat at the existing telemetry cadence;
+- periodic `heap_caps_check_integrity_all(false)` at roughly one-minute cadence;
+- diagnostic-only compile-time breadcrumb restart self-test, disabled by default.
 
-Verified ESP-IDF contract for this build:
+Key Phase B commits include:
 
-- stack HWM values are bytes, not words;
-- non-SMP task core lookup uses `xTaskGetCoreID(task.xHandle)`;
-- warning threshold is below 25% remaining configured stack;
-- critical threshold is below 10%.
+- `9e5ae78f4f4dc56426ecfefd5724c9861d810465` — coredump partition
+- `5f7cdab9811fe8df686565516ce326fbb23041ba` — coredump configuration
+- `2cf2a19bb9d1dfe4cfc51d477748d0c1b14332a6` — coredump boot marker
+- `c2627fe9cc0bca3352c2fa1f6c40b9075d28b3bb` — lifecycle identity
+- `1caf8557eecbec06dccf658ced65c285bf6c032b` — arbiter counter continuity sentinel
+- `d75e904f59d2a00b4648b1498a6157351c903ea8` — stack-HWM unit correction
+- `2d15ff26769103be7ebf461d4891c2d7c0116d2e` — heartbeat and heap integrity
+- `2c7cf143b7ebf253c29c1fe02148466accb23e95` — RTC breadcrumbs
+- `528357397c38dbfbb82af1f09df907cf8bc7b651` — bounded restart self-test
+- `b43516a2adcd320b3da2b4ee9051e442cceb5c93` — explicit build option plumbing for restart self-test
 
-## Phase A bounded hardware evidence
+## Phase B bounded hardware evidence
 
-Task:
+Final task:
 
-`20260906-growbox-stage28e-phase-a-hardware-diag-v1`
+`20260906-growbox-stage28e-phase-b-hardware-diag-v3`
 
-Exact diagnostic firmware:
+Exact source SHA:
 
-`3058625be2f35c121afcf82549d5c73068839ecd`
+`b43516a2adcd320b3da2b4ee9051e442cceb5c93`
 
-Representative safe snapshot:
+The diagnostic build was fake-locked with real RF outputs disabled. It performed one bounded `esp_restart()` after a successful periodic heap-integrity check.
 
-- boot ID `30b159d6`;
-- reset reason `1` / expected power-on reset after flash/reboot;
+Evidence after the software reset:
+
+- reset reason `3` / `ESP_RST_SW`;
+- retained breadcrumb `previous_valid=1`;
+- previous breadcrumb boot sequence `1`;
+- previous arbiter instance `1` and construction count `1`;
+- previous arbiter continuity faults `0`;
+- 14 heartbeats observed across the two boot instances;
+- two successful heap-integrity checks;
+- no coredump present;
+- no `heap_integrity_failed`;
+- no `arbiter_counter_regression`;
+- no Guru Meditation / corrupt heap / stack-canary marker;
+- post-reset main HWM about `8064 B`;
+- internal RAM: free `217188 B`, minimum `216656 B`, largest `176128 B`;
+- PSRAM free `8363512 B`, minimum `8363512 B`, largest `8257536 B`;
 - outputs `fake-locked`;
-- internal RAM: total `341620 B`, free `221648 B`, minimum `221028 B`, largest block `180224 B`;
-- PSRAM: total `8388608 B`, free `8363512 B`, minimum `8363108 B`, largest block `8257536 B`;
-- main stack: `8140 B` HWM of `16384 B` configured;
-- `stage27_store`: `2908 B` HWM of `7168 B`, about 40.6% margin;
-- `nimble_host`: `1688 B` HWM of `4096 B`, about 41.2% margin;
-- no known stack warning/critical state;
-- worst active loop `194320 us` against a `1000000 us` budget;
-- loop overruns `0`;
-- control max `21607 us`;
-- telemetry max `183523 us`.
+- Shelly master ON;
+- Shelly median power `65.5 W`.
 
-The earlier suspected approximately 1 KiB internal-memory crisis was **not reproduced** in this bounded representative run. Phase C must still audit static/stack/heap ownership and fragmentation; Phase G will provide longer runtime evidence.
+The most important retained line was:
 
-A UART capture once ended mid-line and displayed `stage27_store hwm_bytes=29`. That value is invalid truncation evidence; the complete line reported `2908 B`.
+```text
+stage28e_breadcrumb previous_valid=1 write_seq=10 boot_seq=1 boot_id=33c2cde5 reset_reason=1 last_log_seq=8 last_log_uptime_ms=52331 last_log_module=1 last_log_level=2 fault_code=0 fault_seq=0 fault_uptime_ms=0 arbiter_instance=1 arbiter_constructions=1 arbiter_transitions=0 arbiter_dwell_holds=0 arbiter_safety_overrides=0 arbiter_continuity_faults=0
+```
 
-## Hardware-confirm v1/v2 interpretation
+This proves the breadcrumb can preserve prior runtime/arbiter state across the software-reset path that Phase B needs to diagnose.
 
-Two extra read-only confirmation attempts failed at the UART parser/harness layer, not on a product assertion.
+## Normal-firmware restore proof
 
-`hardware-confirm-v2` ran successfully after Local Agent recovery. Its first command proved exact local and remote work SHA `3058625...`, a clean tree and presence of `/dev/cu.usbserial-1130`. The second command failed because a fixed 5-second capture window did not contain a complete line beginning with `status `. The tail contained normal startup/runtime text and `outputs=fake-locked`.
+After the diagnostic run, the board was rebuilt and flashed from the same source SHA with:
 
-Because the original bounded diagnostic already produced a complete valid snapshot answering every Phase A exit question, a third identical confirmation attempt is not required.
+`GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST=0`
 
-See `docs/STAGE28E_PHASE_A_HANDOFF.md` for the complete Phase A evidence and exit rationale.
+The restore build was checked not to contain the restart-self-test marker.
+
+Final status:
+
+- firmware SHA `b43516a2adcd320b3da2b4ee9051e442cceb5c93`;
+- reset reason `1` after flash/hardware reboot;
+- outputs `fake-locked`;
+- `rf_ready=0`;
+- internal RAM free/min/largest `217444 / 216824 / 176128 B`;
+- main HWM `8064 B`;
+- Shelly master ON;
+- Shelly median power `65.5 W`.
+
+Final task markers:
+
+- `STAGE28E_B_HW_V3_RUNTIME_PASS`
+- `STAGE28E_B_HW_V3_SAFE_FAKE_LOCKED_PASS`
+- `STAGE28E_B_HARDWARE_DIAG_V3_PASS`
 
 ## Firmware-size evidence
 
-Original Phase A baseline image:
+Useful progression:
 
-`726061 B`
+- original Phase A baseline: `726061 B`
+- Phase A diagnostic implementation: `730821 B`
+- B1 coredump + boot marker: `739537 B`
+- lifecycle build: `739893 B`
+- counter sentinel build: `740285 B`
+- heartbeat/heap-integrity build: `741265 B`
+- RTC breadcrumb build: `743369 B`
+- diagnostic restart-self-test build: `743773 B`
 
-Final Phase A diagnostic image at `3058625...`:
+The restart self-test is compile-time disabled in the normal firmware.
 
-`730821 B`
+## V5 issue remains open but is now diagnosable
 
-Net increase:
-
-`+4760 B`
-
-The original baseline also had `119759 B` DIRAM used and `222001 B` remaining of `341760 B`.
-
-## V5 issue remains open
-
-The latest decisive Stage28D functional evidence remains V5:
+The decisive Stage28D functional evidence remains V5:
 
 `20260906-growbox-ah-arbiter-clean-v5`
 
-Representative non-safety state included:
-
-- `requested_fan=0.111`;
-- fan/applied fan OFF;
-- safety/force/reason all zero;
-- `arbiter_transitions=0`;
-- `tx_errors=0`;
-- inside AH about `15.10 g/m3`;
-- intake AH about `11.69 g/m3`;
-- AH gap about `3.41 g/m3`;
-- Shelly about `61.7 W`.
-
-The important discontinuity remains cumulative `arbiter_dwell_holds` decreasing within the apparent run:
+The unexplained cumulative dwell-hold decrease remains:
 
 `33 -> 43 -> 1 -> 11`
 
-Do not assume `Stage28dBinaryRoleArbiter::applyBinary()` is the root cause. Stage28E must distinguish reset, object reconstruction, corruption, timing discontinuity, lifecycle/state reconciliation and execution-environment causes before returning to the final physical Gate 7 confirmation.
+Phase B did not reproduce a same-instance counter regression. The firmware can now distinguish:
+
+- new boot/reset;
+- same-boot arbiter/runtime reconstruction;
+- same-instance cumulative counter regression;
+- prior state retained across a software reset;
+- heap-integrity failure;
+- missing runtime heartbeat;
+- coredump presence/absence.
+
+Do not change `Stage28dBinaryRoleArbiter::applyBinary()` based only on the old V5 trace. Phase C-G must complete before returning to the final physical actuator path in Phase H.
 
 ## Latest safety boundary
 
@@ -138,12 +170,9 @@ Never open, probe, monitor, reset or flash:
 
 `/dev/cu.usbserial-10`
 
-That port belongs to another project.
+Standing invariants:
 
-Standing policy/safety invariants:
-
-- native ESP-IDF direction;
-- deterministic rule controller authoritative;
+- rule controller authoritative;
 - ML shadow/research-only;
 - thermal trip `>=28 C`;
 - recovery `<=26 C` continuously for 10 minutes;
@@ -152,20 +181,15 @@ Standing policy/safety invariants:
 - no unattended real-output mode;
 - after bounded diagnostics restore/prove fake-locked safe state.
 
-Previously qualified physical state to restore when applicable:
-
-- lamp ON;
-- fan OFF;
-- humidifier OFF;
-- Shelly master ON;
-- about `61.7 W`.
-
 ## Immediate next work
 
-1. Complete the Phase A docs-only exact-SHA exit gate.
-2. Record the resulting Phase A exit SHA.
-3. Start **Stage28E Phase B — crash, reset, corruption, and lifecycle diagnostics**.
-4. First Phase B action must be read-only: inspect the exact installed ESP-IDF coredump configuration symbols and verify the current 8 MiB flash/partition bounds before editing configuration.
-5. Then implement Phase B in small evidence-backed slices: coredump support, low-wear breadcrumbs, lifecycle/instance IDs, state sentinels, targeted heap-integrity checks and subsystem heartbeats.
+1. Run one docs-only exact-SHA Phase B exit gate on the fresh work-branch HEAD.
+2. Record that SHA as the formal Phase B exit SHA.
+3. Start **Stage28E Phase C — memory map, stack audit and resource baseline**.
+4. Phase C starts read-only: collect linker/static memory evidence and inventory long-lived runtime objects before changing architecture or allocator policy.
+5. Quantify `.data`, `.bss`, IRAM, flash text/rodata, static DRAM contributors, task HWM, large objects, storage location and allocation capability.
+6. Pay special attention to large locals inside the non-returning climate runtime function because they remain resident on `app_main` stack.
+7. Classify generic `malloc/new`, explicit PSRAM, internal/DMA and library-owned allocations.
+8. Decide from measured evidence whether the historical approximately 1 KiB internal-free observation was real, transient, minimum-ever, fragmentation-related or incorrect.
 
-Do not return to a real AH actuator transition until A-G pass and Phase H explicitly starts the bounded end-to-end path.
+Do not run a long soak before Phase G and do not return to a real AH actuator transition before Phase H.
