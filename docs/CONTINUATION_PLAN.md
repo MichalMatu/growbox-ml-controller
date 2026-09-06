@@ -1,9 +1,10 @@
 # Fresh-context continuation plan
 
-Updated: 2026-09-05
+Updated: 2026-09-06
 Work branch: `mvp/environment-controller`
 Control branch: `agent-control`
-Primary roadmap/handoff: `docs/PROJECT_ROADMAP.md`
+Latest handoff: `docs/STAGE28D_AH_ARBITER_HANDOFF.md`
+Primary roadmap: `docs/PROJECT_ROADMAP.md`
 Current status: `docs/CURRENT_STATUS.md`
 Observability contract: `docs/OBSERVABILITY_AND_INFERENCE_PLAN.md`
 Shelly power feedback: `docs/SHELLY_POWER_FEEDBACK.md`
@@ -11,157 +12,161 @@ Shelly power feedback: `docs/SHELLY_POWER_FEEDBACK.md`
 ## Read first in a new chat
 
 1. `AGENTS.md`
-2. `docs/PROJECT_ROADMAP.md`
-3. `docs/CURRENT_STATUS.md`
-4. this file
-5. `docs/OBSERVABILITY_AND_INFERENCE_PLAN.md` when changing ventilation, inference, telemetry or ML features
-6. `docs/SHELLY_POWER_FEEDBACK.md` when changing physical-state supervision
+2. `docs/STAGE28D_AH_ARBITER_HANDOFF.md`
+3. `docs/PROJECT_ROADMAP.md`
+4. `docs/CURRENT_STATUS.md`
+5. this file
+6. `docs/OBSERVABILITY_AND_INFERENCE_PLAN.md` when changing ventilation, inference, telemetry or ML behavior
+7. `docs/SHELLY_POWER_FEEDBACK.md` when changing physical-state supervision
 
-Then fetch fresh `mvp/environment-controller` HEAD and `agent-control:.agent/status/daemon.json`. Never continue from remembered chat state alone.
+Then fetch fresh `mvp/environment-controller` HEAD, `agent-control:.agent/status/daemon.json`, and the newest terminal Local Agent result. Never continue from remembered chat state alone.
 
 ## Current transition
 
-**Stage27C FROZEN -> Stage28A DONE -> Stage28B DONE -> Stage28C DONE -> pre-Stage28D golden gate COMPLETE -> Stage28D manual RF path COMPLETE -> Gates 1-7 COMPLETE -> moisture-aware ventilation policy NEXT**
+**Stage27C FROZEN -> Stage28A/B/C DONE -> Gates 1-6 COMPLETE -> Gate 7 previously qualified -> AH policy software COMPLETE -> Gate 7 runtime path REOPENED by V5 evidence -> diagnose before more hardware**
 
-Gate 7 hardware-qualified code identity:
+The older statement that the next work is to implement moisture-aware ventilation is stale. The absolute-humidity policy is already present at the current product lineage.
 
-`3dfc4b552f669f628d5c9bee455a34666915088c`
+At the 2026-09-06 handoff, the product HEAD before docs-only handoff commits was:
 
-Later docs-only commits are not separately hardware-qualified firmware identities.
+`dfc6dc86a47ad2158e36bb0d5241b0153dbce387`
 
-## Completed physical evidence - do not repeat by default
+with parent:
 
-### RF role routing
+`3e2e195898c45734f459ac9a8f69dad9891ab4eb`
 
-- lamp physical signature about `+97 W`;
-- fan physical signature about `+2.9 W`;
-- humidifier physical signature about `+15.7 W`;
-- all controlled loads OFF baseline about `2.2 W`.
+Always fetch the fresh work HEAD because documentation commits may now be above that executable identity.
 
-### Thermal safety
+## Latest hardware evidence
 
-A deterministic injected-temperature sequence physically proved:
+Task:
 
-- lamp forced OFF at the hot trip;
-- fan forced ON by safety;
-- 10-minute `<=26 C` recovery hold;
-- no humidifier cross-activation;
-- final fake-locked/all-OFF cleanup.
+`20260906-growbox-ah-arbiter-clean-v5`
 
-Do not repeat this long thermal test unless safety code changes.
+Read:
 
-### Ventilation identification
+`.agent/results/20260906-growbox-ah-arbiter-clean-v5.json`
 
-A bounded fan OFF -> ON -> OFF experiment showed:
+V5 observed a non-safety AH-driven exhaust request at or above the fan ON threshold after the expected minimum-OFF window while the fan remained OFF.
 
-- absolute humidity inside fell about `0.312 g/m3/min` while fan was ON;
-- CO2 fell about `3.09 ppm/min`;
-- inside-minus-intake absolute-humidity gradient fell from about `3.27` to `0.96 g/m3`;
-- temperature effect was small.
+Representative state:
 
-Conclusion: moisture ventilation benefit must be based on absolute humidity/moisture content, not raw RH alone.
+- `requested_fan=0.111`;
+- `fan=0`;
+- `applied_fan=0.0`;
+- `safety=0`;
+- `force=0`;
+- `safety_reason=0`;
+- `arbiter_transitions=0`;
+- `tx_errors=0`;
+- inside AH about `15.10 g/m3`;
+- intake AH about `11.69 g/m3`;
+- AH gap about `3.41 g/m3`;
+- Shelly about `61.7 W`.
 
-### Gate 7 short closed loop
+Terminal failure:
 
-Exact SHA `3dfc4b552f669f628d5c9bee455a34666915088c` passed a 10-minute real-output closed loop with truthful requested-versus-applied binary actuator telemetry, SD logging, Shelly correlation and final fake-lock cleanup.
+`AHV2_PRIMARY_ERROR type=RuntimeError detail=sustained req_fan>=0.10 after min-OFF expiry but fan did not transition ON`
 
-Key result:
+This is now the highest-priority control-path issue.
 
-- 58 output records;
-- 52 healthy SD-backed records;
-- maximum requested fan about `0.317`;
-- no physical fan/humidifier transition because complete threshold+dwell conditions were not satisfied;
-- 111 dwell holds;
-- TP357 about `24.2-26.1 C`;
-- final about `2.2 W`, all RF loads OFF, Shelly master ON.
+## Important diagnostic clue
 
-### Gate 7 30-minute bounded soak
+V5 telemetry showed cumulative `arbiter_dwell_holds` values:
 
-The same exact SHA passed a 30-minute bounded soak:
+`33 -> 43 -> 1 -> 11`
 
-- 174 output records;
-- 159 healthy SD-backed records;
-- lamp ON for the scheduled interval in all 174 output records;
-- fan ON records `0`;
-- humidifier ON records `0`;
-- maximum requested fan about `0.331`;
-- arbiter dwell holds `111`, transitions `0`, safety overrides `0`;
-- TP357 about `25.3-27.8 C`;
-- final fake-locked, all controlled RF loads OFF, Shelly master ON, about `2.2 W`.
+The decrease from 43 to 1 strongly suggests a runtime/arbiter reset or reinitialization and must be investigated before blaming `applyBinary()` directly.
 
-Isolated Shelly low-power samples were not persistent. A separate lamp-stability test held about `98.3-98.8 W` for roughly three minutes with no persistent drop. Physical harnesses should therefore use settled median samples and require repeated mismatch before declaring a physical-state failure.
+Check:
 
-## Frozen Gate 7 actuator architecture
+- board/runtime reset evidence;
+- arbiter reconstruction/reinitialization;
+- repeated `synchronizeSafeOff()` or `forceSafeOff()` paths;
+- monotonic-time discontinuities;
+- applied-state reconciliation;
+- whether the controller continues calling the exhaust output path after producing the request.
 
-Control chain:
+## Latest confirmed recovery state
 
-`rule request -> Stage28dBinaryRoleArbiter -> confirmed actual applied -> RF endpoint -> telemetry`
+V5 cleanup passed:
 
-Defaults:
+`AHV2_RECOVERY_PASS sha=dfc6dc86a47ad2158e36bb0d5241b0153dbce387 outputs=fake-locked lamp=on fan=off humidifier=off shelly_master=on power_w=61.700 port=/dev/cu.usbserial-1130`
 
-- fan ON threshold `0.10`, OFF threshold `0.03`, minimum ON/OFF `120 s`;
-- humidifier ON threshold `0.10`, OFF threshold `0.03`, minimum ON/OFF `180 s`;
-- thermal safety bypasses fan minimum-OFF to force immediate ON;
-- clearing safety does not bypass minimum-ON;
-- emergency safe OFF bypasses dwell;
-- failed RF transition does not advance arbiter state;
-- applied telemetry is binary actual state, not the fractional request.
+Last confirmed hardware state:
 
-Persisted actuator telemetry includes requested fan/humidifier, applied fan/humidifier, thermal latch/force state and arbiter counters.
+- outputs fake-locked;
+- lamp ON;
+- fan OFF;
+- humidifier OFF;
+- Shelly master ON.
 
-## Current locked boundary
+## Serial-port invariant
 
-- rule controller authoritative;
+Growbox port:
+
+`/dev/cu.usbserial-1130`
+
+Never touch `/dev/cu.usbserial-10`; it belongs to another project.
+
+## Completed evidence not to repeat by default
+
+- physical RF role identities and ON/OFF routing;
+- physical fan efficacy;
+- deterministic 28 C thermal trip and 10-minute recovery qualification;
+- ventilation identification experiment;
+- long 30-minute soak.
+
+The physical fan previously produced approximately:
+
+- AH slope `-0.312 g/m3/min` while ON;
+- CO2 slope `-3.09 ppm/min`;
+- AH-gradient reduction about `3.27 -> 0.96 g/m3`.
+
+Therefore the current problem is not whether the fan itself works.
+
+## Immediate next work
+
+1. Fetch fresh work HEAD and daemon status.
+2. Confirm no active task before editing/queueing.
+3. Read V5 terminal result completely.
+4. Diagnose the `dwell_holds 43 -> 1` reset/reinitialization clue from source and telemetry.
+5. Trace all paths that can reset/reconcile binary actuator state or dwell timing.
+6. Add a focused regression reproducing the V5 sequence.
+7. Make the smallest evidence-backed product fix.
+8. Run focused tests.
+9. Run exactly one final full software quality gate once the fix is stable.
+10. Only after software PASS run a short bounded exact-SHA hardware confirmation of:
+
+   `AH request -> dwell expiry -> arbiter transition -> RF -> physical fan ON`
+
+11. Use Shelly as independent electrical evidence.
+12. End with verified fake-lock recovery and normal RTC/storage restoration.
+
+## Locked safety/policy boundary
+
+- native ESP-IDF only;
+- deterministic rule policy authoritative;
 - ML shadow/research-only;
-- installed firmware returned to fake-locked after every bounded physical test;
-- automatic real output is not a permanent/unattended mode yet;
-- any future physical run must be bounded, exact-SHA, Shelly-supervised, storage-supervised and end with explicit RF OFF + fake-lock;
-- do not perform another soak without a specific changed-control hypothesis.
-
-## First incomplete software slice - moisture-aware ventilation
-
-The current rule request still mixes raw-RH logic with ventilation decisions. Replace the moisture-exchange part with deterministic inside-versus-intake absolute-humidity benefit logic.
-
-Required behavior:
-
-1. calculate/use valid inside and intake absolute humidity from synchronized T/RH;
-2. ventilate for moisture removal only when intake air is meaningfully drier in absolute-humidity terms;
-3. preserve independent temperature-benefit logic;
-4. keep SCD41 CO2 as ventilation context without pretending outside CO2 is measured;
-5. preserve hard thermal-safety fan override above normal benefit logic;
-6. keep binary/dwell arbitration unchanged unless a test demonstrates a defect;
-7. keep ML shadow-only.
-
-Required regressions include:
-
-- outside/intake RH equal to or higher than inside RH but lower absolute humidity -> ventilation may still be drying-beneficial;
-- outside/intake RH lower but absolute humidity higher -> do not claim drying benefit;
-- stale/invalid intake moisture evidence -> do not use it as a positive drying-benefit signal;
-- thermal safety still forces fan ON regardless of normal benefit scoring;
-- CO2 ventilation context remains independent of nonexistent CO2 dosing capability.
-
-## Verification order for the next slice
-
-1. fetch fresh work HEAD and confirm daemon idle;
-2. inspect the existing rule-request moisture/ventilation path and current derived-metric helpers;
-3. make the smallest deterministic code change needed for absolute-humidity benefit;
-4. add focused host regression tests first;
-5. run focused tests;
-6. run exactly one final full quality gate with outputs fake-locked and no hardware task;
-7. only after software PASS, decide whether the behavioral change needs a new short exact-SHA physical confirmation.
-
-A new hardware run should target the changed ventilation behavior, not repeat RF identity, thermal recovery, lamp stability or the previous 30-minute soak.
+- thermal trip `>=28 C`;
+- recovery threshold `<=26 C` held continuously for 10 minutes;
+- thermal safety may force exhaust immediately;
+- no heater/cooler/dehumidifier/CO2 doser;
+- real outputs only in explicit bounded tests;
+- Shelly master remains ON;
+- manual RF TX remains blocked while automatic outputs are real-bounded;
+- no unattended real-output operation yet.
 
 ## Local Agent / Chat Bridge essentials
 
-Hard binding for every Growbox task:
+Every Growbox task must contain exactly:
 
 `"agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5"`
 
-Use `resources: []` for software/docs/build and `resources: ["board:growbox-s3"]` for USB/serial/flashing/hardware. Task IDs and payloads are immutable; a retry always uses a new ID.
+Use `resources: []` for software/docs/build and `resources: ["board:growbox-s3"]` for USB/serial/flashing/hardware.
 
-Chat Bridge only transports wakeups and pins repository identity. Local Agent executes queued tasks. ChatGPT must inspect result evidence before claiming completion.
+Task IDs and payloads are immutable. A retry uses a new ID.
 
 Recommended fresh-chat instruction:
 
-`Continue Growbox from docs/PROJECT_ROADMAP.md and docs/CONTINUATION_PLAN.md. Verify fresh work-branch HEAD and Local Agent daemon first. Gates 1-7 are complete; start from the moisture-aware ventilation policy slice. Keep ML shadow-only and do not repeat completed physical gates without new evidence.`
+`Continue Growbox from docs/STAGE28D_AH_ARBITER_HANDOFF.md and docs/CONTINUATION_PLAN.md. Fetch fresh work HEAD and Local Agent daemon/result evidence first. V5 reopened the Gate 7 runtime path: diagnose the arbiter_dwell_holds 43 -> 1 discontinuity and state/reset paths before any more hardware testing.`
