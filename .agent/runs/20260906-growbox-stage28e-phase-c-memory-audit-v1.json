@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 2,
+  "index": 3,
   "total": 4,
-  "command": "set -euo pipefail; export CMAKE_BUILD_PARALLEL_LEVEL=1; BUILD=build/idf-stage28e-c-memory-audit-v1; rm -rf \"$BUILD\"; STAGE27C_BUILD_DIR=\"$BUILD\" GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST=0 GROWBOX_FIRMWARE_GIT_SHA=e0fb5da17879569f791898ba793e1c02b195fab8 bash scripts/stage27c_crowpanel.sh build >/tmp/stage28e-c-build.log 2>&1; . /Users/michal/esp/esp-idf/export.sh >/dev/null 2>&1; idf.py -B \"$BUILD\" size > /tmp/stage28e-c-size.txt; echo STAGE28E_C_BUILD_PASS; grep -E 'Total image size|Flash Code|Flash Data|DIRAM|IRAM|DRAM' /tmp/stage28e-c-size.txt || true; tail -40 /tmp/stage28e-c-size.txt",
-  "pid": 92679,
+  "command": "set -euo pipefail; BUILD=build/idf-stage28e-c-memory-audit-v1; ELF=\"$BUILD/growbox_ml_controller.elf\"; MAP=\"$BUILD/growbox_ml_controller.map\"; TOOL=$(find /Users/michal/.espressif/tools/xtensa-esp-elf -type f -name xtensa-esp32s3-elf-nm 2>/dev/null | head -1); test -x \"$TOOL\"; python3 - <<'PY'\nimport re, subprocess, pathlib, os\nb=pathlib.Path('build/idf-stage28e-c-memory-audit-v1')\nelf=b/'growbox_ml_controller.elf'\n# Use toolchain nm from PATH after IDF build if available, otherwise locate it.\nimport shutil\nnm=shutil.which('xtensa-esp32s3-elf-nm')\nif not nm:\n    hits=list(pathlib.Path('/Users/michal/.espressif/tools').rglob('xtensa-esp32s3-elf-nm'))\n    nm=str(hits[0]) if hits else None\nif not nm: raise SystemExit('xtensa-esp32s3-elf-nm not found')\nout=subprocess.check_output([nm,'-S','--size-sort','--radix=d',str(elf)],text=True,errors='replace')\nrows=[]\nfor line in out.splitlines():\n    p=line.split(None,4)\n    if len(p)<4: continue\n    try: size=int(p[1])\n    except: continue\n    typ=p[2]; name=p[3] if len(p)==4 else p[4]\n    if typ in 'BbDdSsGgCc': rows.append((size,typ,name))\nprint('STAGE28E_C_TOP_STATIC_SYMBOLS_BEGIN')\nfor size,typ,name in sorted(rows,reverse=True)[:60]: print(f'{size:8d} {typ} {name}')\nprint('STAGE28E_C_TOP_STATIC_SYMBOLS_END')\n# ELF sections via objdump/readelf if available.\nreadelf=shutil.which('xtensa-esp32s3-elf-readelf')\nif not readelf:\n    hits=list(pathlib.Path('/Users/michal/.espressif/tools').rglob('xtensa-esp32s3-elf-readelf'))\n    readelf=str(hits[0]) if hits else None\nif readelf:\n    sec=subprocess.check_output([readelf,'-S','--wide',str(elf)],text=True,errors='replace')\n    wanted=[]\n    for line in sec.splitlines():\n        if any(x in line for x in [' .data ',' .bss ',' .iram0.text ',' .dram0.data ',' .dram0.bss ',' .flash.text ',' .flash.rodata ',' .rtc']): wanted.append(line.strip())\n    print('STAGE28E_C_SECTION_ROWS_BEGIN'); print('\\n'.join(wanted)); print('STAGE28E_C_SECTION_ROWS_END')\nPY",
+  "pid": 98947,
   "timeout": 3600,
   "idle_timeout": 600,
   "memory_limit_mb": 6144,
-  "started_at": "2026-09-06T20:50:33.121024+00:00",
-  "stage_name": "command-2",
-  "stage_index": 2,
+  "started_at": "2026-09-06T20:51:26.442060+00:00",
+  "stage_name": "command-3",
+  "stage_index": 3,
   "stage_total": 4,
   "stage_phase": "commands",
   "task_id": "20260906-growbox-stage28e-phase-c-memory-audit-v1",
@@ -18,5 +18,5 @@
   "task_digest": "8d6dd34a4e63dea460d7ad988ba187ce6165f6d7dee797d6c9ae117b3fd576e6",
   "daemon_version": "4.18.4",
   "daemon_pid": 92520,
-  "updated_at": "2026-09-06T20:50:33.214501+00:00"
+  "updated_at": "2026-09-06T20:51:26.511136+00:00"
 }
