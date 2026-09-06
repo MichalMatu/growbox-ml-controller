@@ -3,12 +3,14 @@
 #include <cassert>
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <vector>
 
 using growbox::app::climate_io::ClimateActuatorRole;
 using growbox::app::climate_io::ClimateRoleDriver;
 using growbox::app::climate_io::stage28d::BinaryRoleArbiterConfig;
 using growbox::app::climate_io::stage28d::Stage28dBinaryRoleArbiter;
+using growbox::app::climate_io::stage28d::binaryArbiterCounterRegressed;
 
 namespace {
 
@@ -58,6 +60,13 @@ void testInstanceIdentityIsMonotonic() {
   assert(Stage28dBinaryRoleArbiter::constructionCount() >= before + 2U);
 }
 
+void testCounterRegressionDistinguishesWrap() {
+  assert(!binaryArbiterCounterRegressed(43U, 44U));
+  assert(binaryArbiterCounterRegressed(43U, 1U));
+  assert(!binaryArbiterCounterRegressed(std::numeric_limits<std::uint32_t>::max() - 2U, 2U));
+  assert(binaryArbiterCounterRegressed(std::numeric_limits<std::uint32_t>::max() - 2048U, 2U));
+}
+
 void testFanUsesHysteresisAndMinimumDwell() {
   FakeDriver downstream{};
   Stage28dBinaryRoleArbiter arbiter(downstream);
@@ -85,6 +94,7 @@ void testFanUsesHysteresisAndMinimumDwell() {
   assert(downstream.calls.size() == 2U);
   assert(!arbiter.exhaustOn());
   assert(arbiter.dwellHoldCount() >= 2U);
+  assert(arbiter.continuityFaultCount() == 0U);
 }
 
 void testThermalSafetyBypassesMinimumOffButNotMinimumOn() {
@@ -107,6 +117,7 @@ void testThermalSafetyBypassesMinimumOffButNotMinimumOn() {
   assert(arbiter.apply(ClimateActuatorRole::ExhaustFan, 0.0F, 131'000U));
   assert(downstream.calls.size() == 2U);
   assert(!arbiter.exhaustOn());
+  assert(arbiter.continuityFaultCount() == 0U);
 }
 
 void testHumidifierUsesLongerDwell() {
@@ -129,6 +140,7 @@ void testHumidifierUsesLongerDwell() {
   assert(arbiter.apply(ClimateActuatorRole::Humidifier, 0.0F, 360'000U));
   assert(downstream.calls.size() == 2U);
   assert(!arbiter.humidifierOn());
+  assert(arbiter.continuityFaultCount() == 0U);
 }
 
 void testFailedTransitionDoesNotAdvanceState() {
@@ -143,6 +155,7 @@ void testFailedTransitionDoesNotAdvanceState() {
 
   assert(arbiter.apply(ClimateActuatorRole::ExhaustFan, 0.50F, 121'000U));
   assert(arbiter.exhaustOn());
+  assert(arbiter.continuityFaultCount() == 0U);
 }
 
 void testFailSafeOffBypassesDwell() {
@@ -156,12 +169,14 @@ void testFailSafeOffBypassesDwell() {
   assert(!arbiter.exhaustOn());
   assert(downstream.calls.back().safe_off);
   assert(near(downstream.calls.back().level, 0.0F));
+  assert(arbiter.continuityFaultCount() == 0U);
 }
 
 } // namespace
 
 int main() {
   testInstanceIdentityIsMonotonic();
+  testCounterRegressionDistinguishesWrap();
   testFanUsesHysteresisAndMinimumDwell();
   testThermalSafetyBypassesMinimumOffButNotMinimumOn();
   testHumidifierUsesLongerDwell();

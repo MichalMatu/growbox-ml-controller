@@ -18,6 +18,9 @@ struct BinaryRoleArbiterConfig {
   BinaryActuatorConfig humidifier{0.10F, 0.03F, 180'000U, 180'000U};
 };
 
+bool binaryArbiterCounterRegressed(std::uint32_t previous, std::uint32_t current,
+                                   std::uint32_t maximum_expected_advance = 1024U) noexcept;
+
 class Stage28dBinaryRoleArbiter final : public ClimateRoleDriver {
 public:
   explicit Stage28dBinaryRoleArbiter(ClimateRoleDriver& downstream,
@@ -45,6 +48,7 @@ public:
   std::uint32_t transitionCount() const noexcept { return transition_count_; }
   std::uint32_t dwellHoldCount() const noexcept { return dwell_hold_count_; }
   std::uint32_t safetyOverrideCount() const noexcept { return safety_override_count_; }
+  std::uint32_t continuityFaultCount() const noexcept { return continuity_fault_count_; }
   std::uint32_t instanceId() const noexcept { return instance_id_; }
   static std::uint32_t constructionCount() noexcept;
 
@@ -55,8 +59,15 @@ private:
     std::uint64_t last_change_ms{0U};
   };
 
+  struct CounterSnapshot {
+    std::uint32_t transitions{0U};
+    std::uint32_t dwell_holds{0U};
+    std::uint32_t safety_overrides{0U};
+  };
+
   static float normalized(float value) noexcept;
   static BinaryActuatorConfig sanitized(BinaryActuatorConfig config) noexcept;
+  void checkCounterContinuity() noexcept;
   bool applyBinary(ClimateActuatorRole role, float requested_level,
                    std::uint64_t monotonic_ms, const BinaryActuatorConfig& config,
                    BinaryState& state, bool force_on) noexcept;
@@ -72,6 +83,9 @@ private:
   std::uint32_t transition_count_{0U};
   std::uint32_t dwell_hold_count_{0U};
   std::uint32_t safety_override_count_{0U};
+  CounterSnapshot last_counter_snapshot_{};
+  bool counter_snapshot_initialized_{false};
+  std::uint32_t continuity_fault_count_{0U};
 };
 
 } // namespace growbox::app::climate_io::stage28d

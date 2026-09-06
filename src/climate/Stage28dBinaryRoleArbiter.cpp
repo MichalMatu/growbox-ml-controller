@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cmath>
+#include <limits>
 
 #if defined(ESP_PLATFORM)
 #include <esp_log.h>
@@ -39,6 +40,50 @@ std::uint32_t Stage28dBinaryRoleArbiter::constructionCount() noexcept {
   return g_binary_arbiter_construction_count.load(std::memory_order_relaxed);
 }
 
+bool binaryArbiterCounterRegressed(std::uint32_t previous, std::uint32_t current,
+                                   std::uint32_t maximum_expected_advance) noexcept {
+  if (current >= previous) {
+    return false;
+  }
+  const std::uint32_t modulo_delta = current - previous;
+  return modulo_delta > maximum_expected_advance;
+}
+
+void Stage28dBinaryRoleArbiter::checkCounterContinuity() noexcept {
+  const CounterSnapshot current{transition_count_, dwell_hold_count_, safety_override_count_};
+  if (!counter_snapshot_initialized_) {
+    last_counter_snapshot_ = current;
+    counter_snapshot_initialized_ = true;
+    return;
+  }
+
+  const bool transition_regressed =
+      binaryArbiterCounterRegressed(last_counter_snapshot_.transitions, current.transitions);
+  const bool dwell_regressed =
+      binaryArbiterCounterRegressed(last_counter_snapshot_.dwell_holds, current.dwell_holds);
+  const bool safety_regressed = binaryArbiterCounterRegressed(
+      last_counter_snapshot_.safety_overrides, current.safety_overrides);
+  if (transition_regressed || dwell_regressed || safety_regressed) {
+    if (continuity_fault_count_ != std::numeric_limits<std::uint32_t>::max()) {
+      ++continuity_fault_count_;
+    }
+#if defined(ESP_PLATFORM)
+    ESP_LOGE(kLifecycleTag,
+             "arbiter_counter_regression instance_id=%lu faults=%lu transition=%lu/%lu "
+             "dwell=%lu/%lu safety=%lu/%lu",
+             static_cast<unsigned long>(instance_id_),
+             static_cast<unsigned long>(continuity_fault_count_),
+             static_cast<unsigned long>(last_counter_snapshot_.transitions),
+             static_cast<unsigned long>(current.transitions),
+             static_cast<unsigned long>(last_counter_snapshot_.dwell_holds),
+             static_cast<unsigned long>(current.dwell_holds),
+             static_cast<unsigned long>(last_counter_snapshot_.safety_overrides),
+             static_cast<unsigned long>(current.safety_overrides));
+#endif
+  }
+  last_counter_snapshot_ = current;
+}
+
 float Stage28dBinaryRoleArbiter::normalized(float value) noexcept {
   if (!std::isfinite(value)) {
     return 0.0F;
@@ -56,12 +101,14 @@ BinaryActuatorConfig Stage28dBinaryRoleArbiter::sanitized(BinaryActuatorConfig c
 }
 
 void Stage28dBinaryRoleArbiter::synchronizeSafeOff(std::uint64_t monotonic_ms) noexcept {
+  checkCounterContinuity();
   exhaust_ = {true, false, monotonic_ms};
   humidifier_ = {true, false, monotonic_ms};
 }
 
 bool Stage28dBinaryRoleArbiter::apply(ClimateActuatorRole role, float level,
                                      std::uint64_t monotonic_ms) noexcept {
+  checkCounterContinuity();
   if (role == ClimateActuatorRole::ExhaustFan) {
     return applyBinary(role, level, monotonic_ms, config_.exhaust_fan, exhaust_,
                        safety_force_exhaust_);
@@ -85,6 +132,7 @@ float Stage28dBinaryRoleArbiter::appliedLevel(ClimateActuatorRole role,
 
 bool Stage28dBinaryRoleArbiter::forceSafeOff(ClimateActuatorRole role,
                                             std::uint64_t monotonic_ms) noexcept {
+  checkCounterContinuity();
   if (role == ClimateActuatorRole::ExhaustFan) {
     return forceBinaryOff(role, monotonic_ms, exhaust_);
   }
