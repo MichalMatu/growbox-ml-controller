@@ -1,0 +1,17 @@
+{
+  "id": "20260907-growbox-stage28e-phase-d-exit-gate-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 4096,
+  "command_timeout": 600,
+  "idle_timeout": 300,
+  "task_timeout": 900,
+  "commands": [
+    "set -euo pipefail; EXPECTED=5e750b972eeff4ac8c9149ef6ea708f703d2d755; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; git diff --check; echo STAGE28E_D_EXIT_EXACT_SHA_PASS=$EXPECTED",
+    "set -euo pipefail; test -f docs/STAGE28E_PHASE_D_HANDOFF.md; grep -Fq '5296 -> 3104 -> 2032 B' docs/STAGE28E_PHASE_D_HANDOFF.md || grep -Fq '5296 -> 3104 -> 2032' docs/STAGE28E_PHASE_D_HANDOFF.md; grep -Fq '11336 B' docs/STAGE28E_PHASE_D_HANDOFF.md; grep -Fq '213900 / 213264 / 172032 B' docs/STAGE28E_PHASE_D_HANDOFF.md; grep -Fq '65.5 W' docs/STAGE28E_PHASE_D_HANDOFF.md; grep -Fq 'Phase D therefore passes' docs/STAGE28E_PHASE_D_HANDOFF.md; echo STAGE28E_D_EXIT_DOCS_EVIDENCE_PASS",
+    "set -euo pipefail; grep -Fq 'Phase E ACTIVE' docs/CURRENT_STATUS.md; grep -Fq 'docs/STAGE28E_PHASE_D_HANDOFF.md' docs/CURRENT_STATUS.md; grep -Fq 'Phase E ACTIVE' docs/CONTINUATION_PLAN.md; grep -Fq 'docs/STAGE28E_PHASE_D_HANDOFF.md' docs/CONTINUATION_PLAN.md; grep -Fq 'Do not globally enable' docs/CONTINUATION_PLAN.md; echo STAGE28E_D_EXIT_GATE_PASS"
+  ]
+}
