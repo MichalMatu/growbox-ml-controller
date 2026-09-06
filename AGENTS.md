@@ -25,7 +25,7 @@ Repository identity:
 
 When starting work on this repository in a new chat/session:
 
-1. Read this `AGENTS.md`, `docs/STAGE28D_AH_ARBITER_HANDOFF.md`, `docs/PROJECT_ROADMAP.md`, `docs/CURRENT_STATUS.md`, and `docs/CONTINUATION_PLAN.md` before proposing or executing changes. Read `docs/STAGE27_NATIVE_IDF_HANDOFF.md` only when older native-platform decisions are needed.
+1. Read this `AGENTS.md`, `docs/GUIDANCE.md`, `docs/STAGE28D_AH_ARBITER_HANDOFF.md`, `docs/PROJECT_ROADMAP.md`, `docs/CURRENT_STATUS.md`, and `docs/CONTINUATION_PLAN.md` before proposing or executing changes. `docs/GUIDANCE.md` is the mandatory Stage28E A-H execution sequence while diagnostics/architecture hardening is active. Read `docs/STAGE27_NATIVE_IDF_HANDOFF.md` only when older native-platform decisions are needed.
 2. Inspect the exact GitHub branch relevant to the requested work. Do not assume `main` is the work branch.
 3. If Chat Bridge is active, require the wake envelope to identify exactly repository id `growbox-ml-controller`, repository `MichalMatu/growbox-ml-controller`, and agent binding `815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5`. Never infer or switch repository identity from remembered chat context; a different repository requires explicit Bridge Rebind.
 4. Inspect `.agent/status/daemon.json` on `agent-control` and verify `daemon_version` against `MichalMatu/local-agent/local_agent/version.py` when Local Agent compatibility matters.
@@ -38,6 +38,7 @@ When starting work on this repository in a new chat/session:
 11. Prefer remote run/status/result evidence over asking the user to copy local terminal logs when Local Agent can provide the state directly.
 12. Keep repository workspaces isolated. A Growbox task must not publish results through another repository's Local Agent control plane.
 13. Do not reopen completed Stage25/26 work. Stage27 native-platform direction is frozen in `docs/STAGE27_NATIVE_IDF_HANDOFF.md`; the current control-path continuation is in `docs/STAGE28D_AH_ARBITER_HANDOFF.md`.
+14. While Stage28E is active, do not resume normal AH/arbiter functional development before Phases A-G in `docs/GUIDANCE.md` have passed their documented exit criteria and commits have been recorded.
 
 ### Local Agent execution rules
 
