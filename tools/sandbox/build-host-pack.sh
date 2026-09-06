@@ -48,7 +48,7 @@ while read -r lib; do
       ;;
   esac
   cp -L "$lib" "$STAGE/llvm/lib/$(basename "$lib")"
-done < <(ldd "$CLANG_TIDY" | awk '/=> \/ / {print $3} /^\// {print $1}')
+done < <(ldd "$CLANG_TIDY" | awk '/=> \// {print $3} /^\// {print $1}')
 
 cat > "$STAGE/llvm/bin/clang-tidy" <<'EOF'
 #!/usr/bin/env bash
