@@ -67,6 +67,69 @@ void testCounterRegressionDistinguishesWrap() {
   assert(binaryArbiterCounterRegressed(std::numeric_limits<std::uint32_t>::max() - 2048U, 2U));
 }
 
+void testV5SameInstanceDwellContinuityProof() {
+  FakeDriver downstream{};
+  Stage28dBinaryRoleArbiter arbiter(downstream);
+  const std::uint32_t instance_id = arbiter.instanceId();
+  arbiter.synchronizeSafeOff(0U);
+
+  assert(!arbiter.exhaustOn());
+  assert(arbiter.transitionCount() == 0U);
+  assert(arbiter.dwellHoldCount() == 0U);
+  assert(arbiter.continuityFaultCount() == 0U);
+
+  // A request below the ON threshold keeps the synchronized safe-OFF state
+  // without consuming minimum-OFF dwell holds.
+  assert(arbiter.apply(ClimateActuatorRole::ExhaustFan, 0.099F, 500U));
+  assert(downstream.calls.empty());
+  assert(arbiter.dwellHoldCount() == 0U);
+  assert(arbiter.transitionCount() == 0U);
+
+  // Reproduce the historical V5 request magnitude while remaining inside the
+  // 120 s minimum-OFF window. One continuously living arbiter can only advance
+  // this cumulative counter; it cannot produce 43 -> 1 without uint32 wrap.
+  for (std::uint32_t index = 0U; index < 43U; ++index) {
+    const std::uint32_t before = arbiter.dwellHoldCount();
+    assert(arbiter.apply(ClimateActuatorRole::ExhaustFan, 0.111F, 1'000U + index));
+    assert(arbiter.instanceId() == instance_id);
+    assert(arbiter.dwellHoldCount() == before + 1U);
+    assert(arbiter.dwellHoldCount() == index + 1U);
+    assert(arbiter.transitionCount() == 0U);
+    assert(arbiter.continuityFaultCount() == 0U);
+    assert(downstream.calls.empty());
+  }
+
+  assert(arbiter.dwellHoldCount() == 43U);
+  assert(binaryArbiterCounterRegressed(arbiter.dwellHoldCount(), 1U));
+
+  // Immediately before the dwell boundary the same request is still held OFF
+  // and the cumulative counter advances 43 -> 44, never 43 -> 1.
+  assert(arbiter.apply(ClimateActuatorRole::ExhaustFan, 0.111F, 119'999U));
+  assert(arbiter.instanceId() == instance_id);
+  assert(arbiter.dwellHoldCount() == 44U);
+  assert(arbiter.transitionCount() == 0U);
+  assert(!arbiter.exhaustOn());
+  assert(downstream.calls.empty());
+  assert(arbiter.continuityFaultCount() == 0U);
+
+  // At the exact 120 s minimum-OFF boundary the 0.111 request becomes eligible
+  // and produces one OFF -> ON transition without resetting dwell history.
+  assert(arbiter.apply(ClimateActuatorRole::ExhaustFan, 0.111F, 120'000U));
+  assert(arbiter.instanceId() == instance_id);
+  assert(arbiter.exhaustOn());
+  assert(arbiter.transitionCount() == 1U);
+  assert(arbiter.dwellHoldCount() == 44U);
+  assert(downstream.calls.size() == 1U);
+  assert(near(downstream.calls.back().level, 1.0F));
+
+  // A subsequent same-state call causes continuity checking to observe the
+  // transition as monotonic and still reports no continuity fault.
+  assert(arbiter.apply(ClimateActuatorRole::ExhaustFan, 0.111F, 120'001U));
+  assert(arbiter.transitionCount() == 1U);
+  assert(arbiter.dwellHoldCount() == 44U);
+  assert(arbiter.continuityFaultCount() == 0U);
+}
+
 void testFanUsesHysteresisAndMinimumDwell() {
   FakeDriver downstream{};
   Stage28dBinaryRoleArbiter arbiter(downstream);
@@ -177,6 +240,7 @@ void testFailSafeOffBypassesDwell() {
 int main() {
   testInstanceIdentityIsMonotonic();
   testCounterRegressionDistinguishesWrap();
+  testV5SameInstanceDwellContinuityProof();
   testFanUsesHysteresisAndMinimumDwell();
   testThermalSafetyBypassesMinimumOffButNotMinimumOn();
   testHumidifierUsesLongerDwell();
