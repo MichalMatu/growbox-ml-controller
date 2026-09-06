@@ -3,170 +3,156 @@
 Updated: 2026-09-06
 Work branch: `mvp/environment-controller`
 Control branch: `agent-control`
-Latest handoff: `docs/STAGE28D_AH_ARBITER_HANDOFF.md`
-Primary roadmap: `docs/PROJECT_ROADMAP.md`
+Latest handoff: `docs/STAGE28E_PHASE_A_HANDOFF.md`
+Stage28E execution guide: `docs/GUIDANCE.md`
+Prior Stage28D evidence: `docs/STAGE28D_AH_ARBITER_HANDOFF.md`
 Current status: `docs/CURRENT_STATUS.md`
-Observability contract: `docs/OBSERVABILITY_AND_INFERENCE_PLAN.md`
-Shelly power feedback: `docs/SHELLY_POWER_FEEDBACK.md`
+Primary roadmap: `docs/PROJECT_ROADMAP.md`
 
 ## Read first in a new chat
 
 1. `AGENTS.md`
-2. `docs/STAGE28D_AH_ARBITER_HANDOFF.md`
-3. `docs/PROJECT_ROADMAP.md`
-4. `docs/CURRENT_STATUS.md`
-5. this file
-6. `docs/OBSERVABILITY_AND_INFERENCE_PLAN.md` when changing ventilation, inference, telemetry or ML behavior
-7. `docs/SHELLY_POWER_FEEDBACK.md` when changing physical-state supervision
+2. `docs/GUIDANCE.md`
+3. `docs/STAGE28E_PHASE_A_HANDOFF.md`
+4. `docs/PROJECT_ROADMAP.md`
+5. `docs/CURRENT_STATUS.md`
+6. this file
+7. `docs/STAGE28D_AH_ARBITER_HANDOFF.md` when historical V5 details are needed
+8. `docs/OBSERVABILITY_AND_INFERENCE_PLAN.md` when changing ventilation, inference, telemetry or ML behavior
+9. `docs/SHELLY_POWER_FEEDBACK.md` when changing physical-state supervision
 
-Then fetch fresh `mvp/environment-controller` HEAD, `agent-control:.agent/status/daemon.json`, and the newest terminal Local Agent result. Never continue from remembered chat state alone.
+Then fetch fresh `mvp/environment-controller` HEAD, fresh `agent-control:.agent/status/daemon.json`, and the newest Local Agent result. Never continue from remembered chat state alone.
 
 ## Current transition
 
-**Stage27C FROZEN -> Stage28A/B/C DONE -> Gates 1-6 COMPLETE -> Gate 7 previously qualified -> AH policy software COMPLETE -> Gate 7 runtime path REOPENED by V5 evidence -> diagnose before more hardware**
+**Stage27C FROZEN -> Stage28A/B/C DONE -> Gates 1-6 COMPLETE -> Gate 7 previously qualified -> AH policy software COMPLETE -> Gate 7 runtime path REOPENED by V5 -> Stage28E Phase A observability COMPLETE pending exact-SHA docs-only exit gate -> Phase B next**
 
-The older statement that the next work is to implement moisture-aware ventilation is stale. The absolute-humidity policy is already present at the current product lineage.
+The immediate development program is Stage28E A -> H. Stage28D AH functional work stays paused until A-G pass; the final physical `AH/rule request -> binary arbiter -> RF -> physical fan` path belongs to Stage28E Phase H.
 
-At the 2026-09-06 handoff, the product HEAD before docs-only handoff commits was:
+## Phase A identity and evidence
 
-`dfc6dc86a47ad2158e36bb0d5241b0153dbce387`
+Phase A started from:
 
-with parent:
+`2218ad30401222537cb568541d80bc07adc2c0eb`
 
-`3e2e195898c45734f459ac9a8f69dad9891ab4eb`
+Phase A implementation and bounded hardware diagnostic firmware:
 
-Always fetch the fresh work HEAD because documentation commits may now be above that executable identity.
+`3058625be2f35c121afcf82549d5c73068839ecd`
 
-## Latest hardware evidence
+The complete Phase A evidence is in:
 
-Task:
+`docs/STAGE28E_PHASE_A_HANDOFF.md`
+
+Key bounded hardware findings:
+
+- boot/session identity works;
+- reset reason was expected power-on reset;
+- internal RAM free/min/largest: `221648 / 221028 / 180224 B`;
+- PSRAM free/min/largest: `8363512 / 8363108 / 8257536 B`;
+- lowest known percentage stack margin was `stage27_store` at about 40.6%;
+- no known task was below the 25% warning threshold;
+- worst active loop was `194320 us` with a `1000000 us` budget;
+- loop overruns were `0`;
+- firmware size changed from `726061 B` baseline to `730821 B`, net `+4760 B`.
+
+The previously suspected approximately 1 KiB internal-memory crisis was not reproduced by the bounded representative run.
+
+Two extra read-only confirmation tasks failed only because their UART parser did not capture a complete `status` line in the selected window. `hardware-confirm-v2` command 1 still proved exact work SHA `3058625...`, clean tree and correct `/dev/cu.usbserial-1130`. Do not queue a third identical confirmation unless new evidence requires it.
+
+## V5 issue remains the functional problem to explain
+
+The decisive prior Stage28D task remains:
 
 `20260906-growbox-ah-arbiter-clean-v5`
 
-Read:
-
-`.agent/results/20260906-growbox-ah-arbiter-clean-v5.json`
-
-V5 observed a non-safety AH-driven exhaust request at or above the fan ON threshold after the expected minimum-OFF window while the fan remained OFF.
-
-Representative state:
-
-- `requested_fan=0.111`;
-- `fan=0`;
-- `applied_fan=0.0`;
-- `safety=0`;
-- `force=0`;
-- `safety_reason=0`;
-- `arbiter_transitions=0`;
-- `tx_errors=0`;
-- inside AH about `15.10 g/m3`;
-- intake AH about `11.69 g/m3`;
-- AH gap about `3.41 g/m3`;
-- Shelly about `61.7 W`.
-
-Terminal failure:
-
-`AHV2_PRIMARY_ERROR type=RuntimeError detail=sustained req_fan>=0.10 after min-OFF expiry but fan did not transition ON`
-
-This is now the highest-priority control-path issue.
-
-## Important diagnostic clue
-
-V5 telemetry showed cumulative `arbiter_dwell_holds` values:
+V5 showed a non-safety fan request above the ON threshold with the fan remaining OFF after the expected dwell window. The strongest clue is cumulative `arbiter_dwell_holds` decreasing:
 
 `33 -> 43 -> 1 -> 11`
 
-The decrease from 43 to 1 strongly suggests a runtime/arbiter reset or reinitialization and must be investigated before blaming `applyBinary()` directly.
+This must not be treated as an ordinary expected arbiter path. Stage28E must determine whether it came from board reset, runtime/object reconstruction, state corruption, timing discontinuity, reconciliation/safe-off logic or another lifecycle/system fault.
 
-Check:
+Do not jump directly to changing `applyBinary()`.
 
-- board/runtime reset evidence;
-- arbiter reconstruction/reinitialization;
-- repeated `synchronizeSafeOff()` or `forceSafeOff()` paths;
-- monotonic-time discontinuities;
-- applied-state reconciliation;
-- whether the controller continues calling the exhaust output path after producing the request.
+## Serial and hardware invariants
 
-## Latest confirmed recovery state
-
-V5 cleanup passed:
-
-`AHV2_RECOVERY_PASS sha=dfc6dc86a47ad2158e36bb0d5241b0153dbce387 outputs=fake-locked lamp=on fan=off humidifier=off shelly_master=on power_w=61.700 port=/dev/cu.usbserial-1130`
-
-Last confirmed hardware state:
-
-- outputs fake-locked;
-- lamp ON;
-- fan OFF;
-- humidifier OFF;
-- Shelly master ON.
-
-## Serial-port invariant
-
-Growbox port:
+Growbox/CrowPanel serial:
 
 `/dev/cu.usbserial-1130`
 
-Never touch `/dev/cu.usbserial-10`; it belongs to another project.
+Never touch:
 
-## Completed evidence not to repeat by default
+`/dev/cu.usbserial-10`
 
-- physical RF role identities and ON/OFF routing;
-- physical fan efficacy;
-- deterministic 28 C thermal trip and 10-minute recovery qualification;
-- ventilation identification experiment;
-- long 30-minute soak.
+That port belongs to another project.
 
-The physical fan previously produced approximately:
+For Local Agent tasks:
 
-- AH slope `-0.312 g/m3/min` while ON;
-- CO2 slope `-3.09 ppm/min`;
-- AH-gradient reduction about `3.27 -> 0.96 g/m3`.
+- every task must contain exactly `"agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5"`;
+- use `resources: []` for software/docs/build work;
+- use `resources: ["board:growbox-s3"]` for serial/flashing/device work;
+- check fresh daemon state before editing the same branch or queueing hardware access.
 
-Therefore the current problem is not whether the fan itself works.
+Safety boundary remains:
+
+- rule controller authoritative;
+- ML shadow/research-only;
+- thermal trip `>=28 C`;
+- recovery `<=26 C` continuously for 10 minutes;
+- manual RF blocked during `real-bounded`;
+- Shelly master ON;
+- no unattended real-output operation;
+- restore/prove fake-locked after bounded diagnostics.
 
 ## Immediate next work
 
-1. Fetch fresh work HEAD and daemon status.
-2. Confirm no active task before editing/queueing.
-3. Read V5 terminal result completely.
-4. Diagnose the `dwell_holds 43 -> 1` reset/reinitialization clue from source and telemetry.
-5. Trace all paths that can reset/reconcile binary actuator state or dwell timing.
-6. Add a focused regression reproducing the V5 sequence.
-7. Make the smallest evidence-backed product fix.
-8. Run focused tests.
-9. Run exactly one final full software quality gate once the fix is stable.
-10. Only after software PASS run a short bounded exact-SHA hardware confirmation of:
+### 1. Finish Phase A exit
 
-   `AH request -> dwell expiry -> arbiter transition -> RF -> physical fan ON`
+Run one docs-only Local Agent gate on the exact current Phase A closing SHA. It should verify:
 
-11. Use Shelly as independent electrical evidence.
-12. End with verified fake-lock recovery and normal RTC/storage restoration.
+- exact local and remote branch SHA;
+- clean work tree;
+- `git diff --check`;
+- presence of `docs/STAGE28E_PHASE_A_HANDOFF.md`;
+- Phase A handoff contains the implementation SHA `3058625be2f35c121afcf82549d5c73068839ecd`;
+- Phase A handoff contains the bounded hardware memory/timing evidence;
+- `docs/CURRENT_STATUS.md` points to Stage28E Phase B as next;
+- this continuation plan points to `docs/STAGE28E_PHASE_A_HANDOFF.md`;
+- no firmware/device action is performed.
 
-## Locked safety/policy boundary
+If that gate passes, record that exact SHA as the Phase A exit SHA.
 
-- native ESP-IDF only;
-- deterministic rule policy authoritative;
-- ML shadow/research-only;
-- thermal trip `>=28 C`;
-- recovery threshold `<=26 C` held continuously for 10 minutes;
-- thermal safety may force exhaust immediately;
-- no heater/cooler/dehumidifier/CO2 doser;
-- real outputs only in explicit bounded tests;
-- Shelly master remains ON;
-- manual RF TX remains blocked while automatic outputs are real-bounded;
-- no unattended real-output operation yet.
+### 2. Start Phase B
 
-## Local Agent / Chat Bridge essentials
+Phase B starts from the Phase A exit SHA.
 
-Every Growbox task must contain exactly:
+First action is read-only Local Agent inspection of:
 
-`"agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5"`
+- installed ESP-IDF coredump configuration symbols and supported format/checksum options;
+- exact 8 MiB flash size;
+- exact current partition-table offsets/sizes;
+- available safe space for a coredump partition;
+- current build configuration relevant to reset/coredump reporting.
 
-Use `resources: []` for software/docs/build and `resources: ["board:growbox-s3"]` for USB/serial/flashing/hardware.
+Known partition layout to verify before editing:
 
-Task IDs and payloads are immutable. A retry uses a new ID.
+```csv
+nvs,       data, nvs,     0x9000,  0x6000
+phy_init,  data, phy,     0xf000,  0x1000
+factory,   app, factory,  0x10000, 0x400000
+telemetry, data, fat,     0x410000,0x200000
+```
 
-Recommended fresh-chat instruction:
+After the read-only contract is proven, implement Phase B in small slices:
 
-`Continue Growbox from docs/STAGE28D_AH_ARBITER_HANDOFF.md and docs/CONTINUATION_PLAN.md. Fetch fresh work HEAD and Local Agent daemon/result evidence first. V5 reopened the Gate 7 runtime path: diagnose the arbiter_dwell_holds 43 -> 1 discontinuity and state/reset paths before any more hardware testing.`
+1. flash coredump support;
+2. low-wear crash/reset breadcrumbs;
+3. arbiter/runtime owner lifecycle and instance IDs;
+4. selected state-integrity sentinels;
+5. targeted heavy-diagnostic heap-integrity checks;
+6. subsystem heartbeat/age diagnostics.
+
+Do not run a long soak in Phase B. Do not run the final real AH actuator transition before Phase H.
+
+## Recommended fresh-chat instruction
+
+`Read AGENTS.md, docs/GUIDANCE.md, docs/STAGE28E_PHASE_A_HANDOFF.md, docs/CURRENT_STATUS.md and docs/CONTINUATION_PLAN.md. Fetch fresh mvp/environment-controller HEAD and Local Agent daemon/result evidence first. Treat Stage28E Phase A as complete only if its docs-only exact-SHA gate passed. Then continue sequentially with Phase B crash/reset/corruption/lifecycle diagnostics; do not return to Stage28D functional AH testing until A-G pass.`
