@@ -1,0 +1,9 @@
+{
+  "id": "20260906-growbox-stage28e-phase-b-coredump-audit-v1",
+  "status": "failed",
+  "failure_reason": "invalid_task_file",
+  "started_at": null,
+  "finished_at": "2026-09-06T15:02:08.466397+00:00",
+  "daemon_version": "4.18.4",
+  "error": "JSONDecodeError: Invalid \\escape: line 14 column 251 (char 1162)"
+}
