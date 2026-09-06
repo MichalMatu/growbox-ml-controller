@@ -79,7 +79,7 @@ flowchart TB
 
 ## Firmware stack
 
-- ESP-IDF 5.5.1 baseline in CI
+- ESP-IDF 5.5.4 baseline in CI
 - ESP32-S3, C++17
 - CMake / CTest portable host tests
 - emlearn-compatible generated C inference
@@ -178,10 +178,24 @@ pnpm --dir web build
 The convergence branch validates the product layers independently:
 
 1. Python / host C++ / generated-artifact / clang-tidy checks.
-2. ESP-IDF 5.5.1 ESP32-S3 firmware build and clang-check.
+2. ESP-IDF 5.5.4 ESP32-S3 firmware build and clang-check.
 3. Browser typecheck, lint, tests and production build.
 
 The separate gates are intentional: a frontend experiment must not silently redefine the firmware contract, and firmware changes must not silently break the browser tooling.
+
+## ChatGPT Sandbox-first development
+
+Repository-only work can run in ChatGPT Sandbox without depending on the local Mac or a connected board. GitHub `main` remains the source of truth and the persistent Library namespace for this repository is **`/GrowboxML/Sandbox/`**. It is intentionally separate from PhotoMaps and every other repository.
+
+The workflow stores an immutable `growbox-source-<git-sha>.tar.zst` for each relevant revision and uses three independently keyed offline packs:
+
+- `growbox-host-<key>` — CPython 3.11, pinned Python/ML dependencies, portable C++ tooling and clang tools
+- `growbox-web-<key>` — pnpm 11.10.0 plus the offline frontend dependency store
+- `growbox-idf-<key>` — ESP-IDF 5.5.4, the ESP32-S3 toolchain and `esp-clang`
+
+A frontend task needs only the web pack, a Python/portable-C++ task only the host pack, and firmware compilation uses host + IDF. `tools/sandbox/sandbox-doctor.sh` verifies the reconstructed environment and `tools/sandbox/run-sandbox-check.sh` exposes `host`, `web`, `idf` and full `quality` profiles. Physical USB, flashing, serial and board E2E remain Local Agent responsibilities.
+
+See [docs/SANDBOX_EXECUTION_FLOW.md](docs/SANDBOX_EXECUTION_FLOW.md) for the exact Library layout, dependency keys, bootstrap commands, verification profiles and publication lifecycle.
 
 ## Serial demo protocol
 
