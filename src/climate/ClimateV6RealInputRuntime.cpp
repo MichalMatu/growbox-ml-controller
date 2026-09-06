@@ -16,6 +16,7 @@
 #include "climate/runtime/Stage27TelemetryReporter.h"
 #include "climate/runtime/Stage28RfDiagnostics.h"
 #include "climate/runtime/Stage28ServiceConsole.h"
+#include "climate/runtime/Stage28ePlatformDiagnostics.h"
 #include "climate/storage/Stage27TelemetryLogger.h"
 
 #include <esp_err.h>
@@ -237,7 +238,6 @@ runtime::Stage27PhysicalOutputSnapshot physicalOutputSnapshot(
   const bool storage_enabled = storage_config.sd_enabled || storage_config.flash_fallback_enabled;
   const bool storage_logger_ready =
       storage_enabled && storage_logger.begin(GROWBOX_FIRMWARE_GIT_SHA);
-
   runtime::Stage28RfDiagnostics rf_diagnostics(rfDiagnosticsConfig());
   const bool rf_ready = rf_diagnostics.begin();
   DiagnosticsRfTransmitter rf_transmitter(rf_diagnostics);
@@ -290,7 +290,9 @@ runtime::Stage27PhysicalOutputSnapshot physicalOutputSnapshot(
   stage28d::ThermalTestPhase last_test_phase = stage28d::ThermalTestPhase::Complete;
   bool thermal_test_finished_safe = false;
 
-  const esp_reset_reason_t reset_reason = esp_reset_reason();
+  const auto& boot_identity = runtime::bootIdentity(GROWBOX_FIRMWARE_GIT_SHA);
+  const esp_reset_reason_t reset_reason =
+      static_cast<esp_reset_reason_t>(boot_identity.reset_reason);
   runtime::Stage27TelemetryReporter telemetry_reporter(ble, scd41, clock, storage_logger,
                                                        storage_logger_ready,
                                                        static_cast<std::int32_t>(reset_reason));
@@ -306,8 +308,11 @@ runtime::Stage27PhysicalOutputSnapshot physicalOutputSnapshot(
            GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED != 0, real_output_ready,
            GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED != 0,
            real_output_ready ? "real-bounded" : "fake-locked");
-  ESP_LOGI(kTag, "Stage27 soak boot: firmware_sha=%s reset_reason=%d", GROWBOX_FIRMWARE_GIT_SHA,
-           static_cast<int>(reset_reason));
+  ESP_LOGI(kTag,
+           "Stage27 soak boot: firmware_sha=%s boot_id=%08lx reset_reason=%d started_us=%llu",
+           boot_identity.firmware_sha, static_cast<unsigned long>(boot_identity.boot_id),
+           static_cast<int>(reset_reason),
+           static_cast<unsigned long long>(boot_identity.started_monotonic_us));
 
   std::uint32_t diagnostic_tick = 0U;
   while (true) {
