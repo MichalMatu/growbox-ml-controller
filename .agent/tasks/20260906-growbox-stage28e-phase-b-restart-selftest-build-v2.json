@@ -1,0 +1,17 @@
+{
+  "id": "20260906-growbox-stage28e-phase-b-restart-selftest-build-v2",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 4096,
+  "command_timeout": 1800,
+  "idle_timeout": 180,
+  "task_timeout": 2400,
+  "commands": [
+    "set -euo pipefail; EXPECTED=b43516a2adcd320b3da2b4ee9051e442cceb5c93; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; git diff --check; grep -Fq 'GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST=${GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST}' src/CMakeLists.txt; grep -Fq 'GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST=$BREADCRUMB_RESTART_SELFTEST' scripts/stage27c_crowpanel.sh; echo STAGE28E_B_RESTART_SELFTEST_V2_EXACT_SHA_PASS",
+    "set -euo pipefail; export CMAKE_BUILD_PARALLEL_LEVEL=1; BUILD=build/idf-stage28e-b-restart-selftest-default-v2; rm -rf \"$BUILD\"; STAGE27C_BUILD_DIR=\"$BUILD\" GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST=0 GROWBOX_FIRMWARE_GIT_SHA=b43516a2adcd320b3da2b4ee9051e442cceb5c93 bash scripts/stage27c_crowpanel.sh build; if strings \"$BUILD/growbox_ml_controller.elf\" | grep -Fq 'stage28e_breadcrumb_restart_selftest action=esp_restart'; then echo 'self-test marker unexpectedly present in default build' >&2; exit 1; fi; . /Users/michal/esp/esp-idf/export.sh >/dev/null 2>&1; idf.py -B \"$BUILD\" size; echo STAGE28E_B_RESTART_SELFTEST_DEFAULT_BUILD_PASS",
+    "set -euo pipefail; export CMAKE_BUILD_PARALLEL_LEVEL=1; BUILD=build/idf-stage28e-b-restart-selftest-enabled-v2; rm -rf \"$BUILD\"; STAGE27C_BUILD_DIR=\"$BUILD\" GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST=1 GROWBOX_FIRMWARE_GIT_SHA=b43516a2adcd320b3da2b4ee9051e442cceb5c93 bash scripts/stage27c_crowpanel.sh build; strings \"$BUILD/growbox_ml_controller.elf\" | grep -Fq 'stage28e_breadcrumb_restart_selftest action=esp_restart'; grep -Fq 'GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST:STRING=1' \"$BUILD/CMakeCache.txt\"; echo STAGE28E_B_RESTART_SELFTEST_ENABLED_BUILD_PASS"
+  ]
+}
