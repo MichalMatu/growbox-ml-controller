@@ -1,0 +1,15 @@
+{
+  "id": "20260906-growbox-stage28e-phase-b-coredump-contract-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 2048,
+  "command_timeout": 600,
+  "idle_timeout": 120,
+  "task_timeout": 900,
+  "commands": [
+    "set -eu; EXPECTED=384e415eaaec960add2b3b3fe94db5c052ca6497; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; . /Users/michal/esp/esp-idf/export.sh >/dev/null 2>&1; printf '%s\\n' '--- Kconfig coredump contract ---'; sed -n '1,190p' /Users/michal/esp/esp-idf/components/espcoredump/Kconfig; printf '%s\\n' '--- public API ---'; sed -n '1,220p' /Users/michal/esp/esp-idf/components/espcoredump/include/esp_core_dump.h; printf '%s\\n' '--- sizing/help references ---'; grep -R -n -E 'partition.*size|size.*partition|64K|ELF.*size|core dump.*size|coredump.*partition' /Users/michal/esp/esp-idf/components/espcoredump /Users/michal/esp/esp-idf/docs/en 2>/dev/null | head -n 260; printf '%s\\n' 'STAGE28E_PHASE_B_COREDUMP_CONTRACT_PASS'"
+  ]
+}
