@@ -1,0 +1,18 @@
+{
+  "id": "20260907-growbox-stage28e-phase-h-stack-frame-measure-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 4096,
+  "command_timeout": 1200,
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "commands": [
+    "set -euo pipefail; EXPECTED=846b470fa08ae98f3e3cc42b40db72840446adf5; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; echo STAGE28E_H_FRAME_EXACT_SHA_PASS=$EXPECTED",
+    "set -euo pipefail; . /Users/michal/esp/esp-idf/export.sh >/dev/null; for B in build/stage28e-h-real-v2 build/stage28e-h-final-fake-v2; do ELF=$B/growbox_ml_controller.elf; echo ===$B===; test -f $ELF; xtensa-esp32s3-elf-nm -C -S $ELF | grep -F 'runClimateV6RealInputRuntime()' || true; xtensa-esp32s3-elf-objdump -d -C $ELF | grep -A 24 -F '<growbox::app::climate_io::runClimateV6RealInputRuntime()>:' || true; done; echo STAGE28E_H_FRAME_DISASSEMBLY_PASS",
+    "set -euo pipefail; . /Users/michal/esp/esp-idf/export.sh >/dev/null; ELF=build/stage28e-h-real-v2/growbox_ml_controller.elf; xtensa-esp32s3-elf-nm -C -S --size-sort $ELF | grep -E 'runClimateV6RealInputRuntime|Rf433RmtLoopback::begin|Stage28RfDiagnostics::begin|rmt_new_tx_channel|rmt_new_rx_channel' || true; echo STAGE28E_H_FRAME_SYMBOLS_PASS",
+    "set -euo pipefail; test -z \"$(git status --porcelain)\"; git diff --check; echo STAGE28E_H_FRAME_CLEAN_TREE_PASS"
+  ]
+}
