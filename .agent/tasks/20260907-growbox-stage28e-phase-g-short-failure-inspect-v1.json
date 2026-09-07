@@ -1,0 +1,17 @@
+{
+  "id": "20260907-growbox-stage28e-phase-g-short-failure-inspect-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 4096,
+  "command_timeout": 1200,
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "commands": [
+    "set -euo pipefail; EXPECTED=389453882f0e0d2209c5bdece7eaf443895aa7ba; git fetch -q origin mvp/environment-controller agent-control; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; echo STAGE28E_G_FAILURE_INSPECT_EXACT_SHA_PASS=$EXPECTED",
+    "set -euo pipefail; git show origin/agent-control:.agent/results/20260907-growbox-stage28e-phase-g-short-runtime-v1.json > /tmp/stage28e-g-short-result.json; python3 - <<'PY'\nimport json\np='/tmp/stage28e-g-short-result.json'\nd=json.load(open(p))\nassert d['id']=='20260907-growbox-stage28e-phase-g-short-runtime-v1'\nassert d['status']=='failed'\nc=d['commands'][2]\nprint('COMMAND3_EXIT',c['exit_code'])\nout=c.get('output','')\nlines=out.splitlines()\nprint('OUTPUT_LINES',len(lines),'OUTPUT_CHARS',len(out))\nprint('--- OUTPUT TAIL ---')\nfor line in lines[-120:]: print(line)\nprint('--- FAILURE MARKERS ---')\nmarkers=['telemetry queue PSRAM path missing','expected exactly one arbiter construction','unexpected arbiter lifecycle identity','need >=5 status samples','boot identity changed/invalid','reset reason changed','uptime did not increase monotonically','internal free below short-run threshold','internal minimum below short-run threshold','largest internal block below threshold','PSRAM headroom regressed','insufficient task/timing samples','main stack margin failure','storage stack margin failure','loop timing budget failure','unsafe soak output mode','telemetry storage error','unexpected storage fallback','sensor/BLE runtime unhealthy','need >=14 telemetry samples','insufficient telemetry writes','insufficient heartbeats','insufficient heap integrity checks','unexpected fault','runtime lifecycle unexpectedly re-entered','Shelly master is not ON']\nfound=[m for m in markers if m in out]\nprint('FOUND',found)\nif not found:\n    print('LAST_NONEMPTY',next((x for x in reversed(lines) if x.strip()),''))\nprint('STAGE28E_G_SHORT_FAILURE_INSPECT_PASS')\nPY",
+    "set -euo pipefail; test -z \"$(git status --porcelain)\"; git diff --check; echo STAGE28E_G_SHORT_FAILURE_INSPECT_GATE_PASS"
+  ]
+}
