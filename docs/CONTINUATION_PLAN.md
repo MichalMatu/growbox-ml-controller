@@ -179,3 +179,8 @@ Keep each extraction narrow, add focused host tests, then run a full software ga
 ## Recommended fresh-chat instruction
 
 `Continue Growbox Stage28E Phase H only in MichalMatu/growbox-ml-controller. First read AGENTS.md, docs/STAGE28E_PHASE_H_HANDOFF.md, docs/CURRENT_STATUS.md, docs/CONTINUATION_PLAN.md and docs/GUIDANCE.md, then fresh-check mvp/environment-controller HEAD and agent-control:.agent/status/daemon.json. A-G are formally complete; H is not. Qualified production runtime/tooling source identity is 5a4830db9d10e8cb73d4c617b09122f0844ad899. H v5 failed only its obsolete open-tent baseline criterion; recovery/final fake-locked passed. The tent was closed at 2026-09-07T12:16:42Z and must remain closed. Use scripts/stage28e_phase_h_closed_tent.py for the next bounded qualification; no user open/close action, no request injection, no actuator forcing. First require the software-only RC preflight to be green. Then one bounded hardware task must observe stable safety-clear physical fan OFF, natural requested_fan>=0.10, normal arbiter OFF->ON, RF TX increment with zero errors, unconfounded Shelly support and environmental response, followed unconditionally by recovery and final RF-disabled fake-locked. Do not start the runtime/service-console modularity refactor until H formally passes.`
+
+
+## H v6 qualification-tooling finding
+
+H v6 was a false negative caused by the observer using a raw-line `startswith` check for `stage28d_output` while ESP-IDF prefixes all production output-state lines. Correct the observer only, regression-test raw and prefixed forms, and leave production C/C++ unchanged before rerunning formal H.

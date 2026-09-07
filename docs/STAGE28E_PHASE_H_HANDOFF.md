@@ -92,6 +92,40 @@ Recovery after v5 succeeded:
 
 The board was left safe.
 
+## H v6 result and parser root cause
+
+Task:
+
+`.agent/tasks/20260907-stage28e-h-v6-closed-autonomous.json`
+
+Formal outcome: **primary FAIL, recovery/final PASS**.
+
+The primary observer again reported:
+
+`stable safety-clear physical fan-OFF closed-tent baseline not observed`
+
+The raw retained Mac log disproves that physical interpretation. A read-only audit found:
+
+- `24` clean safety-clear physical fan-OFF windows;
+- representative OFF windows lasted about `114-145 s`;
+- maximum clean OFF duration observed: `145.03 s`;
+- runtime ended the real-bounded observation at `arbiter_transitions=46`, `tx=50`, `tx_errors=0`;
+- recovery/final completed successfully and final RF-disabled `fake-locked` was proved.
+
+The actual root cause was an observer parser bug. Production emits output-state telemetry through ESP-IDF logging, for example:
+
+`I (...) climate_stage27: stage28d_output ...`
+
+The v6 observer required `line.startswith("stage28d_output ")`. Audit of the exact v6 log found:
+
+- lines containing `stage28d_output `: `576`;
+- lines starting with `stage28d_output `: `0`;
+- ESP-IDF-prefixed `climate_stage27: stage28d_output ` lines: `576`.
+
+Therefore the observer ignored 100% of arbiter/output-state samples and could never acquire its OFF baseline even though the production controller repeatedly produced valid OFF and ON states. This is a qualification-tooling false negative, not evidence of a controller, arbiter, RF or physical-output failure.
+
+The RC observer is corrected to recognize the `stage28d_output ` marker anywhere in the serial line while preserving the same KV parsing and acceptance criteria. The preflight must regression-test both raw and ESP-IDF-prefixed forms before the next hardware H run.
+
 ## Closed-tent observer — release candidate
 
 Repository path:

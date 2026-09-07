@@ -32,6 +32,7 @@ KV_RE = re.compile(r"([A-Za-z0-9_]+)=([^ ]+)")
 SHELLY_URL = "http://192.168.0.16/rpc/Switch.GetStatus?id=0"
 GROWBOX_PORT = "/dev/cu.usbserial-1130"
 SHELLY_PROOF_SAMPLES = 8
+STAGE28D_OUTPUT_MARKER = "stage28d_output "
 
 
 @dataclass
@@ -72,6 +73,12 @@ def open_serial(port: str) -> serial.Serial:
 def send(handle: serial.Serial, command: str) -> None:
     handle.write((command + "\n").encode())
     handle.flush()
+
+
+def is_stage28d_output_line(line: str) -> bool:
+    # ESP-IDF serial logs prefix ESP_LOG output with timestamp/tag metadata.
+    # Accept both raw service-console-style payloads and prefixed log lines.
+    return STAGE28D_OUTPUT_MARKER in line
 
 
 def absolute_humidity_g_m3(temp_c: float, rh_pct: float) -> float:
@@ -224,7 +231,7 @@ def observe(args: argparse.Namespace) -> int:
                         )
                         return 42
 
-                if line.startswith("stage28d_output ") and runtime_baseline is not None:
+                if is_stage28d_output_line(line) and runtime_baseline is not None:
                     values = dict(KV_RE.findall(line))
                     state = output_state(values)
                     if state is None:

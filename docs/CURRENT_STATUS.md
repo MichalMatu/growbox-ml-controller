@@ -83,6 +83,19 @@ H v5 recovery passed:
 
 The board was left safe.
 
+## H v6 parser false negative
+
+H v6 completed with primary FAIL but recovery/final PASS. The board returned to RF-disabled `fake-locked`.
+
+A retained-log audit established that the failure was in the observer parser, not in the deterministic controller path:
+
+- `576/576` `stage28d_output` lines were ESP-IDF-prefixed;
+- `0` began with the raw marker expected by the observer;
+- the production runtime nevertheless produced `24` clean OFF windows lasting up to about `145 s`;
+- the run reached `arbiter_transitions=46`, `tx=50`, `tx_errors=0`.
+
+The observer now accepts `stage28d_output ` as an in-line marker so both raw and prefixed ESP-IDF serial forms are parsed. Production C/C++ remains unchanged. Formal H is still open until a corrected observer run proves the complete natural OFF->ON path and mandatory recovery/final.
+
 ## Closed-tent H release-candidate harness
 
 The repository now contains:
