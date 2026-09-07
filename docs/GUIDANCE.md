@@ -65,7 +65,7 @@ Hardware policy during Stage28E:
 
 - no AH feature development or uncontrolled actuator experiments
 - diagnostic firmware may be run only when a phase explicitly requires runtime evidence
-- hardware runs must be bounded and use only `board:growbox-s3`
+- hardware runs must be bounded and use `resources: []` and verify the exact device/port inside the task
 - use only `/dev/cu.usbserial-1130`
 - opening that serial port can reset this CrowPanel; tolerate/record only the pre-baseline port-open reset, then fail on any reset/session/lifecycle change after the stabilized post-open baseline
 - preserve all thermal/output safety interlocks

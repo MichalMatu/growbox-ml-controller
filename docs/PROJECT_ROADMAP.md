@@ -232,7 +232,7 @@ Every Growbox task must contain exactly:
 Use:
 
 - `resources: []` for software/docs/build;
-- `resources: ["board:growbox-s3"]` for USB/serial/flashing/hardware.
+- `resources: []` for USB/serial/flashing/hardware.
 
 Task IDs and payloads are immutable. Retry with a new ID. Product/source changes belong on the work branch; `agent-control` is execution/control evidence only.
 

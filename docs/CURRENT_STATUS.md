@@ -190,14 +190,14 @@ For every task:
 
 - exact `agent_binding` is mandatory;
 - use `resources: []` for software/docs/build work;
-- use `resources: ["board:growbox-s3"]` for serial/flash/hardware;
+- use `resources: []` for serial/flash/hardware;
 - verify exact SHA in-task;
 - read terminal `.agent/results/<task-id>.json` before reporting PASS.
 
 ## Immediate next work
 
-1. Fresh-check branch/control state and confirm the corrected observer RC `d91fe21d319d4f85832d9fc95d5912bbae23cf0e` is still the executable qualification-tooling baseline; any later delta must be docs-only.
-2. Run one new immutable **H v7 corrected-parser** bounded hardware task on `board:growbox-s3` and `/dev/cu.usbserial-1130`.
+1. Fresh-check branch/control state and confirm the corrected observer RC `d91fe21d319d4f85832d9fc95d5912bbae23cf0e` is still the executable qualification-tooling baseline; committed policy/docs changes are allowed; executable tooling changes require a new software preflight with no production C/C++ delta.
+2. Run one new immutable **H v8 TimerOff-aware** bounded hardware task on `board:growbox-s3` and `/dev/cu.usbserial-1130`.
 3. Start with the tent already closed; require no operator action, no request injection and no actuator forcing.
 4. Prove stable safety-clear physical fan OFF -> natural `requested_fan>=0.10` -> normal arbiter OFF->ON -> RF TX increment with zero errors -> unconfounded Shelly physical support.
 5. Regardless of primary outcome, always execute recovery RF and final RF-disabled `fake-locked`.

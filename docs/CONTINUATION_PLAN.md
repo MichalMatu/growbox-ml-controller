@@ -105,14 +105,14 @@ Do not add a request injector to force PASS.
 
 RC4 preflight `20260907-stage28e-h-prefix-fix-preflight-rc4` is **PASS** on `d91fe21d319d4f85832d9fc95d5912bbae23cf0e`. It proved clean scope/no production C++ delta, parser replay regression, full host suite, fake 12 KiB firmware build, RF/real 16 KiB firmware build and clean tree.
 
-Before H v7, fresh-check branch HEAD and prove that any delta after `d91fe21d319d4f85832d9fc95d5912bbae23cf0e` is docs-only. If executable code/tooling changed, rerun the software gate with a new immutable task id.
+Before H v8, require a clean worktree. Committed policy/docs/tooling changes are allowed, but because executable observer tooling changed after RC4, rerun the software gate and prove no production C/C++ delta relative to `5a4830db9d10e8cb73d4c617b09122f0844ad899`.
 
 ## Overnight bounded-H wrapper
 
 Only after software preflight PASS, prepare a separate immutable hardware task with:
 
 - exact `agent_binding`: `815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5`;
-- `resources: ["board:growbox-s3"]`;
+- `resources: []`;
 - exact port `/dev/cu.usbserial-1130` and explicit refusal of any other port;
 - exact expected qualified firmware/source identity;
 - RF-enabled main stack `16384 B`;

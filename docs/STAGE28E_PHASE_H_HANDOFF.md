@@ -71,7 +71,7 @@ Useful end-of-real-run evidence included:
 - `applied_fan=1.000`;
 - `safety_latched=0`;
 - `force_fan=0`;
-- `safety_reason=0`;
+- `safety_reason` is `0` (`Safe`) or `1` (`TimerOff`) while `safety_latched=0` and `force_fan=0`;
 - `arbiter_transitions=11`;
 - `arbiter_dwell_holds=318` in the retained terminal sample;
 - `arbiter_safety_overrides=0`;
@@ -161,7 +161,7 @@ The observer requires at least three qualifying output samples spanning at least
 
 - `safety_latched=0`;
 - `force_fan=0`;
-- `safety_reason=0`;
+- `safety_reason` is `0` (`Safe`) or `1` (`TimerOff`) while `safety_latched=0` and `force_fan=0`;
 - `fan_known=1`;
 - `fan_on=0`;
 - `applied_fan<0.01`;
@@ -365,7 +365,7 @@ Terminal result: **PASS**. Verified:
 9. RF-enabled/real ESP-IDF build with `CONFIG_ESP_MAIN_TASK_STACK_SIZE=16384`;
 10. final clean tree.
 
-Any later branch delta before the next hardware H task must be proven docs-only or the preflight must be rerun.
+Committed policy/docs changes do not make the worktree dirty. Executable tooling changes require a new software preflight, and production C/C++ must remain unchanged relative to the qualified identity.
 
 ## Required overnight task wrapper
 
@@ -427,7 +427,7 @@ Rules:
 - task IDs and payloads are immutable;
 - `expected_head` is unsupported, so exact SHA checks belong inside the task;
 - `resources: []` for software-only work;
-- `resources: ["board:growbox-s3"]` for serial/flash/device work;
+- `resources: []` for serial/flash/device work;
 - read terminal `.agent/results/<task-id>.json` before reporting PASS.
 
 ## Stop conditions

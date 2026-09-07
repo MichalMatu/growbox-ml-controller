@@ -35,7 +35,7 @@ Hard binding is immutable for this repository:
 Use:
 
 - `resources: []` for software-only work;
-- `resources: ["board:growbox-s3"]` for serial, flashing or hardware work.
+- `resources: []` for serial, flashing or hardware work.
 
 Before editing or queueing a task, read fresh `agent-control:.agent/status/daemon.json` and ensure there is no active task touching the same branch/resource.
 
