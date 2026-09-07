@@ -9,225 +9,352 @@ Local Agent binding: `815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5`
 ## Exact identities
 
 - Formal Phase G exit gate: `7ddb995d1f6cd190fa110f21f0d8dc0eabc61d26`
-- Formal Phase G docs close: `1eb2772f65ddfa82ba185e5658b2c41899f118d4`
-- Phase G runtime/source SHA: `389453882f0e0d2209c5bdece7eaf443895aa7ba`
-- Current Phase H runtime/tooling source SHA: `5a4830db9d10e8cb73d4c617b09122f0844ad899`
+- Phase H qualified production runtime/tooling source identity: `5a4830db9d10e8cb73d4c617b09122f0844ad899`
+- Pre-closed-tent-preparation branch HEAD: `9042559b2d052b2e1942c0a61220bd9b7e74c97f`
 - Correct Growbox serial port: `/dev/cu.usbserial-1130`
 - Never touch: `/dev/cu.usbserial-10`
 
-Any later documentation-only commit must not be confused with the firmware identity above. Before hardware work, compare the fresh work-branch HEAD with `5a4830db9d10e8cb73d4c617b09122f0844ad899`; if only the documentation files from this handoff changed, the qualified runtime source remains `5a4830db9d10e8cb73d4c617b09122f0844ad899`.
+Later scripts/docs-only commits are qualification tooling revisions, not automatically a new firmware qualification. Before the next hardware run, the software preflight must prove that no production C/C++ source changed relative to the known pre-preparation branch state.
 
 ## Current Stage28E state
 
 A through G are formally complete. H is the only remaining Stage28E phase.
 
-H must prove one bounded physical path:
+H must prove one bounded normal physical path:
 
 `natural AH/rule request -> binary arbiter OFF->ON -> RF TX -> physical fan`
 
-and then restore/prove `fake-locked`.
+and then unconditionally restore/prove RF-disabled `fake-locked`.
 
-H is **not complete yet**. Do not convert safety-forced ventilation into AH evidence.
+H is **not complete yet**.
 
-## Phase H work completed so far
+## Current physical experiment boundary
 
-### Request-interface inspection
+The grow tent was manually closed by the operator at:
 
-No production AH/fan request injector or override exists. Do not add one solely to manufacture a Phase H PASS. The thermal test sequence is also not an AH-path substitute.
+- local: `2026-09-07T14:16:42+02:00`;
+- UTC: `2026-09-07T12:16:42Z`.
 
-The physical harness is:
+The marker is persisted on the control branch as:
 
-`scripts/stage28e_phase_h_e2e.py`
+`.agent/task-assets/20260907-stage28e-h-manual-close-marker.json`
 
-It accepts the exact firmware SHA through `--sha`; it does not hard-code the old H SHA and it never creates an actuator request.
+The tent now stays closed. No subsequent qualification may require the operator to open or close it.
 
-### Physical v1
-
-`.agent/tasks/20260907-growbox-stage28e-phase-h-physical-e2e-v1.json`
-
-Invalid task JSON. The daemon rejected it before execution. It touched no hardware.
-
-### Physical v2
-
-This run exposed a real RF-enabled main-task stack overflow.
-
-Root-cause evidence:
-
-- `runClimateV6RealInputRuntime()` has the same compiler frame in RF and fake builds: `0x7f0 = 2032 B`;
-- `RuntimeIoOwner`, including RF diagnostics, is static/process-lifetime storage;
-- the Stage27C 12 KiB main stack had been qualified only with fake-locked outputs;
-- entering the ESP-IDF RMT initialization path consumed additional call-depth headroom and overflowed the 12 KiB main stack.
-
-Fix:
-
-- `config/idf/sdkconfig.defaults.stage28rf` restores `CONFIG_ESP_MAIN_TASK_STACK_SIZE=16384` for RF-enabled builds;
-- `scripts/stage27c_crowpanel.sh` appends this overlay only when `GROWBOX_RF433_LOOPBACK_ENABLED=1`;
-- fake/non-RF Stage27C builds remain at 12 KiB.
-
-Dual-build verification passed on exact SHA `5a4830db9d10e8cb73d4c617b09122f0844ad899`:
-
-- fake / RF disabled: `12288 B`;
-- RF enabled: `16384 B`.
-
-Do not undo this distinction without new measured evidence.
-
-### Physical v3
+## Latest H attempt: v5
 
 Task:
 
-`.agent/tasks/20260907-growbox-stage28e-phase-h-physical-e2e-v3.json`
+`.agent/tasks/20260907-stage28e-h-v5-fast-close.json`
 
 Result:
 
-`.agent/results/20260907-growbox-stage28e-phase-h-physical-e2e-v3.json`
+`.agent/results/20260907-stage28e-h-v5-fast-close.json`
 
-Primary H gate failed only because the required AH-driven OFF->ON prestate was not observed.
+Formal outcome: **primary FAIL, recovery/final PASS**.
 
-Important positive evidence from the real-bounded runtime:
+The primary observer failed with:
 
-- no stack overflow;
-- stable boot/session `8b596499` through the bounded real run;
+`clean safety-clear fan-OFF open-tent baseline not observed`
+
+This failure is an obsolete test-harness assumption for the current experiment state, not evidence of a production controller/RF failure.
+
+Useful end-of-real-run evidence included:
+
+- firmware/source identity `5a4830db9d10e8cb73d4c617b09122f0844ad899`;
 - `outputs=real-bounded`;
 - `rf_ready=1`;
-- internal free/min/largest approximately `218592 / 218060 / 176128 B`;
-- PSRAM free approximately `8358772 B`;
-- main stack configured `16384 B`;
-- worst observed main free HWM approximately `2600 B`;
-- loop max approximately `845193 us`, zero loop overruns;
-- natural `requested_fan` approximately `0.444-0.500`;
-- after startup recovery: `safety_latched=0`, `force_fan=0`, `safety_reason=0`;
-- physical fan was ON and `applied_fan=1.000`;
-- `arbiter_transitions=1`;
-- `arbiter_safety_overrides=1`;
-- `tx=5`, `tx_errors=0`.
+- `fan_known=1`, `fan_on=1`;
+- `requested_fan≈0.278`;
+- `applied_fan=1.000`;
+- `safety_latched=0`;
+- `force_fan=0`;
+- `safety_reason=0`;
+- `arbiter_transitions=11`;
+- `arbiter_dwell_holds=318` in the retained terminal sample;
+- `arbiter_safety_overrides=0`;
+- `tx=15`;
+- `tx_errors=0`;
+- TP357 about `23.20 C / 65.00% RH`;
+- Xiaomi/intake about `23.22 C / 57.76% RH`;
+- SCD41 CO2 about `823 ppm`.
 
-Why this is not H PASS:
+This is positive controller/RF/physical-state evidence, but it is not a formal H PASS because the observer did not establish the required valid closed-tent normal OFF baseline and then bind the next natural OFF->ON transition to that baseline.
 
-startup lamp safety saw temperature unavailable before the first usable TP357 sample. That latched safety and forced the exhaust fan ON. By the time safety recovered, the natural AH request was already high, so there was no clean normal-mode `fan OFF + request >= 0.10` prestate. The harness correctly failed with:
+Recovery after v5 succeeded:
 
-`natural requested_fan>=0.10 not observed in bounded window`
-
-The run therefore proves the fixed RF runtime is stable and that automatic RF can drive the fan, but it does **not** yet prove the required AH/rule OFF->ON transition independently of startup safety.
-
-Recovery after v3 passed:
-
-- manual fake-locked RF recovery PASS;
-- fan OFF;
-- humidifier OFF;
-- lamp ON;
+- manual RF recovery RC `0`;
+- final verifier RC `0`;
+- final `outputs=fake-locked`;
+- final `rf_ready=0`;
 - Shelly master ON;
-- final RF-disabled `fake-locked` PASS;
-- final Shelly power about `26.9 W`;
-- `manual=0 final=0`.
+- final Shelly power about `27.3 W`.
 
 The board was left safe.
 
-## Exact natural fan-request logic
+## Closed-tent observer — release candidate
 
-Authoritative rule source:
+Repository path:
+
+`scripts/stage28e_phase_h_closed_tent.py`
+
+This is the observer for the next bounded H qualification.
+
+### What it does
+
+It is read/observe-only with respect to the controller/actuators:
+
+- never injects a controller request;
+- never writes actuator commands;
+- never asks the operator to open/close the tent;
+- sends only service-console `status` and `sensors` read requests;
+- independently polls the Shelly switch status/power endpoint.
+
+It first requires a stabilized runtime identity:
+
+- exact `--sha` match;
+- `outputs=real-bounded`;
+- `rf_ready=1`;
+- uptime at least 5 seconds.
+
+After that baseline, any ESP-ROM restart marker, runtime lifecycle re-entry or boot-id change is a stop condition.
+
+### Closed-tent normal OFF baseline
+
+The observer requires at least three qualifying output samples spanning at least 10 seconds with:
+
+- `safety_latched=0`;
+- `force_fan=0`;
+- `safety_reason=0`;
+- `fan_known=1`;
+- `fan_on=0`;
+- `applied_fan<0.01`;
+- `tx_errors=0`.
+
+`requested_fan` is deliberately **not** constrained during this baseline. The binary arbiter can legally keep the fan OFF while a request above the ON threshold is waiting for minimum-OFF dwell. Requiring `requested_fan<0.10` caused the earlier false-negative setup problem.
+
+### Natural request and transition
+
+From the physical fan-OFF state the observer requires:
+
+- natural `requested_fan>=0.10`;
+- then `fan_known=1`, `fan_on=1`, `applied_fan>=0.99`;
+- safety still clear and no force override;
+- arbiter transition count greater than at request capture;
+- RF TX count greater than at request capture;
+- `tx_errors=0`.
+
+No safety-forced fan transition counts as H evidence.
+
+### Independent Shelly support
+
+Because Shelly measures combined controlled-load power rather than fan-only power, the observer rejects a proof if lamp or humidifier state changes between the captured fan request and fan transition. That prevents a simultaneous ~97 W lamp or ~15.7 W humidifier transition from being mistaken for the ~3 W fan load.
+
+With lamp/humidifier stable, the observer requires:
+
+- Shelly master remains ON;
+- pre-transition power evidence exists;
+- post-transition power evidence exists;
+- median total-power delta is at least `+1.0 W`.
+
+This is supporting physical evidence. RF TX completion remains transport evidence, not direct load acknowledgement.
+
+### Environmental evidence
+
+The observer consumes `soak_v=2` samples and records:
+
+- TP357 inside T/RH;
+- Xiaomi intake T/RH;
+- SCD41 T/RH/CO2;
+- derived TP357 absolute humidity;
+- pre/post temperature slope;
+- pre/post absolute-humidity slope;
+- pre/post CO2 slope.
+
+Default post-transition observation window: `600 s`.
+
+Default overall observation timeout: `7200 s`.
+
+The formal PASS does not require a particular sign for every environmental slope; those values are retained for effect characterization. The formal path proof is controller request -> arbiter -> RF -> independently supported physical fan transition.
+
+### Temperature guard
+
+Default observer guard:
+
+`TP357 >=27.5 C -> abort observer with RC 42`
+
+The production thermal safety trip remains `>=28 C`. The observer intentionally stops below that threshold because H is a normal-controller proof, not a thermal-safety test.
+
+## Natural controller logic relevant to H
+
+Authoritative controller source:
 
 `lib/environment_control/src/climate/ClimateRuntimeController.cpp`
 
-Current schedule source:
+Schedule source:
 
 `src/climate/runtime/Stage27ScheduleProfile.cpp`
 
-Day profile, local hour `06:00 <= hour < 22:00`:
+Day profile (`06:00 <= local hour < 22:00`):
 
-- target temperature `24.5 C`;
-- target RH `58%`;
-- RH control mode;
-- exhaust fan available;
-- humidifier available.
+- target T `24.5 C`;
+- target RH `58%`.
 
 Night profile:
 
-- target temperature `21.5 C`;
+- target T `21.5 C`;
 - target RH `65%`.
 
-### Humidity ventilation path
+Binary fan arbiter:
 
-RH is considered too humid when:
+- ON request threshold `0.10`;
+- OFF request threshold `0.03`;
+- minimum ON dwell `120000 ms`;
+- minimum OFF dwell `120000 ms`.
 
-`inside_RH > target_RH + 2%`
+For humidity ventilation, inside RH must exceed target RH + 2 percentage points and intake air must be materially drier in absolute-humidity terms. The useful drying gap begins above about `0.5 g/m3`.
 
-Humidity level is approximately:
+For temperature ventilation when inside is hot and intake is cooler, a practical trigger is approximately an inside-to-intake temperature gap above `2 C`.
 
-`(inside_RH - target_RH - 2) / 18`, clipped to `0..1`.
+Do not manipulate conditions to intentionally hit thermal safety. Natural tent dynamics are sufficient; the bounded observer can wait for a valid cycle.
 
-Ventilation for drying also requires outside/intake temperature and RH to be usable and intake air to be materially drier in absolute-humidity terms.
+## RF main-stack policy
 
-The absolute-humidity drying gap must exceed `0.5 g/m3`; drying benefit scales over `3.0 g/m3`.
+The RF-enabled production path previously exposed a real main-task stack overflow at 12 KiB. The qualified policy is:
 
-For the fan request to reach the binary-arbiter ON threshold `0.10` through this path, the useful practical daytime condition is approximately:
+- RF disabled/fake build: `CONFIG_ESP_MAIN_TASK_STACK_SIZE=12288`;
+- RF enabled build: `CONFIG_ESP_MAIN_TASK_STACK_SIZE=16384`.
 
-- TP357 inside RH at least `61.8%`, and
-- inside absolute humidity at least about `0.8 g/m3` above the Xiaomi/intake absolute humidity.
+Do not shrink the RF-enabled stack before or during H.
 
-For a clean daytime OFF baseline, keep TP357 RH at or below about `60%` and avoid a separate temperature-ventilation request.
+## Architecture audit before handoff
 
-### Temperature ventilation path
+The production runtime was inspected specifically for responsibility separation before the overnight qualification.
 
-The rule evaluates a 20% outside-air mix. Ventilation is requested only when that mix improves the temperature error score by more than `0.08`.
+### `runClimateV6RealInputRuntime()`
 
-When the inside is hotter than target and Xiaomi/intake is cooler, this is approximately equivalent to needing:
+File:
 
-`inside_temperature - intake_temperature > 2 C`
+`src/climate/ClimateV6RealInputRuntime.cpp`
 
-before the temperature ventilation path activates. A difference just above 2 C already gives a request slightly above the arbiter ON threshold.
+Current file size is about `23 KB`.
 
-This is useful for the physical test because the lamp can warm the closed tent while the Xiaomi stays outside. Do **not** approach the 28 C thermal trip. A practical target is roughly `26-27 C` inside with intake around `23-24 C`, while continuously confirming `safety_latched=0`.
+The runtime function currently coordinates too many concerns:
 
-### Binary fan arbiter
+- I2C hardware startup/probes;
+- SCD41, DS3231 and BLE initialization;
+- telemetry storage initialization;
+- RF diagnostics initialization;
+- real-output binding validation and fail-closed safe-state arming;
+- service-console construction;
+- input/schedule/application wiring;
+- binary arbiter/output-driver wiring;
+- lamp safety and thermal-test integration;
+- scheduler/control cycle;
+- output/fail-safe handling;
+- telemetry/platform diagnostics.
 
-Current thresholds:
+This is a genuine god-function risk.
 
-- ON request threshold: `0.10`;
-- OFF request threshold: `0.03`;
-- minimum ON dwell: `120000 ms`;
-- minimum OFF dwell: `120000 ms`.
+### `Stage28ServiceConsole`
 
-Safety overrides bypass normal dwell and must not be counted as the Phase H AH transition.
+Files:
 
-## Startup lamp-safety behavior
+- `src/climate/runtime/Stage28ServiceConsole.cpp` — about `32 KB`;
+- `src/climate/runtime/Stage28ServiceConsole.h`.
 
-Source:
+The implementation combines:
 
-`src/climate/Stage28dLampSafety.{h,cpp}`
+- UART driver ownership/initialization;
+- RX buffering, line editing and echo;
+- command parser/dispatcher;
+- help/prompt rendering;
+- runtime/heap/task-stack/timing diagnostics;
+- sensor reporting;
+- RF listing/transmit/receive commands;
+- RTC write command;
+- SD logger status/list/read/selftest;
+- Base64/CRC/read-file helpers.
 
-Safety limits:
+This is a genuine broad-responsibility service object.
 
-- trip: TP357 `>=28 C`;
-- recovery threshold: TP357 `<=26 C`;
-- recovery hold: 10 continuous minutes.
+### Decision before H
 
-If TP357 is unavailable/stale during an early cycle, safety latches `TemperatureUnavailable`, turns the scheduled lamp OFF, and forces exhaust ON. Once latched, it will clear only after TP357 remains `<=26 C` continuously for 10 minutes.
+**Do not refactor either production area before formal H.**
 
-This startup behavior is expected and must be distinguished from an unexplained post-baseline reset or safety fault.
+Reason: H should qualify the already-measured production runtime, not a freshly reorganized binary. Structural cleanup immediately before the overnight physical proof would trade known behavioral/stack evidence for unnecessary uncertainty.
 
-## Recommended physical preparation for the next H run
+The current RC therefore changes only qualification tooling/documentation and deliberately leaves production C/C++ untouched.
 
-Do **not** start by sealing the tent and intentionally driving TP357 above 28 C. That would prove only thermal safety and repeat the v3 evidence problem.
+### Post-H extraction order
 
-Preferred sequence:
+After formal H PASS:
 
-1. Keep Xiaomi/intake sensor outside the tent.
-2. Put TP357 in the controlled inside location, but initially keep the tent ventilated/open enough that:
-   - TP357 stays `<=26 C`;
-   - daytime TP357 RH is preferably `<=60%`;
-   - no normal fan request remains above the OFF threshold.
-3. Start the exact real-bounded firmware and serial harness.
-4. Establish the mandatory post-serial-open boot/session baseline.
-5. If startup safety latched because TP357 was initially unavailable, keep TP357 `<=26 C` continuously until the 10-minute recovery completes.
-6. Require evidence that safety is clear: `safety_latched=0 force_fan=0 safety_reason=0`.
-7. Require the physical/arbiter fan to reach OFF in normal mode. Because the startup safety fan has already been ON much longer than the 120 s minimum-ON dwell by this point, a low natural request should permit the normal OFF transition.
-8. Once fan OFF is observed, close the tent / enable the intended lamp warming while keeping TP357 safely below 28 C. It is fine for the natural request to rise immediately; the 120 s minimum-OFF dwell should then produce visible dwell evidence.
-9. Prefer a clean temperature trigger around `26-27 C` while Xiaomi/intake remains roughly `23-24 C`, or a humidity trigger above approximately `62% RH` with drier Xiaomi intake air.
-10. Require `requested_fan>=0.10`, then the normal arbiter OFF->ON transition, RF TX increment with `tx_errors=0`, and independent physical/Shelly support.
-11. Fail on any post-baseline reset/session change, RF error, heap integrity failure, critical stack margin, unsafe thermal state, or failed recovery.
-12. Always run manual safe recovery and final RF-disabled `fake-locked` verification.
+1. `runClimateV6RealInputRuntime()`:
+   - bootstrap;
+   - scheduler/cycle;
+   - output/fail-safe;
+   - telemetry/diagnostics coordination.
+2. `Stage28ServiceConsole`:
+   - UART transport + framing;
+   - parser/dispatcher;
+   - status diagnostics;
+   - sensor commands;
+   - RF commands;
+   - RTC commands;
+   - storage commands.
 
-If RH remains around the v3 value of `68-69%` during the entire 10-minute startup-safety recovery, the natural request will already be high when safety clears and the fan is likely to remain ON. That is not a useful H setup.
+Each extraction should be behavior-preserving, one coherent responsibility at a time, with focused host tests. Do not mix extraction with actuator semantics, AH thresholds, allocator changes or stack shrinking.
+
+## Software-only preflight required before overnight hardware
+
+Before queueing the next real-output task, Local Agent must verify the exact current work-branch HEAD with `resources: []` and `allow_write=false`.
+
+Required checks:
+
+1. fresh remote HEAD equals the expected RC SHA;
+2. local tree clean;
+3. `git show --check` / `git diff --check` clean;
+4. diff from pre-preparation HEAD `9042559b2d052b2e1942c0a61220bd9b7e74c97f` contains only intended `scripts/`/`docs/` files;
+5. no `.c/.cc/.cpp/.h/.hpp` production source changed;
+6. `python3 -m py_compile scripts/stage28e_phase_h_closed_tent.py`;
+7. `python3 scripts/stage28e_phase_h_closed_tent.py --help`;
+8. established focused/native host tests pass;
+9. established ESP-IDF firmware build passes without flashing;
+10. final local tree clean.
+
+Do not call the RC ready for the overnight run before this task has a terminal PASS result.
+
+## Required overnight task wrapper
+
+The next hardware task must be a new immutable task id and contain exactly:
+
+`"agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5"`
+
+Hardware resource:
+
+`"resources": ["board:growbox-s3"]`
+
+Port:
+
+`/dev/cu.usbserial-1130`
+
+The wrapper should:
+
+1. verify exact expected work-branch RC HEAD and qualified production source identity policy;
+2. verify/reuse or rebuild the RF-enabled real image with 16 KiB main stack;
+3. verify recovery RF image and RF-disabled final fake image;
+4. flash real-bounded;
+5. run `scripts/stage28e_phase_h_closed_tent.py` with a bounded timeout and `--closure-utc 2026-09-07T12:16:42Z`;
+6. capture primary RC without allowing it to skip recovery;
+7. flash recovery RF image and run `scripts/stage28e_phase_h_e2e.py recovery`;
+8. flash final RF-disabled fake image and run `scripts/stage28e_phase_h_e2e.py final`;
+9. fail hard if either recovery or final verification fails;
+10. only report formal H PASS if the primary closed-tent observer passed and recovery/final also passed.
+
+A reasonable observer window is `--timeout 7200 --post-seconds 600`. A longer overnight observation may be used only if it remains bounded and the temperature/safety stop conditions stay active.
+
+This is authorization for a bounded qualification only, not continuous unattended real-output production operation.
 
 ## Serial-open reset rule
 
@@ -239,84 +366,35 @@ Mandatory order:
 
 `open serial -> tolerate/record port-open reset -> wait for boot stabilization -> request fresh status -> establish post-open baseline -> begin bounded observation`
 
-Any reset/session/lifecycle change after that baseline is a stop condition.
+Any reset/session/lifecycle change after the stabilized baseline is a stop condition.
 
-## Local Agent / Sandbox-style workflow for this repository
+## Local Agent identity and workflow
 
-`AGENTS.md` is the repository-local contract.
+- repository: `MichalMatu/growbox-ml-controller`;
+- repository id: `growbox-ml-controller`;
+- control branch: `agent-control`;
+- work branch: `mvp/environment-controller`;
+- agent binding: `815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5`.
 
-Key points:
+Rules:
 
-- Local Agent is a deterministic executor, not the planner/coding model.
-- Hard binding is fail-closed. Never borrow another repository binding.
-- `agent-control` is control-plane only; product/docs changes belong on `mvp/environment-controller`.
-- Task IDs/payloads are immutable; interrupted tasks are not automatically replayed.
-- `expected_head` is not implemented; exact SHA must be checked explicitly in an early command/stage.
-- use `resources: []` for repository-local software/docs/build work;
-- use `resources: ["board:growbox-s3"]` for USB/serial/flash/device work;
-- read `.agent/status/daemon.json` before writes/device work;
-- follow `.agent/runs/...` while running and read `.agent/results/...` before reporting PASS;
-- direct GitHub edits are appropriate for bounded exact diffs; Local Agent is preferred for Mac commands, local builds/tests, and hardware;
-- hybrid flow is valid: direct GitHub commit, then Local Agent read-only verification of the exact committed SHA;
-- avoid repository-wide source grep through generated/build directories; use narrow source paths such as `src/` and `lib/environment_control/src/`.
-
-`AGENTS.md` points to the canonical Local Agent documents in `MichalMatu/local-agent/main/docs/AUTONOMOUS_CHAT_LOOP.md` and `docs/OPERATIONS.md`. This chat is hard-bound to `MichalMatu/growbox-ml-controller`, so it must not inspect another repository. If canonical Local Agent source itself must be inspected, use a separate explicitly rebound conversation rather than violating this repository binding.
-
-No repository-local document describing a separate `Sandbox Pack` workflow was found. For this Growbox task, treat the practical sandbox/hybrid mode as: planner/direct GitHub for exact bounded edits plus Local Agent for exact-SHA local execution and device evidence, under the rules above.
-
-## Modularity backlog — after formal H only
-
-Do not mix the following refactor with the pending physical H proof. Any production refactor now would change the exact runtime SHA and invalidate the clean comparison with v3.
-
-After H is formally closed, start a separate architecture-hardening continuation with behavior-preserving extractions.
-
-Priority 1: split `runClimateV6RealInputRuntime()`.
-
-Suggested seams:
-
-- `ClimateRuntimeBootstrap`: I2C, storage, BLE, RTC, RF initialization and fail-closed real-output arming;
-- `ClimateRuntimeScheduler`: timing/deadlines and loop cadence;
-- `ClimateRuntimeCycle`: input collection/merge, schedule, safety evaluation, application tick, output application, fail-safe handling;
-- `ClimateRuntimeTelemetry`: periodic runtime/output/status reporting.
-
-Keep existing process-lifetime `RuntimeIoOwner` and `RuntimeControlOwner` semantics unless measurements justify another ownership change.
-
-Priority 2: split `Stage28ServiceConsole`.
-
-Suggested seams:
-
-- UART transport/line framing;
-- parser/dispatcher;
-- `Stage28StatusReporter`;
-- sensor/status commands;
-- `Stage28RfConsoleCommands`;
-- `Stage28RtcConsoleCommands`;
-- `Stage28StorageConsoleCommands`.
-
-Each extraction should be one coherent commit with focused host tests, full software gate at the end of the series, then bounded fake-locked hardware evidence if runtime layout/stack changes materially.
-
-Do not combine modularization with new actuator semantics, AH threshold changes, allocator changes, or additional stack shrinking.
-
-## New-chat bootstrap
-
-Open the new chat on the same Growbox repository. Let Chat Bridge provide the new `LA_CHAT`; never copy/invent the old chat id as the new conversation identity.
-
-Require the bridge envelope to identify:
-
-- repository id `growbox-ml-controller`;
-- repository `MichalMatu/growbox-ml-controller`;
-- agent binding `815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5`.
-
-Start the new chat with:
-
-> Continue Stage28E Phase H only. First read `AGENTS.md`, `docs/STAGE28E_PHASE_H_HANDOFF.md`, `docs/CURRENT_STATUS.md`, `docs/CONTINUATION_PLAN.md`, `docs/GUIDANCE.md`, `docs/ESP32_S3_SERIAL_PORT_RESET.md`, and `docs/STAGE28D_AH_ARBITER_HANDOFF.md`. Fresh-check `mvp/environment-controller` HEAD and `agent-control:.agent/status/daemon.json` before changing or queueing anything. A-G are formally complete. Current qualified Phase H runtime/tooling source SHA is `5a4830db9d10e8cb73d4c617b09122f0844ad899`; later docs-only commits must be distinguished from this firmware identity. H v3 fixed the RF stack overflow but did not pass the required AH OFF->ON gate because startup safety forced the fan ON before the natural request. Do not use `>=28 C` thermal safety as H evidence. Prepare a low-request, `<=26 C` startup-recovery state, obtain normal `fan OFF + safety clear`, then use natural temperature/humidity change to cross `requested_fan>=0.10`, observe the 120 s minimum-OFF dwell, normal arbiter OFF->ON, RF TX with zero errors, physical/Shelly evidence, and final fake-locked restoration. Do not add a request injector. Do not start the modularity refactor until H is formally complete.
+- hard repository binding is fail-closed;
+- never inspect/queue/execute another repository from this conversation;
+- direct GitHub edits are suitable for bounded exact code/docs changes;
+- Local Agent is used for Mac commands, builds/tests and devices;
+- task IDs and payloads are immutable;
+- `expected_head` is unsupported, so exact SHA checks belong inside the task;
+- `resources: []` for software-only work;
+- `resources: ["board:growbox-s3"]` for serial/flash/device work;
+- read terminal `.agent/results/<task-id>.json` before reporting PASS.
 
 ## Stop conditions
 
 Stop H and preserve evidence on:
 
-- unexplained reset/session/lifecycle change after post-open baseline;
-- same-instance cumulative counter regression without legitimate wrap;
+- TP357 reaches observer guard (`>=27.5 C` by default);
+- unexplained reset/session/lifecycle change after baseline;
+- cumulative counter regression without legitimate wrap;
 - coredump/Guru Meditation;
 - heap integrity failure;
 - critical stack margin;
@@ -324,4 +402,13 @@ Stop H and preserve evidence on:
 - safety behavior change;
 - RF TX error;
 - Shelly master OFF;
+- lamp/humidifier state changes that confound the fan-only Shelly proof;
 - inability to restore safe outputs/final `fake-locked`.
+
+## Fresh-chat bootstrap
+
+Open the next conversation with the same Growbox repository binding. Let Chat Bridge provide a new `LA_CHAT`; do not copy an old chat id.
+
+Use this instruction:
+
+> Continue Growbox Stage28E Phase H only in `MichalMatu/growbox-ml-controller`. First read `AGENTS.md`, `docs/STAGE28E_PHASE_H_HANDOFF.md`, `docs/CURRENT_STATUS.md`, `docs/CONTINUATION_PLAN.md`, `docs/GUIDANCE.md`, and `docs/ESP32_S3_SERIAL_PORT_RESET.md`. Fresh-check `mvp/environment-controller` HEAD and `agent-control:.agent/status/daemon.json` before doing anything. A-G are formally complete; H is not. Qualified production runtime/tooling source identity is `5a4830db9d10e8cb73d4c617b09122f0844ad899`. H v5 failed its obsolete open-tent baseline criterion but recovery/final fake-locked passed. The tent was closed at `2026-09-07T12:16:42Z` and must remain closed; no user action is needed. The repository-tracked observer is `scripts/stage28e_phase_h_closed_tent.py`. First require the software-only RC preflight result to be PASS. Then run one bounded hardware H task: stable safety-clear physical fan OFF, natural `requested_fan>=0.10`, normal arbiter OFF->ON, RF TX increment with zero errors, unconfounded Shelly physical support and environmental response, followed unconditionally by recovery and final RF-disabled `fake-locked`. Never touch `/dev/cu.usbserial-10`. Do not add request/output forcing. Do not start the production runtime/service-console modularity refactor until H formally passes.
