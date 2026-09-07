@@ -96,6 +96,8 @@ A retained-log audit established that the failure was in the observer parser, no
 
 The observer now accepts `stage28d_output ` as an in-line marker so both raw and prefixed ESP-IDF serial forms are parsed. Production C/C++ remains unchanged. Formal H is still open until a corrected observer run proves the complete natural OFF->ON path and mandatory recovery/final.
 
+Corrected observer RC4: `d91fe21d319d4f85832d9fc95d5912bbae23cf0e`. Software-only preflight `20260907-stage28e-h-prefix-fix-preflight-rc4` is PASS, including replay acceptance of all 576 retained v6 output-state lines, host suite, fake 12 KiB build, RF/real 16 KiB build and clean tree.
+
 ## Closed-tent H release-candidate harness
 
 The repository now contains:
@@ -194,9 +196,10 @@ For every task:
 
 ## Immediate next work
 
-1. Complete the software-only RC preflight for the closed-tent observer and current docs/scripts HEAD.
-2. Require clean tree, Python compile/help, focused host tests and an ESP-IDF build without flashing.
-3. Prove the delta from the previously qualified baseline contains only `scripts/`/`docs/` preparation files and no production C/C++ runtime change.
-4. Only after the preflight is green, prepare one immutable bounded overnight H task.
-5. The overnight task starts with the tent already closed, never waits for operator action, uses only the normal controller path, and always runs recovery/final fake-locked even if primary observation fails.
-6. Only after formal H PASS should the production modularity backlog begin.
+1. Fresh-check branch/control state and confirm the corrected observer RC `d91fe21d319d4f85832d9fc95d5912bbae23cf0e` is still the executable qualification-tooling baseline; any later delta must be docs-only.
+2. Run one new immutable **H v7 corrected-parser** bounded hardware task on `board:growbox-s3` and `/dev/cu.usbserial-1130`.
+3. Start with the tent already closed; require no operator action, no request injection and no actuator forcing.
+4. Prove stable safety-clear physical fan OFF -> natural `requested_fan>=0.10` -> normal arbiter OFF->ON -> RF TX increment with zero errors -> unconfounded Shelly physical support.
+5. Regardless of primary outcome, always execute recovery RF and final RF-disabled `fake-locked`.
+6. If H v7 passes, formally close Stage28E H before starting the requested longer overnight soak / subsequent roadmap work.
+7. Keep the production runtime/service-console modularity refactor deferred until H is formally closed.

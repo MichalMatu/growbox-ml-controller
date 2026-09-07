@@ -11,6 +11,8 @@ Local Agent binding: `815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5`
 - Formal Phase G exit gate: `7ddb995d1f6cd190fa110f21f0d8dc0eabc61d26`
 - Phase H qualified production runtime/tooling source identity: `5a4830db9d10e8cb73d4c617b09122f0844ad899`
 - Pre-closed-tent-preparation branch HEAD: `9042559b2d052b2e1942c0a61220bd9b7e74c97f`
+- Corrected closed-tent observer RC4 commit: `d91fe21d319d4f85832d9fc95d5912bbae23cf0e`
+- RC4 software-only preflight: `.agent/results/20260907-stage28e-h-prefix-fix-preflight-rc4.json` — PASS
 - Correct Growbox serial port: `/dev/cu.usbserial-1130`
 - Never touch: `/dev/cu.usbserial-10`
 
@@ -41,7 +43,7 @@ The marker is persisted on the control branch as:
 
 The tent now stays closed. No subsequent qualification may require the operator to open or close it.
 
-## Latest H attempt: v5
+## Prior H attempt: v5
 
 Task:
 
@@ -124,7 +126,7 @@ The v6 observer required `line.startswith("stage28d_output ")`. Audit of the exa
 
 Therefore the observer ignored 100% of arbiter/output-state samples and could never acquire its OFF baseline even though the production controller repeatedly produced valid OFF and ON states. This is a qualification-tooling false negative, not evidence of a controller, arbiter, RF or physical-output failure.
 
-The RC observer is corrected to recognize the `stage28d_output ` marker anywhere in the serial line while preserving the same KV parsing and acceptance criteria. The preflight must regression-test both raw and ESP-IDF-prefixed forms before the next hardware H run.
+The RC observer is corrected to recognize the `stage28d_output ` marker anywhere in the serial line while preserving the same KV parsing and acceptance criteria. RC4 at `d91fe21d319d4f85832d9fc95d5912bbae23cf0e` passed synthetic raw/prefixed regression and replay acceptance of all `576/576` retained v6 output-state lines. The full software-only preflight `20260907-stage28e-h-prefix-fix-preflight-rc4` also passed.
 
 ## Closed-tent observer — release candidate
 
@@ -340,24 +342,30 @@ After formal H PASS:
 
 Each extraction should be behavior-preserving, one coherent responsibility at a time, with focused host tests. Do not mix extraction with actuator semantics, AH thresholds, allocator changes or stack shrinking.
 
-## Software-only preflight required before overnight hardware
+## Software-only RC4 preflight — PASS
 
-Before queueing the next real-output task, Local Agent must verify the exact current work-branch HEAD with `resources: []` and `allow_write=false`.
+Task:
 
-Required checks:
+`.agent/results/20260907-stage28e-h-prefix-fix-preflight-rc4.json`
 
-1. fresh remote HEAD equals the expected RC SHA;
-2. local tree clean;
-3. `git show --check` / `git diff --check` clean;
-4. diff from pre-preparation HEAD `9042559b2d052b2e1942c0a61220bd9b7e74c97f` contains only intended `scripts/`/`docs/` files;
-5. no `.c/.cc/.cpp/.h/.hpp` production source changed;
-6. `python3 -m py_compile scripts/stage28e_phase_h_closed_tent.py`;
-7. `python3 scripts/stage28e_phase_h_closed_tent.py --help`;
-8. established focused/native host tests pass;
-9. established ESP-IDF firmware build passes without flashing;
-10. final local tree clean.
+Executable qualification-tooling RC commit:
 
-Do not call the RC ready for the overnight run before this task has a terminal PASS result.
+`d91fe21d319d4f85832d9fc95d5912bbae23cf0e`
+
+Terminal result: **PASS**. Verified:
+
+1. exact RC SHA and clean tree;
+2. diff from qualified firmware identity is restricted to the three handoff/status/continuation docs plus `scripts/stage28e_phase_h_closed_tent.py`;
+3. no production `.c/.cc/.cpp/.h/.hpp` source changed;
+4. Python compile/help;
+5. raw and ESP-IDF-prefixed parser regression;
+6. replay acceptance of all `576/576` v6 `stage28d_output` lines;
+7. complete host test suite;
+8. RF-disabled/fake ESP-IDF build with `CONFIG_ESP_MAIN_TASK_STACK_SIZE=12288`;
+9. RF-enabled/real ESP-IDF build with `CONFIG_ESP_MAIN_TASK_STACK_SIZE=16384`;
+10. final clean tree.
+
+Any later branch delta before the next hardware H task must be proven docs-only or the preflight must be rerun.
 
 ## Required overnight task wrapper
 
@@ -386,7 +394,7 @@ The wrapper should:
 9. fail hard if either recovery or final verification fails;
 10. only report formal H PASS if the primary closed-tent observer passed and recovery/final also passed.
 
-A reasonable observer window is `--timeout 7200 --post-seconds 600`. A longer overnight observation may be used only if it remains bounded and the temperature/safety stop conditions stay active.
+For the immediate corrected H v7 qualification, use a bounded observer window that fits the Local Agent command budget together with mandatory recovery/final handling; the proven v6 environment produced repeated natural OFF/ON cycles within minutes once output lines are parsed correctly. A later overnight soak is a separate bounded test and must retain the same temperature/safety stop conditions.
 
 This is authorization for a bounded qualification only, not continuous unattended real-output production operation.
 

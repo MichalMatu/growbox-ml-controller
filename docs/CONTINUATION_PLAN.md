@@ -36,30 +36,18 @@ The branch may contain later scripts/docs-only qualification preparation. Do not
 
 ## Latest H evidence
 
-H v5 task:
+Latest attempt: H v6
 
-`.agent/tasks/20260907-stage28e-h-v5-fast-close.json`
+- task: `.agent/tasks/20260907-stage28e-h-v6-closed-autonomous.json`;
+- result: `.agent/results/20260907-stage28e-h-v6-closed-autonomous.json`;
+- formal primary outcome: FAIL;
+- recovery/final: PASS, final RF-disabled `fake-locked`;
+- production runtime remained healthy and reached `arbiter_transitions=46`, `tx=50`, `tx_errors=0`;
+- retained log contained `24` clean safety-clear OFF windows up to about `145 s`.
 
-H v5 result:
+Root cause of the formal FAIL was qualification tooling: all `576/576` production `stage28d_output` lines were ESP-IDF-prefixed and the v6 observer incorrectly required a raw-line `startswith` match. Corrected observer RC4 commit: `d91fe21d319d4f85832d9fc95d5912bbae23cf0e`. Parser regression replay accepts all `576/576` retained lines. Full software-only preflight `20260907-stage28e-h-prefix-fix-preflight-rc4` is PASS. Production C/C++ is unchanged relative to qualified firmware identity `5a4830db9d10e8cb73d4c617b09122f0844ad899`.
 
-`.agent/results/20260907-stage28e-h-v5-fast-close.json`
-
-Formal outcome: **FAIL, safe recovery PASS**.
-
-Failure reason:
-
-`clean safety-clear fan-OFF open-tent baseline not observed`
-
-The failure is a harness-assumption problem for the current experiment state. The tent was manually closed at:
-
-- `2026-09-07T14:16:42+02:00`;
-- `2026-09-07T12:16:42Z`.
-
-The user explicitly requested that the tent remain closed and that all remaining tests be autonomous.
-
-End-of-real-run evidence remained healthy: normal controller request, physical fan ON, safety clear, `arbiter_transitions=11`, RF `tx=15`, `tx_errors=0`. Recovery then completed with `manual=0 final=0`, and final RF-disabled `fake-locked` with Shelly master ON.
-
-This evidence does not by itself close H because the retained observer did not prove the required normal closed-tent fan OFF -> natural request -> arbiter/RF -> fan ON chain under a valid baseline.
+H remains formally open only because the corrected observer has not yet been used for a successful physical H proof.
 
 ## Repository-tracked closed-tent observer
 
@@ -113,22 +101,11 @@ Required evidence:
 
 Do not add a request injector to force PASS.
 
-## Before the overnight H run
+## Software-only gate before corrected H v7
 
-Do **not** start hardware qualification until the software-only release-candidate preflight is green.
+RC4 preflight `20260907-stage28e-h-prefix-fix-preflight-rc4` is **PASS** on `d91fe21d319d4f85832d9fc95d5912bbae23cf0e`. It proved clean scope/no production C++ delta, parser replay regression, full host suite, fake 12 KiB firmware build, RF/real 16 KiB firmware build and clean tree.
 
-Preflight must verify the exact current branch HEAD and:
-
-1. clean working tree;
-2. changed-file set relative to the pre-preparation HEAD `9042559b2d052b2e1942c0a61220bd9b7e74c97f` is restricted to intended `scripts/`/`docs/` files;
-3. no production `.c/.cc/.cpp/.h/.hpp` source changed;
-4. `python3 -m py_compile scripts/stage28e_phase_h_closed_tent.py`;
-5. `python3 scripts/stage28e_phase_h_closed_tent.py --help`;
-6. focused/native host tests appropriate to the current controller/arbiter/safety/runtime code;
-7. ESP-IDF software build without flash using the repository's established build procedure;
-8. final clean working tree.
-
-If the preflight fails, fix the RC first and use a new immutable Local Agent task id for the retry.
+Before H v7, fresh-check branch HEAD and prove that any delta after `d91fe21d319d4f85832d9fc95d5912bbae23cf0e` is docs-only. If executable code/tooling changed, rerun the software gate with a new immutable task id.
 
 ## Overnight bounded-H wrapper
 
@@ -178,9 +155,4 @@ Keep each extraction narrow, add focused host tests, then run a full software ga
 
 ## Recommended fresh-chat instruction
 
-`Continue Growbox Stage28E Phase H only in MichalMatu/growbox-ml-controller. First read AGENTS.md, docs/STAGE28E_PHASE_H_HANDOFF.md, docs/CURRENT_STATUS.md, docs/CONTINUATION_PLAN.md and docs/GUIDANCE.md, then fresh-check mvp/environment-controller HEAD and agent-control:.agent/status/daemon.json. A-G are formally complete; H is not. Qualified production runtime/tooling source identity is 5a4830db9d10e8cb73d4c617b09122f0844ad899. H v5 failed only its obsolete open-tent baseline criterion; recovery/final fake-locked passed. The tent was closed at 2026-09-07T12:16:42Z and must remain closed. Use scripts/stage28e_phase_h_closed_tent.py for the next bounded qualification; no user open/close action, no request injection, no actuator forcing. First require the software-only RC preflight to be green. Then one bounded hardware task must observe stable safety-clear physical fan OFF, natural requested_fan>=0.10, normal arbiter OFF->ON, RF TX increment with zero errors, unconfounded Shelly support and environmental response, followed unconditionally by recovery and final RF-disabled fake-locked. Do not start the runtime/service-console modularity refactor until H formally passes.`
-
-
-## H v6 qualification-tooling finding
-
-H v6 was a false negative caused by the observer using a raw-line `startswith` check for `stage28d_output` while ESP-IDF prefixes all production output-state lines. Correct the observer only, regression-test raw and prefixed forms, and leave production C/C++ unchanged before rerunning formal H.
+`Continue Growbox Stage28E Phase H only in MichalMatu/growbox-ml-controller. First read AGENTS.md, docs/STAGE28E_PHASE_H_HANDOFF.md, docs/CURRENT_STATUS.md, docs/CONTINUATION_PLAN.md, docs/GUIDANCE.md and docs/ESP32_S3_SERIAL_PORT_RESET.md, then fresh-check mvp/environment-controller HEAD and agent-control:.agent/status/daemon.json. A-G are formally complete; H is not. Qualified production firmware/source identity remains 5a4830db9d10e8cb73d4c617b09122f0844ad899. H v6 primary was a tooling false negative: all 576 stage28d_output lines were ESP-IDF-prefixed while the observer required startswith; the real run nevertheless had 24 clean OFF windows, 46 arbiter transitions, 50 RF TX and zero TX errors, and recovery/final fake-locked passed. Corrected observer RC4 is d91fe21d319d4f85832d9fc95d5912bbae23cf0e; software-only preflight 20260907-stage28e-h-prefix-fix-preflight-rc4 is PASS, including 576/576 replay parser acceptance, host suite, fake 12 KiB build and RF/real 16 KiB build. The tent remains closed and no user action is needed. Next run one new immutable H v7 bounded hardware task on board:growbox-s3 and /dev/cu.usbserial-1130 using scripts/stage28e_phase_h_closed_tent.py, normal controller path only, no request injection/actuator forcing, and unconditional recovery plus final RF-disabled fake-locked. Never touch /dev/cu.usbserial-10. Do not start the production runtime/service-console modularity refactor until H formally passes.`
