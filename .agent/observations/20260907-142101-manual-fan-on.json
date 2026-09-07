@@ -1,0 +1,16 @@
+{
+  "event": "manual_physical_observation",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "task_id": "20260907-stage28e-h-v5-fast-close",
+  "observed_at_local": "2026-09-07T14:21:01+02:00",
+  "observed_at_utc": "2026-09-07T12:21:01Z",
+  "observation": "user reports physical fan is ON",
+  "context": {
+    "tent_closed_manual_at_local": "2026-09-07T14:16:42+02:00",
+    "fan_off_manual_at_local": "2026-09-07T14:17:57+02:00",
+    "tent_state": "closed",
+    "user_intervention_since_close": "none reported"
+  },
+  "interpretation": "Physical fan OFF->ON transition observed after manual tent closure; correlate later with controller/RF/Shelly/environment telemetry before assigning cause."
+}
