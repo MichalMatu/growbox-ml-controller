@@ -1,0 +1,16 @@
+{
+  "id": "20260907-stage28e-h-v6-log-audit",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 2048,
+  "command_timeout": 600,
+  "idle_timeout": 300,
+  "task_timeout": 1200,
+  "commands": [
+    "set -euo pipefail; test -f /tmp/stage28e_h_v6_closed.log; echo V6_LOG_BYTES=$(wc -c </tmp/stage28e_h_v6_closed.log); echo V6_FAILURE_LINES_BEGIN; grep -nE 'Traceback|AssertionError|not observed|did not complete|no stabilized|no Shelly|proof window|TEMPERATURE_GUARD|STAGE28E_H_CLOSED_' /tmp/stage28e_h_v6_closed.log | tail -80 || true; echo V6_FAILURE_LINES_END; echo V6_LOG_TAIL_BEGIN; tail -120 /tmp/stage28e_h_v6_closed.log; echo V6_LOG_TAIL_END",
+    "set -euo pipefail; python3 - <<'PY'\nimport re\nfrom pathlib import Path\np=Path('/tmp/stage28e_h_v6_closed.log')\nkv=re.compile(r'([A-Za-z0-9_]+)=([^ ]+)')\nlast=None\nchanges=[]\nfor n,line in enumerate(p.read_text(errors='replace').splitlines(),1):\n    if 'stage28d_output ' not in line: continue\n    d=dict(kv.findall(line))\n    try:\n        state=(int(d.get('fan_known','-1')),int(d.get('fan_on','-1')),float(d.get('applied_fan','nan')),float(d.get('requested_fan','nan')),int(d.get('arbiter_transitions','-1')),int(d.get('arbiter_dwell_holds','-1')),int(d.get('tx','-1')),int(d.get('tx_errors','-1')),int(d.get('safety_latched','-1')),int(d.get('force_fan','-1')),int(d.get('safety_reason','-1')),int(d.get('lamp_on','-1')),int(d.get('humidifier_on','-1')))\n    except Exception:\n        continue\n    if last is None or state[:3] != last[:3] or state[4] != last[4] or state[6] != last[6]:\n        changes.append((n,state,line[:600]))\n    last=state\nprint('V6_STATE_CHANGES_BEGIN')\nfor n,state,line in changes[-40:]:\n    print('line',n,'state',state)\n    print(line)\nprint('V6_STATE_CHANGES_END')\nprint('V6_LAST_STATE', last)\nPY"
+  ]
+}
