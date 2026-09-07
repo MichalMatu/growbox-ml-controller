@@ -3,155 +3,193 @@
 Updated: 2026-09-08
 Work branch: `mvp/environment-controller`
 Control branch: `agent-control`
-Latest handoff: `docs/STAGE28E_PHASE_H_HANDOFF.md`
+Latest handoff: `docs/ARCHITECTURE_HANDOFF.md`
+Execution architecture design: `docs/OUTPUT_EXECUTION_ARCHITECTURE.md`
 Current status: `docs/CURRENT_STATUS.md`
-Execution guide: `docs/GUIDANCE.md`
+Frozen Phase H evidence: `docs/STAGE28E_PHASE_H_HANDOFF.md`
 
 ## Read first in a new chat
 
 1. `AGENTS.md`
-2. `docs/STAGE28E_PHASE_H_HANDOFF.md`
-3. `docs/CURRENT_STATUS.md`
-4. this file
-5. `docs/GUIDANCE.md`
-6. `docs/ESP32_S3_SERIAL_PORT_RESET.md`
-7. `docs/STAGE28D_AH_ARBITER_HANDOFF.md`
-8. `docs/PROJECT_ROADMAP.md`
+2. `docs/ARCHITECTURE_HANDOFF.md`
+3. `docs/OUTPUT_EXECUTION_ARCHITECTURE.md`
+4. `docs/CURRENT_STATUS.md`
+5. this file
+6. `docs/GUIDANCE.md`
+7. `docs/STAGE28E_PHASE_H_HANDOFF.md` for frozen H evidence
+8. `docs/STAGE28D_AH_ARBITER_HANDOFF.md` for prior arbiter context
+9. `docs/PROJECT_ROADMAP.md`
+10. `docs/ESP32_S3_SERIAL_PORT_RESET.md` before any future serial/hardware work
 
-Then fetch fresh `mvp/environment-controller` HEAD and fresh `agent-control:.agent/status/daemon.json`. Read the newest relevant `.agent/results/...` before deciding what has passed. Never continue from remembered chat state alone.
+Then fetch fresh `mvp/environment-controller` HEAD and fresh `agent-control:.agent/status/daemon.json`. Read relevant terminal `.agent/results/...` before deciding what has passed. Never continue from remembered chat state alone.
 
 ## Current transition
 
-**Stage28E A-G COMPLETE -> H IN PROGRESS**
+**Stage28E A-G COMPLETE -> H OPEN BUT SUSPENDED -> EXECUTION ARCHITECTURE AUDIT/REFACTOR ACTIVE**
+
+Architecture-pause entry baseline:
+
+`157806442161e88edd8038e532e9dff333a19efb`
 
 Formal Phase G exit gate:
 
 `7ddb995d1f6cd190fa110f21f0d8dc0eabc61d26`
 
-Qualified Phase H production runtime/tooling source SHA:
+Old qualified production identity:
 
 `5a4830db9d10e8cb73d4c617b09122f0844ad899`
 
-The branch may contain later scripts/docs-only qualification preparation. Do not label that later HEAD as newly qualified firmware unless production sources were rebuilt and requalified explicitly.
+H v8 software preflight `20260908-stage28e-h-v8-preflight-v1` passed on `231eed28f64bdbdc4238fd8bce128264027702f2`, but H v8 hardware execution was never started.
 
-## Latest H evidence
+That preflight is frozen historical evidence. It must not be reused to qualify production C++ changed by the architecture workstream.
 
-Latest physical attempt: **H v7**.
+## Explicit project decision
 
-- task: `.agent/tasks/20260907-stage28e-h-v7-corrected-parser-v1.json`;
-- result: `.agent/results/20260907-stage28e-h-v7-corrected-parser-v1.json`;
-- primary was intentionally interrupted with RC `130` after the qualification harness defect was identified;
-- mandatory recovery and final RF-disabled `fake-locked` both passed (`recovery=0`, `final=0`);
-- retained v7 telemetry showed normal fan cycling with `safety_latched=0`, `force_fan=0`, and `safety_reason=1` (`TimerOff`), so the old `reason == 0` observer gate was a false-negative condition rather than production safety activation.
+Do **not** continue H v8 now.
 
-The observer fix is commit `45065a34ce276ac5cdb7ef8cf0a1ad8a4bae1b0d`. It accepts only `Safe (0)` and `TimerOff (1)` as H safety-clear reasons, and only while both `safety_latched=0` and `force_fan=0`; reasons `2..5` remain rejected. Replay of the retained v7 log accepted `596` TimerOff samples and no unsafe reason.
+The previous sequencing decision — preserve the current production binary until H PASS and refactor afterward — is superseded by the 2026-09-08 project decision. We intentionally stop physical qualification first and correct the product architecture.
 
-H v8 software preflight `20260908-stage28e-h-v8-preflight-v1` is **PASS** on executable/preflight HEAD `231eed28f64bdbdc4238fd8bce128264027702f2`. It proved no production C/C++ delta relative to `5a4830db9d10e8cb73d4c617b09122f0844ad899`, passed the focused observer tests and v7 replay, passed all `24/24` host tests, built fake `12288 B` main-stack firmware, built real/recovery `16384 B` main-stack firmware, and ended clean with `hardware_started=0`. H v8 itself has **not** been started.
+The target is not a final output kill switch. The target is modular ownership:
 
-## Repository-tracked closed-tent observer
+```text
+climate/schedule/manual intent
+            +
+      safety envelope
+            |
+            v
+     OutputSupervisor
+   mode + policy + state
+            |
+       OutputPlan
+            |
+            v
+      RF433 Transport
+```
 
-Use:
+`OutputSupervisor` must become the only normal production owner that can execute configured physical outputs.
 
-`scripts/stage28e_phase_h_closed_tent.py`
+## Architecture requirements
 
-It replaces the interactive/open-tent assumption for the next qualification.
+Read the full design in `docs/OUTPUT_EXECUTION_ARCHITECTURE.md`.
 
-Properties:
+Minimum required separation:
 
-- starts with tent already closed;
-- no operator notification/action;
-- no controller-request injection;
-- no actuator command writes;
-- requires exact expected firmware SHA;
-- requires `outputs=real-bounded` and `rf_ready=1`;
-- tolerates only the documented serial-open reset before the stabilized runtime baseline;
-- requires a stable safety-clear `fan_known=1 fan_on=0 applied_fan<0.01` baseline for at least 10 seconds;
-- does not require `requested_fan<0.10` during that baseline;
-- then requires natural `requested_fan>=0.10` from the OFF state;
-- requires increased arbiter transition count and RF TX count, `tx_errors=0`, and known physical fan ON with `applied_fan>=0.99`;
-- requires lamp/humidifier state unchanged across the fan proof so Shelly power evidence is not confounded;
-- requires Shelly master ON and at least 1 W total-power increase;
-- records TP357/Xiaomi/SCD41 environmental response;
-- defaults to TP357 guard `27.5 C`, safely below thermal trip `28 C`;
-- defaults to a bounded 2-hour observation and 10-minute post-transition response window.
+- climate engine computes `ControlIntent`;
+- climate engine may continue observe-only calculation when automation is OFF;
+- safety computes non-bypassable constraints/forced actions and does not transmit;
+- schedule/manual sources produce intents and do not transmit;
+- per-output lifecycle policy defines boot/automation-off/recovery/fault actions;
+- lifecycle actions can define bounded ordering/timing and ON/OFF/no-command/schedule/restore behavior;
+- binary hysteresis/dwell is an execution policy independent of RF and temperature evaluation;
+- RF433 transport sends validated commands and reports transport results only;
+- persisted state distinguishes last commanded/transport result from actual physical state;
+- normal service-console output commands must pass through the supervisor;
+- raw transport diagnostics, if retained, require an explicit maintenance guard and cannot become a second invisible production owner.
 
-The observer does **not** perform recovery. The Local Agent hardware wrapper must always perform recovery RF and final RF-disabled `fake-locked`, regardless of the primary observer return code.
+## First new-chat task: architecture audit
 
-## What H still has to prove
+Start with a read-only/source-reading audit. No production behavior patch first.
 
-One bounded normal control path:
+Create:
 
-`natural AH/rule request -> binary arbiter OFF->ON -> RF TX -> physical fan`
+`docs/OUTPUT_EXECUTION_ARCHITECTURE_AUDIT.md`
 
-Required evidence:
+The audit must identify, with exact file/symbol evidence:
 
-- exact firmware/source identity;
-- post-serial-open stable boot/session baseline;
-- safety clear;
-- physical fan known+OFF prestate;
-- natural request `>=0.10` while fan is still OFF;
-- normal dwell/counter behavior;
-- one normal OFF->ON arbiter transition;
-- RF TX increment and `tx_errors=0`;
-- independent physical/Shelly support without lamp/humidifier power confounding;
-- environmental response snapshot;
-- acceptable memory/stack/timing;
-- mandatory safe recovery and final RF-disabled `fake-locked`.
+1. normal controller-to-output call graph;
+2. every direct and indirect RF/output writer;
+3. every output-state cache/owner;
+4. every thermal safety / fail-safe path;
+5. boot, disable, recovery, and fault output actions;
+6. schedule/lamp path;
+7. service-console/manual output path;
+8. endpoint-role mapping ownership and validation;
+9. persistence/settings mechanisms already present;
+10. control/safety/console/RF task and concurrency context;
+11. `reconcileApplied` and previous-applied semantics;
+12. tests coupled to current actuator/driver structure;
+13. memory/stack impact expected from the new supervisor/policy objects.
 
-Do not add a request injector to force PASS.
+Distinguish observed source facts from design proposals. If the source disproves an assumption in the architecture design, update the design before implementing behavior.
 
-## Software-only gate before H v8
+## Planned implementation after the audit
 
-H v8 preflight `20260908-stage28e-h-v8-preflight-v1` is **PASS** on `231eed28f64bdbdc4238fd8bce128264027702f2`. It verified the TimerOff-aware observer, v7 replay (`596` accepted TimerOff samples), all `24/24` host tests, fake `12288 B` build, real/recovery `16384 B` builds, no production C/C++ delta from `5a4830db9d10e8cb73d4c617b09122f0844ad899`, and a clean worktree.
+Use small coherent commits:
 
-Committed documentation-only readiness changes after that preflight are allowed without rebuilding. Before H v8 starts, verify the current worktree is clean and prove any delta after `231eed28f64bdbdc4238fd8bce128264027702f2` is documentation-only; any executable/configuration change requires a new software preflight.
+1. contracts/types (`ControlIntent`, `SafetyEnvelope`, plan/report/config types);
+2. dumb RF transport split;
+3. safety-envelope adaptation;
+4. `OutputSupervisor` state machine + resolver + lifecycle policy;
+5. binary actuator policy integration without hardware ownership;
+6. climate decision/execution split and correct applied-state reconciliation;
+7. versioned policy + honest command-state persistence using an existing suitable store;
+8. service-console migration and maintenance diagnostics separation;
+9. removal of legacy duplicate state/safety/output ownership;
+10. invariant enforcement: one normal production output owner;
+11. focused host tests during each behavior-changing step;
+12. one full software gate after the architecture stabilizes;
+13. new firmware identity and new H qualification plan before any hardware execution.
 
-## Overnight bounded-H wrapper
+Do not perform a giant rewrite.
 
-Only after software preflight PASS, prepare a separate immutable hardware task with:
+## Frozen Phase H evidence
 
-- exact `agent_binding`: `815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5`;
-- `resources: []`;
-- exact port `/dev/cu.usbserial-1130` and explicit refusal of any other port;
-- exact expected qualified firmware/source identity;
-- RF-enabled main stack `16384 B`;
-- real-bounded flash;
-- closed-tent observer with no human action, e.g. `--timeout 7200 --post-seconds 600 --closure-utc 2026-09-07T12:16:42Z`;
-- primary return code captured but not allowed to skip recovery;
-- recovery RF image + `scripts/stage28e_phase_h_e2e.py recovery`;
-- final RF-disabled fake image + `scripts/stage28e_phase_h_e2e.py final`;
-- fail the task if recovery/final fails, even if primary proof passed;
-- only report formal H PASS after reading terminal result evidence.
+The detailed H history remains in `docs/STAGE28E_PHASE_H_HANDOFF.md`.
 
-This authorizes only one bounded qualification. It is not authorization for continuous unattended real-output production operation.
+Relevant frozen facts:
 
-## Architecture debt — deliberately deferred until H closes
+- H v7 primary was intentionally interrupted after the TimerOff observer defect was understood;
+- recovery and final fake-locked verification passed;
+- TimerOff-aware observer commit is `45065a34ce276ac5cdb7ef8cf0a1ad8a4bae1b0d`;
+- H v8 preflight passed but hardware did not start;
+- the existing observer/recovery scripts are retained but are not authorized to run during the architecture audit/refactor.
 
-The audit confirms two broad-responsibility areas:
+The eventual H path remains conceptually useful, but the exact expected execution chain must be rewritten against the new supervisor architecture before physical qualification resumes.
 
-- `src/climate/ClimateV6RealInputRuntime.cpp` (~23 KB) — runtime bootstrap, storage/RF/output arming, object wiring, safety, cycle/scheduler and telemetry/service coordination are too concentrated around `runClimateV6RealInputRuntime()`;
-- `src/climate/runtime/Stage28ServiceConsole.cpp` (~32 KB) — UART transport, line editor, dispatch, runtime/stack status, sensors, RF, RTC and SD-log commands are combined in one service-console implementation.
+## Test and hardware policy
 
-Do not refactor either before H. The correct sequence after H is behavior-preserving extraction:
+For the current handoff session:
 
-1. runtime: bootstrap -> scheduler/cycle -> output/fail-safe -> telemetry;
-2. console: UART transport/parser -> status -> sensors -> RF -> RTC -> storage.
+- no tests;
+- no builds;
+- no serial;
+- no flash;
+- no RF commands;
+- no hardware qualification.
 
-Keep each extraction narrow, add focused host tests, then run a full software gate and bounded fake-locked hardware evidence if stack/runtime layout changes materially.
+In the next chat:
+
+- audit first without hardware;
+- once implementation begins, focused host tests are expected for coherent changes;
+- one full software gate only after stabilization;
+- no physical H continuation without a new exact firmware identity, reviewed plan, and explicit operator authorization.
 
 ## Safety boundaries
 
 - correct serial: `/dev/cu.usbserial-1130`;
 - never touch `/dev/cu.usbserial-10`;
-- tent remains closed;
-- do not intentionally cross `28 C`;
-- observer guard defaults to `27.5 C`;
+- tent remains closed unless the operator explicitly changes that requirement;
 - deterministic rule controller remains authoritative;
 - ML remains shadow/research-only;
-- manual RF remains blocked during `real-bounded`;
-- Shelly master remains ON;
-- every bounded real-output attempt must end with verified `fake-locked`.
+- thermal trip remains `>=28 C`;
+- thermal recovery remains `<=26 C` continuously for 10 minutes;
+- ordinary automation-off configuration must not silently disable non-bypassable thermal protection;
+- Shelly master remains ON for future bounded qualification;
+- future output recovery semantics must be owned by firmware execution policy, not only qualification scripts.
+
+## Local Agent contract
+
+Every Local Agent task must use:
+
+- exact `agent_binding`: `815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5`;
+- explicit `resources: []`;
+- `work_branch: mvp/environment-controller` when working on this MVP branch;
+- no named resources or `machine`;
+- explicit SHA verification when source identity matters;
+- terminal `.agent/results/<task-id>.json` evidence before reporting PASS.
+
+Any future hardware task must detect and verify `/dev/cu.usbserial-1130` internally and explicitly refuse `/dev/cu.usbserial-10`.
 
 ## Recommended fresh-chat instruction
 
-`Continue Growbox Stage28E Phase H only in MichalMatu/growbox-ml-controller. Read AGENTS.md, docs/STAGE28E_PHASE_H_HANDOFF.md, docs/CURRENT_STATUS.md, docs/CONTINUATION_PLAN.md, docs/GUIDANCE.md and docs/ESP32_S3_SERIAL_PORT_RESET.md, then fresh-check mvp/environment-controller HEAD and agent-control:.agent/status/daemon.json. A-G are complete; H is open. Qualified production firmware identity remains 5a4830db9d10e8cb73d4c617b09122f0844ad899. TimerOff-aware observer commit is 45065a34ce276ac5cdb7ef8cf0a1ad8a4bae1b0d. H v8 software preflight 20260908-stage28e-h-v8-preflight-v1 passed on 231eed28f64bdbdc4238fd8bce128264027702f2 with 24/24 host tests, v7 replay accepted 596 TimerOff samples, fake 12 KiB and real/recovery 16 KiB images built, no production C/C++ delta, and hardware_started=0. H v8 is prepared but not started. All repository tasks use resources: []; verify /dev/cu.usbserial-1130 inside any hardware task and never touch /dev/cu.usbserial-10. When explicitly authorized to start H v8, use only the normal controller path, no request injection or actuator forcing, and always perform recovery plus final RF-disabled fake-locked. Do not begin the production runtime/service-console refactor before formal H PASS.`
+`Continue only MichalMatu/growbox-ml-controller on mvp/environment-controller with Local Agent binding 815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5. Read AGENTS.md, docs/ARCHITECTURE_HANDOFF.md, docs/OUTPUT_EXECUTION_ARCHITECTURE.md, docs/CURRENT_STATUS.md and docs/CONTINUATION_PLAN.md first, then fresh-check work HEAD and agent-control daemon/result state. Stage28E A-G are complete; H remains open but is intentionally suspended before H v8. Do not start H v8, flash hardware or run physical-output tests. Start with a read-only audit of the actual execution architecture: enumerate every RF/output writer, output-state owner, safety/fail-safe path, boot/disable/recovery/fault action, schedule/manual path, endpoint mapping, persistence mechanism, task context and reconcileApplied/previous-state coupling. Write the evidence-backed audit to docs/OUTPUT_EXECUTION_ARCHITECTURE_AUDIT.md and reconcile it with docs/OUTPUT_EXECUTION_ARCHITECTURE.md before changing behavior. The target is one OutputSupervisor as the only normal production physical-output owner, SafetyPolicyEngine producing constraints, per-output lifecycle OutputPolicy, honest StateStore semantics and a dumb RF433 Transport. Automation OFF should stop execution of normal control intent while allowing the climate engine to keep calculating observe-only; safety remains active. After audit, implement in small commits with focused host tests, one full software gate only after stabilization, and create a new firmware identity/qualification plan before any hardware H continuation. Every Local Agent task uses resources: []; future hardware tasks must verify /dev/cu.usbserial-1130 internally and never touch /dev/cu.usbserial-10.`
