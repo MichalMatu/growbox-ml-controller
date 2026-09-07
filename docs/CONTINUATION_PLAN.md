@@ -3,7 +3,7 @@
 Updated: 2026-09-07
 Work branch: `mvp/environment-controller`
 Control branch: `agent-control`
-Latest handoff: `docs/STAGE28E_PHASE_E_HANDOFF.md`
+Latest handoff: `docs/STAGE28E_PHASE_F_HANDOFF.md`
 Stage28E execution guide: `docs/GUIDANCE.md`
 Prior Stage28D evidence: `docs/STAGE28D_AH_ARBITER_HANDOFF.md`
 Current status: `docs/CURRENT_STATUS.md`
@@ -13,22 +13,23 @@ Primary roadmap: `docs/PROJECT_ROADMAP.md`
 
 1. `AGENTS.md`
 2. `docs/GUIDANCE.md`
-3. `docs/STAGE28E_PHASE_E_HANDOFF.md`
+3. `docs/STAGE28E_PHASE_F_HANDOFF.md`
 4. `docs/PROJECT_ROADMAP.md`
 5. `docs/CURRENT_STATUS.md`
 6. this file
-7. `docs/STAGE28E_PHASE_D_HANDOFF.md` for ownership-hardening evidence
-8. `docs/STAGE28E_PHASE_C_HANDOFF.md` for the original memory baseline
-9. `docs/STAGE28E_PHASE_B_HANDOFF.md` for reset/lifecycle diagnostics
-10. `docs/STAGE28D_AH_ARBITER_HANDOFF.md` for historical V5 details
-11. `docs/OBSERVABILITY_AND_INFERENCE_PLAN.md` when changing ventilation/inference/telemetry/ML behavior
-12. `docs/SHELLY_POWER_FEEDBACK.md` when changing physical-state supervision
+7. `docs/STAGE28E_PHASE_E_HANDOFF.md` for measured memory optimization evidence
+8. `docs/STAGE28E_PHASE_D_HANDOFF.md` for ownership-hardening evidence
+9. `docs/STAGE28E_PHASE_C_HANDOFF.md` for the original memory baseline
+10. `docs/STAGE28E_PHASE_B_HANDOFF.md` for reset/lifecycle diagnostics
+11. `docs/STAGE28D_AH_ARBITER_HANDOFF.md` for historical V5 details
+12. `docs/OBSERVABILITY_AND_INFERENCE_PLAN.md` when changing ventilation/inference/telemetry/ML behavior
+13. `docs/SHELLY_POWER_FEEDBACK.md` when changing physical-state supervision
 
 Then fetch fresh `mvp/environment-controller` HEAD, fresh `agent-control:.agent/status/daemon.json`, and the newest Local Agent result. Never continue from remembered chat state alone.
 
 ## Current transition
 
-**Stage27C FROZEN -> Stage28E A COMPLETE -> B COMPLETE -> C COMPLETE -> D COMPLETE -> E COMPLETE -> Phase F NEXT**
+**Stage27C FROZEN -> Stage28E A COMPLETE -> B COMPLETE -> C COMPLETE -> D COMPLETE -> E COMPLETE -> F COMPLETE -> Phase G NEXT**
 
 Stage28D functional AH work stays paused until A-G pass. Final physical `AH/rule request -> binary arbiter -> RF -> physical fan` verification belongs to Phase H.
 
@@ -40,101 +41,115 @@ Stage28D functional AH work stays paused until A-G pass. Final physical `AH/rule
 - Phase D implementation SHA: `09340089767cde117d12acc049790a2b93778b8e`
 - Phase D formal docs exit SHA: `5e750b972eeff4ac8c9149ef6ea708f703d2d755`
 - Phase E implementation head: `4a8ce18edd8cc90e6300929d2d9f035c4ec49eb5`
-- Phase E complete evidence: `docs/STAGE28E_PHASE_E_HANDOFF.md`
+- Phase E formal docs exit SHA: `0d4325f08033a38e4fd3769c38b1572e344a27ff`
+- Phase E evidence: `docs/STAGE28E_PHASE_E_HANDOFF.md`
+- Phase F implementation SHA: `d88c77d8eab5013a6f94baf60e1404f5b030efdc`
+- Phase F evidence: `docs/STAGE28E_PHASE_F_HANDOFF.md`
 
-## Phase E decisive result
+## Phase E retained runtime baseline
 
-Phase E recovered internal-RAM headroom with three bounded, measured changes and no control/AH/RF/safety semantic change.
+Phase E final bounded hardware evidence remains the reference for Phase G:
 
-E1 (`4a5121abf2a93ba76bfc219575d2b52b8025fb03`):
-
-- moved only the `4736 B` telemetry queue payload to PSRAM using `MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT`;
-- kept queue control metadata internal;
-- preserved the previous internal `xQueueCreate()` path as allocation fallback;
-- kept global `CONFIG_SPIRAM_USE_MALLOC` disabled;
-- host `24/24 PASS`;
-- hardware `queue_psram=1 queue_bytes=4736`;
-- internal free/min/largest `218672 / 218140 / 176128 B`;
-- gain vs D2 `+4772 / +4876 B` free/min;
-- storage `12` writes, `0` queue drops, `0` write errors;
-- safe final state `fake-locked`.
-
-E2 (`c2aff0a14bbcca567de4083a284d3522fa52421e`):
-
-- right-sized `stage27_store` stack `7168 -> 6144 B`;
-- host `24/24 PASS`;
-- internal free/min/largest `219568 / 219036 / 176128 B`;
-- gain vs E1 `+896 / +896 B`;
-- worst observed storage-task HWM `1884 B`, later `1820 B` in E3;
-- storage `12` writes, `0` drops, `0` errors;
-- safe final state `fake-locked`.
-
-Do not shrink `stage27_store` further before Phase G long-runtime evidence.
-
-E3 (`4a8ce18edd8cc90e6300929d2d9f035c4ec49eb5`):
-
-- changed only the Stage27C main-task overlay from `16384 -> 12288 B`; base project default remains `16384 B`;
-- generated Stage27C sdkconfig proves the override;
-- host `24/24 PASS`;
 - image `743641 B`;
 - internal free/min/largest `223792 / 223260 / 180224 B`;
-- gain vs E2 `+4224 / +4224 B`;
-- cumulative gain vs D2 `+9892 B free`, `+9996 B min`, `+8192 B largest block`;
-- main worst observed HWM `7240 B` free;
-- storage-task worst HWM `1820 B` free;
+- main configured stack `12288 B`, worst observed HWM `7240 B` free;
+- `stage27_store` configured stack `6144 B`, worst observed HWM `1820 B` free;
+- telemetry queue payload `4736 B` on explicit PSRAM path;
+- telemetry `12` writes, `0` queue drops, `0` write errors;
 - 11 heartbeats and heap-integrity PASS;
 - Shelly master ON, median `65.5 W`;
-- storage `12` writes, `0` drops, `0` errors;
-- safe final state `fake-locked`.
+- safe final state `fake-locked`;
+- no coredump, counter regression, crash, corrupt heap or stack-canary marker.
 
-Phase E stops here. Further stack cuts are intentionally deferred.
+Do not shrink either stack further before Phase G long-runtime evidence.
 
-## Phase F — focused binary-arbiter continuity/regression proof
+## Phase F decisive result
 
-Phase F must resolve the Stage28D V5 anomaly from deterministic evidence before any longer soak or physical AH actuator path.
+Phase F implementation SHA:
 
-Historical symptom:
+`d88c77d8eab5013a6f94baf60e1404f5b030efdc`
 
-`arbiter_dwell_holds 33 -> 43 -> 1 -> 11`
+Only `test/test_stage28d_binary_role_arbiter/test_main.cpp` changed. Production `Stage28dBinaryRoleArbiter.{h,cpp}` remained unchanged from Phase E.
 
-Normal same-instance cumulative state has no ordinary reset path. Phase B-E diagnostics did not reproduce such a regression.
+The deterministic single-instance V5 proof establishes:
 
-### Required Phase F proof
+- `0.099` below threshold remains OFF with zero dwell holds;
+- 43 `0.111` calls inside minimum-OFF dwell increment cumulative holds exactly `0 -> 43` on one stable instance;
+- `43 -> 1` is classified by the existing helper as a regression, while legitimate `uint32_t` wrap remains accepted;
+- `0.111` at `119999 ms` remains OFF and advances `43 -> 44`;
+- `0.111` at exactly `120000 ms` produces one OFF -> ON transition;
+- dwell history remains `44` after the transition;
+- continuity fault count remains `0`.
 
-1. Use a single known `Stage28dBinaryRoleArbiter` instance with lifecycle identity captured.
-2. Use synthetic inputs; keep physical outputs fake-locked.
-3. Exercise request below threshold and a request around `0.111` while minimum-OFF dwell is active.
-4. Verify dwell-hold cumulative counters remain monotonic within one instance except explicit `uint32_t` wrap handling.
-5. Verify a historical-style same-instance `43 -> 1` drop is impossible through normal `applyBinary()` execution.
-6. Hold the same instance through the full `120 s` minimum-OFF dwell.
-7. Prove an eligible `0.111` request transitions ON after dwell eligibility.
-8. Capture boot ID, arbiter instance ID, construction count, transition count, dwell-hold count and continuity-fault count around the proof.
-9. Avoid log/heap churn in the diagnostic; use bounded synthetic events and existing structured diagnostics.
-10. Do not modify `applyBinary()` merely to make the historical V5 trace disappear.
+Local Agent task `20260907-growbox-stage28e-phase-f-arbiter-continuity-gate-v1` passed focused C++17 proof, exact-SHA checks, production-file identity checks, full existing host suite `24/24`, and clean-tree checks.
 
-### Phase F verification order
+Interpretation: the historical V5 same-instance-style `43 -> 1` drop cannot be produced by normal continuous execution of the current arbiter semantics. Future reproduction is lifecycle/runtime evidence until proven otherwise.
 
-1. record fresh start SHA and exact diagnostic scope;
-2. add the smallest pure/focused arbiter diagnostic or test harness needed;
-3. run focused host tests first;
-4. run the existing host suite/build gate if firmware changes;
-5. use bounded fake-locked runtime evidence only if required to prove lifecycle integration;
-6. update handoff/status with the result;
-7. run one formal exact-SHA Phase F exit gate before Phase G.
+## Formal Phase F exit gate
 
-## Phase G after F
+Before entering Phase G, run one final exact-SHA software exit gate on the Phase F docs HEAD.
 
-Run bounded fake-locked runtime first, then the long-duration soak only after short stability is clean. Preserve evidence on any reset, coredump, heap-integrity fault, counter regression, stack alarm, watchdog, or unexplained boot/session change.
+It must:
 
-Do not shrink stacks further simply because a short Phase F run is clean; Phase G is the runtime evidence needed for that decision.
+1. verify work HEAD and origin match the exact docs SHA;
+2. prove production arbiter code is unchanged from Phase E exit `0d4325f08033a38e4fd3769c38b1572e344a27ff`;
+3. rerun the focused V5 continuity proof;
+4. run the full host suite;
+5. build the safe Stage27C firmware profile with all real-output/selftest flags disabled;
+6. confirm generated Stage27C main stack remains `12288 B` and telemetry storage stack remains `6144 B`;
+7. finish with clean worktree / `git diff --check`.
+
+Record the passing docs SHA as formal Phase F exit SHA.
+
+## Phase G — bounded runtime validation and soak
+
+After the formal Phase F exit gate passes, start Phase G with a short bounded hardware run using safe fake-locked outputs.
+
+### G1 short bounded gate
+
+Use only resource `board:growbox-s3` and only `/dev/cu.usbserial-1130`.
+
+Build/flash exact Phase F exit SHA with:
+
+- `GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0`
+- `GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0`
+- `GROWBOX_RF433_LOOPBACK_ENABLED=0`
+- `GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST=0`
+
+Capture and require:
+
+1. exact firmware SHA;
+2. stable boot/session ID and expected reset reason;
+3. stable arbiter instance ID / construction count with no unexplained reconstruction;
+4. cumulative arbiter counters never decrease on the same instance except legitimate wrap;
+5. continuity fault count remains zero;
+6. no coredump, Guru Meditation, corrupt heap, stack canary, watchdog, or heap-integrity failure;
+7. internal free/min/largest block stay close to the Phase E reference and do not collapse;
+8. PSRAM remains healthy;
+9. main stack and `stage27_store` HWM retain accepted margin;
+10. loop timing remains bounded;
+11. BLE/sensor telemetry remains live;
+12. telemetry storage continues with zero queue drops and zero write errors;
+13. Shelly master remains ON;
+14. final outputs remain `fake-locked`.
+
+If G1 fails, stay in Phase G and preserve evidence. Do not start the long soak.
+
+### G2 representative soak
+
+Only after G1 passes, choose a representative duration from current runtime evidence and run the longer diagnostic soak.
+
+Use low-overhead periodic summaries, not TRACE flooding. Preserve evidence immediately on any reset/session change, coredump, heap-integrity fault, counter regression, stack warning/critical event, watchdog, or unexplained object reconstruction.
+
+Do not use a clean reboot to erase evidence before it is captured.
 
 ## Phase H after G
 
-Only after A-G pass, run bounded physical E2E:
+Only after Phase G passes, run the bounded physical E2E path:
 
 `AH/rule request -> binary arbiter -> RF -> physical fan`
 
-Capture request, arbiter state/dwell/identity, transition, RF result, physical/Shelly evidence, memory/stack/safety, then restore `fake-locked`.
+Capture request, arbiter pre-state/dwell/boot+instance, transition, RF result, physical/Shelly evidence, memory/stack/safety, then restore `fake-locked`.
 
 ## Serial and hardware invariants
 
@@ -166,12 +181,12 @@ Safety boundary:
 
 ## Immediate next work
 
-1. Run docs-only exact-SHA Phase E exit gate on fresh HEAD.
-2. Record the passing docs SHA as formal Phase E exit SHA.
-3. Start Phase F with a read-only inspection of the current arbiter tests/harness and exact V5-relevant semantics.
-4. Add the smallest deterministic single-instance synthetic regression proof.
-5. Run focused host proof first; no physical outputs.
+1. Fetch fresh daemon and exact work-branch HEAD after these Phase F docs commits.
+2. Queue the formal exact-SHA Phase F software exit gate; do not duplicate it if already present.
+3. If PASS, record the final Phase F exit SHA and enter Phase G.
+4. Queue one short bounded fake-locked G1 hardware run first.
+5. Only after G1 PASS, plan and run the representative G2 soak.
 
 ## Recommended fresh-chat instruction
 
-`Read AGENTS.md, docs/GUIDANCE.md, docs/STAGE28E_PHASE_E_HANDOFF.md, docs/CURRENT_STATUS.md and docs/CONTINUATION_PLAN.md. Fetch fresh mvp/environment-controller HEAD and Local Agent daemon/result first. Treat Phase E as complete only if its exact-SHA docs gate passed. Then continue Stage28E Phase F with the focused single-instance binary-arbiter continuity/regression proof; keep outputs fake-locked, do not alter applyBinary() merely to fit V5, do not run the long soak before Phase G, and do not run the physical AH actuator path before Phase H.`
+`Read AGENTS.md, docs/GUIDANCE.md, docs/STAGE28E_PHASE_F_HANDOFF.md, docs/CURRENT_STATUS.md and docs/CONTINUATION_PLAN.md. Fetch fresh mvp/environment-controller HEAD and Local Agent daemon/result first. Treat Phase F as complete only if its final exact-SHA software exit gate passed. Then continue Stage28E Phase G with a short bounded fake-locked hardware runtime before any long soak; preserve lifecycle/counter/coredump/heap/stack evidence on failure, use only /dev/cu.usbserial-1130, and do not run the physical AH actuator path before Phase H.`
