@@ -1,0 +1,60 @@
+{
+  "id": "20260908-resource-policy-doc-sync-v2",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "started_at": "2026-09-07T23:22:39.049260+00:00",
+  "command_timeout": 300,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; test \"$(git rev-parse HEAD)\" = 45065a34ce276ac5cdb7ef8cf0a1ad8a4bae1b0d; test -z \"$(git status --porcelain)\"; python3 - <<'PY'\nfrom pathlib import Path\nfiles=['docs/CONTINUATION_PLAN.md','docs/CURRENT_STATUS.md','docs/STAGE28E_PHASE_H_HANDOFF.md','docs/GUIDANCE.md','docs/PROJECT_ROADMAP.md','docs/STAGE28D_AH_ARBITER_HANDOFF.md']\nfor name in files:\n p=Path(name); s=p.read_text(); s=s.replace('`resources: [\"board:growbox-s3\"]`','`resources: []`'); s=s.replace('use only `board:growbox-s3`','use `resources: []` and verify the exact device/port inside the task'); p.write_text(s)\np=Path('docs/CONTINUATION_PLAN.md'); s=p.read_text(); s=s.replace('Before H v7, fresh-check branch HEAD and prove that any delta after `d91fe21d319d4f85832d9fc95d5912bbae23cf0e` is docs-only. If executable code/tooling changed, rerun the software gate with a new immutable task id.','Before H v8, require a clean worktree. Committed policy/docs/tooling changes are allowed, but because executable observer tooling changed after RC4, rerun the software gate and prove no production C/C++ delta relative to `5a4830db9d10e8cb73d4c617b09122f0844ad899`.'); p.write_text(s)\np=Path('docs/CURRENT_STATUS.md'); s=p.read_text(); s=s.replace('any later delta must be docs-only.','committed policy/docs changes are allowed; executable tooling changes require a new software preflight with no production C/C++ delta.'); s=s.replace('**H v7 corrected-parser**','**H v8 TimerOff-aware**'); p.write_text(s)\np=Path('docs/STAGE28E_PHASE_H_HANDOFF.md'); s=p.read_text(); s=s.replace('Any later branch delta before the next hardware H task must be proven docs-only or the preflight must be rerun.','Committed policy/docs changes do not make the worktree dirty. Executable tooling changes require a new software preflight, and production C/C++ must remain unchanged relative to the qualified identity.'); s=s.replace('- `safety_reason=0`;','- `safety_reason` is `0` (`Safe`) or `1` (`TimerOff`) while `safety_latched=0` and `force_fan=0`;'); p.write_text(s)\nprint('DOC_SYNC_PATCHED')\nPY\ngit diff --check; git diff --name-only; git add docs/CONTINUATION_PLAN.md docs/CURRENT_STATUS.md docs/STAGE28E_PHASE_H_HANDOFF.md docs/GUIDANCE.md docs/PROJECT_ROADMAP.md docs/STAGE28D_AH_ARBITER_HANDOFF.md; git commit -m \"Align active docs with relaxed resource policy\"; git push origin HEAD:mvp/environment-controller; test -z \"$(git status --porcelain)\"; echo DOC_SYNC_PASS head=$(git rev-parse HEAD)",
+      "exit_code": 0,
+      "output": "DOC_SYNC_PATCHED\ndocs/CONTINUATION_PLAN.md\ndocs/CURRENT_STATUS.md\ndocs/GUIDANCE.md\ndocs/PROJECT_ROADMAP.md\ndocs/STAGE28D_AH_ARBITER_HANDOFF.md\ndocs/STAGE28E_PHASE_H_HANDOFF.md\n[agent-work 231eed28] Align active docs with relaxed resource policy\n 6 files changed, 12 insertions(+), 12 deletions(-)\nTo https://github.com/MichalMatu/growbox-ml-controller.git\n   45065a34..231eed28  HEAD -> mvp/environment-controller\nDOC_SYNC_PASS head=231eed28f64bdbdc4238fd8bce128264027702f2\n",
+      "elapsed_seconds": 2.302,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 9.61,
+      "output_policy": "stream",
+      "captured_output_chars": 474,
+      "output_truncated": false,
+      "current_rss_mb": 9.61,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 2.302
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.138
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.072
+  },
+  "finished_at": "2026-09-07T23:22:43.217846+00:00",
+  "task_digest": "a7ebc170577bf1519a3090433d48633aadc9920ec354d744912904714bd61423",
+  "idle_timeout": 120,
+  "task_timeout": 900,
+  "memory_limit_mb": 4096,
+  "attempt_id": "cc96bf77933336509f662d84",
+  "daemon_version": "4.18.13"
+}
