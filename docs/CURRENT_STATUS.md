@@ -2,7 +2,7 @@
 
 Updated: 2026-09-07
 Development branch: `mvp/environment-controller`
-Latest handoff: `docs/STAGE28E_PHASE_G_HANDOFF.md`
+Latest handoff: `docs/STAGE28E_PHASE_H_HANDOFF.md`
 Stage28E execution guide: `docs/GUIDANCE.md`
 Prior Stage28D evidence: `docs/STAGE28D_AH_ARBITER_HANDOFF.md`
 Primary roadmap: `docs/PROJECT_ROADMAP.md`
@@ -10,197 +10,87 @@ Continuation checklist: `docs/CONTINUATION_PLAN.md`
 
 ## Current transition
 
-**Stage27C FROZEN -> Stage28E Phase A COMPLETE -> B COMPLETE -> C COMPLETE -> D COMPLETE -> E COMPLETE -> F COMPLETE -> G COMPLETE -> Phase H NEXT**
+**Stage27C FROZEN -> Stage28E A COMPLETE -> B COMPLETE -> C COMPLETE -> D COMPLETE -> E COMPLETE -> F COMPLETE -> G COMPLETE -> H IN PROGRESS**
 
-Stage28E Phase G is formally complete. Its exact-SHA formal exit gate passed at `7ddb995d1f6cd190fa110f21f0d8dc0eabc61d26`. Phase H is now the only remaining Stage28E phase: one bounded physical `AH/rule request -> binary arbiter -> RF -> physical fan` end-to-end validation followed by mandatory restoration to `fake-locked`.
+A-G are formally complete. Phase H is the only remaining Stage28E phase.
 
-## Phase identities
+Formal Phase G exit gate:
 
-- Phase A exit SHA: `384e415eaaec960add2b3b3fe94db5c052ca6497`
-- Phase B exit SHA: `e0fb5da17879569f791898ba793e1c02b195fab8`
-- Phase C exit SHA: `7601f0beb95d27b2bf2360b760355c3c235871a1`
-- Phase D implementation SHA: `09340089767cde117d12acc049790a2b93778b8e`
-- Phase D formal docs exit SHA: `5e750b972eeff4ac8c9149ef6ea708f703d2d755`
-- Phase E implementation head: `4a8ce18edd8cc90e6300929d2d9f035c4ec49eb5`
-- Phase E formal docs exit SHA: `0d4325f08033a38e4fd3769c38b1572e344a27ff`
-- Phase E evidence: `docs/STAGE28E_PHASE_E_HANDOFF.md`
-- Phase F implementation SHA: `d88c77d8eab5013a6f94baf60e1404f5b030efdc`
-- Phase F evidence: `docs/STAGE28E_PHASE_F_HANDOFF.md`
+`7ddb995d1f6cd190fa110f21f0d8dc0eabc61d26`
 
-Always fetch fresh work-branch HEAD and Local Agent daemon state before editing or queueing work.
+Current Phase H runtime/tooling source SHA:
 
-## Phase C quantitative baseline
+`5a4830db9d10e8cb73d4c617b09122f0844ad899`
 
-Default/safe firmware baseline before Phase D:
+Full current H evidence and the fresh-chat procedure are in `docs/STAGE28E_PHASE_H_HANDOFF.md`.
 
-- image: `743369 B`
-- `.data`: `20512 B`
-- `.bss`: `6672 B`
-- DIRAM used: `124771 B / 341760 B`
-- DIRAM remaining: `216989 B`
-- main runtime compiler frame: `5296 B`
-- bounded main HWM: about `7984-8064 B`
-- internal free/min/largest: `217444 / 216808 / 176128 B`
-- PSRAM free/min/largest: `8363512 / 8363108 / 8257536 B`
+## Phase H current result
 
-The historical approximately 1 KiB internal-RAM condition was not reproduced.
+Phase H is **not PASS yet**.
 
-## Phase D completed ownership hardening
+The required evidence remains:
 
-D1 `1aee13cb96eaebdf41a937c5622cce61f1a01b88` introduced explicit process-lifetime ownership for telemetry storage and RF diagnostics.
+`natural AH/rule request -> binary arbiter OFF->ON -> RF -> physical fan`
 
-D2 `09340089767cde117d12acc049790a2b93778b8e` introduced explicit process-lifetime ownership for `ClimateRuntimeController`, `LampSafetyController`, and `ThermalTestSequence`.
+H v3 established that the repaired real/RF runtime is stable, but startup lamp safety forced the fan ON before the natural AH request could be observed from a normal OFF prestate.
 
-Result:
+V3 positive evidence:
 
-- main runtime compiler frame `5296 -> 2032 B` (`-3264 B`, about `61.6%`);
-- D2 hardware main HWM `11336 B`;
-- D2 internal free/min/largest `213900 / 213264 / 172032 B`;
-- image `743477 B`;
-- `.bss` `10216 B`;
-- host tests `24/24 PASS`;
-- no coredump/counter regression/crash/corrupt heap/stack canary;
-- Shelly median about `65.5 W`;
-- safe final state `fake-locked`.
+- no main-task stack overflow;
+- stable real-bounded boot/session;
+- RF ready;
+- main stack `16384 B`, worst observed free HWM about `2600 B`;
+- internal free/min/largest approximately `218592 / 218060 / 176128 B`;
+- natural fan request approximately `0.444-0.500`;
+- after startup recovery: safety clear;
+- physical fan ON;
+- arbiter transition count `1`;
+- RF TX count `5`, TX errors `0`;
+- manual safe recovery PASS;
+- final RF-disabled `fake-locked` PASS;
+- Shelly master remained ON.
 
-Phase D intentionally stopped at a `2032 B` compiler frame instead of moving progressively smaller automatic objects.
+Primary failure reason:
 
-## Phase E completed measured optimization
+`natural requested_fan>=0.10 not observed in bounded window`
 
-Full evidence: `docs/STAGE28E_PHASE_E_HANDOFF.md`.
+This is expected from the observed sequence: startup `TemperatureUnavailable` safety forced exhaust ON, then the normal AH request was already high when safety cleared.
 
-### E1 — telemetry queue payload to PSRAM
+## RF-enabled main-stack correction
 
-Implementation SHA:
+The Stage27C 12 KiB main stack was qualified only in fake-locked builds and overflowed inside the deeper ESP-IDF RMT initialization call path.
 
-`4a5121abf2a93ba76bfc219575d2b52b8025fb03`
+Current policy:
 
-- queue payload `16 x 296 B = 4736 B` uses explicit `MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT`;
-- `StaticQueue_t` metadata stays internal;
-- fallback remains the original internal `xQueueCreate()` path;
-- `CONFIG_SPIRAM_USE_MALLOC` remains disabled;
-- host tests `24/24 PASS`;
-- hardware marker `queue_psram=1 queue_bytes=4736`;
-- internal free/min/largest `218672 / 218140 / 176128 B`;
-- gain vs D2 `+4772 / +4876 B` free/min;
-- telemetry `12` writes, `0` queue drops, `0` write errors;
-- safe final state `fake-locked`.
+- RF disabled/fake build: `CONFIG_ESP_MAIN_TASK_STACK_SIZE=12288`;
+- RF enabled build: `CONFIG_ESP_MAIN_TASK_STACK_SIZE=16384`.
 
-### E2 — `stage27_store` stack right-sizing
+Implementation:
 
-Implementation SHA:
+- `config/idf/sdkconfig.defaults.stage28rf`
+- conditional selection in `scripts/stage27c_crowpanel.sh`
 
-`c2aff0a14bbcca567de4083a284d3522fa52421e`
+Dual-build verification passed on SHA `5a4830db9d10e8cb73d4c617b09122f0844ad899`.
 
-- stack `7168 -> 6144 B`;
-- host tests `24/24 PASS`;
-- hardware internal free/min/largest `219568 / 219036 / 176128 B`;
-- gain vs E1 `+896 / +896 B` free/min;
-- worst observed `stage27_store` HWM `1884 B`, later `1820 B` in E3;
-- telemetry `12` writes, `0` drops, `0` write errors;
-- safe final state `fake-locked`.
+Do not shrink the RF-enabled main stack based on fake-only evidence.
 
-Do not reduce this stack further before longer Phase G evidence.
+## Physical setup required for the next H run
 
-### E3 — Stage27C main stack right-sizing
+Do not intentionally exceed 28 C. Thermal trip `>=28 C` is safety evidence, not AH evidence.
 
-Implementation SHA:
+Preferred setup:
 
-`4a8ce18edd8cc90e6300929d2d9f035c4ec49eb5`
+1. Xiaomi remains outside/intake.
+2. TP357 starts inside with `<=26 C` and preferably daytime RH `<=60%`.
+3. Keep the tent open/ventilated during startup-safety recovery.
+4. If TP357 was unavailable during an early cycle, hold `<=26 C` continuously for 10 minutes until `safety_latched=0 force_fan=0 safety_reason=0`.
+5. Require normal fan OFF before creating the H request.
+6. Then close the tent / allow lamp warming while keeping TP357 below 28 C.
+7. A useful natural temperature trigger is roughly inside `26-27 C` with Xiaomi/intake around `23-24 C`; alternatively daytime RH above roughly `62%` with materially drier intake can cross the fan ON request threshold.
+8. Observe normal minimum-OFF dwell, OFF->ON arbiter transition, RF TX increment with `tx_errors=0`, physical/Shelly evidence.
+9. Always restore/prove final `fake-locked`.
 
-- only Stage27C overlay changes main stack `16384 -> 12288 B`;
-- base project default stays `16384 B`;
-- generated Stage27C sdkconfig confirms `CONFIG_ESP_MAIN_TASK_STACK_SIZE=12288`;
-- host tests `24/24 PASS`;
-- image `743641 B`;
-- hardware internal free/min/largest `223792 / 223260 / 180224 B`;
-- gain vs E2 `+4224 / +4224 B` free/min;
-- cumulative gain vs D2 `+9892 B free`, `+9996 B min`, `+8192 B largest block`;
-- main worst observed HWM `7240 B` free;
-- `stage27_store` worst HWM `1820 B` free;
-- telemetry `12` writes, `0` drops, `0` write errors;
-- 11 heartbeats and heap-integrity PASS;
-- Shelly median `65.5 W`;
-- safe final state `fake-locked`.
-
-Phase E stops here. Further stack cuts have diminishing value and should wait for Phase G long-runtime evidence.
-
-## Verified allocation policy
-
-For this ESP-IDF 5.5.4 Stage27C build:
-
-- `CONFIG_SPIRAM_USE_CAPS_ALLOC=y`;
-- `CONFIG_SPIRAM_USE_MALLOC` is not set;
-- `CONFIG_FREERTOS_TASK_CREATE_ALLOW_EXT_MEM=y`;
-- broad allocator policy was not changed;
-- RMT/ISR/DMA-sensitive buffers were not moved to PSRAM.
-
-## Phase F completed arbiter continuity proof
-
-Full evidence: `docs/STAGE28E_PHASE_F_HANDOFF.md`.
-
-Implementation SHA:
-
-`d88c77d8eab5013a6f94baf60e1404f5b030efdc`
-
-Phase F changed only `test/test_stage28d_binary_role_arbiter/test_main.cpp`. Production `Stage28dBinaryRoleArbiter.{h,cpp}` remained unchanged from the Phase E exit SHA.
-
-Deterministic single-instance result:
-
-- synchronized safe OFF at `0 ms`;
-- request `0.099` stays OFF with zero dwell holds;
-- 43 requests at `0.111` inside minimum-OFF dwell advance the same instance's cumulative dwell counter exactly `0 -> 43`;
-- the existing regression helper classifies `43 -> 1` as a regression;
-- request `0.111` at `119999 ms` stays OFF and advances `43 -> 44`;
-- request `0.111` at exactly `120000 ms` performs one OFF -> ON transition;
-- dwell history remains `44` after transition;
-- continuity faults remain `0`;
-- next same-state call remains monotonic.
-
-Local Agent gate `20260907-growbox-stage28e-phase-f-arbiter-continuity-gate-v1` passed:
-
-- exact SHA verification PASS;
-- focused C++17 proof PASS;
-- existing host tests `24/24 PASS`;
-- clean worktree / `git diff --check` PASS.
-
-Conclusion: the historical V5 same-instance-style dwell counter drop `43 -> 1` cannot arise from normal continuous execution of the current arbiter semantics except legitimate integer wrap. A future recurrence must be treated as lifecycle/runtime evidence until proven otherwise.
-
-## Phase G runtime evidence PASS; formal exit next
-
-Full evidence: `docs/STAGE28E_PHASE_G_HANDOFF.md`.
-
-Validated firmware/source SHA: `389453882f0e0d2209c5bdece7eaf443895aa7ba`.
-
-Short corrected reanalysis PASS:
-
-- one arbiter instance / one construction;
-- internal free/min/largest `223792 / 223152 / 180224 B`;
-- main HWM `7240 B` free; storage HWM `1884 B` free;
-- `18` heartbeats, `3` heap-integrity checks;
-- zero storage drops/write errors/fallbacks;
-- Shelly master ON, median `64.80 W`;
-- safe `fake-locked`.
-
-Representative long-soak corrected reanalysis PASS:
-
-- wall time `736.476 s`; final uptime `733249 ms`; startup serial-open reset gap `3.227 s`;
-- stable post-open boot ID `54f2ecb1`;
-- internal free/min/largest `223792 / 223260 / 180224 B`;
-- main HWM `7064 B` free; storage HWM `1884 B` free;
-- heartbeat sequence reached `72`; heap-integrity check reached `12`;
-- storage progressed to at least record `83`;
-- loop max `228148 us`;
-- BLE/SCD41/TP/Xiaomi healthy;
-- no coredump, arbiter regression, Guru Meditation, corrupt heap, canary, watchdog or heap-integrity failure after the post-open baseline;
-- Shelly master ON, median `65.10 W`;
-- safe `fake-locked`.
-
-The two apparent failures were harness false negatives: SCD41 first-sample warm-up at `751 ms`, and serial-port-open reset. Serial-open behavior and mandatory post-open baseline handling are documented in `docs/ESP32_S3_SERIAL_PORT_RESET.md`.
-
-Formal Phase G exit gate v2 PASS at `7ddb995d1f6cd190fa110f21f0d8dc0eabc61d26`. Phase H may now begin.
-
-Final physical `AH/rule request -> binary arbiter -> RF -> physical fan` remains Phase H.
+Exact request math and startup-safety details are in `docs/STAGE28E_PHASE_H_HANDOFF.md`.
 
 ## Safety boundary
 
@@ -208,7 +98,7 @@ Correct Growbox serial device:
 
 `/dev/cu.usbserial-1130`
 
-Never open, probe, monitor, reset or flash:
+Never open/probe/flash:
 
 `/dev/cu.usbserial-10`
 
@@ -220,14 +110,44 @@ Standing invariants:
 - recovery `<=26 C` continuously for 10 minutes;
 - manual RF blocked during `real-bounded`;
 - Shelly master stays ON;
-- no unattended real-output mode;
-- after bounded diagnostics restore/prove `fake-locked` safe state.
+- after bounded diagnostics restore/prove `fake-locked`;
+- serial-open reset is tolerated only before the stabilized post-open baseline.
+
+## Local Agent execution identity
+
+- repository: `MichalMatu/growbox-ml-controller`
+- repository id: `growbox-ml-controller`
+- agent binding: `815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5`
+- control branch: `agent-control`
+- work branch: `mvp/environment-controller`
+
+Before edits or tasks, read fresh `.agent/status/daemon.json`.
+
+For tasks:
+
+- exact `agent_binding` is mandatory;
+- use `resources: []` for software/docs/build work;
+- use `resources: ["board:growbox-s3"]` for serial/flash/hardware;
+- verify exact SHA explicitly because `expected_head` is not implemented;
+- read terminal `.agent/results/<task-id>.json` before reporting PASS.
+
+## Modularity status
+
+Do not refactor production runtime before the pending H physical proof.
+
+After formal H close, start a separate behavior-preserving modularity series. Priority targets:
+
+1. split the `runClimateV6RealInputRuntime()` god-function into bootstrap, scheduler/cycle, output/fail-safe, and telemetry seams;
+2. split `Stage28ServiceConsole` into transport/parser plus status, RF, RTC, sensor, and storage command modules.
+
+The detailed proposed seams and verification policy are in `docs/STAGE28E_PHASE_H_HANDOFF.md`.
 
 ## Immediate next work
 
-1. Treat `7ddb995d1f6cd190fa110f21f0d8dc0eabc61d26` as the formal Phase G exit SHA.
-2. Inspect the existing exact-SHA `real-bounded` / AH / binary-arbiter / RF control path before any physical run; do not reimplement it.
-3. Open `/dev/cu.usbserial-1130`, tolerate/record only the serial-open reset, wait for stabilization, and establish a fresh post-open boot/session baseline.
-4. Run one bounded physical `AH/rule request -> binary arbiter -> RF -> physical fan` E2E validation with Shelly master ON and all existing thermal/manual-RF safety interlocks intact.
-5. Capture request, arbiter instance/counters/dwell, transition, RF TX evidence, physical fan evidence, memory/stack/timing/safety, and Shelly evidence.
-6. Restore/prove `fake-locked` at the end. Any unexplained reset/session change, safety violation, TX error, heap/stack fault, or failed restoration stops Phase H.
+1. Read `docs/STAGE28E_PHASE_H_HANDOFF.md`.
+2. Fetch fresh work-branch HEAD and fresh daemon/result evidence.
+3. Prepare TP357/Xiaomi so startup safety can recover with a low natural fan request.
+4. Run the next bounded H physical attempt without any request injector and without intentionally crossing 28 C.
+5. Require normal fan OFF prestate, natural request `>=0.10`, minimum-OFF dwell, normal arbiter OFF->ON, RF/physical/Shelly evidence.
+6. Restore/prove `fake-locked`.
+7. Only after H formally closes, begin the modularity backlog.
