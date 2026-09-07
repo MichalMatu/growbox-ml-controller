@@ -57,10 +57,15 @@ if [[ ! -x "$STAGE27C_PYTHON" ]]; then
   STAGE27C_PYTHON="$(command -v python3)"
 fi
 
+SDKCONFIG_DEFAULTS="config/idf/sdkconfig.defaults;config/idf/sdkconfig.defaults.n8r8;config/idf/sdkconfig.defaults.stage27;config/idf/sdkconfig.defaults.stage27c"
+if [[ "$RF433_LOOPBACK_ENABLED" == "1" ]]; then
+  SDKCONFIG_DEFAULTS+=";config/idf/sdkconfig.defaults.stage28rf"
+fi
+
 idf_args=(
   -B "$BUILD_DIR"
   -D "SDKCONFIG=$SDKCONFIG_PATH"
-  -D "SDKCONFIG_DEFAULTS=config/idf/sdkconfig.defaults;config/idf/sdkconfig.defaults.n8r8;config/idf/sdkconfig.defaults.stage27;config/idf/sdkconfig.defaults.stage27c"
+  -D "SDKCONFIG_DEFAULTS=$SDKCONFIG_DEFAULTS"
   -D "GROWBOX_BOARD_PROFILE=crowpanel-esp32s3-2_9-n8r8"
   -D "GROWBOX_APP_MODE=climate-v6-real-inputs"
   -D "GROWBOX_I2C_SDA_GPIO=21"
