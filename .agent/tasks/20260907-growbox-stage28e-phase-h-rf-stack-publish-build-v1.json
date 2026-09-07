@@ -1,0 +1,18 @@
+{
+  "id": "20260907-growbox-stage28e-phase-h-rf-stack-publish-build-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "resources": [],
+  "memory_limit_mb": 4096,
+  "command_timeout": 1800,
+  "idle_timeout": 600,
+  "task_timeout": 3600,
+  "commands": [
+    "set -euo pipefail; EXPECTED=f56295930c356fb6166c9cbe99d76575e4c286c2; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; git fetch -q origin mvp/environment-controller; REMOTE=$(git rev-parse origin/mvp/environment-controller); test \"$REMOTE\" = \"846b470fa08ae98f3e3cc42b40db72840446adf5\" || test \"$REMOTE\" = \"$EXPECTED\"; git push origin HEAD:mvp/environment-controller; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; echo STAGE28E_H_RF_STACK_PUBLISH_PASS=$EXPECTED",
+    "set -euo pipefail; export CMAKE_BUILD_PARALLEL_LEVEL=1; BUILD=build/stage28e-h-stack-fake-verify; rm -rf \"$BUILD\"; STAGE27C_BUILD_DIR=\"$BUILD\" GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST=0 GROWBOX_FIRMWARE_GIT_SHA=f56295930c356fb6166c9cbe99d76575e4c286c2 bash scripts/stage27c_crowpanel.sh build; grep -Fx 'CONFIG_ESP_MAIN_TASK_STACK_SIZE=12288' \"$BUILD/sdkconfig\"; echo STAGE28E_H_FAKE_STACK_12K_BUILD_PASS",
+    "set -euo pipefail; export CMAKE_BUILD_PARALLEL_LEVEL=1; BUILD=build/stage28e-h-stack-rf-verify; rm -rf \"$BUILD\"; STAGE27C_BUILD_DIR=\"$BUILD\" GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 GROWBOX_RF433_LOOPBACK_ENABLED=1 GROWBOX_RF433_LOOPBACK_AUTO_SMOKE=0 GROWBOX_RF433_REMOTE_CAPTURE_ENABLED=0 GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST=0 GROWBOX_FIRMWARE_GIT_SHA=f56295930c356fb6166c9cbe99d76575e4c286c2 bash scripts/stage27c_crowpanel.sh build; grep -Fx 'CONFIG_ESP_MAIN_TASK_STACK_SIZE=16384' \"$BUILD/sdkconfig\"; echo STAGE28E_H_RF_STACK_16K_BUILD_PASS",
+    "set -euo pipefail; test \"$(git rev-parse HEAD)\" = \"f56295930c356fb6166c9cbe99d76575e4c286c2\"; test -z \"$(git status --porcelain)\"; git diff --check; echo STAGE28E_H_RF_STACK_PUBLISH_BUILD_GATE_PASS"
+  ]
+}
