@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260908-resource-policy-empty-mvp-v5",
+  "task_digest": "5fe22253fbf4f996ba4c5787ec55b3ff74cd44a9a1e7da0f67c01c92c75ab5e4",
+  "idle_timeout": 120,
+  "task_timeout": 900,
+  "memory_limit_mb": 512,
+  "started_at": "2026-09-07T22:46:20.926678+00:00",
+  "attempt_id": "48d148751f840aa16501541d",
+  "daemon_version": "4.18.13",
+  "daemon_pid": 83601,
+  "updated_at": "2026-09-07T22:46:20.926734+00:00",
+  "pid": 83601
+}
