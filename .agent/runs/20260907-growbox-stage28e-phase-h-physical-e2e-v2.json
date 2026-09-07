@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260907-growbox-stage28e-phase-h-physical-e2e-v2",
+  "task_digest": "d478f9057329af6b2ed424610cbdf8f5d7a76d484063a08e86a3c65e60766cb2",
+  "idle_timeout": 1200,
+  "task_timeout": 3300,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-07T05:40:03.020545+00:00",
+  "attempt_id": "7548b2e1ab5ef5bd32ac380c",
+  "daemon_version": "4.18.13",
+  "daemon_pid": 33904,
+  "updated_at": "2026-09-07T05:40:03.020702+00:00",
+  "pid": 33904
+}
