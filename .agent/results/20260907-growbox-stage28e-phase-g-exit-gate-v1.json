@@ -1,0 +1,117 @@
+{
+  "id": "20260907-growbox-stage28e-phase-g-exit-gate-v1",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "started_at": "2026-09-07T05:08:09.276947+00:00",
+  "command_timeout": 1200,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; EXPECTED=7ddb995d1f6cd190fa110f21f0d8dc0eabc61d26; git fetch -q origin mvp/environment-controller agent-control; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; git diff --check; echo STAGE28E_G_EXIT_EXACT_SHA_PASS=$EXPECTED",
+      "exit_code": 0,
+      "output": "STAGE28E_G_EXIT_EXACT_SHA_PASS=7ddb995d1f6cd190fa110f21f0d8dc0eabc61d26\n",
+      "elapsed_seconds": 1.473,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 2.17,
+      "output_policy": "stream",
+      "captured_output_chars": 72,
+      "output_truncated": false,
+      "current_rss_mb": 2.17,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 4,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "set -euo pipefail; VALIDATED=389453882f0e0d2209c5bdece7eaf443895aa7ba; python3 - <<'PY'\nimport subprocess\nvalidated='389453882f0e0d2209c5bdece7eaf443895aa7ba'\nexpected={\n 'docs/CONTINUATION_PLAN.md',\n 'docs/CURRENT_STATUS.md',\n 'docs/ESP32_S3_SERIAL_PORT_RESET.md',\n 'docs/GUIDANCE.md',\n 'docs/STAGE28E_PHASE_G_HANDOFF.md',\n}\nfiles=set(subprocess.check_output(['git','diff','--name-only',f'{validated}..HEAD'],text=True).splitlines())\nassert files==expected,(files,expected)\nfor p in expected:\n    assert p.startswith('docs/')\nprint('STAGE28E_G_EXIT_DOC_ONLY_SCOPE_PASS files='+','.join(sorted(files)))\nPY\ntest -f docs/STAGE28E_PHASE_G_HANDOFF.md; test -f docs/ESP32_S3_SERIAL_PORT_RESET.md; grep -Fq 'Validated firmware/source SHA: `389453882f0e0d2209c5bdece7eaf443895aa7ba`' docs/STAGE28E_PHASE_G_HANDOFF.md; grep -Fq 'Opening the serial monitor / USB-UART port can reset the ESP32-S3 before observation begins.' docs/ESP32_S3_SERIAL_PORT_RESET.md; grep -Fq 'establish the runtime failure baseline only after opening the port' docs/GUIDANCE.md; echo STAGE28E_G_EXIT_DOC_CONTENT_PASS",
+      "exit_code": 0,
+      "output": "STAGE28E_G_EXIT_DOC_ONLY_SCOPE_PASS files=docs/CONTINUATION_PLAN.md,docs/CURRENT_STATUS.md,docs/ESP32_S3_SERIAL_PORT_RESET.md,docs/GUIDANCE.md,docs/STAGE28E_PHASE_G_HANDOFF.md\nSTAGE28E_G_EXIT_DOC_CONTENT_PASS\n",
+      "elapsed_seconds": 0.477,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 1.91,
+      "output_policy": "stream",
+      "captured_output_chars": 209,
+      "output_truncated": false,
+      "current_rss_mb": 1.91,
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 4,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "set -euo pipefail; git show origin/agent-control:.agent/results/20260907-growbox-stage28e-phase-g-short-v1-reanalysis-v1.json > /tmp/g-short.json; git show origin/agent-control:.agent/results/20260907-growbox-stage28e-phase-g-long-soak-reanalysis-v1.json > /tmp/g-long.json; python3 - <<'PY'\nimport json\nshort=json.load(open('/tmp/g-short.json'))\nlong=json.load(open('/tmp/g-long.json'))\nassert short['status']=='done',short.get('status')\nassert long['status']=='done',long.get('status')\nso='\\n'.join(c.get('output','') for c in short.get('commands',[]))\nlo='\\n'.join(c.get('output','') for c in long.get('commands',[]))\nfor marker in ['STAGE28E_G_SHORT_REANALYSIS_PASS','STAGE28E_G_SHORT_SAFE_FAKE_LOCKED_PASS','STAGE28E_G_SHORT_REANALYSIS_GATE_PASS']:\n    assert marker in so,marker\nfor marker in ['STAGE28E_G_LONG_SOAK_REANALYSIS_PASS','STAGE28E_G_LONG_SOAK_SAFE_FAKE_LOCKED_PASS','STAGE28E_G_SOAK_REANALYSIS_GATE_PASS']:\n    assert marker in lo,marker\nassert 'boot_id=a8d86e45' in so\nassert 'internal_free=223792' in so\nassert 'main_worst=7240' in so and 'store_worst=1884' in so\nassert 'boot_id=54f2ecb1' in lo\nassert 'wall_s=736.476' in lo and 'final_uptime_ms=733249' in lo and 'startup_reset_gap_s=3.227' in lo\nassert 'main_worst=7064' in lo and 'store_worst=1884' in lo\nassert 'heartbeat_seq_max=72' in lo and 'heap_check_max=12' in lo\nprint('STAGE28E_G_EXIT_SHORT_AND_SOAK_EVIDENCE_PASS')\nPY",
+      "exit_code": 1,
+      "output": "Traceback (most recent call last):\n  File \"<stdin>\", line 13, in <module>\nAssertionError\n",
+      "elapsed_seconds": 0.478,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 3.17,
+      "output_policy": "stream",
+      "captured_output_chars": 89,
+      "output_truncated": false,
+      "current_rss_mb": 3.17,
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 4,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 4,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 1.473
+    },
+    {
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 4,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.477
+    },
+    {
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 4,
+      "stage_phase": "commands",
+      "outcome": "failed",
+      "elapsed_seconds": 0.478
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.109
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.074
+  },
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-07T05:08:13.511641+00:00",
+  "task_digest": "0251bbe950b7e87ce00e3fc33b6ae83dc2eb0efd82fbe6f9a7393ea2b1cda1cb",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "attempt_id": "0d0372471c81601e3de51b7d",
+  "daemon_version": "4.18.13"
+}
