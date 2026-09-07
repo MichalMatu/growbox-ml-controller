@@ -148,9 +148,9 @@ No safety-forced fan transition counts as H evidence.
 
 ### Independent Shelly support
 
-Because Shelly measures combined controlled-load power rather than fan-only power, the observer rejects a proof if lamp or humidifier state changes between the captured fan request and fan transition. That prevents a simultaneous ~97 W lamp or ~15.7 W humidifier transition from being mistaken for the ~3 W fan load.
+Because Shelly measures combined controlled-load power rather than fan-only power, the observer rejects a proof if lamp or humidifier state changes between the captured fan request and fan transition. The physical-power proof window then remains open until eight post-transition Shelly samples are collected and at least one subsequent `stage28d_output` sample confirms that lamp/humidifier state is still unchanged. Any confounder change before that proof window is sealed fails the run. Later load changes during the remaining environmental-response window do not rewrite the already sealed fan-power evidence.
 
-With lamp/humidifier stable, the observer requires:
+With lamp/humidifier stable through that proof window, the observer requires:
 
 - Shelly master remains ON;
 - pre-transition power evidence exists;

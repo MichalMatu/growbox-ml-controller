@@ -31,6 +31,7 @@ import serial
 KV_RE = re.compile(r"([A-Za-z0-9_]+)=([^ ]+)")
 SHELLY_URL = "http://192.168.0.16/rpc/Switch.GetStatus?id=0"
 GROWBOX_PORT = "/dev/cu.usbserial-1130"
+SHELLY_PROOF_SAMPLES = 8
 
 
 @dataclass
@@ -156,6 +157,10 @@ def observe(args: argparse.Namespace) -> int:
     first_request: Optional[tuple[float, dict[str, str]]] = None
     transition: Optional[tuple[float, dict[str, str]]] = None
     transition_time: Optional[float] = None
+    pre_load_state: Optional[tuple[int, int]] = None
+    proof_load_state: Optional[tuple[int, int]] = None
+    proof_power_sealed = False
+    post_state_confirmations = 0
 
     env_samples: list[EnvSample] = []
     shelly_before: list[float] = []
@@ -260,6 +265,7 @@ def observe(args: argparse.Namespace) -> int:
                             >= args.baseline_seconds
                         ):
                             off_baseline = clean_candidates[-1]
+                            pre_load_state = (lamp_on, humidifier_on)
                             on, power, voltage, _ = shelly_status()
                             if on is not None and power is not None:
                                 assert on, "Shelly master output OFF at closed-tent baseline"
@@ -279,6 +285,7 @@ def observe(args: argparse.Namespace) -> int:
                             )
                             if request >= 0.10:
                                 first_request = (now, values)
+                                proof_load_state = (lamp_on, humidifier_on)
                                 print(
                                     "STAGE28E_H_CLOSED_REQUEST_SEEN "
                                     "at_off_baseline=1 "
@@ -289,6 +296,24 @@ def observe(args: argparse.Namespace) -> int:
                             continue
 
                     else:
+                        load_state = (lamp_on, humidifier_on)
+                        if proof_load_state is None:
+                            if pre_load_state is None:
+                                pre_load_state = load_state
+                            elif load_state != pre_load_state:
+                                shelly_before.clear()
+                                pre_load_state = load_state
+                        elif not proof_power_sealed and load_state != proof_load_state:
+                            raise AssertionError(
+                                "Shelly fan proof confounded by lamp/humidifier state change during proof window"
+                            )
+                        elif (
+                            transition_time is not None
+                            and not proof_power_sealed
+                            and load_state == proof_load_state
+                        ):
+                            post_state_confirmations += 1
+
                         if (
                             first_request is None
                             and safety == 0
@@ -301,6 +326,7 @@ def observe(args: argparse.Namespace) -> int:
                             and tx_errors == 0
                         ):
                             first_request = (now, values)
+                            proof_load_state = load_state
                             print(
                                 "STAGE28E_H_CLOSED_REQUEST_SEEN "
                                 "at_off_baseline=0 "
@@ -363,8 +389,18 @@ def observe(args: argparse.Namespace) -> int:
                         )
                     if transition_time is None:
                         shelly_before.append(power)
-                    else:
+                    elif not proof_power_sealed:
                         shelly_after.append(power)
+                        if (
+                            len(shelly_after) >= SHELLY_PROOF_SAMPLES
+                            and post_state_confirmations >= 1
+                        ):
+                            proof_power_sealed = True
+                            print(
+                                "STAGE28E_H_CLOSED_SHELLY_PROOF_WINDOW_SEALED "
+                                f"samples={len(shelly_after)} confirmations={post_state_confirmations}",
+                                flush=True,
+                            )
                     if voltage is not None:
                         shelly_voltage.append(voltage)
                 last_shelly_poll = now
@@ -388,9 +424,14 @@ def observe(args: argparse.Namespace) -> int:
         assert transition_time is not None
         assert int(transition[1].get("tx_errors", "0")) == 0, transition[1]
         assert shelly_after, "no Shelly evidence after fan transition"
+        assert proof_power_sealed, (
+            "Shelly proof window did not complete with stable lamp/humidifier state",
+            len(shelly_after),
+            post_state_confirmations,
+        )
 
-        before_power = shelly_before[-8:]
-        after_power = shelly_after[:8]
+        before_power = shelly_before[-SHELLY_PROOF_SAMPLES:]
+        after_power = shelly_after[:SHELLY_PROOF_SAMPLES]
         pre_median = statistics.median(before_power) if before_power else None
         post_median = statistics.median(after_power) if after_power else None
         power_delta = (
