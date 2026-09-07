@@ -10,9 +10,9 @@ Continuation checklist: `docs/CONTINUATION_PLAN.md`
 
 ## Current transition
 
-**Stage27C FROZEN -> Stage28E Phase A COMPLETE -> B COMPLETE -> C COMPLETE -> D COMPLETE -> E COMPLETE -> F COMPLETE -> G RUNTIME EVIDENCE PASS -> Phase G FORMAL EXIT NEXT**
+**Stage27C FROZEN -> Stage28E Phase A COMPLETE -> B COMPLETE -> C COMPLETE -> D COMPLETE -> E COMPLETE -> F COMPLETE -> G COMPLETE -> Phase H NEXT**
 
-Stage28D functional AH work remains paused. Phase G short and representative long-soak runtime evidence are PASS after correcting two harness false negatives. The remaining Phase G step is one exact-SHA formal exit gate on the documentation HEAD. Do not return to the final physical AH actuator path before that gate passes and Phase H begins.
+Stage28E Phase G is formally complete. Its exact-SHA formal exit gate passed at `7ddb995d1f6cd190fa110f21f0d8dc0eabc61d26`. Phase H is now the only remaining Stage28E phase: one bounded physical `AH/rule request -> binary arbiter -> RF -> physical fan` end-to-end validation followed by mandatory restoration to `fake-locked`.
 
 ## Phase identities
 
@@ -198,7 +198,7 @@ Representative long-soak corrected reanalysis PASS:
 
 The two apparent failures were harness false negatives: SCD41 first-sample warm-up at `751 ms`, and serial-port-open reset. Serial-open behavior and mandatory post-open baseline handling are documented in `docs/ESP32_S3_SERIAL_PORT_RESET.md`.
 
-Run one exact-SHA read-only/software Phase G exit gate on the current docs HEAD. Only after PASS advance to Phase H.
+Formal Phase G exit gate v2 PASS at `7ddb995d1f6cd190fa110f21f0d8dc0eabc61d26`. Phase H may now begin.
 
 Final physical `AH/rule request -> binary arbiter -> RF -> physical fan` remains Phase H.
 
@@ -225,8 +225,9 @@ Standing invariants:
 
 ## Immediate next work
 
-1. Run one exact-SHA Phase G formal exit gate on the fresh documentation HEAD.
-2. Verify `docs/STAGE28E_PHASE_G_HANDOFF.md` and `docs/ESP32_S3_SERIAL_PORT_RESET.md`, both corrected Local Agent reanalysis results, and that production runtime/control code is unchanged from validated firmware SHA `389453882f0e0d2209c5bdece7eaf443895aa7ba`.
-3. Finish with clean worktree / `git diff --check`.
-4. Record the passing docs SHA as formal Phase G exit SHA.
-5. Only then enter Phase H and plan the bounded physical AH/RF/fan E2E validation with post-serial-open baseline and mandatory restoration to `fake-locked`.
+1. Treat `7ddb995d1f6cd190fa110f21f0d8dc0eabc61d26` as the formal Phase G exit SHA.
+2. Inspect the existing exact-SHA `real-bounded` / AH / binary-arbiter / RF control path before any physical run; do not reimplement it.
+3. Open `/dev/cu.usbserial-1130`, tolerate/record only the serial-open reset, wait for stabilization, and establish a fresh post-open boot/session baseline.
+4. Run one bounded physical `AH/rule request -> binary arbiter -> RF -> physical fan` E2E validation with Shelly master ON and all existing thermal/manual-RF safety interlocks intact.
+5. Capture request, arbiter instance/counters/dwell, transition, RF TX evidence, physical fan evidence, memory/stack/timing/safety, and Shelly evidence.
+6. Restore/prove `fake-locked` at the end. Any unexplained reset/session change, safety violation, TX error, heap/stack fault, or failed restoration stops Phase H.

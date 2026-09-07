@@ -30,9 +30,9 @@ Then fetch fresh `mvp/environment-controller` HEAD, fresh `agent-control:.agent/
 
 ## Current transition
 
-**Stage27C FROZEN -> Stage28E A COMPLETE -> B COMPLETE -> C COMPLETE -> D COMPLETE -> E COMPLETE -> F COMPLETE -> G RUNTIME EVIDENCE PASS -> Phase G FORMAL EXIT NEXT**
+**Stage27C FROZEN -> Stage28E A COMPLETE -> B COMPLETE -> C COMPLETE -> D COMPLETE -> E COMPLETE -> F COMPLETE -> G COMPLETE -> Phase H NEXT**
 
-Stage28D functional AH work stays paused until the Phase G formal exit gate passes. Phase G short and representative long-soak evidence are PASS. Final physical `AH/rule request -> binary arbiter -> RF -> physical fan` verification belongs to Phase H.
+Phase G is formally complete at exact exit SHA `7ddb995d1f6cd190fa110f21f0d8dc0eabc61d26`. Phase H is now active and is limited to the bounded physical `AH/rule request -> binary arbiter -> RF -> physical fan` verification plus mandatory fake-locked restoration.
 
 ## Phase identities
 
@@ -182,13 +182,13 @@ Safety boundary:
 
 ## Immediate next work
 
-1. Fetch fresh daemon and exact work-branch HEAD.
-2. Queue one exact-SHA Phase G formal exit gate; do not duplicate it if already present.
-3. The exit gate must verify Phase G handoff + serial-open reset guidance, corrected short and long-soak reanalysis PASS results, and no production runtime/control code changes relative to validated firmware SHA `389453882f0e0d2209c5bdece7eaf443895aa7ba`.
-4. Record the passing documentation SHA as formal Phase G exit SHA.
-5. Only after PASS enter Phase H.
-6. In Phase H, establish the boot/session baseline after opening `/dev/cu.usbserial-1130`, then run one bounded physical `AH/rule request -> binary arbiter -> RF -> physical fan` E2E validation and restore/prove `fake-locked`.
+1. Treat `7ddb995d1f6cd190fa110f21f0d8dc0eabc61d26` as formal Phase G exit SHA.
+2. Read-only inspect the exact current existing `real-bounded`, AH, arbiter and RF service/runtime interfaces before running hardware.
+3. Use only `/dev/cu.usbserial-1130`; opening it can reset the CrowPanel, so establish a stabilized post-open baseline before judging resets.
+4. Run one bounded Phase H physical E2E path: `AH/rule request -> binary arbiter -> RF -> physical fan`.
+5. Keep Shelly master ON, preserve thermal trip/recovery and the manual-RF block, capture exact SHA + lifecycle/counters + RF/physical/Shelly evidence, and fail closed on any anomaly.
+6. Restore/prove `fake-locked` after the diagnostic.
 
 ## Recommended fresh-chat instruction
 
-`Read AGENTS.md, docs/GUIDANCE.md, docs/STAGE28E_PHASE_G_HANDOFF.md, docs/ESP32_S3_SERIAL_PORT_RESET.md, docs/CURRENT_STATUS.md and docs/CONTINUATION_PLAN.md. Fetch fresh mvp/environment-controller HEAD and Local Agent daemon/result first. Treat Phase G runtime evidence as PASS but Phase G itself as complete only if the final exact-SHA docs exit gate passed. Remember that opening /dev/cu.usbserial-1130 can reset this CrowPanel; establish a fresh post-open boot/session baseline before judging resets. After formal G PASS, continue only with bounded Phase H physical AH/RF/fan E2E validation and restore fake-locked afterward.`
+`Read AGENTS.md, docs/GUIDANCE.md, docs/STAGE28E_PHASE_G_HANDOFF.md, docs/ESP32_S3_SERIAL_PORT_RESET.md, docs/CURRENT_STATUS.md and docs/CONTINUATION_PLAN.md. Fetch fresh mvp/environment-controller HEAD and Local Agent daemon/result first. Phase G is formally complete at 7ddb995d1f6cd190fa110f21f0d8dc0eabc61d26. Continue only Phase H: inspect the existing real-bounded/AH/arbiter/RF interface first, then run one bounded physical AH request -> binary arbiter -> RF -> fan E2E validation. Opening /dev/cu.usbserial-1130 can reset this CrowPanel, so establish the post-open baseline first. Preserve all thermal/manual-RF safety interlocks and restore/prove fake-locked afterward.`

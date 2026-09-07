@@ -174,6 +174,8 @@ Before declaring Phase G formally complete, run one final exact-SHA read-only/so
 
 Only after that exact-SHA exit gate passes should documentation advance to **Phase H NEXT**.
 
+Formal Phase G exit gate v2 passed at exact documentation SHA `7ddb995d1f6cd190fa110f21f0d8dc0eabc61d26`. Phase G is therefore formally COMPLETE and Phase H is NEXT.
+
 ## Phase H next
 
 Phase H is the only remaining Stage28E phase.
