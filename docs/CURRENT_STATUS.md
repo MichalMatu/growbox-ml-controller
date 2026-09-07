@@ -2,167 +2,152 @@
 
 Updated: 2026-09-08
 Development branch: `mvp/environment-controller`
-Latest handoff: `docs/STAGE28E_PHASE_H_HANDOFF.md`
-Stage28E execution guide: `docs/GUIDANCE.md`
+Latest handoff: `docs/ARCHITECTURE_HANDOFF.md`
+Execution architecture design: `docs/OUTPUT_EXECUTION_ARCHITECTURE.md`
+Frozen Phase H evidence: `docs/STAGE28E_PHASE_H_HANDOFF.md`
+Stage28E guide/history: `docs/GUIDANCE.md`
 Prior Stage28D evidence: `docs/STAGE28D_AH_ARBITER_HANDOFF.md`
 Primary roadmap: `docs/PROJECT_ROADMAP.md`
 Continuation checklist: `docs/CONTINUATION_PLAN.md`
 
 ## Current transition
 
-**Stage27C FROZEN -> Stage28E A COMPLETE -> B COMPLETE -> C COMPLETE -> D COMPLETE -> E COMPLETE -> F COMPLETE -> G COMPLETE -> H IN PROGRESS**
+**Stage27C FROZEN -> Stage28E A-G COMPLETE -> H OPEN BUT SUSPENDED -> EXECUTION ARCHITECTURE AUDIT/REFACTOR ACTIVE**
 
-A-G are formally complete. Phase H is the only remaining Stage28E phase.
+A-G are formally complete. Phase H remains formally open, but all further H v8 testing is intentionally suspended by project decision on 2026-09-08.
+
+The immediate workstream is not another output gate around the old runtime. It is a clean execution architecture with one physical-output owner and explicit separation of:
+
+- climate/control intent;
+- schedule/manual intent;
+- safety constraints and forced actions;
+- lifecycle/output policy;
+- binary dwell/hysteresis policy;
+- transport;
+- command/configuration state;
+- telemetry/physical feedback.
+
+Architecture-pause entry baseline:
+
+`157806442161e88edd8038e532e9dff333a19efb`
 
 Formal Phase G exit gate:
 
 `7ddb995d1f6cd190fa110f21f0d8dc0eabc61d26`
 
-Qualified Phase H production runtime/tooling source SHA:
+Old qualified Phase H production runtime/tooling identity:
 
 `5a4830db9d10e8cb73d4c617b09122f0844ad899`
 
-Do not confuse a later scripts/docs-only repository HEAD with the firmware identity above.
+That identity and the old H v8 preflight remain historical evidence only once production C++ changes for the architecture refactor.
 
-## Phase H current result
+## Phase H frozen state
 
-Phase H is **not PASS yet**.
+Phase H is **not PASS** and is **not currently running**.
 
-The required evidence remains:
+Latest relevant H facts:
 
-`natural AH/rule request -> binary arbiter OFF->ON -> RF TX -> physical fan`
+- H v7 was intentionally interrupted after an observer semantic defect was established;
+- mandatory recovery and final verification passed;
+- the board was documented RF-disabled `fake-locked` afterward;
+- observer commit `45065a34ce276ac5cdb7ef8cf0a1ad8a4bae1b0d` accepts `Safe (0)` and `TimerOff (1)` only when `safety_latched=0` and `force_fan=0`;
+- H v8 software preflight `20260908-stage28e-h-v8-preflight-v1` passed on `231eed28f64bdbdc4238fd8bce128264027702f2`;
+- H v8 hardware execution was never started.
 
-followed by mandatory recovery and final RF-disabled `fake-locked`.
+Do not start H v8 during the architecture workstream. The frozen H handoff preserves the detailed historical evidence.
 
-### H v5
+## Active architecture decision
 
-Task:
+Authoritative design:
 
-`.agent/tasks/20260907-stage28e-h-v5-fast-close.json`
+`docs/OUTPUT_EXECUTION_ARCHITECTURE.md`
 
-Result:
+Authoritative continuation handoff:
 
-`.agent/results/20260907-stage28e-h-v5-fast-close.json`
+`docs/ARCHITECTURE_HANDOFF.md`
 
-Primary H v5 failed on the harness precondition:
+Core invariant:
 
-`clean safety-clear fan-OFF open-tent baseline not observed`
+> `OutputSupervisor` becomes the only normal production component allowed to execute configured physical outputs.
 
-This is no longer a valid physical-test assumption because the operator closed the tent during the run and explicitly requested that it remain closed for all subsequent work.
+Target responsibilities:
 
-The persisted close marker is:
+- `ClimateRuntimeController` / climate decision layer computes `ControlIntent` and does not own RF/lifecycle behavior;
+- `SafetyPolicyEngine` computes a `SafetyEnvelope` and never transmits directly;
+- schedule and manual sources produce intents;
+- `OutputPolicyConfig` defines per-output boot/automation-off/recovery/fault actions and bounded ordering/timing;
+- binary actuator policy owns hysteresis/dwell only;
+- `OutputSupervisor` resolves mode + intents + safety + policy into an `OutputPlan`;
+- RF433 becomes a narrow transport;
+- `OutputStateStore` distinguishes desired/resolved/last-commanded/transport-result from actual physical state;
+- normal service-console output commands go through the supervisor.
 
-- local: `2026-09-07T14:16:42+02:00`;
-- UTC: `2026-09-07T12:16:42Z`;
-- control-plane asset: `.agent/task-assets/20260907-stage28e-h-manual-close-marker.json`.
+### Automation OFF
 
-Important positive end-of-real-run evidence included:
+Automation OFF is a lifecycle state, not merely a final command filter.
 
-- `outputs=real-bounded`;
-- `rf_ready=1`;
-- `fan_known=1`, `fan_on=1`;
-- `requested_fan≈0.278`;
-- `applied_fan=1.000`;
-- `safety_latched=0`, `force_fan=0`, `safety_reason=0`;
-- `arbiter_transitions=11`;
-- `arbiter_safety_overrides=0`;
-- `tx=15`, `tx_errors=0`;
-- TP357 about `23.2 C / 65% RH`;
-- Xiaomi/intake about `23.22 C / 57.76% RH`;
-- SCD41 CO2 about `823 ppm`.
+Preferred behavior:
 
-These observations are useful evidence but H remains formally open because the retained harness did not establish the required closed-tent normal OFF baseline and then prove the corresponding natural OFF->ON chain without an invalid interactive/open-tent assumption.
+- climate engine may continue calculating in observe-only mode;
+- normal control intent is not executed;
+- safety remains active;
+- configured per-output disable actions decide which sockets receive OFF/ON/no command/schedule/restore behavior and when;
+- transport remains unaware of why a command was chosen.
 
-H v5 recovery passed:
+## First task in the next chat
 
-- manual RF recovery return code `0`;
-- final fake verifier return code `0`;
-- final `outputs=fake-locked`;
-- final `rf_ready=0`;
-- Shelly master ON, about `27.3 W` during the final verifier.
+Start with a **read-only execution-architecture audit**. Do not patch production behavior first.
 
-The board was left safe.
+The audit must identify exact files/symbols for:
 
-## H v6 parser false negative
+1. every normal and diagnostic RF/output write path;
+2. every output-state owner/cache;
+3. thermal safety and all fail-safe paths;
+4. boot, automation-disable, recovery, and fault output behavior;
+5. schedule/lamp path;
+6. service-console/manual RF path;
+7. endpoint-role mapping and validation;
+8. existing configuration/state persistence mechanisms;
+9. task/thread ownership and reentrancy assumptions;
+10. `reconcileApplied` / previous-applied coupling;
+11. host tests coupled to the present actuator-driver chain;
+12. expected stack/DRAM effect of the supervisor/policy split.
 
-H v6 completed with primary FAIL but recovery/final PASS. The board returned to RF-disabled `fake-locked`.
+Write the result to:
 
-A retained-log audit established that the failure was in the observer parser, not in the deterministic controller path:
+`docs/OUTPUT_EXECUTION_ARCHITECTURE_AUDIT.md`
 
-- `576/576` `stage28d_output` lines were ESP-IDF-prefixed;
-- `0` began with the raw marker expected by the observer;
-- the production runtime nevertheless produced `24` clean OFF windows lasting up to about `145 s`;
-- the run reached `arbiter_transitions=46`, `tx=50`, `tx_errors=0`.
+Only after the audit is reconciled with the design should implementation begin.
 
-The observer now accepts `stage28d_output ` as an in-line marker so both raw and prefixed ESP-IDF serial forms are parsed. Production C/C++ remains unchanged. Formal H is still open until a corrected observer run proves the complete natural OFF->ON path and mandatory recovery/final.
+## Planned migration sequence
 
-Corrected observer RC4: `d91fe21d319d4f85832d9fc95d5912bbae23cf0e`. Software-only preflight `20260907-stage28e-h-prefix-fix-preflight-rc4` is PASS, including replay acceptance of all 576 retained v6 output-state lines, host suite, fake 12 KiB build, RF/real 16 KiB build and clean tree.
+1. audit only;
+2. contracts/types;
+3. split dumb RF transport from endpoint state/policy;
+4. adapt thermal safety to a `SafetyEnvelope`;
+5. introduce `OutputSupervisor` + lifecycle state machine/policy;
+6. integrate binary hysteresis/dwell under execution policy;
+7. split climate decision production from physical execution/reconciliation;
+8. add versioned output policy and honest persisted command state using the existing suitable store;
+9. route normal service-console output commands through the supervisor;
+10. remove duplicated state/safety/output ownership and enforce the one-owner invariant;
+11. focused host tests during implementation, then one full software gate after stabilization;
+12. only then create a new production firmware identity and new bounded physical qualification plan.
 
-## H v7 TimerOff false negative and H v8 readiness
+Do not combine this into one large rewrite.
 
-H v7 primary was intentionally interrupted with RC `130` once the observer semantic defect was established. Recovery and final verification both passed, so the board returned to RF-disabled `fake-locked`. V7 telemetry showed normal fan transitions while `safety_latched=0`, `force_fan=0`, `safety_reason=1`; production defines reason `1` as `TimerOff`, a normal schedule-off state.
+## Test / hardware status
 
-Observer commit `45065a34ce276ac5cdb7ef8cf0a1ad8a4bae1b0d` now treats only `Safe (0)` and `TimerOff (1)` as H safety-clear when both latch and force are zero; reasons `2..5` remain rejected. Focused tests pass and retained v7 replay accepts `596` TimerOff samples with zero unsafe accepts.
+For the current handoff session:
 
-H v8 software preflight `20260908-stage28e-h-v8-preflight-v1` passed on `231eed28f64bdbdc4238fd8bce128264027702f2`: no production C/C++ delta from `5a4830db9d10e8cb73d4c617b09122f0844ad899`, `24/24` host tests passed, fake `12288 B` and real/recovery `16384 B` images were built, final tree was clean, and no hardware was started. **H v8 itself is not running and has not been started.**
+- tests are paused;
+- no builds are requested;
+- no serial access;
+- no flashing;
+- no RF transmission;
+- no hardware qualification.
 
-## Closed-tent H release-candidate harness
-
-The repository now contains:
-
-`scripts/stage28e_phase_h_closed_tent.py`
-
-Purpose:
-
-- tent is already closed;
-- no user notification/action dependency;
-- no request injection;
-- no actuator writes;
-- exact firmware SHA and `real-bounded`/RF-ready runtime baseline required;
-- stable safety-clear physical fan-OFF baseline required for at least 10 seconds;
-- `requested_fan` is intentionally unrestricted during that OFF baseline because the arbiter can legally hold OFF while request is already above the ON threshold;
-- then a natural `requested_fan>=0.10` must be observed from fan OFF;
-- normal arbiter transition count and RF TX count must both increase;
-- `tx_errors` must remain zero;
-- fan must become known+ON with `applied_fan>=0.99`;
-- lamp and humidifier state must remain unchanged across the fan proof so Shelly total-power evidence is not confounded;
-- Shelly master must remain ON and total power must rise by at least 1 W;
-- TP357/Xiaomi/SCD41 response is collected before/after the transition;
-- TP357 guard defaults to `27.5 C`, below the `28 C` thermal safety trip;
-- any post-baseline reset/session/lifecycle restart fails the observation;
-- the observer is bounded and recovery/final fake-locked remains the task wrapper's mandatory responsibility.
-
-Do not run the observer by itself as an unattended production controller. The intended use is only inside a bounded qualification task that always restores/proves `fake-locked`.
-
-## RF-enabled main-stack correction
-
-Current policy remains:
-
-- RF disabled/fake build: `CONFIG_ESP_MAIN_TASK_STACK_SIZE=12288`;
-- RF enabled build: `CONFIG_ESP_MAIN_TASK_STACK_SIZE=16384`.
-
-Implementation:
-
-- `config/idf/sdkconfig.defaults.stage28rf`;
-- conditional selection in `scripts/stage27c_crowpanel.sh`.
-
-Do not shrink the RF-enabled stack without new measured evidence.
-
-## Architecture / modularity audit
-
-Two large orchestration areas remain deliberate post-H debt:
-
-1. `src/climate/ClimateV6RealInputRuntime.cpp` is about 23 KB and `runClimateV6RealInputRuntime()` owns too many responsibilities: hardware/bootstrap, storage/RF/output arming, control-object wiring, safety/test-sequence integration, scheduler/cycle execution and telemetry/service-console coordination.
-2. `src/climate/runtime/Stage28ServiceConsole.cpp` is about 32 KB and combines UART transport/line editing, parser/dispatcher, status/stack diagnostics, sensor reporting, RF commands, RTC commands and SD-log commands.
-
-These are genuine god-function/god-object risks, but **do not refactor production C++ before the pending H physical proof**. Preserving the already-qualified production runtime is more valuable than structural cleanup immediately before the overnight qualification.
-
-After formal H close, use behavior-preserving extraction commits:
-
-- runtime -> bootstrap / scheduler-cycle / output-fail-safe / telemetry;
-- service console -> UART transport/parser plus status / RF / RTC / sensor / storage modules.
-
-No actuator semantics, AH thresholds, allocator policy or stack shrinking should be mixed into those extraction commits.
+In the next architecture session, start with code-reading/audit only. Focused host tests resume when behavior-changing implementation begins. One full software gate is deferred until the architecture stabilizes.
 
 ## Safety boundary
 
@@ -176,15 +161,15 @@ Never open/probe/flash:
 
 Standing invariants:
 
-- tent remains closed for the next qualification; no operator open/close action is required;
-- deterministic rule controller authoritative;
-- ML shadow/research-only;
-- thermal trip `>=28 C`;
-- recovery `<=26 C` continuously for 10 minutes;
-- manual RF blocked during `real-bounded`;
-- Shelly master stays ON;
-- after every bounded real-output diagnostic restore/prove RF-disabled `fake-locked`;
-- serial-open reset is tolerated only before the stabilized runtime baseline.
+- tent remains closed unless the operator explicitly changes that requirement later;
+- deterministic rule controller remains authoritative;
+- ML remains shadow/research-only;
+- thermal trip remains `>=28 C`;
+- thermal recovery remains `<=26 C` continuously for 10 minutes;
+- manual RF remains blocked during the old `real-bounded` qualification mode and must not be reintroduced as an unguarded production bypass;
+- Shelly master stays ON during any future bounded qualification;
+- future hardware tasks must restore/prove an explicitly defined safe state;
+- old H observer/recovery tooling is historical until reviewed against the new execution architecture.
 
 ## Local Agent execution identity
 
@@ -194,20 +179,20 @@ Standing invariants:
 - control branch: `agent-control`;
 - work branch: `mvp/environment-controller`.
 
-For every task:
+For every Local Agent task:
 
 - exact `agent_binding` is mandatory;
 - use `resources: []` for every repository task, including software, builds, serial, flash and hardware;
-- verify the exact device/port inside hardware tasks;
-- verify exact SHA in-task;
+- do not declare named resources or `machine`;
+- verify exact SHA in-task whenever source identity matters;
+- verify the exact device/port inside any future hardware task;
 - read terminal `.agent/results/<task-id>.json` before reporting PASS.
 
 ## Immediate next work
 
-1. Treat `231eed28f64bdbdc4238fd8bce128264027702f2` as the H v8 executable/preflight identity and allow only documentation-only readiness commits after it without rerunning the software gate.
-2. H v8 is prepared but **must not start until explicitly requested**. When started, its task must use `resources: []`, verify `/dev/cu.usbserial-1130` inside the task and explicitly refuse `/dev/cu.usbserial-10`.
-3. Start with the tent already closed; require no operator action, no request injection and no actuator forcing.
-4. Prove stable safety-clear physical fan OFF -> natural `requested_fan>=0.10` -> normal arbiter OFF->ON -> RF TX increment with zero errors -> unconfounded Shelly physical support. `Safe (0)` and `TimerOff (1)` are acceptable only while `safety_latched=0` and `force_fan=0`; reasons `2..5` are not.
-5. Regardless of primary outcome, always execute recovery RF and final RF-disabled `fake-locked`.
-6. If H v8 passes, formally close Stage28E H before starting any longer soak or production runtime/service-console modularization.
-7. Keep the production runtime/service-console modularity refactor deferred until H is formally closed.
+1. Fresh-check work-branch HEAD and Local Agent status in the new chat.
+2. Read `docs/ARCHITECTURE_HANDOFF.md` and `docs/OUTPUT_EXECUTION_ARCHITECTURE.md` before the older H handoff.
+3. Perform the read-only architecture audit and create `docs/OUTPUT_EXECUTION_ARCHITECTURE_AUDIT.md`.
+4. Correct the design document if the audit disproves an assumption.
+5. Then implement the modular execution architecture in small coherent commits.
+6. Do not start H v8 or any physical-output test until the architecture has a new software qualification, new exact firmware identity, reviewed qualification plan, and explicit operator authorization.
