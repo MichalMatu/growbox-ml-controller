@@ -1,0 +1,9 @@
+{
+  "id": "20260908-execution-architecture-handoff-v1",
+  "status": "failed",
+  "failure_reason": "invalid_task_file",
+  "started_at": null,
+  "finished_at": "2026-09-07T23:58:09.689593+00:00",
+  "daemon_version": "4.18.13",
+  "error": "JSONDecodeError: Invalid control character at: line 13 column 21102 (char 21442)"
+}
