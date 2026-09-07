@@ -1,0 +1,19 @@
+{
+  "id": "20260907-growbox-stage28e-phase-h-main-stack-diagnosis-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 4096,
+  "command_timeout": 1200,
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "commands": [
+    "set -euo pipefail; EXPECTED=846b470fa08ae98f3e3cc42b40db72840446adf5; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; echo STAGE28E_H_STACK_DIAG_EXACT_SHA_PASS=$EXPECTED",
+    "set -euo pipefail; echo '=== SYMBOL CALL SITES ==='; grep -R -n --include='*.cpp' --include='*.cc' --include='*.cxx' --include='*.h' --include='*.hpp' -E 'Stage28RfDiagnostics|Rf433RmtLoopback|app_main' src main components 2>/dev/null || true; echo '=== END SYMBOL CALL SITES ==='",
+    "set -euo pipefail; python3 - <<'PY'\nfrom pathlib import Path\nroots=[Path('src'),Path('main'),Path('components')]\nneedles=('Stage28RfDiagnostics','Rf433RmtLoopback','app_main')\nfor root in roots:\n    if not root.exists(): continue\n    for p in root.rglob('*'):\n        if not p.is_file() or p.suffix not in {'.cpp','.cc','.cxx','.h','.hpp'}: continue\n        try: lines=p.read_text(errors='replace').splitlines()\n        except Exception: continue\n        hits=[i for i,l in enumerate(lines) if any(n in l for n in needles)]\n        if not hits: continue\n        print(f'=== FILE {p} ===')\n        spans=[]\n        for i in hits:\n            a=max(0,i-25); b=min(len(lines),i+40)\n            if spans and a<=spans[-1][1]+1: spans[-1]=(spans[-1][0],max(spans[-1][1],b))\n            else: spans.append((a,b))\n        for a,b in spans:\n            for j in range(a,b): print(f'{j+1:5d}: {lines[j]}')\n            print('---')\nPY",
+    "set -euo pipefail; echo '=== BUILD ARTIFACTS ==='; for B in build/stage28e-h-real-v2 build/stage28e-h-recovery-rf-v2 build/stage28e-h-final-fake-v2; do echo \"--- $B ---\"; if [ -d \"$B\" ]; then find \"$B\" -type f \( -name '*.su' -o -name '*.map' -o -name '*.elf' \) -print | head -80; else echo MISSING; fi; done; echo '=== STACK USAGE MATCHES ==='; find build/stage28e-h-real-v2 build/stage28e-h-recovery-rf-v2 build/stage28e-h-final-fake-v2 -type f -name '*.su' -print0 2>/dev/null | xargs -0 grep -n -E 'app_main|Stage28RfDiagnostics|Rf433RmtLoopback|begin\\(' 2>/dev/null || true; echo '=== ELF SYMBOL SIZES ==='; ELF=$(find build/stage28e-h-real-v2 -maxdepth 2 -type f -name '*.elf' | head -1 || true); if [ -n \"$ELF\" ]; then . /Users/michal/esp/esp-idf/export.sh >/dev/null; xtensa-esp32s3-elf-nm -C -S --size-sort \"$ELF\" | grep -E 'app_main|Stage28RfDiagnostics|Rf433RmtLoopback' || true; else echo NO_REAL_ELF; fi; echo STAGE28E_H_STACK_DIAG_ARTIFACT_SCAN_PASS",
+    "set -euo pipefail; test -z \"$(git status --porcelain)\"; git diff --check; echo STAGE28E_H_STACK_DIAG_CLEAN_TREE_PASS"
+  ]
+}
