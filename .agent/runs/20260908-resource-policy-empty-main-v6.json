@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260908-resource-policy-empty-main-v6",
+  "task_digest": "3afaa8eade80a822e0c3546f22b743d3448f5c7c9c75c0bef1885f36563fbbf2",
+  "idle_timeout": 120,
+  "task_timeout": 900,
+  "memory_limit_mb": 512,
+  "started_at": "2026-09-07T22:48:53.920861+00:00",
+  "attempt_id": "37d96e131ff9a695b70013d0",
+  "daemon_version": "4.18.13",
+  "daemon_pid": 87401,
+  "updated_at": "2026-09-07T22:48:53.920927+00:00",
+  "pid": 87401
+}
