@@ -1,0 +1,116 @@
+{
+  "id": "20260907-growbox-stage28e-phase-h-request-interface-inspect-v1",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "started_at": "2026-09-07T05:28:45.809992+00:00",
+  "command_timeout": 1200,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; EXPECTED=1eb2772f65ddfa82ba185e5658b2c41899f118d4; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; git diff --check; echo STAGE28E_H_REQUEST_INSPECT_EXACT_SHA_PASS=$EXPECTED",
+      "exit_code": 0,
+      "output": "STAGE28E_H_REQUEST_INSPECT_EXACT_SHA_PASS=1eb2772f65ddfa82ba185e5658b2c41899f118d4\n",
+      "elapsed_seconds": 1.126,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 2.06,
+      "output_policy": "stream",
+      "captured_output_chars": 83,
+      "output_truncated": false,
+      "current_rss_mb": 2.06,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "python3 - <<'PY'\nfrom pathlib import Path\nimport re\nroots=[Path('src'),Path('components'),Path('include'),Path('test'),Path('scripts')]\npat=re.compile(r'(GROWBOX_STAGE28.*(?:TEST|OVERRIDE|FORCE)|requested_fan|safe\\.exhaust_fan|AbsoluteHumidity|absolute humidity|AH_|AhController|ventilation|exhaust_fan)',re.I)\nrows=[]\nfor root in roots:\n    if not root.exists(): continue\n    for p in root.rglob('*'):\n        if not p.is_file() or '.git' in p.parts: continue\n        try: lines=p.read_text(errors='ignore').splitlines()\n        except Exception: continue\n        for n,line in enumerate(lines,1):\n            if pat.search(line): rows.append((str(p),n,line.strip()))\nfor p,n,line in rows[:500]: print(f'{p}:{n}:{line}')\nprint('MATCH_COUNT',len(rows))\nprint('STAGE28E_H_REQUEST_INTERFACE_SEARCH_PASS')\nPY",
+      "exit_code": 0,
+      "output": "src/CMakeLists.txt:130:set(GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED \"0\" CACHE STRING \"Enable bounded Gate6 thermal test sequence\")\nsrc/CMakeLists.txt:132:set(GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST \"0\" CACHE STRING \"Run one bounded Stage28E breadcrumb software-restart self-test\")\nsrc/CMakeLists.txt:165:GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=${GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED}\nsrc/CMakeLists.txt:167:GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST=${GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST}\nsrc/climate/ClimateObservabilityMetrics.h:12:struct VentilationGradientMetrics {\nsrc/climate/ClimateObservabilityMetrics.h:21:VentilationGradientMetrics calculateVentilationGradients(\nsrc/climate/Stage28dBinaryRoleArbiter.h:17:BinaryActuatorConfig exhaust_fan{0.10F, 0.03F, 120'000U, 120'000U};\nsrc/climate/ClimateObservabilityMetrics.cpp:10:constexpr float kAbsoluteHumidityScale = 216.7F;\nsrc/climate/ClimateObservabilityMetrics.cpp:37:kAbsoluteHumidityScale * vapor_pressure_hpa / (273.15F + temperature_c);\nsrc/climate/ClimateObservabilityMetrics.cpp:52:VentilationGradientMetrics calculateVentilationGradients(\nsrc/climate/ClimateObservabilityMetrics.cpp:55:VentilationGradientMetrics output{};\nsrc/climate/ClimateV6RealInputRuntime.cpp:107:#ifndef GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED\nsrc/climate/ClimateV6RealInputRuntime.cpp:108:#define GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED 0\nsrc/climate/ClimateV6RealInputRuntime.cpp:318:if (GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED != 0 && !real_output_ready) {\nsrc/climate/ClimateV6RealInputRuntime.cpp:367:GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED != 0,\nsrc/climate/ClimateV6RealInputRuntime.cpp:393:if (GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED != 0 && real_output_ready &&\nsrc/climate/ClimateV6RealInputRuntime.cpp:409:decision.applied.exhaust_fan = lamp_decision.force_exhaust_on ? 1.0F : 0.0F;\nsrc/climate/ClimateV6RealInputRuntime.cpp:437:} else if (GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED == 0) {\nsrc/climate/ClimateV6RealInputRuntime.cpp:486:\"safety_reason=%u requested_fan=%.3f requested_humidifier=%.3f \"\nsrc/climate/ClimateV6RealInputRuntime.cpp:498:static_cast<double>(decision.rule.safe.exhaust_fan),\nsrc/climate/ClimateV6RealInputRuntime.cpp:500:static_cast<double>(decision.applied.exhaust_fan),\nsrc/climate/ClimateIoAdapters.cpp:16:request.exhaust_fan = level;\nsrc/climate/ClimateIoAdapters.cpp:61:apply_role(ClimateActuatorRole::ExhaustFan, request.exhaust_fan);\nsrc/climate/ClimateIoAdapters.cpp:82:report(ClimateActuatorRole::ExhaustFan, request.exhaust_fan);\nsrc/climate/ClimateV6FakeRuntime.cpp:109:cJSON_AddNumberToObject(node, \"exhaust_fan\", request.exhaust_fan);\nsrc/climate/ClimateV6FakeRuntime.cpp:123:cJSON_AddNumberToObject(node, \"exhaust_fan\", actions.exhaust_fan);\nsrc/climate/ClimateV6FakeRuntime.cpp:149:cJSON_AddBoolToObject(node, \"exhaust_fan\", capabilities.exhaust_fan);\nsrc/climate/Stage28dLampSafety.cpp:32:output.force_exhaust_on = input.exhaust_fan_available;\nsrc/climate/Stage28dLampSafety.cpp:45:output.force_exhaust_on = input.exhaust_fan_available;\nsrc/climate/Stage28dLampSafety.cpp:72:output.force_exhaust_on = thermal_latched_ && input.exhaust_fan_available;\nsrc/climate/ClimateDeterministicFake.cpp:20:output.capabilities.exhaust_fan = true;\nsrc/climate/Stage28dLampSafety.h:29:bool exhaust_fan_available{false};\nsrc/climate/Stage28dBinaryRoleArbiter.cpp:48:config_.exhaust_fan = sanitized(config_.exhaust_fan);\nsrc/climate/Stage28dBinaryRoleArbiter.cpp:144:return applyBinary(role, level, monotonic_ms, config_.exhaust_fan, exhaust_,\nsrc/climate/runtime/Stage27TelemetryReporter.cpp:139:snapshot.requested_exhaust_fan = decision.rule.safe.exhaust_fan;\nsrc/climate/runtime/Stage27TelemetryReporter.cpp:143:snapshot.applied_exhaust_fan = decision.applied.exhaust_fan;\nsrc/climate/runtime/Stage27TelemetryReporter.cpp:184:\"requested_fan=%.3f requested_humidifier=%.3f \"\nsrc/climate/runtime/Stage27TelemetryReporter.cpp:218:snapshot.rule_safety_interventions, static_cast<double>(snapshot.requested_exhaust_fan),\nsrc/climate/runtime/Stage27TelemetryReporter.cpp:221:static_cast<double>(snapshot.applied_exhaust_fan),\nsrc/climate/runtime/Stage27ScheduleProfile.cpp:17:output.capabilities.exhaust_fan = true;\nsrc/climate/runtime/Stage28eLog.cpp:17:#ifndef GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST\nsrc/climate/runtime/Stage28eLog.cpp:18:#define GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST 0\nsrc/climate/runtime/Stage28eLog.cpp:62:#if GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST\nsrc/climate/runtime/Stage28eLog.cpp:131:#if GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST\nsrc/climate/telemetry/Stage27Telemetry.cpp:44:\",\\\"applied\\\":{\\\"heater\\\":%.3f,\\\"cooler\\\":%.3f,\\\"exhaust_fan\\\":%.3f,\"\nsrc/climate/telemetry/Stage27Telemetry.cpp:72:static_cast<double>(snapshot.applied_exhaust_fan),\nsrc/climate/telemetry/Stage27LogFormat.cpp:68:static_cast<double>(snapshot.requested_exhaust_fan),\nsrc/climate/telemetry/Stage27LogFormat.cpp:69:static_cast<double>(snapshot.applied_exhaust_fan),\nsrc/climate/telemetry/Stage27LogFormat.cpp:77:static_cast<double>(snapshot.applied_exhaust_fan),\nsrc/climate/telemetry/Stage27Telemetry.h:67:float requested_exhaust_fan = 0.0F;\nsrc/climate/telemetry/Stage27Telemetry.h:71:float applied_exhaust_fan = 0.0F;\ntest/test_climate_runtime_parity/test_main.cpp:25:return {request.heater,     request.cooler,       request.exhaust_fan,\ntest/test_climate_runtime_parity/test_main.cpp:30:return {action.heater,     action.cooler,       action.exhaust_fan,\ntest/test_climate_v6/test_main.cpp:27:return request.heater > 0.0F || request.cooler > 0.0F || request.exhaust_fan > 0.0F ||\ntest/test_climate_v6/test_main.cpp:36:const char* expected[] = {\"heater\",     \"cooler\",       \"exhaust_fan\",\ntest/test_climate_v6/test_main.cpp:80:capabilities.exhaust_fan = true;\ntest/test_climate_v6/test_main.cpp:87:command.exhaust_fan = 0.8F;\ntest/test_climate_v6/test_main.cpp:166:input.capabilities.exhaust_fan = true;\ntest/test_climate_v6/test_main.cpp:176:near(left.exhaust_fan, right.exhaust_fan, tolerance) &&\ntest/test_climate_v6/test_main.cpp:249:decision.applied.exhaust_fan == 1.0F,\ntest/test_climate_control_loop/test_main.cpp:19:near(request.exhaust_fan, 0.0F) && near(request.humidifier, 0.0F) &&\ntest/test_climate_control_loop/test_main.cpp:25:near(left.exhaust_fan, right.exhaust_fan) && near(left.humidifier, right.humidifier) &&\ntest/test_climate_control_loop/test_main.cpp:41:input.capabilities.exhaust_fan = true;\ntest/test_climate_control_loop/test_main.cpp:100:confirmed_applied.exhaust_fan = request.exhaust_fan > 0.0F ? 1.0F : 0.0F;\ntest/test_climate_control_loop/test_main.cpp:110:output.exhaust_fan = 0.7F;\ntest/test_climate_control_loop/test_main.cpp:186:assert(sink.requested.exhaust_fan > 0.0F && sink.requested.exhaust_fan < 1.0F);\ntest/test_climate_control_loop/test_main.cpp:187:assert(decision.rule.safe.exhaust_fan > 0.0F && decision.rule.safe.exhaust_fan < 1.0F);\ntest/test_climate_control_loop/test_main.cpp:188:assert(near(decision.applied.exhaust_fan, 1.0F));\ntest/test_climate_control_loop/test_main.cpp:189:assert(near(loop.previousApplied().exhaust_fan, 1.0F));\ntest/test_climate_control_loop/test_main.cpp:190:assert(decision.effective_after.exhaust_fan > 0.6F);\ntest/test_climate_control_loop/test_main.cpp:193:void testHigherIntakeRhStillVentilatesWhenAbsoluteHumidityIsLower() {\ntest/test_climate_control_loop/test_main.cpp:203:assert(decision.rule.safe.exhaust_fan > 0.0F);\ntest/test_climate_control_loop/test_main.cpp:206:void testLowerIntakeRhDoesNotClaimDryingWhenAbsoluteHumidityIsHigher() {\ntest/test_climate_control_loop/test_main.cpp:217:assert(near(decision.rule.safe.exhaust_fan, 0.0F));\ntest/test_climate_control_loop/test_main.cpp:220:void testStaleIntakeHumidityCannotCreateDryingVentilation() {\ntest/test_climate_control_loop/test_main.cpp:231:assert(near(decision.rule.safe.exhaust_fan, 0.0F));\ntest/test_climate_control_loop/test_main.cpp:244:assert(decision.rule.safe.exhaust_fan > 0.0F);\ntest/test_climate_control_loop/test_main.cpp:247:void testHighCo2SafetyVentilationRemainsIndependent() {\ntest/test_climate_control_loop/test_main.cpp:258:assert(near(decision.rule.safe.exhaust_fan, 1.0F));\ntest/test_climate_control_loop/test_main.cpp:275:void testVpdModeUsesAbsoluteHumidityForDryingBenefit() {\ntest/test_climate_control_loop/test_main.cpp:286:assert(decision.rule.safe.exhaust_fan > 0.0F);\ntest/test_climate_control_loop/test_main.cpp:351:testHigherIntakeRhStillVentilatesWhenAbsoluteHumidityIsLower();\ntest/test_climate_control_loop/test_main.cpp:352:testLowerIntakeRhDoesNotClaimDryingWhenAbsoluteHumidityIsHigher();\ntest/test_climate_control_loop/test_main.cpp:353:testStaleIntakeHumidityCannotCreateDryingVentilation();\ntest/test_climate_control_loop/test_main.cpp:355:testHighCo2SafetyVentilationRemainsIndependent();\ntest/test_climate_control_loop/test_main.cpp:357:testVpdModeUsesAbsoluteHumidityForDryingBenefit();\ntest/test_climate_application_composition/test_main.cpp:29:near(request.exhaust_fan, 0.0F) && near(request.humidifier, 0.0F) &&\ntest/test_climate_application_composition/test_main.cpp:35:near(left.exhaust_fan, right.exhaust_fan) && near(left.humidifier, right.humidifier) &&\ntest/test_climate_application_composition/test_main.cpp:41:near(previous.exhaust_fan, request.exhaust_fan) &&\ntest/test_climate_application_composition/test_main.cpp:63:snapshot.capabilities.exhaust_fan = true;\ntest/test_climate_application_composition/test_main.cpp:148:request.exhaust_fan = calls[base + 2U].level;\ntest/test_climate_application_composition/test_main.cpp:176:output.exhaust_fan = 0.7F;\ntest/test_climate_application_composition/test_main.cpp:189:request.heater,     request.cooler,       request.exhaust_fan,\ntest/test_climate_fault_soak/test_main.cpp:22:near(request.exhaust_fan, 0.0F) && near(request.humidifier, 0.0F) &&\ntest/test_climate_fault_soak/test_main.cpp:28:near(actions.exhaust_fan, 0.0F) && near(actions.humidifier, 0.0F) &&\ntest/test_climate_fault_soak/test_main.cpp:34:near(actions.exhaust_fan, 0.0F) && near(actions.humidifier, 0.0F) &&\ntest/test_climate_fault_soak/test_main.cpp:53:snapshot.capabilities.exhaust_fan = true;\ntest/test_stage27_schedule_profile/test_main.cpp:13:assert(profile.capabilities.exhaust_fan);\ntest/test_climate_observability_metrics/test_main.cpp:7:using growbox::app::climate_io::calculateVentilationGradients;\ntest/test_climate_observability_metrics/test_main.cpp:23:void testVentilationGradientUsesMoistureContent() {\ntest/test_climate_observability_metrics/test_main.cpp:24:const auto gradient = calculateVentilationGradients(25.0F, 60.0F, 20.0F, 50.0F);\ntest/test_climate_observability_metrics/test_main.cpp:31:const auto gradient = calculateVentilationGradients(28.0F, 55.0F, 18.0F, 70.0F);\ntest/test_climate_observability_metrics/test_main.cpp:40:assert(!calculateVentilationGradients(25.0F, 60.0F, 20.0F, 0.0F).valid);\ntest/test_climate_observability_metrics/test_main.cpp:47:testVentilationGradientUsesMoistureContent();\ntest/test_stage28d_lamp_safety/test_main.cpp:20:value.exhaust_fan_available = fan;\ntest/test_climate_composite_input/test_main.cpp:20:near(request.exhaust_fan, 0.0F) && near(request.humidifier, 0.0F) &&\ntest/test_climate_composite_input/test_main.cpp:110:output.capabilities.exhaust_fan = true;\ntest/test_climate_io_adapters/test_main.cpp:71:snapshot.capabilities.exhaust_fan = true;\ntest/test_climate_io_adapters/test_main.cpp:105:assert(input.capabilities.exhaust_fan);\ntest/test_climate_io_adapters/test_main.cpp:134:request.exhaust_fan = 0.3F;\ntest/test_climate_io_adapters/test_main.cpp:161:request.exhaust_fan = 0.8F;\ntest/test_climate_diagnostics/test_main.cpp:32:snapshot.capabilities.exhaust_fan = true;\ntest/test_climate_diagnostics/test_main.cpp:116:decision.applied.exhaust_fan = 0.55F;\ntest/test_climate_diagnostics/test_main.cpp:128:confirmed.exhaust_fan = 0.25F;\ntest/test_climate_diagnostics/test_main.cpp:149:assert(near(diagnostics.final_safe_request.exhaust_fan, 0.55F));\ntest/test_climate_diagnostics/test_main.cpp:151:assert(near(diagnostics.confirmed_applied.exhaust_fan, 0.25F));\ntest/test_climate_virtual_hil/test_main.cpp:20:near(request.exhaust_fan, 0.0F) && near(request.humidifier, 0.0F) &&\ntest/test_climate_virtual_hil/test_main.cpp:26:near(left.exhaust_fan, right.exhaust_fan) && near(left.humidifier, right.humidifier) &&\ntest/test_climate_virtual_hil/test_main.cpp:46:input.capabilities.exhaust_fan = true;\ntest/test_climate_virtual_hil/test_main.cpp:106:output.exhaust_fan = 0.7F;\ntest/test_climate_virtual_hil/test_main.cpp:211:assert(near(decision.applied.exhaust_fan, 1.0F));\ntest/test_climate_virtual_hil/test_main.cpp:221:assert(near(decision.applied.exhaust_fan, 1.0F));\ntest/test_stage27_fault_freshness/test_main.cpp:30:assert(request.exhaust_fan == 0.0F);\ntest/test_climate_semantic_output/test_main.cpp:63:request.exhaust_fan = 0.30F;\ntest/test_climate_semantic_output/test_main.cpp:137:request.exhaust_fan = 0.4F;\ntest/test_stage27_telemetry/test_main.cpp:57:snapshot.requested_exhaust_fan = 0.29F;\ntest/test_stage27_telemetry/test_main.cpp:59:snapshot.applied_exhaust_fan = 1.0F;\ntest/test_climate_deterministic_fake_runtime/test_main.cpp:47:left.capabilities.exhaust_fan == right.capabilities.exhaust_fan &&\ntest/test_climate_deterministic_fake_runtime/test_main.cpp:56:near(left.exhaust_fan, right.exhaust_fan) && near(left.humidifier, right.humidifier) &&\ntest/test_climate_deterministic_fake_runtime/test_main.cpp:62:near(previous.exhaust_fan, request.exhaust_fan) &&\ntest/test_climate_deterministic_fake_runtime/test_main.cpp:88:request.exhaust_fan = last_levels[2U];\nscripts/quality_gate_push.sh:57:GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 \\\nscripts/stage27c_crowpanel.sh:31:THERMAL_TEST_SEQUENCE_ENABLED=\"${GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED:-0}\"\nscripts/stage27c_crowpanel.sh:32:BREADCRUMB_RESTART_SELFTEST=\"${GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST:-0}\"\nscripts/stage27c_crowpanel.sh:40:*) echo \"GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED must be 0 or 1\" >&2; exit 2 ;;\nscripts/stage27c_crowpanel.sh:44:*) echo \"GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST must be 0 or 1\" >&2; exit 2 ;;\nscripts/stage27c_crowpanel.sh:91:-D \"GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=$THERMAL_TEST_SEQUENCE_ENABLED\"\nscripts/stage27c_crowpanel.sh:92:-D \"GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST=$BREADCRUMB_RESTART_SELFTEST\"\nMATCH_COUNT 138\nSTAGE28E_H_REQUEST_INTERFACE_SEARCH_PASS\n",
+      "elapsed_seconds": 0.524,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 2.14,
+      "output_policy": "stream",
+      "captured_output_chars": 14461,
+      "output_truncated": false,
+      "current_rss_mb": 2.14,
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "set -euo pipefail; test -z \"$(git status --porcelain)\"; git diff --check; echo STAGE28E_H_REQUEST_INTERFACE_INSPECT_GATE_PASS",
+      "exit_code": 0,
+      "output": "STAGE28E_H_REQUEST_INTERFACE_INSPECT_GATE_PASS\n",
+      "elapsed_seconds": 0.422,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 3.45,
+      "output_policy": "stream",
+      "captured_output_chars": 47,
+      "output_truncated": false,
+      "current_rss_mb": 3.45,
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 1.126
+    },
+    {
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.524
+    },
+    {
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.422
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.097
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.072
+  },
+  "finished_at": "2026-09-07T05:28:49.715868+00:00",
+  "task_digest": "2eef25efe1985c790456003900b8730f885927d4d631a437a7a8bce1e5053d09",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "attempt_id": "bcc360f5435dc765df6479c5",
+  "daemon_version": "4.18.13"
+}
