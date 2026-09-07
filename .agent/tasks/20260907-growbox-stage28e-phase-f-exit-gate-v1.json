@@ -1,0 +1,19 @@
+{
+  "id": "20260907-growbox-stage28e-phase-f-exit-gate-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 6144,
+  "command_timeout": 3600,
+  "idle_timeout": 600,
+  "task_timeout": 5400,
+  "commands": [
+    "set -euo pipefail; EXPECTED=389453882f0e0d2209c5bdece7eaf443895aa7ba; BASE=0d4325f08033a38e4fd3769c38b1572e344a27ff; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; git diff --check; git diff --exit-code \"$BASE\" \"$EXPECTED\" -- src lib config CMakeLists.txt sdkconfig.defaults; grep -Fq 'Phase F implementation SHA: `d88c77d8eab5013a6f94baf60e1404f5b030efdc`' docs/STAGE28E_PHASE_F_HANDOFF.md; grep -Fq 'F COMPLETE -> Phase G NEXT' docs/CURRENT_STATUS.md; grep -Fq 'Phase G — bounded runtime validation and soak' docs/CONTINUATION_PLAN.md; grep -Fq 'CONFIG_ESP_MAIN_TASK_STACK_SIZE=12288' config/idf/sdkconfig.defaults.stage27c; grep -Fq 'return 6144U' src/climate/storage/Stage27TelemetryLogger.h; echo STAGE28E_F_EXIT_EXACT_SHA_AND_SCOPE_PASS=$EXPECTED",
+    "set -euo pipefail; OUT=build/stage28e-f-exit-arbiter-proof; mkdir -p \"$OUT\"; c++ -std=c++17 -Wall -Wextra -Wpedantic -Isrc -Ilib/environment_control/src test/test_stage28d_binary_role_arbiter/test_main.cpp src/climate/Stage28dBinaryRoleArbiter.cpp -o \"$OUT/stage28d_binary_role_arbiter_proof\"; \"$OUT/stage28d_binary_role_arbiter_proof\"; echo STAGE28E_F_EXIT_V5_CONTINUITY_PROOF_PASS",
+    "set -euo pipefail; export CMAKE_BUILD_PARALLEL_LEVEL=1; BUILD=build/idf-stage28e-f-exit; rm -rf \"$BUILD\"; STAGE27C_BUILD_DIR=\"$BUILD\" GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST=0 GROWBOX_FIRMWARE_GIT_SHA=389453882f0e0d2209c5bdece7eaf443895aa7ba bash scripts/stage27c_crowpanel.sh build >/tmp/stage28e-f-exit-build.log 2>&1; test -f \"$BUILD/growbox_ml_controller.elf\"; grep -Fq 'CONFIG_ESP_MAIN_TASK_STACK_SIZE=12288' \"$BUILD/sdkconfig\"; . /Users/michal/esp/esp-idf/export.sh >/dev/null 2>&1; idf.py -B \"$BUILD\" size; echo STAGE28E_F_EXIT_FIRMWARE_BUILD_PASS",
+    "set -euo pipefail; rm -rf build/host-tests-stage28e-f-exit; cmake -S test/host -B build/host-tests-stage28e-f-exit >/tmp/stage28e-f-exit-host-config.log 2>&1; cmake --build build/host-tests-stage28e-f-exit --parallel 1 >/tmp/stage28e-f-exit-host-build.log 2>&1; ctest --test-dir build/host-tests-stage28e-f-exit --output-on-failure; echo STAGE28E_F_EXIT_HOST_24_PASS",
+    "set -euo pipefail; test -z \"$(git status --porcelain)\"; git diff --check; echo STAGE28E_F_EXIT_GATE_PASS"
+  ]
+}
