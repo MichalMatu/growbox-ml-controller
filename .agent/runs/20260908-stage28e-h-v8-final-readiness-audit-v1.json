@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260908-stage28e-h-v8-final-readiness-audit-v1",
+  "task_digest": "34530ac41b3304080ed693cefb3528422b8e5b67b04e8d3d8e070d28154bfb6c",
+  "idle_timeout": 120,
+  "task_timeout": 600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-07T23:32:09.411900+00:00",
+  "attempt_id": "7da9014a5202fb3675a9e992",
+  "daemon_version": "4.18.13",
+  "daemon_pid": 42842,
+  "updated_at": "2026-09-07T23:32:09.412045+00:00",
+  "pid": 42842
+}
