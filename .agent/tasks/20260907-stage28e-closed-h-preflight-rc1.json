@@ -1,0 +1,20 @@
+{
+  "id": "20260907-stage28e-closed-h-preflight-rc1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 4096,
+  "command_timeout": 1800,
+  "idle_timeout": 900,
+  "task_timeout": 5400,
+  "commands": [
+    "set -euo pipefail; EXPECTED_HEAD=58e9656aa0400a80750777bb78c5989f7ecdb292; QUALIFIED=5a4830db9d10e8cb73d4c617b09122f0844ad899; git fetch -q origin mvp/environment-controller:refs/remotes/origin/mvp/environment-controller; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED_HEAD\"; test \"$(git rev-parse HEAD)\" = \"$EXPECTED_HEAD\"; test -z \"$(git status --porcelain)\"; python3 - <<'PY'\nimport subprocess\nqualified='5a4830db9d10e8cb73d4c617b09122f0844ad899'\nhead='HEAD'\nexpected={\n    'docs/STAGE28E_PHASE_H_HANDOFF.md',\n    'docs/CURRENT_STATUS.md',\n    'docs/CONTINUATION_PLAN.md',\n    'scripts/stage28e_phase_h_closed_tent.py',\n}\nchanged=set(subprocess.check_output(['git','diff','--name-only',f'{qualified}..{head}'],text=True).splitlines())\nassert changed == expected, (changed, expected)\nproduction=[p for p in changed if p.endswith(('.c','.cc','.cpp','.h','.hpp'))]\nassert not production, production\nprint('STAGE28E_CLOSED_H_DIFF_IDENTITY_PASS', 'head='+subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(), 'qualified='+qualified, 'changed='+','.join(sorted(changed)))\nPY\n git diff --check \"$QUALIFIED..HEAD\"; git show --check --oneline --stat \"$EXPECTED_HEAD\"; echo STAGE28E_CLOSED_H_SOURCE_SCOPE_PASS",
+    "set -euo pipefail; PY=.venv/bin/python; if [ ! -x \"$PY\" ]; then PY=$(command -v python3); fi; \"$PY\" -m py_compile scripts/stage28e_phase_h_closed_tent.py; \"$PY\" scripts/stage28e_phase_h_closed_tent.py --help > /tmp/stage28e_h_closed_help.txt; grep -F -- '--closure-utc' /tmp/stage28e_h_closed_help.txt; grep -F -- '--temperature-guard' /tmp/stage28e_h_closed_help.txt; grep -F 'GROWBOX_PORT = \"/dev/cu.usbserial-1130\"' scripts/stage28e_phase_h_closed_tent.py; if grep -Eq 'osascript|close_tent_now|rf fan |rf humidifier |rf lamp ' scripts/stage28e_phase_h_closed_tent.py; then echo 'interactive/output command marker found' >&2; exit 1; fi; echo STAGE28E_CLOSED_H_HARNESS_STATIC_PASS",
+    "set -euo pipefail; BUILD=/tmp/growbox-stage28e-preflight-host; rm -rf \"$BUILD\"; cmake -S test/host -B \"$BUILD\" -DCMAKE_BUILD_TYPE=Release; cmake --build \"$BUILD\" -j2; ctest --test-dir \"$BUILD\" --output-on-failure; echo STAGE28E_CLOSED_H_HOST_TESTS_PASS",
+    "set -euo pipefail; EXPECTED=5a4830db9d10e8cb73d4c617b09122f0844ad899; BUILD=/tmp/growbox-stage28e-preflight-fake; rm -rf \"$BUILD\"; STAGE27C_BUILD_DIR=\"$BUILD\" GROWBOX_FIRMWARE_GIT_SHA=\"$EXPECTED\" scripts/stage27c_crowpanel.sh build; grep -Fx 'CONFIG_ESP_MAIN_TASK_STACK_SIZE=12288' \"$BUILD/sdkconfig\"; test -f \"$BUILD/growbox_ml_controller.bin\"; echo STAGE28E_CLOSED_H_FAKE_BUILD_PASS",
+    "set -euo pipefail; EXPECTED=5a4830db9d10e8cb73d4c617b09122f0844ad899; BUILD=/tmp/growbox-stage28e-preflight-real; rm -rf \"$BUILD\"; STAGE27C_BUILD_DIR=\"$BUILD\" GROWBOX_FIRMWARE_GIT_SHA=\"$EXPECTED\" GROWBOX_RF433_LOOPBACK_ENABLED=1 GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=1 scripts/stage27c_crowpanel.sh build; grep -Fx 'CONFIG_ESP_MAIN_TASK_STACK_SIZE=16384' \"$BUILD/sdkconfig\"; test -f \"$BUILD/growbox_ml_controller.bin\"; echo STAGE28E_CLOSED_H_REAL_BUILD_PASS",
+    "set -euo pipefail; test -z \"$(git status --porcelain)\"; git diff --check; echo STAGE28E_CLOSED_H_PREFLIGHT_PASS head=$(git rev-parse HEAD)"
+  ]
+}
