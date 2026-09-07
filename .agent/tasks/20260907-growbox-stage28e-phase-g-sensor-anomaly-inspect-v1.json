@@ -1,0 +1,17 @@
+{
+  "id": "20260907-growbox-stage28e-phase-g-sensor-anomaly-inspect-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 4096,
+  "command_timeout": 1200,
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "commands": [
+    "set -euo pipefail; EXPECTED=389453882f0e0d2209c5bdece7eaf443895aa7ba; git fetch -q origin mvp/environment-controller agent-control; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; echo STAGE28E_G_SENSOR_INSPECT_EXACT_SHA_PASS=$EXPECTED",
+    "set -euo pipefail; git show origin/agent-control:.agent/results/20260907-growbox-stage28e-phase-g-short-runtime-v1.json > /tmp/stage28e-g-short-result.json; python3 - <<'PY'\nimport json,re\nd=json.load(open('/tmp/stage28e-g-short-result.json'))\nout=d['commands'][2].get('output','')\nrows=[]\nfor line in out.splitlines():\n    if 'soak_v=2 firmware_sha=389453882f0e0d2209c5bdece7eaf443895aa7ba' not in line: continue\n    vals=dict(re.findall(r'([A-Za-z0-9_]+)=([^ ]+)',line))\n    if 'storage_queue_drops' in vals: rows.append(vals)\nprint('SOAK_ROWS',len(rows))\nprint('BLE_VALUES',sorted({r.get('ble_scanning') for r in rows}))\nprint('SCD_VALUES',sorted({r.get('scd_sample') for r in rows}))\nfor i,r in enumerate(rows):\n    if r.get('ble_scanning')!='1' or r.get('scd_sample')!='1':\n        keys=['uptime_ms','ble_scanning','ble_scan_starts','ble_scan_errors','ble_scan_restarts','ble_scan_completes','scd_available','scd_sample','scd_age_ms','scd_read_errors','scd_invalid','scd_samples','tp_sample','xiaomi_sample','storage_records_written','outputs']\n        print('ANOMALY',i,' '.join(f'{k}={r.get(k)}' for k in keys))\nprint('FIRST', ' '.join(f'{k}={rows[0].get(k)}' for k in ['uptime_ms','ble_scanning','scd_sample','scd_samples']) if rows else 'none')\nprint('LAST', ' '.join(f'{k}={rows[-1].get(k)}' for k in ['uptime_ms','ble_scanning','scd_sample','scd_samples']) if rows else 'none')\nprint('STAGE28E_G_SENSOR_ANOMALY_INSPECT_PASS')\nPY",
+    "set -euo pipefail; test -z \"$(git status --porcelain)\"; git diff --check; echo STAGE28E_G_SENSOR_INSPECT_GATE_PASS"
+  ]
+}
