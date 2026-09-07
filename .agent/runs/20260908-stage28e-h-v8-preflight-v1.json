@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260908-stage28e-h-v8-preflight-v1",
+  "task_digest": "6f90154f3cdfc057eea4f9834a23cb5449c2bc572c23edda18d10ecc496f8b40",
+  "idle_timeout": 600,
+  "task_timeout": 7200,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-07T23:25:33.828514+00:00",
+  "attempt_id": "71ff93ab8de0b9fb22c7242c",
+  "daemon_version": "4.18.13",
+  "daemon_pid": 20140,
+  "updated_at": "2026-09-07T23:25:33.828705+00:00",
+  "pid": 20140
+}
