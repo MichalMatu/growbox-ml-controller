@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260907-growbox-stage28e-phase-g-soak-reset-position-inspect-v1",
+  "task_digest": "38180b67ecf66d86e3e33d0cd84be226c16338f592ddf544b76428d2795c96f6",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-07T04:52:19.673893+00:00",
+  "attempt_id": "277205b3e9798eeb9d8f9c40",
+  "daemon_version": "4.18.13",
+  "daemon_pid": 88770,
+  "updated_at": "2026-09-07T04:52:19.674039+00:00",
+  "pid": 88770
+}
