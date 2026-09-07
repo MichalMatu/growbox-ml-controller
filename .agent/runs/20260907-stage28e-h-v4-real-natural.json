@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260907-stage28e-h-v4-real-natural",
+  "task_digest": "d11384e2171df8ecc9c574747e781d7a9e38a57f6c64549d4426bd093d981885",
+  "idle_timeout": 1800,
+  "task_timeout": 5400,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-07T11:08:23.445542+00:00",
+  "attempt_id": "0363b1d7c95b72716556a135",
+  "daemon_version": "4.18.13",
+  "daemon_pid": 21767,
+  "updated_at": "2026-09-07T11:08:23.445727+00:00",
+  "pid": 21767
+}
