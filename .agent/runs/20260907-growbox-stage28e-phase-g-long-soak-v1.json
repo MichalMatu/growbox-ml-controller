@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260907-growbox-stage28e-phase-g-long-soak-v1",
+  "task_digest": "d06c8c08fee36be130796d442320a88faed2d7273dd0772b14ca980a0181e177",
+  "idle_timeout": 900,
+  "task_timeout": 2700,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-07T04:32:25.353357+00:00",
+  "attempt_id": "99f52fa103ae8e39e5ce61d1",
+  "daemon_version": "4.18.13",
+  "daemon_pid": 72387,
+  "updated_at": "2026-09-07T04:32:25.353571+00:00",
+  "pid": 72387
+}
