@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 4,
+  "index": 5,
   "total": 6,
-  "command": "set -euo pipefail; QUALIFIED=5a4830db9d10e8cb73d4c617b09122f0844ad899; BUILD=/tmp/growbox-stage28e-h-v8-preflight-fake-v1; rm -rf \"$BUILD\"; . /Users/michal/esp/esp-idf/export.sh >/dev/null; STAGE27C_BUILD_DIR=\"$BUILD\" GROWBOX_FIRMWARE_GIT_SHA=\"$QUALIFIED\" scripts/stage27c_crowpanel.sh build; test -f \"$BUILD/growbox_ml_controller.bin\"; grep -Fx 'CONFIG_ESP_MAIN_TASK_STACK_SIZE=12288' \"$BUILD/sdkconfig\"; echo STAGE28E_H_V8_FAKE_IMAGE_PASS build=$BUILD",
-  "pid": 21301,
+  "command": "set -euo pipefail; QUALIFIED=5a4830db9d10e8cb73d4c617b09122f0844ad899; . /Users/michal/esp/esp-idf/export.sh >/dev/null; for BUILD in /tmp/growbox-stage28e-h-v8-preflight-real-v1 /tmp/growbox-stage28e-h-v8-preflight-recovery-v1; do rm -rf \"$BUILD\"; STAGE27C_BUILD_DIR=\"$BUILD\" GROWBOX_FIRMWARE_GIT_SHA=\"$QUALIFIED\" GROWBOX_RF433_LOOPBACK_ENABLED=1 GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=1 scripts/stage27c_crowpanel.sh build; test -f \"$BUILD/growbox_ml_controller.bin\"; grep -Fx 'CONFIG_ESP_MAIN_TASK_STACK_SIZE=16384' \"$BUILD/sdkconfig\"; done; echo STAGE28E_H_V8_REAL_RECOVERY_IMAGES_PASS",
+  "pid": 27369,
   "timeout": 1800,
   "idle_timeout": 600,
   "memory_limit_mb": 4096,
-  "started_at": "2026-09-07T23:26:02.648445+00:00",
-  "stage_name": "command-4",
-  "stage_index": 4,
+  "started_at": "2026-09-07T23:26:53.950257+00:00",
+  "stage_name": "command-5",
+  "stage_index": 5,
   "stage_total": 6,
   "stage_phase": "commands",
   "task_id": "20260908-stage28e-h-v8-preflight-v1",
@@ -18,5 +18,5 @@
   "task_digest": "6f90154f3cdfc057eea4f9834a23cb5449c2bc572c23edda18d10ecc496f8b40",
   "daemon_version": "4.18.13",
   "daemon_pid": 20140,
-  "updated_at": "2026-09-07T23:26:02.718999+00:00"
+  "updated_at": "2026-09-07T23:26:53.985829+00:00"
 }
