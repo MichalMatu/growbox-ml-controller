@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260907-growbox-stage28e-phase-g-docs-advance-v1",
+  "task_digest": "bb0e4eee107596852da5402efcaf9cb92d00d382839d65a7e88b31ad4b12031c",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-07T05:03:42.287600+00:00",
+  "attempt_id": "5edc6bd17549fdc3fc708373",
+  "daemon_version": "4.18.13",
+  "daemon_pid": 97619,
+  "updated_at": "2026-09-07T05:03:42.287861+00:00",
+  "pid": 97619
+}
