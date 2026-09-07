@@ -1,6 +1,6 @@
 # Fresh-context continuation plan
 
-Updated: 2026-09-07
+Updated: 2026-09-08
 Work branch: `mvp/environment-controller`
 Control branch: `agent-control`
 Latest handoff: `docs/STAGE28E_PHASE_H_HANDOFF.md`
@@ -36,18 +36,17 @@ The branch may contain later scripts/docs-only qualification preparation. Do not
 
 ## Latest H evidence
 
-Latest attempt: H v6
+Latest physical attempt: **H v7**.
 
-- task: `.agent/tasks/20260907-stage28e-h-v6-closed-autonomous.json`;
-- result: `.agent/results/20260907-stage28e-h-v6-closed-autonomous.json`;
-- formal primary outcome: FAIL;
-- recovery/final: PASS, final RF-disabled `fake-locked`;
-- production runtime remained healthy and reached `arbiter_transitions=46`, `tx=50`, `tx_errors=0`;
-- retained log contained `24` clean safety-clear OFF windows up to about `145 s`.
+- task: `.agent/tasks/20260907-stage28e-h-v7-corrected-parser-v1.json`;
+- result: `.agent/results/20260907-stage28e-h-v7-corrected-parser-v1.json`;
+- primary was intentionally interrupted with RC `130` after the qualification harness defect was identified;
+- mandatory recovery and final RF-disabled `fake-locked` both passed (`recovery=0`, `final=0`);
+- retained v7 telemetry showed normal fan cycling with `safety_latched=0`, `force_fan=0`, and `safety_reason=1` (`TimerOff`), so the old `reason == 0` observer gate was a false-negative condition rather than production safety activation.
 
-Root cause of the formal FAIL was qualification tooling: all `576/576` production `stage28d_output` lines were ESP-IDF-prefixed and the v6 observer incorrectly required a raw-line `startswith` match. Corrected observer RC4 commit: `d91fe21d319d4f85832d9fc95d5912bbae23cf0e`. Parser regression replay accepts all `576/576` retained lines. Full software-only preflight `20260907-stage28e-h-prefix-fix-preflight-rc4` is PASS. Production C/C++ is unchanged relative to qualified firmware identity `5a4830db9d10e8cb73d4c617b09122f0844ad899`.
+The observer fix is commit `45065a34ce276ac5cdb7ef8cf0a1ad8a4bae1b0d`. It accepts only `Safe (0)` and `TimerOff (1)` as H safety-clear reasons, and only while both `safety_latched=0` and `force_fan=0`; reasons `2..5` remain rejected. Replay of the retained v7 log accepted `596` TimerOff samples and no unsafe reason.
 
-H remains formally open only because the corrected observer has not yet been used for a successful physical H proof.
+H v8 software preflight `20260908-stage28e-h-v8-preflight-v1` is **PASS** on executable/preflight HEAD `231eed28f64bdbdc4238fd8bce128264027702f2`. It proved no production C/C++ delta relative to `5a4830db9d10e8cb73d4c617b09122f0844ad899`, passed the focused observer tests and v7 replay, passed all `24/24` host tests, built fake `12288 B` main-stack firmware, built real/recovery `16384 B` main-stack firmware, and ended clean with `hardware_started=0`. H v8 itself has **not** been started.
 
 ## Repository-tracked closed-tent observer
 
@@ -101,11 +100,11 @@ Required evidence:
 
 Do not add a request injector to force PASS.
 
-## Software-only gate before corrected H v7
+## Software-only gate before H v8
 
-RC4 preflight `20260907-stage28e-h-prefix-fix-preflight-rc4` is **PASS** on `d91fe21d319d4f85832d9fc95d5912bbae23cf0e`. It proved clean scope/no production C++ delta, parser replay regression, full host suite, fake 12 KiB firmware build, RF/real 16 KiB firmware build and clean tree.
+H v8 preflight `20260908-stage28e-h-v8-preflight-v1` is **PASS** on `231eed28f64bdbdc4238fd8bce128264027702f2`. It verified the TimerOff-aware observer, v7 replay (`596` accepted TimerOff samples), all `24/24` host tests, fake `12288 B` build, real/recovery `16384 B` builds, no production C/C++ delta from `5a4830db9d10e8cb73d4c617b09122f0844ad899`, and a clean worktree.
 
-Before H v8, require a clean worktree. Committed policy/docs/tooling changes are allowed, but because executable observer tooling changed after RC4, rerun the software gate and prove no production C/C++ delta relative to `5a4830db9d10e8cb73d4c617b09122f0844ad899`.
+Committed documentation-only readiness changes after that preflight are allowed without rebuilding. Before H v8 starts, verify the current worktree is clean and prove any delta after `231eed28f64bdbdc4238fd8bce128264027702f2` is documentation-only; any executable/configuration change requires a new software preflight.
 
 ## Overnight bounded-H wrapper
 
@@ -155,4 +154,4 @@ Keep each extraction narrow, add focused host tests, then run a full software ga
 
 ## Recommended fresh-chat instruction
 
-`Continue Growbox Stage28E Phase H only in MichalMatu/growbox-ml-controller. First read AGENTS.md, docs/STAGE28E_PHASE_H_HANDOFF.md, docs/CURRENT_STATUS.md, docs/CONTINUATION_PLAN.md, docs/GUIDANCE.md and docs/ESP32_S3_SERIAL_PORT_RESET.md, then fresh-check mvp/environment-controller HEAD and agent-control:.agent/status/daemon.json. A-G are formally complete; H is not. Qualified production firmware/source identity remains 5a4830db9d10e8cb73d4c617b09122f0844ad899. H v6 primary was a tooling false negative: all 576 stage28d_output lines were ESP-IDF-prefixed while the observer required startswith; the real run nevertheless had 24 clean OFF windows, 46 arbiter transitions, 50 RF TX and zero TX errors, and recovery/final fake-locked passed. Corrected observer RC4 is d91fe21d319d4f85832d9fc95d5912bbae23cf0e; software-only preflight 20260907-stage28e-h-prefix-fix-preflight-rc4 is PASS, including 576/576 replay parser acceptance, host suite, fake 12 KiB build and RF/real 16 KiB build. The tent remains closed and no user action is needed. Next run one new immutable H v7 bounded hardware task on board:growbox-s3 and /dev/cu.usbserial-1130 using scripts/stage28e_phase_h_closed_tent.py, normal controller path only, no request injection/actuator forcing, and unconditional recovery plus final RF-disabled fake-locked. Never touch /dev/cu.usbserial-10. Do not start the production runtime/service-console modularity refactor until H formally passes.`
+`Continue Growbox Stage28E Phase H only in MichalMatu/growbox-ml-controller. Read AGENTS.md, docs/STAGE28E_PHASE_H_HANDOFF.md, docs/CURRENT_STATUS.md, docs/CONTINUATION_PLAN.md, docs/GUIDANCE.md and docs/ESP32_S3_SERIAL_PORT_RESET.md, then fresh-check mvp/environment-controller HEAD and agent-control:.agent/status/daemon.json. A-G are complete; H is open. Qualified production firmware identity remains 5a4830db9d10e8cb73d4c617b09122f0844ad899. TimerOff-aware observer commit is 45065a34ce276ac5cdb7ef8cf0a1ad8a4bae1b0d. H v8 software preflight 20260908-stage28e-h-v8-preflight-v1 passed on 231eed28f64bdbdc4238fd8bce128264027702f2 with 24/24 host tests, v7 replay accepted 596 TimerOff samples, fake 12 KiB and real/recovery 16 KiB images built, no production C/C++ delta, and hardware_started=0. H v8 is prepared but not started. All repository tasks use resources: []; verify /dev/cu.usbserial-1130 inside any hardware task and never touch /dev/cu.usbserial-10. When explicitly authorized to start H v8, use only the normal controller path, no request injection or actuator forcing, and always perform recovery plus final RF-disabled fake-locked. Do not begin the production runtime/service-console refactor before formal H PASS.`

@@ -1,6 +1,6 @@
 # Current controller status
 
-Updated: 2026-09-07
+Updated: 2026-09-08
 Development branch: `mvp/environment-controller`
 Latest handoff: `docs/STAGE28E_PHASE_H_HANDOFF.md`
 Stage28E execution guide: `docs/GUIDANCE.md`
@@ -98,6 +98,14 @@ The observer now accepts `stage28d_output ` as an in-line marker so both raw and
 
 Corrected observer RC4: `d91fe21d319d4f85832d9fc95d5912bbae23cf0e`. Software-only preflight `20260907-stage28e-h-prefix-fix-preflight-rc4` is PASS, including replay acceptance of all 576 retained v6 output-state lines, host suite, fake 12 KiB build, RF/real 16 KiB build and clean tree.
 
+## H v7 TimerOff false negative and H v8 readiness
+
+H v7 primary was intentionally interrupted with RC `130` once the observer semantic defect was established. Recovery and final verification both passed, so the board returned to RF-disabled `fake-locked`. V7 telemetry showed normal fan transitions while `safety_latched=0`, `force_fan=0`, `safety_reason=1`; production defines reason `1` as `TimerOff`, a normal schedule-off state.
+
+Observer commit `45065a34ce276ac5cdb7ef8cf0a1ad8a4bae1b0d` now treats only `Safe (0)` and `TimerOff (1)` as H safety-clear when both latch and force are zero; reasons `2..5` remain rejected. Focused tests pass and retained v7 replay accepts `596` TimerOff samples with zero unsafe accepts.
+
+H v8 software preflight `20260908-stage28e-h-v8-preflight-v1` passed on `231eed28f64bdbdc4238fd8bce128264027702f2`: no production C/C++ delta from `5a4830db9d10e8cb73d4c617b09122f0844ad899`, `24/24` host tests passed, fake `12288 B` and real/recovery `16384 B` images were built, final tree was clean, and no hardware was started. **H v8 itself is not running and has not been started.**
+
 ## Closed-tent H release-candidate harness
 
 The repository now contains:
@@ -189,17 +197,17 @@ Standing invariants:
 For every task:
 
 - exact `agent_binding` is mandatory;
-- use `resources: []` for software/docs/build work;
-- use `resources: []` for serial/flash/hardware;
+- use `resources: []` for every repository task, including software, builds, serial, flash and hardware;
+- verify the exact device/port inside hardware tasks;
 - verify exact SHA in-task;
 - read terminal `.agent/results/<task-id>.json` before reporting PASS.
 
 ## Immediate next work
 
-1. Fresh-check branch/control state and confirm the corrected observer RC `d91fe21d319d4f85832d9fc95d5912bbae23cf0e` is still the executable qualification-tooling baseline; committed policy/docs changes are allowed; executable tooling changes require a new software preflight with no production C/C++ delta.
-2. Run one new immutable **H v8 TimerOff-aware** bounded hardware task on `board:growbox-s3` and `/dev/cu.usbserial-1130`.
+1. Treat `231eed28f64bdbdc4238fd8bce128264027702f2` as the H v8 executable/preflight identity and allow only documentation-only readiness commits after it without rerunning the software gate.
+2. H v8 is prepared but **must not start until explicitly requested**. When started, its task must use `resources: []`, verify `/dev/cu.usbserial-1130` inside the task and explicitly refuse `/dev/cu.usbserial-10`.
 3. Start with the tent already closed; require no operator action, no request injection and no actuator forcing.
-4. Prove stable safety-clear physical fan OFF -> natural `requested_fan>=0.10` -> normal arbiter OFF->ON -> RF TX increment with zero errors -> unconfounded Shelly physical support.
+4. Prove stable safety-clear physical fan OFF -> natural `requested_fan>=0.10` -> normal arbiter OFF->ON -> RF TX increment with zero errors -> unconfounded Shelly physical support. `Safe (0)` and `TimerOff (1)` are acceptable only while `safety_latched=0` and `force_fan=0`; reasons `2..5` are not.
 5. Regardless of primary outcome, always execute recovery RF and final RF-disabled `fake-locked`.
-6. If H v7 passes, formally close Stage28E H before starting the requested longer overnight soak / subsequent roadmap work.
+6. If H v8 passes, formally close Stage28E H before starting any longer soak or production runtime/service-console modularization.
 7. Keep the production runtime/service-console modularity refactor deferred until H is formally closed.

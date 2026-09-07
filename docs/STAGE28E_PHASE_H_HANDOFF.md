@@ -1,6 +1,6 @@
 # Stage28E Phase H continuation handoff
 
-Updated: 2026-09-07
+Updated: 2026-09-08
 Repository: `MichalMatu/growbox-ml-controller`
 Work branch: `mvp/environment-controller`
 Control branch: `agent-control`
@@ -127,6 +127,16 @@ The v6 observer required `line.startswith("stage28d_output ")`. Audit of the exa
 Therefore the observer ignored 100% of arbiter/output-state samples and could never acquire its OFF baseline even though the production controller repeatedly produced valid OFF and ON states. This is a qualification-tooling false negative, not evidence of a controller, arbiter, RF or physical-output failure.
 
 The RC observer is corrected to recognize the `stage28d_output ` marker anywhere in the serial line while preserving the same KV parsing and acceptance criteria. RC4 at `d91fe21d319d4f85832d9fc95d5912bbae23cf0e` passed synthetic raw/prefixed regression and replay acceptance of all `576/576` retained v6 output-state lines. The full software-only preflight `20260907-stage28e-h-prefix-fix-preflight-rc4` also passed.
+
+## H v7 TimerOff observer false negative and H v8 readiness
+
+H v7 (`20260907-stage28e-h-v7-corrected-parser-v1`) was intentionally interrupted after the observer semantic defect was identified. Primary RC was `130`; mandatory recovery and final verification were both `0`, leaving the board RF-disabled and `fake-locked`.
+
+The retained run showed `safety_latched=0`, `force_fan=0`, `safety_reason=1` while the normal fan path repeatedly transitioned. Production `LampSafetyReason` defines `1` as `TimerOff`, so requiring `safety_reason==0` prevented a valid nighttime baseline. This was a harness/evidence defect, not production C++ behavior.
+
+Observer commit `45065a34ce276ac5cdb7ef8cf0a1ad8a4bae1b0d` accepts only reasons `0` (`Safe`) and `1` (`TimerOff`) when both `safety_latched=0` and `force_fan=0`; reasons `2..5` remain rejected. Focused regression tests pass, and retained v7 replay accepted `596` TimerOff samples with zero unsafe accepts.
+
+H v8 software preflight `20260908-stage28e-h-v8-preflight-v1` is **PASS** on `231eed28f64bdbdc4238fd8bce128264027702f2`. It verified no production C/C++ delta relative to `5a4830db9d10e8cb73d4c617b09122f0844ad899`, the TimerOff-aware observer, `24/24` host tests, fake `12288 B` main-stack image, real/recovery `16384 B` main-stack images, and a clean tree. Terminal marker records `resources=empty hardware_started=0`. H v8 has **not** been started.
 
 ## Closed-tent observer — release candidate
 
@@ -373,9 +383,9 @@ The next hardware task must be a new immutable task id and contain exactly:
 
 `"agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5"`
 
-Hardware resource:
+Task resources:
 
-`"resources": ["board:growbox-s3"]`
+`"resources": []`
 
 Port:
 
@@ -394,7 +404,7 @@ The wrapper should:
 9. fail hard if either recovery or final verification fails;
 10. only report formal H PASS if the primary closed-tent observer passed and recovery/final also passed.
 
-For the immediate corrected H v7 qualification, use a bounded observer window that fits the Local Agent command budget together with mandatory recovery/final handling; the proven v6 environment produced repeated natural OFF/ON cycles within minutes once output lines are parsed correctly. A later overnight soak is a separate bounded test and must retain the same temperature/safety stop conditions.
+For the prepared H v8 qualification, use a bounded observer window that fits the Local Agent command budget together with mandatory recovery/final handling; the proven v6 environment produced repeated natural OFF/ON cycles within minutes once output lines are parsed correctly. A later overnight soak is a separate bounded test and must retain the same temperature/safety stop conditions.
 
 This is authorization for a bounded qualification only, not continuous unattended real-output production operation.
 
@@ -426,8 +436,8 @@ Rules:
 - Local Agent is used for Mac commands, builds/tests and devices;
 - task IDs and payloads are immutable;
 - `expected_head` is unsupported, so exact SHA checks belong inside the task;
-- `resources: []` for software-only work;
-- `resources: []` for serial/flash/device work;
+- `resources: []` for every repository task, including software/build/serial/flash/device work;
+- hardware tasks verify the exact device/port internally;
 - read terminal `.agent/results/<task-id>.json` before reporting PASS.
 
 ## Stop conditions
@@ -453,4 +463,4 @@ Open the next conversation with the same Growbox repository binding. Let Chat Br
 
 Use this instruction:
 
-> Continue Growbox Stage28E Phase H only in `MichalMatu/growbox-ml-controller`. First read `AGENTS.md`, `docs/STAGE28E_PHASE_H_HANDOFF.md`, `docs/CURRENT_STATUS.md`, `docs/CONTINUATION_PLAN.md`, `docs/GUIDANCE.md`, and `docs/ESP32_S3_SERIAL_PORT_RESET.md`. Fresh-check `mvp/environment-controller` HEAD and `agent-control:.agent/status/daemon.json` before doing anything. A-G are formally complete; H is not. Qualified production runtime/tooling source identity is `5a4830db9d10e8cb73d4c617b09122f0844ad899`. H v5 failed its obsolete open-tent baseline criterion but recovery/final fake-locked passed. The tent was closed at `2026-09-07T12:16:42Z` and must remain closed; no user action is needed. The repository-tracked observer is `scripts/stage28e_phase_h_closed_tent.py`. First require the software-only RC preflight result to be PASS. Then run one bounded hardware H task: stable safety-clear physical fan OFF, natural `requested_fan>=0.10`, normal arbiter OFF->ON, RF TX increment with zero errors, unconfounded Shelly physical support and environmental response, followed unconditionally by recovery and final RF-disabled `fake-locked`. Never touch `/dev/cu.usbserial-10`. Do not add request/output forcing. Do not start the production runtime/service-console modularity refactor until H formally passes.
+> Continue Growbox Stage28E Phase H only in `MichalMatu/growbox-ml-controller`. First read `AGENTS.md`, `docs/STAGE28E_PHASE_H_HANDOFF.md`, `docs/CURRENT_STATUS.md`, `docs/CONTINUATION_PLAN.md`, `docs/GUIDANCE.md`, and `docs/ESP32_S3_SERIAL_PORT_RESET.md`. Fresh-check `mvp/environment-controller` HEAD and `agent-control:.agent/status/daemon.json`. A-G are complete; H remains open. Qualified production firmware identity is `5a4830db9d10e8cb73d4c617b09122f0844ad899`; TimerOff-aware observer commit is `45065a34ce276ac5cdb7ef8cf0a1ad8a4bae1b0d`; H v8 software preflight `20260908-stage28e-h-v8-preflight-v1` passed on `231eed28f64bdbdc4238fd8bce128264027702f2` with `24/24` host tests, v7 replay acceptance of `596` TimerOff samples, fake 12 KiB and real/recovery 16 KiB images, no production C/C++ delta and `hardware_started=0`. H v8 is prepared but not started. All repository tasks use `resources: []`; any hardware task must verify `/dev/cu.usbserial-1130` internally and refuse `/dev/cu.usbserial-10`. When H v8 is explicitly started, prove only the normal fan path and always finish with recovery plus final RF-disabled `fake-locked`. Do not add request/output forcing or begin production modularization before formal H PASS.
