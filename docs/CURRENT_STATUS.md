@@ -2,7 +2,7 @@
 
 Updated: 2026-09-07
 Development branch: `mvp/environment-controller`
-Latest handoff: `docs/STAGE28E_PHASE_F_HANDOFF.md`
+Latest handoff: `docs/STAGE28E_PHASE_G_HANDOFF.md`
 Stage28E execution guide: `docs/GUIDANCE.md`
 Prior Stage28D evidence: `docs/STAGE28D_AH_ARBITER_HANDOFF.md`
 Primary roadmap: `docs/PROJECT_ROADMAP.md`
@@ -10,9 +10,9 @@ Continuation checklist: `docs/CONTINUATION_PLAN.md`
 
 ## Current transition
 
-**Stage27C FROZEN -> Stage28E Phase A COMPLETE -> B COMPLETE -> C COMPLETE -> D COMPLETE -> E COMPLETE -> F COMPLETE -> Phase G NEXT**
+**Stage27C FROZEN -> Stage28E Phase A COMPLETE -> B COMPLETE -> C COMPLETE -> D COMPLETE -> E COMPLETE -> F COMPLETE -> G RUNTIME EVIDENCE PASS -> Phase G FORMAL EXIT NEXT**
 
-Stage28D functional AH work remains paused. The active program remains Stage28E A -> H. Phase G is bounded fake-locked runtime validation followed by a representative soak only after the short gate is clean. Do not return to the final physical AH actuator path before Phase H.
+Stage28D functional AH work remains paused. Phase G short and representative long-soak runtime evidence are PASS after correcting two harness false negatives. The remaining Phase G step is one exact-SHA formal exit gate on the documentation HEAD. Do not return to the final physical AH actuator path before that gate passes and Phase H begins.
 
 ## Phase identities
 
@@ -166,24 +166,39 @@ Local Agent gate `20260907-growbox-stage28e-phase-f-arbiter-continuity-gate-v1` 
 
 Conclusion: the historical V5 same-instance-style dwell counter drop `43 -> 1` cannot arise from normal continuous execution of the current arbiter semantics except legitimate integer wrap. A future recurrence must be treated as lifecycle/runtime evidence until proven otherwise.
 
-## Phase G next goal
+## Phase G runtime evidence PASS; formal exit next
 
-Start with one short, bounded fake-locked hardware runtime. Do not begin the long soak until the short gate is clean.
+Full evidence: `docs/STAGE28E_PHASE_G_HANDOFF.md`.
 
-Required short-run evidence:
+Validated firmware/source SHA: `389453882f0e0d2209c5bdece7eaf443895aa7ba`.
 
-1. exact firmware SHA, boot/session ID and expected reset reason;
-2. stable arbiter instance/construction count with no unexplained reconstruction;
-3. no `arbiter_counter_regression` or continuity fault;
-4. no coredump, crash, corrupt heap, stack warning/critical event or watchdog marker;
-5. internal free/min/largest block remains within accepted Phase E margins;
-6. PSRAM remains healthy;
-7. main and `stage27_store` HWM retain adequate margin;
-8. BLE/sensors/telemetry remain active with zero queue drops/write errors;
-9. loop timing remains bounded;
-10. Shelly master stays ON and final state is `fake-locked`.
+Short corrected reanalysis PASS:
 
-Only after the short bounded run passes should Phase G queue a representative longer diagnostic soak. Any reset/session change or integrity fault preserves evidence and stops forward progress.
+- one arbiter instance / one construction;
+- internal free/min/largest `223792 / 223152 / 180224 B`;
+- main HWM `7240 B` free; storage HWM `1884 B` free;
+- `18` heartbeats, `3` heap-integrity checks;
+- zero storage drops/write errors/fallbacks;
+- Shelly master ON, median `64.80 W`;
+- safe `fake-locked`.
+
+Representative long-soak corrected reanalysis PASS:
+
+- wall time `736.476 s`; final uptime `733249 ms`; startup serial-open reset gap `3.227 s`;
+- stable post-open boot ID `54f2ecb1`;
+- internal free/min/largest `223792 / 223260 / 180224 B`;
+- main HWM `7064 B` free; storage HWM `1884 B` free;
+- heartbeat sequence reached `72`; heap-integrity check reached `12`;
+- storage progressed to at least record `83`;
+- loop max `228148 us`;
+- BLE/SCD41/TP/Xiaomi healthy;
+- no coredump, arbiter regression, Guru Meditation, corrupt heap, canary, watchdog or heap-integrity failure after the post-open baseline;
+- Shelly master ON, median `65.10 W`;
+- safe `fake-locked`.
+
+The two apparent failures were harness false negatives: SCD41 first-sample warm-up at `751 ms`, and serial-port-open reset. Serial-open behavior and mandatory post-open baseline handling are documented in `docs/ESP32_S3_SERIAL_PORT_RESET.md`.
+
+Run one exact-SHA read-only/software Phase G exit gate on the current docs HEAD. Only after PASS advance to Phase H.
 
 Final physical `AH/rule request -> binary arbiter -> RF -> physical fan` remains Phase H.
 
@@ -210,10 +225,8 @@ Standing invariants:
 
 ## Immediate next work
 
-1. Run one formal exact-SHA Phase F software exit gate on the fresh work-branch docs HEAD.
-2. The gate must re-run the focused arbiter proof, full host suite and Stage27C firmware build while proving production arbiter code is unchanged from Phase E.
-3. Record the passing docs SHA as the formal Phase F exit SHA.
-4. Enter Phase G only after that gate passes.
-5. Run one short bounded fake-locked hardware validation before any longer soak.
-
-Do not run the long soak before the short Phase G gate passes and do not return to a real AH actuator transition before Phase H.
+1. Run one exact-SHA Phase G formal exit gate on the fresh documentation HEAD.
+2. Verify `docs/STAGE28E_PHASE_G_HANDOFF.md` and `docs/ESP32_S3_SERIAL_PORT_RESET.md`, both corrected Local Agent reanalysis results, and that production runtime/control code is unchanged from validated firmware SHA `389453882f0e0d2209c5bdece7eaf443895aa7ba`.
+3. Finish with clean worktree / `git diff --check`.
+4. Record the passing docs SHA as formal Phase G exit SHA.
+5. Only then enter Phase H and plan the bounded physical AH/RF/fan E2E validation with post-serial-open baseline and mandatory restoration to `fake-locked`.

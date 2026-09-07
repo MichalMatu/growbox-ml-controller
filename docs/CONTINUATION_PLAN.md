@@ -3,7 +3,7 @@
 Updated: 2026-09-07
 Work branch: `mvp/environment-controller`
 Control branch: `agent-control`
-Latest handoff: `docs/STAGE28E_PHASE_F_HANDOFF.md`
+Latest handoff: `docs/STAGE28E_PHASE_G_HANDOFF.md`
 Stage28E execution guide: `docs/GUIDANCE.md`
 Prior Stage28D evidence: `docs/STAGE28D_AH_ARBITER_HANDOFF.md`
 Current status: `docs/CURRENT_STATUS.md`
@@ -24,14 +24,15 @@ Primary roadmap: `docs/PROJECT_ROADMAP.md`
 11. `docs/STAGE28D_AH_ARBITER_HANDOFF.md` for historical V5 details
 12. `docs/OBSERVABILITY_AND_INFERENCE_PLAN.md` when changing ventilation/inference/telemetry/ML behavior
 13. `docs/SHELLY_POWER_FEEDBACK.md` when changing physical-state supervision
+14. `docs/ESP32_S3_SERIAL_PORT_RESET.md` before interpreting any serial-attached runtime/soak reset evidence
 
 Then fetch fresh `mvp/environment-controller` HEAD, fresh `agent-control:.agent/status/daemon.json`, and the newest Local Agent result. Never continue from remembered chat state alone.
 
 ## Current transition
 
-**Stage27C FROZEN -> Stage28E A COMPLETE -> B COMPLETE -> C COMPLETE -> D COMPLETE -> E COMPLETE -> F COMPLETE -> Phase G NEXT**
+**Stage27C FROZEN -> Stage28E A COMPLETE -> B COMPLETE -> C COMPLETE -> D COMPLETE -> E COMPLETE -> F COMPLETE -> G RUNTIME EVIDENCE PASS -> Phase G FORMAL EXIT NEXT**
 
-Stage28D functional AH work stays paused until A-G pass. Final physical `AH/rule request -> binary arbiter -> RF -> physical fan` verification belongs to Phase H.
+Stage28D functional AH work stays paused until the Phase G formal exit gate passes. Phase G short and representative long-soak evidence are PASS. Final physical `AH/rule request -> binary arbiter -> RF -> physical fan` verification belongs to Phase H.
 
 ## Phase identities
 
@@ -181,12 +182,13 @@ Safety boundary:
 
 ## Immediate next work
 
-1. Fetch fresh daemon and exact work-branch HEAD after these Phase F docs commits.
-2. Queue the formal exact-SHA Phase F software exit gate; do not duplicate it if already present.
-3. If PASS, record the final Phase F exit SHA and enter Phase G.
-4. Queue one short bounded fake-locked G1 hardware run first.
-5. Only after G1 PASS, plan and run the representative G2 soak.
+1. Fetch fresh daemon and exact work-branch HEAD.
+2. Queue one exact-SHA Phase G formal exit gate; do not duplicate it if already present.
+3. The exit gate must verify Phase G handoff + serial-open reset guidance, corrected short and long-soak reanalysis PASS results, and no production runtime/control code changes relative to validated firmware SHA `389453882f0e0d2209c5bdece7eaf443895aa7ba`.
+4. Record the passing documentation SHA as formal Phase G exit SHA.
+5. Only after PASS enter Phase H.
+6. In Phase H, establish the boot/session baseline after opening `/dev/cu.usbserial-1130`, then run one bounded physical `AH/rule request -> binary arbiter -> RF -> physical fan` E2E validation and restore/prove `fake-locked`.
 
 ## Recommended fresh-chat instruction
 
-`Read AGENTS.md, docs/GUIDANCE.md, docs/STAGE28E_PHASE_F_HANDOFF.md, docs/CURRENT_STATUS.md and docs/CONTINUATION_PLAN.md. Fetch fresh mvp/environment-controller HEAD and Local Agent daemon/result first. Treat Phase F as complete only if its final exact-SHA software exit gate passed. Then continue Stage28E Phase G with a short bounded fake-locked hardware runtime before any long soak; preserve lifecycle/counter/coredump/heap/stack evidence on failure, use only /dev/cu.usbserial-1130, and do not run the physical AH actuator path before Phase H.`
+`Read AGENTS.md, docs/GUIDANCE.md, docs/STAGE28E_PHASE_G_HANDOFF.md, docs/ESP32_S3_SERIAL_PORT_RESET.md, docs/CURRENT_STATUS.md and docs/CONTINUATION_PLAN.md. Fetch fresh mvp/environment-controller HEAD and Local Agent daemon/result first. Treat Phase G runtime evidence as PASS but Phase G itself as complete only if the final exact-SHA docs exit gate passed. Remember that opening /dev/cu.usbserial-1130 can reset this CrowPanel; establish a fresh post-open boot/session baseline before judging resets. After formal G PASS, continue only with bounded Phase H physical AH/RF/fan E2E validation and restore fake-locked afterward.`

@@ -17,6 +17,7 @@ Repository and execution identity:
 - control branch: `agent-control`
 - Local Agent binding: `815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5`
 - correct Growbox serial device: `/dev/cu.usbserial-1130`
+- serial-open reset interpretation: read `docs/ESP32_S3_SERIAL_PORT_RESET.md`; establish the runtime failure baseline only after opening the port and capturing a fresh stabilized status
 - `/dev/cu.usbserial-10` belongs to another project and must never be opened, probed, monitored, reset, or flashed
 
 Safety invariants remain unchanged:
@@ -66,6 +67,7 @@ Hardware policy during Stage28E:
 - diagnostic firmware may be run only when a phase explicitly requires runtime evidence
 - hardware runs must be bounded and use only `board:growbox-s3`
 - use only `/dev/cu.usbserial-1130`
+- opening that serial port can reset this CrowPanel; tolerate/record only the pre-baseline port-open reset, then fail on any reset/session/lifecycle change after the stabilized post-open baseline
 - preserve all thermal/output safety interlocks
 - restore safe fake-locked state after every hardware run
 - do not run a long soak until Phase G
