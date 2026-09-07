@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260908-branch-resource-policy-audit-v1",
   "task_digest": "cccc8fe5887894c43ca2682adeca0aec678fe0a65d25f0544a52bce3f9e9b00b",
-  "idle_timeout": 120,
-  "task_timeout": 600,
-  "memory_limit_mb": 4096,
-  "started_at": "2026-09-07T23:21:07.515963+00:00",
+  "status": "done",
+  "failure_reason": null,
+  "finished_at": "2026-09-07T23:21:10.833623+00:00",
   "attempt_id": "399f274ab5e330485a13de60",
   "daemon_version": "4.18.13",
   "daemon_pid": 16225,
-  "updated_at": "2026-09-07T23:21:07.516077+00:00",
+  "updated_at": "2026-09-07T23:21:11.116234+00:00",
   "pid": 16225
 }
