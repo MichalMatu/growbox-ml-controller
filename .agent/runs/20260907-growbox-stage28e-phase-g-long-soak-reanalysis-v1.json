@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260907-growbox-stage28e-phase-g-long-soak-reanalysis-v1",
+  "task_digest": "f930250833df3542ee30108f47e29fefd0075362541757a9698c9e7d967497e5",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-07T04:58:01.766920+00:00",
+  "attempt_id": "78b8f01474ce8f73806d3ef1",
+  "daemon_version": "4.18.13",
+  "daemon_pid": 92911,
+  "updated_at": "2026-09-07T04:58:01.767064+00:00",
+  "pid": 92911
+}
