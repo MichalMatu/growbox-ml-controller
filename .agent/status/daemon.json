@@ -2,8 +2,8 @@
   "version": 1,
   "daemon_version": "4.18.10",
   "state": "idle",
-  "pid": 93968,
-  "updated_at": "2026-09-07T03:12:33.655454+00:00",
+  "pid": 7139,
+  "updated_at": "2026-09-07T03:17:37.656581+00:00",
   "self_revision": "d89b645d42e29b11e6cb8027543340127d60b0e5",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -23,8 +23,7 @@
   "default_branch": "main",
   "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 93968,
+  "worker_pid": 7139,
   "supervisor_pid": 83445,
-  "last_task_id": "20260907-growbox-stage28e-phase-f-exit-gate-v1",
   "execution_variant": "parallel"
 }
