@@ -1,0 +1,60 @@
+{
+  "id": "20260908-stage28e-h-v8-final-readiness-audit-v1",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "started_at": "2026-09-07T23:32:09.411979+00:00",
+  "command_timeout": 300,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; EXPECTED_HEAD=157806442161e88edd8038e532e9dff333a19efb; PREFLIGHT_HEAD=231eed28f64bdbdc4238fd8bce128264027702f2; QUALIFIED=5a4830db9d10e8cb73d4c617b09122f0844ad899; git fetch -q origin --prune; test \"$(git rev-parse HEAD)\" = \"$EXPECTED_HEAD\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED_HEAD\"; test -z \"$(git status --porcelain)\"; python3 - <<'PY'\nimport json, subprocess\nexpected_head='157806442161e88edd8038e532e9dff333a19efb'\npreflight='231eed28f64bdbdc4238fd8bce128264027702f2'\nqualified='5a4830db9d10e8cb73d4c617b09122f0844ad899'\npost=set(subprocess.check_output(['git','diff','--name-only',f'{preflight}..{expected_head}'],text=True).splitlines())\nexpected_docs={'docs/CONTINUATION_PLAN.md','docs/CURRENT_STATUS.md','docs/STAGE28E_PHASE_H_HANDOFF.md'}\nassert post == expected_docs,(post,expected_docs)\nprod=[p for p in subprocess.check_output(['git','diff','--name-only',f'{qualified}..{expected_head}'],text=True).splitlines() if p.endswith(('.c','.cc','.cpp','.h','.hpp'))]\nassert not prod,prod\nactive=['AGENTS.md','docs/GUIDANCE.md','docs/PROJECT_ROADMAP.md','docs/STAGE28D_AH_ARBITER_HANDOFF.md','docs/STAGE28E_PHASE_H_HANDOFF.md','docs/CURRENT_STATUS.md','docs/CONTINUATION_PLAN.md']\ntext='\\n'.join(open(p).read() for p in active)\nassert 'resources: [\"board:growbox-s3\"]' not in text\nassert '`board:growbox-s3`' not in text\nassert 'resources: []' in text\nasset=json.loads(subprocess.check_output(['git','show','origin/agent-control:.agent/task-assets/20260908-stage28e-h-v8-prepared.json'],text=True))\nassert asset['status']=='prepared_not_queued'\nassert asset['expected_head']==expected_head\nassert asset['resources']==[]\nassert asset['start_condition']=='explicit_user_authorization_only'\nmissing=subprocess.run(['git','cat-file','-e','origin/agent-control:.agent/tasks/20260908-stage28e-h-v8-timeroff-observer-v1.json'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode\nassert missing != 0,'H v8 hardware task is unexpectedly queued'\nheads=subprocess.check_output(['git','ls-remote','--heads','origin'],text=True).splitlines()\nbranches={line.split('refs/heads/',1)[1] for line in heads}\nallowed={'agent-control','gh-pages','main','mvp/environment-controller'}\nassert branches==allowed,(branches,allowed)\nprint('H_V8_FINAL_READINESS_PASS', 'head='+expected_head, 'preflight='+preflight, 'resources=empty', 'hardware_task_queued=0', 'remote_branches='+','.join(sorted(branches)))\nPY\ngit diff --check; echo H_V8_READY_NOT_STARTED_PASS",
+      "exit_code": 0,
+      "output": "H_V8_FINAL_READINESS_PASS head=157806442161e88edd8038e532e9dff333a19efb preflight=231eed28f64bdbdc4238fd8bce128264027702f2 resources=empty hardware_task_queued=0 remote_branches=agent-control,gh-pages,main,mvp/environment-controller\nH_V8_READY_NOT_STARTED_PASS\n",
+      "elapsed_seconds": 2.143,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 2.05,
+      "output_policy": "stream",
+      "captured_output_chars": 261,
+      "output_truncated": false,
+      "current_rss_mb": 2.05,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 2.143
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.122
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.082
+  },
+  "finished_at": "2026-09-07T23:32:13.377880+00:00",
+  "task_digest": "34530ac41b3304080ed693cefb3528422b8e5b67b04e8d3d8e070d28154bfb6c",
+  "idle_timeout": 120,
+  "task_timeout": 600,
+  "memory_limit_mb": 4096,
+  "attempt_id": "7da9014a5202fb3675a9e992",
+  "daemon_version": "4.18.13"
+}
