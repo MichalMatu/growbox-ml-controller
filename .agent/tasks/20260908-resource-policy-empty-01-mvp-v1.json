@@ -1,0 +1,16 @@
+{
+  "id": "20260908-resource-policy-empty-01-mvp-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "resources": [],
+  "memory_limit_mb": 512,
+  "command_timeout": 300,
+  "idle_timeout": 120,
+  "task_timeout": 900,
+  "commands": [
+    "set -euo pipefail; test -z \"$(git status --porcelain)\"; python3 - <<'PY'\nfrom pathlib import Path\np=Path('AGENTS.md'); s=p.read_text()\nold='- Use `resources: []` for repository-local software work, including builds/tests, when no exclusive external device or host-global state is used. `memory_limit_mb` is an independent RSS watchdog and does not determine resource classification.\\n- Use stable named resources such as `board:growbox-s3` for USB, serial, flashing, monitor, and hardware work so only tasks sharing that concrete resource serialize.\\n- Use `resources: [\\\"machine\\\"]` only for genuine whole-host operations such as global Local Agent maintenance or host-global toolchain mutation. Resource contention is a wait state and must continue with `NEXT`, not `STOP`.'\nnew='- Every executable task in this repository uses `resources: []`, including builds/tests and USB, serial, flashing, monitor, and hardware work. `memory_limit_mb` remains an independent RSS watchdog.\\n- Detect and verify the current device/port inside the task instead of reserving it as a scheduler resource.\\n- Do not declare named resources or `machine` from this repository; host-global Local Agent maintenance belongs to the supervisor/administration path.'\nassert s.count(old)==1,s.count(old); p.write_text(s.replace(old,new))\nPY\ngit diff --check; ! grep -n -E 'board:growbox-s3|resources: \\\[\\\"machine\\\"\\\]' AGENTS.md; git diff -- AGENTS.md",
+    "set -euo pipefail; git add AGENTS.md; git commit -m 'Simplify Local Agent resource policy'; git push origin HEAD:mvp/environment-controller"
+  ]
+}
