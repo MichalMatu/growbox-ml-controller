@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260907-growbox-stage28e-phase-g-long-soak-failure-inspect-v1",
+  "task_digest": "5aa17f266fed809ca1bf62428c86fd97b78ecb26b56b94383f55103dfdc1718a",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-07T04:47:01.050640+00:00",
+  "attempt_id": "d09baea692c280f6aebe490d",
+  "daemon_version": "4.18.13",
+  "daemon_pid": 84941,
+  "updated_at": "2026-09-07T04:47:01.050843+00:00",
+  "pid": 84941
+}
