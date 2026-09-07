@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260907-growbox-stage28e-phase-g-formal-close-v1",
+  "task_digest": "00b80e13574472279341f0eed2659e5fbba761b2d46223fd629bbb5c44ce384f",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-07T05:18:40.909837+00:00",
+  "attempt_id": "e67634b2d83b80f203122db1",
+  "daemon_version": "4.18.13",
+  "daemon_pid": 12276,
+  "updated_at": "2026-09-07T05:18:40.915565+00:00",
+  "pid": 12276
+}
