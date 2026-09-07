@@ -1,9 +1,9 @@
 {
   "version": 1,
   "daemon_version": "4.18.13",
-  "state": "idle",
-  "pid": 80612,
-  "updated_at": "2026-09-07T15:39:31.679819+00:00",
+  "state": "running",
+  "pid": 81949,
+  "updated_at": "2026-09-07T15:40:42.842349+00:00",
   "self_revision": "a32e54858c3bcb9687334b3232b71ae6ff130208",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -14,7 +14,7 @@
   "task_timeout_default": 1800,
   "task_timeout_max": 21600,
   "memory_limit_mb_default": 4096,
-  "current_task_id": null,
+  "current_task_id": "20260907-stage28e-h-v6-baseline-cadence-audit",
   "current_attempt_id": null,
   "current_task_digest": null,
   "repository_id": "growbox-ml-controller",
@@ -23,8 +23,8 @@
   "default_branch": "main",
   "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 80612,
+  "worker_pid": 81949,
   "supervisor_pid": 1033,
-  "last_task_id": "20260907-stage28e-h-v6-log-audit",
+  "active_resources": [],
   "execution_variant": "parallel"
 }
