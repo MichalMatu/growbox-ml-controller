@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "status": "prepared_not_queued",
+  "suggested_task_id": "20260908-stage28e-h-v8-timeroff-observer-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "mvp/environment-controller",
+  "expected_head": "157806442161e88edd8038e532e9dff333a19efb",
+  "executable_preflight_head": "231eed28f64bdbdc4238fd8bce128264027702f2",
+  "qualified_firmware_sha": "5a4830db9d10e8cb73d4c617b09122f0844ad899",
+  "observer_commit": "45065a34ce276ac5cdb7ef8cf0a1ad8a4bae1b0d",
+  "preflight_result": ".agent/results/20260908-stage28e-h-v8-preflight-v1.json",
+  "resources": [],
+  "port": "/dev/cu.usbserial-1130",
+  "forbidden_port": "/dev/cu.usbserial-10",
+  "images": {
+    "real": "/tmp/growbox-stage28e-h-v8-preflight-real-v1",
+    "recovery": "/tmp/growbox-stage28e-h-v8-preflight-recovery-v1",
+    "safe_fake": "/tmp/growbox-stage28e-h-v8-preflight-fake-v1"
+  },
+  "observer": {
+    "script": "scripts/stage28e_phase_h_closed_tent.py",
+    "timeout_seconds": 6600,
+    "post_seconds": 600,
+    "closure_utc": "2026-09-07T12:16:42Z",
+    "temperature_guard_c": 27.5,
+    "accepted_safety_reasons": [0, 1],
+    "requires_safety_latched": 0,
+    "requires_force_fan": 0
+  },
+  "mandatory_recovery": true,
+  "mandatory_final_fake_locked": true,
+  "start_condition": "explicit_user_authorization_only",
+  "notes": [
+    "Do not queue this asset directly; create a new immutable task under .agent/tasks only after explicit authorization.",
+    "Before start, require a clean worktree and prove the delta from executable_preflight_head to expected_head is documentation-only.",
+    "Verify the exact serial device inside the task and refuse the forbidden port.",
+    "No request injection, actuator forcing, or intentional thermal-safety trigger is permitted.",
+    "Primary failure must not skip recovery or final fake-locked verification."
+  ]
+}
