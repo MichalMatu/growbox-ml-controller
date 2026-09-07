@@ -2,7 +2,7 @@
 
 Updated: 2026-09-07
 Development branch: `mvp/environment-controller`
-Latest handoff: `docs/STAGE28E_PHASE_E_HANDOFF.md`
+Latest handoff: `docs/STAGE28E_PHASE_F_HANDOFF.md`
 Stage28E execution guide: `docs/GUIDANCE.md`
 Prior Stage28D evidence: `docs/STAGE28D_AH_ARBITER_HANDOFF.md`
 Primary roadmap: `docs/PROJECT_ROADMAP.md`
@@ -10,9 +10,9 @@ Continuation checklist: `docs/CONTINUATION_PLAN.md`
 
 ## Current transition
 
-**Stage27C FROZEN -> Stage28E Phase A COMPLETE -> B COMPLETE -> C COMPLETE -> D COMPLETE -> E COMPLETE -> Phase F NEXT**
+**Stage27C FROZEN -> Stage28E Phase A COMPLETE -> B COMPLETE -> C COMPLETE -> D COMPLETE -> E COMPLETE -> F COMPLETE -> Phase G NEXT**
 
-Stage28D functional AH work remains paused. The active program remains Stage28E A -> H. Phase F is the focused binary-arbiter continuity/regression proof. Do not return to the final physical AH actuator path before Phase H.
+Stage28D functional AH work remains paused. The active program remains Stage28E A -> H. Phase G is bounded fake-locked runtime validation followed by a representative soak only after the short gate is clean. Do not return to the final physical AH actuator path before Phase H.
 
 ## Phase identities
 
@@ -22,7 +22,10 @@ Stage28D functional AH work remains paused. The active program remains Stage28E 
 - Phase D implementation SHA: `09340089767cde117d12acc049790a2b93778b8e`
 - Phase D formal docs exit SHA: `5e750b972eeff4ac8c9149ef6ea708f703d2d755`
 - Phase E implementation head: `4a8ce18edd8cc90e6300929d2d9f035c4ec49eb5`
+- Phase E formal docs exit SHA: `0d4325f08033a38e4fd3769c38b1572e344a27ff`
 - Phase E evidence: `docs/STAGE28E_PHASE_E_HANDOFF.md`
+- Phase F implementation SHA: `d88c77d8eab5013a6f94baf60e1404f5b030efdc`
+- Phase F evidence: `docs/STAGE28E_PHASE_F_HANDOFF.md`
 
 Always fetch fresh work-branch HEAD and Local Agent daemon state before editing or queueing work.
 
@@ -132,21 +135,57 @@ For this ESP-IDF 5.5.4 Stage27C build:
 - broad allocator policy was not changed;
 - RMT/ISR/DMA-sensitive buffers were not moved to PSRAM.
 
-## Phase F next goal
+## Phase F completed arbiter continuity proof
 
-Phase F must prove the Stage28D/V5 arbiter behavior from synthetic, single-instance evidence rather than inference.
+Full evidence: `docs/STAGE28E_PHASE_F_HANDOFF.md`.
 
-Required proof:
+Implementation SHA:
 
-1. use one known binary-arbiter instance with lifecycle/boot identity visible;
-2. hold requests below threshold and around minimum-OFF dwell;
-3. prove cumulative dwell-hold counters remain monotonic within one instance except allowed integer wrap;
-4. prove the historical same-instance-style `43 -> 1` drop cannot arise from normal `applyBinary()` execution;
-5. after the full `120 s` minimum-OFF dwell, prove an eligible `0.111` request can transition ON;
-6. keep physical outputs `fake-locked`;
-7. do not change `applyBinary()` merely to fit historical V5 logs.
+`d88c77d8eab5013a6f94baf60e1404f5b030efdc`
 
-Long runtime soak remains Phase G. Final physical `AH/rule request -> binary arbiter -> RF -> physical fan` remains Phase H.
+Phase F changed only `test/test_stage28d_binary_role_arbiter/test_main.cpp`. Production `Stage28dBinaryRoleArbiter.{h,cpp}` remained unchanged from the Phase E exit SHA.
+
+Deterministic single-instance result:
+
+- synchronized safe OFF at `0 ms`;
+- request `0.099` stays OFF with zero dwell holds;
+- 43 requests at `0.111` inside minimum-OFF dwell advance the same instance's cumulative dwell counter exactly `0 -> 43`;
+- the existing regression helper classifies `43 -> 1` as a regression;
+- request `0.111` at `119999 ms` stays OFF and advances `43 -> 44`;
+- request `0.111` at exactly `120000 ms` performs one OFF -> ON transition;
+- dwell history remains `44` after transition;
+- continuity faults remain `0`;
+- next same-state call remains monotonic.
+
+Local Agent gate `20260907-growbox-stage28e-phase-f-arbiter-continuity-gate-v1` passed:
+
+- exact SHA verification PASS;
+- focused C++17 proof PASS;
+- existing host tests `24/24 PASS`;
+- clean worktree / `git diff --check` PASS.
+
+Conclusion: the historical V5 same-instance-style dwell counter drop `43 -> 1` cannot arise from normal continuous execution of the current arbiter semantics except legitimate integer wrap. A future recurrence must be treated as lifecycle/runtime evidence until proven otherwise.
+
+## Phase G next goal
+
+Start with one short, bounded fake-locked hardware runtime. Do not begin the long soak until the short gate is clean.
+
+Required short-run evidence:
+
+1. exact firmware SHA, boot/session ID and expected reset reason;
+2. stable arbiter instance/construction count with no unexplained reconstruction;
+3. no `arbiter_counter_regression` or continuity fault;
+4. no coredump, crash, corrupt heap, stack warning/critical event or watchdog marker;
+5. internal free/min/largest block remains within accepted Phase E margins;
+6. PSRAM remains healthy;
+7. main and `stage27_store` HWM retain adequate margin;
+8. BLE/sensors/telemetry remain active with zero queue drops/write errors;
+9. loop timing remains bounded;
+10. Shelly master stays ON and final state is `fake-locked`.
+
+Only after the short bounded run passes should Phase G queue a representative longer diagnostic soak. Any reset/session change or integrity fault preserves evidence and stops forward progress.
+
+Final physical `AH/rule request -> binary arbiter -> RF -> physical fan` remains Phase H.
 
 ## Safety boundary
 
@@ -171,10 +210,10 @@ Standing invariants:
 
 ## Immediate next work
 
-1. Run one docs-only exact-SHA Phase E exit gate on the fresh work-branch HEAD.
-2. Record that SHA as the formal Phase E exit SHA.
-3. Enter Phase F only after that gate passes.
-4. Build the focused synthetic arbiter continuity/regression diagnostic with no physical actuator output.
-5. Run focused host proof first, then only the bounded fake-locked runtime evidence required by Phase F.
+1. Run one formal exact-SHA Phase F software exit gate on the fresh work-branch docs HEAD.
+2. The gate must re-run the focused arbiter proof, full host suite and Stage27C firmware build while proving production arbiter code is unchanged from Phase E.
+3. Record the passing docs SHA as the formal Phase F exit SHA.
+4. Enter Phase G only after that gate passes.
+5. Run one short bounded fake-locked hardware validation before any longer soak.
 
-Do not run the long soak before Phase G and do not return to a real AH actuator transition before Phase H.
+Do not run the long soak before the short Phase G gate passes and do not return to a real AH actuator transition before Phase H.
