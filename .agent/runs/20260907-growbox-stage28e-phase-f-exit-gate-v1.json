@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 2,
+  "index": 3,
   "total": 5,
-  "command": "set -euo pipefail; OUT=build/stage28e-f-exit-arbiter-proof; mkdir -p \"$OUT\"; c++ -std=c++17 -Wall -Wextra -Wpedantic -Isrc -Ilib/environment_control/src test/test_stage28d_binary_role_arbiter/test_main.cpp src/climate/Stage28dBinaryRoleArbiter.cpp -o \"$OUT/stage28d_binary_role_arbiter_proof\"; \"$OUT/stage28d_binary_role_arbiter_proof\"; echo STAGE28E_F_EXIT_V5_CONTINUITY_PROOF_PASS",
-  "pid": 94170,
+  "command": "set -euo pipefail; export CMAKE_BUILD_PARALLEL_LEVEL=1; BUILD=build/idf-stage28e-f-exit; rm -rf \"$BUILD\"; STAGE27C_BUILD_DIR=\"$BUILD\" GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST=0 GROWBOX_FIRMWARE_GIT_SHA=389453882f0e0d2209c5bdece7eaf443895aa7ba bash scripts/stage27c_crowpanel.sh build >/tmp/stage28e-f-exit-build.log 2>&1; test -f \"$BUILD/growbox_ml_controller.elf\"; grep -Fq 'CONFIG_ESP_MAIN_TASK_STACK_SIZE=12288' \"$BUILD/sdkconfig\"; . /Users/michal/esp/esp-idf/export.sh >/dev/null 2>&1; idf.py -B \"$BUILD\" size; echo STAGE28E_F_EXIT_FIRMWARE_BUILD_PASS",
+  "pid": 94227,
   "timeout": 3600,
   "idle_timeout": 600,
   "memory_limit_mb": 6144,
-  "started_at": "2026-09-07T03:10:44.089638+00:00",
-  "stage_name": "command-2",
-  "stage_index": 2,
+  "started_at": "2026-09-07T03:10:46.236219+00:00",
+  "stage_name": "command-3",
+  "stage_index": 3,
   "stage_total": 5,
   "stage_phase": "commands",
   "task_id": "20260907-growbox-stage28e-phase-f-exit-gate-v1",
@@ -18,5 +18,5 @@
   "task_digest": "2d3a4701c82d8b0c6ecb733ba45e27ec2230e0d7396952f59c9ea6deb6c47130",
   "daemon_version": "4.18.10",
   "daemon_pid": 93968,
-  "updated_at": "2026-09-07T03:10:44.167200+00:00"
+  "updated_at": "2026-09-07T03:10:46.309829+00:00"
 }
