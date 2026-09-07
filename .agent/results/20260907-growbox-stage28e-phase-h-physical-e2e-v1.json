@@ -1,9 +1,0 @@
-{
-  "id": "20260907-growbox-stage28e-phase-h-physical-e2e-v1",
-  "status": "failed",
-  "failure_reason": "invalid_task_file",
-  "started_at": null,
-  "finished_at": "2026-09-07T05:32:37.083433+00:00",
-  "daemon_version": "4.18.13",
-  "error": "JSONDecodeError: Invalid control character at: line 15 column 502 (char 2507)"
-}
