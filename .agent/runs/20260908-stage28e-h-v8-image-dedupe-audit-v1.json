@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260908-stage28e-h-v8-image-dedupe-audit-v1",
+  "task_digest": "31e65865880dfddff143b859f320375ab3b71637d38cc9278ce883ef8e58e543",
+  "idle_timeout": 120,
+  "task_timeout": 600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-07T23:37:41.501406+00:00",
+  "attempt_id": "ae1aee140954a49b8f537eb7",
+  "daemon_version": "4.18.13",
+  "daemon_pid": 46941,
+  "updated_at": "2026-09-07T23:37:41.501473+00:00",
+  "pid": 46941
+}
