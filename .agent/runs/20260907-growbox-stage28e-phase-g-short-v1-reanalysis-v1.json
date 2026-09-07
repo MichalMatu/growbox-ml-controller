@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260907-growbox-stage28e-phase-g-short-v1-reanalysis-v1",
+  "task_digest": "4b9ac65240cb427748bb2fd7a069436cb200f2c6bd6fac9e0d603574b27b1097",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-07T04:27:37.943306+00:00",
+  "attempt_id": "bf80d9812b2eeedd856e4c3c",
+  "daemon_version": "4.18.13",
+  "daemon_pid": 68824,
+  "updated_at": "2026-09-07T04:27:37.943440+00:00",
+  "pid": 68824
+}
