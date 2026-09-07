@@ -1,0 +1,18 @@
+{
+  "id": "20260907-growbox-stage28e-phase-h-rf-stack-dual-build-v2",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 4096,
+  "command_timeout": 1800,
+  "idle_timeout": 600,
+  "task_timeout": 3600,
+  "commands": [
+    "set -euo pipefail; EXPECTED=5a4830db9d10e8cb73d4c617b09122f0844ad899; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; bash -n scripts/stage27c_crowpanel.sh; echo STAGE28E_H_RF_STACK_V2_EXACT_SHA_PASS=$EXPECTED",
+    "set -euo pipefail; export CMAKE_BUILD_PARALLEL_LEVEL=1; BUILD=build/stage28e-h-stack-fake-verify-v2; rm -rf \"$BUILD\"; STAGE27C_BUILD_DIR=\"$BUILD\" GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST=0 GROWBOX_FIRMWARE_GIT_SHA=5a4830db9d10e8cb73d4c617b09122f0844ad899 bash scripts/stage27c_crowpanel.sh build; grep -Fx 'CONFIG_ESP_MAIN_TASK_STACK_SIZE=12288' \"$BUILD/sdkconfig\"; echo STAGE28E_H_FAKE_STACK_12K_BUILD_PASS",
+    "set -euo pipefail; export CMAKE_BUILD_PARALLEL_LEVEL=1; BUILD=build/stage28e-h-stack-rf-verify-v2; rm -rf \"$BUILD\"; STAGE27C_BUILD_DIR=\"$BUILD\" GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 GROWBOX_RF433_LOOPBACK_ENABLED=1 GROWBOX_RF433_LOOPBACK_AUTO_SMOKE=0 GROWBOX_RF433_REMOTE_CAPTURE_ENABLED=0 GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST=0 GROWBOX_FIRMWARE_GIT_SHA=5a4830db9d10e8cb73d4c617b09122f0844ad899 bash scripts/stage27c_crowpanel.sh build; grep -Fx 'CONFIG_ESP_MAIN_TASK_STACK_SIZE=16384' \"$BUILD/sdkconfig\"; echo STAGE28E_H_RF_STACK_16K_BUILD_PASS",
+    "set -euo pipefail; test \"$(git rev-parse HEAD)\" = \"5a4830db9d10e8cb73d4c617b09122f0844ad899\"; test -z \"$(git status --porcelain)\"; git diff --check; echo STAGE28E_H_RF_STACK_DUAL_BUILD_GATE_PASS"
+  ]
+}
