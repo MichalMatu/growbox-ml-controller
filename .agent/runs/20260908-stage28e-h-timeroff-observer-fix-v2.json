@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260908-stage28e-h-timeroff-observer-fix-v2",
+  "task_digest": "a6414948b72b8bc73387e93308cde67ac03bc9ab6cdd8317b0c2eebaa430c338",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-07T23:11:07.414660+00:00",
+  "attempt_id": "2fcbce8f019987550100ebaf",
+  "daemon_version": "4.18.13",
+  "daemon_pid": 7913,
+  "updated_at": "2026-09-07T23:11:07.414784+00:00",
+  "pid": 7913
+}
