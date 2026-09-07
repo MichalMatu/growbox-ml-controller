@@ -1,0 +1,18 @@
+{
+  "id": "20260907-stage28e-h-closed-shelly-hardening-rc3",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "resources": [],
+  "memory_limit_mb": 2048,
+  "command_timeout": 600,
+  "idle_timeout": 300,
+  "task_timeout": 1200,
+  "commands": [
+    "set -euo pipefail; EXPECTED=58e9656aa0400a80750777bb78c5989f7ecdb292; git fetch -q origin mvp/environment-controller:refs/remotes/origin/mvp/environment-controller agent-control:refs/remotes/origin/agent-control; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; echo STAGE28E_H_RC3_PATCH_IDENTITY_PASS head=$EXPECTED",
+    "set -euo pipefail; git show origin/agent-control:.agent/task-assets/20260907-stage28e-h-closed-shelly-hardening-rc3.py > /tmp/stage28e_h_rc3_patch.py; python3 /tmp/stage28e_h_rc3_patch.py; git diff -- scripts/stage28e_phase_h_closed_tent.py docs/STAGE28E_PHASE_H_HANDOFF.md; git diff --check; echo STAGE28E_H_RC3_PATCH_APPLIED_PASS",
+    "set -euo pipefail; PY=.venv/bin/python; if [ ! -x \"$PY\" ]; then PY=$(command -v python3); fi; \"$PY\" -m py_compile scripts/stage28e_phase_h_closed_tent.py; \"$PY\" scripts/stage28e_phase_h_closed_tent.py --help >/tmp/stage28e_h_rc3_help.txt; grep -F 'SHELLY_PROOF_SAMPLES = 8' scripts/stage28e_phase_h_closed_tent.py; grep -F 'STAGE28E_H_CLOSED_SHELLY_PROOF_WINDOW_SEALED' scripts/stage28e_phase_h_closed_tent.py; grep -F 'proof window' docs/STAGE28E_PHASE_H_HANDOFF.md; git diff --check; echo STAGE28E_H_RC3_STATIC_PASS",
+    "set -euo pipefail; git add scripts/stage28e_phase_h_closed_tent.py docs/STAGE28E_PHASE_H_HANDOFF.md; git commit -m 'Harden closed-tent Shelly proof window'; NEW=$(git rev-parse HEAD); git push origin HEAD:mvp/environment-controller; test \"$(git ls-remote origin refs/heads/mvp/environment-controller | awk '{print $1}')\" = \"$NEW\"; test -z \"$(git status --porcelain)\"; echo STAGE28E_H_RC3_COMMIT_PASS new_head=$NEW"
+  ]
+}
