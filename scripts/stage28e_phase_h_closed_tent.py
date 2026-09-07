@@ -33,6 +33,11 @@ SHELLY_URL = "http://192.168.0.16/rpc/Switch.GetStatus?id=0"
 GROWBOX_PORT = "/dev/cu.usbserial-1130"
 SHELLY_PROOF_SAMPLES = 8
 STAGE28D_OUTPUT_MARKER = "stage28d_output "
+LAMP_SAFETY_REASON_SAFE = 0
+LAMP_SAFETY_REASON_TIMER_OFF = 1
+H_SAFETY_CLEAR_REASONS = frozenset(
+    (LAMP_SAFETY_REASON_SAFE, LAMP_SAFETY_REASON_TIMER_OFF)
+)
 
 
 @dataclass
@@ -79,6 +84,15 @@ def is_stage28d_output_line(line: str) -> bool:
     # ESP-IDF serial logs prefix ESP_LOG output with timestamp/tag metadata.
     # Accept both raw service-console-style payloads and prefixed log lines.
     return STAGE28D_OUTPUT_MARKER in line
+
+
+def is_h_safety_clear(safety_latched: int, force_fan: int, reason: int) -> bool:
+    # TimerOff is normal schedule state, not a thermal safety condition.
+    return (
+        safety_latched == 0
+        and force_fan == 0
+        and reason in H_SAFETY_CLEAR_REASONS
+    )
 
 
 def absolute_humidity_g_m3(temp_c: float, rh_pct: float) -> float:
@@ -253,9 +267,7 @@ def observe(args: argparse.Namespace) -> int:
 
                     if off_baseline is None:
                         clean = (
-                            safety == 0
-                            and force == 0
-                            and reason == 0
+                            is_h_safety_clear(safety, force, reason)
                             and fan_known == 1
                             and fan_on == 0
                             and applied < 0.01
@@ -323,9 +335,7 @@ def observe(args: argparse.Namespace) -> int:
 
                         if (
                             first_request is None
-                            and safety == 0
-                            and force == 0
-                            and reason == 0
+                            and is_h_safety_clear(safety, force, reason)
                             and fan_known == 1
                             and fan_on == 0
                             and applied < 0.01
@@ -344,9 +354,7 @@ def observe(args: argparse.Namespace) -> int:
 
                         if (
                             first_request is not None
-                            and safety == 0
-                            and force == 0
-                            and reason == 0
+                            and is_h_safety_clear(safety, force, reason)
                             and fan_known == 1
                             and request >= 0.10
                             and fan_on == 1
