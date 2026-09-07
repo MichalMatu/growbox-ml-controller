@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 3,
+  "index": 4,
   "total": 6,
-  "command": "set -uo pipefail; QUALIFIED=5a4830db9d10e8cb73d4c617b09122f0844ad899; PORT=/dev/cu.usbserial-1130; FORBIDDEN=/dev/cu.usbserial-10; REC=/tmp/growbox-stage28e-h-recovery-rf-v7-corrected-parser-v1; RCFILE=/tmp/stage28e_h_v7_corrected_parser_v1.recovery.rc; test \"$PORT\" = /dev/cu.usbserial-1130 || exit 90; test \"$PORT\" != \"$FORBIDDEN\" || exit 90; . /Users/michal/esp/esp-idf/export.sh >/dev/null; PY=.venv/bin/python; if [ ! -x \"$PY\" ]; then PY=$(command -v python3); fi; recovery_rc=0; set +e; idf.py -B \"$REC\" -p \"$PORT\" flash; flash_rc=$?; if [ \"$flash_rc\" -ne 0 ]; then recovery_rc=$flash_rc; else \"$PY\" scripts/stage28e_phase_h_e2e.py recovery --port \"$PORT\" --sha \"$QUALIFIED\"; recovery_rc=$?; fi; set -e; printf '%s\\n' \"$recovery_rc\" > \"$RCFILE\"; echo STAGE28E_H_V7_RECOVERY_RC=$recovery_rc; exit 0",
-  "pid": 73684,
+  "command": "set -uo pipefail; QUALIFIED=5a4830db9d10e8cb73d4c617b09122f0844ad899; PORT=/dev/cu.usbserial-1130; FORBIDDEN=/dev/cu.usbserial-10; SAFE=/tmp/growbox-stage28e-preflight-fake-rc4; RCFILE=/tmp/stage28e_h_v7_corrected_parser_v1.final.rc; test \"$PORT\" = /dev/cu.usbserial-1130 || exit 90; test \"$PORT\" != \"$FORBIDDEN\" || exit 90; . /Users/michal/esp/esp-idf/export.sh >/dev/null; PY=.venv/bin/python; if [ ! -x \"$PY\" ]; then PY=$(command -v python3); fi; final_rc=0; set +e; idf.py -B \"$SAFE\" -p \"$PORT\" flash; flash_rc=$?; if [ \"$flash_rc\" -ne 0 ]; then final_rc=$flash_rc; else \"$PY\" scripts/stage28e_phase_h_e2e.py final --port \"$PORT\" --sha \"$QUALIFIED\"; final_rc=$?; fi; set -e; printf '%s\\n' \"$final_rc\" > \"$RCFILE\"; echo STAGE28E_H_V7_FINAL_RC=$final_rc; exit 0",
+  "pid": 74234,
   "timeout": 7200,
   "idle_timeout": 1800,
   "memory_limit_mb": 4096,
-  "started_at": "2026-09-07T22:33:49.535161+00:00",
-  "stage_name": "command-3",
-  "stage_index": 3,
+  "started_at": "2026-09-07T22:34:30.548225+00:00",
+  "stage_name": "command-4",
+  "stage_index": 4,
   "stage_total": 6,
   "stage_phase": "commands",
   "task_id": "20260907-stage28e-h-v7-corrected-parser-v1",
@@ -18,5 +18,5 @@
   "task_digest": "32092973e108189a5e2b6a2f498336c4f59eb0862788292404ba161bd2a51b80",
   "daemon_version": "4.18.13",
   "daemon_pid": 89103,
-  "updated_at": "2026-09-07T22:33:49.630174+00:00"
+  "updated_at": "2026-09-07T22:34:30.640657+00:00"
 }
