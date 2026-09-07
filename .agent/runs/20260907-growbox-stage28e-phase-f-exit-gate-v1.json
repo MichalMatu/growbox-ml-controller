@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 4,
+  "index": 5,
   "total": 5,
-  "command": "set -euo pipefail; rm -rf build/host-tests-stage28e-f-exit; cmake -S test/host -B build/host-tests-stage28e-f-exit >/tmp/stage28e-f-exit-host-config.log 2>&1; cmake --build build/host-tests-stage28e-f-exit --parallel 1 >/tmp/stage28e-f-exit-host-build.log 2>&1; ctest --test-dir build/host-tests-stage28e-f-exit --output-on-failure; echo STAGE28E_F_EXIT_HOST_24_PASS",
-  "pid": 847,
+  "command": "set -euo pipefail; test -z \"$(git status --porcelain)\"; git diff --check; echo STAGE28E_F_EXIT_GATE_PASS",
+  "pid": 2143,
   "timeout": 3600,
   "idle_timeout": 600,
   "memory_limit_mb": 6144,
-  "started_at": "2026-09-07T03:11:40.972406+00:00",
-  "stage_name": "command-4",
-  "stage_index": 4,
+  "started_at": "2026-09-07T03:12:18.220211+00:00",
+  "stage_name": "command-5",
+  "stage_index": 5,
   "stage_total": 5,
   "stage_phase": "commands",
   "task_id": "20260907-growbox-stage28e-phase-f-exit-gate-v1",
@@ -18,5 +18,5 @@
   "task_digest": "2d3a4701c82d8b0c6ecb733ba45e27ec2230e0d7396952f59c9ea6deb6c47130",
   "daemon_version": "4.18.10",
   "daemon_pid": 93968,
-  "updated_at": "2026-09-07T03:11:40.989874+00:00"
+  "updated_at": "2026-09-07T03:12:18.256584+00:00"
 }
