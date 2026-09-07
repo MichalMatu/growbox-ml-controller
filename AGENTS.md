@@ -54,9 +54,9 @@ When starting work on this repository in a new chat/session:
 - A repository worker may report current daemon version/revision through `.agent/status/daemon.json`; use that evidence before attempting any maintenance action.
 - Use bounded task timeouts/memory. The canonical defaults are command 900 s, no-output 300 s, whole-task 1800 s and process-group RSS 4096 MiB unless the task has a justified override.
 - Every task must declare `resources` explicitly; missing, malformed, duplicated, oversized, or non-canonical declarations are terminal task-contract errors with no compatibility fallback.
-- Use `resources: []` for repository-local software work, including builds/tests, when no exclusive external device or host-global state is used. `memory_limit_mb` is an independent RSS watchdog and does not determine resource classification.
-- Use stable named resources such as `board:growbox-s3` for USB, serial, flashing, monitor, and hardware work so only tasks sharing that concrete resource serialize.
-- Use `resources: ["machine"]` only for genuine whole-host operations such as global Local Agent maintenance or host-global toolchain mutation. Resource contention is a wait state and must continue with `NEXT`, not `STOP`.
+- Every executable task in this repository uses `resources: []`, including builds/tests and USB, serial, flashing, monitor, and hardware work. `memory_limit_mb` remains an independent RSS watchdog.
+- Detect and verify the current device/port inside the task instead of reserving it as a scheduler resource.
+- Do not declare named resources or `machine` from this repository; host-global Local Agent maintenance belongs to the supervisor/administration path.
 - Successful stages must not leave background descendants.
 - Final results are durably spooled before remote publication; publication recovery must not re-execute commands.
 
