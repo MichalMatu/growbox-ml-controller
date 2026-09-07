@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260907-growbox-stage28e-phase-g-short-runtime-v2",
+  "task_digest": "3281154b10c7f4a56c661c053d0cdd562f23122a757d28a93293e75e29e1c3eb",
+  "idle_timeout": 600,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-07T04:21:55.981130+00:00",
+  "attempt_id": "e402bb96701c12ead2bd95b4",
+  "daemon_version": "4.18.13",
+  "daemon_pid": 64201,
+  "updated_at": "2026-09-07T04:21:55.981417+00:00",
+  "pid": 64201
+}
