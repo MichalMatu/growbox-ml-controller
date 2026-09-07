@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260907-growbox-sdlog-serial-read-v2",
+  "task_digest": "55603c8b34156681429410d3dc0689d554e68c43601bfce3ee1d243e683f6b82",
+  "idle_timeout": 120,
+  "task_timeout": 480,
+  "memory_limit_mb": 1024,
+  "started_at": "2026-09-07T10:56:02.972993+00:00",
+  "attempt_id": "1478787e28b285c4516a39b3",
+  "daemon_version": "4.18.13",
+  "daemon_pid": 13125,
+  "updated_at": "2026-09-07T10:56:02.973758+00:00",
+  "pid": 13125
+}
