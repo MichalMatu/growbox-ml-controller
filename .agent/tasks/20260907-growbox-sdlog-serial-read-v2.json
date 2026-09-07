@@ -1,0 +1,15 @@
+{
+  "id": "20260907-growbox-sdlog-serial-read-v2",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": ["board:growbox-s3"],
+  "memory_limit_mb": 1024,
+  "command_timeout": 180,
+  "idle_timeout": 120,
+  "task_timeout": 480,
+  "commands": [
+    "set -euo pipefail; EXPECTED_REMOTE=9042559b2d052b2e1942c0a61220bd9b7e74c97f; git fetch -q origin mvp/environment-controller; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED_REMOTE\"; test -e /dev/cu.usbserial-1130; python3 - <<'PY'\nimport base64, re, time\nimport serial\nPORT='/dev/cu.usbserial-1130'\nif PORT != '/dev/cu.usbserial-1130': raise SystemExit(90)\nser=serial.Serial(PORT,115200,timeout=0.20,write_timeout=1,dsrdtr=False,rtscts=False)\ntry:\n    try: ser.dtr=False\n    except Exception: pass\n    try: ser.rts=False\n    except Exception: pass\n    time.sleep(6.0)\n    ser.reset_input_buffer()\n    def cmd(text, settle=1.6):\n        ser.write((text+'\\n').encode('ascii')); ser.flush()\n        end=time.monotonic()+settle; data=bytearray()\n        while time.monotonic()<end:\n            chunk=ser.read(4096)\n            if chunk: data.extend(chunk)\n            else: time.sleep(0.03)\n        out=data.decode('utf-8','replace')\n        print('--- CMD',text,'---')\n        print(out)\n        return out\n    cmd('status',2.0)\n    cmd('sensors',2.0)\n    cmd('sdlog status',2.0)\n    listing=cmd('sdlog list',2.5)\n    files=[(m.group(1),int(m.group(2))) for m in re.finditer(r'sdlog_file name=([0-9A-Fa-f]{8}\\.JL) size=(\\d+)', listing)]\n    print('SDLOG_FILES',files)\n    for name,size in files:\n        if size<=0: continue\n        length=min(384,size); offset=max(0,size-length)\n        out=cmd(f'sdlog read {name} {offset} {length}',2.0)\n        m=re.search(r'sdlog_chunk name=\\S+ offset=\\d+ size=\\d+ file_size=\\d+ eof=\\d+ crc32=[0-9A-Fa-f]+ b64=([A-Za-z0-9+/=]+)',out)\n        if not m:\n            print('SDLOG_DECODE_FAIL',name); continue\n        raw=base64.b64decode(m.group(1))\n        print('=== SDLOG_TAIL',name,'offset',offset,'size',len(raw),'===')\n        print(raw.decode('utf-8','replace'))\nfinally:\n    ser.close()\nPY"
+  ]
+}
