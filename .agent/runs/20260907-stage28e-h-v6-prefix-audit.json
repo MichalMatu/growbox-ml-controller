@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260907-stage28e-h-v6-prefix-audit",
   "task_digest": "075d7c62c1379aaf5484638acd9c8d1470a355cfeda822af160b0868b1d16a6a",
-  "idle_timeout": 120,
-  "task_timeout": 600,
-  "memory_limit_mb": 1024,
-  "started_at": "2026-09-07T15:41:38.643496+00:00",
+  "status": "done",
+  "failure_reason": null,
+  "finished_at": "2026-09-07T15:41:40.934458+00:00",
   "attempt_id": "bc09e4be22b6cd0f36ee9908",
   "daemon_version": "4.18.13",
   "daemon_pid": 82825,
-  "updated_at": "2026-09-07T15:41:38.643673+00:00",
+  "updated_at": "2026-09-07T15:41:41.226000+00:00",
   "pid": 82825
 }
