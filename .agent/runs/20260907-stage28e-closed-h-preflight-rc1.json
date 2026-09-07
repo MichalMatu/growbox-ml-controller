@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 5,
+  "index": 6,
   "total": 6,
-  "command": "set -euo pipefail; EXPECTED=5a4830db9d10e8cb73d4c617b09122f0844ad899; BUILD=/tmp/growbox-stage28e-preflight-real; rm -rf \"$BUILD\"; STAGE27C_BUILD_DIR=\"$BUILD\" GROWBOX_FIRMWARE_GIT_SHA=\"$EXPECTED\" GROWBOX_RF433_LOOPBACK_ENABLED=1 GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=1 scripts/stage27c_crowpanel.sh build; grep -Fx 'CONFIG_ESP_MAIN_TASK_STACK_SIZE=16384' \"$BUILD/sdkconfig\"; test -f \"$BUILD/growbox_ml_controller.bin\"; echo STAGE28E_CLOSED_H_REAL_BUILD_PASS",
-  "pid": 50930,
+  "command": "set -euo pipefail; test -z \"$(git status --porcelain)\"; git diff --check; echo STAGE28E_CLOSED_H_PREFLIGHT_PASS head=$(git rev-parse HEAD)",
+  "pid": 56842,
   "timeout": 1800,
   "idle_timeout": 900,
   "memory_limit_mb": 4096,
-  "started_at": "2026-09-07T13:32:31.489451+00:00",
-  "stage_name": "command-5",
-  "stage_index": 5,
+  "started_at": "2026-09-07T13:33:23.695784+00:00",
+  "stage_name": "command-6",
+  "stage_index": 6,
   "stage_total": 6,
   "stage_phase": "commands",
   "task_id": "20260907-stage28e-closed-h-preflight-rc1",
@@ -18,5 +18,5 @@
   "task_digest": "f47b12cb27aa4649562f1b109540522a0583fc4fd6ac41acd9605bca0b7160a2",
   "daemon_version": "4.18.13",
   "daemon_pid": 43648,
-  "updated_at": "2026-09-07T13:32:31.562684+00:00"
+  "updated_at": "2026-09-07T13:33:23.725928+00:00"
 }
