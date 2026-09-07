@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260907-growbox-stage28e-phase-g-sensor-anomaly-inspect-v1",
+  "task_digest": "2670893e5089dac8179267f2d51ade35842987b24b40b0008269c9dbbca782e7",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-07T04:16:24.889776+00:00",
+  "attempt_id": "d9be067da070b5af8610becf",
+  "daemon_version": "4.18.13",
+  "daemon_pid": 59777,
+  "updated_at": "2026-09-07T04:16:24.889917+00:00",
+  "pid": 59777
+}
