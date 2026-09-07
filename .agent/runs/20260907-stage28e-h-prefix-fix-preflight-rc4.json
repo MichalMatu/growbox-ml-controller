@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260907-stage28e-h-prefix-fix-preflight-rc4",
+  "task_digest": "a0ec8c55926e58b987a5453dbccc984ed54a5a03502707ab4d8c01e68f1a7e26",
+  "idle_timeout": 900,
+  "task_timeout": 5400,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-07T15:44:57.560333+00:00",
+  "attempt_id": "afd7bbbfbe7d81e4cf3472a3",
+  "daemon_version": "4.18.13",
+  "daemon_pid": 85760,
+  "updated_at": "2026-09-07T15:44:57.560536+00:00",
+  "pid": 85760
+}
