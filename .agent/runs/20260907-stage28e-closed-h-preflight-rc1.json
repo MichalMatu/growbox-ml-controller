@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 3,
+  "index": 4,
   "total": 6,
-  "command": "set -euo pipefail; BUILD=/tmp/growbox-stage28e-preflight-host; rm -rf \"$BUILD\"; cmake -S test/host -B \"$BUILD\" -DCMAKE_BUILD_TYPE=Release; cmake --build \"$BUILD\" -j2; ctest --test-dir \"$BUILD\" --output-on-failure; echo STAGE28E_CLOSED_H_HOST_TESTS_PASS",
-  "pid": 43957,
+  "command": "set -euo pipefail; EXPECTED=5a4830db9d10e8cb73d4c617b09122f0844ad899; BUILD=/tmp/growbox-stage28e-preflight-fake; rm -rf \"$BUILD\"; STAGE27C_BUILD_DIR=\"$BUILD\" GROWBOX_FIRMWARE_GIT_SHA=\"$EXPECTED\" scripts/stage27c_crowpanel.sh build; grep -Fx 'CONFIG_ESP_MAIN_TASK_STACK_SIZE=12288' \"$BUILD/sdkconfig\"; test -f \"$BUILD/growbox_ml_controller.bin\"; echo STAGE28E_CLOSED_H_FAKE_BUILD_PASS",
+  "pid": 44913,
   "timeout": 1800,
   "idle_timeout": 900,
   "memory_limit_mb": 4096,
-  "started_at": "2026-09-07T13:31:15.452889+00:00",
-  "stage_name": "command-3",
-  "stage_index": 3,
+  "started_at": "2026-09-07T13:31:40.411031+00:00",
+  "stage_name": "command-4",
+  "stage_index": 4,
   "stage_total": 6,
   "stage_phase": "commands",
   "task_id": "20260907-stage28e-closed-h-preflight-rc1",
@@ -18,5 +18,5 @@
   "task_digest": "f47b12cb27aa4649562f1b109540522a0583fc4fd6ac41acd9605bca0b7160a2",
   "daemon_version": "4.18.13",
   "daemon_pid": 43648,
-  "updated_at": "2026-09-07T13:31:15.523148+00:00"
+  "updated_at": "2026-09-07T13:31:40.434742+00:00"
 }
