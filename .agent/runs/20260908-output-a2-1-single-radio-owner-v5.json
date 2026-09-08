@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260908-output-a2-1-single-radio-owner-v5",
+  "task_digest": "20e271005692a6fee5416ac956f27d09efecf83a89e58c773204de7906f3dbeb",
+  "idle_timeout": 600,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-08T09:45:36.043749+00:00",
+  "attempt_id": "f05779b6c8ae9dfe242ee5ae",
+  "daemon_version": "4.18.18",
+  "daemon_pid": 90265,
+  "updated_at": "2026-09-08T09:45:36.043928+00:00",
+  "pid": 90265
+}
