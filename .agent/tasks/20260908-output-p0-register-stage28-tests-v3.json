@@ -1,0 +1,14 @@
+{
+  "id": "20260908-output-p0-register-stage28-tests-v3",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "resources": [],
+  "commands": [
+    "test \"$(git rev-parse HEAD)\" = a2d11d2b8a64147c8ae9c0b879587536ca360d78 && test -z \"$(git status --porcelain)\"",
+    "python3 scripts/register_stage28d_host_tests.py",
+    "cmake -S test/host -B build/host-tests && cmake --build build/host-tests --parallel --target stage28d_binary_role_arbiter_tests stage28d_rf_output_endpoint_tests && ctest --test-dir build/host-tests -R '^(stage28d_binary_role_arbiter_tests|stage28d_rf_output_endpoint_tests)$' --output-on-failure",
+    "git diff --check && git add test/host/CMakeLists.txt scripts/register_stage28d_host_tests.py && git commit -m 'Register Stage28 output host tests' && git push origin HEAD:mvp/environment-controller"
+  ]
+}
