@@ -285,6 +285,20 @@ target_include_directories(output_supervisor_lifecycle_tests PRIVATE "${PROJECT_
 target_compile_features(output_supervisor_lifecycle_tests PRIVATE cxx_std_17)
 target_compile_options(output_supervisor_lifecycle_tests PRIVATE -Wall -Wextra -Wpedantic)
 
+
+add_executable(
+  output_lifecycle_executor_tests
+  "${PROJECT_ROOT}/test/test_output_lifecycle_executor/test_main.cpp"
+  "${PROJECT_ROOT}/src/climate/output/OutputLifecycleExecutor.cpp"
+  "${PROJECT_ROOT}/src/climate/output/OutputSupervisorLifecycle.cpp"
+  "${PROJECT_ROOT}/src/climate/output/OutputPolicyConfig.cpp"
+  "${PROJECT_ROOT}/src/climate/output/OutputStateStore.cpp"
+  "${PROJECT_ROOT}/src/climate/output/BinaryActuatorPolicy.cpp"
+)
+target_include_directories(output_lifecycle_executor_tests PRIVATE "${PROJECT_ROOT}/src")
+target_compile_features(output_lifecycle_executor_tests PRIVATE cxx_std_17)
+target_compile_options(output_lifecycle_executor_tests PRIVATE -Wall -Wextra -Wpedantic)
+
 add_executable(
   climate_semantic_output_tests
   "${PROJECT_ROOT}/test/test_climate_semantic_output/test_main.cpp"
@@ -530,6 +544,7 @@ add_test(NAME output_execution_projection_tests COMMAND output_execution_project
 add_test(NAME climate_output_supervisor_sink_tests COMMAND climate_output_supervisor_sink_tests)
 add_test(NAME output_policy_config_tests COMMAND output_policy_config_tests)
 add_test(NAME output_supervisor_lifecycle_tests COMMAND output_supervisor_lifecycle_tests)
+add_test(NAME output_lifecycle_executor_tests COMMAND output_lifecycle_executor_tests)
 add_test(NAME climate_semantic_output_tests COMMAND climate_semantic_output_tests)
 add_test(NAME stage28d_binary_role_arbiter_tests COMMAND stage28d_binary_role_arbiter_tests)
 add_test(NAME stage28d_rf_output_endpoint_tests COMMAND stage28d_rf_output_endpoint_tests)

@@ -11,6 +11,7 @@ idf_component_register(
     "climate/output/OutputStateStore.cpp"
     "climate/output/OutputPolicyConfig.cpp"
     "climate/output/OutputSupervisorLifecycle.cpp"
+    "climate/output/OutputLifecycleExecutor.cpp"
     "climate/output/OutputExecutionProjection.cpp"
     "climate/output/BinaryActuatorPolicy.cpp"
     "climate/output/OutputSupervisorResolver.cpp"
