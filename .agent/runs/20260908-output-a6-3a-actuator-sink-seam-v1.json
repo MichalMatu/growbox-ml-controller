@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260908-output-a6-3a-actuator-sink-seam-v1",
+  "task_digest": "85a3cc854d8f562dec0fdd81acac9790460e3eb1afcccb9b3e8368209755f28a",
+  "idle_timeout": 600,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-08T13:48:37.962882+00:00",
+  "attempt_id": "52ad96af2a48c5240a0bee44",
+  "daemon_version": "4.18.19",
+  "daemon_pid": 58165,
+  "updated_at": "2026-09-08T13:48:37.963019+00:00",
+  "pid": 58165
+}
