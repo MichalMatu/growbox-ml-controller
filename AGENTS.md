@@ -57,6 +57,8 @@ Every task must declare `resources` explicitly. Missing or invalid declarations 
 
 For substantial coding tasks, prefer `workflow_policy: "efficient-verification-v1"` with explicit `work` / `focused` stages and exactly one final `full` verification stage. Task payloads are immutable: a claimed or interrupted task is not replayed automatically, so changed work or an intentional retry must use a new unique task id. A successful local task proves execution and verification; source publication remains an explicit final step.
 
+When a Local Agent task is active and healthy, do not queue a duplicate or poll it every 30 seconds. With Chat Bridge, use no sooner than about two minutes for an early liveness re-check and normally 5-10 minutes for multi-minute builds/tests unless exact evidence supports a nearer completion. Explicit `NEXT=30s` remains available for deliberate operator/emergency use. If exact current run/status evidence proves that the active task cannot achieve its intended outcome, publish repository-scoped `cancel_task` for that exact task id, wait for cancellation/terminal result evidence, and only then queue replacement work; do not cancel merely because healthy work is slower than expected.
+
 ## Panel UI (`tools/panel/static/`) — układ pól
 
 **Nie układaj parametrów w mini-kartach jeden pod drugim.** To powtarzający się błąd (donice, uprawa, aktuary).
