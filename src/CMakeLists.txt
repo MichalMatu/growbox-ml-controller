@@ -7,6 +7,7 @@ idf_component_register(
     "climate/ClimateSemanticOutput.cpp"
     "climate/ClimateObservabilityMetrics.cpp"
     "climate/rf433/ClimateRf433EndpointRegistry.cpp"
+    "climate/rf433/Rf433OutputTransport.cpp"
     "climate/Stage28dOutputBindings.cpp"
     "climate/Stage28dLampSafety.cpp"
     "climate/Stage28dBinaryRoleArbiter.cpp"
@@ -94,6 +95,7 @@ elseif(GROWBOX_APP_MODE STREQUAL "climate-v6-real-inputs")
       "climate/native/Ds3231ClockSource.cpp"
       "climate/rf433/Rf433ProtocolCodec.cpp"
       "climate/rf433/Rf433RmtLoopback.cpp"
+      "climate/rf433/Rf433RmtFrameSender.cpp"
   )
 else()
   message(FATAL_ERROR "Unsupported GROWBOX_APP_MODE: ${GROWBOX_APP_MODE}")

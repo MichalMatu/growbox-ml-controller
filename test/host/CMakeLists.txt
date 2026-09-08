@@ -431,3 +431,19 @@ add_test(NAME stage27_fault_freshness_tests COMMAND stage27_fault_freshness_test
 add_test(NAME stage27_file_durability_tests COMMAND stage27_file_durability_tests)
 add_test(NAME stage28_service_console_tests COMMAND stage28_service_console_tests)
 add_test(NAME rf433_protocol_tests COMMAND rf433_protocol_tests)
+
+add_executable(
+  rf433_output_transport_tests
+  "${PROJECT_ROOT}/test/test_rf433_output_transport/test_main.cpp"
+  "${PROJECT_ROOT}/src/climate/rf433/Rf433OutputTransport.cpp"
+  "${PROJECT_ROOT}/src/climate/rf433/ClimateRf433EndpointRegistry.cpp"
+)
+target_include_directories(
+  rf433_output_transport_tests
+  PRIVATE
+    "${PROJECT_ROOT}/src"
+    "${PROJECT_ROOT}/lib/environment_control/src"
+)
+target_compile_features(rf433_output_transport_tests PRIVATE cxx_std_17)
+target_compile_options(rf433_output_transport_tests PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME rf433_output_transport_tests COMMAND rf433_output_transport_tests)
