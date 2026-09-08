@@ -25,6 +25,17 @@ enum class OutputSource : std::uint8_t {
   Maintenance,
 };
 
+enum class OutputReason : std::uint8_t {
+  None = 0U,
+  ClimateDecision,
+  ScheduleRequest,
+  ManualRequest,
+  ThermalSafety,
+  LifecyclePolicy,
+  FaultContainment,
+  MaintenanceRequest,
+};
+
 enum class SupervisorMode : std::uint8_t {
   BootLocked = 0U,
   Arming,
