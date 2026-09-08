@@ -18,6 +18,18 @@ public:
 
   ::growbox::climate::ClimateLoopResult
   tick(std::uint64_t monotonic_ms, ::growbox::climate::ClimateRuntimeDecision& decision) noexcept;
+
+  void setPreviousExecutionFeedback(
+      const ::growbox::climate::ClimateExecutionProjection& feedback) noexcept {
+    control_loop_.setPreviousExecutionFeedback(feedback);
+  }
+  void clearPreviousExecutionFeedback() noexcept {
+    control_loop_.clearPreviousExecutionFeedback();
+  }
+  bool hasExternalPreviousExecutionFeedback() const noexcept {
+    return control_loop_.hasExternalPreviousExecutionFeedback();
+  }
+
   void reset() noexcept;
 
   bool actuatorFaultLatched() const noexcept {

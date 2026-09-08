@@ -1,6 +1,21 @@
 #include "ClimateControlLoop.h"
 
+#include <cmath>
+
 namespace growbox::climate {
+namespace {
+
+float boundedPreviousLevel(float value) noexcept {
+  if (!std::isfinite(value)) {
+    return 0.0F;
+  }
+  if (value < 0.0F) {
+    return 0.0F;
+  }
+  return value > 1.0F ? 1.0F : value;
+}
+
+} // namespace
 
 ClimateControlLoop::ClimateControlLoop(ClimateRuntimeController& runtime,
                                        ClimateInputSource& input_source,
@@ -11,6 +26,45 @@ PreviousClimateActions
 ClimateControlLoop::previousFromRequest(const ClimatePolicyRequest& request) noexcept {
   return PreviousClimateActions{request.heater,     request.cooler,       request.exhaust_fan,
                                 request.humidifier, request.dehumidifier, request.co2_doser};
+}
+
+void ClimateControlLoop::setPreviousExecutionFeedback(
+    const ClimateExecutionProjection& feedback) noexcept {
+  external_previous_execution_ = feedback;
+  has_external_previous_execution_ = true;
+}
+
+void ClimateControlLoop::clearPreviousExecutionFeedback() noexcept {
+  external_previous_execution_ = {};
+  has_external_previous_execution_ = false;
+}
+
+PreviousClimateActions ClimateControlLoop::previousForInput() const noexcept {
+  PreviousClimateActions previous = previous_applied_;
+  if (!has_external_previous_execution_) {
+    return previous;
+  }
+
+  const auto& feedback = external_previous_execution_;
+  if (feedback.known(ClimateExecutionKnownHeater)) {
+    previous.heater = boundedPreviousLevel(feedback.executed.heater);
+  }
+  if (feedback.known(ClimateExecutionKnownCooler)) {
+    previous.cooler = boundedPreviousLevel(feedback.executed.cooler);
+  }
+  if (feedback.known(ClimateExecutionKnownExhaustFan)) {
+    previous.exhaust_fan = boundedPreviousLevel(feedback.executed.exhaust_fan);
+  }
+  if (feedback.known(ClimateExecutionKnownHumidifier)) {
+    previous.humidifier = boundedPreviousLevel(feedback.executed.humidifier);
+  }
+  if (feedback.known(ClimateExecutionKnownDehumidifier)) {
+    previous.dehumidifier = boundedPreviousLevel(feedback.executed.dehumidifier);
+  }
+  if (feedback.known(ClimateExecutionKnownCo2Doser)) {
+    previous.co2_doser = boundedPreviousLevel(feedback.executed.co2_doser);
+  }
+  return previous;
 }
 
 bool ClimateControlLoop::isOff(const ClimatePolicyRequest& request) noexcept {
@@ -36,7 +90,7 @@ ClimateLoopResult ClimateControlLoop::tick(std::uint64_t monotonic_ms,
   if (!result.input_sampled) {
     input = {};
   }
-  input.previous = previous_applied_;
+  input.previous = previousForInput();
 
   result.runtime_status = runtime_.step(input, monotonic_ms, decision);
   ClimatePolicyRequest confirmed_applied{};
@@ -62,6 +116,7 @@ ClimateLoopResult ClimateControlLoop::tick(std::uint64_t monotonic_ms,
   // actuator state never becomes future ML context.
   runtime_.reset();
   previous_applied_ = {};
+  clearPreviousExecutionFeedback();
   if (!result.fail_safe_applied) {
     actuator_fault_latched_ = true;
   }
@@ -71,6 +126,7 @@ ClimateLoopResult ClimateControlLoop::tick(std::uint64_t monotonic_ms,
 void ClimateControlLoop::reset() noexcept {
   runtime_.reset();
   previous_applied_ = {};
+  clearPreviousExecutionFeedback();
   actuator_fault_latched_ = false;
 }
 

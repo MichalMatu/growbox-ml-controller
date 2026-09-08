@@ -1,4 +1,5 @@
 #include "ClimateControlLoop.h"
+#include "ClimateContract.h"
 
 #include <cassert>
 #include <cmath>
@@ -102,6 +103,19 @@ public:
   }
 };
 
+class RecordingInference final : public ClimateInferenceProvider {
+public:
+  bool infer(const ClimateFeatureVector& features, ClimatePolicyRequest& output) noexcept override {
+    ++calls;
+    last_features = features;
+    output = {};
+    return true;
+  }
+
+  std::size_t calls = 0U;
+  ClimateFeatureVector last_features{};
+};
+
 class FixedInference final : public ClimateInferenceProvider {
 public:
   bool infer(const ClimateFeatureVector&, ClimatePolicyRequest& output) noexcept override {
@@ -188,6 +202,50 @@ void testConfirmedBinaryStateBecomesRuntimeTruth() {
   assert(near(decision.applied.exhaust_fan, 1.0F));
   assert(near(loop.previousApplied().exhaust_fan, 1.0F));
   assert(decision.effective_after.exhaust_fan > 0.6F);
+}
+
+void testExternalPreviousExecutionFeedbackOverridesOnlyKnownRoles() {
+  namespace contract = growbox::climate::contract;
+  RecordingInference inference{};
+  ClimateRuntimeConfig config{};
+  config.mode = ClimatePolicyMode::MlShadow;
+  ClimateRuntimeController runtime(&inference, config);
+  FakeInputSource source{};
+  FakeActuatorSink sink{};
+  ClimateControlLoop loop(runtime, source, sink);
+  ClimateRuntimeDecision decision{};
+
+  const auto first = loop.tick(120'000U, decision);
+  assert(first.command_applied);
+  const PreviousClimateActions internal_previous = loop.previousApplied();
+  assert(internal_previous.heater > 0.0F);
+
+  ClimateExecutionProjection feedback{};
+  feedback.executed.heater = 0.0F;
+  feedback.executed.exhaust_fan = 1.0F;
+  feedback.known_mask = ClimateExecutionKnownHeater;
+  loop.setPreviousExecutionFeedback(feedback);
+  assert(loop.hasExternalPreviousExecutionFeedback());
+
+  const auto second = loop.tick(130'000U, decision);
+  assert(second.command_applied);
+  assert(inference.calls >= 2U);
+  assert(near(inference.last_features.values[contract::index(contract::FeatureIndex::PreviousHeater)],
+              0.0F));
+  assert(near(inference.last_features.values[contract::index(contract::FeatureIndex::PreviousExhaustFan)],
+              internal_previous.exhaust_fan));
+
+  const PreviousClimateActions compatibility_after_external = loop.previousApplied();
+  loop.clearPreviousExecutionFeedback();
+  assert(!loop.hasExternalPreviousExecutionFeedback());
+  const auto third = loop.tick(140'000U, decision);
+  assert(third.command_applied);
+  assert(near(inference.last_features.values[contract::index(contract::FeatureIndex::PreviousHeater)],
+              compatibility_after_external.heater));
+
+  loop.setPreviousExecutionFeedback(feedback);
+  loop.reset();
+  assert(!loop.hasExternalPreviousExecutionFeedback());
 }
 
 void testHigherIntakeRhStillVentilatesWhenAbsoluteHumidityIsLower() {
@@ -292,6 +350,10 @@ void testRejectedCommandAttemptsOffAndRecoversEstimator() {
   FakeActuatorSink sink{};
   sink.outcomes = {false, true};
   ClimateControlLoop loop(runtime, source, sink);
+  ClimateExecutionProjection stale_feedback{};
+  stale_feedback.executed.heater = 1.0F;
+  stale_feedback.known_mask = ClimateExecutionKnownHeater;
+  loop.setPreviousExecutionFeedback(stale_feedback);
   ClimateRuntimeDecision decision{};
 
   const ClimateLoopResult result = loop.tick(120'000U, decision);
@@ -304,6 +366,7 @@ void testRejectedCommandAttemptsOffAndRecoversEstimator() {
   assert(off(sink.requests.back()));
   assert(!loop.actuatorFaultLatched());
   assert(near(loop.previousApplied().heater, 0.0F));
+  assert(!loop.hasExternalPreviousExecutionFeedback());
 
   sink.outcomes.clear();
   const ClimateLoopResult recovered = loop.tick(130'000U, decision);
@@ -348,6 +411,7 @@ int main() {
   testInputFailureFailsClosed();
   testMlShadowNeverDrivesSink();
   testConfirmedBinaryStateBecomesRuntimeTruth();
+  testExternalPreviousExecutionFeedbackOverridesOnlyKnownRoles();
   testHigherIntakeRhStillVentilatesWhenAbsoluteHumidityIsLower();
   testLowerIntakeRhDoesNotClaimDryingWhenAbsoluteHumidityIsHigher();
   testStaleIntakeHumidityCannotCreateDryingVentilation();

@@ -210,6 +210,22 @@ void assertBatchMapping(const RecordingRoleDriver& driver, std::size_t batch,
   }
 }
 
+void testApplicationForwardsExternalPreviousExecutionFeedbackSeam() {
+  ClimateRuntimeController runtime{};
+  ConstantSnapshotProvider provider(snapshotFor(20.0F));
+  RecordingActuatorSink sink{};
+  ClimateApplication application(runtime, provider, sink);
+  ClimateExecutionProjection feedback{};
+  feedback.executed.exhaust_fan = 1.0F;
+  feedback.known_mask = ClimateExecutionKnownExhaustFan;
+
+  assert(!application.hasExternalPreviousExecutionFeedback());
+  application.setPreviousExecutionFeedback(feedback);
+  assert(application.hasExternalPreviousExecutionFeedback());
+  application.clearPreviousExecutionFeedback();
+  assert(!application.hasExternalPreviousExecutionFeedback());
+}
+
 void testFullIpoRuleSequenceHandlesChangingStaleInvalidAndUnavailableInput() {
   ClimateInputSnapshot stale = snapshotFor(20.0F);
   stale.measurements.air_temperature_c.age_ms = 30'001U;
@@ -409,6 +425,7 @@ void testCompleteActuatorSinkCanBeInjectedWithoutRoleFanout() {
 } // namespace
 
 int main() {
+  testApplicationForwardsExternalPreviousExecutionFeedbackSeam();
   testFullIpoRuleSequenceHandlesChangingStaleInvalidAndUnavailableInput();
   testMlShadowDivergesButRuleSafeOutputRemainsAuthoritative();
   testRejectedCommandGetsOffRecoveryWithoutPoisoningConfirmedState();
