@@ -1,0 +1,9 @@
+{
+  "event": "invalid_task_rejected",
+  "status": "failed",
+  "failure_reason": "invalid_task_file",
+  "updated_at": "2026-09-08T11:43:11.365850+00:00",
+  "task_id": "20260908-output-a2-2-rf-output-transport-v3",
+  "daemon_version": "4.18.19",
+  "pid": 13377
+}
