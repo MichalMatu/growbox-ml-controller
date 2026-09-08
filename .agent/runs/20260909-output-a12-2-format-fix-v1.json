@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260909-output-a12-2-format-fix-v1",
+  "task_digest": "6309edb9eaec799d41d959b5040ce99eba5bfe2c381de04c44d6dc7320a18c69",
+  "idle_timeout": 600,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-08T22:47:57.698677+00:00",
+  "attempt_id": "6e33e302f084f0d4be86972a",
+  "daemon_version": "4.18.19",
+  "daemon_pid": 21813,
+  "updated_at": "2026-09-08T22:47:57.698846+00:00",
+  "pid": 21813
+}
