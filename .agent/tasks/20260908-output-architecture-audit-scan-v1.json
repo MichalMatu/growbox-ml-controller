@@ -1,0 +1,22 @@
+{
+  "id": "20260908-output-architecture-audit-scan-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 4096,
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "commands": [
+    "set -euo pipefail; EXPECTED=430e15e1bc9e2d65ff5a97554339467ef2351c52; git fetch -q origin mvp/environment-controller:refs/remotes/origin/mvp/environment-controller; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; echo AUDIT_IDENTITY_PASS head=$EXPECTED branch=$(git branch --show-current)",
+    "set -euo pipefail; echo '=== CORE SYMBOL FILES ==='; rg -l --glob '!docs/**' --glob '!scripts/**' --glob '!tools/**' --glob '!build/**' 'ClimateRuntimeController|ClimateControlLoop|ClimateActuatorAdapter|MappedClimateRoleDriver|Stage28dBinaryRoleArbiter|Stage28dRfOutputEndpoint|LampSafetyController|reconcileApplied|previous_applied|EstimatedEffectiveClimateActions' . | sort",
+    "set -euo pipefail; echo '=== OUTPUT/RF ENTRY POINTS ==='; rg -n --glob '!docs/**' --glob '!scripts/**' --glob '!tools/**' --glob '!build/**' 'forceSafeOff|synchronizeSafeOff|applyBinary|apply\(|send\(|transmit|tx\(|rf433|RF433|manual RF|manualRf|service.*rf|execute.*output|setLamp|setFan|setHumid|lamp.*on|fan.*on|humidifier.*on' src lib include main test tests 2>/dev/null | head -n 1200",
+    "set -euo pipefail; echo '=== STARTUP DISABLE RECOVERY FAULT SCHEDULE ==='; rg -n --glob '!docs/**' --glob '!scripts/**' --glob '!tools/**' 'automation|enabled|disable|startup|boot|recover|recovery|fault|safe|schedule|TimerOff|LampSafety|force_fan|force_lamp|real-bounded|fake-locked' src lib include main test tests 2>/dev/null | head -n 1400",
+    "set -euo pipefail; echo '=== PERSISTENCE ==='; rg -n --glob '!docs/**' --glob '!scripts/**' --glob '!tools/**' 'nvs_|NVS|Preferences|persist|storage|save[A-Z_a-z]*\(|load[A-Z_a-z]*\(|config_store|settings|Settings' src lib include main test tests 2>/dev/null | head -n 1000",
+    "set -euo pipefail; echo '=== TASK CONCURRENCY ==='; rg -n --glob '!docs/**' --glob '!scripts/**' --glob '!tools/**' 'xTaskCreate|xTaskCreatePinnedToCore|TaskHandle|Semaphore|mutex|Mutex|lock_guard|critical|portENTER|FreeRTOS|std::atomic|atomic<' src lib include main 2>/dev/null | head -n 1000",
+    "set -euo pipefail; echo '=== TEST COUPLING ==='; rg -n 'ClimateActuatorAdapter|MappedClimateRoleDriver|Stage28dBinaryRoleArbiter|Stage28dRfOutputEndpoint|LampSafetyController|reconcileApplied|previous_applied|ClimateControlLoop|ClimateRuntimeController' test tests 2>/dev/null | head -n 1600",
+    "set -euo pipefail; echo '=== RELEVANT TRACKED PATHS ==='; git ls-files | grep -E '(^|/)(Climate|Stage28|Rf|RF|Lamp|Safety|Output|Schedule|Service|Storage|Settings|Config|Runtime|Application|Actuator|Arbiter)' | sort | head -n 1200; echo AUDIT_SCAN_PASS"
+  ]
+}
