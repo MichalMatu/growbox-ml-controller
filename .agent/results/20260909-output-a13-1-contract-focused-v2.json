@@ -1,0 +1,88 @@
+{
+  "id": "20260909-output-a13-1-contract-focused-v2",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "started_at": "2026-09-08T23:23:24.923364+00:00",
+  "command_timeout": 900,
+  "edits": {},
+  "commands": [
+    {
+      "command": "git fetch -q origin mvp/environment-controller && test \"$(git rev-parse HEAD)\" = \"d9383a693f66851f5151a96f0341fd4eeaaf746d\" && test \"$(git rev-parse FETCH_HEAD)\" = \"d9383a693f66851f5151a96f0341fd4eeaaf746d\" && test -z \"$(git status --porcelain)\"",
+      "exit_code": 0,
+      "output": "",
+      "elapsed_seconds": 0.816,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 3.05,
+      "output_policy": "stream",
+      "captured_output_chars": 0,
+      "output_truncated": false,
+      "current_rss_mb": 3.05,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 2,
+      "stage_phase": "commands"
+    },
+    {
+      "command": ".venv/bin/pre-commit run --files tools/output_supervisor_h.py tests/test_output_supervisor_h.py docs/STAGE28E_OUTPUT_SUPERVISOR_H_QUALIFICATION.md docs/CURRENT_STATUS.md docs/ARCHITECTURE_HANDOFF.md && .venv/bin/python -m pytest -q tests/test_output_supervisor_h.py && .venv/bin/python -m py_compile tools/output_supervisor_h.py && git diff --check && echo A13_1_CONTRACT_FOCUSED_PASS sha=d9383a693f66851f5151a96f0341fd4eeaaf746d qualified_sha=1c59f3cfa239abbfbae721247d01d65a39d4bdfc hardware_started=0",
+      "exit_code": 0,
+      "output": "trim trailing whitespace.................................................Passed\nfix end of files.........................................................Passed\ncheck for merge conflicts................................................Passed\ncheck yaml...........................................(no files to check)Skipped\ncheck json...........................................(no files to check)Skipped\ndetect private key.......................................................Passed\nruff.....................................................................Passed\nruff-format..............................................................Passed\nclang-format.........................................(no files to check)Skipped\nenvironment schema (--check).........................(no files to check)Skipped\n.......                                                                  [100%]\n7 passed in 0.11s\nA13_1_CONTRACT_FOCUSED_PASS sha=d9383a693f66851f5151a96f0341fd4eeaaf746d qualified_sha=1c59f3cfa239abbfbae721247d01d65a39d4bdfc hardware_started=0\n",
+      "elapsed_seconds": 1.384,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 2.12,
+      "output_policy": "stream",
+      "captured_output_chars": 1045,
+      "output_truncated": false,
+      "current_rss_mb": 2.12,
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 2,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 2,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.816
+    },
+    {
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 2,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 1.384
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.075
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.068
+  },
+  "finished_at": "2026-09-08T23:23:28.921148+00:00",
+  "task_digest": "47f4b543533a943b1d89c801c185b03a5178b61317a17df3cf0b0ca4ada0e33f",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "attempt_id": "c31eae236906a839d4470dda",
+  "daemon_version": "4.18.19"
+}
