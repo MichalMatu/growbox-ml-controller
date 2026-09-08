@@ -19,6 +19,7 @@ idf_component_register(
     "climate/output/OutputAutomationControl.cpp"
     "climate/output/OutputManualControl.cpp"
     "climate/output/OutputMaintenanceControl.cpp"
+    "climate/output/OutputRuntimeLifecycleControl.cpp"
     "climate/output/OutputExecutionProjection.cpp"
     "climate/output/BinaryActuatorPolicy.cpp"
     "climate/output/OutputSupervisorResolver.cpp"

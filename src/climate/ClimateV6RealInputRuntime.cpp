@@ -12,6 +12,7 @@
 #include "climate/output/OutputLifecycleExecutor.h"
 #include "climate/output/OutputManualControl.h"
 #include "climate/output/OutputMaintenanceControl.h"
+#include "climate/output/OutputRuntimeLifecycleControl.h"
 #include "climate/output/OutputNvsBackend.h"
 #include "climate/output/OutputPersistenceCoordinator.h"
 #include "climate/output/OutputPersistenceStore.h"
@@ -388,19 +389,18 @@ private:
   const bool output_bindings_valid =
       stage28d::validateOutputBindings(semantic_output_config, output_policy) ==
       stage28d::OutputBindingStatus::Ok;
+  bool real_transport_available =
+      GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED != 0 && rf_ready && output_bindings_valid;
   stage28d::Stage28dRfOutputEndpoint physical_endpoint(
-      {GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED != 0 && rf_ready && output_bindings_valid, 0.5F},
-      rf_output_transport, output_state_store_ready ? &output_state_store : nullptr);
+      {real_transport_available, 0.5F}, rf_output_transport,
+      output_state_store_ready ? &output_state_store : nullptr);
 
-  bool real_output_ready = false;
-  if (GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED != 0) {
-    real_output_ready = rf_ready && output_bindings_valid;
-    if (real_output_ready) {
-      real_output_ready = forceSafeStateWithRetries(physical_endpoint, monotonicMilliseconds());
-    }
-    if (!real_output_ready) {
-      ESP_LOGE(kTag, "Real-output initialization failed; automatic outputs remain fake-locked");
-    }
+  // Normal production startup is supervisor-owned below. The legacy thermal
+  // qualification path remains explicit migration debt until A11.2.
+  bool real_output_ready =
+      real_transport_available && GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED != 0;
+  if (GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED != 0 && !real_transport_available) {
+    ESP_LOGE(kTag, "Real-output transport unavailable; automatic outputs remain fake-locked");
   }
 
   if (GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED != 0 && !real_output_ready) {
@@ -425,10 +425,6 @@ private:
 
   output::BinaryActuatorPolicy exhaust_policy(kExhaustPolicyConfig);
   output::BinaryActuatorPolicy humidifier_policy(kHumidifierPolicyConfig);
-  if (real_output_ready) {
-    synchronizeSupervisorPoliciesSafeOff(exhaust_policy, humidifier_policy,
-                                         monotonicMilliseconds());
-  }
 
   output::OutputSupervisorResolverConfig supervisor_config{};
   supervisor_config.endpoints[0] = {stage28d::kScheduledLightEndpoint, nullptr};
@@ -436,19 +432,14 @@ private:
   supervisor_config.endpoints[2] = {stage28d::kHumidifierEndpoint, &humidifier_policy};
   supervisor_config.count = 3U;
 
-  RuntimeOutputTransport supervisor_transport(rf_output_transport, real_output_ready);
+  RuntimeOutputTransport supervisor_transport(rf_output_transport, real_transport_available);
   output::OutputSupervisorLifecycle output_lifecycle(output_policy);
   output::OutputLifecycleExecutor lifecycle_executor(output_policy, output_lifecycle,
                                                      supervisor_transport, output_state_store,
                                                      supervisor_config);
-  bool lifecycle_ready = output_lifecycle.valid() && lifecycle_executor.valid();
-  if (lifecycle_ready) {
-    const auto begin_arming = output_lifecycle.apply(output::OutputLifecycleCommand::BeginArming);
-    const auto armed = output_lifecycle.apply(output::OutputLifecycleCommand::ArmingSucceeded);
-    lifecycle_ready = begin_arming.status == output::OutputLifecycleTransitionStatus::Applied &&
-                      armed.status == output::OutputLifecycleTransitionStatus::Applied &&
-                      output_lifecycle.mode() == output::SupervisorMode::Automatic;
-  }
+  output::OutputRuntimeLifecycleControl runtime_lifecycle(output_lifecycle, lifecycle_executor);
+  bool lifecycle_ready = output_lifecycle.valid() && lifecycle_executor.valid() &&
+                         runtime_lifecycle.valid();
   output::OutputAutomationControl automation_control(output_lifecycle, lifecycle_executor);
   output::OutputManualControl manual_control(output_policy, output_lifecycle);
   runtime::Stage28MaintenanceRfTransport maintenance_rf_transport(rf_diagnostics);
@@ -465,18 +456,12 @@ private:
                                               supervisor_executor, output_state_store,
                                               &fail_safe_actuator_adapter);
   if (!supervisor_sink.valid() || !lifecycle_ready) {
-    ESP_LOGE(kTag, "Output supervisor/lifecycle composition invalid; real outputs remain locked");
-    if (real_output_ready) {
-      const std::uint64_t safe_ms = monotonicMilliseconds();
-      const bool safe_off = forceSafeStateWithRetries(physical_endpoint, safe_ms);
-      if (safe_off) {
-        synchronizeSupervisorPoliciesSafeOff(exhaust_policy, humidifier_policy, safe_ms);
-      }
-      fail_safe_output_driver.disableReal();
-      real_output_ready = false;
-      ESP_LOGE(kTag, "Output supervisor composition fault safe_off=%d outputs=fake-locked",
-               safe_off);
-    }
+    ESP_LOGE(kTag, "Output supervisor/lifecycle composition invalid; physical execution locked");
+    // There is no direct emergency writer here anymore. If the supervisor cannot
+    // be composed, fail closed by disabling transport ownership for this boot.
+    real_transport_available = false;
+    fail_safe_output_driver.disableReal();
+    real_output_ready = false;
   }
 
   runtime::Stage28ServiceConsole service_console(
@@ -539,7 +524,7 @@ private:
     stage28d::LampSafetyDecision lamp_decision{};
 
     const std::uint64_t control_started_us = static_cast<std::uint64_t>(esp_timer_get_time());
-    const bool real_transport_active_this_cycle = real_output_ready;
+    const bool real_transport_active_this_cycle = real_transport_available;
     if (GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED != 0 && real_output_ready &&
         !thermal_test_finished_safe) {
       const auto point = thermal_test_sequence.sample(now_ms - thermal_test_started_ms);
@@ -628,42 +613,56 @@ private:
       const bool safety_envelope_ready = stage28d::buildLampSafetyEnvelope(
           lamp_safety_input, lamp_decision, nextOutputIntentSequence(output_intent_sequence),
           safety_snapshot);
-      if (!safety_envelope_ready && fail_safe_output_driver.realEnabled()) {
-        ESP_LOGE(kTag, "Lamp safety envelope build failed; forcing safe state and locking outputs");
-        const bool safe_off = forceSafeStateWithRetries(physical_endpoint, now_ms);
-        if (safe_off) {
-          synchronizeSupervisorPoliciesSafeOff(exhaust_policy, humidifier_policy, now_ms);
+      if (!safety_envelope_ready && real_transport_available &&
+          output_lifecycle.mode() != output::SupervisorMode::FaultLocked) {
+        ESP_LOGE(kTag, "Lamp safety envelope build failed; requesting supervisor fault containment");
+        if (!runtime_lifecycle.requestFault(now_ms, schedule_intent)) {
+          ESP_LOGE(kTag, "Supervisor fault request failed; disabling physical transport");
+          real_transport_available = false;
         }
-        fail_safe_output_driver.disableReal();
         real_output_ready = false;
-        ESP_LOGE(kTag, "Lamp safety envelope fault safe_off=%d outputs=fake-locked", safe_off);
+      } else if (safety_envelope_ready &&
+                 output_lifecycle.mode() == output::SupervisorMode::BootLocked &&
+                 !runtime_lifecycle.transitionActive()) {
+        if (!runtime_lifecycle.beginBoot(now_ms, schedule_intent)) {
+          ESP_LOGE(kTag, "Supervisor boot plan failed to start; disabling physical transport");
+          real_transport_available = false;
+          real_output_ready = false;
+        }
       }
 
-      const auto automation_report =
-          automation_control.tick(now_ms, schedule_intent, safety_snapshot.envelope);
-      const auto maintenance_report =
-          maintenance_control.tick(now_ms, safety_snapshot.envelope);
+      // Runtime boot/recovery/fault owns the lifecycle executor only while its
+      // own transition is active. Automation/maintenance retain their existing
+      // executor ownership outside those windows. Hard safety defers lifecycle
+      // TX and remains executable by the supervisor resolver below.
+      (void)runtime_lifecycle.tick(now_ms, safety_snapshot.envelope);
+      if (!runtime_lifecycle.transitionActive()) {
+        (void)automation_control.tick(now_ms, schedule_intent, safety_snapshot.envelope);
+        (void)maintenance_control.tick(now_ms, safety_snapshot.envelope);
+      }
+
+      real_output_ready = real_transport_available && runtime_lifecycle.bootCompleted() &&
+                          output_lifecycle.mode() != output::SupervisorMode::FaultLocked;
 
       output::ManualIntent manual_intent{};
       (void)manual_control.consume(manual_intent);
 
       ClimateOutputSupervisorCycleContext supervisor_context{};
-      supervisor_context.mode = maintenance_report.mode;
+      supervisor_context.mode = output_lifecycle.mode();
       supervisor_context.schedule = schedule_intent;
       supervisor_context.manual = manual_intent;
       supervisor_context.safety = safety_snapshot.envelope;
       supervisor_sink.setCycleContext(supervisor_context);
 
       loop_result = application.tick(now_ms, decision);
-      if (fail_safe_output_driver.realEnabled() && !loop_result.command_applied) {
-        ESP_LOGE(kTag, "Supervisor output apply failed; forcing safe state and locking real outputs");
-        const bool safe_off = forceSafeStateWithRetries(physical_endpoint, now_ms);
-        if (safe_off) {
-          synchronizeSupervisorPoliciesSafeOff(exhaust_policy, humidifier_policy, now_ms);
+      if (real_transport_available && !loop_result.command_applied &&
+          output_lifecycle.mode() != output::SupervisorMode::FaultLocked) {
+        ESP_LOGE(kTag, "Supervisor output apply failed; requesting lifecycle fault containment");
+        if (!runtime_lifecycle.requestFault(now_ms, schedule_intent)) {
+          ESP_LOGE(kTag, "Lifecycle fault containment failed to start; disabling physical transport");
+          real_transport_available = false;
         }
-        fail_safe_output_driver.disableReal();
         real_output_ready = false;
-        ESP_LOGE(kTag, "Supervisor output fault safe_off=%d outputs=fake-locked", safe_off);
       }
     }
     if (output_persistence.valid()) {

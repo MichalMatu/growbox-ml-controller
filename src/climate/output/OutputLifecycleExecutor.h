@@ -54,6 +54,9 @@ public:
   }
 
   OutputLifecycleExecutionReport tick(std::uint64_t monotonic_ms) noexcept;
+  // Abort a pending lifecycle plan without fabricating a transport result. This is
+  // used only when a higher-priority fault transition supersedes the old plan.
+  bool cancelPending() noexcept;
   OutputLifecycleExecutionReport report() const noexcept;
 
 private:

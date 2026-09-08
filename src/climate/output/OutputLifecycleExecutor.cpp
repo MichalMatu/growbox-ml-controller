@@ -343,6 +343,21 @@ OutputLifecycleExecutionReport OutputLifecycleExecutor::tick(std::uint64_t monot
   return report();
 }
 
+bool OutputLifecycleExecutor::cancelPending() noexcept {
+  if (!valid_) {
+    return false;
+  }
+  if (!active_) {
+    return true;
+  }
+  clearPlan();
+  active_ = false;
+  containment_active_ = false;
+  status_ = OutputLifecycleExecutionStatus::Idle;
+  event_ = OutputLifecycleEvent::Boot;
+  return true;
+}
+
 OutputLifecycleExecutionReport OutputLifecycleExecutor::report() const noexcept {
   OutputLifecycleExecutionReport value{};
   value.status = status_;

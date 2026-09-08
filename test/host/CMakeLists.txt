@@ -336,6 +336,21 @@ target_compile_features(output_lifecycle_executor_tests PRIVATE cxx_std_17)
 target_compile_options(output_lifecycle_executor_tests PRIVATE -Wall -Wextra -Wpedantic)
 
 add_executable(
+  output_runtime_lifecycle_control_tests
+  "${PROJECT_ROOT}/test/test_output_runtime_lifecycle_control/test_main.cpp"
+  "${PROJECT_ROOT}/src/climate/output/OutputRuntimeLifecycleControl.cpp"
+  "${PROJECT_ROOT}/src/climate/output/OutputLifecycleExecutor.cpp"
+  "${PROJECT_ROOT}/src/climate/output/OutputSupervisorLifecycle.cpp"
+  "${PROJECT_ROOT}/src/climate/output/OutputSupervisorResolver.cpp"
+  "${PROJECT_ROOT}/src/climate/output/OutputPolicyConfig.cpp"
+  "${PROJECT_ROOT}/src/climate/output/OutputStateStore.cpp"
+  "${PROJECT_ROOT}/src/climate/output/BinaryActuatorPolicy.cpp"
+)
+target_include_directories(output_runtime_lifecycle_control_tests PRIVATE "${PROJECT_ROOT}/src")
+target_compile_features(output_runtime_lifecycle_control_tests PRIVATE cxx_std_17)
+target_compile_options(output_runtime_lifecycle_control_tests PRIVATE -Wall -Wextra -Wpedantic)
+
+add_executable(
   output_automation_control_tests
   "${PROJECT_ROOT}/test/test_output_automation_control/test_main.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputAutomationControl.cpp"
@@ -625,6 +640,7 @@ add_test(NAME output_persistence_coordinator_tests COMMAND output_persistence_co
 add_test(NAME output_persistence_store_tests COMMAND output_persistence_store_tests)
 add_test(NAME output_supervisor_lifecycle_tests COMMAND output_supervisor_lifecycle_tests)
 add_test(NAME output_lifecycle_executor_tests COMMAND output_lifecycle_executor_tests)
+add_test(NAME output_runtime_lifecycle_control_tests COMMAND output_runtime_lifecycle_control_tests)
 add_test(NAME output_automation_control_tests COMMAND output_automation_control_tests)
 add_test(NAME output_manual_control_tests COMMAND output_manual_control_tests)
 add_test(NAME output_maintenance_control_tests COMMAND output_maintenance_control_tests)
