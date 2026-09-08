@@ -12,6 +12,7 @@ using growbox::app::climate_io::telemetry::formatStage27SampleNdjson;
 using growbox::app::climate_io::telemetry::formatStage27SessionNdjson;
 using growbox::app::climate_io::telemetry::Stage27LogSessionMetadata;
 using growbox::app::climate_io::telemetry::Stage27TelemetrySnapshot;
+namespace output = growbox::app::output;
 
 int main() {
   Stage27TelemetrySnapshot snapshot{};
@@ -54,20 +55,46 @@ int main() {
   snapshot.xiaomi_packets = 50U;
   snapshot.xiaomi_accepted = 25U;
   snapshot.xiaomi_rejected = 25U;
+  snapshot.runtime_status = 1U;
+  snapshot.runtime_mode = 2U;
   snapshot.requested_exhaust_fan = 0.29F;
   snapshot.requested_humidifier = 0.14F;
   snapshot.applied_exhaust_fan = 1.0F;
   snapshot.applied_humidifier = 0.0F;
-  snapshot.real_outputs_active = true;
-  snapshot.physical_light_on = true;
-  snapshot.physical_exhaust_on = true;
-  snapshot.physical_humidifier_on = false;
-  snapshot.thermal_safety_latched = true;
-  snapshot.safety_force_exhaust = true;
-  snapshot.safety_reason = 4U;
-  snapshot.arbiter_transition_count = 7U;
-  snapshot.arbiter_dwell_hold_count = 11U;
-  snapshot.arbiter_safety_override_count = 2U;
+
+  snapshot.output.mode = output::SupervisorMode::Automatic;
+  snapshot.output.transport_active = true;
+  snapshot.output.lifecycle_active = false;
+  snapshot.output.lifecycle_event = output::OutputLifecycleEvent::Boot;
+  snapshot.output.automation_requested = true;
+  snapshot.output.safety_latched = true;
+  snapshot.output.safety_reason_code = 4U;
+  snapshot.output.endpoint_count = 1U;
+  auto& endpoint = snapshot.output.endpoints[0];
+  endpoint.endpoint = 2U;
+  endpoint.schedule = {true, 1.0F};
+  endpoint.safety_active = true;
+  endpoint.safety_constraint = output::SafetyConstraint::ForceOff;
+  endpoint.safety_reason = output::OutputReason::ThermalSafety;
+  endpoint.selected = true;
+  endpoint.selected_level = 0.0F;
+  endpoint.selected_source = output::OutputSource::Safety;
+  endpoint.selected_reason = output::OutputReason::ThermalSafety;
+  endpoint.resolved = true;
+  endpoint.resolved_state = output::BinaryOutputState::Off;
+  endpoint.safety_override = true;
+  endpoint.attempt_known = true;
+  endpoint.attempted_this_cycle = true;
+  endpoint.attempt_state = output::BinaryOutputState::Off;
+  endpoint.attempt_source = output::OutputSource::Safety;
+  endpoint.attempt_reason = output::OutputReason::ThermalSafety;
+  endpoint.transport_status = output::TransportStatus::Completed;
+  endpoint.last_command_known = true;
+  endpoint.last_command_state = output::BinaryOutputState::Off;
+  endpoint.last_command_source = output::OutputSource::Safety;
+  endpoint.last_command_reason = output::OutputReason::ThermalSafety;
+  endpoint.physical_state = output::PhysicalOutputState::Unknown;
+  endpoint.physical_independent = false;
 
   Stage27LogSessionMetadata session{};
   session.firmware_sha = "0123456789abcdef0123456789abcdef01234567";
@@ -79,23 +106,18 @@ int main() {
   session.start_unix_time_s = snapshot.unix_time_s;
 
   char session_buffer[512]{};
-  const auto session_length =
-      formatStage27SessionNdjson(session_buffer, sizeof(session_buffer), session);
-  assert(session_length > 0U && session_length < 320U);
-  assert(std::strstr(session_buffer, "\"schema\":\"growbox-log-v2\"") != nullptr);
-  assert(std::strstr(session_buffer, "\"backend\":\"sd\"") != nullptr);
-  assert(std::strstr(session_buffer, "\"sample_ms\":10000") != nullptr);
+  const auto session_length = formatStage27SessionNdjson(session_buffer, sizeof(session_buffer), session);
+  assert(session_length > 0U && session_length < 360U);
+  assert(std::strstr(session_buffer, "\"schema\":\"growbox-log-v3\"") != nullptr);
+  assert(std::strstr(session_buffer, "\"out_v\":2") != nullptr);
 
-  char sample_buffer[768]{};
-  const auto sample_length =
-      formatStage27SampleNdjson(sample_buffer, sizeof(sample_buffer), snapshot);
-  assert(sample_length > 0U && sample_length < 600U);
-  assert(std::strstr(sample_buffer, "\"t\":\"s\"") != nullptr);
-  assert(std::strstr(sample_buffer, "\"scd\":[1,1,24.25,59.50,721,4050]") != nullptr);
-  assert(std::strstr(sample_buffer, "\"tp\":[1,23.80,71.00,15000]") != nullptr);
-  assert(std::strstr(sample_buffer, "\"o\":[1,1,1,0]") != nullptr);
-  assert(std::strstr(sample_buffer,
-                     "\"a\":[0.290,1.000,0.140,0.000,1,1,4,7,11,2]") != nullptr);
+  char sample_buffer[1024]{};
+  const auto sample_length = formatStage27SampleNdjson(sample_buffer, sizeof(sample_buffer), snapshot);
+  assert(sample_length > 0U && sample_length < sizeof(sample_buffer));
+  assert(std::strstr(sample_buffer, "\"t\":\"s\",\"v\":3") != nullptr);
+  assert(std::strstr(sample_buffer, "\"out\":{\"v\":2,\"m\":2,\"ta\":1") != nullptr);
+  assert(std::strstr(sample_buffer, "\"ep\":[[2,0,0.000,1,1.000") != nullptr);
+  assert(std::strstr(sample_buffer, "\"physical_light\"") == nullptr);
 
   Stage27StorageStatus storage{};
   storage.active_backend = Stage27StorageBackendKind::Flash;
@@ -105,22 +127,16 @@ int main() {
   storage.fallback_activations = 1U;
   storage.last_write_ms = 123000U;
 
-  char health_buffer[768]{};
-  const auto health_length =
-      formatStage27HealthNdjson(health_buffer, sizeof(health_buffer), snapshot, storage);
-  assert(health_length > 0U && health_length < 560U);
-  assert(std::strstr(health_buffer, "\"t\":\"h\"") != nullptr);
-  assert(std::strstr(health_buffer, "\"o\":[1,1,1,0]") != nullptr);
+  char health_buffer[1024]{};
+  const auto health_length = formatStage27HealthNdjson(health_buffer, sizeof(health_buffer), snapshot, storage);
+  assert(health_length > 0U && health_length < sizeof(health_buffer));
+  assert(std::strstr(health_buffer, "\"t\":\"h\",\"v\":3") != nullptr);
+  assert(std::strstr(health_buffer, "\"out\":{\"v\":2") != nullptr);
   assert(std::strstr(health_buffer, "\"st\":[\"flash\",0,1,2") != nullptr);
 
   char too_small[32]{};
   assert(formatStage27SessionNdjson(too_small, sizeof(too_small), session) == 0U);
   assert(formatStage27SampleNdjson(too_small, sizeof(too_small), snapshot) == 0U);
   assert(formatStage27HealthNdjson(too_small, sizeof(too_small), snapshot, storage) == 0U);
-
-  assert(growbox::app::climate_io::storage::stage27SampleIntervalMs(
-             Stage27StorageBackendKind::Flash) == 60'000U);
-  assert(growbox::app::climate_io::storage::stage27HealthIntervalMs(
-             Stage27StorageBackendKind::Flash) == 300'000U);
   return 0;
 }

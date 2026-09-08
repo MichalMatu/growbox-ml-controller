@@ -7,6 +7,7 @@
 #include "climate/Stage28dOutputBindings.h"
 #include "climate/output/BinaryActuatorPolicy.h"
 #include "climate/output/ClimateOutputSupervisorSink.h"
+#include "climate/output/OutputExecutionTelemetry.h"
 #include "climate/output/OutputAutomationControl.h"
 #include "climate/output/OutputLifecycleExecutor.h"
 #include "climate/output/OutputManualControl.h"
@@ -176,43 +177,6 @@ std::uint64_t nextOutputIntentSequence(std::uint64_t& sequence) noexcept {
     ++sequence;
   }
   return sequence;
-}
-
-bool commandStateKnown(const output::OutputStateStore& store,
-                       output::OutputEndpointId endpoint) noexcept {
-  const auto* state = store.find(endpoint);
-  return state != nullptr && state->has_successful_command;
-}
-
-bool commandStateOn(const output::OutputStateStore& store,
-                    output::OutputEndpointId endpoint) noexcept {
-  const auto* state = store.find(endpoint);
-  return state != nullptr && state->has_successful_command &&
-         state->last_successful_command.state == output::BinaryOutputState::On;
-}
-
-runtime::Stage27PhysicalOutputSnapshot physicalOutputSnapshot(
-    const output::OutputStateStore& state_store, bool real_active,
-    const stage28d::LampSafetyDecision& lamp_decision,
-    const output::BinaryActuatorPolicy& exhaust_policy,
-    const output::BinaryActuatorPolicy& humidifier_policy) noexcept {
-  // Stage27 telemetry keeps its historical field names here. These ON/OFF values are
-  // supervisor last-commanded truth, not independent physical acknowledgement.
-  runtime::Stage27PhysicalOutputSnapshot snapshot{};
-  snapshot.real_outputs_active = real_active;
-  snapshot.light_on = commandStateOn(state_store, stage28d::kScheduledLightEndpoint);
-  snapshot.exhaust_on = commandStateOn(state_store, stage28d::kExhaustFanEndpoint);
-  snapshot.humidifier_on = commandStateOn(state_store, stage28d::kHumidifierEndpoint);
-  snapshot.thermal_safety_latched = lamp_decision.thermal_latched;
-  snapshot.safety_force_exhaust = lamp_decision.force_exhaust_on;
-  snapshot.safety_reason = static_cast<std::uint32_t>(lamp_decision.reason);
-  snapshot.arbiter_transition_count =
-      exhaust_policy.transitionCount() + humidifier_policy.transitionCount();
-  snapshot.arbiter_dwell_hold_count =
-      exhaust_policy.dwellHoldCount() + humidifier_policy.dwellHoldCount();
-  snapshot.arbiter_safety_override_count =
-      exhaust_policy.overrideCount() + humidifier_policy.overrideCount();
-  return snapshot;
 }
 
 class RuntimeIoOwner final {
@@ -558,39 +522,66 @@ private:
     if ((diagnostic_tick++ % kTelemetryEveryTicks) == 0U) {
       const std::uint64_t telemetry_started_us =
           static_cast<std::uint64_t>(esp_timer_get_time());
-      const auto physical_outputs = physicalOutputSnapshot(
-          output_state_store, real_output_ready, lamp_decision, exhaust_policy, humidifier_policy);
-      telemetry_reporter.record(now_ms, loop_result, decision, physical_outputs);
+      output::OutputSupervisorCycleInput telemetry_cycle{};
+      telemetry_cycle.mode = output_lifecycle.mode();
+      telemetry_cycle.monotonic_ms = now_ms;
+      telemetry_cycle.control = supervisor_sink.lastControlIntent();
+      telemetry_cycle.schedule = schedule_intent;
+      telemetry_cycle.manual = manual_intent;
+      telemetry_cycle.safety = safety_snapshot.envelope;
+
+      const auto lifecycle_report = lifecycle_executor.report();
+      output::OutputExecutionTelemetrySnapshot output_telemetry{};
+      const bool output_telemetry_ready = output::buildOutputExecutionTelemetry(
+          telemetry_cycle, supervisor_sink.lastResolution(), output_state_store,
+          real_transport_available, lifecycle_report.active, lifecycle_report.event,
+          automation_control.requestedEnabled(), output_telemetry);
+      output_telemetry.safety_latched = lamp_decision.thermal_latched;
+      output_telemetry.safety_reason_code = static_cast<std::uint32_t>(lamp_decision.reason);
+      if (!output_telemetry_ready) {
+        ESP_LOGE(kTag, "Output execution telemetry snapshot build failed");
+      }
+      telemetry_reporter.record(now_ms, loop_result, decision, output_telemetry);
       ESP_LOGI(kTag,
-               "stage28d_output real=%d lamp_known=%d lamp_on=%d fan_known=%d fan_on=%d "
-               "humidifier_known=%d humidifier_on=%d safety_latched=%d force_fan=%d "
-               "safety_reason=%u supervisor_mode=%u automation_requested=%d lifecycle_active=%d "
-               "requested_fan=%.3f requested_humidifier=%.3f "
-               "applied_fan=%.3f applied_humidifier=%.3f arbiter_transitions=%lu "
-               "arbiter_dwell_holds=%lu arbiter_safety_overrides=%lu tx=%lu tx_errors=%lu",
-               real_output_ready,
-               commandStateKnown(output_state_store, stage28d::kScheduledLightEndpoint),
-               commandStateOn(output_state_store, stage28d::kScheduledLightEndpoint),
-               commandStateKnown(output_state_store, stage28d::kExhaustFanEndpoint),
-               commandStateOn(output_state_store, stage28d::kExhaustFanEndpoint),
-               commandStateKnown(output_state_store, stage28d::kHumidifierEndpoint),
-               commandStateOn(output_state_store, stage28d::kHumidifierEndpoint),
-               lamp_decision.thermal_latched, lamp_decision.force_exhaust_on,
-               static_cast<unsigned>(lamp_decision.reason),
-               static_cast<unsigned>(output_lifecycle.mode()), automation_control.requestedEnabled(),
-               automation_control.transitionActive(),
-               static_cast<double>(decision.rule.safe.exhaust_fan),
-               static_cast<double>(decision.rule.safe.humidifier),
-               static_cast<double>(decision.applied.exhaust_fan),
-               static_cast<double>(decision.applied.humidifier),
-               static_cast<unsigned long>(exhaust_policy.transitionCount() +
-                                                  humidifier_policy.transitionCount()),
-               static_cast<unsigned long>(exhaust_policy.dwellHoldCount() +
-                                                  humidifier_policy.dwellHoldCount()),
-               static_cast<unsigned long>(exhaust_policy.overrideCount() +
-                                                  humidifier_policy.overrideCount()),
+               "output_exec_v=2 supervisor_mode=%u transport_active=%d lifecycle_active=%d "
+               "lifecycle_event=%u automation_requested=%d safety_latched=%d safety_reason=%u "
+               "tx=%lu tx_errors=%lu",
+               static_cast<unsigned>(output_telemetry.mode), output_telemetry.transport_active,
+               output_telemetry.lifecycle_active,
+               static_cast<unsigned>(output_telemetry.lifecycle_event),
+               output_telemetry.automation_requested, output_telemetry.safety_latched,
+               output_telemetry.safety_reason_code,
                static_cast<unsigned long>(supervisor_transport.transmitCount()),
                static_cast<unsigned long>(supervisor_transport.transmitErrorCount()));
+      for (std::size_t index = 0U; index < output_telemetry.endpoint_count; ++index) {
+        const auto& endpoint = output_telemetry.endpoints[index];
+        ESP_LOGI(
+            kTag,
+            "output_endpoint endpoint=%u control=%d/%.3f schedule=%d/%.3f manual=%d/%.3f "
+            "safety=%d/%u/%u selected=%d/%.3f/%u/%u resolved=%d/%u dwell=%d "
+            "override=%d inhibited=%d attempt=%d current=%d state=%u source=%u reason=%u "
+            "transport=%u error=%u last_command=%d/%u/%u/%u physical_state=%u independent=%d",
+            static_cast<unsigned>(endpoint.endpoint), endpoint.control.active,
+            static_cast<double>(endpoint.control.level), endpoint.schedule.active,
+            static_cast<double>(endpoint.schedule.level), endpoint.manual.active,
+            static_cast<double>(endpoint.manual.level), endpoint.safety_active,
+            static_cast<unsigned>(endpoint.safety_constraint),
+            static_cast<unsigned>(endpoint.safety_reason), endpoint.selected,
+            static_cast<double>(endpoint.selected_level),
+            static_cast<unsigned>(endpoint.selected_source),
+            static_cast<unsigned>(endpoint.selected_reason), endpoint.resolved,
+            static_cast<unsigned>(endpoint.resolved_state), endpoint.held_by_dwell,
+            endpoint.safety_override, endpoint.inhibited, endpoint.attempt_known,
+            endpoint.attempted_this_cycle, static_cast<unsigned>(endpoint.attempt_state),
+            static_cast<unsigned>(endpoint.attempt_source),
+            static_cast<unsigned>(endpoint.attempt_reason),
+            static_cast<unsigned>(endpoint.transport_status),
+            static_cast<unsigned>(endpoint.transport_error), endpoint.last_command_known,
+            static_cast<unsigned>(endpoint.last_command_state),
+            static_cast<unsigned>(endpoint.last_command_source),
+            static_cast<unsigned>(endpoint.last_command_reason),
+            static_cast<unsigned>(endpoint.physical_state), endpoint.physical_independent);
+      }
       runtime_timing.telemetry.observe(
           static_cast<std::uint64_t>(esp_timer_get_time()) - telemetry_started_us);
     }

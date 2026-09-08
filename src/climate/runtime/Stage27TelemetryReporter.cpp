@@ -36,7 +36,7 @@ Stage27TelemetryReporter::Stage27TelemetryReporter(native::BleClimateScanner& bl
 void Stage27TelemetryReporter::record(
     std::uint64_t now_ms, const ::growbox::climate::ClimateLoopResult& loop_result,
     const ::growbox::climate::ClimateRuntimeDecision& decision,
-    const Stage27PhysicalOutputSnapshot& physical_outputs) noexcept {
+    const ::growbox::app::output::OutputExecutionTelemetrySnapshot& output_execution) noexcept {
   native::BleClimateReading tp357{};
   native::BleClimateReading xiaomi{};
   const bool tp357_sampled = ble_.sampleTp357(now_ms, tp357);
@@ -145,16 +145,7 @@ void Stage27TelemetryReporter::record(
   snapshot.applied_dehumidifier = decision.applied.dehumidifier;
   snapshot.applied_co2_doser = decision.applied.co2_doser;
 
-  snapshot.real_outputs_active = physical_outputs.real_outputs_active;
-  snapshot.physical_light_on = physical_outputs.light_on;
-  snapshot.physical_exhaust_on = physical_outputs.exhaust_on;
-  snapshot.physical_humidifier_on = physical_outputs.humidifier_on;
-  snapshot.thermal_safety_latched = physical_outputs.thermal_safety_latched;
-  snapshot.safety_force_exhaust = physical_outputs.safety_force_exhaust;
-  snapshot.safety_reason = physical_outputs.safety_reason;
-  snapshot.arbiter_transition_count = physical_outputs.arbiter_transition_count;
-  snapshot.arbiter_dwell_hold_count = physical_outputs.arbiter_dwell_hold_count;
-  snapshot.arbiter_safety_override_count = physical_outputs.arbiter_safety_override_count;
+  snapshot.output = output_execution;
 
   const auto storage_status = storage_logger_.status();
   logRecord(snapshot, storage_status);
@@ -168,7 +159,7 @@ void Stage27TelemetryReporter::logRecord(
     const storage::Stage27StorageStatus& storage_status) noexcept {
   ESP_LOGI(
       kTag,
-      "soak_v=2 firmware_sha=%s uptime_ms=%llu reset_reason=%d input_sampled=%d io_status=%u "
+      "soak_v=3 firmware_sha=%s uptime_ms=%llu reset_reason=%d input_sampled=%d io_status=%u "
       "heap_internal=%u heap_internal_min=%u heap_internal_largest=%u "
       "heap_psram=%u heap_psram_min=%u heap_psram_largest=%u stack_free=%u "
       "scd_available=%d scd_sample=%d scd_t=%.2f scd_rh=%.2f scd_co2=%.0f "
@@ -184,15 +175,12 @@ void Stage27TelemetryReporter::logRecord(
       "requested_fan=%.3f requested_humidifier=%.3f "
       "applied_heater=%.3f applied_cooler=%.3f applied_fan=%.3f applied_humidifier=%.3f "
       "applied_dehumidifier=%.3f applied_co2=%.3f "
-      "physical_light=%d physical_fan=%d physical_humidifier=%d "
-      "thermal_latched=%d force_fan=%d safety_reason=%u "
-      "arbiter_transitions=%u arbiter_dwell_holds=%u arbiter_safety_overrides=%u "
+      "output_v=%u supervisor_mode=%u transport_active=%d lifecycle_active=%d "
+      "lifecycle_event=%u automation_requested=%d safety_latched=%d safety_reason=%u "
       "storage_backend=%s storage_sd_mounted=%d storage_flash_mounted=%d "
       "storage_sd_mount_errors=%u storage_flash_mount_errors=%u storage_write_errors=%u "
       "storage_queue_drops=%u storage_records_written=%u storage_records_skipped=%u "
-      "storage_fallbacks=%u storage_sd_recoveries=%u storage_last_write_ms=%llu "
-      "sd_mounted=%d sd_mount_errors=%u sd_write_errors=%u sd_queue_drops=%u "
-      "sd_records_written=%u sd_records_skipped=%u sd_last_write_ms=%llu outputs=%s",
+      "storage_fallbacks=%u storage_sd_recoveries=%u storage_last_write_ms=%llu",
       GROWBOX_FIRMWARE_GIT_SHA, static_cast<unsigned long long>(snapshot.uptime_ms),
       snapshot.reset_reason, snapshot.input_sampled, snapshot.io_status, snapshot.heap_internal,
       snapshot.heap_internal_min, snapshot.heap_internal_largest, snapshot.heap_psram,
@@ -221,21 +209,17 @@ void Stage27TelemetryReporter::logRecord(
       static_cast<double>(snapshot.applied_exhaust_fan),
       static_cast<double>(snapshot.applied_humidifier),
       static_cast<double>(snapshot.applied_dehumidifier),
-      static_cast<double>(snapshot.applied_co2_doser), snapshot.physical_light_on,
-      snapshot.physical_exhaust_on, snapshot.physical_humidifier_on,
-      snapshot.thermal_safety_latched, snapshot.safety_force_exhaust, snapshot.safety_reason,
-      snapshot.arbiter_transition_count, snapshot.arbiter_dwell_hold_count,
-      snapshot.arbiter_safety_override_count,
+      static_cast<double>(snapshot.applied_co2_doser), snapshot.output.version,
+      static_cast<unsigned>(snapshot.output.mode), snapshot.output.transport_active,
+      snapshot.output.lifecycle_active, static_cast<unsigned>(snapshot.output.lifecycle_event),
+      snapshot.output.automation_requested, snapshot.output.safety_latched,
+      snapshot.output.safety_reason_code,
       storage::stage27StorageBackendName(storage_status.active_backend), storage_status.sd_mounted,
       storage_status.flash_mounted, storage_status.sd_mount_errors,
       storage_status.flash_mount_errors, storage_status.write_errors, storage_status.queue_drops,
       storage_status.records_written, storage_status.records_skipped,
       storage_status.fallback_activations, storage_status.sd_recoveries,
-      static_cast<unsigned long long>(storage_status.last_write_ms), storage_status.sd_mounted,
-      storage_status.sd_mount_errors, storage_status.write_errors, storage_status.queue_drops,
-      storage_status.records_written, storage_status.records_skipped,
-      static_cast<unsigned long long>(storage_status.last_write_ms),
-      snapshot.real_outputs_active ? "real-bounded" : "fake-locked");
+      static_cast<unsigned long long>(storage_status.last_write_ms));
 }
 
 } // namespace growbox::app::climate_io::runtime

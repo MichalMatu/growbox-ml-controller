@@ -254,11 +254,13 @@ bool ClimateOutputSupervisorSink::applyAndReportExecution(
     const ::growbox::climate::ClimatePolicyRequest& request, std::uint64_t monotonic_ms,
     ::growbox::climate::ClimateExecutionProjection& execution) noexcept {
   execution = {};
+  last_control_intent_ = {};
   ::growbox::app::output::ControlIntent control{};
   if (!buildControlIntent(request, monotonic_ms, control)) {
     return false;
   }
 
+  last_control_intent_ = control;
   bool transport_completed = false;
   if (!executeCycle(control, monotonic_ms, transport_completed)) {
     return false;
@@ -284,6 +286,7 @@ bool ClimateOutputSupervisorSink::applyFailSafeOff(std::uint64_t monotonic_ms) n
   using ::growbox::app::output::OutputSource;
   using ::growbox::app::output::SafetyConstraint;
 
+  last_control_intent_ = {};
   last_resolution_ = {};
   last_report_ = {};
   if (!valid()) {

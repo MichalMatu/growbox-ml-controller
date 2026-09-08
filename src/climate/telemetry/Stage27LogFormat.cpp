@@ -1,6 +1,7 @@
 #include "climate/telemetry/Stage27LogFormat.h"
 
 #include <cinttypes>
+#include <cstdarg>
 #include <cstdio>
 
 namespace growbox::app::climate_io::telemetry {
@@ -17,8 +18,75 @@ std::size_t checkedLength(char* buffer, std::size_t buffer_size, int written) no
   return static_cast<std::size_t>(written);
 }
 
-int flag(bool value) noexcept {
-  return value ? 1 : 0;
+int flag(bool value) noexcept { return value ? 1 : 0; }
+
+bool appendFormat(char*& cursor, std::size_t& remaining, const char* format, ...) noexcept {
+  if (cursor == nullptr || remaining == 0U) {
+    return false;
+  }
+  va_list args;
+  va_start(args, format);
+  const int written = std::vsnprintf(cursor, remaining, format, args);
+  va_end(args);
+  if (written < 0 || static_cast<std::size_t>(written) >= remaining) {
+    cursor[0] = '\0';
+    return false;
+  }
+  cursor += static_cast<std::size_t>(written);
+  remaining -= static_cast<std::size_t>(written);
+  return true;
+}
+
+bool formatOutputJson(char* buffer, std::size_t buffer_size,
+                      const ::growbox::app::output::OutputExecutionTelemetrySnapshot& output) noexcept {
+  if (buffer == nullptr || buffer_size == 0U ||
+      output.endpoint_count > output.endpoints.size()) {
+    return false;
+  }
+  char* cursor = buffer;
+  std::size_t remaining = buffer_size;
+  if (!appendFormat(cursor, remaining,
+                    "{\"v\":%u,\"m\":%u,\"ta\":%d,\"la\":%d,\"le\":%u,\"ae\":%d,"
+                    "\"sl\":%d,\"sr\":%" PRIu32 ",\"ep\":[",
+                    output.version, static_cast<unsigned>(output.mode), flag(output.transport_active),
+                    flag(output.lifecycle_active), static_cast<unsigned>(output.lifecycle_event),
+                    flag(output.automation_requested), flag(output.safety_latched),
+                    output.safety_reason_code)) {
+    return false;
+  }
+  for (std::size_t index = 0U; index < output.endpoint_count; ++index) {
+    const auto& endpoint = output.endpoints[index];
+    if (index != 0U && !appendFormat(cursor, remaining, ",")) {
+      return false;
+    }
+    if (!appendFormat(
+            cursor, remaining,
+            "[%u,%d,%.3f,%d,%.3f,%d,%.3f,%d,%u,%u,%d,%.3f,%u,%u,%d,%u,%d,%d,%d,"
+            "%d,%d,%u,%u,%u,%u,%u,%d,%u,%u,%u,%u,%d]",
+            static_cast<unsigned>(endpoint.endpoint), flag(endpoint.control.active),
+            static_cast<double>(endpoint.control.level), flag(endpoint.schedule.active),
+            static_cast<double>(endpoint.schedule.level), flag(endpoint.manual.active),
+            static_cast<double>(endpoint.manual.level), flag(endpoint.safety_active),
+            static_cast<unsigned>(endpoint.safety_constraint),
+            static_cast<unsigned>(endpoint.safety_reason), flag(endpoint.selected),
+            static_cast<double>(endpoint.selected_level),
+            static_cast<unsigned>(endpoint.selected_source),
+            static_cast<unsigned>(endpoint.selected_reason), flag(endpoint.resolved),
+            static_cast<unsigned>(endpoint.resolved_state), flag(endpoint.held_by_dwell),
+            flag(endpoint.safety_override), flag(endpoint.inhibited), flag(endpoint.attempt_known),
+            flag(endpoint.attempted_this_cycle), static_cast<unsigned>(endpoint.attempt_state),
+            static_cast<unsigned>(endpoint.attempt_source),
+            static_cast<unsigned>(endpoint.attempt_reason),
+            static_cast<unsigned>(endpoint.transport_status),
+            static_cast<unsigned>(endpoint.transport_error), flag(endpoint.last_command_known),
+            static_cast<unsigned>(endpoint.last_command_state),
+            static_cast<unsigned>(endpoint.last_command_source),
+            static_cast<unsigned>(endpoint.last_command_reason),
+            static_cast<unsigned>(endpoint.physical_state), flag(endpoint.physical_independent))) {
+      return false;
+    }
+  }
+  return appendFormat(cursor, remaining, "]}");
 }
 
 } // namespace
@@ -32,9 +100,10 @@ std::size_t formatStage27SessionNdjson(char* buffer, std::size_t buffer_size,
   const auto health_interval_ms = storage::stage27HealthIntervalMs(session.backend);
   const int written = std::snprintf(
       buffer, buffer_size,
-      "{\"t\":\"session\",\"schema\":\"growbox-log-v2\",\"fw\":\"%s\",\"sid\":\"%08" PRIx32
-      "\",\"backend\":\"%s\",\"reset\":%" PRId32 ",\"u0\":%" PRIu64 ",\"x0\":%" PRIu64
-      ",\"rtc\":%d,\"sample_ms\":%" PRIu64 ",\"health_ms\":%" PRIu64 "}",
+      "{\"t\":\"session\",\"schema\":\"growbox-log-v3\",\"out_v\":2,\"fw\":\"%s\","
+      "\"sid\":\"%08" PRIx32 "\",\"backend\":\"%s\",\"reset\":%" PRId32
+      ",\"u0\":%" PRIu64 ",\"x0\":%" PRIu64 ",\"rtc\":%d,\"sample_ms\":%" PRIu64
+      ",\"health_ms\":%" PRIu64 "}",
       session.firmware_sha != nullptr ? session.firmware_sha : "unknown", session.session_id,
       storage::stage27StorageBackendName(session.backend), session.reset_reason,
       session.start_uptime_ms, session.start_unix_time_s, flag(session.rtc_trusted),
@@ -47,13 +116,16 @@ std::size_t formatStage27SampleNdjson(char* buffer, std::size_t buffer_size,
   if (buffer == nullptr || buffer_size == 0U) {
     return 0U;
   }
+  char output_json[640]{};
+  if (!formatOutputJson(output_json, sizeof(output_json), snapshot.output)) {
+    return 0U;
+  }
   const int written = std::snprintf(
       buffer, buffer_size,
-      "{\"t\":\"s\",\"v\":2,\"u\":%" PRIu64 ",\"x\":%" PRIu64 ",\"i\":[%d,%" PRIu32
+      "{\"t\":\"s\",\"v\":3,\"u\":%" PRIu64 ",\"x\":%" PRIu64 ",\"i\":[%d,%" PRIu32
       "],\"scd\":[%d,%d,%.2f,%.2f,%.0f,%" PRIu64 "],"
       "\"tp\":[%d,%.2f,%.2f,%" PRIu64 "],\"xm\":[%d,%.2f,%.2f,%" PRIu64 "],"
-      "\"o\":[%d,%d,%d,%d],"
-      "\"a\":[%.3f,%.3f,%.3f,%.3f,%d,%d,%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 "],"
+      "\"out\":%s,"
       "\"c\":[%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%.3f,%.3f,%.3f,%.3f,%.3f,%.3f]}",
       snapshot.uptime_ms, snapshot.unix_time_s, flag(snapshot.input_sampled), snapshot.io_status,
       flag(snapshot.scd_sample), flag(snapshot.scd_available),
@@ -62,43 +134,35 @@ std::size_t formatStage27SampleNdjson(char* buffer, std::size_t buffer_size,
       snapshot.scd_age_ms, flag(snapshot.tp_sample), static_cast<double>(snapshot.tp_temperature_c),
       static_cast<double>(snapshot.tp_humidity_pct), snapshot.tp_age_ms,
       flag(snapshot.xiaomi_sample), static_cast<double>(snapshot.xiaomi_temperature_c),
-      static_cast<double>(snapshot.xiaomi_humidity_pct), snapshot.xiaomi_age_ms,
-      flag(snapshot.real_outputs_active), flag(snapshot.physical_light_on),
-      flag(snapshot.physical_exhaust_on), flag(snapshot.physical_humidifier_on),
-      static_cast<double>(snapshot.requested_exhaust_fan),
-      static_cast<double>(snapshot.applied_exhaust_fan),
-      static_cast<double>(snapshot.requested_humidifier),
-      static_cast<double>(snapshot.applied_humidifier), flag(snapshot.thermal_safety_latched),
-      flag(snapshot.safety_force_exhaust), snapshot.safety_reason,
-      snapshot.arbiter_transition_count, snapshot.arbiter_dwell_hold_count,
-      snapshot.arbiter_safety_override_count, snapshot.runtime_status, snapshot.runtime_mode,
-      snapshot.rule_arbitration_interventions, snapshot.rule_safety_interventions,
-      static_cast<double>(snapshot.applied_heater), static_cast<double>(snapshot.applied_cooler),
-      static_cast<double>(snapshot.applied_exhaust_fan),
+      static_cast<double>(snapshot.xiaomi_humidity_pct), snapshot.xiaomi_age_ms, output_json,
+      snapshot.runtime_status, snapshot.runtime_mode, snapshot.rule_arbitration_interventions,
+      snapshot.rule_safety_interventions, static_cast<double>(snapshot.applied_heater),
+      static_cast<double>(snapshot.applied_cooler), static_cast<double>(snapshot.applied_exhaust_fan),
       static_cast<double>(snapshot.applied_humidifier),
       static_cast<double>(snapshot.applied_dehumidifier),
       static_cast<double>(snapshot.applied_co2_doser));
   return checkedLength(buffer, buffer_size, written);
 }
 
-std::size_t
-formatStage27HealthNdjson(char* buffer, std::size_t buffer_size,
-                          const Stage27TelemetrySnapshot& snapshot,
-                          const storage::Stage27StorageStatus& storage_status) noexcept {
+std::size_t formatStage27HealthNdjson(char* buffer, std::size_t buffer_size,
+                                      const Stage27TelemetrySnapshot& snapshot,
+                                      const storage::Stage27StorageStatus& storage_status) noexcept {
   if (buffer == nullptr || buffer_size == 0U) {
+    return 0U;
+  }
+  char output_json[640]{};
+  if (!formatOutputJson(output_json, sizeof(output_json), snapshot.output)) {
     return 0U;
   }
   const int written = std::snprintf(
       buffer, buffer_size,
-      "{\"t\":\"h\",\"v\":2,\"u\":%" PRIu64 ","
+      "{\"t\":\"h\",\"v\":3,\"u\":%" PRIu64 ","
       "\"sys\":[%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32
-      "],"
-      "\"scd\":[%d,%" PRIu32 ",%" PRIu32 ",%" PRIu32 "],"
+      "],\"scd\":[%d,%" PRIu32 ",%" PRIu32 ",%" PRIu32 "],"
       "\"rtc\":[%d,%d,%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu64 ",%" PRIu64 "],"
       "\"ble\":[%d,%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 "],"
       "\"tp\":[%" PRIu32 ",%" PRIu32 ",%" PRIu32 "],"
-      "\"xm\":[%" PRIu32 ",%" PRIu32 ",%" PRIu32 "],"
-      "\"o\":[%d,%d,%d,%d],"
+      "\"xm\":[%" PRIu32 ",%" PRIu32 ",%" PRIu32 "],\"out\":%s,"
       "\"st\":[\"%s\",%d,%d,%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32
       ",%" PRIu32 ",%" PRIu32 ",%" PRIu64 "]}",
       snapshot.uptime_ms, snapshot.heap_internal, snapshot.heap_internal_min,
@@ -110,9 +174,7 @@ formatStage27HealthNdjson(char* buffer, std::size_t buffer_size,
       snapshot.rtc_last_trusted_ms, flag(snapshot.ble_scanning), snapshot.ble_scan_starts,
       snapshot.ble_scan_errors, snapshot.ble_scan_restarts, snapshot.ble_scan_completes,
       snapshot.ble_adv_lock_drops, snapshot.tp_packets, snapshot.tp_accepted, snapshot.tp_rejected,
-      snapshot.xiaomi_packets, snapshot.xiaomi_accepted, snapshot.xiaomi_rejected,
-      flag(snapshot.real_outputs_active), flag(snapshot.physical_light_on),
-      flag(snapshot.physical_exhaust_on), flag(snapshot.physical_humidifier_on),
+      snapshot.xiaomi_packets, snapshot.xiaomi_accepted, snapshot.xiaomi_rejected, output_json,
       storage::stage27StorageBackendName(storage_status.active_backend),
       flag(storage_status.sd_mounted), flag(storage_status.flash_mounted),
       storage_status.sd_mount_errors, storage_status.flash_mount_errors,

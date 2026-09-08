@@ -1,5 +1,7 @@
 #pragma once
 
+#include "climate/output/OutputExecutionTelemetry.h"
+
 #include <cstdint>
 
 namespace growbox::app::climate_io::telemetry {
@@ -73,19 +75,7 @@ struct Stage27TelemetrySnapshot {
   float applied_dehumidifier = 0.0F;
   float applied_co2_doser = 0.0F;
 
-  // Physical-output observability. These fields describe the RF endpoint's
-  // internally confirmed transmitted state, not a direct load acknowledgement.
-  // Shelly power feedback remains the external physical confirmation channel.
-  bool real_outputs_active = false;
-  bool physical_light_on = false;
-  bool physical_exhaust_on = false;
-  bool physical_humidifier_on = false;
-  bool thermal_safety_latched = false;
-  bool safety_force_exhaust = false;
-  std::uint32_t safety_reason = 0U;
-  std::uint32_t arbiter_transition_count = 0U;
-  std::uint32_t arbiter_dwell_hold_count = 0U;
-  std::uint32_t arbiter_safety_override_count = 0U;
+  ::growbox::app::output::OutputExecutionTelemetrySnapshot output{};
 };
 
 } // namespace growbox::app::climate_io::telemetry

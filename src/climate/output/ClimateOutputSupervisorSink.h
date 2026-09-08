@@ -44,6 +44,9 @@ public:
   const ::growbox::app::output::ExecutionReport& lastReport() const noexcept {
     return last_report_;
   }
+  const ::growbox::app::output::ControlIntent& lastControlIntent() const noexcept {
+    return last_control_intent_;
+  }
 
 private:
   static float roleLevel(const ::growbox::climate::ClimatePolicyRequest& request,
@@ -68,6 +71,7 @@ private:
   ::growbox::app::output::OutputSupervisorExecutor& executor_;
   ::growbox::app::output::OutputStateStore& state_store_;
   ClimateOutputSupervisorCycleContext context_{};
+  ::growbox::app::output::ControlIntent last_control_intent_{};
   ::growbox::app::output::OutputSupervisorResolution last_resolution_{};
   ::growbox::app::output::ExecutionReport last_report_{};
   std::uint64_t sequence_{0U};
