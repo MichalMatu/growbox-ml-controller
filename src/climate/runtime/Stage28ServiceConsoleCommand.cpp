@@ -95,6 +95,12 @@ ServiceConsoleCommand parseServiceConsoleCommand(const char* line) noexcept {
     if (count==2U && equalsIgnoreCase(tokens[1],"off")) { command.kind=ServiceConsoleCommandKind::AutomationDisable; return command; }
     return invalidCommand();
   }
+  if (equalsIgnoreCase(tokens[0],"maintenance")) {
+    if (count==1U || (count==2U && equalsIgnoreCase(tokens[1],"status"))) { command.kind=ServiceConsoleCommandKind::MaintenanceStatus; return command; }
+    if (count==2U && equalsIgnoreCase(tokens[1],"enter")) { command.kind=ServiceConsoleCommandKind::MaintenanceEnter; return command; }
+    if (count==2U && equalsIgnoreCase(tokens[1],"exit")) { command.kind=ServiceConsoleCommandKind::MaintenanceExit; return command; }
+    return invalidCommand();
+  }
   if (count==1U) {
     if (equalsIgnoreCase(tokens[0],"help")||equalsIgnoreCase(tokens[0],"menu")||tokens[0]=="?"||tokens[0]=="0") { command.kind=ServiceConsoleCommandKind::Help; return command; }
     if (equalsIgnoreCase(tokens[0],"status")||tokens[0]=="1") { command.kind=ServiceConsoleCommandKind::Status; return command; }
@@ -122,6 +128,7 @@ ServiceConsoleCommand parseServiceConsoleCommand(const char* line) noexcept {
   }
   if (!equalsIgnoreCase(tokens[0],"rf")) return invalidCommand();
   if (count==2U && equalsIgnoreCase(tokens[1],"list")) { command.kind=ServiceConsoleCommandKind::RfList; return command; }
+  if (count==4U && equalsIgnoreCase(tokens[1],"raw") && parseDevice(tokens[2],command.device) && parseState(tokens[3],command.state)) { command.kind=ServiceConsoleCommandKind::MaintenanceRawOutput; return command; }
   if (equalsIgnoreCase(tokens[1],"rx")) {
     if (count==2U) { command.kind=ServiceConsoleCommandKind::RfReceive; command.timeout_ms=kDefaultRxTimeoutMs; return command; }
     if (count==3U) { if (!parseUnsigned(tokens[2],command.timeout_ms)||command.timeout_ms<kMinimumRxTimeoutMs||command.timeout_ms>kMaximumRxTimeoutMs) return invalidCommand(); command.kind=ServiceConsoleCommandKind::RfReceive; return command; }

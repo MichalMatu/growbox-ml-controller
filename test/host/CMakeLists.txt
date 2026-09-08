@@ -362,6 +362,21 @@ target_compile_features(output_manual_control_tests PRIVATE cxx_std_17)
 target_compile_options(output_manual_control_tests PRIVATE -Wall -Wextra -Wpedantic)
 
 add_executable(
+  output_maintenance_control_tests
+  "${PROJECT_ROOT}/test/test_output_maintenance_control/test_main.cpp"
+  "${PROJECT_ROOT}/src/climate/output/OutputMaintenanceControl.cpp"
+  "${PROJECT_ROOT}/src/climate/output/OutputAutomationControl.cpp"
+  "${PROJECT_ROOT}/src/climate/output/OutputLifecycleExecutor.cpp"
+  "${PROJECT_ROOT}/src/climate/output/OutputSupervisorLifecycle.cpp"
+  "${PROJECT_ROOT}/src/climate/output/OutputPolicyConfig.cpp"
+  "${PROJECT_ROOT}/src/climate/output/OutputStateStore.cpp"
+  "${PROJECT_ROOT}/src/climate/output/BinaryActuatorPolicy.cpp"
+)
+target_include_directories(output_maintenance_control_tests PRIVATE "${PROJECT_ROOT}/src")
+target_compile_features(output_maintenance_control_tests PRIVATE cxx_std_17)
+target_compile_options(output_maintenance_control_tests PRIVATE -Wall -Wextra -Wpedantic)
+
+add_executable(
   climate_semantic_output_tests
   "${PROJECT_ROOT}/test/test_climate_semantic_output/test_main.cpp"
   "${PROJECT_ROOT}/src/climate/ClimateIoAdapters.cpp"
@@ -612,6 +627,7 @@ add_test(NAME output_supervisor_lifecycle_tests COMMAND output_supervisor_lifecy
 add_test(NAME output_lifecycle_executor_tests COMMAND output_lifecycle_executor_tests)
 add_test(NAME output_automation_control_tests COMMAND output_automation_control_tests)
 add_test(NAME output_manual_control_tests COMMAND output_manual_control_tests)
+add_test(NAME output_maintenance_control_tests COMMAND output_maintenance_control_tests)
 add_test(NAME climate_semantic_output_tests COMMAND climate_semantic_output_tests)
 add_test(NAME stage28d_binary_role_arbiter_tests COMMAND stage28d_binary_role_arbiter_tests)
 add_test(NAME stage28d_rf_output_endpoint_tests COMMAND stage28d_rf_output_endpoint_tests)

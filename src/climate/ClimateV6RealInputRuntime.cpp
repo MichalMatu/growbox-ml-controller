@@ -11,6 +11,7 @@
 #include "climate/output/OutputAutomationControl.h"
 #include "climate/output/OutputLifecycleExecutor.h"
 #include "climate/output/OutputManualControl.h"
+#include "climate/output/OutputMaintenanceControl.h"
 #include "climate/output/OutputNvsBackend.h"
 #include "climate/output/OutputPersistenceCoordinator.h"
 #include "climate/output/OutputPersistenceStore.h"
@@ -27,6 +28,7 @@
 #include "climate/runtime/Stage27ScheduleIntentAdapter.h"
 #include "climate/runtime/Stage27TelemetryReporter.h"
 #include "climate/runtime/Stage28RfDiagnostics.h"
+#include "climate/runtime/Stage28MaintenanceRfTransport.h"
 #include "climate/runtime/Stage28ServiceConsole.h"
 #include "climate/runtime/Stage28eLog.h"
 #include "climate/runtime/Stage28ePlatformDiagnostics.h"
@@ -473,7 +475,12 @@ private:
   }
   output::OutputAutomationControl automation_control(output_lifecycle, lifecycle_executor);
   output::OutputManualControl manual_control(output_policy, output_lifecycle);
-  lifecycle_ready = lifecycle_ready && automation_control.valid() && manual_control.valid();
+  runtime::Stage28MaintenanceRfTransport maintenance_rf_transport(rf_diagnostics);
+  output::OutputMaintenanceControl maintenance_control(
+      output_policy, output_lifecycle, automation_control, lifecycle_executor,
+      output_state_store, supervisor_config, maintenance_rf_transport);
+  lifecycle_ready = lifecycle_ready && automation_control.valid() && manual_control.valid() &&
+                    maintenance_control.valid();
 
   output::OutputSupervisorResolver supervisor_resolver(supervisor_config);
   output::OutputSupervisorExecutor supervisor_executor(supervisor_transport, output_state_store,
@@ -498,7 +505,8 @@ private:
 
   runtime::Stage28ServiceConsole service_console(
       {GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED != 0, GROWBOX_FIRMWARE_GIT_SHA,
-       &real_output_ready, &storage_logger, &runtime_timing, &automation_control, &manual_control},
+       &real_output_ready, &storage_logger, &runtime_timing, &automation_control, &manual_control,
+       &maintenance_control},
       ble, scd41, clock, rf_diagnostics);
   const bool service_console_ready = service_console.begin();
 
@@ -657,12 +665,14 @@ private:
 
       const auto automation_report =
           automation_control.tick(now_ms, schedule_intent, safety_snapshot.envelope);
+      const auto maintenance_report =
+          maintenance_control.tick(now_ms, safety_snapshot.envelope);
 
       output::ManualIntent manual_intent{};
       (void)manual_control.consume(manual_intent);
 
       ClimateOutputSupervisorCycleContext supervisor_context{};
-      supervisor_context.mode = automation_report.mode;
+      supervisor_context.mode = maintenance_report.mode;
       supervisor_context.schedule = schedule_intent;
       supervisor_context.manual = manual_intent;
       supervisor_context.safety = safety_snapshot.envelope;

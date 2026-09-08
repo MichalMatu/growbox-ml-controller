@@ -15,6 +15,7 @@ namespace growbox::app::climate_io::storage { class Stage27TelemetryLogger; }
 namespace growbox::app::output {
 class OutputAutomationControl;
 class OutputManualControl;
+class OutputMaintenanceControl;
 }
 
 namespace growbox::app::climate_io::runtime {
@@ -29,6 +30,7 @@ public:
     const RuntimeTimingMetrics* timing_metrics{nullptr};
     ::growbox::app::output::OutputAutomationControl* automation_control{nullptr};
     ::growbox::app::output::OutputManualControl* manual_control{nullptr};
+    ::growbox::app::output::OutputMaintenanceControl* maintenance_control{nullptr};
   };
 
   Stage28ServiceConsole(Config config, native::BleClimateScanner& ble,
@@ -54,6 +56,9 @@ private:
   void handleRfReceive(const ServiceConsoleCommand& command) noexcept;
   void printAutomationStatus() noexcept;
   void handleAutomationRequest(bool enabled) noexcept;
+  void printMaintenanceStatus() noexcept;
+  void handleMaintenanceRequest(bool enter) noexcept;
+  void handleMaintenanceRaw(const ServiceConsoleCommand& command, std::uint64_t now_ms) noexcept;
   void handleRtcSetUnix(const ServiceConsoleCommand& command, std::uint64_t now_ms) noexcept;
   void printSdLogStatus() noexcept;
   void printSdLogList() noexcept;

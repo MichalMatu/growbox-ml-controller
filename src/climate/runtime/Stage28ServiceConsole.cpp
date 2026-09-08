@@ -3,6 +3,7 @@
 #include "climate/runtime/Stage28ePlatformDiagnostics.h"
 #include "climate/output/OutputAutomationControl.h"
 #include "climate/output/OutputManualControl.h"
+#include "climate/output/OutputMaintenanceControl.h"
 #include "climate/rf433/Rf433HardwareConfig.h"
 #include "climate/runtime/EuropeWarsawTime.h"
 #include "climate/storage/Stage27FileDurability.h"
@@ -263,6 +264,18 @@ void Stage28ServiceConsole::processLine(std::uint64_t now_ms) noexcept {
   case ServiceConsoleCommandKind::AutomationDisable:
     handleAutomationRequest(false);
     return;
+  case ServiceConsoleCommandKind::MaintenanceStatus:
+    printMaintenanceStatus();
+    return;
+  case ServiceConsoleCommandKind::MaintenanceEnter:
+    handleMaintenanceRequest(true);
+    return;
+  case ServiceConsoleCommandKind::MaintenanceExit:
+    handleMaintenanceRequest(false);
+    return;
+  case ServiceConsoleCommandKind::MaintenanceRawOutput:
+    handleMaintenanceRaw(command, now_ms);
+    return;
   case ServiceConsoleCommandKind::RtcSetUnix:
     handleRtcSetUnix(command, now_ms);
     return;
@@ -292,11 +305,14 @@ void Stage28ServiceConsole::printHelp() noexcept {
   writeText("  3 | rf | rf list                 list known RF433 devices/codes\r\n");
   writeText("  automation [status]              show automation lifecycle state\r\n");
   writeText("  automation on|off                request high-level automation mode\r\n");
+  writeText("  maintenance [status]             show maintenance lock state\r\n");
+  writeText("  maintenance enter|exit           safe enter / explicit re-arm exit\r\n");
   writeText("  rtc set-unix <epoch>             set DS3231 from UTC Unix seconds\r\n");
   writeText("  output lamp on|off               supervised manual lamp command\r\n");
   writeText("  output fan on|off                supervised manual fan command\r\n");
   writeText("  output humidifier on|off         supervised manual humidifier command\r\n");
   writeText("  rf <device> on|off               compatibility alias for output command\r\n");
+  writeText("  rf raw <device> on|off           maintenance-only raw RF diagnostic TX\r\n");
   writeText("  rf rx [50..5000]                 capture/decode one RF frame\r\n");
   writeText("  sdlog status                     SD logger status/counters\r\n");
   writeText("  sdlog list                       list GBLOG/*.JL with sizes\r\n");
@@ -305,6 +321,7 @@ void Stage28ServiceConsole::printHelp() noexcept {
   writeText("RTC stores UTC; lighting schedule converts UTC to Europe/Warsaw.\r\n");
   writeText("Configured manual outputs are supervisor-owned and mode/safety constrained.\r\n");
   writeText("Manual output completion is command truth, not physical load acknowledgement.\r\n");
+  writeText("Raw RF TX requires MaintenanceLocked and is vetoed by conflicting hard safety.\r\n");
 }
 
 void Stage28ServiceConsole::printAutomationStatus() noexcept {
@@ -326,6 +343,66 @@ void Stage28ServiceConsole::handleAutomationRequest(bool enabled) noexcept {
   const bool accepted = config_.automation_control->requestEnabled(enabled);
   writeFormatted("automation request=%s accepted=%d mode=%s\r\n", enabled ? "on" : "off",
                  accepted, supervisorModeName(config_.automation_control->mode()));
+}
+
+
+void Stage28ServiceConsole::printMaintenanceStatus() noexcept {
+  if (config_.maintenance_control == nullptr) {
+    writeText("maintenance unavailable\r\n");
+    return;
+  }
+  const auto report = config_.maintenance_control->report();
+  writeFormatted(
+      "maintenance mode=%s status=%u enter_pending=%d exit_pending=%d rearm_pending=%d "
+      "raw_pending=%d raw_result=%d raw_endpoint=%u raw_state=%u tx_status=%u tx_error=%u "
+      "physical_state=unknown\r\n",
+      supervisorModeName(report.mode), static_cast<unsigned>(report.status), report.enter_pending,
+      report.exit_pending, report.rearm_pending, report.raw_pending, report.has_raw_result,
+      static_cast<unsigned>(report.raw_command.endpoint),
+      static_cast<unsigned>(report.raw_command.state),
+      static_cast<unsigned>(report.raw_transport.status),
+      static_cast<unsigned>(report.raw_transport.error));
+}
+
+void Stage28ServiceConsole::handleMaintenanceRequest(bool enter) noexcept {
+  if (config_.maintenance_control == nullptr) {
+    writeText("error: maintenance control unavailable\r\n");
+    return;
+  }
+  const bool accepted = enter ? config_.maintenance_control->requestEnter()
+                              : config_.maintenance_control->requestExit();
+  writeFormatted("maintenance request=%s accepted=%d mode=%s\r\n",
+                 enter ? "enter" : "exit", accepted,
+                 supervisorModeName(config_.maintenance_control->mode()));
+}
+
+void Stage28ServiceConsole::handleMaintenanceRaw(const ServiceConsoleCommand& command,
+                                                 std::uint64_t now_ms) noexcept {
+  if (config_.maintenance_control == nullptr) {
+    writeText("error: maintenance control unavailable\r\n");
+    return;
+  }
+  ::growbox::app::output::OutputEndpointRole role =
+      ::growbox::app::output::OutputEndpointRole::ScheduledLight;
+  switch (command.device) {
+  case ServiceConsoleRfDevice::Lamp:
+    role = ::growbox::app::output::OutputEndpointRole::ScheduledLight;
+    break;
+  case ServiceConsoleRfDevice::Fan:
+    role = ::growbox::app::output::OutputEndpointRole::ExhaustFan;
+    break;
+  case ServiceConsoleRfDevice::Humidifier:
+    role = ::growbox::app::output::OutputEndpointRole::Humidifier;
+    break;
+  }
+  const auto state = command.state == ServiceConsoleRfState::On
+                         ? ::growbox::app::output::BinaryOutputState::On
+                         : ::growbox::app::output::BinaryOutputState::Off;
+  const bool accepted = config_.maintenance_control->requestRaw(role, state, now_ms);
+  writeFormatted("maintenance_raw device=%s state=%s accepted=%d mode=%s queued_only=1 "
+                 "physical_state=unknown\r\n",
+                 serviceConsoleRfDeviceName(command.device), serviceConsoleRfStateName(command.state),
+                 accepted, supervisorModeName(config_.maintenance_control->mode()));
 }
 
 void Stage28ServiceConsole::printStatus(std::uint64_t now_ms) noexcept {
@@ -371,6 +448,9 @@ void Stage28ServiceConsole::printStatus(std::uint64_t now_ms) noexcept {
 
   if (config_.automation_control != nullptr) {
     printAutomationStatus();
+  }
+  if (config_.maintenance_control != nullptr) {
+    printMaintenanceStatus();
   }
 
   if (config_.timing_metrics != nullptr) {

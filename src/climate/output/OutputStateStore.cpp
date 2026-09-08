@@ -179,4 +179,13 @@ bool OutputStateStore::recordPhysicalObservation(OutputEndpointId endpoint,
   return true;
 }
 
+bool OutputStateStore::clearPhysicalObservation(OutputEndpointId endpoint) noexcept {
+  OutputStateEntry* entry = findMutable(endpoint);
+  if (entry == nullptr) {
+    return false;
+  }
+  entry->physical = {};
+  return true;
+}
+
 } // namespace growbox::app::output

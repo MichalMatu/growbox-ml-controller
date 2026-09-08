@@ -56,6 +56,7 @@ public:
   bool recordPhysicalObservation(OutputEndpointId endpoint, PhysicalOutputState state,
                                  std::uint64_t observed_ms,
                                  std::uint64_t sequence = 0U) noexcept;
+  bool clearPhysicalObservation(OutputEndpointId endpoint) noexcept;
 
 private:
   static bool commandStateValid(const OutputCommand& command) noexcept;
