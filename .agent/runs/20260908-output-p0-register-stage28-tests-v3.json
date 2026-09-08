@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260908-output-p0-register-stage28-tests-v3",
+  "task_digest": "1a6861e87d1e01bc5b9f8ee0dd05694b151762ee8af8d97acf8b4e0d89efb92d",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-08T01:50:51.567011+00:00",
+  "attempt_id": "a84a74c2ef1b7a3b4426f9bc",
+  "daemon_version": "4.18.13",
+  "daemon_pid": 37969,
+  "updated_at": "2026-09-08T01:50:51.567099+00:00",
+  "pid": 37969
+}
