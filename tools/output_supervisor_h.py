@@ -261,7 +261,9 @@ def _is_clean_fan_off_baseline(snapshot: OutputSnapshot) -> bool:
 def _assert_natural_fan_on_transition(snapshot: OutputSnapshot) -> None:
     fan = snapshot.endpoint(FAN_ENDPOINT)
     if snapshot.safety_latched or fan.safety_active or fan.safety_override or fan.inhibited:
-        raise QualificationContractError("hard safety caused or inhibited the counted fan transition")
+        raise QualificationContractError(
+            "hard safety caused or inhibited the counted fan transition"
+        )
     if fan.manual_active:
         raise QualificationContractError("manual intent is active during counted fan transition")
     if not fan.control_active or fan.control_level <= 0.0:
@@ -296,7 +298,9 @@ def _assert_natural_fan_on_transition(snapshot: OutputSnapshot) -> None:
         raise QualificationContractError("transport is not active for counted command attempt")
 
 
-def find_natural_fan_transition(records: list[dict[str, Any]]) -> tuple[OutputSnapshot, OutputSnapshot]:
+def find_natural_fan_transition(
+    records: list[dict[str, Any]],
+) -> tuple[OutputSnapshot, OutputSnapshot]:
     if not records:
         raise QualificationContractError("no telemetry records supplied")
     validate_session_record(records[0])
@@ -330,7 +334,9 @@ def validate_independent_evidence(evidence: dict[str, Any]) -> tuple[float, floa
     before = [float(value) for value in evidence.get("power_before_w", [])]
     after = [float(value) for value in evidence.get("power_after_w", [])]
     if len(before) < 3 or len(after) < 3:
-        raise QualificationContractError("at least three Shelly samples are required before and after")
+        raise QualificationContractError(
+            "at least three Shelly samples are required before and after"
+        )
     minimum_delta = float(evidence.get("minimum_power_delta_w", 0.0))
     if minimum_delta <= 0.0:
         raise QualificationContractError("minimum_power_delta_w must be positive")
