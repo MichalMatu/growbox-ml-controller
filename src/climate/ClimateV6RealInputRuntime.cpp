@@ -8,6 +8,7 @@
 #include "climate/Stage28dOutputBindings.h"
 #include "climate/Stage28dRfOutputEndpoint.h"
 #include "climate/Stage28dThermalTestSequence.h"
+#include "climate/output/OutputStateStore.h"
 #include "climate/native/BleClimateScanner.h"
 #include "climate/native/Ds3231ClockSource.h"
 #include "climate/native/NativeI2cBus.h"
@@ -30,6 +31,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
+#include <array>
 #include <cstdint>
 
 #ifndef GROWBOX_I2C_SDA_GPIO
@@ -300,13 +302,22 @@ private:
   const bool rf_ready = runtime_io_owner.beginRf();
   rf433::Rf433RmtFrameSender rf_frame_sender(runtime_io_owner.rfRadio());
   rf433::Rf433OutputTransport rf_output_transport(rf_frame_sender);
+  static output::OutputStateStore output_state_store;
+  static constexpr std::array<output::OutputEndpointId, output::kOutputEndpointCapacity>
+      kShadowOutputEndpoints{stage28d::kExhaustFanEndpoint, stage28d::kScheduledLightEndpoint,
+                             stage28d::kHumidifierEndpoint};
+  const bool output_state_store_ready =
+      output_state_store.configure(kShadowOutputEndpoints, kShadowOutputEndpoints.size());
+  if (!output_state_store_ready) {
+    ESP_LOGE(kTag, "Output state-store shadow configuration failed");
+  }
 
   const auto semantic_output_config = stage28d::makeClimateSemanticOutputConfig();
   const bool output_bindings_valid =
       stage28d::validateOutputBindings(semantic_output_config) == stage28d::OutputBindingStatus::Ok;
   stage28d::Stage28dRfOutputEndpoint physical_endpoint(
       {GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED != 0 && rf_ready && output_bindings_valid, 0.5F},
-      rf_output_transport);
+      rf_output_transport, output_state_store_ready ? &output_state_store : nullptr);
 
   bool real_output_ready = false;
   if (GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED != 0) {

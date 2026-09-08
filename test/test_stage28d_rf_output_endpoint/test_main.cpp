@@ -1,5 +1,6 @@
 #include "climate/Stage28dOutputBindings.h"
 #include "climate/Stage28dRfOutputEndpoint.h"
+#include "climate/output/OutputStateStore.h"
 #include "climate/output/OutputTransport.h"
 
 #include <array>
@@ -11,22 +12,24 @@ using namespace growbox::app::climate_io::stage28d;
 
 namespace {
 
-class FakeTransport final : public growbox::app::output::OutputTransport {
+namespace output = growbox::app::output;
+
+constexpr std::array<output::OutputEndpointId, output::kOutputEndpointCapacity> kOutputEndpoints{
+    kExhaustFanEndpoint, kScheduledLightEndpoint, kHumidifierEndpoint};
+
+class FakeTransport final : public output::OutputTransport {
 public:
-  growbox::app::output::TxResult
-  send(const growbox::app::output::OutputCommand& command) noexcept override {
+  output::TxResult send(const output::OutputCommand& command) noexcept override {
     assert(count < commands.size());
     commands[count++] = command;
     if (fail_next) {
       fail_next = false;
-      return {growbox::app::output::TransportStatus::Failed,
-              growbox::app::output::TransportError::IoFailure};
+      return {output::TransportStatus::Failed, output::TransportError::IoFailure};
     }
-    return {growbox::app::output::TransportStatus::Completed,
-            growbox::app::output::TransportError::None};
+    return {output::TransportStatus::Completed, output::TransportError::None};
   }
 
-  std::array<growbox::app::output::OutputCommand, 16U> commands{};
+  std::array<output::OutputCommand, 16U> commands{};
   std::size_t count{0U};
   bool fail_next{false};
 };
@@ -35,8 +38,7 @@ void expectLast(const FakeTransport& tx, ClimateEndpointId endpoint, bool on) {
   assert(tx.count > 0U);
   const auto& command = tx.commands[tx.count - 1U];
   assert(command.endpoint == endpoint);
-  assert(command.state == (on ? growbox::app::output::BinaryOutputState::On
-                              : growbox::app::output::BinaryOutputState::Off));
+  assert(command.state == (on ? output::BinaryOutputState::On : output::BinaryOutputState::Off));
 }
 
 void testSafeInitializationAndDeduplication() {
@@ -131,6 +133,53 @@ void testDisabledEndpointFailsClosed() {
   assert(tx.count == 0U);
 }
 
+void testShadowStoreMirrorsCommandTruthWithoutFabricatingPhysicalState() {
+  output::OutputStateStore store;
+  assert(store.configure(kOutputEndpoints, kOutputEndpoints.size()));
+  FakeTransport tx;
+  Stage28dRfOutputEndpoint endpoint({true, 0.5F}, tx, &store);
+  assert(endpoint.initializeSafeState(10U));
+
+  const auto* fan_after_boot = store.find(kExhaustFanEndpoint);
+  assert(fan_after_boot != nullptr && fan_after_boot->has_successful_command);
+  assert(fan_after_boot->last_successful_command.state == output::BinaryOutputState::Off);
+  assert(fan_after_boot->physical.state == output::PhysicalOutputState::Unknown);
+  assert(!fan_after_boot->physical.has_independent_feedback);
+
+  endpoint.setSafetyForceExhaust(true);
+  assert(endpoint.write(kExhaustFanEndpoint, 0.0F, 100U));
+  const auto* fan = store.find(kExhaustFanEndpoint);
+  assert(fan != nullptr && fan->has_desired && fan->has_resolved && fan->has_attempt);
+  assert(fan->desired.state == output::BinaryOutputState::Off);
+  assert(fan->resolved.state == output::BinaryOutputState::On);
+  assert(fan->last_transport.status == output::TransportStatus::Completed);
+  assert(fan->last_successful_command.state == output::BinaryOutputState::On);
+  assert(endpoint.stateOn(kExhaustFanEndpoint));
+  assert(fan->physical.state == output::PhysicalOutputState::Unknown);
+  const auto fan_attempt_ms = fan->last_attempt_ms;
+  const auto tx_count = tx.count;
+
+  assert(endpoint.write(kExhaustFanEndpoint, 0.0F, 110U));
+  assert(tx.count == tx_count);
+  fan = store.find(kExhaustFanEndpoint);
+  assert(fan != nullptr && fan->last_attempt_ms == fan_attempt_ms);
+
+  tx.fail_next = true;
+  assert(!endpoint.write(kHumidifierEndpoint, 1.0F, 200U));
+  const auto* humidifier = store.find(kHumidifierEndpoint);
+  assert(humidifier != nullptr && humidifier->has_desired && humidifier->has_resolved);
+  assert(humidifier->desired.state == output::BinaryOutputState::On);
+  assert(humidifier->resolved.state == output::BinaryOutputState::On);
+  assert(humidifier->has_attempt);
+  assert(humidifier->last_attempt.state == output::BinaryOutputState::On);
+  assert(humidifier->last_transport.status == output::TransportStatus::Failed);
+  assert(humidifier->has_successful_command);
+  assert(humidifier->last_successful_command.state == output::BinaryOutputState::Off);
+  assert(!endpoint.stateOn(kHumidifierEndpoint));
+  assert(humidifier->physical.state == output::PhysicalOutputState::Unknown);
+  assert(!humidifier->physical.has_independent_feedback);
+}
+
 } // namespace
 
 int main() {
@@ -140,5 +189,6 @@ int main() {
   testScheduledLightUsesDedicatedPath();
   testTransmitFailureDoesNotAdvanceState();
   testDisabledEndpointFailsClosed();
+  testShadowStoreMirrorsCommandTruthWithoutFabricatingPhysicalState();
   return 0;
 }

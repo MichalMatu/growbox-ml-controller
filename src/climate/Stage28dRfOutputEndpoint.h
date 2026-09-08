@@ -1,6 +1,7 @@
 #pragma once
 
 #include "climate/ClimateSemanticOutput.h"
+#include "climate/output/OutputStateStore.h"
 #include "climate/output/OutputTransport.h"
 
 #include <array>
@@ -15,8 +16,9 @@ struct RfOutputEndpointConfig {
 
 class Stage28dRfOutputEndpoint final : public ClimateOutputEndpoint {
 public:
-  Stage28dRfOutputEndpoint(RfOutputEndpointConfig config,
-                           ::growbox::app::output::OutputTransport& transport) noexcept;
+  Stage28dRfOutputEndpoint(
+      RfOutputEndpointConfig config, ::growbox::app::output::OutputTransport& transport,
+      ::growbox::app::output::OutputStateStore* shadow_state_store = nullptr) noexcept;
 
   bool initializeSafeState(std::uint64_t monotonic_ms) noexcept;
   bool write(ClimateEndpointId endpoint, float normalized_level,
@@ -38,11 +40,14 @@ private:
   };
 
   static std::size_t stateIndex(ClimateEndpointId endpoint) noexcept;
+  void mirrorDesiredResolved(ClimateEndpointId endpoint, bool desired_on,
+                             bool resolved_on) noexcept;
   bool applyBinary(ClimateEndpointId endpoint, bool on, std::uint64_t monotonic_ms,
                    bool force_send = false) noexcept;
 
   RfOutputEndpointConfig config_{};
   ::growbox::app::output::OutputTransport& transport_;
+  ::growbox::app::output::OutputStateStore* shadow_state_store_{nullptr};
   std::array<EndpointState, 3U> states_{};
   bool safety_force_exhaust_{false};
   std::uint32_t transmit_count_{0U};

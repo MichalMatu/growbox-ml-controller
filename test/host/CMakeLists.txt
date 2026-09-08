@@ -243,6 +243,7 @@ add_executable(
   stage28d_rf_output_endpoint_tests
   "${PROJECT_ROOT}/test/test_stage28d_rf_output_endpoint/test_main.cpp"
   "${PROJECT_ROOT}/src/climate/Stage28dRfOutputEndpoint.cpp"
+  "${PROJECT_ROOT}/src/climate/output/OutputStateStore.cpp"
 )
 target_include_directories(stage28d_rf_output_endpoint_tests PRIVATE "${PROJECT_ROOT}/src" "${PROJECT_ROOT}/lib/environment_control/src")
 target_compile_features(stage28d_rf_output_endpoint_tests PRIVATE cxx_std_17)

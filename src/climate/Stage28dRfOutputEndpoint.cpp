@@ -10,11 +10,21 @@ namespace {
 
 constexpr std::size_t kInvalidStateIndex = std::numeric_limits<std::size_t>::max();
 
+::growbox::app::output::OutputCommand makeBinaryCommand(ClimateEndpointId endpoint,
+                                                        bool on) noexcept {
+  return {
+      endpoint,
+      on ? ::growbox::app::output::BinaryOutputState::On
+         : ::growbox::app::output::BinaryOutputState::Off,
+  };
+}
+
 } // namespace
 
 Stage28dRfOutputEndpoint::Stage28dRfOutputEndpoint(
-    RfOutputEndpointConfig config, ::growbox::app::output::OutputTransport& transport) noexcept
-    : config_(config), transport_(transport) {}
+    RfOutputEndpointConfig config, ::growbox::app::output::OutputTransport& transport,
+    ::growbox::app::output::OutputStateStore* shadow_state_store) noexcept
+    : config_(config), transport_(transport), shadow_state_store_(shadow_state_store) {}
 
 std::size_t Stage28dRfOutputEndpoint::stateIndex(ClimateEndpointId endpoint) noexcept {
   if (endpoint == kExhaustFanEndpoint) {
@@ -29,13 +39,25 @@ std::size_t Stage28dRfOutputEndpoint::stateIndex(ClimateEndpointId endpoint) noe
   return kInvalidStateIndex;
 }
 
+void Stage28dRfOutputEndpoint::mirrorDesiredResolved(ClimateEndpointId endpoint, bool desired_on,
+                                                     bool resolved_on) noexcept {
+  if (shadow_state_store_ == nullptr) {
+    return;
+  }
+  (void)shadow_state_store_->recordDesired(makeBinaryCommand(endpoint, desired_on));
+  (void)shadow_state_store_->recordResolved(makeBinaryCommand(endpoint, resolved_on));
+}
+
 bool Stage28dRfOutputEndpoint::initializeSafeState(std::uint64_t monotonic_ms) noexcept {
   if (!config_.enabled) {
     return false;
   }
   bool ok = true;
+  mirrorDesiredResolved(kScheduledLightEndpoint, false, false);
   ok = applyBinary(kScheduledLightEndpoint, false, monotonic_ms, true) && ok;
+  mirrorDesiredResolved(kExhaustFanEndpoint, false, false);
   ok = applyBinary(kExhaustFanEndpoint, false, monotonic_ms, true) && ok;
+  mirrorDesiredResolved(kHumidifierEndpoint, false, false);
   ok = applyBinary(kHumidifierEndpoint, false, monotonic_ms, true) && ok;
   return ok;
 }
@@ -50,6 +72,7 @@ bool Stage28dRfOutputEndpoint::write(ClimateEndpointId endpoint, float normalize
   const bool effective_on = endpoint == kExhaustFanEndpoint && safety_force_exhaust_
                                 ? true
                                 : requested_on;
+  mirrorDesiredResolved(endpoint, requested_on, effective_on);
   return applyBinary(endpoint, effective_on, monotonic_ms);
 }
 
@@ -58,6 +81,7 @@ bool Stage28dRfOutputEndpoint::forceOff(ClimateEndpointId endpoint,
   if (!config_.enabled || endpoint == kScheduledLightEndpoint) {
     return false;
   }
+  mirrorDesiredResolved(endpoint, false, false);
   return applyBinary(endpoint, false, monotonic_ms, true);
 }
 
@@ -65,6 +89,7 @@ bool Stage28dRfOutputEndpoint::writeScheduledLight(bool on, std::uint64_t monoto
   if (!config_.enabled) {
     return false;
   }
+  mirrorDesiredResolved(kScheduledLightEndpoint, on, on);
   return applyBinary(kScheduledLightEndpoint, on, monotonic_ms);
 }
 
@@ -89,12 +114,11 @@ bool Stage28dRfOutputEndpoint::applyBinary(ClimateEndpointId endpoint, bool on,
     return true;
   }
 
-  const ::growbox::app::output::OutputCommand command{
-      endpoint,
-      on ? ::growbox::app::output::BinaryOutputState::On
-         : ::growbox::app::output::BinaryOutputState::Off,
-  };
+  const auto command = makeBinaryCommand(endpoint, on);
   const auto result = transport_.send(command);
+  if (shadow_state_store_ != nullptr) {
+    (void)shadow_state_store_->recordAttempt(command, monotonic_ms, result);
+  }
   if (result.status != ::growbox::app::output::TransportStatus::Completed) {
     ++transmit_error_count_;
     return false;
