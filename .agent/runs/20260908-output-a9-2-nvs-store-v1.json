@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260908-output-a9-2-nvs-store-v1",
+  "task_digest": "cee18d886c084fdc0811473359baeae5f0c5b410d3bdc7cc2e21bb4670143032",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-08T16:28:49.876484+00:00",
+  "attempt_id": "7022309830ed6c996e769a9d",
+  "daemon_version": "4.18.19",
+  "daemon_pid": 11435,
+  "updated_at": "2026-09-08T16:28:49.876671+00:00",
+  "pid": 11435
+}
