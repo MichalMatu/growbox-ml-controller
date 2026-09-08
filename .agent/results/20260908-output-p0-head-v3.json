@@ -1,0 +1,87 @@
+{
+  "id": "20260908-output-p0-head-v3",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "started_at": "2026-09-08T01:45:13.404275+00:00",
+  "command_timeout": 900,
+  "edits": {},
+  "commands": [
+    {
+      "command": "git rev-parse HEAD",
+      "exit_code": 0,
+      "output": "a2d11d2b8a64147c8ae9c0b879587536ca360d78\n",
+      "elapsed_seconds": 0.376,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 0.16,
+      "output_policy": "stream",
+      "captured_output_chars": 41,
+      "output_truncated": false,
+      "current_rss_mb": 0.16,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 2,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "git status --porcelain",
+      "exit_code": 0,
+      "output": "",
+      "elapsed_seconds": 0.407,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": null,
+      "output_policy": "stream",
+      "captured_output_chars": 0,
+      "output_truncated": false,
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 2,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 2,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.376
+    },
+    {
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 2,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.407
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.093
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.073
+  },
+  "finished_at": "2026-09-08T01:45:15.968618+00:00",
+  "task_digest": "e3679f5f2da9214515b443d0a7007c12850d10e6f278b1c69eb903cdb9ddc873",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "attempt_id": "7cc8942e28663005512ba53e",
+  "daemon_version": "4.18.13"
+}
