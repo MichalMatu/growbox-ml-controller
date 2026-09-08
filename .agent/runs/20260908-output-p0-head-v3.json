@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260908-output-p0-head-v3",
+  "task_digest": "e3679f5f2da9214515b443d0a7007c12850d10e6f278b1c69eb903cdb9ddc873",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-08T01:45:13.404228+00:00",
+  "attempt_id": "7cc8942e28663005512ba53e",
+  "daemon_version": "4.18.13",
+  "daemon_pid": 34117,
+  "updated_at": "2026-09-08T01:45:13.404315+00:00",
+  "pid": 34117
+}
