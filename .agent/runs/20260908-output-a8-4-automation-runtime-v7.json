@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260908-output-a8-4-automation-runtime-v7",
+  "task_digest": "0e0c3dc7e655e51bd91f367d4cace5a170cd50f6b764eddb6b32fdb89ce6541b",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-08T16:09:03.915112+00:00",
+  "attempt_id": "252389445139e4deeb04f898",
+  "daemon_version": "4.18.19",
+  "daemon_pid": 92897,
+  "updated_at": "2026-09-08T16:09:03.915211+00:00",
+  "pid": 92897
+}
