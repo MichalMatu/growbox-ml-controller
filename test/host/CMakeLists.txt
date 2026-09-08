@@ -457,3 +457,13 @@ target_include_directories(output_state_store_tests PRIVATE "${PROJECT_ROOT}/src
 target_compile_features(output_state_store_tests PRIVATE cxx_std_17)
 target_compile_options(output_state_store_tests PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME output_state_store_tests COMMAND output_state_store_tests)
+
+add_executable(
+  binary_actuator_policy_tests
+  "${PROJECT_ROOT}/test/test_binary_actuator_policy/test_main.cpp"
+  "${PROJECT_ROOT}/src/climate/output/BinaryActuatorPolicy.cpp"
+)
+target_include_directories(binary_actuator_policy_tests PRIVATE "${PROJECT_ROOT}/src")
+target_compile_features(binary_actuator_policy_tests PRIVATE cxx_std_17)
+target_compile_options(binary_actuator_policy_tests PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME binary_actuator_policy_tests COMMAND binary_actuator_policy_tests)

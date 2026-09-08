@@ -9,6 +9,7 @@ idf_component_register(
     "climate/rf433/ClimateRf433EndpointRegistry.cpp"
     "climate/rf433/Rf433OutputTransport.cpp"
     "climate/output/OutputStateStore.cpp"
+    "climate/output/BinaryActuatorPolicy.cpp"
     "climate/Stage28dOutputBindings.cpp"
     "climate/Stage28dLampSafety.cpp"
     "climate/Stage28dBinaryRoleArbiter.cpp"
