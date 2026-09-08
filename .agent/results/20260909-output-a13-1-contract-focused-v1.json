@@ -1,0 +1,105 @@
+{
+  "id": "20260909-output-a13-1-contract-focused-v1",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "started_at": "2026-09-08T23:18:31.746174+00:00",
+  "command_timeout": 900,
+  "edits": {},
+  "commands": [
+    {
+      "command": "git fetch -q origin mvp/environment-controller && test \"$(git rev-parse HEAD)\" = \"52eed8c06de64305bcb669db8d8ca5e9e8ca30a4\" && test \"$(git rev-parse FETCH_HEAD)\" = \"52eed8c06de64305bcb669db8d8ca5e9e8ca30a4\" && test -z \"$(git status --porcelain)\"",
+      "exit_code": 0,
+      "output": "",
+      "elapsed_seconds": 0.815,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 2.5,
+      "output_policy": "stream",
+      "captured_output_chars": 0,
+      "output_truncated": false,
+      "current_rss_mb": 2.5,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 2,
+      "stage_phase": "commands"
+    },
+    {
+      "command": ".venv/bin/pre-commit run --files tools/output_supervisor_h.py tests/test_output_supervisor_h.py docs/STAGE28E_OUTPUT_SUPERVISOR_H_QUALIFICATION.md docs/CURRENT_STATUS.md docs/ARCHITECTURE_HANDOFF.md && .venv/bin/python -m pytest -q tests/test_output_supervisor_h.py && .venv/bin/python -m py_compile tools/output_supervisor_h.py && git diff --check && echo A13_1_CONTRACT_FOCUSED_PASS sha=52eed8c06de64305bcb669db8d8ca5e9e8ca30a4 qualified_sha=1c59f3cfa239abbfbae721247d01d65a39d4bdfc hardware_started=0",
+      "exit_code": 1,
+      "output": "trim trailing whitespace.................................................Passed\nfix end of files.........................................................Passed\ncheck for merge conflicts................................................Passed\ncheck yaml...........................................(no files to check)Skipped\ncheck json...........................................(no files to check)Skipped\ndetect private key.......................................................Passed\nruff.....................................................................Passed\nruff-format..............................................................Failed\n- hook id: ruff-format\n- files were modified by this hook\n\n1 file reformatted, 1 file left unchanged\n\nclang-format.........................................(no files to check)Skipped\nenvironment schema (--check).........................(no files to check)Skipped\n",
+      "elapsed_seconds": 0.841,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 1.92,
+      "output_policy": "stream",
+      "captured_output_chars": 902,
+      "output_truncated": false,
+      "current_rss_mb": 1.92,
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 2,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 2,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.815
+    },
+    {
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 2,
+      "stage_phase": "commands",
+      "outcome": "failed",
+      "elapsed_seconds": 0.841
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": " M tools/output_supervisor_h.py\n",
+    "elapsed_seconds": 0.1
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "diff --git a/tools/output_supervisor_h.py b/tools/output_supervisor_h.py\nindex 1a26d6f9..b0819b09 100644\n--- a/tools/output_supervisor_h.py\n+++ b/tools/output_supervisor_h.py\n@@ -261,7 +261,9 @@ def _is_clean_fan_off_baseline(snapshot: OutputSnapshot) -> bool:\n def _assert_natural_fan_on_transition(snapshot: OutputSnapshot) -> None:\n     fan = snapshot.endpoint(FAN_ENDPOINT)\n     if snapshot.safety_latched or fan.safety_active or fan.safety_override or fan.inhibited:\n-        raise QualificationContractError(\"hard safety caused or inhibited the counted fan transition\")\n+        raise QualificationContractError(\n+            \"hard safety caused or inhibited the counted fan transition\"\n+        )\n     if fan.manual_active:\n         raise QualificationContractError(\"manual intent is active during counted fan transition\")\n     if not fan.control_active or fan.control_level <= 0.0:\n@@ -296,7 +298,9 @@ def _assert_natural_fan_on_transition(snapshot: OutputSnapshot) -> None:\n         raise QualificationContractError(\"transport is not active for counted command attempt\")\n \n \n-def find_natural_fan_transition(records: list[dict[str, Any]]) -> tuple[OutputSnapshot, OutputSnapshot]:\n+def find_natural_fan_transition(\n+    records: list[dict[str, Any]],\n+) -> tuple[OutputSnapshot, OutputSnapshot]:\n     if not records:\n         raise QualificationContractError(\"no telemetry records supplied\")\n     validate_session_record(records[0])\n@@ -330,7 +334,9 @@ def validate_independent_evidence(evidence: dict[str, Any]) -> tuple[float, floa\n     before = [float(value) for value in evidence.get(\"power_before_w\", [])]\n     after = [float(value) for value in evidence.get(\"power_after_w\", [])]\n     if len(before) < 3 or len(after) < 3:\n-        raise QualificationContractError(\"at least three Shelly samples are required before and after\")\n+        raise QualificationContractError(\n+            \"at least three Shelly samples are required before and after\"\n+        )\n     minimum_delta = float(evidence.get(\"minimum_power_delta_w\", 0.0))\n     if minimum_delta <= 0.0:\n         raise QualificationContractError(\"minimum_power_delta_w must be positive\")\n",
+    "elapsed_seconds": 0.085
+  },
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-08T23:18:35.271854+00:00",
+  "workspace_checkpoint": {
+    "version": 2,
+    "task_id": "20260909-output-a13-1-contract-focused-v1",
+    "reason": "task-exit",
+    "created_at": "2026-09-08T23:18:35.653148+00:00",
+    "base_head": "52eed8c06de64305bcb669db8d8ca5e9e8ca30a4",
+    "work_branch": "agent-work",
+    "path": "/Users/michal/agent-workspace/repos/growbox-ml-controller/checkpoints/20260909-output-a13-1-contract-focused-v1/1788909515521093000-task-exit",
+    "tracked_patch": "tracked.patch",
+    "untracked_root": "untracked",
+    "untracked_files": [],
+    "tracked_patch_bytes": 2221,
+    "untracked_bytes": 0,
+    "total_bytes": 2221,
+    "status": " M tools/output_supervisor_h.py\n"
+  },
+  "task_digest": "13488c2058fb951b93b474037046f02e90040aa3f6a88f9d03a42bcdcc40e74c",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "attempt_id": "1a238944d5abed90848cce88",
+  "daemon_version": "4.18.19"
+}
