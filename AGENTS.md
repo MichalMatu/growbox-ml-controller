@@ -59,6 +59,8 @@ When starting work on this repository in a new chat/session:
 - Do not declare named resources or `machine` from this repository; host-global Local Agent maintenance belongs to the supervisor/administration path.
 - Successful stages must not leave background descendants.
 - Final results are durably spooled before remote publication; publication recovery must not re-execute commands.
+- When a Local Agent task is active and healthy, do not queue a duplicate or poll it every 30 seconds. With Chat Bridge, use no sooner than about two minutes for an early liveness re-check and normally 5-10 minutes for multi-minute builds/tests unless exact evidence supports a nearer completion. Explicit `NEXT=30s` remains available for deliberate operator/emergency use.
+- If exact current run/status evidence proves that an active task cannot achieve its intended outcome, publish repository-scoped `cancel_task` for that exact task id, wait for cancellation/terminal result evidence, and only then queue replacement work. Do not cancel merely because healthy work is slower than expected.
 
 ### Efficient verification workflow
 
