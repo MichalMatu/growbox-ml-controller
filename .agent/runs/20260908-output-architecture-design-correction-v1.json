@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260908-output-architecture-design-correction-v1",
   "task_digest": "b4598959f36acf92ee58bc434668a6d2822bb765561c66bbcb8531e5f8f6567f",
-  "idle_timeout": 300,
-  "task_timeout": 1800,
-  "memory_limit_mb": 4096,
-  "started_at": "2026-09-08T00:13:56.277964+00:00",
+  "status": "failed",
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-08T00:13:59.610177+00:00",
   "attempt_id": "85a0bf0c282477efd69b483c",
   "daemon_version": "4.18.13",
   "daemon_pid": 73658,
-  "updated_at": "2026-09-08T00:13:56.278168+00:00",
+  "updated_at": "2026-09-08T00:13:59.904797+00:00",
   "pid": 73658
 }
