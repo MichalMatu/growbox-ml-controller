@@ -1,6 +1,7 @@
 #pragma once
 
 #include "climate/ClimateIoAdapters.h"
+#include "climate/output/BinaryActuatorPolicy.h"
 
 #include <cstdint>
 
@@ -67,16 +68,24 @@ private:
 
   static float normalized(float value) noexcept;
   static BinaryActuatorConfig sanitized(BinaryActuatorConfig config) noexcept;
+  static ::growbox::app::output::BinaryActuatorPolicyConfig
+  policyConfig(BinaryActuatorConfig config) noexcept;
+  void syncPolicyCounters() noexcept;
   void checkCounterContinuity() noexcept;
   bool applyBinary(ClimateActuatorRole role, float requested_level,
-                   std::uint64_t monotonic_ms, const BinaryActuatorConfig& config,
+                   std::uint64_t monotonic_ms,
+                   ::growbox::app::output::BinaryActuatorPolicy& policy,
                    BinaryState& state, bool force_on) noexcept;
   bool forceBinaryOff(ClimateActuatorRole role, std::uint64_t monotonic_ms,
+                      ::growbox::app::output::BinaryActuatorPolicy& policy,
                       BinaryState& state) noexcept;
 
   ClimateRoleDriver& downstream_;
   BinaryRoleArbiterConfig config_{};
   std::uint32_t instance_id_{0U};
+  ::growbox::app::output::BinaryActuatorPolicy exhaust_policy_{};
+  ::growbox::app::output::BinaryActuatorPolicy humidifier_policy_{};
+  // Compatibility mirrors only. A4.3 removes these after parity is proven.
   BinaryState exhaust_{};
   BinaryState humidifier_{};
   bool safety_force_exhaust_{false};

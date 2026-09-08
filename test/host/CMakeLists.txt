@@ -234,6 +234,7 @@ add_executable(
   stage28d_binary_role_arbiter_tests
   "${PROJECT_ROOT}/test/test_stage28d_binary_role_arbiter/test_main.cpp"
   "${PROJECT_ROOT}/src/climate/Stage28dBinaryRoleArbiter.cpp"
+  "${PROJECT_ROOT}/src/climate/output/BinaryActuatorPolicy.cpp"
 )
 target_include_directories(stage28d_binary_role_arbiter_tests PRIVATE "${PROJECT_ROOT}/src" "${PROJECT_ROOT}/lib/environment_control/src")
 target_compile_features(stage28d_binary_role_arbiter_tests PRIVATE cxx_std_17)
