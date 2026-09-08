@@ -8,6 +8,9 @@ if [[ ! -x "$PY" ]]; then
   PY="$(command -v python3)"
 fi
 
+echo "==> output execution ownership"
+"$PY" "${ROOT}/scripts/check_output_rf_ownership.py"
+
 echo "==> pytest"
 # Hardware board E2E needs a matching flashed firmware; exclude from pre-push.
 "$PY" -m pytest -q -m "not hardware"
