@@ -20,6 +20,25 @@ float normalizedLevel(float value) noexcept {
   return std::clamp(value, 0.0F, 1.0F);
 }
 
+::growbox::climate::ClimateExecutionKnownMask executionKnownMask(
+    ClimateActuatorRole role) noexcept {
+  switch (role) {
+  case ClimateActuatorRole::Heater:
+    return ::growbox::climate::ClimateExecutionKnownHeater;
+  case ClimateActuatorRole::Cooler:
+    return ::growbox::climate::ClimateExecutionKnownCooler;
+  case ClimateActuatorRole::ExhaustFan:
+    return ::growbox::climate::ClimateExecutionKnownExhaustFan;
+  case ClimateActuatorRole::Humidifier:
+    return ::growbox::climate::ClimateExecutionKnownHumidifier;
+  case ClimateActuatorRole::Dehumidifier:
+    return ::growbox::climate::ClimateExecutionKnownDehumidifier;
+  case ClimateActuatorRole::Co2Doser:
+    return ::growbox::climate::ClimateExecutionKnownCo2Doser;
+  }
+  return ::growbox::climate::ClimateExecutionKnownNone;
+}
+
 } // namespace
 
 ClimateOutputSupervisorSink::ClimateOutputSupervisorSink(
@@ -177,7 +196,7 @@ bool ClimateOutputSupervisorSink::executeCycle(
 }
 
 bool ClimateOutputSupervisorSink::projectExecutedClimate(
-    ::growbox::climate::ClimatePolicyRequest& projection) const noexcept {
+    ::growbox::climate::ClimateExecutionProjection& projection) const noexcept {
   projection = {};
   if (config_status_ != ClimateSemanticOutputConfigStatus::Ok) {
     return false;
@@ -195,8 +214,17 @@ bool ClimateOutputSupervisorSink::projectExecutedClimate(
       projection = {};
       return false;
     }
+    const auto mask = executionKnownMask(role);
+    if (mask == ::growbox::climate::ClimateExecutionKnownNone) {
+      projection = {};
+      return false;
+    }
     const auto& mapping = climate_config_.roles[role_index];
     if (!mapping.enabled) {
+      // Unsupported climate roles are rejected unless requested at zero, so zero
+      // is honest semantic execution truth for those roles.
+      setRoleLevel(projection.executed, role, 0.0F);
+      projection.known_mask |= static_cast<std::uint8_t>(mask);
       continue;
     }
     const auto* endpoint = ::growbox::app::output::findExecutedEndpointProjection(
@@ -209,9 +237,11 @@ bool ClimateOutputSupervisorSink::projectExecutedClimate(
                                 ::growbox::app::output::BinaryOutputState::On
                             ? 1.0F
                             : 0.0F;
-    setRoleLevel(projection, role, level);
+    setRoleLevel(projection.executed, role, level);
+    projection.known_mask |= static_cast<std::uint8_t>(mask);
   }
-  return true;
+  return projection.known_mask ==
+         static_cast<std::uint8_t>(::growbox::climate::ClimateExecutionKnownAll);
 }
 
 bool ClimateOutputSupervisorSink::apply(
@@ -221,10 +251,10 @@ bool ClimateOutputSupervisorSink::apply(
   return applyAndReport(request, monotonic_ms, projection);
 }
 
-bool ClimateOutputSupervisorSink::applyAndReport(
+bool ClimateOutputSupervisorSink::applyAndReportExecution(
     const ::growbox::climate::ClimatePolicyRequest& request, std::uint64_t monotonic_ms,
-    ::growbox::climate::ClimatePolicyRequest& executed_projection) noexcept {
-  executed_projection = {};
+    ::growbox::climate::ClimateExecutionProjection& execution) noexcept {
+  execution = {};
   ::growbox::app::output::ControlIntent control{};
   if (!buildControlIntent(request, monotonic_ms, control)) {
     return false;
@@ -234,11 +264,20 @@ bool ClimateOutputSupervisorSink::applyAndReport(
   if (!executeCycle(control, monotonic_ms, transport_completed)) {
     return false;
   }
-  if (!projectExecutedClimate(executed_projection)) {
-    executed_projection = {};
+  if (!projectExecutedClimate(execution)) {
+    execution = {};
     return false;
   }
   return transport_completed;
+}
+
+bool ClimateOutputSupervisorSink::applyAndReport(
+    const ::growbox::climate::ClimatePolicyRequest& request, std::uint64_t monotonic_ms,
+    ::growbox::climate::ClimatePolicyRequest& executed_projection) noexcept {
+  ::growbox::climate::ClimateExecutionProjection execution{};
+  const bool completed = applyAndReportExecution(request, monotonic_ms, execution);
+  executed_projection = execution.executed;
+  return completed;
 }
 
 bool ClimateOutputSupervisorSink::applyFailSafeOff(std::uint64_t monotonic_ms) noexcept {

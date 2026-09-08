@@ -163,6 +163,36 @@ void testCompleteClimateRequestUsesOneSupervisorCycleAndProjectsCommandTruth() {
   assert(store.find(kHumidifier)->physical.state == output::PhysicalOutputState::Off);
 }
 
+void testExecutionFeedbackIsCompleteCommandTruthAndNotPhysicalAck() {
+  auto fan = makePolicy();
+  auto humidifier = makePolicy();
+  auto store = makeStore();
+  const auto supervisor_config = makeSupervisorConfig(fan, humidifier);
+  output::OutputSupervisorResolver resolver(supervisor_config);
+  FakeTransport transport;
+  output::OutputSupervisorExecutor executor(transport, store, supervisor_config);
+  climate_io::ClimateOutputSupervisorSink sink(makeClimateConfig(), resolver, executor, store);
+  sink.setCycleContext(scheduleContext(true));
+
+  climate::ClimateExecutionProjection execution{};
+  assert(sink.applyAndReportExecution(request(1.0F, 1.0F), 5'000U, execution));
+  assert(execution.known_mask == climate::ClimateExecutionKnownAll);
+  assert(execution.known(climate::ClimateExecutionKnownHeater));
+  assert(execution.known(climate::ClimateExecutionKnownCooler));
+  assert(execution.known(climate::ClimateExecutionKnownExhaustFan));
+  assert(execution.known(climate::ClimateExecutionKnownHumidifier));
+  assert(execution.known(climate::ClimateExecutionKnownDehumidifier));
+  assert(execution.known(climate::ClimateExecutionKnownCo2Doser));
+  assert(near(execution.executed.heater, 0.0F));
+  assert(near(execution.executed.cooler, 0.0F));
+  assert(near(execution.executed.exhaust_fan, 1.0F));
+  assert(near(execution.executed.humidifier, 1.0F));
+  assert(near(execution.executed.dehumidifier, 0.0F));
+  assert(near(execution.executed.co2_doser, 0.0F));
+  assertPhysicalUnknown(store, kFan);
+  assertPhysicalUnknown(store, kHumidifier);
+}
+
 void testPartialFailureReturnsFalseAndProjectsLastSuccessfulCommands() {
   auto fan = makePolicy();
   auto humidifier = makePolicy();
@@ -306,6 +336,7 @@ void testExceptionalFailSafeRemainsExplicitLegacyFallbackDebt() {
 
 int main() {
   testCompleteClimateRequestUsesOneSupervisorCycleAndProjectsCommandTruth();
+  testExecutionFeedbackIsCompleteCommandTruthAndNotPhysicalAck();
   testPartialFailureReturnsFalseAndProjectsLastSuccessfulCommands();
   testDwellHoldReturnsHeldExecutionProjectionWithoutTransport();
   testSafetyContextOverridesClimateWithoutChangingProjectionMeaning();

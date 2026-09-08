@@ -33,6 +33,22 @@ public:
     return ok;
   }
 
+  // Execution-aware sink contract. Compatibility sinks report a complete accepted
+  // request; supervisor-backed sinks override this with command-truth projection.
+  virtual bool applyAndReportExecution(const ClimatePolicyRequest& request,
+                                       std::uint64_t monotonic_ms,
+                                       ClimateExecutionProjection& execution) noexcept {
+    execution = {};
+    ClimatePolicyRequest confirmed_applied{};
+    const bool ok = applyAndReport(request, monotonic_ms, confirmed_applied);
+    if (!ok) {
+      return false;
+    }
+    execution.executed = confirmed_applied;
+    execution.known_mask = ClimateExecutionKnownAll;
+    return true;
+  }
+
   // Fail-safe OFF must bypass ordinary dwell/hysteresis in hardware adapters.
   virtual bool applyFailSafeOff(std::uint64_t monotonic_ms) noexcept {
     const ClimatePolicyRequest off{};

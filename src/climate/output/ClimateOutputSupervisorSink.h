@@ -34,6 +34,9 @@ public:
   bool applyAndReport(const ::growbox::climate::ClimatePolicyRequest& request,
                       std::uint64_t monotonic_ms,
                       ::growbox::climate::ClimatePolicyRequest& executed_projection) noexcept override;
+  bool applyAndReportExecution(
+      const ::growbox::climate::ClimatePolicyRequest& request, std::uint64_t monotonic_ms,
+      ::growbox::climate::ClimateExecutionProjection& execution) noexcept override;
   bool applyFailSafeOff(std::uint64_t monotonic_ms) noexcept override;
 
   const ::growbox::app::output::OutputSupervisorResolution& lastResolution() const noexcept {
@@ -57,7 +60,7 @@ private:
   bool executeCycle(const ::growbox::app::output::ControlIntent& control,
                     std::uint64_t monotonic_ms, bool& transport_completed) noexcept;
   bool projectExecutedClimate(
-      ::growbox::climate::ClimatePolicyRequest& projection) const noexcept;
+      ::growbox::climate::ClimateExecutionProjection& projection) const noexcept;
   std::uint64_t nextSequence() noexcept;
 
   ClimateSemanticOutputConfig climate_config_{};

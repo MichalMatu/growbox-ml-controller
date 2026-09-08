@@ -201,6 +201,7 @@ void testConfirmedBinaryStateBecomesRuntimeTruth() {
   assert(decision.rule.safe.exhaust_fan > 0.0F && decision.rule.safe.exhaust_fan < 1.0F);
   assert(near(decision.applied.exhaust_fan, 1.0F));
   assert(near(loop.previousApplied().exhaust_fan, 1.0F));
+  assert(loop.hasExternalPreviousExecutionFeedback());
   assert(decision.effective_after.exhaust_fan > 0.6F);
 }
 

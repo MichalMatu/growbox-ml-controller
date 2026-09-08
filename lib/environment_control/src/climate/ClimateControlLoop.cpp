@@ -93,15 +93,16 @@ ClimateLoopResult ClimateControlLoop::tick(std::uint64_t monotonic_ms,
   input.previous = previousForInput();
 
   result.runtime_status = runtime_.step(input, monotonic_ms, decision);
-  ClimatePolicyRequest confirmed_applied{};
+  ClimateExecutionProjection execution{};
   result.command_applied =
-      actuator_sink_.applyAndReport(decision.applied, monotonic_ms, confirmed_applied);
+      actuator_sink_.applyAndReportExecution(decision.applied, monotonic_ms, execution);
   if (result.command_applied) {
-    ClimateExecutionProjection execution{};
-    execution.executed = confirmed_applied;
-    execution.known_mask = ClimateExecutionKnownAll;
     runtime_.reconcileExecution(execution, input.capabilities, decision);
+    // Keep the historical snapshot only as a compatibility mirror. The next
+    // cycle consumes execution feedback first, so production supervisor truth
+    // owns previous-state semantics.
     previous_applied_ = previousFromRequest(decision.applied);
+    setPreviousExecutionFeedback(execution);
     result.io_status =
         result.input_sampled ? ClimateLoopIoStatus::Ok : ClimateLoopIoStatus::InputUnavailable;
     return result;
