@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260908-output-architecture-audit-scan-v2",
   "task_digest": "be0231957158a21e6d1f95b534a2c5234d60b067a9feb2cf1f13f154d8b750c1",
-  "idle_timeout": 300,
-  "task_timeout": 1800,
-  "memory_limit_mb": 4096,
-  "started_at": "2026-09-08T00:03:57.173315+00:00",
+  "status": "failed",
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-08T00:04:00.590407+00:00",
   "attempt_id": "1e3f0ec0043da577c224b639",
   "daemon_version": "4.18.13",
   "daemon_pid": 64912,
-  "updated_at": "2026-09-08T00:03:57.173556+00:00",
+  "updated_at": "2026-09-08T00:04:00.874358+00:00",
   "pid": 64912
 }
