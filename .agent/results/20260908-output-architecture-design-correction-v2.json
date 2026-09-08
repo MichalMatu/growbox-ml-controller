@@ -1,0 +1,143 @@
+{
+  "id": "20260908-output-architecture-design-correction-v2",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "started_at": "2026-09-08T00:15:12.195726+00:00",
+  "command_timeout": 900,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; EXPECTED=430e15e1bc9e2d65ff5a97554339467ef2351c52; git fetch -q origin mvp/environment-controller:refs/remotes/origin/mvp/environment-controller; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; echo DESIGN_CORRECTION_IDENTITY_PASS head=$EXPECTED",
+      "exit_code": 0,
+      "output": "DESIGN_CORRECTION_IDENTITY_PASS head=430e15e1bc9e2d65ff5a97554339467ef2351c52\n",
+      "elapsed_seconds": 0.775,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 2.03,
+      "output_policy": "stream",
+      "captured_output_chars": 78,
+      "output_truncated": false,
+      "current_rss_mb": 2.03,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 4,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "python3 -c \"import base64; exec(base64.b64decode('ZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCnAgPSBQYXRoKCJkb2NzL09VVFBVVF9FWEVDVVRJT05fQVJDSElURUNUVVJFLm1kIikKcyA9IHAucmVhZF90ZXh0KCkKb2xkID0gIi0gc2VydmljZS1jb25zb2xlIFJGIGRpYWdub3N0aWNzIGNhbiBhZGRyZXNzIFJGIGJlaGF2aW9yIHRocm91Z2ggYSBzZXBhcmF0ZSBvcGVyYXRpb25hbCBwYXRoLlxuIgpuZXcgPSBvbGQgKyAiLSBgU3RhZ2UyOFJmRGlhZ25vc3RpY3NgIGF1dG8tc21va2UgaXMgYW5vdGhlciBkaXJlY3QgUkYgdHJhbnNtaXQgcGF0aCB3aGVuIGVuYWJsZWQ7IGl0IG11c3QgYmUgdHJlYXRlZCBhcyBtYWludGVuYW5jZS90cmFuc3BvcnQgZGlhZ25vc3RpY3MgcmF0aGVyIHRoYW4gYSBwcm9kdWN0aW9uIG91dHB1dCBvd25lci5cbiIKYXNzZXJ0IG9sZCBpbiBzCnMgPSBzLnJlcGxhY2Uob2xkLCBuZXcsIDEpCm9sZCA9ICJWZXJzaW9uZWQgYE91dHB1dFBvbGljeUNvbmZpZ2AgYW5kIGVuZHBvaW50LXJvbGUgYmluZGluZ3MgYXJlIGR1cmFibGUgY29uZmlndXJhdGlvbi4gVGhlIGltcGxlbWVudGF0aW9uIGF1ZGl0IG11c3QgY2hvb3NlIHRoZSBleGlzdGluZyBwcm9qZWN0IHBlcnNpc3RlbmNlIG1lY2hhbmlzbSB0aGF0IGJlc3QgZml0cyB0aGlzIGRhdGE7IGRvIG5vdCBpbnRyb2R1Y2UgYSBzZWNvbmQgY29uZmlndXJhdGlvbiBzdG9yZSB1bm5lY2Vzc2FyaWx5LiIKbmV3ID0gIlZlcnNpb25lZCBgT3V0cHV0UG9saWN5Q29uZmlnYCBhbmQgZW5kcG9pbnQtcm9sZSBiaW5kaW5ncyBhcmUgZHVyYWJsZSBjb25maWd1cmF0aW9uLiBUaGUgQTAgYXVkaXQgZm91bmQgbm8gZXhpc3RpbmcgcHJvZHVjdCBjb25maWd1cmF0aW9uL3N0YXRlIHN0b3JlIHN1aXRhYmxlIGZvciB0aGlzIGRhdGE6IHByb2plY3QgY29kZSBpbml0aWFsaXplcyBOVlMgZm9yIHBsYXRmb3JtL0JMRSB1c2UsIFJUQyBuby1pbml0IHN0b3JhZ2UgaXMgZGlhZ25vc3RpYy1vbmx5LCBhbmQgU3RhZ2UyNyBTRC9mbGFzaCBzdG9yYWdlIGlzIGFwcGVuZC1vbmx5IHRlbGVtZXRyeSByYXRoZXIgdGhhbiBhIHNldHRpbmdzIHN0b3JlLiBBNiBtYXkgdGhlcmVmb3JlIGludHJvZHVjZSBleGFjdGx5IG9uZSB2ZXJzaW9uZWQgb3V0cHV0IGNvbmZpZ3VyYXRpb24vc3RhdGUgc3RvcmUgKE5WUyBpcyB0aGUgbmF0dXJhbCBmaXJzdCBjYW5kaWRhdGUpIGluc3RlYWQgb2YgcmVwdXJwb3NpbmcgdGVsZW1ldHJ5IHN0b3JhZ2UuIElmIGEgc3VpdGFibGUgcHJvZHVjdCBjb25maWd1cmF0aW9uIHN0b3JlIGlzIGFkZGVkIGVsc2V3aGVyZSBiZWZvcmUgQTYsIHJldXNlIGl0IHJhdGhlciB0aGFuIGNyZWF0aW5nIGEgc2Vjb25kIG9uZS4iCmFzc2VydCBvbGQgaW4gcwpzID0gcy5yZXBsYWNlKG9sZCwgbmV3LCAxKQpvbGQgPSAiNy4gKipBNiDigJQgcGVyc2lzdGVuY2UvY29uZmlndXJhdGlvbioqOiB2ZXJzaW9uZWQgb3V0cHV0IHBvbGljeSBhbmQgaG9uZXN0IGNvbW1hbmQtc3RhdGUgcGVyc2lzdGVuY2UgdXNpbmcgdGhlIGV4aXN0aW5nIHN1aXRhYmxlIHN0b3JlLiIKbmV3ID0gIjcuICoqQTYg4oCUIHBlcnNpc3RlbmNlL2NvbmZpZ3VyYXRpb24qKjogYWRkIHZlcnNpb25lZCBvdXRwdXQgcG9saWN5IGFuZCBob25lc3QgY29tbWFuZC1zdGF0ZSBwZXJzaXN0ZW5jZSBpbiBleGFjdGx5IG9uZSBzdWl0YWJsZSBzdG9yZTsgcmV1c2UgYW4gZXhpc3RpbmcgcHJvZHVjdCBjb25maWd1cmF0aW9uIHN0b3JlIG9ubHkgaWYgb25lIGV4aXN0cyBieSB0aGVuLiIKYXNzZXJ0IG9sZCBpbiBzCnMgPSBzLnJlcGxhY2Uob2xkLCBuZXcsIDEpCnAud3JpdGVfdGV4dChzKQo='))\"",
+      "exit_code": 0,
+      "output": "",
+      "elapsed_seconds": 0.408,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": null,
+      "output_policy": "stream",
+      "captured_output_chars": 0,
+      "output_truncated": false,
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 4,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "set -euo pipefail; git diff --check; git diff -- docs/OUTPUT_EXECUTION_ARCHITECTURE.md",
+      "exit_code": 0,
+      "output": "diff --git a/docs/OUTPUT_EXECUTION_ARCHITECTURE.md b/docs/OUTPUT_EXECUTION_ARCHITECTURE.md\nindex 6f4f3ea8..d13d69b8 100644\n--- a/docs/OUTPUT_EXECUTION_ARCHITECTURE.md\n+++ b/docs/OUTPUT_EXECUTION_ARCHITECTURE.md\n@@ -27,6 +27,7 @@ The current implementation has useful pieces but distributes execution authority\n - `Stage28dRfOutputEndpoint` combines RF endpoint execution, cached endpoint state, initialization behavior, and a safety-force flag.\n - `LampSafetyController` makes lamp/fan safety decisions outside the normal climate decision path.\n - service-console RF diagnostics can address RF behavior through a separate operational path.\n+- `Stage28RfDiagnostics` auto-smoke is another direct RF transmit path when enabled; it must be treated as maintenance/transport diagnostics rather than a production output owner.\n - qualification/recovery tooling contains lifecycle output behavior such as fan OFF, humidifier OFF, lamp ON/fake-locked restoration.\n - fail-safe semantics are not represented by one common policy: ordinary fail-safe OFF, thermal lamp OFF + fan ON, startup safe-state initialization, and recovery behavior are distinct mechanisms.\n \n@@ -291,7 +292,7 @@ There are two different kinds of state and they must not be conflated.\n \n ### Durable configuration\n \n-Versioned `OutputPolicyConfig` and endpoint-role bindings are durable configuration. The implementation audit must choose the existing project persistence mechanism that best fits this data; do not introduce a second configuration store unnecessarily.\n+Versioned `OutputPolicyConfig` and endpoint-role bindings are durable configuration. The A0 audit found no existing product configuration/state store suitable for this data: project code initializes NVS for platform/BLE use, RTC no-init storage is diagnostic-only, and Stage27 SD/flash storage is append-only telemetry rather than a settings store. A6 may therefore introduce exactly one versioned output configuration/state store (NVS is the natural first candidate) instead of repurposing telemetry storage. If a suitable product configuration store is added elsewhere before A6, reuse it rather than creating a second one.\n \n ### Runtime / command state\n \n@@ -374,7 +375,7 @@ The first new-chat task is an audit, not a rewrite. After the audit is accepted,\n 4. **A3 — safety envelope**: adapt thermal safety to produce constraints; remove direct transport knowledge from safety.\n 5. **A4 — OutputSupervisor core**: introduce mode/state machine, resolver, lifecycle policy, binary actuator policy integration, and deterministic execution reports.\n 6. **A5 — climate integration**: make climate decisions feed `ControlIntent`; reconcile confirmed executed control projection without giving the climate loop transport ownership.\n-7. **A6 — persistence/configuration**: versioned output policy and honest command-state persistence using the existing suitable store.\n+7. **A6 — persistence/configuration**: add versioned output policy and honest command-state persistence in exactly one suitable store; reuse an existing product configuration store only if one exists by then.\n 8. **A7 — console/diagnostics migration**: remove normal direct output bypasses; separate maintenance transport diagnostics.\n 9. **A8 — legacy removal and invariant enforcement**: remove duplicated safety/output state and prove one production output owner.\n 10. **A9 — software qualification**: focused tests during each change, then one full software gate after the architecture stabilizes.\n",
+      "elapsed_seconds": 0.418,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 2.45,
+      "output_policy": "stream",
+      "captured_output_chars": 3500,
+      "output_truncated": false,
+      "current_rss_mb": 2.45,
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 4,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "set -euo pipefail; git add docs/OUTPUT_EXECUTION_ARCHITECTURE.md; git commit -m 'Correct output architecture persistence assumptions'; git push origin HEAD:mvp/environment-controller; echo DESIGN_CORRECTION_PASS head=$(git rev-parse HEAD)",
+      "exit_code": 0,
+      "output": "[agent-work ff769096] Correct output architecture persistence assumptions\n 1 file changed, 3 insertions(+), 2 deletions(-)\nTo https://github.com/MichalMatu/growbox-ml-controller.git\n   430e15e1..ff769096  HEAD -> mvp/environment-controller\nDESIGN_CORRECTION_PASS head=ff769096f24349ba6f31e61ea170176db00725d3\n",
+      "elapsed_seconds": 2.093,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 3.02,
+      "output_policy": "stream",
+      "captured_output_chars": 309,
+      "output_truncated": false,
+      "current_rss_mb": 3.02,
+      "stage_name": "command-4",
+      "stage_index": 4,
+      "stage_total": 4,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 4,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.775
+    },
+    {
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 4,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.408
+    },
+    {
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 4,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.418
+    },
+    {
+      "stage_name": "command-4",
+      "stage_index": 4,
+      "stage_total": 4,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 2.093
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.117
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.08
+  },
+  "finished_at": "2026-09-08T00:15:17.745870+00:00",
+  "task_digest": "a45a1e8016fab3ead5565fbbef04c6d8dfb540e1ec2d3db594e855f65396f713",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "attempt_id": "b3834243f9629a376b5bd675",
+  "daemon_version": "4.18.13"
+}
