@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "id": "20260909-output-a13-1-contract-focused-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "mvp/environment-controller",
+  "resources": [],
+  "allow_write": false,
+  "command_timeout": 900,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch -q origin mvp/environment-controller && test \"$(git rev-parse HEAD)\" = \"52eed8c06de64305bcb669db8d8ca5e9e8ca30a4\" && test \"$(git rev-parse FETCH_HEAD)\" = \"52eed8c06de64305bcb669db8d8ca5e9e8ca30a4\" && test -z \"$(git status --porcelain)\"",
+    ".venv/bin/pre-commit run --files tools/output_supervisor_h.py tests/test_output_supervisor_h.py docs/STAGE28E_OUTPUT_SUPERVISOR_H_QUALIFICATION.md docs/CURRENT_STATUS.md docs/ARCHITECTURE_HANDOFF.md && .venv/bin/python -m pytest -q tests/test_output_supervisor_h.py && .venv/bin/python -m py_compile tools/output_supervisor_h.py && git diff --check && echo A13_1_CONTRACT_FOCUSED_PASS sha=52eed8c06de64305bcb669db8d8ca5e9e8ca30a4 qualified_sha=1c59f3cfa239abbfbae721247d01d65a39d4bdfc hardware_started=0"
+  ]
+}
