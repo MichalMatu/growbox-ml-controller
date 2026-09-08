@@ -44,22 +44,20 @@ public:
     safety_force_exhaust_ = force_on;
   }
 
-  bool exhaustOn() const noexcept { return exhaust_.known && exhaust_.on; }
-  bool humidifierOn() const noexcept { return humidifier_.known && humidifier_.on; }
-  std::uint32_t transitionCount() const noexcept { return transition_count_; }
-  std::uint32_t dwellHoldCount() const noexcept { return dwell_hold_count_; }
+  bool exhaustOn() const noexcept { return exhaust_policy_.on(); }
+  bool humidifierOn() const noexcept { return humidifier_policy_.on(); }
+  std::uint32_t transitionCount() const noexcept {
+    return exhaust_policy_.transitionCount() + humidifier_policy_.transitionCount();
+  }
+  std::uint32_t dwellHoldCount() const noexcept {
+    return exhaust_policy_.dwellHoldCount() + humidifier_policy_.dwellHoldCount();
+  }
   std::uint32_t safetyOverrideCount() const noexcept { return safety_override_count_; }
   std::uint32_t continuityFaultCount() const noexcept { return continuity_fault_count_; }
   std::uint32_t instanceId() const noexcept { return instance_id_; }
   static std::uint32_t constructionCount() noexcept;
 
 private:
-  struct BinaryState {
-    bool known{false};
-    bool on{false};
-    std::uint64_t last_change_ms{0U};
-  };
-
   struct CounterSnapshot {
     std::uint32_t transitions{0U};
     std::uint32_t dwell_holds{0U};
@@ -70,27 +68,19 @@ private:
   static BinaryActuatorConfig sanitized(BinaryActuatorConfig config) noexcept;
   static ::growbox::app::output::BinaryActuatorPolicyConfig
   policyConfig(BinaryActuatorConfig config) noexcept;
-  void syncPolicyCounters() noexcept;
   void checkCounterContinuity() noexcept;
   bool applyBinary(ClimateActuatorRole role, float requested_level,
                    std::uint64_t monotonic_ms,
                    ::growbox::app::output::BinaryActuatorPolicy& policy,
-                   BinaryState& state, bool force_on) noexcept;
+                   bool force_on) noexcept;
   bool forceBinaryOff(ClimateActuatorRole role, std::uint64_t monotonic_ms,
-                      ::growbox::app::output::BinaryActuatorPolicy& policy,
-                      BinaryState& state) noexcept;
+                      ::growbox::app::output::BinaryActuatorPolicy& policy) noexcept;
 
   ClimateRoleDriver& downstream_;
-  BinaryRoleArbiterConfig config_{};
   std::uint32_t instance_id_{0U};
   ::growbox::app::output::BinaryActuatorPolicy exhaust_policy_{};
   ::growbox::app::output::BinaryActuatorPolicy humidifier_policy_{};
-  // Compatibility mirrors only. A4.3 removes these after parity is proven.
-  BinaryState exhaust_{};
-  BinaryState humidifier_{};
   bool safety_force_exhaust_{false};
-  std::uint32_t transition_count_{0U};
-  std::uint32_t dwell_hold_count_{0U};
   std::uint32_t safety_override_count_{0U};
   CounterSnapshot last_counter_snapshot_{};
   bool counter_snapshot_initialized_{false};
