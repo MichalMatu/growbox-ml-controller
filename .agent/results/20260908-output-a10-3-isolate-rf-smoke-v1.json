@@ -1,0 +1,132 @@
+{
+  "id": "20260908-output-a10-3-isolate-rf-smoke-v1",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "started_at": "2026-09-08T17:28:14.122038+00:00",
+  "command_timeout": 900,
+  "edits": {},
+  "commands": [
+    {
+      "command": "git fetch -q origin agent-control",
+      "exit_code": 0,
+      "output": "",
+      "elapsed_seconds": 1.375,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 6.11,
+      "output_policy": "stream",
+      "captured_output_chars": 0,
+      "output_truncated": false,
+      "current_rss_mb": 6.11,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "git show FETCH_HEAD:.agent/scripts/20260908-a10-3-isolate-rf-smoke-v1-run.py > /tmp/a10_3_run.py",
+      "exit_code": 0,
+      "output": "",
+      "elapsed_seconds": 0.393,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": null,
+      "output_policy": "stream",
+      "captured_output_chars": 0,
+      "output_truncated": false,
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "python3 /tmp/a10_3_run.py",
+      "exit_code": 1,
+      "output": "+ git fetch -q origin mvp/environment-controller\nA10_3_IDENTITY_PASS\n+ git add -N scripts/check_output_rf_ownership.py\n+ git diff --check\n+ python3 scripts/check_output_rf_ownership.py\nOUTPUT_RF_OWNERSHIP_FAIL ClimateV6RealInputRuntime.cpp: forbidden production auto-smoke token 'GROWBOX_RF433_LOOPBACK_AUTO_SMOKE'\nOUTPUT_RF_OWNERSHIP_FAIL ClimateV6RealInputRuntime.cpp: forbidden production auto-smoke token 'GROWBOX_RF433_LOOPBACK_SMOKE_'\nTraceback (most recent call last):\n  File \"/tmp/a10_3_run.py\", line 211, in <module>\n    run(['python3', 'scripts/check_output_rf_ownership.py'])\n    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/a10_3_run.py\", line 19, in run\n    subprocess.run(cmd, check=True, env=env)\n    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.13/3.13.9_1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/subprocess.py\", line 577, in run\n    raise CalledProcessError(retcode, process.args,\n                             output=stdout, stderr=stderr)\nsubprocess.CalledProcessError: Command '['python3', 'scripts/check_output_rf_ownership.py']' returned non-zero exit status 1.\n",
+      "elapsed_seconds": 1.035,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 0.59,
+      "output_policy": "stream",
+      "captured_output_chars": 1159,
+      "output_truncated": false,
+      "current_rss_mb": 0.59,
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 1.375
+    },
+    {
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.393
+    },
+    {
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "failed",
+      "elapsed_seconds": 1.035
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": " A scripts/check_output_rf_ownership.py\n M scripts/stage27c_crowpanel.sh\n M src/CMakeLists.txt\n M src/climate/ClimateV6RealInputRuntime.cpp\n M src/climate/runtime/Stage28RfDiagnostics.cpp\n M src/climate/runtime/Stage28RfDiagnostics.h\n",
+    "elapsed_seconds": 0.11
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "diff --git a/scripts/check_output_rf_ownership.py b/scripts/check_output_rf_ownership.py\nnew file mode 100644\nindex 00000000..340321fc\n--- /dev/null\n+++ b/scripts/check_output_rf_ownership.py\n@@ -0,0 +1,77 @@\n+#!/usr/bin/env python3\n+\"\"\"Narrow A10.3 RF diagnostics/output ownership guard.\n+\n+This is intentionally a draft guard. A11.4 will enforce the full production\n+output-owner allowlist after legacy startup/fault paths are removed.\n+\"\"\"\n+from pathlib import Path\n+import re\n+import sys\n+\n+ROOT = Path(__file__).resolve().parents[1]\n+\n+\n+def read(rel: str) -> str:\n+    return (ROOT / rel).read_text()\n+\n+\n+errors: list[str] = []\n+diag_h = read('src/climate/runtime/Stage28RfDiagnostics.h')\n+diag_cpp = read('src/climate/runtime/Stage28RfDiagnostics.cpp')\n+runtime = read('src/climate/ClimateV6RealInputRuntime.cpp')\n+cmake = read('src/CMakeLists.txt')\n+canonical = read('scripts/stage27c_crowpanel.sh')\n+\n+for token in (\n+    'auto_smoke',\n+    'smoke_attempted_',\n+    'runSmoke',\n+    'GROWBOX_RF433_LOOPBACK_AUTO_SMOKE',\n+    'GROWBOX_RF433_LOOPBACK_SMOKE_',\n+):\n+    for rel, text in (\n+        ('Stage28RfDiagnostics.h', diag_h),\n+        ('Stage28RfDiagnostics.cpp', diag_cpp),\n+        ('ClimateV6RealInputRuntime.cpp', runtime),\n+        ('src/CMakeLists.txt', cmake),\n+        ('scripts/stage27c_crowpanel.sh', canonical),\n+    ):\n+        if token in text:\n+            errors.append(f'{rel}: forbidden production auto-smoke token {token!r}')\n+\n+if 'if (config_.passive_capture)' not in diag_cpp or 'capturePassive();' not in diag_cpp:\n+    errors.append('Stage28RfDiagnostics.cpp: passive receive path missing')\n+if 'manualReceive(' not in diag_cpp:\n+    errors.append('Stage28RfDiagnostics.cpp: explicit receive API missing')\n+if diag_cpp.count('transmitAndReceive(') != 1:\n+    errors.append('Stage28RfDiagnostics.cpp: expected exactly one explicit TX implementation')\n+\n+manual_tx = re.search(\n+    r'bool Stage28RfDiagnostics::manualTransmit\\(.*?\\n\\}', diag_cpp, flags=re.S\n+)\n+if manual_tx is None or 'transmitAndReceive(' not in manual_tx.group(0):\n+    errors.append('Stage28RfDiagnostics.cpp: TX must remain inside manualTransmit only')\n+\n+allowed_cpp = {\n+    'src/climate/runtime/Stage28RfDiagnostics.cpp',\n+    'src/climate/runtime/Stage28MaintenanceRfTransport.cpp',\n+}\n+for path in (ROOT / 'src').rglob('*.cpp'):\n+    text = path.read_text()\n+    if 'manualTransmit(' not in text:\n+        continue\n+    rel = path.relative_to(ROOT).as_posix()\n+    if rel not in allowed_cpp:\n+        errors.append(f'{rel}: diagnostics manualTransmit call is not maintenance-only')\n+\n+maintenance = read('src/climate/runtime/Stage28MaintenanceRfTransport.cpp')\n+if 'diagnostics_.manualTransmit(' not in maintenance:\n+    errors.append('Stage28MaintenanceRfTransport.cpp: explicit maintenance TX call missing')\n+if 'rf_diagnostics.tick(now_ms);' not in runtime:\n+    errors.append('ClimateV6RealInputRuntime.cpp: diagnostics tick unexpectedly removed')\n+\n+if errors:\n+    for error in errors:\n+        print(f'OUTPUT_RF_OWNERSHIP_FAIL {error}', file=sys.stderr)\n+    raise SystemExit(1)\n+print('OUTPUT_RF_OWNERSHIP_PASS')\ndiff --git a/scripts/stage27c_crowpanel.sh b/scripts/stage27c_crowpanel.sh\nindex ab5af1ee..ea3d4bce 100755\n--- a/scripts/stage27c_crowpanel.sh\n+++ b/scripts/stage27c_crowpanel.sh\n@@ -17,13 +17,7 @@ SD_ENABLED=\"${GROWBOX_STAGE27_SD_ENABLED:-1}\"\n FLASH_FALLBACK_ENABLED=\"${GROWBOX_STAGE27_FLASH_FALLBACK_ENABLED:-1}\"\n SD_CMD0_PRECONDITION=\"${GROWBOX_SD_CMD0_PRECONDITION:-0}\"\n RF433_LOOPBACK_ENABLED=\"${GROWBOX_RF433_LOOPBACK_ENABLED:-0}\"\n-RF433_LOOPBACK_AUTO_SMOKE=\"${GROWBOX_RF433_LOOPBACK_AUTO_SMOKE:-0}\"\n RF433_REMOTE_CAPTURE_ENABLED=\"${GROWBOX_RF433_REMOTE_CAPTURE_ENABLED:-0}\"\n-RF433_LOOPBACK_SMOKE_CODE=\"${GROWBOX_RF433_LOOPBACK_SMOKE_CODE:-0xA55A}\"\n-RF433_LOOPBACK_SMOKE_BITS=\"${GROWBOX_RF433_LOOPBACK_SMOKE_BITS:-16}\"\n-RF433_LOOPBACK_SMOKE_PROTOCOL=\"${GROWBOX_RF433_LOOPBACK_SMOKE_PROTOCOL:-1}\"\n-RF433_LOOPBACK_SMOKE_REPEAT=\"${GROWBOX_RF433_LOOPBACK_SMOKE_REPEAT:-3}\"\n-RF433_LOOPBACK_SMOKE_PULSE_US=\"${GROWBOX_RF433_LOOPBACK_SMOKE_PULSE_US:-0}\"\n RF433_TX_GPIO=\"${GROWBOX_RF433_TX_GPIO:-8}\"\n RF433_RX_GPIO=\"${GROWBOX_RF433_RX_GPIO:-14}\"\n SERVICE_CONSOLE_ENABLED=\"${GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED:-1}\"\n@@ -82,13 +76,7 @@ idf_args=(\n   -D \"GROWBOX_SD_CS_GPIO=10\"\n   -D \"GROWBOX_SD_POWER_GPIO=42\"\n   -D \"GROWBOX_RF433_LOOPBACK_ENABLED=$RF433_LOOPBACK_ENABLED\"\n-  -D \"GROWBOX_RF433_LOOPBACK_AUTO_SMOKE=$RF433_LOOPBACK_AUTO_SMOKE\"\n   -D \"GROWBOX_RF433_REMOTE_CAPTURE_ENABLED=$RF433_REMOTE_CAPTURE_ENABLED\"\n-  -D \"GROWBOX_RF433_LOOPBACK_SMOKE_CODE=$RF433_LOOPBACK_SMOKE_CODE\"\n-  -D \"GROWBOX_RF433_LOOPBACK_SMOKE_BITS=$RF433_LOOPBACK_SMOKE_BITS\"\n-  -D \"GROWBOX_RF433_LOOPBACK_SMOKE_PROTOCOL=$RF433_LOOPBACK_SMOKE_PROTOCOL\"\n-  -D \"GROWBOX_RF433_LOOPBACK_SMOKE_REPEAT=$RF433_LOOPBACK_SMOKE_REPEAT\"\n-  -D \"GROWBOX_RF433_LOOPBACK_SMOKE_PULSE_US=$RF433_LOOPBACK_SMOKE_PULSE_US\"\n   -D \"GROWBOX_RF433_TX_GPIO=$RF433_TX_GPIO\"\n   -D \"GROWBOX_RF433_RX_GPIO=$RF433_RX_GPIO\"\n   -D \"GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED=$SERVICE_CONSOLE_ENABLED\"\ndiff --git a/src/CMakeLists.txt b/src/CMakeLists.txt\nindex aae80d34..f3b19c91 100644\n--- a/src/CMakeLists.txt\n+++ b/src/CMakeLists.txt\n@@ -136,13 +136,7 @@ set(GROWBOX_SD_SCLK_GPIO \"39\" CACHE STRING \"Stage27 SD SPI clock GPIO\")\n set(GROWBOX_SD_CS_GPIO \"10\" CACHE STRING \"Stage27 SD SPI chip-select GPIO\")\n set(GROWBOX_SD_POWER_GPIO \"-1\" CACHE STRING \"Stage27 SD power-enable GPIO\")\n set(GROWBOX_RF433_LOOPBACK_ENABLED \"0\" CACHE STRING \"Enable Stage28 RF433 loopback transport\")\n-set(GROWBOX_RF433_LOOPBACK_AUTO_SMOKE \"0\" CACHE STRING \"Run one Stage28 RF433 boot loopback smoke\")\n set(GROWBOX_RF433_REMOTE_CAPTURE_ENABLED \"0\" CACHE STRING \"Enable Stage28C passive remote capture diagnostics\")\n-set(GROWBOX_RF433_LOOPBACK_SMOKE_CODE \"0xA55A\" CACHE STRING \"Stage28 RF433 loopback smoke code\")\n-set(GROWBOX_RF433_LOOPBACK_SMOKE_BITS \"16\" CACHE STRING \"Stage28 RF433 loopback smoke bit length\")\n-set(GROWBOX_RF433_LOOPBACK_SMOKE_PROTOCOL \"1\" CACHE STRING \"Stage28 RF433 loopback smoke protocol\")\n-set(GROWBOX_RF433_LOOPBACK_SMOKE_REPEAT \"3\" CACHE STRING \"Stage28 RF433 loopback smoke repeat count\")\n-set(GROWBOX_RF433_LOOPBACK_SMOKE_PULSE_US \"0\" CACHE STRING \"Stage28 RF433 loopback smoke pulse length; 0 uses protocol default\")\n set(GROWBOX_RF433_TX_GPIO \"8\" CACHE STRING \"Stage28 RF433 TX GPIO\")\n set(GROWBOX_RF433_RX_GPIO \"14\" CACHE STRING \"Stage28 RF433 RX GPIO\")\n set(GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED \"1\" CACHE STRING \"Enable Stage28 primary-serial service console\")\n@@ -171,13 +165,7 @@ target_compile_definitions(\n     GROWBOX_SD_CS_GPIO=${GROWBOX_SD_CS_GPIO}\n     GROWBOX_SD_POWER_GPIO=${GROWBOX_SD_POWER_GPIO}\n     GROWBOX_RF433_LOOPBACK_ENABLED=${GROWBOX_RF433_LOOPBACK_ENABLED}\n-    GROWBOX_RF433_LOOPBACK_AUTO_SMOKE=${GROWBOX_RF433_LOOPBACK_AUTO_SMOKE}\n     GROWBOX_RF433_REMOTE_CAPTURE_ENABLED=${GROWBOX_RF433_REMOTE_CAPTURE_ENABLED}\n-    GROWBOX_RF433_LOOPBACK_SMOKE_CODE=${GROWBOX_RF433_LOOPBACK_SMOKE_CODE}\n-    GROWBOX_RF433_LOOPBACK_SMOKE_BITS=${GROWBOX_RF433_LOOPBACK_SMOKE_BITS}\n-    GROWBOX_RF433_LOOPBACK_SMOKE_PROTOCOL=${GROWBOX_RF433_LOOPBACK_SMOKE_PROTOCOL}\n-    GROWBOX_RF433_LOOPBACK_SMOKE_REPEAT=${GROWBOX_RF433_LOOPBACK_SMOKE_REPEAT}\n-    GROWBOX_RF433_LOOPBACK_SMOKE_PULSE_US=${GROWBOX_RF433_LOOPBACK_SMOKE_PULSE_US}\n     GROWBOX_RF433_TX_GPIO=${GROWBOX_RF433_TX_GPIO}\n     GROWBOX_RF433_RX_GPIO=${GROWBOX_RF433_RX_GPIO}\n     GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED=${GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED}\ndiff --git a/src/climate/ClimateV6RealInputRuntime.cpp b/src/climate/ClimateV6RealInputRuntime.cpp\nindex 5356928e..8639fd9b 100644\n--- a/src/climate/ClimateV6RealInputRuntime.cpp\n+++ b/src/climate/ClimateV6RealInputRuntime.cpp\n@@ -156,14 +156,8 @@ runtime::Stage28RfDiagnosticsConfig rfDiagnosticsConfig() noexcept {\n   runtime::Stage28RfDiagnosticsConfig config{};\n   config.enabled = GROWBOX_RF433_LOOPBACK_ENABLED != 0;\n   config.passive_capture = GROWBOX_RF433_REMOTE_CAPTURE_ENABLED != 0;\n-  config.auto_smoke = GROWBOX_RF433_LOOPBACK_AUTO_SMOKE != 0;\n   config.tx_gpio = GROWBOX_RF433_TX_GPIO;\n   config.rx_gpio = GROWBOX_RF433_RX_GPIO;\n-  config.smoke = {{static_cast<std::uint32_t>(GROWBOX_RF433_LOOPBACK_SMOKE_CODE),\n-                   static_cast<std::uint8_t>(GROWBOX_RF433_LOOPBACK_SMOKE_BITS),\n-                   static_cast<std::uint8_t>(GROWBOX_RF433_LOOPBACK_SMOKE_PROTOCOL)},\n-                  static_cast<std::uint8_t>(GROWBOX_RF433_LOOPBACK_SMOKE_REPEAT),\n-                  static_cast<std::uint16_t>(GROWBOX_RF433_LOOPBACK_SMOKE_PULSE_US)};\n   return config;\n }\n \ndiff --git a/src/climate/runtime/Stage28RfDiagnostics.cpp b/src/climate/runtime/Stage28RfDiagnostics.cpp\nindex a841909d..6a7d11c6 100644\n--- a/src/climate/runtime/Stage28RfDiagnostics.cpp\n+++ b/src/climate/runtime/Stage28RfDiagnostics.cpp\n@@ -19,17 +19,13 @@ bool Stage28RfDiagnostics::begin(bool radio_ready) noexcept {\n }\n \n void Stage28RfDiagnostics::tick(std::uint64_t now_ms) noexcept {\n+  (void)now_ms;\n   if (!ready_) {\n     return;\n   }\n \n   if (config_.passive_capture) {\n     capturePassive();\n-    return;\n-  }\n-\n-  if (config_.auto_smoke && !smoke_attempted_ && now_ms >= config_.smoke_after_ms) {\n-    runSmoke();\n   }\n }\n \n@@ -39,7 +35,7 @@ bool Stage28RfDiagnostics::manualTransmit(const rf433::FrameConfig& frame,\n   if (!ready_) {\n     return false;\n   }\n-  static_cast<void>(radio_.transmitAndReceive(frame, config_.smoke_timeout_ms, evidence));\n+  static_cast<void>(radio_.transmitAndReceive(frame, config_.manual_tx_timeout_ms, evidence));\n   return evidence.tx_completed;\n }\n \n@@ -91,43 +87,5 @@ void Stage28RfDiagnostics::capturePassive() noexcept {\n   }\n }\n \n-void Stage28RfDiagnostics::runSmoke() noexcept {\n-  smoke_attempted_ = true;\n-  rf433::LoopbackEvidence evidence{};\n-  const bool passed =\n-      radio_.transmitAndReceive(config_.smoke, config_.smoke_timeout_ms, evidence);\n-  const auto& rf_diag = radio_.diagnostics();\n-  const auto& smoke = config_.smoke;\n-\n-  ESP_LOGI(kTag,\n-           \"rf433_loopback_v=1 pass=%d tx_id=%llu requested_code=%lu requested_bits=%u \"\n-           \"requested_protocol=%u requested_repeat=%u requested_pulse_us=%u tx_queued=%d \"\n-           \"tx_started=%d tx_completed=%d tx_started_ms=%lu tx_completed_ms=%lu \"\n-           \"rx_captured=%d rx_start_ms=%lu rx_finish_ms=%lu decode_status=%u \"\n-           \"decoded_code=%lu decoded_bits=%u decoded_protocol=%u estimated_pulse_us=%u \"\n-           \"observed_repeats=%u classification=%u tx_queue_errors=%lu tx_wait_errors=%lu \"\n-           \"rx_arm_errors=%lu rx_timeouts=%lu rx_decode_failures=%lu rx_ambiguous=%lu \"\n-           \"rx_self_tx=%lu rx_interference=%lu outputs=fake-locked\",\n-           passed, static_cast<unsigned long long>(evidence.tx_id),\n-           static_cast<unsigned long>(smoke.key.code), smoke.key.bit_length, smoke.key.protocol,\n-           smoke.repeat, smoke.pulse_us, evidence.tx_queued, evidence.tx_started,\n-           evidence.tx_completed, static_cast<unsigned long>(evidence.tx_started_at_ms),\n-           static_cast<unsigned long>(evidence.tx_completed_at_ms), evidence.rx_captured,\n-           static_cast<unsigned long>(evidence.rx_started_at_ms),\n-           static_cast<unsigned long>(evidence.rx_finished_at_ms),\n-           static_cast<unsigned>(evidence.decoded.status),\n-           static_cast<unsigned long>(evidence.decoded.frame.code),\n-           evidence.decoded.frame.bit_length, evidence.decoded.frame.protocol,\n-           evidence.decoded.estimated_pulse_us, evidence.decoded.observed_repeats,\n-           static_cast<unsigned>(evidence.classification),\n-           static_cast<unsigned long>(rf_diag.tx_queue_errors),\n-           static_cast<unsigned long>(rf_diag.tx_wait_errors),\n-           static_cast<unsigned long>(rf_diag.rx_arm_errors),\n-           static_cast<unsigned long>(rf_diag.rx_timeouts),\n-           static_cast<unsigned long>(rf_diag.rx_decode_failures),\n-           static_cast<unsigned long>(rf_diag.rx_ambiguous),\n-           static_cast<unsigned long>(rf_diag.rx_self_tx),\n-           static_cast<unsigned long>(rf_diag.rx_interference));\n-}\n \n } // namespace growbox::app::climate_io::runtime\ndiff --git a/src/climate/runtime/Stage28RfDiagnostics.h b/src/climate/runtime/Stage28RfDiagnostics.h\nindex 8c547e1b..23188a82 100644\n--- a/src/climate/runtime/Stage28RfDiagnostics.h\n+++ b/src/climate/runtime/Stage28RfDiagnostics.h\n@@ -9,13 +9,10 @@ namespace growbox::app::climate_io::runtime {\n struct Stage28RfDiagnosticsConfig {\n   bool enabled{false};\n   bool passive_capture{false};\n-  bool auto_smoke{false};\n   int tx_gpio{8};\n   int rx_gpio{14};\n-  rf433::FrameConfig smoke{};\n   std::uint32_t passive_timeout_ms{750U};\n-  std::uint32_t smoke_timeout_ms{1'500U};\n-  std::uint64_t smoke_after_ms{3'000U};\n+  std::uint32_t manual_tx_timeout_ms{1'500U};\n };\n \n class Stage28RfDiagnostics final {\n@@ -34,12 +31,10 @@ public:\n \n private:\n   void capturePassive() noexcept;\n-  void runSmoke() noexcept;\n \n   Stage28RfDiagnosticsConfig config_{};\n   rf433::Rf433RmtLoopback& radio_;\n   bool ready_{false};\n-  bool smoke_attempted_{false};\n   bool capture_ready_logged_{false};\n   std::uint32_t capture_id_{0U};\n };\n",
+    "elapsed_seconds": 0.031
+  },
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-08T17:28:18.558777+00:00",
+  "workspace_checkpoint": {
+    "version": 2,
+    "task_id": "20260908-output-a10-3-isolate-rf-smoke-v1",
+    "reason": "task-exit",
+    "created_at": "2026-09-08T17:28:18.935054+00:00",
+    "base_head": "b31982664c85c0903587a2eeaa8fca5d9699f683",
+    "work_branch": "agent-work",
+    "path": "/Users/michal/agent-workspace/repos/growbox-ml-controller/checkpoints/20260908-output-a10-3-isolate-rf-smoke-v1/1788888498797394000-task-exit",
+    "tracked_patch": "tracked.patch",
+    "untracked_root": "untracked",
+    "untracked_files": [],
+    "tracked_patch_bytes": 13589,
+    "untracked_bytes": 0,
+    "total_bytes": 13589,
+    "status": " A scripts/check_output_rf_ownership.py\n M scripts/stage27c_crowpanel.sh\n M src/CMakeLists.txt\n M src/climate/ClimateV6RealInputRuntime.cpp\n M src/climate/runtime/Stage28RfDiagnostics.cpp\n M src/climate/runtime/Stage28RfDiagnostics.h\n"
+  },
+  "task_digest": "dbaee831dfc800625707658efe1e405ac13b1ad7b45d85f3a1e039cd96459364",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "attempt_id": "cb8a69eaffd936e822b9d932",
+  "daemon_version": "4.18.19"
+}
