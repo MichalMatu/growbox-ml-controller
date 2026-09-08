@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260908-output-a11-3-honest-output-telemetry-v3",
+  "task_digest": "c75caead0191ac5a092a9198e4fac32bb69f29e7a5c238871ec49fd953a49711",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-08T21:37:26.157952+00:00",
+  "attempt_id": "02f3bfbe76cc22a175492f83",
+  "daemon_version": "4.18.19",
+  "daemon_pid": 31064,
+  "updated_at": "2026-09-08T21:37:26.158029+00:00",
+  "pid": 31064
+}
