@@ -1,5 +1,7 @@
 #include "climate/output/ClimateOutputSupervisorSink.h"
 
+#include "climate/output/OutputExecutionProjection.h"
+
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -177,7 +179,13 @@ bool ClimateOutputSupervisorSink::executeCycle(
 bool ClimateOutputSupervisorSink::projectExecutedClimate(
     ::growbox::climate::ClimatePolicyRequest& projection) const noexcept {
   projection = {};
-  if (config_status_ != ClimateSemanticOutputConfigStatus::Ok || !state_store_.valid()) {
+  if (config_status_ != ClimateSemanticOutputConfigStatus::Ok) {
+    return false;
+  }
+
+  ::growbox::app::output::ExecutedControlProjection executed{};
+  if (!::growbox::app::output::buildExecutedControlProjection(
+          last_resolution_, last_report_, state_store_, executed)) {
     return false;
   }
 
@@ -191,18 +199,16 @@ bool ClimateOutputSupervisorSink::projectExecutedClimate(
     if (!mapping.enabled) {
       continue;
     }
-    const auto* state = state_store_.find(mapping.endpoint);
-    if (state == nullptr) {
+    const auto* endpoint = ::growbox::app::output::findExecutedEndpointProjection(
+        executed, mapping.endpoint);
+    if (endpoint == nullptr || !endpoint->has_executed_state) {
       projection = {};
       return false;
     }
-    float level = 0.0F;
-    if (state->has_successful_command) {
-      level = state->last_successful_command.state ==
-                      ::growbox::app::output::BinaryOutputState::On
-                  ? 1.0F
-                  : 0.0F;
-    }
+    const float level = endpoint->executed_state ==
+                                ::growbox::app::output::BinaryOutputState::On
+                            ? 1.0F
+                            : 0.0F;
     setRoleLevel(projection, role, level);
   }
   return true;

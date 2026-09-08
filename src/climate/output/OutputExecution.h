@@ -61,8 +61,20 @@ constexpr bool appendExecutionResult(ExecutionReport& report,
   return true;
 }
 
+struct ExecutedEndpointProjection {
+  OutputEndpointId endpoint = kInvalidOutputEndpoint;
+  bool has_executed_state = false;
+  BinaryOutputState executed_state = BinaryOutputState::Off;
+  bool attempted = false;
+  TxResult transport{};
+  bool held_by_dwell = false;
+  OutputSource source = OutputSource::None;
+  OutputReason reason = OutputReason::None;
+};
+
 struct ExecutedControlProjection {
-  std::array<EndpointIntent, kOutputEndpointCapacity> endpoints{};
+  std::array<ExecutedEndpointProjection, kOutputEndpointCapacity> endpoints{};
+  std::uint8_t size = 0U;
 };
 
 } // namespace growbox::app::output
