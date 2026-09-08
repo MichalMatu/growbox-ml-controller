@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 4,
+  "index": 5,
   "total": 5,
-  "command": "set -euo pipefail; STAGE27C_BUILD_DIR=build/idf-a2-2-v4 STAGE27C_SDKCONFIG=build/idf-a2-2-v4/sdkconfig GROWBOX_RF433_LOOPBACK_ENABLED=1 GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=1 GROWBOX_RF433_LOOPBACK_AUTO_SMOKE=0 GROWBOX_RF433_REMOTE_CAPTURE_ENABLED=0 bash scripts/stage27c_crowpanel.sh build; echo A2_2_V4_CANONICAL_RF_BUILD_PASS",
-  "pid": 14841,
+  "command": "set -euo pipefail; python3 -c \"import base64; exec(base64.b64decode('CmltcG9ydCBzdWJwcm9jZXNzCmV4cGVjdGVkPXsKJ3NyYy9DTWFrZUxpc3RzLnR4dCcsCidzcmMvY2xpbWF0ZS9vdXRwdXQvT3V0cHV0VHJhbnNwb3J0LmgnLAonc3JjL2NsaW1hdGUvcmY0MzMvUmY0MzNPdXRwdXRUcmFuc3BvcnQuY3BwJywKJ3NyYy9jbGltYXRlL3JmNDMzL1JmNDMzT3V0cHV0VHJhbnNwb3J0LmgnLAonc3JjL2NsaW1hdGUvcmY0MzMvUmY0MzNSbXRGcmFtZVNlbmRlci5jcHAnLAonc3JjL2NsaW1hdGUvcmY0MzMvUmY0MzNSbXRGcmFtZVNlbmRlci5oJywKJ3Rlc3QvaG9zdC9DTWFrZUxpc3RzLnR4dCcsCid0ZXN0L3Rlc3RfcmY0MzNfb3V0cHV0X3RyYW5zcG9ydC90ZXN0X21haW4uY3BwJywKfQphY3R1YWw9c2V0KGZpbHRlcihOb25lLHN1YnByb2Nlc3MuY2hlY2tfb3V0cHV0KFsnZ2l0JywnZGlmZicsJy0tbmFtZS1vbmx5J10sdGV4dD1UcnVlKS5zcGxpdGxpbmVzKCkpKQppZiBhY3R1YWwgIT0gZXhwZWN0ZWQ6CiAgICByYWlzZSBTeXN0ZW1FeGl0KGYnZGlmZiBhbGxvd2xpc3QgbWlzbWF0Y2ggYWN0dWFsPXtzb3J0ZWQoYWN0dWFsKX0gZXhwZWN0ZWQ9e3NvcnRlZChleHBlY3RlZCl9JykKcHJpbnQoJ0EyXzJfVjRfQUxMT1dMSVNUX1BBU1MnKQo='))\"; git diff --check; git add src/CMakeLists.txt src/climate/output/OutputTransport.h src/climate/rf433/Rf433OutputTransport.cpp src/climate/rf433/Rf433OutputTransport.h src/climate/rf433/Rf433RmtFrameSender.cpp src/climate/rf433/Rf433RmtFrameSender.h test/host/CMakeLists.txt test/test_rf433_output_transport/test_main.cpp; git diff --cached --check; git commit -m 'Add dedicated RF433 output transport'; NEW=$(git rev-parse HEAD); git push origin HEAD:mvp/environment-controller; test -z \"$(git status --porcelain)\"; echo A2_2_V4_PASS commit=$NEW",
+  "pid": 20850,
   "timeout": 1800,
   "idle_timeout": 600,
   "memory_limit_mb": 4096,
-  "started_at": "2026-09-08T11:45:24.832511+00:00",
-  "stage_name": "command-4",
-  "stage_index": 4,
+  "started_at": "2026-09-08T11:46:13.279914+00:00",
+  "stage_name": "command-5",
+  "stage_index": 5,
   "stage_total": 5,
   "stage_phase": "commands",
   "task_id": "20260908-output-a2-2-rf-output-transport-v4",
@@ -18,5 +18,5 @@
   "task_digest": "47d3f4e9f6eec87ff7c9fdeb47f362022eb521d6264cb64b28de6c45cc5655e1",
   "daemon_version": "4.18.19",
   "daemon_pid": 14548,
-  "updated_at": "2026-09-08T11:45:24.884768+00:00"
+  "updated_at": "2026-09-08T11:46:13.296185+00:00"
 }
