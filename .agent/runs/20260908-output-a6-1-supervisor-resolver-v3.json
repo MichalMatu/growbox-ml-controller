@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260908-output-a6-1-supervisor-resolver-v3",
+  "task_digest": "ce4731b3362e6bfd6e6461a132baefd45f26cfa7a53c329ca38f3085f25b4c42",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-08T13:38:19.176043+00:00",
+  "attempt_id": "3727cb01270f00c42224d8c5",
+  "daemon_version": "4.18.19",
+  "daemon_pid": 49652,
+  "updated_at": "2026-09-08T13:38:19.176390+00:00",
+  "pid": 49652
+}
