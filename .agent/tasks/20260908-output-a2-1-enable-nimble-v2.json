@@ -1,0 +1,19 @@
+{
+  "id": "20260908-output-a2-1-enable-nimble-v2",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "resources": [],
+  "memory_limit_mb": 4096,
+  "command_timeout": 1800,
+  "idle_timeout": 600,
+  "task_timeout": 3600,
+  "commands": [
+    "set -euo pipefail; EXPECTED=757817702d97b6c840736b6117cd15e038580558; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; echo NIMBLE_FIX_V2_IDENTITY_PASS head=$EXPECTED",
+    "python3 -c \"from pathlib import Path; p=Path('config/idf/sdkconfig.defaults'); s=p.read_text(); assert 'CONFIG_BT_ENABLED=y' not in s; assert 'CONFIG_BT_NIMBLE_ENABLED=y' not in s; p.write_text(s.rstrip() + '\\nCONFIG_BT_ENABLED=y\\nCONFIG_BT_NIMBLE_ENABLED=y\\n')\"; git diff --check; git diff -- config/idf/sdkconfig.defaults",
+    "set -euo pipefail; bash scripts/run_idf.sh -B build/idf-nimble-fix-v2 -D SDKCONFIG=build/idf-nimble-fix-v2/sdkconfig -D \"SDKCONFIG_DEFAULTS=config/idf/sdkconfig.defaults;config/idf/sdkconfig.defaults.n16r8\" -D GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n16r8 -D GROWBOX_APP_MODE=climate-v6-real-inputs reconfigure; grep -q '^CONFIG_BT_ENABLED=y$' build/idf-nimble-fix-v2/sdkconfig; grep -q '^CONFIG_BT_NIMBLE_ENABLED=y$' build/idf-nimble-fix-v2/sdkconfig; echo NIMBLE_CONFIG_V2_PASS",
+    "set -euo pipefail; bash scripts/run_idf.sh -B build/idf-nimble-fix-v2 -D SDKCONFIG=build/idf-nimble-fix-v2/sdkconfig -D \"SDKCONFIG_DEFAULTS=config/idf/sdkconfig.defaults;config/idf/sdkconfig.defaults.n16r8\" -D GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n16r8 -D GROWBOX_APP_MODE=climate-v6-real-inputs build",
+    "set -euo pipefail; test \"$(git diff --name-only)\" = 'config/idf/sdkconfig.defaults'; git diff --check; git add config/idf/sdkconfig.defaults; git commit -m 'Enable NimBLE for real-input firmware'; NEW=$(git rev-parse HEAD); git push origin HEAD:mvp/environment-controller; test -z \"$(git status --porcelain)\"; echo NIMBLE_FIX_V2_PASS commit=$NEW"
+  ]
+}
