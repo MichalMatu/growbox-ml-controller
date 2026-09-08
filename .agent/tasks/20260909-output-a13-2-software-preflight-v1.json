@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "id": "20260909-output-a13-2-software-preflight-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "mvp/environment-controller",
+  "resources": [],
+  "allow_write": false,
+  "command_timeout": 7200,
+  "task_timeout": 7200,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch -q origin mvp/environment-controller && test \"$(git rev-parse HEAD)\" = \"d9383a693f66851f5151a96f0341fd4eeaaf746d\" && test \"$(git rev-parse FETCH_HEAD)\" = \"d9383a693f66851f5151a96f0341fd4eeaaf746d\" && test -z \"$(git status --porcelain)\"",
+    "git fetch -q origin agent-control && git show FETCH_HEAD:.agent/scripts/20260909-output-a13-2-software-preflight-v1-run.py | python3 -"
+  ]
+}
