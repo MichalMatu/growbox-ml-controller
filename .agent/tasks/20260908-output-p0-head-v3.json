@@ -1,0 +1,9 @@
+{
+  "id": "20260908-output-p0-head-v3",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "commands": ["git rev-parse HEAD", "git status --porcelain"]
+}
