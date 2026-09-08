@@ -202,6 +202,25 @@ target_compile_features(climate_semantic_output_tests PRIVATE cxx_std_17)
 target_compile_options(climate_semantic_output_tests PRIVATE -Wall -Wextra -Wpedantic)
 
 add_executable(
+  stage28d_binary_role_arbiter_tests
+  "${PROJECT_ROOT}/test/test_stage28d_binary_role_arbiter/test_main.cpp"
+  "${PROJECT_ROOT}/src/climate/Stage28dBinaryRoleArbiter.cpp"
+)
+target_include_directories(stage28d_binary_role_arbiter_tests PRIVATE "${PROJECT_ROOT}/src" "${PROJECT_ROOT}/lib/environment_control/src")
+target_compile_features(stage28d_binary_role_arbiter_tests PRIVATE cxx_std_17)
+target_compile_options(stage28d_binary_role_arbiter_tests PRIVATE -Wall -Wextra -Wpedantic)
+
+add_executable(
+  stage28d_rf_output_endpoint_tests
+  "${PROJECT_ROOT}/test/test_stage28d_rf_output_endpoint/test_main.cpp"
+  "${PROJECT_ROOT}/src/climate/Stage28dRfOutputEndpoint.cpp"
+  "${PROJECT_ROOT}/src/climate/rf433/ClimateRf433EndpointRegistry.cpp"
+)
+target_include_directories(stage28d_rf_output_endpoint_tests PRIVATE "${PROJECT_ROOT}/src" "${PROJECT_ROOT}/lib/environment_control/src")
+target_compile_features(stage28d_rf_output_endpoint_tests PRIVATE cxx_std_17)
+target_compile_options(stage28d_rf_output_endpoint_tests PRIVATE -Wall -Wextra -Wpedantic)
+
+add_executable(
   stage28d_lamp_safety_tests
   "${PROJECT_ROOT}/test/test_stage28d_lamp_safety/test_main.cpp"
   "${PROJECT_ROOT}/src/climate/Stage28dLampSafety.cpp"
@@ -345,6 +364,8 @@ if(UNIX)
   target_link_libraries(climate_diagnostics_tests PRIVATE m)
   target_link_libraries(climate_composite_input_tests PRIVATE m)
   target_link_libraries(climate_semantic_output_tests PRIVATE m)
+  target_link_libraries(stage28d_binary_role_arbiter_tests PRIVATE m)
+  target_link_libraries(stage28d_rf_output_endpoint_tests PRIVATE m)
   target_link_libraries(stage28d_lamp_safety_tests PRIVATE m)
   target_link_libraries(climate_observability_metrics_tests PRIVATE m)
   target_link_libraries(stage27_telemetry_tests PRIVATE m)
@@ -364,6 +385,8 @@ add_test(NAME climate_fault_soak_tests COMMAND climate_fault_soak_tests)
 add_test(NAME climate_diagnostics_tests COMMAND climate_diagnostics_tests)
 add_test(NAME climate_composite_input_tests COMMAND climate_composite_input_tests)
 add_test(NAME climate_semantic_output_tests COMMAND climate_semantic_output_tests)
+add_test(NAME stage28d_binary_role_arbiter_tests COMMAND stage28d_binary_role_arbiter_tests)
+add_test(NAME stage28d_rf_output_endpoint_tests COMMAND stage28d_rf_output_endpoint_tests)
 add_test(NAME stage28d_lamp_safety_tests COMMAND stage28d_lamp_safety_tests)
 add_test(NAME climate_observability_metrics_tests COMMAND climate_observability_metrics_tests)
 add_test(NAME europe_warsaw_time_tests COMMAND europe_warsaw_time_tests)
