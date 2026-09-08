@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260908-output-a11-4-output-ownership-guard-v2",
+  "task_digest": "3419539537f1240512076b068ea47f8728e50c72e3d4523b28e73d922d874c17",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-08T21:50:06.995437+00:00",
+  "attempt_id": "0fdbd2226d923fce1af029a5",
+  "daemon_version": "4.18.19",
+  "daemon_pid": 49187,
+  "updated_at": "2026-09-08T21:50:06.995626+00:00",
+  "pid": 49187
+}
