@@ -446,3 +446,13 @@ target_include_directories(
 target_compile_features(rf433_output_transport_tests PRIVATE cxx_std_17)
 target_compile_options(rf433_output_transport_tests PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME rf433_output_transport_tests COMMAND rf433_output_transport_tests)
+
+add_executable(
+  output_state_store_tests
+  "${PROJECT_ROOT}/test/test_output_state_store/test_main.cpp"
+  "${PROJECT_ROOT}/src/climate/output/OutputStateStore.cpp"
+)
+target_include_directories(output_state_store_tests PRIVATE "${PROJECT_ROOT}/src")
+target_compile_features(output_state_store_tests PRIVATE cxx_std_17)
+target_compile_options(output_state_store_tests PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME output_state_store_tests COMMAND output_state_store_tests)
