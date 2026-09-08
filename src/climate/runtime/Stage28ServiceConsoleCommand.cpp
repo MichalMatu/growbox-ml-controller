@@ -116,6 +116,10 @@ ServiceConsoleCommand parseServiceConsoleCommand(const char* line) noexcept {
     }
     return invalidCommand();
   }
+  if (equalsIgnoreCase(tokens[0],"output")) {
+    if (count==3U && parseDevice(tokens[1],command.device) && parseState(tokens[2],command.state)) { command.kind=ServiceConsoleCommandKind::ManualOutput; return command; }
+    return invalidCommand();
+  }
   if (!equalsIgnoreCase(tokens[0],"rf")) return invalidCommand();
   if (count==2U && equalsIgnoreCase(tokens[1],"list")) { command.kind=ServiceConsoleCommandKind::RfList; return command; }
   if (equalsIgnoreCase(tokens[1],"rx")) {
@@ -123,7 +127,7 @@ ServiceConsoleCommand parseServiceConsoleCommand(const char* line) noexcept {
     if (count==3U) { if (!parseUnsigned(tokens[2],command.timeout_ms)||command.timeout_ms<kMinimumRxTimeoutMs||command.timeout_ms>kMaximumRxTimeoutMs) return invalidCommand(); command.kind=ServiceConsoleCommandKind::RfReceive; return command; }
     return invalidCommand();
   }
-  if (count==3U && parseDevice(tokens[1],command.device) && parseState(tokens[2],command.state)) { command.kind=ServiceConsoleCommandKind::RfTransmit; return command; }
+  if (count==3U && parseDevice(tokens[1],command.device) && parseState(tokens[2],command.state)) { command.kind=ServiceConsoleCommandKind::ManualOutput; return command; }
   return invalidCommand();
 }
 

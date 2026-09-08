@@ -10,6 +10,7 @@
 #include "climate/output/ClimateOutputSupervisorSink.h"
 #include "climate/output/OutputAutomationControl.h"
 #include "climate/output/OutputLifecycleExecutor.h"
+#include "climate/output/OutputManualControl.h"
 #include "climate/output/OutputNvsBackend.h"
 #include "climate/output/OutputPersistenceCoordinator.h"
 #include "climate/output/OutputPersistenceStore.h"
@@ -471,7 +472,8 @@ private:
                       output_lifecycle.mode() == output::SupervisorMode::Automatic;
   }
   output::OutputAutomationControl automation_control(output_lifecycle, lifecycle_executor);
-  lifecycle_ready = lifecycle_ready && automation_control.valid();
+  output::OutputManualControl manual_control(output_policy, output_lifecycle);
+  lifecycle_ready = lifecycle_ready && automation_control.valid() && manual_control.valid();
 
   output::OutputSupervisorResolver supervisor_resolver(supervisor_config);
   output::OutputSupervisorExecutor supervisor_executor(supervisor_transport, output_state_store,
@@ -496,7 +498,7 @@ private:
 
   runtime::Stage28ServiceConsole service_console(
       {GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED != 0, GROWBOX_FIRMWARE_GIT_SHA,
-       &real_output_ready, &storage_logger, &runtime_timing, &automation_control},
+       &real_output_ready, &storage_logger, &runtime_timing, &automation_control, &manual_control},
       ble, scd41, clock, rf_diagnostics);
   const bool service_console_ready = service_console.begin();
 
@@ -656,9 +658,13 @@ private:
       const auto automation_report =
           automation_control.tick(now_ms, schedule_intent, safety_snapshot.envelope);
 
+      output::ManualIntent manual_intent{};
+      (void)manual_control.consume(manual_intent);
+
       ClimateOutputSupervisorCycleContext supervisor_context{};
       supervisor_context.mode = automation_report.mode;
       supervisor_context.schedule = schedule_intent;
+      supervisor_context.manual = manual_intent;
       supervisor_context.safety = safety_snapshot.envelope;
       supervisor_sink.setCycleContext(supervisor_context);
 

@@ -11,7 +11,7 @@ enum class ServiceConsoleCommandKind : std::uint8_t {
   Status,
   Sensors,
   RfList,
-  RfTransmit,
+  ManualOutput,
   RfReceive,
   AutomationStatus,
   AutomationEnable,

@@ -2,6 +2,7 @@
 
 #include "climate/runtime/Stage28ePlatformDiagnostics.h"
 #include "climate/output/OutputAutomationControl.h"
+#include "climate/output/OutputManualControl.h"
 #include "climate/rf433/Rf433HardwareConfig.h"
 #include "climate/runtime/EuropeWarsawTime.h"
 #include "climate/storage/Stage27FileDurability.h"
@@ -247,8 +248,8 @@ void Stage28ServiceConsole::processLine(std::uint64_t now_ms) noexcept {
   case ServiceConsoleCommandKind::RfList:
     printRfList();
     return;
-  case ServiceConsoleCommandKind::RfTransmit:
-    handleRfTransmit(command);
+  case ServiceConsoleCommandKind::ManualOutput:
+    handleManualOutput(command, now_ms);
     return;
   case ServiceConsoleCommandKind::RfReceive:
     handleRfReceive(command);
@@ -292,18 +293,18 @@ void Stage28ServiceConsole::printHelp() noexcept {
   writeText("  automation [status]              show automation lifecycle state\r\n");
   writeText("  automation on|off                request high-level automation mode\r\n");
   writeText("  rtc set-unix <epoch>             set DS3231 from UTC Unix seconds\r\n");
-  writeText("  rf lamp on|off                   manual lamp socket transmit\r\n");
-  writeText("  rf fan on|off                    manual fan socket transmit\r\n");
-  writeText("  rf humidifier on|off             manual humidifier socket transmit\r\n");
+  writeText("  output lamp on|off               supervised manual lamp command\r\n");
+  writeText("  output fan on|off                supervised manual fan command\r\n");
+  writeText("  output humidifier on|off         supervised manual humidifier command\r\n");
+  writeText("  rf <device> on|off               compatibility alias for output command\r\n");
   writeText("  rf rx [50..5000]                 capture/decode one RF frame\r\n");
   writeText("  sdlog status                     SD logger status/counters\r\n");
   writeText("  sdlog list                       list GBLOG/*.JL with sizes\r\n");
   writeText("  sdlog read <file.JL> <off> <n>  read 1..384 bytes as Base64 + CRC32\r\n");
   writeText("  sdlog selftest                   durable write/read/delete SD probe\r\n");
   writeText("RTC stores UTC; lighting schedule converts UTC to Europe/Warsaw.\r\n");
-  writeText("RF transmit commands require the RF diagnostics transport to be enabled.\r\n");
-  writeText("Manual RF TX is blocked while automatic outputs are real-bounded.\r\n");
-  writeText("Manual TX is not physical load-state acknowledgement.\r\n");
+  writeText("Configured manual outputs are supervisor-owned and mode/safety constrained.\r\n");
+  writeText("Manual output completion is command truth, not physical load acknowledgement.\r\n");
 }
 
 void Stage28ServiceConsole::printAutomationStatus() noexcept {
@@ -513,36 +514,49 @@ void Stage28ServiceConsole::printRfList() noexcept {
   }
 }
 
-void Stage28ServiceConsole::handleRfTransmit(const ServiceConsoleCommand& command) noexcept {
-  if (realOutputsActive()) {
-    writeText("error: manual RF TX blocked while automatic outputs are real-bounded\r\n");
+void Stage28ServiceConsole::handleManualOutput(const ServiceConsoleCommand& command,
+                                                   std::uint64_t now_ms) noexcept {
+  if (config_.manual_control == nullptr) {
+    writeText("error: manual output control unavailable\r\n");
     return;
   }
 
-  const KnownRfDevice* device = findKnownDevice(command.device);
-  if (device == nullptr) {
-    writeText("error: RF device not found\r\n");
-    return;
-  }
-  if (!rf_diagnostics_.ready()) {
-    writeText("error: RF transport is not ready; enable GROWBOX_RF433_LOOPBACK_ENABLED\r\n");
-    return;
+  ::growbox::app::output::OutputEndpointRole role =
+      ::growbox::app::output::OutputEndpointRole::ScheduledLight;
+  switch (command.device) {
+  case ServiceConsoleRfDevice::Lamp:
+    role = ::growbox::app::output::OutputEndpointRole::ScheduledLight;
+    break;
+  case ServiceConsoleRfDevice::Fan:
+    role = ::growbox::app::output::OutputEndpointRole::ExhaustFan;
+    break;
+  case ServiceConsoleRfDevice::Humidifier:
+    role = ::growbox::app::output::OutputEndpointRole::Humidifier;
+    break;
   }
 
-  const rf433::FrameConfig& frame =
-      command.state == ServiceConsoleRfState::On ? device->hardware->on : device->hardware->off;
-  rf433::LoopbackEvidence evidence{};
-  const bool tx_completed = rf_diagnostics_.manualTransmit(frame, evidence);
+  const auto state = command.state == ServiceConsoleRfState::On
+                         ? ::growbox::app::output::BinaryOutputState::On
+                         : ::growbox::app::output::BinaryOutputState::Off;
+  const auto report = config_.manual_control->request(role, state, now_ms);
+  const char* status = "invalid-configuration";
+  using ::growbox::app::output::OutputManualRequestStatus;
+  switch (report.status) {
+  case OutputManualRequestStatus::Accepted: status = "accepted"; break;
+  case OutputManualRequestStatus::Busy: status = "busy"; break;
+  case OutputManualRequestStatus::ModeDenied: status = "mode-denied"; break;
+  case OutputManualRequestStatus::InvalidRole: status = "invalid-role"; break;
+  case OutputManualRequestStatus::InvalidState: status = "invalid-state"; break;
+  case OutputManualRequestStatus::InvalidConfiguration: break;
+  }
+
   writeFormatted(
-      "manual_rf_tx device=%s state=%s code=%lu bits=%u protocol=%u pulse_us=%u "
-      "repeat=%u tx_queued=%d tx_started=%d tx_completed=%d self_rx_captured=%d "
-      "self_rx_decode_status=%u self_rx_classification=%u physical_state=unconfirmed\r\n",
+      "manual_output device=%s state=%s accepted=%d status=%s mode=%s endpoint=%u "
+      "sequence=%llu outputs=%s physical_state=unconfirmed\r\n",
       serviceConsoleRfDeviceName(command.device), serviceConsoleRfStateName(command.state),
-      static_cast<unsigned long>(frame.key.code), frame.key.bit_length, frame.key.protocol,
-      frame.pulse_us, frame.repeat, evidence.tx_queued, evidence.tx_started,
-      tx_completed && evidence.tx_completed, evidence.rx_captured,
-      static_cast<unsigned>(evidence.decoded.status),
-      static_cast<unsigned>(evidence.classification));
+      report.status == OutputManualRequestStatus::Accepted, status,
+      supervisorModeName(report.mode), static_cast<unsigned>(report.endpoint),
+      static_cast<unsigned long long>(report.sequence), outputModeName());
 }
 
 void Stage28ServiceConsole::handleRfReceive(const ServiceConsoleCommand& command) noexcept {

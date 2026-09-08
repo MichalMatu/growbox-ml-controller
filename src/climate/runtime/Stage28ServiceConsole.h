@@ -12,7 +12,10 @@
 #include <cstdint>
 
 namespace growbox::app::climate_io::storage { class Stage27TelemetryLogger; }
-namespace growbox::app::output { class OutputAutomationControl; }
+namespace growbox::app::output {
+class OutputAutomationControl;
+class OutputManualControl;
+}
 
 namespace growbox::app::climate_io::runtime {
 
@@ -25,6 +28,7 @@ public:
     const storage::Stage27TelemetryLogger* storage_logger{nullptr};
     const RuntimeTimingMetrics* timing_metrics{nullptr};
     ::growbox::app::output::OutputAutomationControl* automation_control{nullptr};
+    ::growbox::app::output::OutputManualControl* manual_control{nullptr};
   };
 
   Stage28ServiceConsole(Config config, native::BleClimateScanner& ble,
@@ -46,7 +50,7 @@ private:
   void printStatus(std::uint64_t now_ms) noexcept;
   void printSensors(std::uint64_t now_ms) noexcept;
   void printRfList() noexcept;
-  void handleRfTransmit(const ServiceConsoleCommand& command) noexcept;
+  void handleManualOutput(const ServiceConsoleCommand& command, std::uint64_t now_ms) noexcept;
   void handleRfReceive(const ServiceConsoleCommand& command) noexcept;
   void printAutomationStatus() noexcept;
   void handleAutomationRequest(bool enabled) noexcept;
