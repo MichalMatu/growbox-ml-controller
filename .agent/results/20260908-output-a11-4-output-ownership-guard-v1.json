@@ -1,0 +1,105 @@
+{
+  "id": "20260908-output-a11-4-output-ownership-guard-v1",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "started_at": "2026-09-08T21:47:14.418749+00:00",
+  "command_timeout": 900,
+  "edits": {},
+  "commands": [
+    {
+      "command": "git fetch -q origin agent-control",
+      "exit_code": 0,
+      "output": "",
+      "elapsed_seconds": 1.3,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 1.16,
+      "output_policy": "stream",
+      "captured_output_chars": 0,
+      "output_truncated": false,
+      "current_rss_mb": 1.16,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 2,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "git show FETCH_HEAD:.agent/scripts/20260908-a11-4-output-ownership-guard-v1-run.py | python3 -",
+      "exit_code": 1,
+      "output": "+ git fetch -q origin mvp/environment-controller\nA11_4_IDENTITY_PASS\n+ git add -N scripts/check_output_rf_ownership.py scripts/quality_gate_push.sh tests/test_output_execution_ownership.py\n+ git diff --check\n+ python3 scripts/check_output_rf_ownership.py\nOUTPUT_EXECUTION_OWNERSHIP_FAIL src/climate/Stage28dRfOutputEndpoint.cpp: raw OutputTransport send call outside supervisor/maintenance boundary\nTraceback (most recent call last):\n  File \"<stdin>\", line 309, in <module>\n  File \"<stdin>\", line 15, in run\n  File \"/opt/homebrew/Cellar/python@3.13/3.13.9_1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/subprocess.py\", line 577, in run\n    raise CalledProcessError(retcode, process.args,\n                             output=stdout, stderr=stderr)\nsubprocess.CalledProcessError: Command '['python3', 'scripts/check_output_rf_ownership.py']' returned non-zero exit status 1.\n",
+      "elapsed_seconds": 0.985,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 2.52,
+      "output_policy": "stream",
+      "captured_output_chars": 885,
+      "output_truncated": false,
+      "current_rss_mb": 2.52,
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 2,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 2,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 1.3
+    },
+    {
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 2,
+      "stage_phase": "commands",
+      "outcome": "failed",
+      "elapsed_seconds": 0.985
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": " M scripts/check_output_rf_ownership.py\n M scripts/quality_gate_push.sh\n A tests/test_output_execution_ownership.py\n",
+    "elapsed_seconds": 0.112
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "diff --git a/scripts/check_output_rf_ownership.py b/scripts/check_output_rf_ownership.py\nindex 340321fc..7c3731f7 100644\n--- a/scripts/check_output_rf_ownership.py\n+++ b/scripts/check_output_rf_ownership.py\n@@ -1,8 +1,10 @@\n #!/usr/bin/env python3\n-\"\"\"Narrow A10.3 RF diagnostics/output ownership guard.\n+\"\"\"Final configured-output RF ownership invariant.\n \n-This is intentionally a draft guard. A11.4 will enforce the full production\n-output-owner allowlist after legacy startup/fault paths are removed.\n+Normal climate, schedule, safety, runtime and service-console code may compose\n+output execution, but must not own RF transmission calls. The only legal\n+production call sites are the dedicated RF transport layers plus the explicit\n+maintenance-only adapter.\n \"\"\"\n from pathlib import Path\n import re\n@@ -10,68 +12,200 @@ import sys\n \n ROOT = Path(__file__).resolve().parents[1]\n \n+LOW_LEVEL_RMT = {\n+    'rmt_new_tx_channel(': {'src/climate/rf433/Rf433RmtLoopback.cpp'},\n+    'rmt_transmit(': {'src/climate/rf433/Rf433RmtLoopback.cpp'},\n+    'rmt_tx_wait_all_done(': {'src/climate/rf433/Rf433RmtLoopback.cpp'},\n+}\n+RADIO_TX = {\n+    'transmitAndReceive(': {\n+        'src/climate/rf433/Rf433RmtLoopback.cpp',\n+        'src/climate/rf433/Rf433RmtFrameSender.cpp',\n+        'src/climate/runtime/Stage28RfDiagnostics.cpp',\n+    },\n+    'transmitFrame(': {\n+        'src/climate/rf433/Rf433RmtFrameSender.cpp',\n+        'src/climate/rf433/Rf433OutputTransport.cpp',\n+    },\n+    'manualTransmit(': {\n+        'src/climate/runtime/Stage28RfDiagnostics.cpp',\n+        'src/climate/runtime/Stage28MaintenanceRfTransport.cpp',\n+    },\n+}\n \n-def read(rel: str) -> str:\n-    return (ROOT / rel).read_text()\n-\n-\n-errors: list[str] = []\n-diag_h = read('src/climate/runtime/Stage28RfDiagnostics.h')\n-diag_cpp = read('src/climate/runtime/Stage28RfDiagnostics.cpp')\n-runtime = read('src/climate/ClimateV6RealInputRuntime.cpp')\n-cmake = read('src/CMakeLists.txt')\n-canonical = read('scripts/stage27c_crowpanel.sh')\n-\n-for token in (\n+AUTO_SMOKE_TOKENS = (\n     'auto_smoke',\n     'smoke_attempted_',\n     'runSmoke',\n     'GROWBOX_RF433_LOOPBACK_AUTO_SMOKE',\n     'GROWBOX_RF433_LOOPBACK_SMOKE_',\n-):\n-    for rel, text in (\n-        ('Stage28RfDiagnostics.h', diag_h),\n-        ('Stage28RfDiagnostics.cpp', diag_cpp),\n-        ('ClimateV6RealInputRuntime.cpp', runtime),\n-        ('src/CMakeLists.txt', cmake),\n-        ('scripts/stage27c_crowpanel.sh', canonical),\n-    ):\n-        if token in text:\n-            errors.append(f'{rel}: forbidden production auto-smoke token {token!r}')\n-\n-if 'if (config_.passive_capture)' not in diag_cpp or 'capturePassive();' not in diag_cpp:\n-    errors.append('Stage28RfDiagnostics.cpp: passive receive path missing')\n-if 'manualReceive(' not in diag_cpp:\n-    errors.append('Stage28RfDiagnostics.cpp: explicit receive API missing')\n-if diag_cpp.count('transmitAndReceive(') != 1:\n-    errors.append('Stage28RfDiagnostics.cpp: expected exactly one explicit TX implementation')\n-\n-manual_tx = re.search(\n-    r'bool Stage28RfDiagnostics::manualTransmit\\(.*?\\n\\}', diag_cpp, flags=re.S\n )\n-if manual_tx is None or 'transmitAndReceive(' not in manual_tx.group(0):\n-    errors.append('Stage28RfDiagnostics.cpp: TX must remain inside manualTransmit only')\n \n-allowed_cpp = {\n-    'src/climate/runtime/Stage28RfDiagnostics.cpp',\n-    'src/climate/runtime/Stage28MaintenanceRfTransport.cpp',\n+RUNTIME_FORBIDDEN = (\n+    'Stage28dRfOutputEndpoint',\n+    'MappedClimateRoleDriver',\n+    'SwitchableRoleDriver',\n+    'ClimateActuatorAdapter',\n+    'writeScheduledLight(',\n+    'setSafetyForceExhaust(',\n+    'forceSafeStateWithRetries',\n+    'physical_endpoint',\n+    '.manualTransmit(',\n+    '.transmitFrame(',\n+    '.transmitAndReceive(',\n+    'rmt_transmit(',\n+)\n+\n+SERVICE_CONSOLE_FORBIDDEN = (\n+    'manualTransmit(',\n+    'transmitFrame(',\n+    'transmitAndReceive(',\n+    'rmt_transmit(',\n+)\n+\n+LEGACY_FIRMWARE_SOURCES = (\n+    '\"climate/Stage28dBinaryRoleArbiter.cpp\"',\n+    '\"climate/Stage28dRfOutputEndpoint.cpp\"',\n+)\n+\n+RAW_SEND_RE = re.compile(r'(?<![A-Za-z0-9_])(transport_|raw_transport_)\\.send\\(')\n+RAW_SEND_ALLOW = {\n+    'src/climate/output/OutputSupervisorExecutor.cpp',\n+    'src/climate/output/OutputLifecycleExecutor.cpp',\n+    'src/climate/output/OutputMaintenanceControl.cpp',\n }\n-for path in (ROOT / 'src').rglob('*.cpp'):\n-    text = path.read_text()\n-    if 'manualTransmit(' not in text:\n-        continue\n-    rel = path.relative_to(ROOT).as_posix()\n-    if rel not in allowed_cpp:\n-        errors.append(f'{rel}: diagnostics manualTransmit call is not maintenance-only')\n-\n-maintenance = read('src/climate/runtime/Stage28MaintenanceRfTransport.cpp')\n-if 'diagnostics_.manualTransmit(' not in maintenance:\n-    errors.append('Stage28MaintenanceRfTransport.cpp: explicit maintenance TX call missing')\n-if 'rf_diagnostics.tick(now_ms);' not in runtime:\n-    errors.append('ClimateV6RealInputRuntime.cpp: diagnostics tick unexpectedly removed')\n-\n-if errors:\n-    for error in errors:\n-        print(f'OUTPUT_RF_OWNERSHIP_FAIL {error}', file=sys.stderr)\n-    raise SystemExit(1)\n-print('OUTPUT_RF_OWNERSHIP_PASS')\n+\n+\n+def production_cpp(root: Path):\n+    return sorted((root / 'src').rglob('*.cpp'))\n+\n+\n+def relative(root: Path, path: Path) -> str:\n+    return path.relative_to(root).as_posix()\n+\n+\n+def cpp_sites(root: Path, token: str) -> set[str]:\n+    sites: set[str] = set()\n+    for path in production_cpp(root):\n+        if token in path.read_text():\n+            sites.add(relative(root, path))\n+    return sites\n+\n+\n+def find_violations(root: Path = ROOT) -> list[str]:\n+    errors: list[str] = []\n+\n+    required = (\n+        'src/climate/rf433/Rf433RmtLoopback.cpp',\n+        'src/climate/rf433/Rf433RmtFrameSender.cpp',\n+        'src/climate/rf433/Rf433OutputTransport.cpp',\n+        'src/climate/runtime/Stage28RfDiagnostics.cpp',\n+        'src/climate/runtime/Stage28MaintenanceRfTransport.cpp',\n+        'src/climate/output/OutputSupervisorExecutor.cpp',\n+        'src/climate/output/OutputLifecycleExecutor.cpp',\n+        'src/climate/output/OutputMaintenanceControl.cpp',\n+        'src/climate/ClimateV6RealInputRuntime.cpp',\n+        'src/climate/runtime/Stage28ServiceConsole.cpp',\n+        'src/climate/runtime/Stage28ServiceConsoleCommand.cpp',\n+        'src/CMakeLists.txt',\n+        'scripts/stage27c_crowpanel.sh',\n+    )\n+    for rel in required:\n+        if not (root / rel).is_file():\n+            errors.append(f'{rel}: required ownership surface missing')\n+\n+    if errors:\n+        return errors\n+\n+    for token, allowed in {**LOW_LEVEL_RMT, **RADIO_TX}.items():\n+        actual = cpp_sites(root, token)\n+        unexpected = actual - allowed\n+        missing = allowed - actual\n+        for rel in sorted(unexpected):\n+            errors.append(f'{rel}: forbidden configured-output TX token {token!r}')\n+        for rel in sorted(missing):\n+            errors.append(f'{rel}: expected ownership token missing {token!r}')\n+\n+    raw_send_sites: set[str] = set()\n+    for path in production_cpp(root):\n+        if RAW_SEND_RE.search(path.read_text()):\n+            raw_send_sites.add(relative(root, path))\n+    for rel in sorted(raw_send_sites - RAW_SEND_ALLOW):\n+        errors.append(f'{rel}: raw OutputTransport send call outside supervisor/maintenance boundary')\n+    for rel in sorted(RAW_SEND_ALLOW - raw_send_sites):\n+        errors.append(f'{rel}: expected supervisor/maintenance transport send call missing')\n+\n+    runtime_path = root / 'src/climate/ClimateV6RealInputRuntime.cpp'\n+    runtime = runtime_path.read_text()\n+    for token in RUNTIME_FORBIDDEN:\n+        if token in runtime:\n+            errors.append(f'{relative(root, runtime_path)}: forbidden direct output owner token {token!r}')\n+\n+    for rel in (\n+        'src/climate/runtime/Stage28ServiceConsole.cpp',\n+        'src/climate/runtime/Stage28ServiceConsoleCommand.cpp',\n+    ):\n+        text = (root / rel).read_text()\n+        for token in SERVICE_CONSOLE_FORBIDDEN:\n+            if token in text:\n+                errors.append(f'{rel}: service console must not own TX token {token!r}')\n+\n+    cmake = (root / 'src/CMakeLists.txt').read_text()\n+    for token in LEGACY_FIRMWARE_SOURCES:\n+        if token in cmake:\n+            errors.append(f'src/CMakeLists.txt: legacy execution owner still compiled {token}')\n+\n+    output_transport = (root / 'src/climate/rf433/Rf433OutputTransport.cpp').read_text()\n+    for token in ('Stage28RfDiagnostics', 'manualTransmit('):\n+        if token in output_transport:\n+            errors.append(\n+                f'src/climate/rf433/Rf433OutputTransport.cpp: normal transport depends on diagnostics {token!r}'\n+            )\n+\n+    maintenance = (root / 'src/climate/runtime/Stage28MaintenanceRfTransport.cpp').read_text()\n+    for required_token in (\n+        'OutputSource::Maintenance',\n+        'OutputReason::MaintenanceRequest',\n+        'diagnostics_.manualTransmit(',\n+    ):\n+        if required_token not in maintenance:\n+            errors.append(\n+                'src/climate/runtime/Stage28MaintenanceRfTransport.cpp: '\n+                f'maintenance-only guard missing {required_token!r}'\n+            )\n+\n+    diagnostics = (root / 'src/climate/runtime/Stage28RfDiagnostics.cpp').read_text()\n+    if 'if (config_.passive_capture)' not in diagnostics or 'capturePassive();' not in diagnostics:\n+        errors.append('src/climate/runtime/Stage28RfDiagnostics.cpp: passive RX path missing')\n+    if diagnostics.count('transmitAndReceive(') != 1:\n+        errors.append(\n+            'src/climate/runtime/Stage28RfDiagnostics.cpp: TX must remain only in explicit manualTransmit'\n+        )\n+\n+    for rel in (\n+        'src/climate/runtime/Stage28RfDiagnostics.h',\n+        'src/climate/runtime/Stage28RfDiagnostics.cpp',\n+        'src/climate/ClimateV6RealInputRuntime.cpp',\n+        'src/CMakeLists.txt',\n+        'scripts/stage27c_crowpanel.sh',\n+    ):\n+        text = (root / rel).read_text()\n+        for token in AUTO_SMOKE_TOKENS:\n+            if token in text:\n+                errors.append(f'{rel}: forbidden production auto-smoke token {token!r}')\n+\n+    return errors\n+\n+\n+def main() -> int:\n+    errors = find_violations(ROOT)\n+    if errors:\n+        for error in errors:\n+            print(f'OUTPUT_EXECUTION_OWNERSHIP_FAIL {error}', file=sys.stderr)\n+        return 1\n+    print('OUTPUT_EXECUTION_OWNERSHIP_PASS')\n+    return 0\n+\n+\n+if __name__ == '__main__':\n+    raise SystemExit(main())\ndiff --git a/scripts/quality_gate_push.sh b/scripts/quality_gate_push.sh\nindex 557d6941..c964ec6e 100755\n--- a/scripts/quality_gate_push.sh\n+++ b/scripts/quality_gate_push.sh\n@@ -8,6 +8,9 @@ if [[ ! -x \"$PY\" ]]; then\n   PY=\"$(command -v python3)\"\n fi\n \n+echo \"==> output execution ownership\"\n+\"$PY\" \"${ROOT}/scripts/check_output_rf_ownership.py\"\n+\n echo \"==> pytest\"\n # Hardware board E2E needs a matching flashed firmware; exclude from pre-push.\n \"$PY\" -m pytest -q -m \"not hardware\"\ndiff --git a/tests/test_output_execution_ownership.py b/tests/test_output_execution_ownership.py\nnew file mode 100644\nindex 00000000..284eb1cf\n--- /dev/null\n+++ b/tests/test_output_execution_ownership.py\n@@ -0,0 +1,46 @@\n+from importlib.util import module_from_spec, spec_from_file_location\n+from pathlib import Path\n+\n+ROOT = Path(__file__).resolve().parents[1]\n+SCRIPT = ROOT / 'scripts' / 'check_output_rf_ownership.py'\n+\n+\n+def load_guard():\n+    spec = spec_from_file_location('output_execution_ownership_guard', SCRIPT)\n+    assert spec is not None and spec.loader is not None\n+    module = module_from_spec(spec)\n+    spec.loader.exec_module(module)\n+    return module\n+\n+\n+def test_repository_output_execution_ownership_is_single_owner():\n+    guard = load_guard()\n+    assert guard.find_violations(ROOT) == []\n+\n+\n+def test_low_level_rmt_allowlist_rejects_runtime_bypass(tmp_path):\n+    guard = load_guard()\n+    allowed = tmp_path / 'src' / 'climate' / 'rf433' / 'Rf433RmtLoopback.cpp'\n+    allowed.parent.mkdir(parents=True)\n+    allowed.write_text('rmt_transmit(tx, enc, data, size, cfg);\\n')\n+    runtime = tmp_path / 'src' / 'climate' / 'ClimateV6RealInputRuntime.cpp'\n+    runtime.parent.mkdir(parents=True, exist_ok=True)\n+    runtime.write_text('rmt_transmit(tx, enc, data, size, cfg);\\n')\n+\n+    sites = guard.cpp_sites(tmp_path, 'rmt_transmit(')\n+    assert sites == {\n+        'src/climate/rf433/Rf433RmtLoopback.cpp',\n+        'src/climate/ClimateV6RealInputRuntime.cpp',\n+    }\n+    assert sites - guard.LOW_LEVEL_RMT['rmt_transmit('] == {\n+        'src/climate/ClimateV6RealInputRuntime.cpp'\n+    }\n+\n+\n+def test_raw_transport_send_allowlist_rejects_new_production_owner(tmp_path):\n+    guard = load_guard()\n+    runtime = tmp_path / 'src' / 'climate' / 'ClimateV6RealInputRuntime.cpp'\n+    runtime.parent.mkdir(parents=True)\n+    runtime.write_text('transport_.send(command);\\n')\n+    assert guard.RAW_SEND_RE.search(runtime.read_text()) is not None\n+    assert 'src/climate/ClimateV6RealInputRuntime.cpp' not in guard.RAW_SEND_ALLOW\n",
+    "elapsed_seconds": 0.036
+  },
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-08T21:47:18.281276+00:00",
+  "workspace_checkpoint": {
+    "version": 2,
+    "task_id": "20260908-output-a11-4-output-ownership-guard-v1",
+    "reason": "task-exit",
+    "created_at": "2026-09-08T21:47:18.649292+00:00",
+    "base_head": "dac0dcd48180273380380832b3de1fba292a79c3",
+    "work_branch": "agent-work",
+    "path": "/Users/michal/agent-workspace/repos/growbox-ml-controller/checkpoints/20260908-output-a11-4-output-ownership-guard-v1/1788904038514167000-task-exit",
+    "tracked_patch": "tracked.patch",
+    "untracked_root": "untracked",
+    "untracked_files": [],
+    "tracked_patch_bytes": 13253,
+    "untracked_bytes": 0,
+    "total_bytes": 13253,
+    "status": " M scripts/check_output_rf_ownership.py\n M scripts/quality_gate_push.sh\n A tests/test_output_execution_ownership.py\n"
+  },
+  "task_digest": "b277d3c63af5b0c70cb32493c3c6c1bd333fe101b3061bc4517ae1faa993282f",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "attempt_id": "4b190a785f7c253052ece8f5",
+  "daemon_version": "4.18.19"
+}
