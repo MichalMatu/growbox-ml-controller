@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260908-output-a10-1-manual-supervisor-v2",
+  "task_digest": "e918f7db1d9f9a925aadfda2dd86b68ea2844006d412e9ba41e20402825e34b9",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-08T16:56:06.474028+00:00",
+  "attempt_id": "ccc2f24877b3d8a7803091a6",
+  "daemon_version": "4.18.19",
+  "daemon_pid": 40070,
+  "updated_at": "2026-09-08T16:56:06.474207+00:00",
+  "pid": 40070
+}
