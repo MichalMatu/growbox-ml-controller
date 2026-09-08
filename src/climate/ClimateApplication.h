@@ -3,6 +3,7 @@
 #include "climate/ClimateIoAdapters.h"
 
 #include <cstdint>
+#include <optional>
 
 namespace growbox::app::climate_io {
 
@@ -11,6 +12,9 @@ public:
   ClimateApplication(::growbox::climate::ClimateRuntimeController& runtime,
                      ClimateSnapshotProvider& snapshot_provider,
                      ClimateRoleDriver& role_driver) noexcept;
+  ClimateApplication(::growbox::climate::ClimateRuntimeController& runtime,
+                     ClimateSnapshotProvider& snapshot_provider,
+                     ::growbox::climate::ClimateActuatorSink& actuator_sink) noexcept;
 
   ::growbox::climate::ClimateLoopResult
   tick(std::uint64_t monotonic_ms, ::growbox::climate::ClimateRuntimeDecision& decision) noexcept;
@@ -26,7 +30,7 @@ public:
 
 private:
   ClimateInputAdapter input_adapter_;
-  ClimateActuatorAdapter actuator_adapter_;
+  std::optional<ClimateActuatorAdapter> actuator_adapter_;
   ::growbox::climate::ClimateControlLoop control_loop_;
 };
 

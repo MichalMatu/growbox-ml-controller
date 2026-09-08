@@ -168,6 +168,20 @@ public:
   std::size_t calls = 0U;
 };
 
+class RecordingActuatorSink final : public ClimateActuatorSink {
+public:
+  bool apply(const ClimatePolicyRequest& request, std::uint64_t monotonic_ms) noexcept override {
+    ++calls;
+    last_request = request;
+    last_monotonic_ms = monotonic_ms;
+    return true;
+  }
+
+  std::size_t calls = 0U;
+  ClimatePolicyRequest last_request{};
+  std::uint64_t last_monotonic_ms = 0U;
+};
+
 class FixedShadowInference final : public ClimateInferenceProvider {
 public:
   bool infer(const ClimateFeatureVector&, ClimatePolicyRequest& output) noexcept override {
@@ -373,6 +387,25 @@ void testProviderAndDriverImplementationsAreReplaceableAtCompositionBoundary() {
   assert(decision.applied.heater > 0.0F);
 }
 
+void testCompleteActuatorSinkCanBeInjectedWithoutRoleFanout() {
+  ConstantSnapshotProvider provider(snapshotFor(20.0F));
+  RecordingActuatorSink sink{};
+  ClimateRuntimeController runtime{};
+  ClimateApplication application(runtime, provider, static_cast<ClimateActuatorSink&>(sink));
+  ClimateRuntimeDecision decision{};
+
+  const auto result = application.tick(510'000U, decision);
+  assert(result.io_status == ClimateLoopIoStatus::Ok);
+  assert(result.input_sampled);
+  assert(result.command_applied);
+  assert(provider.calls == 1U);
+  assert(sink.calls == 1U);
+  assert(sink.last_monotonic_ms == 510'000U);
+  assert(same(sink.last_request, decision.rule.safe));
+  assert(same(sink.last_request, decision.applied));
+  assert(samePrevious(application.previousApplied(), sink.last_request));
+}
+
 } // namespace
 
 int main() {
@@ -381,5 +414,6 @@ int main() {
   testRejectedCommandGetsOffRecoveryWithoutPoisoningConfirmedState();
   testDoubleFailureLatchesSkipsNormalControlAndResetRestoresOperation();
   testProviderAndDriverImplementationsAreReplaceableAtCompositionBoundary();
+  testCompleteActuatorSinkCanBeInjectedWithoutRoleFanout();
   return 0;
 }
