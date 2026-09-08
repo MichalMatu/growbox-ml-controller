@@ -1,6 +1,7 @@
 #include "climate/runtime/Stage28ServiceConsole.h"
 
 #include "climate/runtime/Stage28ePlatformDiagnostics.h"
+#include "climate/output/OutputAutomationControl.h"
 #include "climate/rf433/Rf433HardwareConfig.h"
 #include "climate/runtime/EuropeWarsawTime.h"
 #include "climate/storage/Stage27FileDurability.h"
@@ -106,6 +107,20 @@ std::uint32_t knownConfiguredTaskStackBytes(const char* name) noexcept {
   }
 #endif
   return 0U;
+}
+
+const char* supervisorModeName(::growbox::app::output::SupervisorMode mode) noexcept {
+  using ::growbox::app::output::SupervisorMode;
+  switch (mode) {
+  case SupervisorMode::BootLocked: return "boot-locked";
+  case SupervisorMode::Arming: return "arming";
+  case SupervisorMode::Automatic: return "automatic";
+  case SupervisorMode::Recovering: return "recovering";
+  case SupervisorMode::Disabled: return "disabled";
+  case SupervisorMode::FaultLocked: return "fault-locked";
+  case SupervisorMode::MaintenanceLocked: return "maintenance-locked";
+  }
+  return "unknown";
 }
 
 const char* stackMarginSeverityName(StackMarginSeverity severity) noexcept {
@@ -238,6 +253,15 @@ void Stage28ServiceConsole::processLine(std::uint64_t now_ms) noexcept {
   case ServiceConsoleCommandKind::RfReceive:
     handleRfReceive(command);
     return;
+  case ServiceConsoleCommandKind::AutomationStatus:
+    printAutomationStatus();
+    return;
+  case ServiceConsoleCommandKind::AutomationEnable:
+    handleAutomationRequest(true);
+    return;
+  case ServiceConsoleCommandKind::AutomationDisable:
+    handleAutomationRequest(false);
+    return;
   case ServiceConsoleCommandKind::RtcSetUnix:
     handleRtcSetUnix(command, now_ms);
     return;
@@ -265,6 +289,8 @@ void Stage28ServiceConsole::printHelp() noexcept {
   writeText("  1 | status                       firmware/runtime/heap/RF status\r\n");
   writeText("  2 | sensors                      SCD41, TP357, Xiaomi and RTC snapshot\r\n");
   writeText("  3 | rf | rf list                 list known RF433 devices/codes\r\n");
+  writeText("  automation [status]              show automation lifecycle state\r\n");
+  writeText("  automation on|off                request high-level automation mode\r\n");
   writeText("  rtc set-unix <epoch>             set DS3231 from UTC Unix seconds\r\n");
   writeText("  rf lamp on|off                   manual lamp socket transmit\r\n");
   writeText("  rf fan on|off                    manual fan socket transmit\r\n");
@@ -278,6 +304,27 @@ void Stage28ServiceConsole::printHelp() noexcept {
   writeText("RF transmit commands require the RF diagnostics transport to be enabled.\r\n");
   writeText("Manual RF TX is blocked while automatic outputs are real-bounded.\r\n");
   writeText("Manual TX is not physical load-state acknowledgement.\r\n");
+}
+
+void Stage28ServiceConsole::printAutomationStatus() noexcept {
+  if (config_.automation_control == nullptr) {
+    writeText("automation unavailable\r\n");
+    return;
+  }
+  const auto& control = *config_.automation_control;
+  writeFormatted("automation mode=%s requested=%s transition_active=%d request_pending=%d\r\n",
+                 supervisorModeName(control.mode()), control.requestedEnabled() ? "on" : "off",
+                 control.transitionActive(), control.requestPending());
+}
+
+void Stage28ServiceConsole::handleAutomationRequest(bool enabled) noexcept {
+  if (config_.automation_control == nullptr) {
+    writeText("error: automation control unavailable\r\n");
+    return;
+  }
+  const bool accepted = config_.automation_control->requestEnabled(enabled);
+  writeFormatted("automation request=%s accepted=%d mode=%s\r\n", enabled ? "on" : "off",
+                 accepted, supervisorModeName(config_.automation_control->mode()));
 }
 
 void Stage28ServiceConsole::printStatus(std::uint64_t now_ms) noexcept {
@@ -320,6 +367,10 @@ void Stage28ServiceConsole::printStatus(std::uint64_t now_ms) noexcept {
       static_cast<unsigned long>(stack_watermark_bytes),
       static_cast<unsigned long>(stack_watermark_bytes), static_cast<unsigned long>(task_total),
       static_cast<unsigned long>(task_captured), task_status != nullptr);
+
+  if (config_.automation_control != nullptr) {
+    printAutomationStatus();
+  }
 
   if (config_.timing_metrics != nullptr) {
     const RuntimeTimingMetrics& timing = *config_.timing_metrics;

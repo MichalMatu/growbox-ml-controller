@@ -8,6 +8,9 @@
 #include "climate/Stage28dRfOutputEndpoint.h"
 #include "climate/output/BinaryActuatorPolicy.h"
 #include "climate/output/ClimateOutputSupervisorSink.h"
+#include "climate/output/OutputAutomationControl.h"
+#include "climate/output/OutputLifecycleExecutor.h"
+#include "climate/output/OutputSupervisorLifecycle.h"
 #include "climate/output/OutputSupervisorExecutor.h"
 #include "climate/output/OutputSupervisorResolver.h"
 #include "climate/Stage28dThermalTestSequence.h"
@@ -407,11 +410,6 @@ private:
 
   runtime::RuntimeTimingMetrics runtime_timing{};
   runtime_timing.loop_active.budget_us = kTickIntervalMs * 1000U;
-  runtime::Stage28ServiceConsole service_console(
-      {GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED != 0, GROWBOX_FIRMWARE_GIT_SHA,
-       &real_output_ready, &storage_logger, &runtime_timing},
-      ble, scd41, clock, rf_diagnostics);
-  const bool service_console_ready = service_console.begin();
 
   runtime::Stage27InsideSource inside(ble, scd41);
   runtime::Stage27NearbySource outside(ble);
@@ -440,14 +438,30 @@ private:
   supervisor_config.count = 3U;
 
   RuntimeOutputTransport supervisor_transport(rf_output_transport, real_output_ready);
+  const output::OutputPolicyConfig output_policy = stage28d::makeOutputPolicyConfig();
+  output::OutputSupervisorLifecycle output_lifecycle(output_policy);
+  output::OutputLifecycleExecutor lifecycle_executor(output_policy, output_lifecycle,
+                                                     supervisor_transport, output_state_store,
+                                                     supervisor_config);
+  bool lifecycle_ready = output_lifecycle.valid() && lifecycle_executor.valid();
+  if (lifecycle_ready) {
+    const auto begin_arming = output_lifecycle.apply(output::OutputLifecycleCommand::BeginArming);
+    const auto armed = output_lifecycle.apply(output::OutputLifecycleCommand::ArmingSucceeded);
+    lifecycle_ready = begin_arming.status == output::OutputLifecycleTransitionStatus::Applied &&
+                      armed.status == output::OutputLifecycleTransitionStatus::Applied &&
+                      output_lifecycle.mode() == output::SupervisorMode::Automatic;
+  }
+  output::OutputAutomationControl automation_control(output_lifecycle, lifecycle_executor);
+  lifecycle_ready = lifecycle_ready && automation_control.valid();
+
   output::OutputSupervisorResolver supervisor_resolver(supervisor_config);
   output::OutputSupervisorExecutor supervisor_executor(supervisor_transport, output_state_store,
                                                        supervisor_config);
   ClimateOutputSupervisorSink supervisor_sink(semantic_output_config, supervisor_resolver,
                                               supervisor_executor, output_state_store,
                                               &fail_safe_actuator_adapter);
-  if (!supervisor_sink.valid()) {
-    ESP_LOGE(kTag, "Output supervisor composition invalid; real outputs remain locked");
+  if (!supervisor_sink.valid() || !lifecycle_ready) {
+    ESP_LOGE(kTag, "Output supervisor/lifecycle composition invalid; real outputs remain locked");
     if (real_output_ready) {
       const std::uint64_t safe_ms = monotonicMilliseconds();
       const bool safe_off = forceSafeStateWithRetries(physical_endpoint, safe_ms);
@@ -460,6 +474,12 @@ private:
                safe_off);
     }
   }
+
+  runtime::Stage28ServiceConsole service_console(
+      {GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED != 0, GROWBOX_FIRMWARE_GIT_SHA,
+       &real_output_ready, &storage_logger, &runtime_timing, &automation_control},
+      ble, scd41, clock, rf_diagnostics);
+  const bool service_console_ready = service_console.begin();
 
   static RuntimeControlOwner runtime_control_owner;
   auto& runtime_controller = runtime_control_owner.runtimeController();
@@ -613,8 +633,11 @@ private:
         ESP_LOGE(kTag, "Lamp safety envelope fault safe_off=%d outputs=fake-locked", safe_off);
       }
 
+      const auto automation_report =
+          automation_control.tick(now_ms, schedule_intent, safety_snapshot.envelope);
+
       ClimateOutputSupervisorCycleContext supervisor_context{};
-      supervisor_context.mode = output::SupervisorMode::Automatic;
+      supervisor_context.mode = automation_report.mode;
       supervisor_context.schedule = schedule_intent;
       supervisor_context.safety = safety_snapshot.envelope;
       supervisor_sink.setCycleContext(supervisor_context);
@@ -643,7 +666,8 @@ private:
       ESP_LOGI(kTag,
                "stage28d_output real=%d lamp_known=%d lamp_on=%d fan_known=%d fan_on=%d "
                "humidifier_known=%d humidifier_on=%d safety_latched=%d force_fan=%d "
-               "safety_reason=%u requested_fan=%.3f requested_humidifier=%.3f "
+               "safety_reason=%u supervisor_mode=%u automation_requested=%d lifecycle_active=%d "
+               "requested_fan=%.3f requested_humidifier=%.3f "
                "applied_fan=%.3f applied_humidifier=%.3f arbiter_transitions=%lu "
                "arbiter_dwell_holds=%lu arbiter_safety_overrides=%lu tx=%lu tx_errors=%lu",
                real_output_ready,
@@ -655,6 +679,8 @@ private:
                commandStateOn(output_state_store, stage28d::kHumidifierEndpoint),
                lamp_decision.thermal_latched, lamp_decision.force_exhaust_on,
                static_cast<unsigned>(lamp_decision.reason),
+               static_cast<unsigned>(output_lifecycle.mode()), automation_control.requestedEnabled(),
+               automation_control.transitionActive(),
                static_cast<double>(decision.rule.safe.exhaust_fan),
                static_cast<double>(decision.rule.safe.humidifier),
                static_cast<double>(decision.applied.exhaust_fan),

@@ -89,6 +89,12 @@ ServiceConsoleCommand parseServiceConsoleCommand(const char* line) noexcept {
   if (count>tokens.size()) return invalidCommand();
 
   ServiceConsoleCommand command{};
+  if (equalsIgnoreCase(tokens[0],"automation")) {
+    if (count==1U || (count==2U && equalsIgnoreCase(tokens[1],"status"))) { command.kind=ServiceConsoleCommandKind::AutomationStatus; return command; }
+    if (count==2U && equalsIgnoreCase(tokens[1],"on")) { command.kind=ServiceConsoleCommandKind::AutomationEnable; return command; }
+    if (count==2U && equalsIgnoreCase(tokens[1],"off")) { command.kind=ServiceConsoleCommandKind::AutomationDisable; return command; }
+    return invalidCommand();
+  }
   if (count==1U) {
     if (equalsIgnoreCase(tokens[0],"help")||equalsIgnoreCase(tokens[0],"menu")||tokens[0]=="?"||tokens[0]=="0") { command.kind=ServiceConsoleCommandKind::Help; return command; }
     if (equalsIgnoreCase(tokens[0],"status")||tokens[0]=="1") { command.kind=ServiceConsoleCommandKind::Status; return command; }
