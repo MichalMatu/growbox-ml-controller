@@ -1,7 +1,6 @@
 #include "climate/Stage28dRfOutputEndpoint.h"
 
 #include "climate/Stage28dOutputBindings.h"
-#include "climate/rf433/ClimateRf433EndpointRegistry.h"
 
 #include <cmath>
 #include <limits>
@@ -13,18 +12,18 @@ constexpr std::size_t kInvalidStateIndex = std::numeric_limits<std::size_t>::max
 
 } // namespace
 
-Stage28dRfOutputEndpoint::Stage28dRfOutputEndpoint(RfOutputEndpointConfig config,
-                                                   RfCommandTransmitter& transmitter) noexcept
-    : config_(config), transmitter_(transmitter) {}
+Stage28dRfOutputEndpoint::Stage28dRfOutputEndpoint(
+    RfOutputEndpointConfig config, ::growbox::app::output::OutputTransport& transport) noexcept
+    : config_(config), transport_(transport) {}
 
 std::size_t Stage28dRfOutputEndpoint::stateIndex(ClimateEndpointId endpoint) noexcept {
-  if (endpoint == rf433::kRemoteSocket1ClimateEndpoint) {
+  if (endpoint == kExhaustFanEndpoint) {
     return 0U;
   }
-  if (endpoint == rf433::kRemoteSocket2ClimateEndpoint) {
+  if (endpoint == kScheduledLightEndpoint) {
     return 1U;
   }
-  if (endpoint == rf433::kRemoteSocket3ClimateEndpoint) {
+  if (endpoint == kHumidifierEndpoint) {
     return 2U;
   }
   return kInvalidStateIndex;
@@ -90,12 +89,13 @@ bool Stage28dRfOutputEndpoint::applyBinary(ClimateEndpointId endpoint, bool on,
     return true;
   }
 
-  const rf433::ClimateRf433EndpointBinding* binding = rf433::findClimateRf433Endpoint(endpoint);
-  if (binding == nullptr || binding->hardware == nullptr) {
-    return false;
-  }
-  const rf433::FrameConfig& frame = on ? binding->hardware->on : binding->hardware->off;
-  if (!transmitter_.transmit(frame)) {
+  const ::growbox::app::output::OutputCommand command{
+      endpoint,
+      on ? ::growbox::app::output::BinaryOutputState::On
+         : ::growbox::app::output::BinaryOutputState::Off,
+  };
+  const auto result = transport_.send(command);
+  if (result.status != ::growbox::app::output::TransportStatus::Completed) {
     ++transmit_error_count_;
     return false;
   }

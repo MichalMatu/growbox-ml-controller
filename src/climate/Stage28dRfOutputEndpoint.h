@@ -1,18 +1,12 @@
 #pragma once
 
 #include "climate/ClimateSemanticOutput.h"
-#include "climate/rf433/Rf433HardwareConfig.h"
+#include "climate/output/OutputTransport.h"
 
 #include <array>
 #include <cstdint>
 
 namespace growbox::app::climate_io::stage28d {
-
-class RfCommandTransmitter {
-public:
-  virtual ~RfCommandTransmitter() = default;
-  virtual bool transmit(const rf433::FrameConfig& frame) noexcept = 0;
-};
 
 struct RfOutputEndpointConfig {
   bool enabled{false};
@@ -21,7 +15,8 @@ struct RfOutputEndpointConfig {
 
 class Stage28dRfOutputEndpoint final : public ClimateOutputEndpoint {
 public:
-  Stage28dRfOutputEndpoint(RfOutputEndpointConfig config, RfCommandTransmitter& transmitter) noexcept;
+  Stage28dRfOutputEndpoint(RfOutputEndpointConfig config,
+                           ::growbox::app::output::OutputTransport& transport) noexcept;
 
   bool initializeSafeState(std::uint64_t monotonic_ms) noexcept;
   bool write(ClimateEndpointId endpoint, float normalized_level,
@@ -47,7 +42,7 @@ private:
                    bool force_send = false) noexcept;
 
   RfOutputEndpointConfig config_{};
-  RfCommandTransmitter& transmitter_;
+  ::growbox::app::output::OutputTransport& transport_;
   std::array<EndpointState, 3U> states_{};
   bool safety_force_exhaust_{false};
   std::uint32_t transmit_count_{0U};

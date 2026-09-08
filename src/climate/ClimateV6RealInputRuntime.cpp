@@ -18,6 +18,8 @@
 #include "climate/runtime/Stage28ServiceConsole.h"
 #include "climate/runtime/Stage28eLog.h"
 #include "climate/runtime/Stage28ePlatformDiagnostics.h"
+#include "climate/rf433/Rf433OutputTransport.h"
+#include "climate/rf433/Rf433RmtFrameSender.h"
 #include "climate/rf433/Rf433RmtLoopback.h"
 #include "climate/storage/Stage27TelemetryLogger.h"
 
@@ -145,20 +147,6 @@ runtime::Stage28RfDiagnosticsConfig rfDiagnosticsConfig() noexcept {
                   static_cast<std::uint16_t>(GROWBOX_RF433_LOOPBACK_SMOKE_PULSE_US)};
   return config;
 }
-
-class DiagnosticsRfTransmitter final : public stage28d::RfCommandTransmitter {
-public:
-  explicit DiagnosticsRfTransmitter(runtime::Stage28RfDiagnostics& diagnostics) noexcept
-      : diagnostics_(diagnostics) {}
-
-  bool transmit(const rf433::FrameConfig& frame) noexcept override {
-    rf433::LoopbackEvidence evidence{};
-    return diagnostics_.manualTransmit(frame, evidence) && evidence.tx_completed;
-  }
-
-private:
-  runtime::Stage28RfDiagnostics& diagnostics_;
-};
 
 class SwitchableRoleDriver final : public ClimateRoleDriver {
 public:
@@ -310,14 +298,15 @@ private:
       storage_enabled && storage_logger.begin(GROWBOX_FIRMWARE_GIT_SHA);
   auto& rf_diagnostics = runtime_io_owner.rfDiagnostics();
   const bool rf_ready = runtime_io_owner.beginRf();
-  DiagnosticsRfTransmitter rf_transmitter(rf_diagnostics);
+  rf433::Rf433RmtFrameSender rf_frame_sender(runtime_io_owner.rfRadio());
+  rf433::Rf433OutputTransport rf_output_transport(rf_frame_sender);
 
   const auto semantic_output_config = stage28d::makeClimateSemanticOutputConfig();
   const bool output_bindings_valid =
       stage28d::validateOutputBindings(semantic_output_config) == stage28d::OutputBindingStatus::Ok;
   stage28d::Stage28dRfOutputEndpoint physical_endpoint(
       {GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED != 0 && rf_ready && output_bindings_valid, 0.5F},
-      rf_transmitter);
+      rf_output_transport);
 
   bool real_output_ready = false;
   if (GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED != 0) {

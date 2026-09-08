@@ -1,35 +1,46 @@
 #include "climate/Stage28dOutputBindings.h"
 #include "climate/Stage28dRfOutputEndpoint.h"
+#include "climate/output/OutputTransport.h"
 
 #include <array>
 #include <cassert>
 #include <cstddef>
-#include <cstdint>
 
 using namespace growbox::app::climate_io;
 using namespace growbox::app::climate_io::stage28d;
 
 namespace {
 
-class FakeTransmitter final : public RfCommandTransmitter {
+class FakeTransport final : public growbox::app::output::OutputTransport {
 public:
-  bool transmit(const rf433::FrameConfig& frame) noexcept override {
+  growbox::app::output::TxResult
+  send(const growbox::app::output::OutputCommand& command) noexcept override {
+    assert(count < commands.size());
+    commands[count++] = command;
     if (fail_next) {
       fail_next = false;
-      return false;
+      return {growbox::app::output::TransportStatus::Failed,
+              growbox::app::output::TransportError::IoFailure};
     }
-    assert(count < codes.size());
-    codes[count++] = frame.key.code;
-    return true;
+    return {growbox::app::output::TransportStatus::Completed,
+            growbox::app::output::TransportError::None};
   }
 
-  std::array<std::uint32_t, 16U> codes{};
+  std::array<growbox::app::output::OutputCommand, 16U> commands{};
   std::size_t count{0U};
   bool fail_next{false};
 };
 
+void expectLast(const FakeTransport& tx, ClimateEndpointId endpoint, bool on) {
+  assert(tx.count > 0U);
+  const auto& command = tx.commands[tx.count - 1U];
+  assert(command.endpoint == endpoint);
+  assert(command.state == (on ? growbox::app::output::BinaryOutputState::On
+                              : growbox::app::output::BinaryOutputState::Off));
+}
+
 void testSafeInitializationAndDeduplication() {
-  FakeTransmitter tx;
+  FakeTransport tx;
   Stage28dRfOutputEndpoint endpoint({true, 0.5F}, tx);
   assert(endpoint.initializeSafeState(100U));
   assert(tx.count == 3U);
@@ -44,27 +55,28 @@ void testSafeInitializationAndDeduplication() {
   assert(tx.count == 3U);
   assert(endpoint.write(kExhaustFanEndpoint, 1.0F, 300U));
   assert(tx.count == 4U);
+  expectLast(tx, kExhaustFanEndpoint, true);
   assert(endpoint.write(kExhaustFanEndpoint, 1.0F, 400U));
   assert(tx.count == 4U);
 }
 
 void testSafetyForceExhaustOverridesRuleRequest() {
-  FakeTransmitter tx;
+  FakeTransport tx;
   Stage28dRfOutputEndpoint endpoint({true, 0.5F}, tx);
   assert(endpoint.initializeSafeState(0U));
   endpoint.setSafetyForceExhaust(true);
   assert(endpoint.write(kExhaustFanEndpoint, 0.0F, 100U));
   assert(endpoint.stateOn(kExhaustFanEndpoint));
-  assert(tx.codes[tx.count - 1U] == rf433::kRemoteSocket1.on.key.code);
+  expectLast(tx, kExhaustFanEndpoint, true);
 
   endpoint.setSafetyForceExhaust(false);
   assert(endpoint.write(kExhaustFanEndpoint, 0.0F, 200U));
   assert(!endpoint.stateOn(kExhaustFanEndpoint));
-  assert(tx.codes[tx.count - 1U] == rf433::kRemoteSocket1.off.key.code);
+  expectLast(tx, kExhaustFanEndpoint, false);
 }
 
 void testEmergencyOffBypassesSafetyForce() {
-  FakeTransmitter tx;
+  FakeTransport tx;
   Stage28dRfOutputEndpoint endpoint({true, 0.5F}, tx);
   assert(endpoint.initializeSafeState(0U));
   endpoint.setSafetyForceExhaust(true);
@@ -73,32 +85,31 @@ void testEmergencyOffBypassesSafetyForce() {
 
   assert(endpoint.forceOff(kExhaustFanEndpoint, 101U));
   assert(!endpoint.stateOn(kExhaustFanEndpoint));
-  assert(tx.codes[tx.count - 1U] == rf433::kRemoteSocket1.off.key.code);
+  expectLast(tx, kExhaustFanEndpoint, false);
 
-  // The ordinary path still honors the safety force afterwards.
   assert(endpoint.write(kExhaustFanEndpoint, 0.0F, 102U));
   assert(endpoint.stateOn(kExhaustFanEndpoint));
-  assert(tx.codes[tx.count - 1U] == rf433::kRemoteSocket1.on.key.code);
+  expectLast(tx, kExhaustFanEndpoint, true);
 }
 
 void testScheduledLightUsesDedicatedPath() {
-  FakeTransmitter tx;
+  FakeTransport tx;
   Stage28dRfOutputEndpoint endpoint({true, 0.5F}, tx);
   assert(endpoint.initializeSafeState(0U));
   assert(!endpoint.write(kScheduledLightEndpoint, 1.0F, 100U));
   assert(!endpoint.forceOff(kScheduledLightEndpoint, 100U));
   assert(endpoint.writeScheduledLight(true, 100U));
   assert(endpoint.stateOn(kScheduledLightEndpoint));
-  assert(tx.codes[tx.count - 1U] == rf433::kRemoteSocket2.on.key.code);
+  expectLast(tx, kScheduledLightEndpoint, true);
   assert(endpoint.writeScheduledLight(true, 200U));
   assert(tx.count == 4U);
   assert(endpoint.writeScheduledLight(false, 300U));
   assert(!endpoint.stateOn(kScheduledLightEndpoint));
-  assert(tx.codes[tx.count - 1U] == rf433::kRemoteSocket2.off.key.code);
+  expectLast(tx, kScheduledLightEndpoint, false);
 }
 
 void testTransmitFailureDoesNotAdvanceState() {
-  FakeTransmitter tx;
+  FakeTransport tx;
   Stage28dRfOutputEndpoint endpoint({true, 0.5F}, tx);
   assert(endpoint.initializeSafeState(0U));
   tx.fail_next = true;
@@ -107,10 +118,11 @@ void testTransmitFailureDoesNotAdvanceState() {
   assert(endpoint.transmitErrorCount() == 1U);
   assert(endpoint.write(kHumidifierEndpoint, 1.0F, 200U));
   assert(endpoint.stateOn(kHumidifierEndpoint));
+  expectLast(tx, kHumidifierEndpoint, true);
 }
 
 void testDisabledEndpointFailsClosed() {
-  FakeTransmitter tx;
+  FakeTransport tx;
   Stage28dRfOutputEndpoint endpoint({false, 0.5F}, tx);
   assert(!endpoint.initializeSafeState(0U));
   assert(!endpoint.write(kExhaustFanEndpoint, 1.0F, 100U));
