@@ -1,0 +1,22 @@
+{
+  "id": "20260908-output-architecture-audit-scan-v4-current",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 4096,
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "commands": [
+    "set -euo pipefail; EXPECTED=ff769096f24349ba6f31e61ea170176db00725d3; git fetch -q origin mvp/environment-controller:refs/remotes/origin/mvp/environment-controller; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; echo AUDIT_IDENTITY_PASS head=$EXPECTED branch=$(git branch --show-current)",
+    "set -euo pipefail; echo '=== CORE SYMBOL FILES ==='; git grep -l -E 'ClimateRuntimeController|ClimateControlLoop|ClimateActuatorAdapter|MappedClimateRoleDriver|Stage28dBinaryRoleArbiter|Stage28dRfOutputEndpoint|LampSafetyController|reconcileApplied|previous_applied|EstimatedEffectiveClimateActions' -- src lib test tests 2>/dev/null | sort || true",
+    "set -euo pipefail; echo '=== OUTPUT RF ENTRY POINTS ==='; git grep -n -E 'forceSafeOff|synchronizeSafeOff|applyBinary|transmit|rf433|RF433|manualRf|manual_rf|setLamp|setFan|setHumid|force_fan|force_lamp' -- src lib test tests 2>/dev/null | head -n 1800 || true",
+    "set -euo pipefail; echo '=== STARTUP DISABLE RECOVERY FAULT SCHEDULE ==='; git grep -n -E 'automation|enabled|disable|startup|boot|recover|recovery|fault|safe|schedule|TimerOff|LampSafety|force_fan|force_lamp|real-bounded|fake-locked' -- src lib test tests 2>/dev/null | head -n 2200 || true",
+    "set -euo pipefail; echo '=== PERSISTENCE ==='; git grep -n -E 'nvs_|NVS|Preferences|persist|storage|save|load|config_store|settings|Settings' -- src lib test tests 2>/dev/null | head -n 1500 || true",
+    "set -euo pipefail; echo '=== TASK CONCURRENCY ==='; git grep -n -E 'xTaskCreate|xTaskCreatePinnedToCore|TaskHandle|Semaphore|mutex|Mutex|lock_guard|critical|portENTER|FreeRTOS|std::atomic|atomic<' -- src lib 2>/dev/null | head -n 1500 || true",
+    "set -euo pipefail; echo '=== TEST COUPLING ==='; git grep -n -E 'ClimateActuatorAdapter|MappedClimateRoleDriver|Stage28dBinaryRoleArbiter|Stage28dRfOutputEndpoint|LampSafetyController|reconcileApplied|previous_applied|ClimateControlLoop|ClimateRuntimeController' -- test tests 2>/dev/null | head -n 2200 || true",
+    "set -euo pipefail; echo '=== RELEVANT TRACKED PATHS ==='; git ls-files | grep -E '(^|/)(Climate|Stage28|Rf|RF|Lamp|Safety|Output|Schedule|Service|Storage|Settings|Config|Runtime|Application|Actuator|Arbiter)' | sort | head -n 1800 || true; echo AUDIT_SCAN_PASS"
+  ]
+}
