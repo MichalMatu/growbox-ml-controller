@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260908-output-a7-2-estimator-reconcile-v2",
+  "task_digest": "516311230817bfcd3f44948f3a347d4470511b9a298f54863ebd81417ebb0f75",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-08T14:45:01.855849+00:00",
+  "attempt_id": "52f71b85a7c91c256c368469",
+  "daemon_version": "4.18.19",
+  "daemon_pid": 24061,
+  "updated_at": "2026-09-08T14:45:01.856039+00:00",
+  "pid": 24061
+}
