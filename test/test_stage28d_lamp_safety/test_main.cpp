@@ -1,4 +1,5 @@
 #include "climate/Stage28dLampSafety.h"
+#include "climate/Stage28dOutputBindings.h"
 
 #include <cassert>
 #include <cstdint>
@@ -7,8 +8,13 @@
 using growbox::app::climate_io::stage28d::LampSafetyConfig;
 using growbox::app::climate_io::stage28d::LampSafetyController;
 using growbox::app::climate_io::stage28d::LampSafetyInput;
+using growbox::app::climate_io::stage28d::LampSafetyEnvelopeSnapshot;
 using growbox::app::climate_io::stage28d::LampSafetyReason;
+using growbox::app::climate_io::stage28d::buildLampSafetyEnvelope;
+using growbox::app::climate_io::stage28d::kExhaustFanEndpoint;
+using growbox::app::climate_io::stage28d::kScheduledLightEndpoint;
 using growbox::app::climate_io::stage28d::validateLampSafetyConfig;
+namespace output = growbox::app::output;
 
 namespace {
 
@@ -117,6 +123,88 @@ void testInvalidConfigFailsClosed() {
   assert(decision.reason == LampSafetyReason::InvalidConfig);
 }
 
+void testEnvelopeLeavesScheduleAuthorityUnconstrainedWhenThermallySafe() {
+  LampSafetyController controller;
+  const auto sample = input(0.0F, 24.0F, true, 77U, 2'000U);
+  const auto decision = controller.evaluate(sample);
+  LampSafetyEnvelopeSnapshot snapshot{};
+  assert(buildLampSafetyEnvelope(sample, decision, 9U, snapshot));
+  assert(snapshot.reason == LampSafetyReason::TimerOff);
+  assert(!snapshot.thermal_latched);
+  assert(!snapshot.recovery_running);
+  assert(snapshot.evidence_monotonic_ms == 2'000U);
+  assert(snapshot.temperature_age_ms == 77U);
+  assert(snapshot.envelope.metadata.sequence == 9U);
+  assert(snapshot.envelope.metadata.monotonic_ms == 2'000U);
+  assert(snapshot.envelope.metadata.source == output::OutputSource::Safety);
+  assert(snapshot.envelope.metadata.reason == output::OutputReason::None);
+  for (const auto& constraint : snapshot.envelope.endpoints) {
+    assert(!output::safetyConstraintActive(constraint));
+  }
+}
+
+void testEnvelopeMapsThermalLatchToLampOffAndFanOn() {
+  LampSafetyController controller;
+  const auto sample = input(1.0F, 28.0F, true, 321U, 10'000U);
+  const auto decision = controller.evaluate(sample);
+  LampSafetyEnvelopeSnapshot snapshot{};
+  assert(buildLampSafetyEnvelope(sample, decision, 55U, snapshot));
+  assert(snapshot.reason == LampSafetyReason::OverTemperature);
+  assert(snapshot.thermal_latched);
+  assert(!snapshot.recovery_running);
+  assert(snapshot.evidence_monotonic_ms == 10'000U);
+  assert(snapshot.temperature_age_ms == 321U);
+  assert(snapshot.envelope.metadata.reason == output::OutputReason::ThermalSafety);
+  assert(output::safetyConstraintActive(snapshot.envelope.endpoints[0]));
+  assert(snapshot.envelope.endpoints[0].endpoint == kScheduledLightEndpoint);
+  assert(snapshot.envelope.endpoints[0].constraint == output::SafetyConstraint::ForceOff);
+  assert(snapshot.envelope.endpoints[0].reason == output::OutputReason::ThermalSafety);
+  assert(output::safetyConstraintActive(snapshot.envelope.endpoints[1]));
+  assert(snapshot.envelope.endpoints[1].endpoint == kExhaustFanEndpoint);
+  assert(snapshot.envelope.endpoints[1].constraint == output::SafetyConstraint::ForceOn);
+  assert(!output::safetyConstraintActive(snapshot.envelope.endpoints[2]));
+}
+
+void testEnvelopePreservesRecoveryMetadata() {
+  LampSafetyController controller;
+  (void)controller.evaluate(input(1.0F, 29.0F, true, 0U, 0U));
+  const auto sample = input(1.0F, 26.0F, true, 10U, 10'000U);
+  const auto decision = controller.evaluate(sample);
+  assert(decision.recovery_running);
+  assert(decision.recovery_started_ms == 10'000U);
+
+  LampSafetyEnvelopeSnapshot snapshot{};
+  assert(buildLampSafetyEnvelope(sample, decision, 3U, snapshot));
+  assert(snapshot.reason == LampSafetyReason::RecoveryHold);
+  assert(snapshot.thermal_latched);
+  assert(snapshot.recovery_running);
+  assert(snapshot.recovery_started_ms == 10'000U);
+  assert(snapshot.envelope.endpoints[0].constraint == output::SafetyConstraint::ForceOff);
+  assert(snapshot.envelope.endpoints[1].constraint == output::SafetyConstraint::ForceOn);
+
+  const auto recovered_sample = input(1.0F, 25.9F, true, 0U, 610'000U);
+  const auto recovered = controller.evaluate(recovered_sample);
+  assert(!recovered.thermal_latched);
+  assert(!recovered.recovery_running);
+  assert(recovered.recovery_started_ms == 0U);
+  assert(buildLampSafetyEnvelope(recovered_sample, recovered, 4U, snapshot));
+  for (const auto& constraint : snapshot.envelope.endpoints) {
+    assert(!output::safetyConstraintActive(constraint));
+  }
+}
+
+void testEnvelopeDoesNotInventUnavailableFan() {
+  LampSafetyController controller;
+  const auto sample = input(1.0F, 28.5F, true, 0U, 1U, false);
+  const auto decision = controller.evaluate(sample);
+  LampSafetyEnvelopeSnapshot snapshot{};
+  assert(buildLampSafetyEnvelope(sample, decision, 1U, snapshot));
+  assert(snapshot.thermal_latched);
+  assert(snapshot.envelope.endpoints[0].endpoint == kScheduledLightEndpoint);
+  assert(snapshot.envelope.endpoints[0].constraint == output::SafetyConstraint::ForceOff);
+  assert(!output::safetyConstraintActive(snapshot.envelope.endpoints[1]));
+}
+
 } // namespace
 
 int main() {
@@ -127,5 +215,9 @@ int main() {
   testStaleInvalidAndNonFiniteTemperatureFailClosed();
   testNoFanCapabilityDoesNotInventActuation();
   testInvalidConfigFailsClosed();
+  testEnvelopeLeavesScheduleAuthorityUnconstrainedWhenThermallySafe();
+  testEnvelopeMapsThermalLatchToLampOffAndFanOn();
+  testEnvelopePreservesRecoveryMetadata();
+  testEnvelopeDoesNotInventUnavailableFan();
   return 0;
 }

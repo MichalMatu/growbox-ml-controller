@@ -1,6 +1,7 @@
 #pragma once
 
 #include "climate/ClimateTypes.h"
+#include "climate/output/OutputIntents.h"
 
 #include <cstdint>
 
@@ -35,8 +36,24 @@ struct LampSafetyDecision {
   bool effective_lamp_on{false};
   bool force_exhaust_on{false};
   bool thermal_latched{false};
+  bool recovery_running{false};
+  std::uint64_t recovery_started_ms{0U};
   LampSafetyReason reason{LampSafetyReason::Safe};
 };
+
+struct LampSafetyEnvelopeSnapshot {
+  ::growbox::app::output::SafetyEnvelope envelope{};
+  LampSafetyReason reason{LampSafetyReason::Safe};
+  bool thermal_latched{false};
+  bool recovery_running{false};
+  std::uint64_t recovery_started_ms{0U};
+  std::uint64_t evidence_monotonic_ms{0U};
+  std::uint64_t temperature_age_ms{0U};
+};
+
+bool buildLampSafetyEnvelope(const LampSafetyInput& input, const LampSafetyDecision& decision,
+                             std::uint64_t sequence,
+                             LampSafetyEnvelopeSnapshot& output) noexcept;
 
 bool validateLampSafetyConfig(const LampSafetyConfig& config) noexcept;
 

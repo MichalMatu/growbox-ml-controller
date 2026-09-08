@@ -1,5 +1,7 @@
 #include "climate/Stage28dLampSafety.h"
 
+#include "climate/Stage28dOutputBindings.h"
+
 #include <cmath>
 
 namespace growbox::app::climate_io::stage28d {
@@ -24,6 +26,10 @@ void LampSafetyController::reset() noexcept {
 LampSafetyDecision LampSafetyController::evaluate(const LampSafetyInput& input) noexcept {
   LampSafetyDecision output{};
   output.schedule_requests_lamp_on = input.scheduled_light_level >= config_.light_on_threshold;
+  const auto attach_recovery_metadata = [&]() noexcept {
+    output.recovery_running = recovery_running_;
+    output.recovery_started_ms = recovery_running_ ? recovery_started_ms_ : 0U;
+  };
 
   if (!validateLampSafetyConfig(config_)) {
     thermal_latched_ = true;
@@ -32,6 +38,7 @@ LampSafetyDecision LampSafetyController::evaluate(const LampSafetyInput& input) 
     output.force_exhaust_on = input.exhaust_fan_available;
     output.thermal_latched = true;
     output.reason = LampSafetyReason::InvalidConfig;
+    attach_recovery_metadata();
     return output;
   }
 
@@ -45,6 +52,7 @@ LampSafetyDecision LampSafetyController::evaluate(const LampSafetyInput& input) 
     output.force_exhaust_on = input.exhaust_fan_available;
     output.thermal_latched = true;
     output.reason = LampSafetyReason::TemperatureUnavailable;
+    attach_recovery_metadata();
     return output;
   }
 
@@ -75,13 +83,53 @@ LampSafetyDecision LampSafetyController::evaluate(const LampSafetyInput& input) 
     output.reason = temperature.value >= config_.trip_temperature_c
                         ? LampSafetyReason::OverTemperature
                         : LampSafetyReason::RecoveryHold;
+    attach_recovery_metadata();
     return output;
   }
 
   output.effective_lamp_on = output.schedule_requests_lamp_on;
   output.reason = output.schedule_requests_lamp_on ? LampSafetyReason::Safe
                                                    : LampSafetyReason::TimerOff;
+  attach_recovery_metadata();
   return output;
+}
+
+bool buildLampSafetyEnvelope(const LampSafetyInput& input, const LampSafetyDecision& decision,
+                             std::uint64_t sequence,
+                             LampSafetyEnvelopeSnapshot& output) noexcept {
+  output = {};
+  output.reason = decision.reason;
+  output.thermal_latched = decision.thermal_latched;
+  output.recovery_running = decision.recovery_running;
+  output.recovery_started_ms = decision.recovery_started_ms;
+  output.evidence_monotonic_ms = input.monotonic_ms;
+  output.temperature_age_ms = input.inside_temperature_c.age_ms;
+  output.envelope.metadata.sequence = sequence;
+  output.envelope.metadata.monotonic_ms = input.monotonic_ms;
+  output.envelope.metadata.source = ::growbox::app::output::OutputSource::Safety;
+
+  if (!decision.thermal_latched) {
+    return true;
+  }
+
+  output.envelope.metadata.reason = ::growbox::app::output::OutputReason::ThermalSafety;
+  if (!::growbox::app::output::setSafetyConstraint(
+          output.envelope.endpoints[0], kScheduledLightEndpoint,
+          ::growbox::app::output::SafetyConstraint::ForceOff,
+          ::growbox::app::output::OutputReason::ThermalSafety)) {
+    output = {};
+    return false;
+  }
+
+  if (decision.force_exhaust_on &&
+      !::growbox::app::output::setSafetyConstraint(
+          output.envelope.endpoints[1], kExhaustFanEndpoint,
+          ::growbox::app::output::SafetyConstraint::ForceOn,
+          ::growbox::app::output::OutputReason::ThermalSafety)) {
+    output = {};
+    return false;
+  }
+  return true;
 }
 
 } // namespace growbox::app::climate_io::stage28d
