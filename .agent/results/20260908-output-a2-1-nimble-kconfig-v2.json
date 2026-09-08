@@ -1,0 +1,61 @@
+{
+  "id": "20260908-output-a2-1-nimble-kconfig-v2",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "started_at": "2026-09-08T09:59:32.532192+00:00",
+  "command_timeout": 900,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; test \"$(git rev-parse HEAD)\" = 757817702d97b6c840736b6117cd15e038580558; test -z \"$(git status --porcelain)\"; source scripts/source_idf.sh >/dev/null; grep -R -n 'BT_NIMBLE_ENABLED' \"$IDF_PATH/components/bt\" | head -30; grep -R -n 'BT_NIMBLE_ROLE_OBSERVER' \"$IDF_PATH/components/bt\" | head -30; grep -R -n 'BT_ENABLED' \"$IDF_PATH/components/bt/Kconfig*\" 2>/dev/null | head -30 || true",
+      "exit_code": 141,
+      "output": "Activating ESP-IDF 5.5\nSetting IDF_PATH to '/Users/michal/esp/esp-idf'.\n* Checking python version ... 3.13.9\n* Checking python dependencies ... OK\n* Deactivating the current ESP-IDF environment (if any) ... OK\n* Establishing a new ESP-IDF environment ... OK\n* Identifying shell ... bash\n* Detecting outdated tools in system ... OK - no outdated tools found\n* Shell completion ... Autocompletion code generated\n/Users/michal/esp/esp-idf/components/bt/CMakeLists.txt:709:            if(CONFIG_BT_NIMBLE_ENABLED)\n/Users/michal/esp/esp-idf/components/bt/CMakeLists.txt:772:    if(CONFIG_BT_NIMBLE_ENABLED)\n/Users/michal/esp/esp-idf/components/bt/CMakeLists.txt:1140:if(CONFIG_COMPILER_OPTIMIZATION_ASSERTIONS_DISABLE AND CONFIG_BT_NIMBLE_ENABLED)\n/Users/michal/esp/esp-idf/components/bt/host/nimble/esp-hci/src/esp_nimble_hci.c:10:#if CONFIG_BT_NIMBLE_ENABLED\n/Users/michal/esp/esp-idf/components/bt/host/nimble/esp-hci/src/esp_nimble_hci.c:12:#endif //CONFIG_BT_NIMBLE_ENABLED\n/Users/michal/esp/esp-idf/components/bt/host/nimble/port/include/esp_nimble_cfg.h:79:#if CONFIG_BT_NIMBLE_ENABLED\n/Users/michal/esp/esp-idf/components/bt/host/nimble/nimble/porting/nimble/src/nimble_port.c:25:#if CONFIG_BT_NIMBLE_ENABLED\n/Users/michal/esp/esp-idf/components/bt/host/nimble/nimble/porting/nimble/src/nimble_port.c:27:#endif //CONFIG_BT_NIMBLE_ENABLED\n/Users/michal/esp/esp-idf/components/bt/host/nimble/nimble/porting/nimble/src/nimble_port.c:57:#if CONFIG_BT_NIMBLE_ENABLED \n/Users/michal/esp/esp-idf/components/bt/host/nimble/nimble/porting/nimble/src/nimble_port.c:67:#if CONFIG_BT_NIMBLE_ENABLED\n/Users/michal/esp/esp-idf/components/bt/host/nimble/nimble/porting/nimble/src/nimble_port.c:81:#if CONFIG_BT_NIMBLE_ENABLED\n/Users/michal/esp/esp-idf/components/bt/host/nimble/nimble/porting/nimble/src/nimble_port.c:90:#if CONFIG_BT_NIMBLE_ENABLED\n/Users/michal/esp/esp-idf/components/bt/host/nimble/nimble/porting/nimble/src/nimble_port.c:92:#endif //CONFIG_BT_NIMBLE_ENABLED\n/Users/michal/esp/esp-idf/components/bt/host/nimble/nimble/porting/nimble/src/os_msys_init.c:30:#if CONFIG_BT_NIMBLE_ENABLED\n/Users/michal/esp/esp-idf/components/bt/host/nimble/nimble/porting/npl/freertos/src/npl_os_freertos.c:50:#if CONFIG_BT_NIMBLE_ENABLED\n/Users/michal/esp/esp-idf/components/bt/host/nimble/Kconfig.in:39:        depends on BT_NIMBLE_ENABLED\n/Users/michal/esp/esp-idf/components/bt/host/nimble/Kconfig.in:46:        depends on BT_NIMBLE_ENABLED && !FREERTOS_UNICORE\n/Users/michal/esp/esp-idf/components/bt/host/nimble/Kconfig.in:60:        depends on BT_NIMBLE_ENABLED\n/Users/michal/esp/esp-idf/components/bt/host/nimble/Kconfig.in:80:        depends on BT_NIMBLE_ENABLED\n/Users/michal/esp/esp-idf/components/bt/host/nimble/Kconfig.in:87:        depends on BT_NIMBLE_ENABLED\n/Users/michal/esp/esp-idf/components/bt/host/nimble/Kconfig.in:94:        depends on BT_NIMBLE_ENABLED\n/Users/michal/esp/esp-idf/components/bt/host/nimble/Kconfig.in:101:        depends on BT_NIMBLE_ENABLED\n/Users/michal/esp/esp-idf/components/bt/host/nimble/Kconfig.in:125:        depends on BT_NIMBLE_ENABLED\n/Users/michal/esp/esp-idf/components/bt/host/nimble/Kconfig.in:212:        depends on BT_NIMBLE_ENABLED\n/Users/michal/esp/esp-idf/components/bt/host/nimble/Kconfig.in:219:        depends on BT_NIMBLE_ENABLED\n/Users/michal/esp/esp-idf/components/bt/host/nimble/Kconfig.in:238:        depends on BT_NIMBLE_ENABLED && BT_NIMBLE_ENABLE_CONN_REATTEMPT\n/Users/michal/esp/esp-idf/components/bt/host/nimble/Kconfig.in:245:        depends on BT_NIMBLE_ENABLED\n/Users/michal/esp/esp-idf/components/bt/host/nimble/Kconfig.in:255:        depends on BT_NIMBLE_ENABLED && BT_NIMBLE_HS_PVCY && IDF_TARGET_ESP32\n/Users/michal/esp/esp-idf/components/bt/host/nimble/Kconfig.in:262:        depends on BT_NIMBLE_ENABLED && !(IDF_TARGET_ESP32C2)\n/Users/michal/esp/esp-idf/components/bt/host/nimble/Kconfig.in:268:        depends on BT_NIMBLE_ENABLED\n",
+      "elapsed_seconds": 3.334,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 4.55,
+      "output_policy": "stream",
+      "captured_output_chars": 3902,
+      "output_truncated": false,
+      "current_rss_mb": 4.55,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "failed",
+      "elapsed_seconds": 3.334
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.113
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.075
+  },
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-08T09:59:37.664310+00:00",
+  "task_digest": "82bf3e47a994490b8f85dca686d16947b9b9921f45822f4b83c09924226e391f",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "attempt_id": "5a3706598f20dd0de1a8be29",
+  "daemon_version": "4.18.18"
+}
