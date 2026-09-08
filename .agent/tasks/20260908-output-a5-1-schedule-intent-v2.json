@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "id": "20260908-output-a5-1-schedule-intent-v2",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "mvp/environment-controller",
+  "resources": [],
+  "allow_write": true,
+  "command_timeout": 1800,
+  "idle_timeout": 600,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "set -euo pipefail; git fetch -q origin agent-control; git show FETCH_HEAD:.agent/scripts/20260908-a5-1-task-entry-v1.sh > /tmp/a5_1_entry.sh; bash /tmp/a5_1_entry.sh"
+  ]
+}
