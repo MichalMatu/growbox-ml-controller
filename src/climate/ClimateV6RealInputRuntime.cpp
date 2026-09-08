@@ -186,7 +186,8 @@ public:
         rf_diagnostics_config_(rfDiagnosticsConfig()),
         rf_radio_(rf433::Rf433RmtLoopback::Config{rf_diagnostics_config_.tx_gpio,
                                                   rf_diagnostics_config_.rx_gpio}),
-        rf_diagnostics_(rf_diagnostics_config_, rf_radio_) {}
+        rf_diagnostics_(rf_diagnostics_config_, rf_radio_), rf_frame_sender_(rf_radio_),
+        rf_output_transport_(rf_frame_sender_) {}
 
   RuntimeIoOwner(const RuntimeIoOwner&) = delete;
   RuntimeIoOwner& operator=(const RuntimeIoOwner&) = delete;
@@ -212,12 +213,18 @@ public:
     return rf_radio_;
   }
 
+  rf433::Rf433OutputTransport& rfOutputTransport() noexcept {
+    return rf_output_transport_;
+  }
+
 private:
   storage::Stage27TelemetryLogger::Config storage_config_{};
   storage::Stage27TelemetryLogger storage_logger_;
   runtime::Stage28RfDiagnosticsConfig rf_diagnostics_config_{};
   rf433::Rf433RmtLoopback rf_radio_;
   runtime::Stage28RfDiagnostics rf_diagnostics_;
+  rf433::Rf433RmtFrameSender rf_frame_sender_;
+  rf433::Rf433OutputTransport rf_output_transport_;
 };
 
 class RuntimeControlOwner final {
@@ -239,6 +246,88 @@ public:
 private:
   ::growbox::climate::ClimateRuntimeController runtime_controller_;
   stage28d::LampSafetyController lamp_safety_;
+};
+
+
+const output::OutputPolicyConfig& safeOutputPolicy() noexcept {
+  static const output::OutputPolicyConfig policy = stage28d::makeOutputPolicyConfig();
+  return policy;
+}
+
+output::OutputSupervisorResolverConfig makeRuntimeSupervisorConfig(
+    output::BinaryActuatorPolicy& exhaust_policy,
+    output::BinaryActuatorPolicy& humidifier_policy) noexcept {
+  output::OutputSupervisorResolverConfig config{};
+  config.endpoints[0] = {stage28d::kScheduledLightEndpoint, nullptr};
+  config.endpoints[1] = {stage28d::kExhaustFanEndpoint, &exhaust_policy};
+  config.endpoints[2] = {stage28d::kHumidifierEndpoint, &humidifier_policy};
+  config.count = 3U;
+  return config;
+}
+
+class RuntimeOutputOwner final {
+public:
+  RuntimeOutputOwner(output::OutputTransport& real_transport, const bool& real_enabled,
+                     runtime::Stage28RfDiagnostics& diagnostics,
+                     const output::OutputPolicyConfig& policy,
+                     output::OutputStateStore& state_store) noexcept
+      : policy_(policy),
+        semantic_output_config_(stage28d::makeClimateSemanticOutputConfig(policy_)),
+        exhaust_policy_(kExhaustPolicyConfig), humidifier_policy_(kHumidifierPolicyConfig),
+        supervisor_config_(makeRuntimeSupervisorConfig(exhaust_policy_, humidifier_policy_)),
+        supervisor_transport_(real_transport, real_enabled), output_lifecycle_(policy_),
+        lifecycle_executor_(policy_, output_lifecycle_, supervisor_transport_, state_store,
+                            supervisor_config_),
+        runtime_lifecycle_(output_lifecycle_, lifecycle_executor_),
+        automation_control_(output_lifecycle_, lifecycle_executor_),
+        manual_control_(policy_, output_lifecycle_), maintenance_rf_transport_(diagnostics),
+        maintenance_control_(policy_, output_lifecycle_, automation_control_, lifecycle_executor_,
+                             state_store, supervisor_config_, maintenance_rf_transport_),
+        supervisor_resolver_(supervisor_config_),
+        supervisor_executor_(supervisor_transport_, state_store, supervisor_config_),
+        supervisor_sink_(semantic_output_config_, supervisor_resolver_, supervisor_executor_,
+                         state_store) {
+    bindings_valid_ = stage28d::validateOutputBindings(semantic_output_config_, policy_) ==
+                      stage28d::OutputBindingStatus::Ok;
+    valid_ = bindings_valid_ && output_lifecycle_.valid() && lifecycle_executor_.valid() &&
+             runtime_lifecycle_.valid() && automation_control_.valid() && manual_control_.valid() &&
+             maintenance_control_.valid() && supervisor_sink_.valid();
+  }
+
+  RuntimeOutputOwner(const RuntimeOutputOwner&) = delete;
+  RuntimeOutputOwner& operator=(const RuntimeOutputOwner&) = delete;
+
+  bool valid() const noexcept { return valid_; }
+  bool bindingsValid() const noexcept { return bindings_valid_; }
+
+  RuntimeOutputTransport& transport() noexcept { return supervisor_transport_; }
+  output::OutputSupervisorLifecycle& lifecycle() noexcept { return output_lifecycle_; }
+  output::OutputLifecycleExecutor& lifecycleExecutor() noexcept { return lifecycle_executor_; }
+  output::OutputRuntimeLifecycleControl& runtimeLifecycle() noexcept { return runtime_lifecycle_; }
+  output::OutputAutomationControl& automationControl() noexcept { return automation_control_; }
+  output::OutputManualControl& manualControl() noexcept { return manual_control_; }
+  output::OutputMaintenanceControl& maintenanceControl() noexcept { return maintenance_control_; }
+  ClimateOutputSupervisorSink& supervisorSink() noexcept { return supervisor_sink_; }
+
+private:
+  output::OutputPolicyConfig policy_{};
+  ClimateSemanticOutputConfig semantic_output_config_{};
+  output::BinaryActuatorPolicy exhaust_policy_;
+  output::BinaryActuatorPolicy humidifier_policy_;
+  output::OutputSupervisorResolverConfig supervisor_config_{};
+  RuntimeOutputTransport supervisor_transport_;
+  output::OutputSupervisorLifecycle output_lifecycle_;
+  output::OutputLifecycleExecutor lifecycle_executor_;
+  output::OutputRuntimeLifecycleControl runtime_lifecycle_;
+  output::OutputAutomationControl automation_control_;
+  output::OutputManualControl manual_control_;
+  runtime::Stage28MaintenanceRfTransport maintenance_rf_transport_;
+  output::OutputMaintenanceControl maintenance_control_;
+  output::OutputSupervisorResolver supervisor_resolver_;
+  output::OutputSupervisorExecutor supervisor_executor_;
+  ClimateOutputSupervisorSink supervisor_sink_;
+  bool bindings_valid_{false};
+  bool valid_{false};
 };
 
 } // namespace
@@ -266,8 +355,6 @@ private:
       storage_enabled && storage_logger.begin(GROWBOX_FIRMWARE_GIT_SHA);
   auto& rf_diagnostics = runtime_io_owner.rfDiagnostics();
   const bool rf_ready = runtime_io_owner.beginRf();
-  rf433::Rf433RmtFrameSender rf_frame_sender(runtime_io_owner.rfRadio());
-  rf433::Rf433OutputTransport rf_output_transport(rf_frame_sender);
   static output::OutputStateStore output_state_store;
   static constexpr std::array<output::OutputEndpointId, output::kOutputEndpointCapacity>
       kShadowOutputEndpoints{stage28d::kExhaustFanEndpoint, stage28d::kScheduledLightEndpoint,
@@ -278,28 +365,23 @@ private:
     ESP_LOGE(kTag, "Output state-store shadow configuration failed");
   }
 
-  const output::OutputPolicyConfig safe_output_policy = stage28d::makeOutputPolicyConfig();
   static output::OutputNvsBackend output_nvs_backend;
   static output::OutputPersistenceStore output_persistence_store(output_nvs_backend,
-                                                                 stage28d::makeOutputPolicyConfig());
+                                                                 safeOutputPolicy());
   static output::OutputPersistenceCoordinator output_persistence(output_persistence_store);
   const auto persistence_init = output_state_store_ready
                                     ? output_persistence.initialize(output_state_store)
                                     : output::OutputPersistenceCoordinatorInitResult{};
-  const output::OutputPolicyConfig output_policy =
-      output_persistence.valid() ? output_persistence.policy() : safe_output_policy;
+  const output::OutputPolicyConfig& output_policy =
+      output_persistence.valid() ? output_persistence.policy() : safeOutputPolicy();
   if (!output_persistence.valid()) {
     ESP_LOGW(kTag, "Output persistence unavailable status=%u store_status=%u; using safe policy",
              static_cast<unsigned>(persistence_init.status),
              static_cast<unsigned>(persistence_init.load.status));
   }
 
-  const auto semantic_output_config = stage28d::makeClimateSemanticOutputConfig(output_policy);
-  const bool output_bindings_valid =
-      stage28d::validateOutputBindings(semantic_output_config, output_policy) ==
-      stage28d::OutputBindingStatus::Ok;
-  bool real_transport_available =
-      GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED != 0 && rf_ready && output_bindings_valid;
+  static bool real_transport_available = false;
+  real_transport_available = GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED != 0 && rf_ready;
 
   // The pre-supervisor Gate6 qualification path was a direct configured-output
   // writer. Keep the build knob fail-closed until A13 defines the replacement
@@ -310,12 +392,21 @@ private:
     real_transport_available = false;
   }
 
-  bool real_output_ready = false;
+  static RuntimeOutputOwner runtime_output_owner(runtime_io_owner.rfOutputTransport(),
+                                                 real_transport_available, rf_diagnostics,
+                                                 output_policy, output_state_store);
+  const bool output_bindings_valid = runtime_output_owner.bindingsValid();
+  if (!output_bindings_valid) {
+    real_transport_available = false;
+  }
+
+  static bool real_output_ready = false;
+  real_output_ready = false;
   if (GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED != 0 && !real_transport_available) {
     ESP_LOGE(kTag, "Real-output transport unavailable; automatic outputs remain fake-locked");
   }
 
-  runtime::RuntimeTimingMetrics runtime_timing{};
+  static runtime::RuntimeTimingMetrics runtime_timing{};
   runtime_timing.loop_active.budget_us = kTickIntervalMs * 1000U;
 
   runtime::Stage27InsideSource inside(ble, scd41);
@@ -323,38 +414,16 @@ private:
   runtime::FixedStage27ScheduleConfigSource schedule_config;
   CompositeClimateSnapshotProvider composite(inside, outside, clock, schedule_config);
 
-  output::BinaryActuatorPolicy exhaust_policy(kExhaustPolicyConfig);
-  output::BinaryActuatorPolicy humidifier_policy(kHumidifierPolicyConfig);
+  auto& supervisor_transport = runtime_output_owner.transport();
+  auto& output_lifecycle = runtime_output_owner.lifecycle();
+  auto& lifecycle_executor = runtime_output_owner.lifecycleExecutor();
+  auto& runtime_lifecycle = runtime_output_owner.runtimeLifecycle();
+  auto& automation_control = runtime_output_owner.automationControl();
+  auto& manual_control = runtime_output_owner.manualControl();
+  auto& maintenance_control = runtime_output_owner.maintenanceControl();
+  auto& supervisor_sink = runtime_output_owner.supervisorSink();
 
-  output::OutputSupervisorResolverConfig supervisor_config{};
-  supervisor_config.endpoints[0] = {stage28d::kScheduledLightEndpoint, nullptr};
-  supervisor_config.endpoints[1] = {stage28d::kExhaustFanEndpoint, &exhaust_policy};
-  supervisor_config.endpoints[2] = {stage28d::kHumidifierEndpoint, &humidifier_policy};
-  supervisor_config.count = 3U;
-
-  RuntimeOutputTransport supervisor_transport(rf_output_transport, real_transport_available);
-  output::OutputSupervisorLifecycle output_lifecycle(output_policy);
-  output::OutputLifecycleExecutor lifecycle_executor(output_policy, output_lifecycle,
-                                                     supervisor_transport, output_state_store,
-                                                     supervisor_config);
-  output::OutputRuntimeLifecycleControl runtime_lifecycle(output_lifecycle, lifecycle_executor);
-  bool lifecycle_ready = output_lifecycle.valid() && lifecycle_executor.valid() &&
-                         runtime_lifecycle.valid();
-  output::OutputAutomationControl automation_control(output_lifecycle, lifecycle_executor);
-  output::OutputManualControl manual_control(output_policy, output_lifecycle);
-  runtime::Stage28MaintenanceRfTransport maintenance_rf_transport(rf_diagnostics);
-  output::OutputMaintenanceControl maintenance_control(
-      output_policy, output_lifecycle, automation_control, lifecycle_executor,
-      output_state_store, supervisor_config, maintenance_rf_transport);
-  lifecycle_ready = lifecycle_ready && automation_control.valid() && manual_control.valid() &&
-                    maintenance_control.valid();
-
-  output::OutputSupervisorResolver supervisor_resolver(supervisor_config);
-  output::OutputSupervisorExecutor supervisor_executor(supervisor_transport, output_state_store,
-                                                       supervisor_config);
-  ClimateOutputSupervisorSink supervisor_sink(semantic_output_config, supervisor_resolver,
-                                              supervisor_executor, output_state_store);
-  if (!supervisor_sink.valid() || !lifecycle_ready) {
+  if (!runtime_output_owner.valid()) {
     ESP_LOGE(kTag, "Output supervisor/lifecycle composition invalid; physical execution locked");
     // There is no direct emergency writer here anymore. If the supervisor cannot
     // be composed, fail closed by disabling transport ownership for this boot.
