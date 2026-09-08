@@ -27,6 +27,7 @@ The current implementation has useful pieces but distributes execution authority
 - `Stage28dRfOutputEndpoint` combines RF endpoint execution, cached endpoint state, initialization behavior, and a safety-force flag.
 - `LampSafetyController` makes lamp/fan safety decisions outside the normal climate decision path.
 - service-console RF diagnostics can address RF behavior through a separate operational path.
+- `Stage28RfDiagnostics` auto-smoke is another direct RF transmit path when enabled; it must be treated as maintenance/transport diagnostics rather than a production output owner.
 - qualification/recovery tooling contains lifecycle output behavior such as fan OFF, humidifier OFF, lamp ON/fake-locked restoration.
 - fail-safe semantics are not represented by one common policy: ordinary fail-safe OFF, thermal lamp OFF + fan ON, startup safe-state initialization, and recovery behavior are distinct mechanisms.
 
@@ -291,7 +292,7 @@ There are two different kinds of state and they must not be conflated.
 
 ### Durable configuration
 
-Versioned `OutputPolicyConfig` and endpoint-role bindings are durable configuration. The implementation audit must choose the existing project persistence mechanism that best fits this data; do not introduce a second configuration store unnecessarily.
+Versioned `OutputPolicyConfig` and endpoint-role bindings are durable configuration. The A0 audit found no existing product configuration/state store suitable for this data: project code initializes NVS for platform/BLE use, RTC no-init storage is diagnostic-only, and Stage27 SD/flash storage is append-only telemetry rather than a settings store. A6 may therefore introduce exactly one versioned output configuration/state store (NVS is the natural first candidate) instead of repurposing telemetry storage. If a suitable product configuration store is added elsewhere before A6, reuse it rather than creating a second one.
 
 ### Runtime / command state
 
@@ -374,7 +375,7 @@ The first new-chat task is an audit, not a rewrite. After the audit is accepted,
 4. **A3 — safety envelope**: adapt thermal safety to produce constraints; remove direct transport knowledge from safety.
 5. **A4 — OutputSupervisor core**: introduce mode/state machine, resolver, lifecycle policy, binary actuator policy integration, and deterministic execution reports.
 6. **A5 — climate integration**: make climate decisions feed `ControlIntent`; reconcile confirmed executed control projection without giving the climate loop transport ownership.
-7. **A6 — persistence/configuration**: versioned output policy and honest command-state persistence using the existing suitable store.
+7. **A6 — persistence/configuration**: add versioned output policy and honest command-state persistence in exactly one suitable store; reuse an existing product configuration store only if one exists by then.
 8. **A7 — console/diagnostics migration**: remove normal direct output bypasses; separate maintenance transport diagnostics.
 9. **A8 — legacy removal and invariant enforcement**: remove duplicated safety/output state and prove one production output owner.
 10. **A9 — software qualification**: focused tests during each change, then one full software gate after the architecture stabilizes.
