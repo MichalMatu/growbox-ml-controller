@@ -1,6 +1,7 @@
 #pragma once
 
 #include "climate/ClimateSemanticOutput.h"
+#include "climate/output/OutputPolicyConfig.h"
 #include "climate/rf433/ClimateRf433EndpointRegistry.h"
 
 #include <cstdint>
@@ -19,8 +20,10 @@ enum class OutputBindingStatus : std::uint8_t {
   ExhaustFanMissingOrWrong,
   HumidifierMissingOrWrong,
   UnexpectedClimateRole,
+  PolicyConfigInvalid,
 };
 
+::growbox::app::output::OutputPolicyConfig makeOutputPolicyConfig() noexcept;
 ClimateSemanticOutputConfig makeClimateSemanticOutputConfig() noexcept;
 OutputBindingStatus validateOutputBindings(const ClimateSemanticOutputConfig& config) noexcept;
 bool isScheduledLightEndpoint(ClimateEndpointId endpoint) noexcept;
