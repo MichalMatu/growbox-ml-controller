@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260908-output-a2-1-coredump-config-diagnostic-v1",
+  "task_digest": "68d884da2caca238a9b81a4fbb9faf6fa8ba5618e3a8c2d68a4485d6b637cf25",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-08T10:17:52.563480+00:00",
+  "attempt_id": "6f6c1359d62e19bc5d2b3c9b",
+  "daemon_version": "4.18.18",
+  "daemon_pid": 39761,
+  "updated_at": "2026-09-08T10:17:52.563635+00:00",
+  "pid": 39761
+}
