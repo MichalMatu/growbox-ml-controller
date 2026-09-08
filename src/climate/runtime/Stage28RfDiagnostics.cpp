@@ -9,11 +9,12 @@ namespace {
 constexpr char kTag[] = "climate_stage27";
 } // namespace
 
-Stage28RfDiagnostics::Stage28RfDiagnostics(Stage28RfDiagnosticsConfig config) noexcept
-    : config_(config), loopback_(rf433::Rf433RmtLoopback::Config{config.tx_gpio, config.rx_gpio}) {}
+Stage28RfDiagnostics::Stage28RfDiagnostics(Stage28RfDiagnosticsConfig config,
+                                                 rf433::Rf433RmtLoopback& radio) noexcept
+    : config_(config), radio_(radio) {}
 
-bool Stage28RfDiagnostics::begin() noexcept {
-  ready_ = config_.enabled && loopback_.begin();
+bool Stage28RfDiagnostics::begin(bool radio_ready) noexcept {
+  ready_ = config_.enabled && radio_ready;
   return ready_;
 }
 
@@ -38,14 +39,14 @@ bool Stage28RfDiagnostics::manualTransmit(const rf433::FrameConfig& frame,
   if (!ready_) {
     return false;
   }
-  static_cast<void>(loopback_.transmitAndReceive(frame, config_.smoke_timeout_ms, evidence));
+  static_cast<void>(radio_.transmitAndReceive(frame, config_.smoke_timeout_ms, evidence));
   return evidence.tx_completed;
 }
 
 bool Stage28RfDiagnostics::manualReceive(std::uint32_t timeout_ms,
                                          rf433::ReceiveEvidence& evidence) noexcept {
   evidence = {};
-  return ready_ && timeout_ms > 0U && loopback_.receiveOnce(timeout_ms, evidence);
+  return ready_ && timeout_ms > 0U && radio_.receiveOnce(timeout_ms, evidence);
 }
 
 void Stage28RfDiagnostics::capturePassive() noexcept {
@@ -58,7 +59,7 @@ void Stage28RfDiagnostics::capturePassive() noexcept {
   }
 
   rf433::ReceiveEvidence capture{};
-  if (!loopback_.receiveOnce(config_.passive_timeout_ms, capture)) {
+  if (!radio_.receiveOnce(config_.passive_timeout_ms, capture)) {
     return;
   }
 
@@ -94,8 +95,8 @@ void Stage28RfDiagnostics::runSmoke() noexcept {
   smoke_attempted_ = true;
   rf433::LoopbackEvidence evidence{};
   const bool passed =
-      loopback_.transmitAndReceive(config_.smoke, config_.smoke_timeout_ms, evidence);
-  const auto& rf_diag = loopback_.diagnostics();
+      radio_.transmitAndReceive(config_.smoke, config_.smoke_timeout_ms, evidence);
+  const auto& rf_diag = radio_.diagnostics();
   const auto& smoke = config_.smoke;
 
   ESP_LOGI(kTag,

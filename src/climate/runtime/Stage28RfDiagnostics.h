@@ -20,9 +20,10 @@ struct Stage28RfDiagnosticsConfig {
 
 class Stage28RfDiagnostics final {
 public:
-  explicit Stage28RfDiagnostics(Stage28RfDiagnosticsConfig config) noexcept;
+  Stage28RfDiagnostics(Stage28RfDiagnosticsConfig config,
+                       rf433::Rf433RmtLoopback& radio) noexcept;
 
-  bool begin() noexcept;
+  bool begin(bool radio_ready) noexcept;
   void tick(std::uint64_t now_ms) noexcept;
   bool manualTransmit(const rf433::FrameConfig& frame, rf433::LoopbackEvidence& evidence) noexcept;
   bool manualReceive(std::uint32_t timeout_ms, rf433::ReceiveEvidence& evidence) noexcept;
@@ -36,7 +37,7 @@ private:
   void runSmoke() noexcept;
 
   Stage28RfDiagnosticsConfig config_{};
-  rf433::Rf433RmtLoopback loopback_;
+  rf433::Rf433RmtLoopback& radio_;
   bool ready_{false};
   bool smoke_attempted_{false};
   bool capture_ready_logged_{false};

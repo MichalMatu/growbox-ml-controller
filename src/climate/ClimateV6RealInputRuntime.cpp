@@ -18,6 +18,7 @@
 #include "climate/runtime/Stage28ServiceConsole.h"
 #include "climate/runtime/Stage28eLog.h"
 #include "climate/runtime/Stage28ePlatformDiagnostics.h"
+#include "climate/rf433/Rf433RmtLoopback.h"
 #include "climate/storage/Stage27TelemetryLogger.h"
 
 #include <esp_err.h>
@@ -221,7 +222,10 @@ class RuntimeIoOwner final {
 public:
   RuntimeIoOwner() noexcept
       : storage_config_(makeStorageConfig()), storage_logger_(storage_config_),
-        rf_diagnostics_(rfDiagnosticsConfig()) {}
+        rf_diagnostics_config_(rfDiagnosticsConfig()),
+        rf_radio_(rf433::Rf433RmtLoopback::Config{rf_diagnostics_config_.tx_gpio,
+                                                  rf_diagnostics_config_.rx_gpio}),
+        rf_diagnostics_(rf_diagnostics_config_, rf_radio_) {}
 
   RuntimeIoOwner(const RuntimeIoOwner&) = delete;
   RuntimeIoOwner& operator=(const RuntimeIoOwner&) = delete;
@@ -234,13 +238,24 @@ public:
     return storage_logger_;
   }
 
+  bool beginRf() noexcept {
+    const bool radio_ready = rf_diagnostics_config_.enabled && rf_radio_.begin();
+    return rf_diagnostics_.begin(radio_ready);
+  }
+
   runtime::Stage28RfDiagnostics& rfDiagnostics() noexcept {
     return rf_diagnostics_;
+  }
+
+  rf433::Rf433RmtLoopback& rfRadio() noexcept {
+    return rf_radio_;
   }
 
 private:
   storage::Stage27TelemetryLogger::Config storage_config_{};
   storage::Stage27TelemetryLogger storage_logger_;
+  runtime::Stage28RfDiagnosticsConfig rf_diagnostics_config_{};
+  rf433::Rf433RmtLoopback rf_radio_;
   runtime::Stage28RfDiagnostics rf_diagnostics_;
 };
 
@@ -294,7 +309,7 @@ private:
   const bool storage_logger_ready =
       storage_enabled && storage_logger.begin(GROWBOX_FIRMWARE_GIT_SHA);
   auto& rf_diagnostics = runtime_io_owner.rfDiagnostics();
-  const bool rf_ready = rf_diagnostics.begin();
+  const bool rf_ready = runtime_io_owner.beginRf();
   DiagnosticsRfTransmitter rf_transmitter(rf_diagnostics);
 
   const auto semantic_output_config = stage28d::makeClimateSemanticOutputConfig();
