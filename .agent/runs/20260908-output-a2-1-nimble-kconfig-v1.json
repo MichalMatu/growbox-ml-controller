@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260908-output-a2-1-nimble-kconfig-v1",
+  "task_digest": "2cfb19d49ec05a60e1a90488a090b96493d89af03d98043ccb84a489dc8b0dc5",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-08T09:58:41.666094+00:00",
+  "attempt_id": "322d83608fb17bd52aa9aaab",
+  "daemon_version": "4.18.18",
+  "daemon_pid": 11293,
+  "updated_at": "2026-09-08T09:58:41.666295+00:00",
+  "pid": 11293
+}
