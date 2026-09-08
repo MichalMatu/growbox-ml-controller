@@ -19,17 +19,13 @@ bool Stage28RfDiagnostics::begin(bool radio_ready) noexcept {
 }
 
 void Stage28RfDiagnostics::tick(std::uint64_t now_ms) noexcept {
+  (void)now_ms;
   if (!ready_) {
     return;
   }
 
   if (config_.passive_capture) {
     capturePassive();
-    return;
-  }
-
-  if (config_.auto_smoke && !smoke_attempted_ && now_ms >= config_.smoke_after_ms) {
-    runSmoke();
   }
 }
 
@@ -39,7 +35,7 @@ bool Stage28RfDiagnostics::manualTransmit(const rf433::FrameConfig& frame,
   if (!ready_) {
     return false;
   }
-  static_cast<void>(radio_.transmitAndReceive(frame, config_.smoke_timeout_ms, evidence));
+  static_cast<void>(radio_.transmitAndReceive(frame, config_.manual_tx_timeout_ms, evidence));
   return evidence.tx_completed;
 }
 
@@ -91,43 +87,5 @@ void Stage28RfDiagnostics::capturePassive() noexcept {
   }
 }
 
-void Stage28RfDiagnostics::runSmoke() noexcept {
-  smoke_attempted_ = true;
-  rf433::LoopbackEvidence evidence{};
-  const bool passed =
-      radio_.transmitAndReceive(config_.smoke, config_.smoke_timeout_ms, evidence);
-  const auto& rf_diag = radio_.diagnostics();
-  const auto& smoke = config_.smoke;
-
-  ESP_LOGI(kTag,
-           "rf433_loopback_v=1 pass=%d tx_id=%llu requested_code=%lu requested_bits=%u "
-           "requested_protocol=%u requested_repeat=%u requested_pulse_us=%u tx_queued=%d "
-           "tx_started=%d tx_completed=%d tx_started_ms=%lu tx_completed_ms=%lu "
-           "rx_captured=%d rx_start_ms=%lu rx_finish_ms=%lu decode_status=%u "
-           "decoded_code=%lu decoded_bits=%u decoded_protocol=%u estimated_pulse_us=%u "
-           "observed_repeats=%u classification=%u tx_queue_errors=%lu tx_wait_errors=%lu "
-           "rx_arm_errors=%lu rx_timeouts=%lu rx_decode_failures=%lu rx_ambiguous=%lu "
-           "rx_self_tx=%lu rx_interference=%lu outputs=fake-locked",
-           passed, static_cast<unsigned long long>(evidence.tx_id),
-           static_cast<unsigned long>(smoke.key.code), smoke.key.bit_length, smoke.key.protocol,
-           smoke.repeat, smoke.pulse_us, evidence.tx_queued, evidence.tx_started,
-           evidence.tx_completed, static_cast<unsigned long>(evidence.tx_started_at_ms),
-           static_cast<unsigned long>(evidence.tx_completed_at_ms), evidence.rx_captured,
-           static_cast<unsigned long>(evidence.rx_started_at_ms),
-           static_cast<unsigned long>(evidence.rx_finished_at_ms),
-           static_cast<unsigned>(evidence.decoded.status),
-           static_cast<unsigned long>(evidence.decoded.frame.code),
-           evidence.decoded.frame.bit_length, evidence.decoded.frame.protocol,
-           evidence.decoded.estimated_pulse_us, evidence.decoded.observed_repeats,
-           static_cast<unsigned>(evidence.classification),
-           static_cast<unsigned long>(rf_diag.tx_queue_errors),
-           static_cast<unsigned long>(rf_diag.tx_wait_errors),
-           static_cast<unsigned long>(rf_diag.rx_arm_errors),
-           static_cast<unsigned long>(rf_diag.rx_timeouts),
-           static_cast<unsigned long>(rf_diag.rx_decode_failures),
-           static_cast<unsigned long>(rf_diag.rx_ambiguous),
-           static_cast<unsigned long>(rf_diag.rx_self_tx),
-           static_cast<unsigned long>(rf_diag.rx_interference));
-}
 
 } // namespace growbox::app::climate_io::runtime

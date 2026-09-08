@@ -89,26 +89,8 @@
 #ifndef GROWBOX_RF433_LOOPBACK_ENABLED
 #define GROWBOX_RF433_LOOPBACK_ENABLED 0
 #endif
-#ifndef GROWBOX_RF433_LOOPBACK_AUTO_SMOKE
-#define GROWBOX_RF433_LOOPBACK_AUTO_SMOKE 0
-#endif
 #ifndef GROWBOX_RF433_REMOTE_CAPTURE_ENABLED
 #define GROWBOX_RF433_REMOTE_CAPTURE_ENABLED 0
-#endif
-#ifndef GROWBOX_RF433_LOOPBACK_SMOKE_CODE
-#define GROWBOX_RF433_LOOPBACK_SMOKE_CODE 0xA55A
-#endif
-#ifndef GROWBOX_RF433_LOOPBACK_SMOKE_BITS
-#define GROWBOX_RF433_LOOPBACK_SMOKE_BITS 16
-#endif
-#ifndef GROWBOX_RF433_LOOPBACK_SMOKE_PROTOCOL
-#define GROWBOX_RF433_LOOPBACK_SMOKE_PROTOCOL 1
-#endif
-#ifndef GROWBOX_RF433_LOOPBACK_SMOKE_REPEAT
-#define GROWBOX_RF433_LOOPBACK_SMOKE_REPEAT 3
-#endif
-#ifndef GROWBOX_RF433_LOOPBACK_SMOKE_PULSE_US
-#define GROWBOX_RF433_LOOPBACK_SMOKE_PULSE_US 0
 #endif
 #ifndef GROWBOX_RF433_TX_GPIO
 #define GROWBOX_RF433_TX_GPIO 8
@@ -156,14 +138,8 @@ runtime::Stage28RfDiagnosticsConfig rfDiagnosticsConfig() noexcept {
   runtime::Stage28RfDiagnosticsConfig config{};
   config.enabled = GROWBOX_RF433_LOOPBACK_ENABLED != 0;
   config.passive_capture = GROWBOX_RF433_REMOTE_CAPTURE_ENABLED != 0;
-  config.auto_smoke = GROWBOX_RF433_LOOPBACK_AUTO_SMOKE != 0;
   config.tx_gpio = GROWBOX_RF433_TX_GPIO;
   config.rx_gpio = GROWBOX_RF433_RX_GPIO;
-  config.smoke = {{static_cast<std::uint32_t>(GROWBOX_RF433_LOOPBACK_SMOKE_CODE),
-                   static_cast<std::uint8_t>(GROWBOX_RF433_LOOPBACK_SMOKE_BITS),
-                   static_cast<std::uint8_t>(GROWBOX_RF433_LOOPBACK_SMOKE_PROTOCOL)},
-                  static_cast<std::uint8_t>(GROWBOX_RF433_LOOPBACK_SMOKE_REPEAT),
-                  static_cast<std::uint16_t>(GROWBOX_RF433_LOOPBACK_SMOKE_PULSE_US)};
   return config;
 }
 
