@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260908-v41814-selfupdate-probe-v1",
+  "task_digest": "bd7d9acee34b8b794f283ab176b224704f1bbbfde8271d909fcdf59504b67819",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 256,
+  "started_at": "2026-09-08T03:26:53.071782+00:00",
+  "attempt_id": "d9c8b329912f8e775fc8ed5e",
+  "daemon_version": "4.18.13",
+  "daemon_pid": 3765,
+  "updated_at": "2026-09-08T03:26:53.071932+00:00",
+  "pid": 3765
+}
