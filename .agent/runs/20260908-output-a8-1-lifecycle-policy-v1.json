@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260908-output-a8-1-lifecycle-policy-v1",
+  "task_digest": "460d875e37e18e20a852f24cdc742c7ed8fe153bac0d313929f77eb4a77b653e",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-08T15:07:03.376566+00:00",
+  "attempt_id": "aba4a7b27bca922d6efbcd35",
+  "daemon_version": "4.18.19",
+  "daemon_pid": 46590,
+  "updated_at": "2026-09-08T15:07:03.376725+00:00",
+  "pid": 46590
+}
