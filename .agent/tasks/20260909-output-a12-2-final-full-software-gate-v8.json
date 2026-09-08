@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "id": "20260909-output-a12-2-final-full-software-gate-v8",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "mvp/environment-controller",
+  "resources": [],
+  "allow_write": false,
+  "workflow_policy": "efficient-verification-v1",
+  "command_timeout": 7200,
+  "idle_timeout": 900,
+  "task_timeout": 18000,
+  "memory_limit_mb": 4096,
+  "steps": [
+    {
+      "name": "candidate-identity",
+      "command": "git fetch -q origin mvp/environment-controller && test \"$(git rev-parse HEAD)\" = \"1c59f3cfa239abbfbae721247d01d65a39d4bdfc\" && test \"$(git rev-parse FETCH_HEAD)\" = \"1c59f3cfa239abbfbae721247d01d65a39d4bdfc\" && test -z \"$(git status --porcelain)\"",
+      "verification_level": "work"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "final-full-software-gate",
+      "command": "git fetch -q origin agent-control && git show FETCH_HEAD:.agent/scripts/20260909-output-a12-2-final-full-software-gate-v8-run.py | python3 -",
+      "verification_level": "full"
+    }
+  ]
+}
