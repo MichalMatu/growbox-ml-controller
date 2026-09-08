@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260908-output-architecture-tooling-scan-v6",
+  "task_digest": "197f512a5761cd59942220a79d0a8b4cd6ad4d7bac1ed5e39eb2576a76e74ce6",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-08T00:16:54.894309+00:00",
+  "attempt_id": "80d43753e7b13e08b1d76200",
+  "daemon_version": "4.18.13",
+  "daemon_pid": 76876,
+  "updated_at": "2026-09-08T00:16:54.894370+00:00",
+  "pid": 76876
+}
