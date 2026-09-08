@@ -10,6 +10,7 @@ idf_component_register(
     "climate/rf433/Rf433OutputTransport.cpp"
     "climate/output/OutputStateStore.cpp"
     "climate/output/OutputPolicyConfig.cpp"
+    "climate/output/OutputSupervisorLifecycle.cpp"
     "climate/output/OutputExecutionProjection.cpp"
     "climate/output/BinaryActuatorPolicy.cpp"
     "climate/output/OutputSupervisorResolver.cpp"
