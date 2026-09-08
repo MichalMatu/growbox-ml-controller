@@ -43,6 +43,7 @@ HOST_CXX="${CXX:-c++}"
   -Isrc -Ilib/environment_control/src \
   test/test_stage28d_binary_role_arbiter/test_main.cpp \
   src/climate/Stage28dBinaryRoleArbiter.cpp \
+  src/climate/output/BinaryActuatorPolicy.cpp \
   -o /tmp/stage28d_binary_role_arbiter_tests
 /tmp/stage28d_binary_role_arbiter_tests
 
