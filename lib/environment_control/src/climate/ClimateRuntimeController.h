@@ -71,6 +71,7 @@ struct ClimateRuntimeDecision {
   ClimateTrends trends{};
   EstimatedEffectiveClimateActions effective_before{};
   ClimatePolicyRequest applied{};
+  ClimateExecutionProjection execution{};
   EstimatedEffectiveClimateActions effective_after{};
 };
 
@@ -82,9 +83,14 @@ public:
   ClimateRuntimeStatus step(const ClimateControllerInput& input, std::uint64_t monotonic_ms,
                             ClimateRuntimeDecision& decision) noexcept;
 
-  // Reconcile a decision after the actuator sink reports the levels that were
-  // actually accepted. This rewinds the estimator to effective_before and
-  // advances it with the confirmed physical command instead of the proposal.
+  // Reconcile estimator state from execution truth. Known roles use the
+  // executed command projection; unknown roles hold effective_before rather
+  // than being fabricated as OFF. No physical acknowledgement is implied.
+  void reconcileExecution(const ClimateExecutionProjection& execution,
+                          const ClimateCapabilities& capabilities,
+                          ClimateRuntimeDecision& decision) noexcept;
+
+  // Short migration wrapper for sinks/tests that still report a complete request.
   void reconcileApplied(const ClimatePolicyRequest& confirmed_applied,
                         const ClimateCapabilities& capabilities,
                         ClimateRuntimeDecision& decision) noexcept;

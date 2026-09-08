@@ -43,7 +43,10 @@ ClimateLoopResult ClimateControlLoop::tick(std::uint64_t monotonic_ms,
   result.command_applied =
       actuator_sink_.applyAndReport(decision.applied, monotonic_ms, confirmed_applied);
   if (result.command_applied) {
-    runtime_.reconcileApplied(confirmed_applied, input.capabilities, decision);
+    ClimateExecutionProjection execution{};
+    execution.executed = confirmed_applied;
+    execution.known_mask = ClimateExecutionKnownAll;
+    runtime_.reconcileExecution(execution, input.capabilities, decision);
     previous_applied_ = previousFromRequest(decision.applied);
     result.io_status =
         result.input_sampled ? ClimateLoopIoStatus::Ok : ClimateLoopIoStatus::InputUnavailable;

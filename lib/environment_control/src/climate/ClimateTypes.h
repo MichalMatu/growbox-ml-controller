@@ -95,6 +95,26 @@ struct ClimatePolicyRequest {
   float heater = 0.0F, cooler = 0.0F, exhaust_fan = 0.0F, humidifier = 0.0F, dehumidifier = 0.0F,
         co2_doser = 0.0F;
 };
+
+enum ClimateExecutionKnownMask : std::uint8_t {
+  ClimateExecutionKnownNone = 0U,
+  ClimateExecutionKnownHeater = 1U << 0U,
+  ClimateExecutionKnownCooler = 1U << 1U,
+  ClimateExecutionKnownExhaustFan = 1U << 2U,
+  ClimateExecutionKnownHumidifier = 1U << 3U,
+  ClimateExecutionKnownDehumidifier = 1U << 4U,
+  ClimateExecutionKnownCo2Doser = 1U << 5U,
+  ClimateExecutionKnownAll = (1U << 6U) - 1U,
+};
+
+struct ClimateExecutionProjection {
+  ClimatePolicyRequest executed{};
+  std::uint8_t known_mask = ClimateExecutionKnownNone;
+
+  bool known(ClimateExecutionKnownMask mask) const noexcept {
+    return (known_mask & static_cast<std::uint8_t>(mask)) != 0U;
+  }
+};
 static_assert(contract::kFeatureCount <= 64U, "Climate encoder masks require at most 64 features");
 static_assert(contract::kOutputCount == 6U, "Climate MVP policy request implements six ML outputs");
 } // namespace growbox::climate

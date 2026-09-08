@@ -232,6 +232,45 @@ void runtimePolicyModeTest() {
   check(nearRequest(decision.applied, decision.rule.safe), "runtime ML failure applied rule");
 }
 
+void runtimeExecutionReconcileTest() {
+  using namespace growbox::climate;
+  auto input = runtimeInput();
+  ClimateRuntimeController controller{};
+  ClimateRuntimeDecision decision{};
+
+  controller.step(input, 0U, decision);
+  ClimateExecutionProjection first_execution{};
+  first_execution.executed = decision.applied;
+  first_execution.known_mask = ClimateExecutionKnownAll;
+  controller.reconcileExecution(first_execution, input.capabilities, decision);
+  const float established = decision.effective_after.heater;
+  check(established > 0.0F, "execution reconcile establishes heater estimate");
+
+  controller.step(input, 10'000U, decision);
+  const float before_unknown = decision.effective_before.heater;
+  ClimateExecutionProjection unknown_heater{};
+  unknown_heater.executed = decision.applied;
+  unknown_heater.known_mask = static_cast<std::uint8_t>(
+      ClimateExecutionKnownAll & ~ClimateExecutionKnownHeater);
+  controller.reconcileExecution(unknown_heater, input.capabilities, decision);
+  check(near(decision.effective_after.heater, before_unknown, 0.0001F),
+        "unknown execution holds previous effective heater state");
+  check(!decision.execution.known(ClimateExecutionKnownHeater),
+        "decision preserves unknown execution truth");
+
+  controller.step(input, 20'000U, decision);
+  const float before_off = decision.effective_before.heater;
+  ClimateExecutionProjection heater_off{};
+  heater_off.executed = decision.applied;
+  heater_off.executed.heater = 0.0F;
+  heater_off.known_mask = ClimateExecutionKnownAll;
+  controller.reconcileExecution(heater_off, input.capabilities, decision);
+  check(decision.effective_after.heater < before_off,
+        "known executed OFF decays heater estimate");
+  check(decision.execution.known(ClimateExecutionKnownHeater),
+        "decision records known execution truth");
+}
+
 void runtimeSafetyTest() {
   using namespace growbox::climate;
   auto input = runtimeInput();
@@ -258,6 +297,7 @@ int main() {
   actuatorEstimatorTest();
   trendTest();
   runtimePolicyModeTest();
+  runtimeExecutionReconcileTest();
   runtimeSafetyTest();
   if (failures) {
     std::cerr << failures << " climate v6 checks failed\n";
