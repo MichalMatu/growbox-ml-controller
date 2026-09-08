@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260908-output-a2-3-static-diagnostic-v1",
+  "task_digest": "0d002c57b72e5f606b437779b08ca517ad5b0b1c9da2612e8aaa8cca95e06150",
+  "idle_timeout": 300,
+  "task_timeout": 1200,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-08T12:19:14.831800+00:00",
+  "attempt_id": "d3783eae8a44f0f3e8905637",
+  "daemon_version": "4.18.19",
+  "daemon_pid": 55029,
+  "updated_at": "2026-09-08T12:19:14.831941+00:00",
+  "pid": 55029
+}
