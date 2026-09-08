@@ -286,6 +286,17 @@ target_compile_features(output_persistence_schema_tests PRIVATE cxx_std_17)
 target_compile_options(output_persistence_schema_tests PRIVATE -Wall -Wextra -Wpedantic)
 
 add_executable(
+  output_persistence_store_tests
+  "${PROJECT_ROOT}/test/test_output_persistence_store/test_main.cpp"
+  "${PROJECT_ROOT}/src/climate/output/OutputPersistenceStore.cpp"
+  "${PROJECT_ROOT}/src/climate/output/OutputPersistenceSchema.cpp"
+  "${PROJECT_ROOT}/src/climate/output/OutputPolicyConfig.cpp"
+)
+target_include_directories(output_persistence_store_tests PRIVATE "${PROJECT_ROOT}/src")
+target_compile_features(output_persistence_store_tests PRIVATE cxx_std_17)
+target_compile_options(output_persistence_store_tests PRIVATE -Wall -Wextra -Wpedantic)
+
+add_executable(
   output_supervisor_lifecycle_tests
   "${PROJECT_ROOT}/test/test_output_supervisor_lifecycle/test_main.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputSupervisorLifecycle.cpp"
@@ -568,6 +579,7 @@ add_test(NAME output_execution_projection_tests COMMAND output_execution_project
 add_test(NAME climate_output_supervisor_sink_tests COMMAND climate_output_supervisor_sink_tests)
 add_test(NAME output_policy_config_tests COMMAND output_policy_config_tests)
 add_test(NAME output_persistence_schema_tests COMMAND output_persistence_schema_tests)
+add_test(NAME output_persistence_store_tests COMMAND output_persistence_store_tests)
 add_test(NAME output_supervisor_lifecycle_tests COMMAND output_supervisor_lifecycle_tests)
 add_test(NAME output_lifecycle_executor_tests COMMAND output_lifecycle_executor_tests)
 add_test(NAME output_automation_control_tests COMMAND output_automation_control_tests)
