@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260909-output-r5-final-architecture-audit-v1",
+  "task_digest": "988b18b914712338a50ce56be47b74298b7a9d92f2c21cb8fc1b4d8b99eb74b1",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-08T22:16:38.819791+00:00",
+  "attempt_id": "ccfcc095e35e3126bcc2ee45",
+  "daemon_version": "4.18.19",
+  "daemon_pid": 97518,
+  "updated_at": "2026-09-08T22:16:38.819961+00:00",
+  "pid": 97518
+}
