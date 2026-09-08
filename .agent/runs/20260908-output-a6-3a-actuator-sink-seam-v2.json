@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 3,
+  "index": 4,
   "total": 5,
-  "command": "set -euo pipefail; cmake -S test/host -B build/host-tests-a6-3a-v2; cmake --build build/host-tests-a6-3a-v2 --parallel --target climate_application_composition_tests climate_control_loop_tests; ctest --test-dir build/host-tests-a6-3a-v2 -R '^(climate_application_composition_tests|climate_control_loop_tests)$' --output-on-failure; echo A6_3A_V2_FOCUSED_PASS",
-  "pid": 62456,
+  "command": "set -euo pipefail; STAGE27C_BUILD_DIR=build/idf-a6-3a-v2 STAGE27C_SDKCONFIG=build/idf-a6-3a-v2/sdkconfig GROWBOX_RF433_LOOPBACK_ENABLED=1 GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=1 GROWBOX_RF433_LOOPBACK_AUTO_SMOKE=0 GROWBOX_RF433_REMOTE_CAPTURE_ENABLED=0 bash scripts/stage27c_crowpanel.sh build; echo A6_3A_V2_CANONICAL_RF_BUILD_PASS",
+  "pid": 62657,
   "timeout": 1800,
   "idle_timeout": 600,
   "memory_limit_mb": 4096,
-  "started_at": "2026-09-08T13:53:06.446868+00:00",
-  "stage_name": "command-3",
-  "stage_index": 3,
+  "started_at": "2026-09-08T13:53:09.782245+00:00",
+  "stage_name": "command-4",
+  "stage_index": 4,
   "stage_total": 5,
   "stage_phase": "commands",
   "task_id": "20260908-output-a6-3a-actuator-sink-seam-v2",
@@ -18,5 +18,5 @@
   "task_digest": "2a82ea1af7976a5d5dc18bde028c8738d936f6949622ba4bd6ce7dcbb275c4af",
   "daemon_version": "4.18.19",
   "daemon_pid": 62246,
-  "updated_at": "2026-09-08T13:53:06.515873+00:00"
+  "updated_at": "2026-09-08T13:53:09.817821+00:00"
 }
