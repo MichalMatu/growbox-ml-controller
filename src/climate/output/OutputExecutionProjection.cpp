@@ -20,8 +20,7 @@ findResolution(const OutputSupervisorResolution& resolution, OutputEndpointId en
   return found;
 }
 
-const ExecutionStepResult* findReportStep(const ExecutionReport& report,
-                                          OutputEndpointId endpoint,
+const ExecutionStepResult* findReportStep(const ExecutionReport& report, OutputEndpointId endpoint,
                                           bool& duplicate) noexcept {
   duplicate = false;
   const ExecutionStepResult* found = nullptr;

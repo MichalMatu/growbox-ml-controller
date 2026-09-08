@@ -58,8 +58,9 @@ const EndpointIntent* OutputSupervisorResolver::findIntent(
   return nullptr;
 }
 
-const SafetyEndpointConstraint* OutputSupervisorResolver::findSafetyConstraint(
-    const SafetyEnvelope& safety, OutputEndpointId endpoint) noexcept {
+const SafetyEndpointConstraint*
+OutputSupervisorResolver::findSafetyConstraint(const SafetyEnvelope& safety,
+                                               OutputEndpointId endpoint) noexcept {
   for (const auto& candidate : safety.endpoints) {
     if (safetyConstraintActive(candidate) && candidate.endpoint == endpoint) {
       return &candidate;
@@ -68,7 +69,8 @@ const SafetyEndpointConstraint* OutputSupervisorResolver::findSafetyConstraint(
   return nullptr;
 }
 
-BinaryOutputState OutputSupervisorResolver::directBinaryState(NormalizedOutputLevel level) noexcept {
+BinaryOutputState
+OutputSupervisorResolver::directBinaryState(NormalizedOutputLevel level) noexcept {
   return normalizedLevel(level) >= 0.5F ? BinaryOutputState::On : BinaryOutputState::Off;
 }
 
@@ -181,7 +183,8 @@ bool OutputSupervisorResolver::resolve(const OutputSupervisorCycleInput& input,
     }
 
     resolved.has_resolved_state = true;
-    resolved.resolved_state = direct_override ? direct_override_state : directBinaryState(selected.level);
+    resolved.resolved_state =
+        direct_override ? direct_override_state : directBinaryState(selected.level);
     command.state = resolved.resolved_state;
     if (commandAlreadyCompleted(state_store, command)) {
       continue;

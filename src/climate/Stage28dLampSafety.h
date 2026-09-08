@@ -52,8 +52,7 @@ struct LampSafetyEnvelopeSnapshot {
 };
 
 bool buildLampSafetyEnvelope(const LampSafetyInput& input, const LampSafetyDecision& decision,
-                             std::uint64_t sequence,
-                             LampSafetyEnvelopeSnapshot& output) noexcept;
+                             std::uint64_t sequence, LampSafetyEnvelopeSnapshot& output) noexcept;
 
 bool validateLampSafetyConfig(const LampSafetyConfig& config) noexcept;
 
@@ -63,7 +62,9 @@ public:
 
   LampSafetyDecision evaluate(const LampSafetyInput& input) noexcept;
   void reset() noexcept;
-  const LampSafetyConfig& config() const noexcept { return config_; }
+  const LampSafetyConfig& config() const noexcept {
+    return config_;
+  }
 
 private:
   LampSafetyConfig config_{};

@@ -29,24 +29,30 @@ public:
   OutputAutomationControl(OutputSupervisorLifecycle& lifecycle,
                           OutputLifecycleExecutor& lifecycle_executor) noexcept;
 
-  bool valid() const noexcept { return valid_; }
+  bool valid() const noexcept {
+    return valid_;
+  }
   bool requestEnabled(bool enabled) noexcept;
-  bool requestedEnabled() const noexcept { return requested_enabled_; }
-  bool requestPending() const noexcept { return request_pending_; }
-  SupervisorMode mode() const noexcept { return lifecycle_.mode(); }
+  bool requestedEnabled() const noexcept {
+    return requested_enabled_;
+  }
+  bool requestPending() const noexcept {
+    return request_pending_;
+  }
+  SupervisorMode mode() const noexcept {
+    return lifecycle_.mode();
+  }
   bool transitionActive() const noexcept {
     return lifecycle_executor_.active() || arming_completion_pending_ || request_pending_;
   }
 
-  OutputAutomationControlReport tick(std::uint64_t monotonic_ms,
-                                     const ScheduleIntent& schedule,
+  OutputAutomationControlReport tick(std::uint64_t monotonic_ms, const ScheduleIntent& schedule,
                                      const SafetyEnvelope& safety) noexcept;
 
 private:
   static bool hardSafetyActive(const SafetyEnvelope& safety) noexcept;
   bool completeArming() noexcept;
-  bool applyPendingRequest(std::uint64_t monotonic_ms,
-                           const ScheduleIntent& schedule) noexcept;
+  bool applyPendingRequest(std::uint64_t monotonic_ms, const ScheduleIntent& schedule) noexcept;
   OutputAutomationControlReport makeReport(bool safety_deferred) const noexcept;
 
   OutputSupervisorLifecycle& lifecycle_;

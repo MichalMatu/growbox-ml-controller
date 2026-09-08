@@ -50,18 +50,29 @@ class OutputSupervisorLifecycle final {
 public:
   explicit OutputSupervisorLifecycle(const OutputPolicyConfig& policy) noexcept;
 
-  bool valid() const noexcept { return valid_; }
-  SupervisorMode mode() const noexcept { return mode_; }
-  OutputLifecycleFaultReason fault() const noexcept { return fault_; }
-  std::uint64_t generation() const noexcept { return generation_; }
-  bool normalExecutionEnabled() const noexcept { return mode_ == SupervisorMode::Automatic; }
-  bool safetyEvaluationEnabled() const noexcept { return true; }
+  bool valid() const noexcept {
+    return valid_;
+  }
+  SupervisorMode mode() const noexcept {
+    return mode_;
+  }
+  OutputLifecycleFaultReason fault() const noexcept {
+    return fault_;
+  }
+  std::uint64_t generation() const noexcept {
+    return generation_;
+  }
+  bool normalExecutionEnabled() const noexcept {
+    return mode_ == SupervisorMode::Automatic;
+  }
+  bool safetyEvaluationEnabled() const noexcept {
+    return true;
+  }
 
   OutputLifecycleTransitionReport apply(OutputLifecycleCommand command) noexcept;
 
 private:
-  OutputLifecycleTransitionReport transition(SupervisorMode next,
-                                             OutputLifecycleFaultReason fault,
+  OutputLifecycleTransitionReport transition(SupervisorMode next, OutputLifecycleFaultReason fault,
                                              bool has_policy_event,
                                              OutputLifecycleEvent policy_event) noexcept;
   OutputLifecycleTransitionReport noChange() const noexcept;

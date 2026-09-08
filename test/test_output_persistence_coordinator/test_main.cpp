@@ -36,7 +36,8 @@ public:
     return output::OutputPersistenceBackendStatus::Ok;
   }
 
-  output::OutputPersistenceBackendStatus read_status = output::OutputPersistenceBackendStatus::NotFound;
+  output::OutputPersistenceBackendStatus read_status =
+      output::OutputPersistenceBackendStatus::NotFound;
   output::OutputPersistenceBackendStatus write_status = output::OutputPersistenceBackendStatus::Ok;
   output::OutputPersistenceBlob blob{};
   std::size_t stored_size = 0U;
@@ -119,7 +120,8 @@ void testSuccessfulCommandWritesOnceAndRestoresWithoutAttempt() {
 
   assert(state.recordAttempt(command(1U, output::BinaryOutputState::On), 100U,
                              {output::TransportStatus::Completed, output::TransportError::None}));
-  assert(coordinator.syncFromStateStore(state, true) == output::OutputPersistenceCoordinatorStatus::Ok);
+  assert(coordinator.syncFromStateStore(state, true) ==
+         output::OutputPersistenceCoordinatorStatus::Ok);
   assert(backend.write_count == 1U);
   for (unsigned index = 0U; index < 20U; ++index) {
     assert(coordinator.syncFromStateStore(state, true) ==
@@ -169,7 +171,8 @@ void testFakeModeCommandTruthIsNotDurable() {
   assert(coordinator.syncFromStateStore(state, false) ==
          output::OutputPersistenceCoordinatorStatus::Unchanged);
   assert(backend.write_count == 0U);
-  assert(coordinator.syncFromStateStore(state, true) == output::OutputPersistenceCoordinatorStatus::Ok);
+  assert(coordinator.syncFromStateStore(state, true) ==
+         output::OutputPersistenceCoordinatorStatus::Ok);
   assert(backend.write_count == 1U);
 }
 
@@ -207,10 +210,12 @@ void testPolicyChangeWritesOnlyWhenChanged() {
   assert(coordinator.initialize(state).status == output::OutputPersistenceCoordinatorStatus::Ok);
 
   auto policy = coordinator.policy();
-  policy.endpoints[0].lifecycle[output::outputLifecycleEventIndex(
-      output::OutputLifecycleEvent::Recovery)].delay_ms = 500U;
+  policy.endpoints[0]
+      .lifecycle[output::outputLifecycleEventIndex(output::OutputLifecycleEvent::Recovery)]
+      .delay_ms = 500U;
   assert(output::validateOutputPolicyConfig(policy) == output::OutputPolicyConfigStatus::Ok);
-  assert(coordinator.applyPolicy(policy, state, false) == output::OutputPersistenceCoordinatorStatus::Ok);
+  assert(coordinator.applyPolicy(policy, state, false) ==
+         output::OutputPersistenceCoordinatorStatus::Ok);
   assert(backend.write_count == 1U);
   assert(coordinator.applyPolicy(policy, state, false) ==
          output::OutputPersistenceCoordinatorStatus::Unchanged);
@@ -249,7 +254,8 @@ void testRestoreLastCommandHonorsRetransmitPolicyAcrossReboot() {
   assert(coordinator.initialize(state).status == output::OutputPersistenceCoordinatorStatus::Ok);
   assert(state.recordAttempt(command(1U, output::BinaryOutputState::On), 100U,
                              {output::TransportStatus::Completed, output::TransportError::None}));
-  assert(coordinator.syncFromStateStore(state, true) == output::OutputPersistenceCoordinatorStatus::Ok);
+  assert(coordinator.syncFromStateStore(state, true) ==
+         output::OutputPersistenceCoordinatorStatus::Ok);
 
   auto policy = coordinator.policy();
   auto& restore = policy.endpoints[0].lifecycle[output::outputLifecycleEventIndex(
@@ -257,12 +263,14 @@ void testRestoreLastCommandHonorsRetransmitPolicyAcrossReboot() {
   restore.action = output::OutputPolicyAction::RestoreLastCommand;
   restore.retransmit = true;
   restore.max_retries = 1U;
-  assert(coordinator.applyPolicy(policy, state, true) == output::OutputPersistenceCoordinatorStatus::Ok);
+  assert(coordinator.applyPolicy(policy, state, true) ==
+         output::OutputPersistenceCoordinatorStatus::Ok);
 
   output::OutputPersistenceStore reboot_store(backend, safePolicy());
   auto reboot_state = configuredStateStore();
   output::OutputPersistenceCoordinator rebooted(reboot_store);
-  assert(rebooted.initialize(reboot_state).status == output::OutputPersistenceCoordinatorStatus::Ok);
+  assert(rebooted.initialize(reboot_state).status ==
+         output::OutputPersistenceCoordinatorStatus::Ok);
   assert(runRestoreLifecycle(rebooted.policy(), reboot_state, true));
 
   output::OutputPersistenceStore second_reboot_store(backend, safePolicy());
@@ -271,9 +279,11 @@ void testRestoreLastCommandHonorsRetransmitPolicyAcrossReboot() {
   assert(second_reboot.initialize(second_state).status ==
          output::OutputPersistenceCoordinatorStatus::Ok);
   auto no_retransmit_policy = second_reboot.policy();
-  no_retransmit_policy.endpoints[0].lifecycle[output::outputLifecycleEventIndex(
-      output::OutputLifecycleEvent::AutomationOff)].retransmit = false;
-  assert(output::validateOutputPolicyConfig(no_retransmit_policy) == output::OutputPolicyConfigStatus::Ok);
+  no_retransmit_policy.endpoints[0]
+      .lifecycle[output::outputLifecycleEventIndex(output::OutputLifecycleEvent::AutomationOff)]
+      .retransmit = false;
+  assert(output::validateOutputPolicyConfig(no_retransmit_policy) ==
+         output::OutputPolicyConfigStatus::Ok);
   runRestoreLifecycle(no_retransmit_policy, second_state, false);
 }
 

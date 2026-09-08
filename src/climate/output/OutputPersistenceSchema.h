@@ -19,9 +19,9 @@ inline constexpr std::size_t kOutputPersistencePolicySize =
 inline constexpr std::size_t kOutputPersistenceCommandEntrySize = 4U;
 inline constexpr std::size_t kOutputPersistenceCommandStateSize =
     1U + (kOutputEndpointCapacity * kOutputPersistenceCommandEntrySize);
-inline constexpr std::size_t kOutputPersistenceEncodedSize =
-    kOutputPersistenceHeaderSize + kOutputPersistencePolicySize +
-    kOutputPersistenceCommandStateSize;
+inline constexpr std::size_t kOutputPersistenceEncodedSize = kOutputPersistenceHeaderSize +
+                                                             kOutputPersistencePolicySize +
+                                                             kOutputPersistenceCommandStateSize;
 
 static_assert(kOutputPersistenceEncodedSize == 134U,
               "Output persistence wire size must remain explicitly bounded");
@@ -69,8 +69,8 @@ bool makeSafeOutputPersistenceSnapshot(const OutputPolicyConfig& safe_defaults,
 OutputPersistenceStatus encodeOutputPersistence(const OutputPersistenceSnapshot& snapshot,
                                                 OutputPersistenceBlob& blob) noexcept;
 
-OutputPersistenceDecodeResult decodeOutputPersistence(const std::uint8_t* data,
-                                                       std::size_t size,
-                                                       const OutputPolicyConfig& safe_defaults) noexcept;
+OutputPersistenceDecodeResult
+decodeOutputPersistence(const std::uint8_t* data, std::size_t size,
+                        const OutputPolicyConfig& safe_defaults) noexcept;
 
 } // namespace growbox::app::output

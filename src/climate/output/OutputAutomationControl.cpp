@@ -3,8 +3,7 @@
 namespace growbox::app::output {
 
 OutputAutomationControl::OutputAutomationControl(
-    OutputSupervisorLifecycle& lifecycle,
-    OutputLifecycleExecutor& lifecycle_executor) noexcept
+    OutputSupervisorLifecycle& lifecycle, OutputLifecycleExecutor& lifecycle_executor) noexcept
     : lifecycle_(lifecycle), lifecycle_executor_(lifecycle_executor),
       valid_(lifecycle_.valid() && lifecycle_executor_.valid()),
       requested_enabled_(lifecycle_.mode() == SupervisorMode::Automatic) {}
@@ -129,9 +128,9 @@ OutputAutomationControl::makeReport(bool safety_deferred) const noexcept {
   return report;
 }
 
-OutputAutomationControlReport OutputAutomationControl::tick(
-    std::uint64_t monotonic_ms, const ScheduleIntent& schedule,
-    const SafetyEnvelope& safety) noexcept {
+OutputAutomationControlReport OutputAutomationControl::tick(std::uint64_t monotonic_ms,
+                                                            const ScheduleIntent& schedule,
+                                                            const SafetyEnvelope& safety) noexcept {
   if (!valid_) {
     return makeReport(false);
   }

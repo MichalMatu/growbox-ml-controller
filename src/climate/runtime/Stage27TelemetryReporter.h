@@ -3,9 +3,9 @@
 #include "climate/ClimateApplication.h"
 #include "climate/ClimateCompositeInput.h"
 #include "climate/native/BleClimateScanner.h"
-#include "climate/output/OutputExecutionTelemetry.h"
 #include "climate/native/Ds3231ClockSource.h"
 #include "climate/native/Scd41InsideSource.h"
+#include "climate/output/OutputExecutionTelemetry.h"
 #include "climate/storage/Stage27TelemetryLogger.h"
 #include "climate/telemetry/Stage27Telemetry.h"
 
@@ -22,7 +22,8 @@ public:
 
   void record(std::uint64_t now_ms, const ::growbox::climate::ClimateLoopResult& loop_result,
               const ::growbox::climate::ClimateRuntimeDecision& decision,
-              const ::growbox::app::output::OutputExecutionTelemetrySnapshot& output_execution = {}) noexcept;
+              const ::growbox::app::output::OutputExecutionTelemetrySnapshot& output_execution =
+                  {}) noexcept;
 
 private:
   void logRecord(const telemetry::Stage27TelemetrySnapshot& snapshot,

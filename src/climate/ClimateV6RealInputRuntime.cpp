@@ -5,36 +5,36 @@
 #include "climate/ClimateSemanticOutput.h"
 #include "climate/Stage28dLampSafety.h"
 #include "climate/Stage28dOutputBindings.h"
-#include "climate/output/BinaryActuatorPolicy.h"
-#include "climate/output/ClimateOutputSupervisorSink.h"
-#include "climate/output/OutputExecutionTelemetry.h"
-#include "climate/output/OutputAutomationControl.h"
-#include "climate/output/OutputLifecycleExecutor.h"
-#include "climate/output/OutputManualControl.h"
-#include "climate/output/OutputMaintenanceControl.h"
-#include "climate/output/OutputRuntimeLifecycleControl.h"
-#include "climate/output/OutputNvsBackend.h"
-#include "climate/output/OutputPersistenceCoordinator.h"
-#include "climate/output/OutputPersistenceStore.h"
-#include "climate/output/OutputSupervisorLifecycle.h"
-#include "climate/output/OutputSupervisorExecutor.h"
-#include "climate/output/OutputSupervisorResolver.h"
-#include "climate/output/OutputStateStore.h"
 #include "climate/native/BleClimateScanner.h"
 #include "climate/native/Ds3231ClockSource.h"
 #include "climate/native/NativeI2cBus.h"
 #include "climate/native/Scd41InsideSource.h"
-#include "climate/runtime/Stage27RuntimeAdapters.h"
-#include "climate/runtime/Stage27ScheduleIntentAdapter.h"
-#include "climate/runtime/Stage27TelemetryReporter.h"
-#include "climate/runtime/Stage28RfDiagnostics.h"
-#include "climate/runtime/Stage28MaintenanceRfTransport.h"
-#include "climate/runtime/Stage28ServiceConsole.h"
-#include "climate/runtime/Stage28eLog.h"
-#include "climate/runtime/Stage28ePlatformDiagnostics.h"
+#include "climate/output/BinaryActuatorPolicy.h"
+#include "climate/output/ClimateOutputSupervisorSink.h"
+#include "climate/output/OutputAutomationControl.h"
+#include "climate/output/OutputExecutionTelemetry.h"
+#include "climate/output/OutputLifecycleExecutor.h"
+#include "climate/output/OutputMaintenanceControl.h"
+#include "climate/output/OutputManualControl.h"
+#include "climate/output/OutputNvsBackend.h"
+#include "climate/output/OutputPersistenceCoordinator.h"
+#include "climate/output/OutputPersistenceStore.h"
+#include "climate/output/OutputRuntimeLifecycleControl.h"
+#include "climate/output/OutputStateStore.h"
+#include "climate/output/OutputSupervisorExecutor.h"
+#include "climate/output/OutputSupervisorLifecycle.h"
+#include "climate/output/OutputSupervisorResolver.h"
 #include "climate/rf433/Rf433OutputTransport.h"
 #include "climate/rf433/Rf433RmtFrameSender.h"
 #include "climate/rf433/Rf433RmtLoopback.h"
+#include "climate/runtime/Stage27RuntimeAdapters.h"
+#include "climate/runtime/Stage27ScheduleIntentAdapter.h"
+#include "climate/runtime/Stage27TelemetryReporter.h"
+#include "climate/runtime/Stage28MaintenanceRfTransport.h"
+#include "climate/runtime/Stage28RfDiagnostics.h"
+#include "climate/runtime/Stage28ServiceConsole.h"
+#include "climate/runtime/Stage28eLog.h"
+#include "climate/runtime/Stage28ePlatformDiagnostics.h"
 #include "climate/storage/Stage27TelemetryLogger.h"
 
 #include <esp_err.h>
@@ -114,10 +114,9 @@ namespace {
 constexpr char kTag[] = "climate_stage27";
 constexpr std::uint64_t kTickIntervalMs = 1'000U;
 constexpr std::uint32_t kTelemetryEveryTicks = 10U;
-constexpr output::BinaryActuatorPolicyConfig kExhaustPolicyConfig{0.10F, 0.03F, 120'000U,
-                                                                  120'000U};
+constexpr output::BinaryActuatorPolicyConfig kExhaustPolicyConfig{0.10F, 0.03F, 120'000U, 120'000U};
 constexpr output::BinaryActuatorPolicyConfig kHumidifierPolicyConfig{0.10F, 0.03F, 180'000U,
-                                                                      180'000U};
+                                                                     180'000U};
 
 std::uint64_t monotonicMilliseconds() noexcept {
   return static_cast<std::uint64_t>(esp_timer_get_time()) / 1000U;
@@ -144,8 +143,7 @@ runtime::Stage28RfDiagnosticsConfig rfDiagnosticsConfig() noexcept {
 
 class RuntimeOutputTransport final : public output::OutputTransport {
 public:
-  RuntimeOutputTransport(output::OutputTransport& real_transport,
-                         const bool& real_enabled) noexcept
+  RuntimeOutputTransport(output::OutputTransport& real_transport, const bool& real_enabled) noexcept
       : real_transport_(real_transport), real_enabled_(real_enabled) {}
 
   output::TxResult send(const output::OutputCommand& command) noexcept override {
@@ -161,8 +159,12 @@ public:
     return result;
   }
 
-  std::uint32_t transmitCount() const noexcept { return transmit_count_; }
-  std::uint32_t transmitErrorCount() const noexcept { return transmit_error_count_; }
+  std::uint32_t transmitCount() const noexcept {
+    return transmit_count_;
+  }
+  std::uint32_t transmitErrorCount() const noexcept {
+    return transmit_error_count_;
+  }
 
 private:
   output::OutputTransport& real_transport_;
@@ -229,8 +231,7 @@ private:
 
 class RuntimeControlOwner final {
 public:
-  RuntimeControlOwner() noexcept
-      : runtime_controller_(nullptr, runtime::defaultRuntimeConfig()) {}
+  RuntimeControlOwner() noexcept : runtime_controller_(nullptr, runtime::defaultRuntimeConfig()) {}
 
   RuntimeControlOwner(const RuntimeControlOwner&) = delete;
   RuntimeControlOwner& operator=(const RuntimeControlOwner&) = delete;
@@ -248,15 +249,14 @@ private:
   stage28d::LampSafetyController lamp_safety_;
 };
 
-
 const output::OutputPolicyConfig& safeOutputPolicy() noexcept {
   static const output::OutputPolicyConfig policy = stage28d::makeOutputPolicyConfig();
   return policy;
 }
 
-output::OutputSupervisorResolverConfig makeRuntimeSupervisorConfig(
-    output::BinaryActuatorPolicy& exhaust_policy,
-    output::BinaryActuatorPolicy& humidifier_policy) noexcept {
+output::OutputSupervisorResolverConfig
+makeRuntimeSupervisorConfig(output::BinaryActuatorPolicy& exhaust_policy,
+                            output::BinaryActuatorPolicy& humidifier_policy) noexcept {
   output::OutputSupervisorResolverConfig config{};
   config.endpoints[0] = {stage28d::kScheduledLightEndpoint, nullptr};
   config.endpoints[1] = {stage28d::kExhaustFanEndpoint, &exhaust_policy};
@@ -297,17 +297,37 @@ public:
   RuntimeOutputOwner(const RuntimeOutputOwner&) = delete;
   RuntimeOutputOwner& operator=(const RuntimeOutputOwner&) = delete;
 
-  bool valid() const noexcept { return valid_; }
-  bool bindingsValid() const noexcept { return bindings_valid_; }
+  bool valid() const noexcept {
+    return valid_;
+  }
+  bool bindingsValid() const noexcept {
+    return bindings_valid_;
+  }
 
-  RuntimeOutputTransport& transport() noexcept { return supervisor_transport_; }
-  output::OutputSupervisorLifecycle& lifecycle() noexcept { return output_lifecycle_; }
-  output::OutputLifecycleExecutor& lifecycleExecutor() noexcept { return lifecycle_executor_; }
-  output::OutputRuntimeLifecycleControl& runtimeLifecycle() noexcept { return runtime_lifecycle_; }
-  output::OutputAutomationControl& automationControl() noexcept { return automation_control_; }
-  output::OutputManualControl& manualControl() noexcept { return manual_control_; }
-  output::OutputMaintenanceControl& maintenanceControl() noexcept { return maintenance_control_; }
-  ClimateOutputSupervisorSink& supervisorSink() noexcept { return supervisor_sink_; }
+  RuntimeOutputTransport& transport() noexcept {
+    return supervisor_transport_;
+  }
+  output::OutputSupervisorLifecycle& lifecycle() noexcept {
+    return output_lifecycle_;
+  }
+  output::OutputLifecycleExecutor& lifecycleExecutor() noexcept {
+    return lifecycle_executor_;
+  }
+  output::OutputRuntimeLifecycleControl& runtimeLifecycle() noexcept {
+    return runtime_lifecycle_;
+  }
+  output::OutputAutomationControl& automationControl() noexcept {
+    return automation_control_;
+  }
+  output::OutputManualControl& manualControl() noexcept {
+    return manual_control_;
+  }
+  output::OutputMaintenanceControl& maintenanceControl() noexcept {
+    return maintenance_control_;
+  }
+  ClimateOutputSupervisorSink& supervisorSink() noexcept {
+    return supervisor_sink_;
+  }
 
 private:
   output::OutputPolicyConfig policy_{};
@@ -432,8 +452,8 @@ private:
   }
 
   runtime::Stage28ServiceConsole service_console(
-      {GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED != 0, GROWBOX_FIRMWARE_GIT_SHA,
-       &real_output_ready, &storage_logger, &runtime_timing, &automation_control, &manual_control,
+      {GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED != 0, GROWBOX_FIRMWARE_GIT_SHA, &real_output_ready,
+       &storage_logger, &runtime_timing, &automation_control, &manual_control,
        &maintenance_control},
       ble, scd41, clock, rf_diagnostics);
   const bool service_console_ready = service_console.begin();
@@ -462,12 +482,11 @@ private:
            GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED != 0, real_output_ready,
            GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED != 0,
            real_output_ready ? "real-bounded" : "fake-locked");
-  GROWBOX_STAGE28E_LOG_INFO(
-      runtime::DiagnosticLogModule::Sys,
-      "boot firmware_sha=%s reset_reason=%d started_us=%llu outputs=%s",
-      boot_identity.firmware_sha, static_cast<int>(reset_reason),
-      static_cast<unsigned long long>(boot_identity.started_monotonic_us),
-      real_output_ready ? "real-bounded" : "fake-locked");
+  GROWBOX_STAGE28E_LOG_INFO(runtime::DiagnosticLogModule::Sys,
+                            "boot firmware_sha=%s reset_reason=%d started_us=%llu outputs=%s",
+                            boot_identity.firmware_sha, static_cast<int>(reset_reason),
+                            static_cast<unsigned long long>(boot_identity.started_monotonic_us),
+                            real_output_ready ? "real-bounded" : "fake-locked");
 
   std::uint32_t diagnostic_tick = 0U;
   std::uint64_t output_intent_sequence = 0U;
@@ -476,11 +495,12 @@ private:
     const std::uint64_t now_ms = loop_started_us / 1000U;
     const std::uint64_t console_started_us = static_cast<std::uint64_t>(esp_timer_get_time());
     service_console.poll(now_ms);
-    runtime_timing.service_console.observe(
-        static_cast<std::uint64_t>(esp_timer_get_time()) - console_started_us);
+    runtime_timing.service_console.observe(static_cast<std::uint64_t>(esp_timer_get_time()) -
+                                           console_started_us);
     const std::uint64_t rf_started_us = static_cast<std::uint64_t>(esp_timer_get_time());
     rf_diagnostics.tick(now_ms);
-    runtime_timing.rf_tick.observe(static_cast<std::uint64_t>(esp_timer_get_time()) - rf_started_us);
+    runtime_timing.rf_tick.observe(static_cast<std::uint64_t>(esp_timer_get_time()) -
+                                   rf_started_us);
 
     ::growbox::climate::ClimateLoopResult loop_result{};
     ::growbox::climate::ClimateRuntimeDecision decision{};
@@ -488,94 +508,92 @@ private:
 
     const std::uint64_t control_started_us = static_cast<std::uint64_t>(esp_timer_get_time());
     const bool real_transport_active_this_cycle = real_transport_available;
-      ClimateWallClockSnapshot rtc_snapshot{};
-      native::BleClimateReading tp357{};
-      const bool rtc_sampled = clock.sample(now_ms, rtc_snapshot) && rtc_snapshot.valid;
-      const bool tp357_sampled = ble.sampleTp357(now_ms, tp357);
+    ClimateWallClockSnapshot rtc_snapshot{};
+    native::BleClimateReading tp357{};
+    const bool rtc_sampled = clock.sample(now_ms, rtc_snapshot) && rtc_snapshot.valid;
+    const bool tp357_sampled = ble.sampleTp357(now_ms, tp357);
 
-      output::ScheduleIntent schedule_intent{};
-      const std::uint64_t schedule_sequence = nextOutputIntentSequence(output_intent_sequence);
-      const bool schedule_intent_ready =
-          rtc_sampled &&
-          runtime::buildStage27ScheduleIntent(now_ms, rtc_snapshot, schedule_sequence,
-                                              schedule_intent);
-      if (!schedule_intent_ready) {
-        schedule_intent = {};
-        schedule_intent.metadata.sequence = schedule_sequence;
-        schedule_intent.metadata.monotonic_ms = now_ms;
-        schedule_intent.metadata.source = output::OutputSource::Schedule;
-        schedule_intent.metadata.reason = output::OutputReason::ScheduleRequest;
-        (void)output::setEndpointIntent(schedule_intent.endpoints[0],
-                                        stage28d::kScheduledLightEndpoint, 0.0F);
+    output::ScheduleIntent schedule_intent{};
+    const std::uint64_t schedule_sequence = nextOutputIntentSequence(output_intent_sequence);
+    const bool schedule_intent_ready =
+        rtc_sampled && runtime::buildStage27ScheduleIntent(now_ms, rtc_snapshot, schedule_sequence,
+                                                           schedule_intent);
+    if (!schedule_intent_ready) {
+      schedule_intent = {};
+      schedule_intent.metadata.sequence = schedule_sequence;
+      schedule_intent.metadata.monotonic_ms = now_ms;
+      schedule_intent.metadata.source = output::OutputSource::Schedule;
+      schedule_intent.metadata.reason = output::OutputReason::ScheduleRequest;
+      (void)output::setEndpointIntent(schedule_intent.endpoints[0],
+                                      stage28d::kScheduledLightEndpoint, 0.0F);
+    }
+
+    ::growbox::climate::MeasuredValue safety_temperature{};
+    if (tp357_sampled) {
+      safety_temperature = {tp357.temperature_c, true, tp357.age_ms};
+    }
+    const float scheduled_light = output::endpointIntentActive(schedule_intent.endpoints[0])
+                                      ? schedule_intent.endpoints[0].level
+                                      : 0.0F;
+    const stage28d::LampSafetyInput lamp_safety_input{scheduled_light, safety_temperature,
+                                                      output_bindings_valid, now_ms};
+    lamp_decision = lamp_safety.evaluate(lamp_safety_input);
+
+    stage28d::LampSafetyEnvelopeSnapshot safety_snapshot{};
+    const bool safety_envelope_ready = stage28d::buildLampSafetyEnvelope(
+        lamp_safety_input, lamp_decision, nextOutputIntentSequence(output_intent_sequence),
+        safety_snapshot);
+    if (!safety_envelope_ready && real_transport_available &&
+        output_lifecycle.mode() != output::SupervisorMode::FaultLocked) {
+      ESP_LOGE(kTag, "Lamp safety envelope build failed; requesting supervisor fault containment");
+      if (!runtime_lifecycle.requestFault(now_ms, schedule_intent)) {
+        ESP_LOGE(kTag, "Supervisor fault request failed; disabling physical transport");
+        real_transport_available = false;
       }
-
-      ::growbox::climate::MeasuredValue safety_temperature{};
-      if (tp357_sampled) {
-        safety_temperature = {tp357.temperature_c, true, tp357.age_ms};
-      }
-      const float scheduled_light =
-          output::endpointIntentActive(schedule_intent.endpoints[0])
-              ? schedule_intent.endpoints[0].level
-              : 0.0F;
-      const stage28d::LampSafetyInput lamp_safety_input{
-          scheduled_light, safety_temperature, output_bindings_valid, now_ms};
-      lamp_decision = lamp_safety.evaluate(lamp_safety_input);
-
-      stage28d::LampSafetyEnvelopeSnapshot safety_snapshot{};
-      const bool safety_envelope_ready = stage28d::buildLampSafetyEnvelope(
-          lamp_safety_input, lamp_decision, nextOutputIntentSequence(output_intent_sequence),
-          safety_snapshot);
-      if (!safety_envelope_ready && real_transport_available &&
-          output_lifecycle.mode() != output::SupervisorMode::FaultLocked) {
-        ESP_LOGE(kTag, "Lamp safety envelope build failed; requesting supervisor fault containment");
-        if (!runtime_lifecycle.requestFault(now_ms, schedule_intent)) {
-          ESP_LOGE(kTag, "Supervisor fault request failed; disabling physical transport");
-          real_transport_available = false;
-        }
-        real_output_ready = false;
-      } else if (safety_envelope_ready &&
-                 output_lifecycle.mode() == output::SupervisorMode::BootLocked &&
-                 !runtime_lifecycle.transitionActive()) {
-        if (!runtime_lifecycle.beginBoot(now_ms, schedule_intent)) {
-          ESP_LOGE(kTag, "Supervisor boot plan failed to start; disabling physical transport");
-          real_transport_available = false;
-          real_output_ready = false;
-        }
-      }
-
-      // Runtime boot/recovery/fault owns the lifecycle executor only while its
-      // own transition is active. Automation/maintenance retain their existing
-      // executor ownership outside those windows. Hard safety defers lifecycle
-      // TX and remains executable by the supervisor resolver below.
-      (void)runtime_lifecycle.tick(now_ms, safety_snapshot.envelope);
-      if (!runtime_lifecycle.transitionActive()) {
-        (void)automation_control.tick(now_ms, schedule_intent, safety_snapshot.envelope);
-        (void)maintenance_control.tick(now_ms, safety_snapshot.envelope);
-      }
-
-      real_output_ready = real_transport_available && runtime_lifecycle.bootCompleted() &&
-                          output_lifecycle.mode() != output::SupervisorMode::FaultLocked;
-
-      output::ManualIntent manual_intent{};
-      (void)manual_control.consume(manual_intent);
-
-      ClimateOutputSupervisorCycleContext supervisor_context{};
-      supervisor_context.mode = output_lifecycle.mode();
-      supervisor_context.schedule = schedule_intent;
-      supervisor_context.manual = manual_intent;
-      supervisor_context.safety = safety_snapshot.envelope;
-      supervisor_sink.setCycleContext(supervisor_context);
-
-      loop_result = application.tick(now_ms, decision);
-      if (real_transport_available && !loop_result.command_applied &&
-          output_lifecycle.mode() != output::SupervisorMode::FaultLocked) {
-        ESP_LOGE(kTag, "Supervisor output apply failed; requesting lifecycle fault containment");
-        if (!runtime_lifecycle.requestFault(now_ms, schedule_intent)) {
-          ESP_LOGE(kTag, "Lifecycle fault containment failed to start; disabling physical transport");
-          real_transport_available = false;
-        }
+      real_output_ready = false;
+    } else if (safety_envelope_ready &&
+               output_lifecycle.mode() == output::SupervisorMode::BootLocked &&
+               !runtime_lifecycle.transitionActive()) {
+      if (!runtime_lifecycle.beginBoot(now_ms, schedule_intent)) {
+        ESP_LOGE(kTag, "Supervisor boot plan failed to start; disabling physical transport");
+        real_transport_available = false;
         real_output_ready = false;
       }
+    }
+
+    // Runtime boot/recovery/fault owns the lifecycle executor only while its
+    // own transition is active. Automation/maintenance retain their existing
+    // executor ownership outside those windows. Hard safety defers lifecycle
+    // TX and remains executable by the supervisor resolver below.
+    (void)runtime_lifecycle.tick(now_ms, safety_snapshot.envelope);
+    if (!runtime_lifecycle.transitionActive()) {
+      (void)automation_control.tick(now_ms, schedule_intent, safety_snapshot.envelope);
+      (void)maintenance_control.tick(now_ms, safety_snapshot.envelope);
+    }
+
+    real_output_ready = real_transport_available && runtime_lifecycle.bootCompleted() &&
+                        output_lifecycle.mode() != output::SupervisorMode::FaultLocked;
+
+    output::ManualIntent manual_intent{};
+    (void)manual_control.consume(manual_intent);
+
+    ClimateOutputSupervisorCycleContext supervisor_context{};
+    supervisor_context.mode = output_lifecycle.mode();
+    supervisor_context.schedule = schedule_intent;
+    supervisor_context.manual = manual_intent;
+    supervisor_context.safety = safety_snapshot.envelope;
+    supervisor_sink.setCycleContext(supervisor_context);
+
+    loop_result = application.tick(now_ms, decision);
+    if (real_transport_available && !loop_result.command_applied &&
+        output_lifecycle.mode() != output::SupervisorMode::FaultLocked) {
+      ESP_LOGE(kTag, "Supervisor output apply failed; requesting lifecycle fault containment");
+      if (!runtime_lifecycle.requestFault(now_ms, schedule_intent)) {
+        ESP_LOGE(kTag, "Lifecycle fault containment failed to start; disabling physical transport");
+        real_transport_available = false;
+      }
+      real_output_ready = false;
+    }
     if (output_persistence.valid()) {
       const auto persistence_status = output_persistence.syncFromStateStore(
           output_state_store, real_transport_active_this_cycle);
@@ -585,12 +603,11 @@ private:
                  static_cast<unsigned>(persistence_status));
       }
     }
-    runtime_timing.control_cycle.observe(
-        static_cast<std::uint64_t>(esp_timer_get_time()) - control_started_us);
+    runtime_timing.control_cycle.observe(static_cast<std::uint64_t>(esp_timer_get_time()) -
+                                         control_started_us);
 
     if ((diagnostic_tick++ % kTelemetryEveryTicks) == 0U) {
-      const std::uint64_t telemetry_started_us =
-          static_cast<std::uint64_t>(esp_timer_get_time());
+      const std::uint64_t telemetry_started_us = static_cast<std::uint64_t>(esp_timer_get_time());
       output::OutputSupervisorCycleInput telemetry_cycle{};
       telemetry_cycle.mode = output_lifecycle.mode();
       telemetry_cycle.monotonic_ms = now_ms;
@@ -624,39 +641,38 @@ private:
                static_cast<unsigned long>(supervisor_transport.transmitErrorCount()));
       for (std::size_t index = 0U; index < output_telemetry.endpoint_count; ++index) {
         const auto& endpoint = output_telemetry.endpoints[index];
-        ESP_LOGI(
-            kTag,
-            "output_endpoint endpoint=%u control=%d/%.3f schedule=%d/%.3f manual=%d/%.3f "
-            "safety=%d/%u/%u selected=%d/%.3f/%u/%u resolved=%d/%u dwell=%d "
-            "override=%d inhibited=%d attempt=%d current=%d state=%u source=%u reason=%u "
-            "transport=%u error=%u last_command=%d/%u/%u/%u physical_state=%u independent=%d",
-            static_cast<unsigned>(endpoint.endpoint), endpoint.control.active,
-            static_cast<double>(endpoint.control.level), endpoint.schedule.active,
-            static_cast<double>(endpoint.schedule.level), endpoint.manual.active,
-            static_cast<double>(endpoint.manual.level), endpoint.safety_active,
-            static_cast<unsigned>(endpoint.safety_constraint),
-            static_cast<unsigned>(endpoint.safety_reason), endpoint.selected,
-            static_cast<double>(endpoint.selected_level),
-            static_cast<unsigned>(endpoint.selected_source),
-            static_cast<unsigned>(endpoint.selected_reason), endpoint.resolved,
-            static_cast<unsigned>(endpoint.resolved_state), endpoint.held_by_dwell,
-            endpoint.safety_override, endpoint.inhibited, endpoint.attempt_known,
-            endpoint.attempted_this_cycle, static_cast<unsigned>(endpoint.attempt_state),
-            static_cast<unsigned>(endpoint.attempt_source),
-            static_cast<unsigned>(endpoint.attempt_reason),
-            static_cast<unsigned>(endpoint.transport_status),
-            static_cast<unsigned>(endpoint.transport_error), endpoint.last_command_known,
-            static_cast<unsigned>(endpoint.last_command_state),
-            static_cast<unsigned>(endpoint.last_command_source),
-            static_cast<unsigned>(endpoint.last_command_reason),
-            static_cast<unsigned>(endpoint.physical_state), endpoint.physical_independent);
+        ESP_LOGI(kTag,
+                 "output_endpoint endpoint=%u control=%d/%.3f schedule=%d/%.3f manual=%d/%.3f "
+                 "safety=%d/%u/%u selected=%d/%.3f/%u/%u resolved=%d/%u dwell=%d "
+                 "override=%d inhibited=%d attempt=%d current=%d state=%u source=%u reason=%u "
+                 "transport=%u error=%u last_command=%d/%u/%u/%u physical_state=%u independent=%d",
+                 static_cast<unsigned>(endpoint.endpoint), endpoint.control.active,
+                 static_cast<double>(endpoint.control.level), endpoint.schedule.active,
+                 static_cast<double>(endpoint.schedule.level), endpoint.manual.active,
+                 static_cast<double>(endpoint.manual.level), endpoint.safety_active,
+                 static_cast<unsigned>(endpoint.safety_constraint),
+                 static_cast<unsigned>(endpoint.safety_reason), endpoint.selected,
+                 static_cast<double>(endpoint.selected_level),
+                 static_cast<unsigned>(endpoint.selected_source),
+                 static_cast<unsigned>(endpoint.selected_reason), endpoint.resolved,
+                 static_cast<unsigned>(endpoint.resolved_state), endpoint.held_by_dwell,
+                 endpoint.safety_override, endpoint.inhibited, endpoint.attempt_known,
+                 endpoint.attempted_this_cycle, static_cast<unsigned>(endpoint.attempt_state),
+                 static_cast<unsigned>(endpoint.attempt_source),
+                 static_cast<unsigned>(endpoint.attempt_reason),
+                 static_cast<unsigned>(endpoint.transport_status),
+                 static_cast<unsigned>(endpoint.transport_error), endpoint.last_command_known,
+                 static_cast<unsigned>(endpoint.last_command_state),
+                 static_cast<unsigned>(endpoint.last_command_source),
+                 static_cast<unsigned>(endpoint.last_command_reason),
+                 static_cast<unsigned>(endpoint.physical_state), endpoint.physical_independent);
       }
-      runtime_timing.telemetry.observe(
-          static_cast<std::uint64_t>(esp_timer_get_time()) - telemetry_started_us);
+      runtime_timing.telemetry.observe(static_cast<std::uint64_t>(esp_timer_get_time()) -
+                                       telemetry_started_us);
     }
 
-    runtime_timing.loop_active.observe(
-        static_cast<std::uint64_t>(esp_timer_get_time()) - loop_started_us);
+    runtime_timing.loop_active.observe(static_cast<std::uint64_t>(esp_timer_get_time()) -
+                                       loop_started_us);
     vTaskDelay(pdMS_TO_TICKS(kTickIntervalMs));
   }
 }

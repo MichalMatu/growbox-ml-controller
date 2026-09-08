@@ -20,8 +20,8 @@ float normalizedLevel(float value) noexcept {
   return std::clamp(value, 0.0F, 1.0F);
 }
 
-::growbox::climate::ClimateExecutionKnownMask executionKnownMask(
-    ClimateActuatorRole role) noexcept {
+::growbox::climate::ClimateExecutionKnownMask
+executionKnownMask(ClimateActuatorRole role) noexcept {
   switch (role) {
   case ClimateActuatorRole::Heater:
     return ::growbox::climate::ClimateExecutionKnownHeater;
@@ -56,8 +56,7 @@ bool ClimateOutputSupervisorSink::valid() const noexcept {
 }
 
 float ClimateOutputSupervisorSink::roleLevel(
-    const ::growbox::climate::ClimatePolicyRequest& request,
-    ClimateActuatorRole role) noexcept {
+    const ::growbox::climate::ClimatePolicyRequest& request, ClimateActuatorRole role) noexcept {
   switch (role) {
   case ClimateActuatorRole::Heater:
     return request.heater;
@@ -75,9 +74,8 @@ float ClimateOutputSupervisorSink::roleLevel(
   return 0.0F;
 }
 
-void ClimateOutputSupervisorSink::setRoleLevel(
-    ::growbox::climate::ClimatePolicyRequest& request, ClimateActuatorRole role,
-    float level) noexcept {
+void ClimateOutputSupervisorSink::setRoleLevel(::growbox::climate::ClimatePolicyRequest& request,
+                                               ClimateActuatorRole role, float level) noexcept {
   switch (role) {
   case ClimateActuatorRole::Heater:
     request.heater = level;
@@ -164,9 +162,9 @@ bool ClimateOutputSupervisorSink::reportTransportCompleted(
   return true;
 }
 
-bool ClimateOutputSupervisorSink::executeCycle(
-    const ::growbox::app::output::ControlIntent& control, std::uint64_t monotonic_ms,
-    bool& transport_completed) noexcept {
+bool ClimateOutputSupervisorSink::executeCycle(const ::growbox::app::output::ControlIntent& control,
+                                               std::uint64_t monotonic_ms,
+                                               bool& transport_completed) noexcept {
   transport_completed = false;
   last_resolution_ = {};
   last_report_ = {};
@@ -202,8 +200,8 @@ bool ClimateOutputSupervisorSink::projectExecutedClimate(
   }
 
   ::growbox::app::output::ExecutedControlProjection executed{};
-  if (!::growbox::app::output::buildExecutedControlProjection(
-          last_resolution_, last_report_, state_store_, executed)) {
+  if (!::growbox::app::output::buildExecutedControlProjection(last_resolution_, last_report_,
+                                                              state_store_, executed)) {
     return false;
   }
 
@@ -226,16 +224,14 @@ bool ClimateOutputSupervisorSink::projectExecutedClimate(
       projection.known_mask |= static_cast<std::uint8_t>(mask);
       continue;
     }
-    const auto* endpoint = ::growbox::app::output::findExecutedEndpointProjection(
-        executed, mapping.endpoint);
+    const auto* endpoint =
+        ::growbox::app::output::findExecutedEndpointProjection(executed, mapping.endpoint);
     if (endpoint == nullptr || !endpoint->has_executed_state) {
       projection = {};
       return false;
     }
-    const float level = endpoint->executed_state ==
-                                ::growbox::app::output::BinaryOutputState::On
-                            ? 1.0F
-                            : 0.0F;
+    const float level =
+        endpoint->executed_state == ::growbox::app::output::BinaryOutputState::On ? 1.0F : 0.0F;
     setRoleLevel(projection.executed, role, level);
     projection.known_mask |= static_cast<std::uint8_t>(mask);
   }
@@ -243,9 +239,8 @@ bool ClimateOutputSupervisorSink::projectExecutedClimate(
          static_cast<std::uint8_t>(::growbox::climate::ClimateExecutionKnownAll);
 }
 
-bool ClimateOutputSupervisorSink::apply(
-    const ::growbox::climate::ClimatePolicyRequest& request,
-    std::uint64_t monotonic_ms) noexcept {
+bool ClimateOutputSupervisorSink::apply(const ::growbox::climate::ClimatePolicyRequest& request,
+                                        std::uint64_t monotonic_ms) noexcept {
   ::growbox::climate::ClimatePolicyRequest projection{};
   return applyAndReport(request, monotonic_ms, projection);
 }
@@ -310,9 +305,9 @@ bool ClimateOutputSupervisorSink::applyFailSafeOff(std::uint64_t monotonic_ms) n
       continue;
     }
     if (constraint_count >= fail_safe.endpoints.size() ||
-        !::growbox::app::output::setSafetyConstraint(
-            fail_safe.endpoints[constraint_count], mapping.endpoint, SafetyConstraint::ForceOff,
-            OutputReason::FaultContainment)) {
+        !::growbox::app::output::setSafetyConstraint(fail_safe.endpoints[constraint_count],
+                                                     mapping.endpoint, SafetyConstraint::ForceOff,
+                                                     OutputReason::FaultContainment)) {
       return false;
     }
     ++constraint_count;

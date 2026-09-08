@@ -27,12 +27,9 @@ public:
   explicit Stage28dBinaryRoleArbiter(ClimateRoleDriver& downstream,
                                      BinaryRoleArbiterConfig config = {}) noexcept;
 
-  bool apply(ClimateActuatorRole role, float level,
-             std::uint64_t monotonic_ms) noexcept override;
-  float appliedLevel(ClimateActuatorRole role,
-                     float requested_level) const noexcept override;
-  bool forceSafeOff(ClimateActuatorRole role,
-                    std::uint64_t monotonic_ms) noexcept override;
+  bool apply(ClimateActuatorRole role, float level, std::uint64_t monotonic_ms) noexcept override;
+  float appliedLevel(ClimateActuatorRole role, float requested_level) const noexcept override;
+  bool forceSafeOff(ClimateActuatorRole role, std::uint64_t monotonic_ms) noexcept override;
 
   // Call after the downstream endpoint has been explicitly initialized OFF.
   // This gives dwell timing a truthful starting point without retransmitting RF.
@@ -44,17 +41,27 @@ public:
     safety_force_exhaust_ = force_on;
   }
 
-  bool exhaustOn() const noexcept { return exhaust_policy_.on(); }
-  bool humidifierOn() const noexcept { return humidifier_policy_.on(); }
+  bool exhaustOn() const noexcept {
+    return exhaust_policy_.on();
+  }
+  bool humidifierOn() const noexcept {
+    return humidifier_policy_.on();
+  }
   std::uint32_t transitionCount() const noexcept {
     return exhaust_policy_.transitionCount() + humidifier_policy_.transitionCount();
   }
   std::uint32_t dwellHoldCount() const noexcept {
     return exhaust_policy_.dwellHoldCount() + humidifier_policy_.dwellHoldCount();
   }
-  std::uint32_t safetyOverrideCount() const noexcept { return safety_override_count_; }
-  std::uint32_t continuityFaultCount() const noexcept { return continuity_fault_count_; }
-  std::uint32_t instanceId() const noexcept { return instance_id_; }
+  std::uint32_t safetyOverrideCount() const noexcept {
+    return safety_override_count_;
+  }
+  std::uint32_t continuityFaultCount() const noexcept {
+    return continuity_fault_count_;
+  }
+  std::uint32_t instanceId() const noexcept {
+    return instance_id_;
+  }
   static std::uint32_t constructionCount() noexcept;
 
 private:
@@ -69,10 +76,8 @@ private:
   static ::growbox::app::output::BinaryActuatorPolicyConfig
   policyConfig(BinaryActuatorConfig config) noexcept;
   void checkCounterContinuity() noexcept;
-  bool applyBinary(ClimateActuatorRole role, float requested_level,
-                   std::uint64_t monotonic_ms,
-                   ::growbox::app::output::BinaryActuatorPolicy& policy,
-                   bool force_on) noexcept;
+  bool applyBinary(ClimateActuatorRole role, float requested_level, std::uint64_t monotonic_ms,
+                   ::growbox::app::output::BinaryActuatorPolicy& policy, bool force_on) noexcept;
   bool forceBinaryOff(ClimateActuatorRole role, std::uint64_t monotonic_ms,
                       ::growbox::app::output::BinaryActuatorPolicy& policy) noexcept;
 

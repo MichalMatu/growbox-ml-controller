@@ -53,8 +53,8 @@ output::OutputStateStore makeStore() {
   return store;
 }
 
-output::OutputSupervisorResolverConfig makeSupervisorConfig(
-    output::BinaryActuatorPolicy& fan, output::BinaryActuatorPolicy& humidifier) {
+output::OutputSupervisorResolverConfig
+makeSupervisorConfig(output::BinaryActuatorPolicy& fan, output::BinaryActuatorPolicy& humidifier) {
   output::OutputSupervisorResolverConfig config{};
   config.endpoints[0] = {kFan, &fan};
   config.endpoints[1] = {kLamp, nullptr};
@@ -67,7 +67,7 @@ climate_io::ClimateSemanticOutputConfig makeClimateConfig() {
   climate_io::ClimateSemanticOutputConfig config{};
   assert(climate_io::bindClimateRole(config, climate_io::ClimateActuatorRole::ExhaustFan, kFan));
   assert(climate_io::bindClimateRole(config, climate_io::ClimateActuatorRole::Humidifier,
-                                    kHumidifier));
+                                     kHumidifier));
   assert(climate_io::validateClimateSemanticOutputConfig(config) ==
          climate_io::ClimateSemanticOutputConfigStatus::Ok);
   return config;
@@ -131,7 +131,8 @@ void testCompleteClimateRequestUsesOneSupervisorCycleAndProjectsCommandTruth() {
   assertPhysicalUnknown(store, kHumidifier);
 
   assert(store.recordPhysicalObservation(kFan, output::PhysicalOutputState::Off, 1'010U, 1U));
-  assert(store.recordPhysicalObservation(kHumidifier, output::PhysicalOutputState::Off, 1'010U, 2U));
+  assert(
+      store.recordPhysicalObservation(kHumidifier, output::PhysicalOutputState::Off, 1'010U, 2U));
   sink.setCycleContext(scheduleContext(true));
   assert(sink.applyAndReport(request(1.0F, 1.0F), 2'000U, projection));
   assert(transport.sent_count == 3U);

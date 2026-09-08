@@ -18,8 +18,9 @@ struct VentilationGradientMetrics {
 AirMoistureMetrics calculateAirMoistureMetrics(float temperature_c,
                                                float relative_humidity_pct) noexcept;
 
-VentilationGradientMetrics calculateVentilationGradients(
-    float inside_temperature_c, float inside_relative_humidity_pct,
-    float intake_temperature_c, float intake_relative_humidity_pct) noexcept;
+VentilationGradientMetrics
+calculateVentilationGradients(float inside_temperature_c, float inside_relative_humidity_pct,
+                              float intake_temperature_c,
+                              float intake_relative_humidity_pct) noexcept;
 
 } // namespace growbox::app::climate_io

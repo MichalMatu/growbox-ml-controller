@@ -44,7 +44,8 @@ struct Fixture {
   }
 
   output::OutputSupervisorResolverConfig configureResolver() {
-    const std::array<output::OutputEndpointId, output::kOutputEndpointCapacity> endpoints{1U, 2U, 3U};
+    const std::array<output::OutputEndpointId, output::kOutputEndpointCapacity> endpoints{1U, 2U,
+                                                                                          3U};
     assert(state.configure(endpoints, endpoints.size()));
     resolver.endpoints[0] = {1U, &fan};
     resolver.endpoints[1] = {2U, nullptr};
@@ -76,8 +77,8 @@ struct Fixture {
 
   void enterMaintenance(output::SafetyEnvelope safety = {}) {
     assert(maintenance.requestEnter());
-    for (std::uint64_t now = 100U; now < 120U &&
-         lifecycle.mode() != output::SupervisorMode::MaintenanceLocked; ++now) {
+    for (std::uint64_t now = 100U;
+         now < 120U && lifecycle.mode() != output::SupervisorMode::MaintenanceLocked; ++now) {
       automation.tick(now, scheduleOff(), safety);
       maintenance.tick(now, safety);
     }
@@ -105,8 +106,8 @@ void testSafeEntryCompletesBeforeMaintenanceAndClearsPhysicalTruth() {
   assert(report.mode == output::SupervisorMode::Disabled);
   assert(report.enter_pending);
   assert(f.lifecycle.mode() != output::SupervisorMode::MaintenanceLocked);
-  for (std::uint64_t now = 101U; now < 120U &&
-       f.lifecycle.mode() != output::SupervisorMode::MaintenanceLocked; ++now) {
+  for (std::uint64_t now = 101U;
+       now < 120U && f.lifecycle.mode() != output::SupervisorMode::MaintenanceLocked; ++now) {
     f.automation.tick(now, f.scheduleOff(), {});
     report = f.maintenance.tick(now, {});
   }
@@ -191,11 +192,12 @@ void testExitRearmsThroughDisabledAndArming() {
 void testEntryFailureFaultLocks() {
   Fixture f;
   f.bootstrapAutomatic();
-  f.lifecycle_transport.result = {output::TransportStatus::Failed, output::TransportError::IoFailure};
+  f.lifecycle_transport.result = {output::TransportStatus::Failed,
+                                  output::TransportError::IoFailure};
   assert(f.maintenance.requestEnter());
   output::OutputMaintenanceReport report{};
-  for (std::uint64_t now = 500U; now < 540U &&
-       f.lifecycle.mode() != output::SupervisorMode::FaultLocked; ++now) {
+  for (std::uint64_t now = 500U;
+       now < 540U && f.lifecycle.mode() != output::SupervisorMode::FaultLocked; ++now) {
     f.automation.tick(now, f.scheduleOff(), {});
     report = f.maintenance.tick(now, {});
   }

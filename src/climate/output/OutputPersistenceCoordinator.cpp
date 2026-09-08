@@ -6,7 +6,7 @@ namespace growbox::app::output {
 namespace {
 
 const DurableOutputCommandState* findDurableCommand(const OutputPersistenceSnapshot& snapshot,
-                                                     OutputEndpointId endpoint) noexcept {
+                                                    OutputEndpointId endpoint) noexcept {
   for (std::size_t index = 0U; index < snapshot.command_count; ++index) {
     if (snapshot.commands[index].endpoint == endpoint) {
       return &snapshot.commands[index];
@@ -116,8 +116,8 @@ bool OutputPersistenceCoordinator::buildSnapshot(
   return validateOutputPersistenceSnapshot(candidate) == OutputPersistenceStatus::Ok;
 }
 
-OutputPersistenceCoordinatorStatus OutputPersistenceCoordinator::saveIfChanged(
-    const OutputPersistenceSnapshot& candidate) noexcept {
+OutputPersistenceCoordinatorStatus
+OutputPersistenceCoordinator::saveIfChanged(const OutputPersistenceSnapshot& candidate) noexcept {
   OutputPersistenceBlob candidate_blob{};
   if (!valid_ || !encodeSnapshot(candidate, candidate_blob)) {
     return OutputPersistenceCoordinatorStatus::InvalidPolicy;
@@ -144,8 +144,9 @@ OutputPersistenceCoordinatorStatus OutputPersistenceCoordinator::saveIfChanged(
   return OutputPersistenceCoordinatorStatus::Ok;
 }
 
-OutputPersistenceCoordinatorStatus OutputPersistenceCoordinator::syncFromStateStore(
-    const OutputStateStore& state_store, bool persist_command_truth) noexcept {
+OutputPersistenceCoordinatorStatus
+OutputPersistenceCoordinator::syncFromStateStore(const OutputStateStore& state_store,
+                                                 bool persist_command_truth) noexcept {
   OutputPersistenceSnapshot candidate{};
   if (!buildSnapshot(policy_, state_store, persist_command_truth, candidate)) {
     return state_store.valid() ? OutputPersistenceCoordinatorStatus::InvalidPolicy
@@ -154,9 +155,10 @@ OutputPersistenceCoordinatorStatus OutputPersistenceCoordinator::syncFromStateSt
   return saveIfChanged(candidate);
 }
 
-OutputPersistenceCoordinatorStatus OutputPersistenceCoordinator::applyPolicy(
-    const OutputPolicyConfig& policy, const OutputStateStore& state_store,
-    bool persist_command_truth) noexcept {
+OutputPersistenceCoordinatorStatus
+OutputPersistenceCoordinator::applyPolicy(const OutputPolicyConfig& policy,
+                                          const OutputStateStore& state_store,
+                                          bool persist_command_truth) noexcept {
   if (validateOutputPolicyConfig(policy) != OutputPolicyConfigStatus::Ok) {
     return OutputPersistenceCoordinatorStatus::InvalidPolicy;
   }

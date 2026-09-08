@@ -31,9 +31,15 @@ public:
   OutputManualControl(const OutputPolicyConfig& policy,
                       const OutputSupervisorLifecycle& lifecycle) noexcept;
 
-  bool valid() const noexcept { return valid_; }
-  bool pending() const noexcept { return pending_; }
-  SupervisorMode mode() const noexcept { return lifecycle_.mode(); }
+  bool valid() const noexcept {
+    return valid_;
+  }
+  bool pending() const noexcept {
+    return pending_;
+  }
+  SupervisorMode mode() const noexcept {
+    return lifecycle_.mode();
+  }
 
   OutputManualRequestReport request(OutputEndpointRole role, BinaryOutputState state,
                                     std::uint64_t monotonic_ms) noexcept;

@@ -35,8 +35,10 @@ Stage28eBreadcrumbState readStage28eBreadcrumb() noexcept {
 void beginStage28eBreadcrumb(std::uint32_t boot_id, std::int32_t reset_reason) noexcept {
   const Stage28eBreadcrumbState previous = currentOrEmpty();
   Stage28eBreadcrumbState state{};
-  state.write_sequence = stage28eBreadcrumbValid(previous) ? nextSequence(previous.write_sequence) : 1U;
-  state.boot_sequence = stage28eBreadcrumbValid(previous) ? nextSequence(previous.boot_sequence) : 1U;
+  state.write_sequence =
+      stage28eBreadcrumbValid(previous) ? nextSequence(previous.write_sequence) : 1U;
+  state.boot_sequence =
+      stage28eBreadcrumbValid(previous) ? nextSequence(previous.boot_sequence) : 1U;
   state.boot_id = boot_id;
   state.reset_reason = reset_reason;
   storeBreadcrumb(state);
@@ -62,8 +64,7 @@ void recordStage28eBreadcrumbLog(std::uint32_t sequence, std::uint64_t uptime_ms
 
 void recordStage28eBreadcrumbArbiter(std::uint64_t uptime_ms, std::uint32_t instance_id,
                                      std::uint32_t construction_count,
-                                     std::uint32_t transition_count,
-                                     std::uint32_t dwell_hold_count,
+                                     std::uint32_t transition_count, std::uint32_t dwell_hold_count,
                                      std::uint32_t safety_override_count,
                                      std::uint32_t continuity_fault_count,
                                      bool continuity_fault) noexcept {

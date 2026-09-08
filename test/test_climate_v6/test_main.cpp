@@ -250,8 +250,8 @@ void runtimeExecutionReconcileTest() {
   const float before_unknown = decision.effective_before.heater;
   ClimateExecutionProjection unknown_heater{};
   unknown_heater.executed = decision.applied;
-  unknown_heater.known_mask = static_cast<std::uint8_t>(
-      ClimateExecutionKnownAll & ~ClimateExecutionKnownHeater);
+  unknown_heater.known_mask =
+      static_cast<std::uint8_t>(ClimateExecutionKnownAll & ~ClimateExecutionKnownHeater);
   controller.reconcileExecution(unknown_heater, input.capabilities, decision);
   check(near(decision.effective_after.heater, before_unknown, 0.0001F),
         "unknown execution holds previous effective heater state");
@@ -265,8 +265,7 @@ void runtimeExecutionReconcileTest() {
   heater_off.executed.heater = 0.0F;
   heater_off.known_mask = ClimateExecutionKnownAll;
   controller.reconcileExecution(heater_off, input.capabilities, decision);
-  check(decision.effective_after.heater < before_off,
-        "known executed OFF decays heater estimate");
+  check(decision.effective_after.heater < before_off, "known executed OFF decays heater estimate");
   check(decision.execution.known(ClimateExecutionKnownHeater),
         "decision records known execution truth");
 }

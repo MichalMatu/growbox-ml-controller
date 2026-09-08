@@ -161,22 +161,22 @@ A diagnostic capture once ended mid-UART-line and displayed `stage27_store hwm_b
 
 ## Phase A exit questions — answered
 
-1. **Which boot is running?**  
+1. **Which boot is running?**
    The bounded diagnostic identified boot `30b159d6` and firmware `3058625...`.
 
-2. **Why did it boot/reset?**  
+2. **Why did it boot/reset?**
    `reset_reason=1`, corresponding to the expected power-on reset after the diagnostic flash/reboot, with no crash/reset evidence in the bounded run.
 
-3. **Internal heap now/min/largest?**  
+3. **Internal heap now/min/largest?**
    Current `221648 B`, minimum-ever `221028 B`, largest free block `180224 B`.
 
-4. **PSRAM now/min/largest?**  
+4. **PSRAM now/min/largest?**
    Current `8363512 B`, minimum-ever `8363108 B`, largest free block `8257536 B`.
 
-5. **Lowest-stack task?**  
+5. **Lowest-stack task?**
    For tasks with known configured sizes, `stage27_store` had the lowest percentage margin at about 40.6%; all known tasks remained above the 25% warning threshold.
 
-6. **Worst observed loop latency?**  
+6. **Worst observed loop latency?**
    `194320 us` with a `1000000 us` budget and `0` overruns.
 
 ## Interpretation

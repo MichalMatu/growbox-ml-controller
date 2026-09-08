@@ -37,8 +37,8 @@ struct FakeTransport final : output::OutputTransport {
 };
 
 struct Fixture {
-  output::OutputPolicyConfig policy{output::makeSafeDefaultOutputPolicyConfig(kFan, kLamp,
-                                                                              kHumidifier)};
+  output::OutputPolicyConfig policy{
+      output::makeSafeDefaultOutputPolicyConfig(kFan, kLamp, kHumidifier)};
   output::OutputStateStore store{};
   output::OutputSupervisorResolverConfig resolver_config{};
   FakeTransport transport{};
@@ -82,7 +82,8 @@ struct ReadyFixture {
   explicit ReadyFixture(output::OutputPolicyConfig custom =
                             output::makeSafeDefaultOutputPolicyConfig(kFan, kLamp, kHumidifier))
       : policy(custom), resolver_config(makeResolverConfig()), lifecycle(policy),
-        executor(policy, lifecycle, transport, store, resolver_config), control(lifecycle, executor) {
+        executor(policy, lifecycle, transport, store, resolver_config),
+        control(lifecycle, executor) {
     // This constructor cannot configure store before executor construction. Use create().
   }
 
@@ -170,8 +171,9 @@ void testRecoveryPartialFailureFailsClosed() {
   auto policy = output::makeSafeDefaultOutputPolicyConfig(kFan, kLamp, kHumidifier);
   policy.max_transition_failures = 2U;
   for (std::size_t i = 0U; i < policy.count; ++i) {
-    auto& recovery = policy.endpoints[i].lifecycle[output::outputLifecycleEventIndex(
-        output::OutputLifecycleEvent::Recovery)];
+    auto& recovery =
+        policy.endpoints[i]
+            .lifecycle[output::outputLifecycleEventIndex(output::OutputLifecycleEvent::Recovery)];
     recovery.max_retries = 0U;
   }
   assert(output::validateOutputPolicyConfig(policy) == output::OutputPolicyConfigStatus::Ok);
@@ -208,8 +210,7 @@ void testHardSafetyDefersLifecycleButRemainsResolvable() {
   safety.metadata.monotonic_ms = 500U;
   safety.metadata.source = output::OutputSource::Safety;
   safety.metadata.reason = output::OutputReason::ThermalSafety;
-  assert(output::setSafetyConstraint(safety.endpoints[0], kFan,
-                                     output::SafetyConstraint::ForceOn,
+  assert(output::setSafetyConstraint(safety.endpoints[0], kFan, output::SafetyConstraint::ForceOn,
                                      output::OutputReason::ThermalSafety));
 
   const auto report = h.control->tick(500U, safety);

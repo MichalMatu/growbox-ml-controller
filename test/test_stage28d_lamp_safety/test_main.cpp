@@ -5,14 +5,14 @@
 #include <cstdint>
 #include <limits>
 
-using growbox::app::climate_io::stage28d::LampSafetyConfig;
-using growbox::app::climate_io::stage28d::LampSafetyController;
-using growbox::app::climate_io::stage28d::LampSafetyInput;
-using growbox::app::climate_io::stage28d::LampSafetyEnvelopeSnapshot;
-using growbox::app::climate_io::stage28d::LampSafetyReason;
 using growbox::app::climate_io::stage28d::buildLampSafetyEnvelope;
 using growbox::app::climate_io::stage28d::kExhaustFanEndpoint;
 using growbox::app::climate_io::stage28d::kScheduledLightEndpoint;
+using growbox::app::climate_io::stage28d::LampSafetyConfig;
+using growbox::app::climate_io::stage28d::LampSafetyController;
+using growbox::app::climate_io::stage28d::LampSafetyEnvelopeSnapshot;
+using growbox::app::climate_io::stage28d::LampSafetyInput;
+using growbox::app::climate_io::stage28d::LampSafetyReason;
 using growbox::app::climate_io::stage28d::validateLampSafetyConfig;
 namespace output = growbox::app::output;
 
@@ -98,8 +98,8 @@ void testStaleInvalidAndNonFiniteTemperatureFailClosed() {
   assert(invalid.force_exhaust_on);
 
   LampSafetyController nan_controller;
-  auto nonfinite = nan_controller.evaluate(
-      input(1.0F, std::numeric_limits<float>::quiet_NaN(), true, 0U, 1U));
+  auto nonfinite =
+      nan_controller.evaluate(input(1.0F, std::numeric_limits<float>::quiet_NaN(), true, 0U, 1U));
   assert(!nonfinite.effective_lamp_on);
   assert(nonfinite.force_exhaust_on);
 }

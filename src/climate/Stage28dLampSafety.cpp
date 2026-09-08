@@ -7,8 +7,7 @@
 namespace growbox::app::climate_io::stage28d {
 
 bool validateLampSafetyConfig(const LampSafetyConfig& config) noexcept {
-  return std::isfinite(config.trip_temperature_c) &&
-         std::isfinite(config.recovery_temperature_c) &&
+  return std::isfinite(config.trip_temperature_c) && std::isfinite(config.recovery_temperature_c) &&
          std::isfinite(config.light_on_threshold) &&
          config.recovery_temperature_c < config.trip_temperature_c &&
          config.light_on_threshold >= 0.0F && config.light_on_threshold <= 1.0F &&
@@ -88,15 +87,14 @@ LampSafetyDecision LampSafetyController::evaluate(const LampSafetyInput& input) 
   }
 
   output.effective_lamp_on = output.schedule_requests_lamp_on;
-  output.reason = output.schedule_requests_lamp_on ? LampSafetyReason::Safe
-                                                   : LampSafetyReason::TimerOff;
+  output.reason =
+      output.schedule_requests_lamp_on ? LampSafetyReason::Safe : LampSafetyReason::TimerOff;
   attach_recovery_metadata();
   return output;
 }
 
 bool buildLampSafetyEnvelope(const LampSafetyInput& input, const LampSafetyDecision& decision,
-                             std::uint64_t sequence,
-                             LampSafetyEnvelopeSnapshot& output) noexcept {
+                             std::uint64_t sequence, LampSafetyEnvelopeSnapshot& output) noexcept {
   output = {};
   output.reason = decision.reason;
   output.thermal_latched = decision.thermal_latched;
@@ -121,11 +119,10 @@ bool buildLampSafetyEnvelope(const LampSafetyInput& input, const LampSafetyDecis
     return false;
   }
 
-  if (decision.force_exhaust_on &&
-      !::growbox::app::output::setSafetyConstraint(
-          output.envelope.endpoints[1], kExhaustFanEndpoint,
-          ::growbox::app::output::SafetyConstraint::ForceOn,
-          ::growbox::app::output::OutputReason::ThermalSafety)) {
+  if (decision.force_exhaust_on && !::growbox::app::output::setSafetyConstraint(
+                                       output.envelope.endpoints[1], kExhaustFanEndpoint,
+                                       ::growbox::app::output::SafetyConstraint::ForceOn,
+                                       ::growbox::app::output::OutputReason::ThermalSafety)) {
     output = {};
     return false;
   }

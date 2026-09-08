@@ -40,17 +40,17 @@ void emitCoreDumpBootDiagnostics() noexcept {
   const esp_err_t get_result = esp_core_dump_image_get(&dump_address, &dump_size);
   const bool present = get_result == ESP_OK && dump_size > 0U;
   const esp_err_t check_result = present ? esp_core_dump_image_check() : get_result;
-  std::printf("stage28e_coredump present=%d valid=%d size=%lu get_err=%ld check_err=%ld\n",
-              present, present && check_result == ESP_OK,
-              static_cast<unsigned long>(dump_size), static_cast<long>(get_result),
-              static_cast<long>(check_result));
+  std::printf("stage28e_coredump present=%d valid=%d size=%lu get_err=%ld check_err=%ld\n", present,
+              present && check_result == ESP_OK, static_cast<unsigned long>(dump_size),
+              static_cast<long>(get_result), static_cast<long>(check_result));
 }
 
 void emitBreadcrumbBootDiagnostics() noexcept {
   using namespace growbox::app::climate_io::runtime;
   const Stage28eBreadcrumbState raw_previous = readStage28eBreadcrumb();
   const bool previous_valid = stage28eBreadcrumbValid(raw_previous);
-  const Stage28eBreadcrumbState previous = previous_valid ? raw_previous : Stage28eBreadcrumbState{};
+  const Stage28eBreadcrumbState previous =
+      previous_valid ? raw_previous : Stage28eBreadcrumbState{};
   std::printf(
       "stage28e_breadcrumb previous_valid=%d write_seq=%lu boot_seq=%lu boot_id=%08lx "
       "reset_reason=%ld last_log_seq=%lu last_log_uptime_ms=%llu last_log_module=%lu "

@@ -96,7 +96,8 @@ bool Ds3231ClockSource::setUnixTimeUtc(std::uint64_t unix_time_s) noexcept {
   for (std::size_t index = 0U; index < registers.size(); ++index) {
     write_buffer[index + 1U] = registers[index];
   }
-  if (i2c_master_transmit(device_, write_buffer.data(), write_buffer.size(), kTimeoutMs) != ESP_OK) {
+  if (i2c_master_transmit(device_, write_buffer.data(), write_buffer.size(), kTimeoutMs) !=
+      ESP_OK) {
     ++write_error_count_;
     available_ = false;
     trusted_ = false;
@@ -118,7 +119,8 @@ bool Ds3231ClockSource::setUnixTimeUtc(std::uint64_t unix_time_s) noexcept {
         kStatusRegister,
         static_cast<std::uint8_t>(status & static_cast<std::uint8_t>(~kOscillatorStopFlag)),
     }};
-    if (i2c_master_transmit(device_, status_write.data(), status_write.size(), kTimeoutMs) != ESP_OK) {
+    if (i2c_master_transmit(device_, status_write.data(), status_write.size(), kTimeoutMs) !=
+        ESP_OK) {
       ++write_error_count_;
       available_ = false;
       trusted_ = false;

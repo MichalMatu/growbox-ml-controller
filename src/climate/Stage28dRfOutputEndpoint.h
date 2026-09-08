@@ -25,12 +25,18 @@ public:
              std::uint64_t monotonic_ms) noexcept override;
   bool forceOff(ClimateEndpointId endpoint, std::uint64_t monotonic_ms) noexcept override;
   bool writeScheduledLight(bool on, std::uint64_t monotonic_ms) noexcept;
-  void setSafetyForceExhaust(bool force) noexcept { safety_force_exhaust_ = force; }
+  void setSafetyForceExhaust(bool force) noexcept {
+    safety_force_exhaust_ = force;
+  }
 
   bool stateKnown(ClimateEndpointId endpoint) const noexcept;
   bool stateOn(ClimateEndpointId endpoint) const noexcept;
-  std::uint32_t transmitCount() const noexcept { return transmit_count_; }
-  std::uint32_t transmitErrorCount() const noexcept { return transmit_error_count_; }
+  std::uint32_t transmitCount() const noexcept {
+    return transmit_count_;
+  }
+  std::uint32_t transmitErrorCount() const noexcept {
+    return transmit_error_count_;
+  }
 
 private:
   struct EndpointState {

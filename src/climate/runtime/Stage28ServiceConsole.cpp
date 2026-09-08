@@ -1,11 +1,11 @@
 #include "climate/runtime/Stage28ServiceConsole.h"
 
-#include "climate/runtime/Stage28ePlatformDiagnostics.h"
 #include "climate/output/OutputAutomationControl.h"
-#include "climate/output/OutputManualControl.h"
 #include "climate/output/OutputMaintenanceControl.h"
+#include "climate/output/OutputManualControl.h"
 #include "climate/rf433/Rf433HardwareConfig.h"
 #include "climate/runtime/EuropeWarsawTime.h"
+#include "climate/runtime/Stage28ePlatformDiagnostics.h"
 #include "climate/storage/Stage27FileDurability.h"
 #include "climate/storage/Stage27TelemetryLogger.h"
 
@@ -14,16 +14,16 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/idf_additions.h>
 #include <freertos/task.h>
-#include <sdkconfig.h>
 #include <mbedtls/base64.h>
+#include <sdkconfig.h>
 
 #include <array>
 #include <cerrno>
-#include <dirent.h>
-#include <sys/stat.h>
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
+#include <dirent.h>
+#include <sys/stat.h>
 
 namespace growbox::app::climate_io::runtime {
 namespace {
@@ -57,19 +57,22 @@ constexpr std::size_t kSdReadMaxBytes = 384U;
 
 bool isLogFilename(const char* name) noexcept {
   if (name == nullptr || std::strlen(name) != 11U || name[8] != '.' ||
-      (name[9] != 'J' && name[9] != 'j') || (name[10] != 'L' && name[10] != 'l')) return false;
-  for (std::size_t i=0U; i<8U; ++i) {
-    const char c=name[i];
-    if (!((c>='0'&&c<='9')||(c>='a'&&c<='f')||(c>='A'&&c<='F'))) return false;
+      (name[9] != 'J' && name[9] != 'j') || (name[10] != 'L' && name[10] != 'l'))
+    return false;
+  for (std::size_t i = 0U; i < 8U; ++i) {
+    const char c = name[i];
+    if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')))
+      return false;
   }
   return true;
 }
 
 std::uint32_t crc32(const std::uint8_t* data, std::size_t length) noexcept {
-  std::uint32_t crc=0xFFFFFFFFU;
-  for (std::size_t i=0U; i<length; ++i) {
+  std::uint32_t crc = 0xFFFFFFFFU;
+  for (std::size_t i = 0U; i < length; ++i) {
     crc ^= data[i];
-    for (unsigned bit=0U; bit<8U; ++bit) crc=(crc>>1U) ^ ((crc&1U)!=0U ? 0xEDB88320U : 0U);
+    for (unsigned bit = 0U; bit < 8U; ++bit)
+      crc = (crc >> 1U) ^ ((crc & 1U) != 0U ? 0xEDB88320U : 0U);
   }
   return crc ^ 0xFFFFFFFFU;
 }
@@ -114,13 +117,20 @@ std::uint32_t knownConfiguredTaskStackBytes(const char* name) noexcept {
 const char* supervisorModeName(::growbox::app::output::SupervisorMode mode) noexcept {
   using ::growbox::app::output::SupervisorMode;
   switch (mode) {
-  case SupervisorMode::BootLocked: return "boot-locked";
-  case SupervisorMode::Arming: return "arming";
-  case SupervisorMode::Automatic: return "automatic";
-  case SupervisorMode::Recovering: return "recovering";
-  case SupervisorMode::Disabled: return "disabled";
-  case SupervisorMode::FaultLocked: return "fault-locked";
-  case SupervisorMode::MaintenanceLocked: return "maintenance-locked";
+  case SupervisorMode::BootLocked:
+    return "boot-locked";
+  case SupervisorMode::Arming:
+    return "arming";
+  case SupervisorMode::Automatic:
+    return "automatic";
+  case SupervisorMode::Recovering:
+    return "recovering";
+  case SupervisorMode::Disabled:
+    return "disabled";
+  case SupervisorMode::FaultLocked:
+    return "fault-locked";
+  case SupervisorMode::MaintenanceLocked:
+    return "maintenance-locked";
   }
   return "unknown";
 }
@@ -341,10 +351,9 @@ void Stage28ServiceConsole::handleAutomationRequest(bool enabled) noexcept {
     return;
   }
   const bool accepted = config_.automation_control->requestEnabled(enabled);
-  writeFormatted("automation request=%s accepted=%d mode=%s\r\n", enabled ? "on" : "off",
-                 accepted, supervisorModeName(config_.automation_control->mode()));
+  writeFormatted("automation request=%s accepted=%d mode=%s\r\n", enabled ? "on" : "off", accepted,
+                 supervisorModeName(config_.automation_control->mode()));
 }
-
 
 void Stage28ServiceConsole::printMaintenanceStatus() noexcept {
   if (config_.maintenance_control == nullptr) {
@@ -371,9 +380,8 @@ void Stage28ServiceConsole::handleMaintenanceRequest(bool enter) noexcept {
   }
   const bool accepted = enter ? config_.maintenance_control->requestEnter()
                               : config_.maintenance_control->requestExit();
-  writeFormatted("maintenance request=%s accepted=%d mode=%s\r\n",
-                 enter ? "enter" : "exit", accepted,
-                 supervisorModeName(config_.maintenance_control->mode()));
+  writeFormatted("maintenance request=%s accepted=%d mode=%s\r\n", enter ? "enter" : "exit",
+                 accepted, supervisorModeName(config_.maintenance_control->mode()));
 }
 
 void Stage28ServiceConsole::handleMaintenanceRaw(const ServiceConsoleCommand& command,
@@ -401,8 +409,9 @@ void Stage28ServiceConsole::handleMaintenanceRaw(const ServiceConsoleCommand& co
   const bool accepted = config_.maintenance_control->requestRaw(role, state, now_ms);
   writeFormatted("maintenance_raw device=%s state=%s accepted=%d mode=%s queued_only=1 "
                  "physical_state=unknown\r\n",
-                 serviceConsoleRfDeviceName(command.device), serviceConsoleRfStateName(command.state),
-                 accepted, supervisorModeName(config_.maintenance_control->mode()));
+                 serviceConsoleRfDeviceName(command.device),
+                 serviceConsoleRfStateName(command.state), accepted,
+                 supervisorModeName(config_.maintenance_control->mode()));
 }
 
 void Stage28ServiceConsole::printStatus(std::uint64_t now_ms) noexcept {
@@ -417,8 +426,8 @@ void Stage28ServiceConsole::printStatus(std::uint64_t now_ms) noexcept {
   task_total = uxTaskGetNumberOfTasks();
   const UBaseType_t task_capacity = task_total + 2U;
   const std::size_t task_bytes = static_cast<std::size_t>(task_capacity) * sizeof(TaskStatus_t);
-  task_status = static_cast<TaskStatus_t*>(
-      heap_caps_malloc(task_bytes, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
+  task_status =
+      static_cast<TaskStatus_t*>(heap_caps_malloc(task_bytes, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
   if (task_status != nullptr) {
     task_captured = uxTaskGetSystemState(task_status, task_capacity, nullptr);
   }
@@ -429,9 +438,11 @@ void Stage28ServiceConsole::printStatus(std::uint64_t now_ms) noexcept {
       "internal_total=%lu internal_free=%lu internal_min=%lu internal_largest=%lu "
       "psram_total=%lu psram_free=%lu psram_min=%lu psram_largest=%lu "
       "free_internal=%lu free_psram=%lu stack_high_water=%lu current_task_stack_hwm_bytes=%lu "
-      "task_total=%lu task_captured=%lu task_snapshot_psram=%d hwm_semantics=min_free_since_create\r\n",
-      boot.firmware_sha, static_cast<unsigned long>(boot.boot_id), static_cast<long>(boot.reset_reason),
-      static_cast<unsigned long long>(now_ms), outputModeName(), rf_diagnostics_.ready(),
+      "task_total=%lu task_captured=%lu task_snapshot_psram=%d "
+      "hwm_semantics=min_free_since_create\r\n",
+      boot.firmware_sha, static_cast<unsigned long>(boot.boot_id),
+      static_cast<long>(boot.reset_reason), static_cast<unsigned long long>(now_ms),
+      outputModeName(), rf_diagnostics_.ready(),
       static_cast<unsigned long>(memory.internal.total_bytes),
       static_cast<unsigned long>(memory.internal.free_bytes),
       static_cast<unsigned long>(memory.internal.minimum_free_bytes),
@@ -479,16 +490,15 @@ void Stage28ServiceConsole::printStatus(std::uint64_t now_ms) noexcept {
     const std::uint32_t high_water_bytes = static_cast<std::uint32_t>(task.usStackHighWaterMark);
     const StackMarginSeverity severity =
         classifyStackMargin(high_water_bytes, configured_stack_bytes);
-    writeFormatted(
-        "task name=%s task_no=%lu core=%ld priority=%lu configured_stack_bytes=%lu "
-        "hwm_bytes=%lu worst_hwm_bytes=%lu severity=%s\r\n",
-        task.pcTaskName != nullptr ? task.pcTaskName : "unknown",
-        static_cast<unsigned long>(task.xTaskNumber),
-        static_cast<long>(xTaskGetCoreID(task.xHandle)),
-        static_cast<unsigned long>(task.uxCurrentPriority),
-        static_cast<unsigned long>(configured_stack_bytes),
-        static_cast<unsigned long>(high_water_bytes), static_cast<unsigned long>(high_water_bytes),
-        stackMarginSeverityName(severity));
+    writeFormatted("task name=%s task_no=%lu core=%ld priority=%lu configured_stack_bytes=%lu "
+                   "hwm_bytes=%lu worst_hwm_bytes=%lu severity=%s\r\n",
+                   task.pcTaskName != nullptr ? task.pcTaskName : "unknown",
+                   static_cast<unsigned long>(task.xTaskNumber),
+                   static_cast<long>(xTaskGetCoreID(task.xHandle)),
+                   static_cast<unsigned long>(task.uxCurrentPriority),
+                   static_cast<unsigned long>(configured_stack_bytes),
+                   static_cast<unsigned long>(high_water_bytes),
+                   static_cast<unsigned long>(high_water_bytes), stackMarginSeverityName(severity));
   }
   if (task_status != nullptr) {
     heap_caps_free(task_status);
@@ -595,7 +605,7 @@ void Stage28ServiceConsole::printRfList() noexcept {
 }
 
 void Stage28ServiceConsole::handleManualOutput(const ServiceConsoleCommand& command,
-                                                   std::uint64_t now_ms) noexcept {
+                                               std::uint64_t now_ms) noexcept {
   if (config_.manual_control == nullptr) {
     writeText("error: manual output control unavailable\r\n");
     return;
@@ -622,21 +632,32 @@ void Stage28ServiceConsole::handleManualOutput(const ServiceConsoleCommand& comm
   const char* status = "invalid-configuration";
   using ::growbox::app::output::OutputManualRequestStatus;
   switch (report.status) {
-  case OutputManualRequestStatus::Accepted: status = "accepted"; break;
-  case OutputManualRequestStatus::Busy: status = "busy"; break;
-  case OutputManualRequestStatus::ModeDenied: status = "mode-denied"; break;
-  case OutputManualRequestStatus::InvalidRole: status = "invalid-role"; break;
-  case OutputManualRequestStatus::InvalidState: status = "invalid-state"; break;
-  case OutputManualRequestStatus::InvalidConfiguration: break;
+  case OutputManualRequestStatus::Accepted:
+    status = "accepted";
+    break;
+  case OutputManualRequestStatus::Busy:
+    status = "busy";
+    break;
+  case OutputManualRequestStatus::ModeDenied:
+    status = "mode-denied";
+    break;
+  case OutputManualRequestStatus::InvalidRole:
+    status = "invalid-role";
+    break;
+  case OutputManualRequestStatus::InvalidState:
+    status = "invalid-state";
+    break;
+  case OutputManualRequestStatus::InvalidConfiguration:
+    break;
   }
 
-  writeFormatted(
-      "manual_output device=%s state=%s accepted=%d status=%s mode=%s endpoint=%u "
-      "sequence=%llu outputs=%s physical_state=unconfirmed\r\n",
-      serviceConsoleRfDeviceName(command.device), serviceConsoleRfStateName(command.state),
-      report.status == OutputManualRequestStatus::Accepted, status,
-      supervisorModeName(report.mode), static_cast<unsigned>(report.endpoint),
-      static_cast<unsigned long long>(report.sequence), outputModeName());
+  writeFormatted("manual_output device=%s state=%s accepted=%d status=%s mode=%s endpoint=%u "
+                 "sequence=%llu outputs=%s physical_state=unconfirmed\r\n",
+                 serviceConsoleRfDeviceName(command.device),
+                 serviceConsoleRfStateName(command.state),
+                 report.status == OutputManualRequestStatus::Accepted, status,
+                 supervisorModeName(report.mode), static_cast<unsigned>(report.endpoint),
+                 static_cast<unsigned long long>(report.sequence), outputModeName());
 }
 
 void Stage28ServiceConsole::handleRfReceive(const ServiceConsoleCommand& command) noexcept {
@@ -734,21 +755,24 @@ void Stage28ServiceConsole::printSdLogList() noexcept {
     writeFormatted("sdlog_error op=list reason=opendir errno=%d\r\n", errno);
     return;
   }
-  std::uint32_t count=0U;
+  std::uint32_t count = 0U;
   while (dirent* entry = ::readdir(directory)) {
-    if (!isLogFilename(entry->d_name)) continue;
+    if (!isLogFilename(entry->d_name))
+      continue;
     char path[64]{};
     const int path_length =
         std::snprintf(path, sizeof(path), "%s/%.11s", kSdLogDirectory, entry->d_name);
-    if (path_length <= 0 || static_cast<std::size_t>(path_length) >= sizeof(path)) continue;
-    struct stat st {};
-    if (::stat(path,&st)!=0) continue;
-    writeFormatted("sdlog_file name=%s size=%llu\r\n",entry->d_name,
+    if (path_length <= 0 || static_cast<std::size_t>(path_length) >= sizeof(path))
+      continue;
+    struct stat st{};
+    if (::stat(path, &st) != 0)
+      continue;
+    writeFormatted("sdlog_file name=%s size=%llu\r\n", entry->d_name,
                    static_cast<unsigned long long>(st.st_size));
     ++count;
   }
   ::closedir(directory);
-  writeFormatted("sdlog_list_end count=%lu\r\n",static_cast<unsigned long>(count));
+  writeFormatted("sdlog_list_end count=%lu\r\n", static_cast<unsigned long>(count));
 }
 
 void Stage28ServiceConsole::handleSdLogRead(const ServiceConsoleCommand& command) noexcept {
@@ -756,48 +780,61 @@ void Stage28ServiceConsole::handleSdLogRead(const ServiceConsoleCommand& command
     writeText("sdlog_error op=read reason=sd_not_mounted\r\n");
     return;
   }
-  if (!isLogFilename(command.filename.data()) || command.length==0U || command.length>kSdReadMaxBytes) {
+  if (!isLogFilename(command.filename.data()) || command.length == 0U ||
+      command.length > kSdReadMaxBytes) {
     writeText("sdlog_error op=read reason=invalid_request\r\n");
     return;
   }
   char path[64]{};
-  const int path_length = std::snprintf(path, sizeof(path), "%s/%.11s", kSdLogDirectory,
-                                        command.filename.data());
+  const int path_length =
+      std::snprintf(path, sizeof(path), "%s/%.11s", kSdLogDirectory, command.filename.data());
   if (path_length <= 0 || static_cast<std::size_t>(path_length) >= sizeof(path)) {
     writeText("sdlog_error op=read reason=path\r\n");
     return;
   }
-  std::FILE* file=std::fopen(path,"rb");
-  if (file==nullptr) {
-    writeFormatted("sdlog_error op=read reason=open errno=%d\r\n",errno);
+  std::FILE* file = std::fopen(path, "rb");
+  if (file == nullptr) {
+    writeFormatted("sdlog_error op=read reason=open errno=%d\r\n", errno);
     return;
   }
-  struct stat st {};
-  if (::stat(path,&st)!=0 || static_cast<std::uint64_t>(command.offset)>static_cast<std::uint64_t>(st.st_size)) {
+  struct stat st{};
+  if (::stat(path, &st) != 0 ||
+      static_cast<std::uint64_t>(command.offset) > static_cast<std::uint64_t>(st.st_size)) {
     std::fclose(file);
     writeText("sdlog_error op=read reason=offset\r\n");
     return;
   }
-  if (std::fseek(file,static_cast<long>(command.offset),SEEK_SET)!=0) {
-    const int e=errno; std::fclose(file); writeFormatted("sdlog_error op=read reason=seek errno=%d\r\n",e); return;
+  if (std::fseek(file, static_cast<long>(command.offset), SEEK_SET) != 0) {
+    const int e = errno;
+    std::fclose(file);
+    writeFormatted("sdlog_error op=read reason=seek errno=%d\r\n", e);
+    return;
   }
-  std::array<std::uint8_t,kSdReadMaxBytes> raw{};
-  const std::size_t read=std::fread(raw.data(),1U,command.length,file);
-  const bool read_error=std::ferror(file)!=0;
+  std::array<std::uint8_t, kSdReadMaxBytes> raw{};
+  const std::size_t read = std::fread(raw.data(), 1U, command.length, file);
+  const bool read_error = std::ferror(file) != 0;
   std::fclose(file);
-  if (read_error) { writeFormatted("sdlog_error op=read reason=fread errno=%d\r\n",errno); return; }
+  if (read_error) {
+    writeFormatted("sdlog_error op=read reason=fread errno=%d\r\n", errno);
+    return;
+  }
   std::array<unsigned char, 520U> encoded{};
-  std::size_t encoded_length=0U;
-  const int b64=mbedtls_base64_encode(encoded.data(),encoded.size()-1U,&encoded_length,raw.data(),read);
-  if (b64!=0 || encoded_length>=encoded.size()) { writeFormatted("sdlog_error op=read reason=base64 code=%d\r\n",b64); return; }
-  encoded[encoded_length]='\0';
-  const std::uint32_t checksum=crc32(raw.data(),read);
-  const std::uint64_t file_size=static_cast<std::uint64_t>(st.st_size);
-  writeFormatted("sdlog_chunk name=%s offset=%lu size=%u file_size=%llu eof=%d crc32=%08lX b64=%s\r\n",
-                 command.filename.data(),static_cast<unsigned long>(command.offset),
-                 static_cast<unsigned>(read),static_cast<unsigned long long>(file_size),
-                 static_cast<std::uint64_t>(command.offset)+read>=file_size,
-                 static_cast<unsigned long>(checksum),reinterpret_cast<const char*>(encoded.data()));
+  std::size_t encoded_length = 0U;
+  const int b64 =
+      mbedtls_base64_encode(encoded.data(), encoded.size() - 1U, &encoded_length, raw.data(), read);
+  if (b64 != 0 || encoded_length >= encoded.size()) {
+    writeFormatted("sdlog_error op=read reason=base64 code=%d\r\n", b64);
+    return;
+  }
+  encoded[encoded_length] = '\0';
+  const std::uint32_t checksum = crc32(raw.data(), read);
+  const std::uint64_t file_size = static_cast<std::uint64_t>(st.st_size);
+  writeFormatted(
+      "sdlog_chunk name=%s offset=%lu size=%u file_size=%llu eof=%d crc32=%08lX b64=%s\r\n",
+      command.filename.data(), static_cast<unsigned long>(command.offset),
+      static_cast<unsigned>(read), static_cast<unsigned long long>(file_size),
+      static_cast<std::uint64_t>(command.offset) + read >= file_size,
+      static_cast<unsigned long>(checksum), reinterpret_cast<const char*>(encoded.data()));
 }
 
 void Stage28ServiceConsole::handleSdLogSelfTest() noexcept {
@@ -805,23 +842,42 @@ void Stage28ServiceConsole::handleSdLogSelfTest() noexcept {
     writeText("sdlog_selftest ok=0 reason=sd_not_mounted\r\n");
     return;
   }
-  constexpr char payload[]="growbox-sd-selftest-v1\n";
-  std::FILE* file=std::fopen(kSdSelfTestPath,"wb");
-  if (file==nullptr) { writeFormatted("sdlog_selftest ok=0 reason=open_write errno=%d\r\n",errno); return; }
-  const std::size_t expected=sizeof(payload)-1U;
-  if (std::fwrite(payload,1U,expected,file)!=expected) { const int e=errno; std::fclose(file); ::unlink(kSdSelfTestPath); writeFormatted("sdlog_selftest ok=0 reason=write errno=%d\r\n",e); return; }
-  const auto durable=storage::stage27FlushSyncAndStat(file);
+  constexpr char payload[] = "growbox-sd-selftest-v1\n";
+  std::FILE* file = std::fopen(kSdSelfTestPath, "wb");
+  if (file == nullptr) {
+    writeFormatted("sdlog_selftest ok=0 reason=open_write errno=%d\r\n", errno);
+    return;
+  }
+  const std::size_t expected = sizeof(payload) - 1U;
+  if (std::fwrite(payload, 1U, expected, file) != expected) {
+    const int e = errno;
+    std::fclose(file);
+    ::unlink(kSdSelfTestPath);
+    writeFormatted("sdlog_selftest ok=0 reason=write errno=%d\r\n", e);
+    return;
+  }
+  const auto durable = storage::stage27FlushSyncAndStat(file);
   std::fclose(file);
-  if (!durable.ok || durable.size_bytes!=expected) { ::unlink(kSdSelfTestPath); writeFormatted("sdlog_selftest ok=0 reason=durability step=%s errno=%d size=%llu\r\n",storage::stage27FileDurabilityStepName(durable.failed_step),durable.error_number,static_cast<unsigned long long>(durable.size_bytes)); return; }
-  file=std::fopen(kSdSelfTestPath,"rb");
-  if (file==nullptr) { ::unlink(kSdSelfTestPath); writeFormatted("sdlog_selftest ok=0 reason=open_read errno=%d\r\n",errno); return; }
-  std::array<char,sizeof(payload)> readback{};
-  const std::size_t got=std::fread(readback.data(),1U,expected,file);
+  if (!durable.ok || durable.size_bytes != expected) {
+    ::unlink(kSdSelfTestPath);
+    writeFormatted("sdlog_selftest ok=0 reason=durability step=%s errno=%d size=%llu\r\n",
+                   storage::stage27FileDurabilityStepName(durable.failed_step),
+                   durable.error_number, static_cast<unsigned long long>(durable.size_bytes));
+    return;
+  }
+  file = std::fopen(kSdSelfTestPath, "rb");
+  if (file == nullptr) {
+    ::unlink(kSdSelfTestPath);
+    writeFormatted("sdlog_selftest ok=0 reason=open_read errno=%d\r\n", errno);
+    return;
+  }
+  std::array<char, sizeof(payload)> readback{};
+  const std::size_t got = std::fread(readback.data(), 1U, expected, file);
   std::fclose(file);
-  const bool match=got==expected && std::memcmp(readback.data(),payload,expected)==0;
-  const int unlink_result=::unlink(kSdSelfTestPath);
-  writeFormatted("sdlog_selftest ok=%d size=%llu readback=%d cleanup=%d\r\n",match,
-                 static_cast<unsigned long long>(durable.size_bytes),match,unlink_result==0);
+  const bool match = got == expected && std::memcmp(readback.data(), payload, expected) == 0;
+  const int unlink_result = ::unlink(kSdSelfTestPath);
+  writeFormatted("sdlog_selftest ok=%d size=%llu readback=%d cleanup=%d\r\n", match,
+                 static_cast<unsigned long long>(durable.size_bytes), match, unlink_result == 0);
 }
 
 void Stage28ServiceConsole::writeText(const char* text) noexcept {

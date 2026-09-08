@@ -95,8 +95,8 @@ DiagnosticLogLevel stage28eLogLevel(DiagnosticLogModule module) noexcept {
   return g_filter.get(module);
 }
 
-void stage28eLogWrite(DiagnosticLogModule module, DiagnosticLogLevel level,
-                      const char* format, ...) noexcept {
+void stage28eLogWrite(DiagnosticLogModule module, DiagnosticLogLevel level, const char* format,
+                      ...) noexcept {
   if (format == nullptr || !g_filter.enabled(module, level)) {
     return;
   }
@@ -120,8 +120,7 @@ void stage28eLogWrite(DiagnosticLogModule module, DiagnosticLogLevel level,
 
   recordStage28eBreadcrumbLog(sequence, uptime_ms, module, level);
 
-  esp_log_write(toEspLogLevel(level), kTag,
-                "u=%llu b=%08lx s=%lu %s/%s %s/c%ld %s",
+  esp_log_write(toEspLogLevel(level), kTag, "u=%llu b=%08lx s=%lu %s/%s %s/c%ld %s",
                 static_cast<unsigned long long>(uptime_ms),
                 static_cast<unsigned long>(g_boot_id.load(std::memory_order_relaxed)),
                 static_cast<unsigned long>(sequence), diagnosticLogLevelName(level),
@@ -131,7 +130,8 @@ void stage28eLogWrite(DiagnosticLogModule module, DiagnosticLogLevel level,
 #if GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST
   const bool heap_integrity_success =
       module == DiagnosticLogModule::Mem && level == DiagnosticLogLevel::Info &&
-      std::strncmp(message.data(), kHeapIntegrityOkPrefix, sizeof(kHeapIntegrityOkPrefix) - 1U) == 0;
+      std::strncmp(message.data(), kHeapIntegrityOkPrefix, sizeof(kHeapIntegrityOkPrefix) - 1U) ==
+          0;
   if (heap_integrity_success && esp_reset_reason() != ESP_RST_SW &&
       !g_breadcrumb_restart_selftest_fired.exchange(true, std::memory_order_relaxed)) {
     esp_log_write(ESP_LOG_WARN, kTag,

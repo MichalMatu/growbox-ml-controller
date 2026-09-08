@@ -122,14 +122,12 @@ ClimatePolicyRequest ruleRequest(const ClimateControllerInput& input) noexcept {
 
     if (too_humid && outside_temperature_ok && outside_humidity_ok) {
       const float inside_absolute_humidity = absoluteHumidityGm3(temperature, humidity);
-      const float intake_absolute_humidity =
-          absoluteHumidityGm3(measurements.outside_temperature_c.value,
-                              measurements.outside_humidity_pct.value);
+      const float intake_absolute_humidity = absoluteHumidityGm3(
+          measurements.outside_temperature_c.value, measurements.outside_humidity_pct.value);
       const float drying_gap = inside_absolute_humidity - intake_absolute_humidity;
       if (drying_gap > kAbsoluteHumidityBenefitDeadbandGm3) {
-        const float drying_benefit =
-            level(drying_gap, kAbsoluteHumidityBenefitDeadbandGm3,
-                  kAbsoluteHumidityBenefitFullScaleGm3);
+        const float drying_benefit = level(drying_gap, kAbsoluteHumidityBenefitDeadbandGm3,
+                                           kAbsoluteHumidityBenefitFullScaleGm3);
         request.exhaust_fan =
             std::max(request.exhaust_fan, std::min(humidity_level, drying_benefit));
       }
@@ -326,8 +324,8 @@ ClimateRuntimeStatus ClimateRuntimeController::step(const ClimateControllerInput
 }
 
 void ClimateRuntimeController::reconcileExecution(const ClimateExecutionProjection& execution,
-                                                        const ClimateCapabilities& capabilities,
-                                                        ClimateRuntimeDecision& decision) noexcept {
+                                                  const ClimateCapabilities& capabilities,
+                                                  ClimateRuntimeDecision& decision) noexcept {
   const float timestep =
       std::isfinite(config_.timestep_s) && config_.timestep_s > 0.0F ? config_.timestep_s : 10.0F;
 

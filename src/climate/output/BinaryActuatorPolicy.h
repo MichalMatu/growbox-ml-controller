@@ -33,9 +33,9 @@ class BinaryActuatorPolicy final {
 public:
   explicit BinaryActuatorPolicy(BinaryActuatorPolicyConfig config = {}) noexcept;
 
-  BinaryActuatorProposal propose(
-      float requested_level, std::uint64_t monotonic_ms,
-      BinaryPolicyOverride override_mode = BinaryPolicyOverride::None) noexcept;
+  BinaryActuatorProposal
+  propose(float requested_level, std::uint64_t monotonic_ms,
+          BinaryPolicyOverride override_mode = BinaryPolicyOverride::None) noexcept;
 
   // Commit only after the downstream command has completed successfully.
   // A failed command is represented by command_completed=false and never
@@ -44,15 +44,33 @@ public:
 
   void synchronize(BinaryOutputState state, std::uint64_t monotonic_ms) noexcept;
 
-  bool known() const noexcept { return known_; }
-  BinaryOutputState state() const noexcept { return state_; }
-  bool on() const noexcept { return known_ && state_ == BinaryOutputState::On; }
-  std::uint64_t lastChangeMs() const noexcept { return last_change_ms_; }
-  std::uint32_t generation() const noexcept { return generation_; }
-  std::uint32_t transitionCount() const noexcept { return transition_count_; }
-  std::uint32_t dwellHoldCount() const noexcept { return dwell_hold_count_; }
-  std::uint32_t overrideCount() const noexcept { return override_count_; }
-  const BinaryActuatorPolicyConfig& config() const noexcept { return config_; }
+  bool known() const noexcept {
+    return known_;
+  }
+  BinaryOutputState state() const noexcept {
+    return state_;
+  }
+  bool on() const noexcept {
+    return known_ && state_ == BinaryOutputState::On;
+  }
+  std::uint64_t lastChangeMs() const noexcept {
+    return last_change_ms_;
+  }
+  std::uint32_t generation() const noexcept {
+    return generation_;
+  }
+  std::uint32_t transitionCount() const noexcept {
+    return transition_count_;
+  }
+  std::uint32_t dwellHoldCount() const noexcept {
+    return dwell_hold_count_;
+  }
+  std::uint32_t overrideCount() const noexcept {
+    return override_count_;
+  }
+  const BinaryActuatorPolicyConfig& config() const noexcept {
+    return config_;
+  }
 
 private:
   static float normalized(float value) noexcept;

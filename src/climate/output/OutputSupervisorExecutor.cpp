@@ -10,8 +10,7 @@ OutputSupervisorExecutor::OutputSupervisorExecutor(OutputTransport& transport,
     : transport_(transport), state_store_(state_store), config_(config),
       valid_(validConfig(config_)) {}
 
-bool OutputSupervisorExecutor::validConfig(
-    const OutputSupervisorResolverConfig& config) noexcept {
+bool OutputSupervisorExecutor::validConfig(const OutputSupervisorResolverConfig& config) noexcept {
   if (config.count == 0U || config.count > kOutputEndpointCapacity) {
     return false;
   }
@@ -38,8 +37,9 @@ OutputSupervisorExecutor::findBinding(OutputEndpointId endpoint) const noexcept 
   return nullptr;
 }
 
-const OutputSupervisorEndpointResolution* OutputSupervisorExecutor::findResolution(
-    const OutputSupervisorResolution& resolution, OutputEndpointId endpoint) noexcept {
+const OutputSupervisorEndpointResolution*
+OutputSupervisorExecutor::findResolution(const OutputSupervisorResolution& resolution,
+                                         OutputEndpointId endpoint) noexcept {
   for (std::size_t i = 0U; i < resolution.endpoint_count; ++i) {
     if (resolution.endpoints[i].endpoint == endpoint) {
       return &resolution.endpoints[i];

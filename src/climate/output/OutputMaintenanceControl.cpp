@@ -4,11 +4,13 @@
 
 namespace growbox::app::output {
 
-OutputMaintenanceControl::OutputMaintenanceControl(
-    const OutputPolicyConfig& policy, OutputSupervisorLifecycle& lifecycle,
-    OutputAutomationControl& automation_control, OutputLifecycleExecutor& lifecycle_executor,
-    OutputStateStore& state_store, OutputSupervisorResolverConfig resolver_config,
-    OutputTransport& raw_transport) noexcept
+OutputMaintenanceControl::OutputMaintenanceControl(const OutputPolicyConfig& policy,
+                                                   OutputSupervisorLifecycle& lifecycle,
+                                                   OutputAutomationControl& automation_control,
+                                                   OutputLifecycleExecutor& lifecycle_executor,
+                                                   OutputStateStore& state_store,
+                                                   OutputSupervisorResolverConfig resolver_config,
+                                                   OutputTransport& raw_transport) noexcept
     : policy_(policy), lifecycle_(lifecycle), automation_control_(automation_control),
       lifecycle_executor_(lifecycle_executor), state_store_(state_store),
       resolver_config_(resolver_config), raw_transport_(raw_transport) {
@@ -134,8 +136,8 @@ bool OutputMaintenanceControl::requestEnter() noexcept {
     last_terminal_status_ = OutputMaintenanceStatus::EnterPending;
     return true;
   }
-  if (lifecycle_.mode() == SupervisorMode::Disabled &&
-      !automation_control_.transitionActive() && !lifecycle_executor_.active()) {
+  if (lifecycle_.mode() == SupervisorMode::Disabled && !automation_control_.transitionActive() &&
+      !lifecycle_executor_.active()) {
     enter_pending_ = true;
     last_terminal_status_ = OutputMaintenanceStatus::EnterPending;
     return true;
@@ -193,7 +195,7 @@ bool OutputMaintenanceControl::requestRaw(OutputEndpointRole role, BinaryOutputS
 }
 
 OutputMaintenanceReport OutputMaintenanceControl::tick(std::uint64_t monotonic_ms,
-                                                        const SafetyEnvelope& safety) noexcept {
+                                                       const SafetyEnvelope& safety) noexcept {
   if (!valid_) {
     last_terminal_status_ = OutputMaintenanceStatus::Invalid;
     return makeReport();
@@ -208,8 +210,7 @@ OutputMaintenanceReport OutputMaintenanceControl::tick(std::uint64_t monotonic_m
   }
 
   if (rearm_pending_) {
-    if (lifecycle_.mode() == SupervisorMode::Automatic &&
-        !automation_control_.transitionActive()) {
+    if (lifecycle_.mode() == SupervisorMode::Automatic && !automation_control_.transitionActive()) {
       rearm_pending_ = false;
       last_terminal_status_ = OutputMaintenanceStatus::Ready;
     }
@@ -231,8 +232,7 @@ OutputMaintenanceReport OutputMaintenanceControl::tick(std::uint64_t monotonic_m
     }
     const auto transition = lifecycle_.apply(OutputLifecycleCommand::EnterMaintenance);
     if (transition.status != OutputLifecycleTransitionStatus::Applied ||
-        lifecycle_.mode() != SupervisorMode::MaintenanceLocked ||
-        !clearPhysicalUncertainty()) {
+        lifecycle_.mode() != SupervisorMode::MaintenanceLocked || !clearPhysicalUncertainty()) {
       failClosed();
       return makeReport();
     }
@@ -324,6 +324,8 @@ OutputMaintenanceReport OutputMaintenanceControl::makeReport() const noexcept {
   return value;
 }
 
-OutputMaintenanceReport OutputMaintenanceControl::report() const noexcept { return makeReport(); }
+OutputMaintenanceReport OutputMaintenanceControl::report() const noexcept {
+  return makeReport();
+}
 
 } // namespace growbox::app::output

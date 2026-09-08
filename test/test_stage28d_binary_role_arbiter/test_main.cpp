@@ -8,9 +8,9 @@
 
 using growbox::app::climate_io::ClimateActuatorRole;
 using growbox::app::climate_io::ClimateRoleDriver;
+using growbox::app::climate_io::stage28d::binaryArbiterCounterRegressed;
 using growbox::app::climate_io::stage28d::BinaryRoleArbiterConfig;
 using growbox::app::climate_io::stage28d::Stage28dBinaryRoleArbiter;
-using growbox::app::climate_io::stage28d::binaryArbiterCounterRegressed;
 
 namespace {
 

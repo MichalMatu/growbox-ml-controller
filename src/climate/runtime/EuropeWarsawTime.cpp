@@ -63,8 +63,7 @@ std::uint64_t unixFromCivilUtc(std::int64_t year, std::uint8_t month, std::uint8
   if (days < 0) {
     return 0U;
   }
-  return static_cast<std::uint64_t>(days) * 86400ULL +
-         static_cast<std::uint64_t>(hour) * 3600ULL;
+  return static_cast<std::uint64_t>(days) * 86400ULL + static_cast<std::uint64_t>(hour) * 3600ULL;
 }
 
 bool isEuropeWarsawDst(std::uint64_t utc_unix_time_s, std::int64_t year) noexcept {

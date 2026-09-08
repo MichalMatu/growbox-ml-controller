@@ -36,7 +36,7 @@ Stage27FileDurabilityResult stage27FlushSyncAndStat(std::FILE* file) noexcept {
     return result;
   }
 
-  struct stat file_stat {};
+  struct stat file_stat{};
   errno = 0;
   if (::fstat(descriptor, &file_stat) != 0) {
     result.failed_step = Stage27FileDurabilityStep::Stat;

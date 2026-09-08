@@ -26,8 +26,8 @@ Stage28MaintenanceRfTransport::send(const ::growbox::app::output::OutputCommand&
   if (!diagnostics_.ready()) {
     return {TransportStatus::Failed, TransportError::Unavailable};
   }
-  const auto& frame = command.state == BinaryOutputState::On ? binding->hardware->on
-                                                              : binding->hardware->off;
+  const auto& frame =
+      command.state == BinaryOutputState::On ? binding->hardware->on : binding->hardware->off;
   rf433::LoopbackEvidence evidence{};
   if (!diagnostics_.manualTransmit(frame, evidence)) {
     return {TransportStatus::Failed, TransportError::IoFailure};

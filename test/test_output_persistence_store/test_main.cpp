@@ -31,7 +31,8 @@ public:
     return write_status;
   }
 
-  output::OutputPersistenceBackendStatus read_status = output::OutputPersistenceBackendStatus::NotFound;
+  output::OutputPersistenceBackendStatus read_status =
+      output::OutputPersistenceBackendStatus::NotFound;
   output::OutputPersistenceBackendStatus write_status = output::OutputPersistenceBackendStatus::Ok;
   output::OutputPersistenceBlob blob{};
   std::size_t stored_size = 0U;
@@ -125,7 +126,8 @@ void testWriteFailureSurfacesWithoutSuccess() {
   FakeBackend backend;
   backend.write_status = output::OutputPersistenceBackendStatus::WriteFailed;
   output::OutputPersistenceStore store(backend, safePolicy());
-  assert(store.save(snapshotWithCommand()) == output::OutputPersistenceStoreStatus::BackendWriteFailed);
+  assert(store.save(snapshotWithCommand()) ==
+         output::OutputPersistenceStoreStatus::BackendWriteFailed);
   assert(backend.write_count == 1U);
 }
 
@@ -137,7 +139,8 @@ void testInvalidSafeDefaultsFailClosed() {
   const auto loaded = store.load();
   assert(loaded.status == output::OutputPersistenceStoreStatus::InvalidSafeDefaults);
   assert(!loaded.used_safe_defaults);
-  assert(store.save(snapshotWithCommand()) == output::OutputPersistenceStoreStatus::InvalidSafeDefaults);
+  assert(store.save(snapshotWithCommand()) ==
+         output::OutputPersistenceStoreStatus::InvalidSafeDefaults);
 }
 
 } // namespace

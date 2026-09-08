@@ -52,11 +52,11 @@ void testBusyDoesNotReplacePendingCommand() {
   const auto config = policy();
   auto lifecycle = automaticLifecycle(config);
   output::OutputManualControl control(config, lifecycle);
-  const auto first = control.request(output::OutputEndpointRole::ExhaustFan,
-                                     output::BinaryOutputState::On, 10U);
+  const auto first =
+      control.request(output::OutputEndpointRole::ExhaustFan, output::BinaryOutputState::On, 10U);
   assert(first.status == output::OutputManualRequestStatus::Accepted);
-  const auto second = control.request(output::OutputEndpointRole::Humidifier,
-                                      output::BinaryOutputState::Off, 20U);
+  const auto second =
+      control.request(output::OutputEndpointRole::Humidifier, output::BinaryOutputState::Off, 20U);
   assert(second.status == output::OutputManualRequestStatus::Busy);
 
   output::ManualIntent intent{};
@@ -95,8 +95,8 @@ void testInvalidConfigurationFailsClosed() {
   output::OutputSupervisorLifecycle lifecycle(invalid);
   output::OutputManualControl control(invalid, lifecycle);
   assert(!control.valid());
-  const auto report = control.request(output::OutputEndpointRole::ExhaustFan,
-                                      output::BinaryOutputState::On, 0U);
+  const auto report =
+      control.request(output::OutputEndpointRole::ExhaustFan, output::BinaryOutputState::On, 0U);
   assert(report.status == output::OutputManualRequestStatus::InvalidConfiguration);
 }
 
@@ -104,12 +104,12 @@ void testSequenceAdvancesAcrossConsumedRequests() {
   const auto config = policy();
   auto lifecycle = automaticLifecycle(config);
   output::OutputManualControl control(config, lifecycle);
-  const auto first = control.request(output::OutputEndpointRole::Humidifier,
-                                     output::BinaryOutputState::On, 1U);
+  const auto first =
+      control.request(output::OutputEndpointRole::Humidifier, output::BinaryOutputState::On, 1U);
   output::ManualIntent intent{};
   assert(control.consume(intent));
-  const auto second = control.request(output::OutputEndpointRole::Humidifier,
-                                      output::BinaryOutputState::Off, 2U);
+  const auto second =
+      control.request(output::OutputEndpointRole::Humidifier, output::BinaryOutputState::Off, 2U);
   assert(second.status == output::OutputManualRequestStatus::Accepted);
   assert(second.sequence > first.sequence);
   assert(control.consume(intent));

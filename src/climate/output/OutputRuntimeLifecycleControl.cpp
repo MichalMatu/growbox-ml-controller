@@ -135,8 +135,9 @@ OutputRuntimeLifecycleControl::makeReport(bool safety_deferred) const noexcept {
   return value;
 }
 
-OutputRuntimeLifecycleReport OutputRuntimeLifecycleControl::tick(
-    std::uint64_t monotonic_ms, const SafetyEnvelope& safety) noexcept {
+OutputRuntimeLifecycleReport
+OutputRuntimeLifecycleControl::tick(std::uint64_t monotonic_ms,
+                                    const SafetyEnvelope& safety) noexcept {
   if (!valid_ || !transitionActive()) {
     return makeReport(false);
   }

@@ -1,5 +1,5 @@
-#include "ClimateControlLoop.h"
 #include "ClimateContract.h"
+#include "ClimateControlLoop.h"
 
 #include <cassert>
 #include <cmath>
@@ -231,18 +231,21 @@ void testExternalPreviousExecutionFeedbackOverridesOnlyKnownRoles() {
   const auto second = loop.tick(130'000U, decision);
   assert(second.command_applied);
   assert(inference.calls >= 2U);
-  assert(near(inference.last_features.values[contract::index(contract::FeatureIndex::PreviousHeater)],
-              0.0F));
-  assert(near(inference.last_features.values[contract::index(contract::FeatureIndex::PreviousExhaustFan)],
-              internal_previous.exhaust_fan));
+  assert(
+      near(inference.last_features.values[contract::index(contract::FeatureIndex::PreviousHeater)],
+           0.0F));
+  assert(near(
+      inference.last_features.values[contract::index(contract::FeatureIndex::PreviousExhaustFan)],
+      internal_previous.exhaust_fan));
 
   const PreviousClimateActions compatibility_after_external = loop.previousApplied();
   loop.clearPreviousExecutionFeedback();
   assert(!loop.hasExternalPreviousExecutionFeedback());
   const auto third = loop.tick(140'000U, decision);
   assert(third.command_applied);
-  assert(near(inference.last_features.values[contract::index(contract::FeatureIndex::PreviousHeater)],
-              compatibility_after_external.heater));
+  assert(
+      near(inference.last_features.values[contract::index(contract::FeatureIndex::PreviousHeater)],
+           compatibility_after_external.heater));
 
   loop.setPreviousExecutionFeedback(feedback);
   loop.reset();

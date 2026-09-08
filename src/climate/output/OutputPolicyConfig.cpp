@@ -134,7 +134,8 @@ OutputPolicyConfig makeSafeDefaultOutputPolicyConfig(OutputEndpointId exhaust_fa
   config.endpoints[1].endpoint = scheduled_light;
   config.endpoints[1].role = OutputEndpointRole::ScheduledLight;
   fillLifecycle(config.endpoints[1], 0U);
-  config.endpoints[1].lifecycle[outputLifecycleEventIndex(OutputLifecycleEvent::AutomationOff)]
+  config.endpoints[1]
+      .lifecycle[outputLifecycleEventIndex(OutputLifecycleEvent::AutomationOff)]
       .action = OutputPolicyAction::ApplySchedule;
 
   config.endpoints[2].endpoint = humidifier;

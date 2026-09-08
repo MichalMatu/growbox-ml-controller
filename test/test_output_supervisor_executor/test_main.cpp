@@ -22,10 +22,10 @@ public:
   output::TxResult send(const output::OutputCommand& command) noexcept override {
     assert(sent_count < sent.size());
     sent[sent_count] = command;
-    const auto result = sent_count < scripted_count
-                            ? scripted[sent_count]
-                            : output::TxResult{output::TransportStatus::Completed,
-                                               output::TransportError::None};
+    const auto result =
+        sent_count < scripted_count
+            ? scripted[sent_count]
+            : output::TxResult{output::TransportStatus::Completed, output::TransportError::None};
     ++sent_count;
     return result;
   }
@@ -66,7 +66,8 @@ output::OutputSupervisorCycleInput allOnInput(std::uint64_t now_ms) {
   return input;
 }
 
-void assertPhysicalUnknown(const output::OutputStateStore& store, output::OutputEndpointId endpoint) {
+void assertPhysicalUnknown(const output::OutputStateStore& store,
+                           output::OutputEndpointId endpoint) {
   const auto* state = store.find(endpoint);
   assert(state != nullptr);
   assert(state->physical.state == output::PhysicalOutputState::Unknown);
@@ -103,8 +104,8 @@ void runPartialFailureAt(std::size_t failure_index) {
   for (std::size_t i = 0U; i < 3U; ++i) {
     assert(report.steps[i].command.endpoint == resolution.plan.steps[i].endpoint);
     assert(report.steps[i].physical == output::PhysicalOutputState::Unknown);
-    const auto expected_status = i == failure_index ? output::TransportStatus::Failed
-                                                     : output::TransportStatus::Completed;
+    const auto expected_status =
+        i == failure_index ? output::TransportStatus::Failed : output::TransportStatus::Completed;
     assert(report.steps[i].transport.status == expected_status);
     const auto* state = store.find(resolution.plan.steps[i].endpoint);
     assert(state != nullptr);

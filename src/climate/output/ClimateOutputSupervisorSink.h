@@ -8,8 +8,7 @@
 namespace growbox::app::climate_io {
 
 struct ClimateOutputSupervisorCycleContext {
-  ::growbox::app::output::SupervisorMode mode =
-      ::growbox::app::output::SupervisorMode::Automatic;
+  ::growbox::app::output::SupervisorMode mode = ::growbox::app::output::SupervisorMode::Automatic;
   ::growbox::app::output::ScheduleIntent schedule{};
   ::growbox::app::output::ManualIntent manual{};
   ::growbox::app::output::SafetyEnvelope safety{};
@@ -17,11 +16,10 @@ struct ClimateOutputSupervisorCycleContext {
 
 class ClimateOutputSupervisorSink final : public ::growbox::climate::ClimateActuatorSink {
 public:
-  ClimateOutputSupervisorSink(
-      ClimateSemanticOutputConfig climate_config,
-      ::growbox::app::output::OutputSupervisorResolver& resolver,
-      ::growbox::app::output::OutputSupervisorExecutor& executor,
-      ::growbox::app::output::OutputStateStore& state_store) noexcept;
+  ClimateOutputSupervisorSink(ClimateSemanticOutputConfig climate_config,
+                              ::growbox::app::output::OutputSupervisorResolver& resolver,
+                              ::growbox::app::output::OutputSupervisorExecutor& executor,
+                              ::growbox::app::output::OutputStateStore& state_store) noexcept;
 
   bool valid() const noexcept;
   void setCycleContext(const ClimateOutputSupervisorCycleContext& context) noexcept {
@@ -30,9 +28,10 @@ public:
 
   bool apply(const ::growbox::climate::ClimatePolicyRequest& request,
              std::uint64_t monotonic_ms) noexcept override;
-  bool applyAndReport(const ::growbox::climate::ClimatePolicyRequest& request,
-                      std::uint64_t monotonic_ms,
-                      ::growbox::climate::ClimatePolicyRequest& executed_projection) noexcept override;
+  bool
+  applyAndReport(const ::growbox::climate::ClimatePolicyRequest& request,
+                 std::uint64_t monotonic_ms,
+                 ::growbox::climate::ClimatePolicyRequest& executed_projection) noexcept override;
   bool applyAndReportExecution(
       const ::growbox::climate::ClimatePolicyRequest& request, std::uint64_t monotonic_ms,
       ::growbox::climate::ClimateExecutionProjection& execution) noexcept override;
@@ -53,16 +52,16 @@ private:
                          ClimateActuatorRole role) noexcept;
   static void setRoleLevel(::growbox::climate::ClimatePolicyRequest& request,
                            ClimateActuatorRole role, float level) noexcept;
-  static bool reportTransportCompleted(
-      const ::growbox::app::output::ExecutionReport& report) noexcept;
+  static bool
+  reportTransportCompleted(const ::growbox::app::output::ExecutionReport& report) noexcept;
 
   bool buildControlIntent(const ::growbox::climate::ClimatePolicyRequest& request,
                           std::uint64_t monotonic_ms,
                           ::growbox::app::output::ControlIntent& intent) noexcept;
   bool executeCycle(const ::growbox::app::output::ControlIntent& control,
                     std::uint64_t monotonic_ms, bool& transport_completed) noexcept;
-  bool projectExecutedClimate(
-      ::growbox::climate::ClimateExecutionProjection& projection) const noexcept;
+  bool
+  projectExecutedClimate(::growbox::climate::ClimateExecutionProjection& projection) const noexcept;
   std::uint64_t nextSequence() noexcept;
 
   ClimateSemanticOutputConfig climate_config_{};

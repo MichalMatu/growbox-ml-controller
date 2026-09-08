@@ -44,8 +44,7 @@ bool writeLineDurably(std::FILE* file, const char* data, std::size_t length,
   }
   errno = 0;
   if (std::fputc('\n', file) == EOF) {
-    ESP_LOGW(kTag, "%s newline write failed errno=%d ferror=%d", context, errno,
-             std::ferror(file));
+    ESP_LOGW(kTag, "%s newline write failed errno=%d ferror=%d", context, errno, std::ferror(file));
     return false;
   }
 

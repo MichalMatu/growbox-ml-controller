@@ -66,9 +66,10 @@ public:
 
   bool apply(const ::growbox::climate::ClimatePolicyRequest& request,
              std::uint64_t monotonic_ms) noexcept override;
-  bool applyAndReport(const ::growbox::climate::ClimatePolicyRequest& request,
-                      std::uint64_t monotonic_ms,
-                      ::growbox::climate::ClimatePolicyRequest& confirmed_applied) noexcept override;
+  bool
+  applyAndReport(const ::growbox::climate::ClimatePolicyRequest& request,
+                 std::uint64_t monotonic_ms,
+                 ::growbox::climate::ClimatePolicyRequest& confirmed_applied) noexcept override;
   bool applyFailSafeOff(std::uint64_t monotonic_ms) noexcept override;
 
 private:

@@ -32,9 +32,11 @@ int main() {
   assert(plan.steps[0].endpoint == 2U);
   assert(plan.steps[1].endpoint == 1U);
 
-  OutputCommand third{}; third.endpoint = 3U;
+  OutputCommand third{};
+  third.endpoint = 3U;
   assert(appendOutputCommand(plan, third));
-  OutputCommand overflow{}; overflow.endpoint = 4U;
+  OutputCommand overflow{};
+  overflow.endpoint = 4U;
   assert(!appendOutputCommand(plan, overflow));
   assert(plan.size == kOutputEndpointCapacity);
   OutputCommand invalid{};

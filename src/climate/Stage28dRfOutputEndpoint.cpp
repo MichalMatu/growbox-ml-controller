@@ -69,15 +69,14 @@ bool Stage28dRfOutputEndpoint::write(ClimateEndpointId endpoint, float normalize
     return false;
   }
   const bool requested_on = normalized_level >= config_.on_threshold;
-  const bool effective_on = endpoint == kExhaustFanEndpoint && safety_force_exhaust_
-                                ? true
-                                : requested_on;
+  const bool effective_on =
+      endpoint == kExhaustFanEndpoint && safety_force_exhaust_ ? true : requested_on;
   mirrorDesiredResolved(endpoint, requested_on, effective_on);
   return applyBinary(endpoint, effective_on, monotonic_ms);
 }
 
 bool Stage28dRfOutputEndpoint::forceOff(ClimateEndpointId endpoint,
-                                       std::uint64_t monotonic_ms) noexcept {
+                                        std::uint64_t monotonic_ms) noexcept {
   if (!config_.enabled || endpoint == kScheduledLightEndpoint) {
     return false;
   }
@@ -104,7 +103,7 @@ bool Stage28dRfOutputEndpoint::stateOn(ClimateEndpointId endpoint) const noexcep
 }
 
 bool Stage28dRfOutputEndpoint::applyBinary(ClimateEndpointId endpoint, bool on,
-                                          std::uint64_t monotonic_ms, bool force_send) noexcept {
+                                           std::uint64_t monotonic_ms, bool force_send) noexcept {
   const std::size_t index = stateIndex(endpoint);
   if (index == kInvalidStateIndex) {
     return false;

@@ -17,8 +17,7 @@ struct Stage28RfDiagnosticsConfig {
 
 class Stage28RfDiagnostics final {
 public:
-  Stage28RfDiagnostics(Stage28RfDiagnosticsConfig config,
-                       rf433::Rf433RmtLoopback& radio) noexcept;
+  Stage28RfDiagnostics(Stage28RfDiagnosticsConfig config, rf433::Rf433RmtLoopback& radio) noexcept;
 
   bool begin(bool radio_ready) noexcept;
   void tick(std::uint64_t now_ms) noexcept;

@@ -28,28 +28,37 @@ public:
 
   OutputPersistenceCoordinatorInitResult initialize(OutputStateStore& state_store) noexcept;
 
-  bool valid() const noexcept { return valid_; }
-  const OutputPolicyConfig& policy() const noexcept { return policy_; }
-  const OutputPersistenceSnapshot& snapshot() const noexcept { return snapshot_; }
-  std::uint32_t writeAttemptCount() const noexcept { return write_attempt_count_; }
-  std::uint32_t writeSuccessCount() const noexcept { return write_success_count_; }
+  bool valid() const noexcept {
+    return valid_;
+  }
+  const OutputPolicyConfig& policy() const noexcept {
+    return policy_;
+  }
+  const OutputPersistenceSnapshot& snapshot() const noexcept {
+    return snapshot_;
+  }
+  std::uint32_t writeAttemptCount() const noexcept {
+    return write_attempt_count_;
+  }
+  std::uint32_t writeSuccessCount() const noexcept {
+    return write_success_count_;
+  }
 
-  OutputPersistenceCoordinatorStatus syncFromStateStore(
-      const OutputStateStore& state_store, bool persist_command_truth) noexcept;
-  OutputPersistenceCoordinatorStatus applyPolicy(
-      const OutputPolicyConfig& policy, const OutputStateStore& state_store,
-      bool persist_command_truth) noexcept;
+  OutputPersistenceCoordinatorStatus syncFromStateStore(const OutputStateStore& state_store,
+                                                        bool persist_command_truth) noexcept;
+  OutputPersistenceCoordinatorStatus applyPolicy(const OutputPolicyConfig& policy,
+                                                 const OutputStateStore& state_store,
+                                                 bool persist_command_truth) noexcept;
 
 private:
   bool buildSnapshot(const OutputPolicyConfig& policy, const OutputStateStore& state_store,
                      bool persist_command_truth,
                      OutputPersistenceSnapshot& candidate) const noexcept;
-  OutputPersistenceCoordinatorStatus saveIfChanged(
-      const OutputPersistenceSnapshot& candidate) noexcept;
+  OutputPersistenceCoordinatorStatus
+  saveIfChanged(const OutputPersistenceSnapshot& candidate) noexcept;
   static bool encodeSnapshot(const OutputPersistenceSnapshot& snapshot,
                              OutputPersistenceBlob& blob) noexcept;
-  static bool sameBlob(const OutputPersistenceBlob& lhs,
-                       const OutputPersistenceBlob& rhs) noexcept;
+  static bool sameBlob(const OutputPersistenceBlob& lhs, const OutputPersistenceBlob& rhs) noexcept;
 
   OutputPersistenceStore& store_;
   OutputPolicyConfig policy_{};

@@ -70,10 +70,8 @@ struct OutputExecutionTelemetrySnapshot {
 
 bool buildOutputExecutionTelemetry(const OutputSupervisorCycleInput& cycle,
                                    const OutputSupervisorResolution& resolution,
-                                   const OutputStateStore& state_store,
-                                   bool transport_active,
-                                   bool lifecycle_active,
-                                   OutputLifecycleEvent lifecycle_event,
+                                   const OutputStateStore& state_store, bool transport_active,
+                                   bool lifecycle_active, OutputLifecycleEvent lifecycle_event,
                                    bool automation_requested,
                                    OutputExecutionTelemetrySnapshot& output) noexcept;
 

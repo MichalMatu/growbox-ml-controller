@@ -53,8 +53,7 @@ OutputPersistenceBackendStatus OutputNvsBackend::read(OutputPersistenceBlob& blo
   return OutputPersistenceBackendStatus::Ok;
 }
 
-OutputPersistenceBackendStatus
-OutputNvsBackend::write(const OutputPersistenceBlob& blob) noexcept {
+OutputPersistenceBackendStatus OutputNvsBackend::write(const OutputPersistenceBlob& blob) noexcept {
   nvs_handle_t handle{};
   const esp_err_t open_error = nvs_open(kOutputNvsNamespace, NVS_READWRITE, &handle);
   if (open_error != ESP_OK) {
@@ -63,7 +62,8 @@ OutputNvsBackend::write(const OutputPersistenceBlob& blob) noexcept {
                : mapOpenError(open_error);
   }
 
-  esp_err_t error = nvs_set_blob(handle, kOutputNvsSnapshotKey, blob.bytes.data(), blob.bytes.size());
+  esp_err_t error =
+      nvs_set_blob(handle, kOutputNvsSnapshotKey, blob.bytes.data(), blob.bytes.size());
   if (error == ESP_OK) {
     error = nvs_commit(handle);
   }

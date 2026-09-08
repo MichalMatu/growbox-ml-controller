@@ -41,8 +41,7 @@ struct Stage28eBreadcrumbState {
   std::uint32_t arbiter_continuity_fault_count{0U};
 };
 
-constexpr std::uint32_t stage28eBreadcrumbMix32(std::uint32_t hash,
-                                                std::uint32_t value) noexcept {
+constexpr std::uint32_t stage28eBreadcrumbMix32(std::uint32_t hash, std::uint32_t value) noexcept {
   for (unsigned shift = 0U; shift < 32U; shift += 8U) {
     hash ^= (value >> shift) & 0xFFU;
     hash *= 16777619U;
@@ -65,12 +64,14 @@ constexpr std::uint32_t stage28eBreadcrumbChecksum(const Stage28eBreadcrumbState
   hash = stage28eBreadcrumbMix32(hash, state.last_log_level);
   hash = stage28eBreadcrumbMix32(hash, state.last_fault_sequence);
   hash = stage28eBreadcrumbMix32(hash, static_cast<std::uint32_t>(state.last_fault_uptime_ms));
-  hash = stage28eBreadcrumbMix32(hash, static_cast<std::uint32_t>(state.last_fault_uptime_ms >> 32U));
+  hash =
+      stage28eBreadcrumbMix32(hash, static_cast<std::uint32_t>(state.last_fault_uptime_ms >> 32U));
   hash = stage28eBreadcrumbMix32(hash, state.last_fault_module);
   hash = stage28eBreadcrumbMix32(hash, state.last_fault_level);
   hash = stage28eBreadcrumbMix32(hash, state.last_fault_code);
   hash = stage28eBreadcrumbMix32(hash, static_cast<std::uint32_t>(state.last_arbiter_uptime_ms));
-  hash = stage28eBreadcrumbMix32(hash, static_cast<std::uint32_t>(state.last_arbiter_uptime_ms >> 32U));
+  hash = stage28eBreadcrumbMix32(hash,
+                                 static_cast<std::uint32_t>(state.last_arbiter_uptime_ms >> 32U));
   hash = stage28eBreadcrumbMix32(hash, state.arbiter_instance_id);
   hash = stage28eBreadcrumbMix32(hash, state.arbiter_construction_count);
   hash = stage28eBreadcrumbMix32(hash, state.arbiter_transition_count);
@@ -81,8 +82,7 @@ constexpr std::uint32_t stage28eBreadcrumbChecksum(const Stage28eBreadcrumbState
 }
 
 constexpr bool stage28eBreadcrumbValid(const Stage28eBreadcrumbState& state) noexcept {
-  return state.magic == kStage28eBreadcrumbMagic &&
-         state.version == kStage28eBreadcrumbVersion &&
+  return state.magic == kStage28eBreadcrumbMagic && state.version == kStage28eBreadcrumbVersion &&
          state.checksum == stage28eBreadcrumbChecksum(state);
 }
 
@@ -92,8 +92,7 @@ void recordStage28eBreadcrumbLog(std::uint32_t sequence, std::uint64_t uptime_ms
                                  DiagnosticLogModule module, DiagnosticLogLevel level) noexcept;
 void recordStage28eBreadcrumbArbiter(std::uint64_t uptime_ms, std::uint32_t instance_id,
                                      std::uint32_t construction_count,
-                                     std::uint32_t transition_count,
-                                     std::uint32_t dwell_hold_count,
+                                     std::uint32_t transition_count, std::uint32_t dwell_hold_count,
                                      std::uint32_t safety_override_count,
                                      std::uint32_t continuity_fault_count,
                                      bool continuity_fault) noexcept;

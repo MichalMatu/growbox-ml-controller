@@ -12,15 +12,15 @@ namespace {
 namespace output = growbox::app::output;
 using growbox::app::climate_io::ClimateWallClockSnapshot;
 using growbox::app::climate_io::runtime::buildStage27ScheduleIntent;
+using growbox::app::climate_io::stage28d::buildLampSafetyEnvelope;
+using growbox::app::climate_io::stage28d::kExhaustFanEndpoint;
+using growbox::app::climate_io::stage28d::kScheduledLightEndpoint;
 using growbox::app::climate_io::stage28d::LampSafetyConfig;
 using growbox::app::climate_io::stage28d::LampSafetyController;
 using growbox::app::climate_io::stage28d::LampSafetyDecision;
 using growbox::app::climate_io::stage28d::LampSafetyEnvelopeSnapshot;
 using growbox::app::climate_io::stage28d::LampSafetyInput;
 using growbox::app::climate_io::stage28d::LampSafetyReason;
-using growbox::app::climate_io::stage28d::buildLampSafetyEnvelope;
-using growbox::app::climate_io::stage28d::kExhaustFanEndpoint;
-using growbox::app::climate_io::stage28d::kScheduledLightEndpoint;
 
 struct ShadowProjection {
   bool lamp_on{false};
@@ -28,7 +28,7 @@ struct ShadowProjection {
 };
 
 const output::EndpointIntent* findIntent(const output::ScheduleIntent& intent,
-                                        output::OutputEndpointId endpoint) {
+                                         output::OutputEndpointId endpoint) {
   for (const auto& candidate : intent.endpoints) {
     if (output::endpointIntentActive(candidate) && candidate.endpoint == endpoint) {
       return &candidate;
@@ -101,7 +101,7 @@ void assertParity(LampSafetyController& controller, const output::ScheduleIntent
 
 void testDayAndNightScheduleParity() {
   LampSafetyController controller;
-  const auto day = scheduleAt(1768453200ULL, 1'000U);   // Warsaw 06:00 winter
+  const auto day = scheduleAt(1768453200ULL, 1'000U); // Warsaw 06:00 winter
   assertParity(controller, day, 24.0F, true, 0U, 1'000U, true, LampSafetyReason::Safe);
 
   const auto night = scheduleAt(1768510800ULL, 2'000U); // Warsaw 22:00 winter
@@ -118,17 +118,14 @@ void testTemperatureUnavailableParity() {
 void testOverTemperatureParity() {
   LampSafetyController controller;
   const auto day = scheduleAt(1768453200ULL, 20'000U);
-  assertParity(controller, day, 28.0F, true, 0U, 20'000U, true,
-               LampSafetyReason::OverTemperature);
+  assertParity(controller, day, 28.0F, true, 0U, 20'000U, true, LampSafetyReason::OverTemperature);
 }
 
 void testRecoveryHoldParity() {
   LampSafetyController controller;
   const auto day = scheduleAt(1768453200ULL, 30'000U);
-  assertParity(controller, day, 29.0F, true, 0U, 30'000U, true,
-               LampSafetyReason::OverTemperature);
-  assertParity(controller, day, 26.0F, true, 0U, 40'000U, true,
-               LampSafetyReason::RecoveryHold);
+  assertParity(controller, day, 29.0F, true, 0U, 30'000U, true, LampSafetyReason::OverTemperature);
+  assertParity(controller, day, 26.0F, true, 0U, 40'000U, true, LampSafetyReason::RecoveryHold);
 }
 
 void testInvalidConfigParity() {
@@ -136,8 +133,7 @@ void testInvalidConfigParity() {
   config.recovery_temperature_c = config.trip_temperature_c;
   LampSafetyController controller(config);
   const auto day = scheduleAt(1768453200ULL, 50'000U);
-  assertParity(controller, day, 24.0F, true, 0U, 50'000U, true,
-               LampSafetyReason::InvalidConfig);
+  assertParity(controller, day, 24.0F, true, 0U, 50'000U, true, LampSafetyReason::InvalidConfig);
 }
 
 void testUnavailableFanIsNotInvented() {

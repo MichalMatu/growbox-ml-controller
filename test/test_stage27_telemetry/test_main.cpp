@@ -106,13 +106,15 @@ int main() {
   session.start_unix_time_s = snapshot.unix_time_s;
 
   char session_buffer[512]{};
-  const auto session_length = formatStage27SessionNdjson(session_buffer, sizeof(session_buffer), session);
+  const auto session_length =
+      formatStage27SessionNdjson(session_buffer, sizeof(session_buffer), session);
   assert(session_length > 0U && session_length < 360U);
   assert(std::strstr(session_buffer, "\"schema\":\"growbox-log-v3\"") != nullptr);
   assert(std::strstr(session_buffer, "\"out_v\":2") != nullptr);
 
   char sample_buffer[1024]{};
-  const auto sample_length = formatStage27SampleNdjson(sample_buffer, sizeof(sample_buffer), snapshot);
+  const auto sample_length =
+      formatStage27SampleNdjson(sample_buffer, sizeof(sample_buffer), snapshot);
   assert(sample_length > 0U && sample_length < sizeof(sample_buffer));
   assert(std::strstr(sample_buffer, "\"t\":\"s\",\"v\":3") != nullptr);
   assert(std::strstr(sample_buffer, "\"out\":{\"v\":2,\"m\":2,\"ta\":1") != nullptr);
@@ -128,7 +130,8 @@ int main() {
   storage.last_write_ms = 123000U;
 
   char health_buffer[1024]{};
-  const auto health_length = formatStage27HealthNdjson(health_buffer, sizeof(health_buffer), snapshot, storage);
+  const auto health_length =
+      formatStage27HealthNdjson(health_buffer, sizeof(health_buffer), snapshot, storage);
   assert(health_length > 0U && health_length < sizeof(health_buffer));
   assert(std::strstr(health_buffer, "\"t\":\"h\",\"v\":3") != nullptr);
   assert(std::strstr(health_buffer, "\"out\":{\"v\":2") != nullptr);

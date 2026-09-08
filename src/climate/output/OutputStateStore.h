@@ -43,8 +43,12 @@ public:
                  std::size_t count) noexcept;
   void resetRuntimeTruth() noexcept;
 
-  bool valid() const noexcept { return valid_; }
-  std::size_t configuredCount() const noexcept { return configured_count_; }
+  bool valid() const noexcept {
+    return valid_;
+  }
+  std::size_t configuredCount() const noexcept {
+    return configured_count_;
+  }
 
   const OutputStateEntry* find(OutputEndpointId endpoint) const noexcept;
 
@@ -54,8 +58,7 @@ public:
                      TxResult result) noexcept;
   bool restoreLastSuccessfulCommand(OutputEndpointId endpoint, BinaryOutputState state) noexcept;
   bool recordPhysicalObservation(OutputEndpointId endpoint, PhysicalOutputState state,
-                                 std::uint64_t observed_ms,
-                                 std::uint64_t sequence = 0U) noexcept;
+                                 std::uint64_t observed_ms, std::uint64_t sequence = 0U) noexcept;
   bool clearPhysicalObservation(OutputEndpointId endpoint) noexcept;
 
 private:

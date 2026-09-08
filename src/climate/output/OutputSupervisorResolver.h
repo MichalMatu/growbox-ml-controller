@@ -55,18 +55,23 @@ class OutputSupervisorResolver final {
 public:
   explicit OutputSupervisorResolver(OutputSupervisorResolverConfig config) noexcept;
 
-  bool valid() const noexcept { return valid_; }
-  const OutputSupervisorResolverConfig& config() const noexcept { return config_; }
+  bool valid() const noexcept {
+    return valid_;
+  }
+  const OutputSupervisorResolverConfig& config() const noexcept {
+    return config_;
+  }
 
   bool resolve(const OutputSupervisorCycleInput& input, const OutputStateStore& state_store,
                OutputSupervisorResolution& output) noexcept;
 
 private:
   static bool validConfig(const OutputSupervisorResolverConfig& config) noexcept;
-  static const EndpointIntent* findIntent(const std::array<EndpointIntent, kOutputEndpointCapacity>& intents,
-                                          OutputEndpointId endpoint) noexcept;
-  static const SafetyEndpointConstraint*
-  findSafetyConstraint(const SafetyEnvelope& safety, OutputEndpointId endpoint) noexcept;
+  static const EndpointIntent*
+  findIntent(const std::array<EndpointIntent, kOutputEndpointCapacity>& intents,
+             OutputEndpointId endpoint) noexcept;
+  static const SafetyEndpointConstraint* findSafetyConstraint(const SafetyEnvelope& safety,
+                                                              OutputEndpointId endpoint) noexcept;
   static BinaryOutputState directBinaryState(NormalizedOutputLevel level) noexcept;
   static bool commandAlreadyCompleted(const OutputStateStore& state_store,
                                       const OutputCommand& command) noexcept;

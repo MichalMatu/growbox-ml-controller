@@ -46,7 +46,9 @@ public:
   OutputPersistenceStore(OutputPersistenceBackend& backend,
                          const OutputPolicyConfig& safe_defaults) noexcept;
 
-  bool valid() const noexcept { return valid_; }
+  bool valid() const noexcept {
+    return valid_;
+  }
   OutputPersistenceLoadResult load() noexcept;
   OutputPersistenceStoreStatus save(const OutputPersistenceSnapshot& snapshot) noexcept;
 

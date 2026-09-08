@@ -18,7 +18,9 @@ std::size_t checkedLength(char* buffer, std::size_t buffer_size, int written) no
   return static_cast<std::size_t>(written);
 }
 
-int flag(bool value) noexcept { return value ? 1 : 0; }
+int flag(bool value) noexcept {
+  return value ? 1 : 0;
+}
 
 bool appendFormat(char*& cursor, std::size_t& remaining, const char* format, ...) noexcept {
   if (cursor == nullptr || remaining == 0U) {
@@ -37,10 +39,10 @@ bool appendFormat(char*& cursor, std::size_t& remaining, const char* format, ...
   return true;
 }
 
-bool formatOutputJson(char* buffer, std::size_t buffer_size,
-                      const ::growbox::app::output::OutputExecutionTelemetrySnapshot& output) noexcept {
-  if (buffer == nullptr || buffer_size == 0U ||
-      output.endpoint_count > output.endpoints.size()) {
+bool formatOutputJson(
+    char* buffer, std::size_t buffer_size,
+    const ::growbox::app::output::OutputExecutionTelemetrySnapshot& output) noexcept {
+  if (buffer == nullptr || buffer_size == 0U || output.endpoint_count > output.endpoints.size()) {
     return false;
   }
   char* cursor = buffer;
@@ -48,8 +50,9 @@ bool formatOutputJson(char* buffer, std::size_t buffer_size,
   if (!appendFormat(cursor, remaining,
                     "{\"v\":%u,\"m\":%u,\"ta\":%d,\"la\":%d,\"le\":%u,\"ae\":%d,"
                     "\"sl\":%d,\"sr\":%" PRIu32 ",\"ep\":[",
-                    output.version, static_cast<unsigned>(output.mode), flag(output.transport_active),
-                    flag(output.lifecycle_active), static_cast<unsigned>(output.lifecycle_event),
+                    output.version, static_cast<unsigned>(output.mode),
+                    flag(output.transport_active), flag(output.lifecycle_active),
+                    static_cast<unsigned>(output.lifecycle_event),
                     flag(output.automation_requested), flag(output.safety_latched),
                     output.safety_reason_code)) {
     return false;
@@ -101,9 +104,8 @@ std::size_t formatStage27SessionNdjson(char* buffer, std::size_t buffer_size,
   const int written = std::snprintf(
       buffer, buffer_size,
       "{\"t\":\"session\",\"schema\":\"growbox-log-v3\",\"out_v\":2,\"fw\":\"%s\","
-      "\"sid\":\"%08" PRIx32 "\",\"backend\":\"%s\",\"reset\":%" PRId32
-      ",\"u0\":%" PRIu64 ",\"x0\":%" PRIu64 ",\"rtc\":%d,\"sample_ms\":%" PRIu64
-      ",\"health_ms\":%" PRIu64 "}",
+      "\"sid\":\"%08" PRIx32 "\",\"backend\":\"%s\",\"reset\":%" PRId32 ",\"u0\":%" PRIu64
+      ",\"x0\":%" PRIu64 ",\"rtc\":%d,\"sample_ms\":%" PRIu64 ",\"health_ms\":%" PRIu64 "}",
       session.firmware_sha != nullptr ? session.firmware_sha : "unknown", session.session_id,
       storage::stage27StorageBackendName(session.backend), session.reset_reason,
       session.start_uptime_ms, session.start_unix_time_s, flag(session.rtc_trusted),
@@ -137,16 +139,18 @@ std::size_t formatStage27SampleNdjson(char* buffer, std::size_t buffer_size,
       static_cast<double>(snapshot.xiaomi_humidity_pct), snapshot.xiaomi_age_ms, output_json,
       snapshot.runtime_status, snapshot.runtime_mode, snapshot.rule_arbitration_interventions,
       snapshot.rule_safety_interventions, static_cast<double>(snapshot.applied_heater),
-      static_cast<double>(snapshot.applied_cooler), static_cast<double>(snapshot.applied_exhaust_fan),
+      static_cast<double>(snapshot.applied_cooler),
+      static_cast<double>(snapshot.applied_exhaust_fan),
       static_cast<double>(snapshot.applied_humidifier),
       static_cast<double>(snapshot.applied_dehumidifier),
       static_cast<double>(snapshot.applied_co2_doser));
   return checkedLength(buffer, buffer_size, written);
 }
 
-std::size_t formatStage27HealthNdjson(char* buffer, std::size_t buffer_size,
-                                      const Stage27TelemetrySnapshot& snapshot,
-                                      const storage::Stage27StorageStatus& storage_status) noexcept {
+std::size_t
+formatStage27HealthNdjson(char* buffer, std::size_t buffer_size,
+                          const Stage27TelemetrySnapshot& snapshot,
+                          const storage::Stage27StorageStatus& storage_status) noexcept {
   if (buffer == nullptr || buffer_size == 0U) {
     return 0U;
   }

@@ -66,9 +66,8 @@ int main() {
                 kRemoteSocket3Off);
 
   const auto before_invalid = sender.calls;
-  auto result =
-      transport.send(OutputCommand{growbox::app::output::kInvalidOutputEndpoint,
-                                   BinaryOutputState::On});
+  auto result = transport.send(
+      OutputCommand{growbox::app::output::kInvalidOutputEndpoint, BinaryOutputState::On});
   assert(result.status == TransportStatus::Failed);
   assert(result.error == TransportError::InvalidEndpoint);
   assert(sender.calls == before_invalid);
@@ -78,8 +77,8 @@ int main() {
   assert(result.error == TransportError::InvalidEndpoint);
   assert(sender.calls == before_invalid);
 
-  result = transport.send(OutputCommand{kRemoteSocket1ClimateEndpoint,
-                                        static_cast<BinaryOutputState>(0x7fU)});
+  result = transport.send(
+      OutputCommand{kRemoteSocket1ClimateEndpoint, static_cast<BinaryOutputState>(0x7fU)});
   assert(result.status == TransportStatus::Failed);
   assert(result.error == TransportError::InvalidCommand);
   assert(sender.calls == before_invalid);

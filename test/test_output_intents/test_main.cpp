@@ -19,10 +19,14 @@ int main() {
   ScheduleIntent schedule{};
   ManualIntent manual{};
   SafetyEnvelope safety{};
-  for (const auto& item : control.endpoints) assert(!endpointIntentActive(item));
-  for (const auto& item : schedule.endpoints) assert(!endpointIntentActive(item));
-  for (const auto& item : manual.endpoints) assert(!endpointIntentActive(item));
-  for (const auto& item : safety.endpoints) assert(!safetyConstraintActive(item));
+  for (const auto& item : control.endpoints)
+    assert(!endpointIntentActive(item));
+  for (const auto& item : schedule.endpoints)
+    assert(!endpointIntentActive(item));
+  for (const auto& item : manual.endpoints)
+    assert(!endpointIntentActive(item));
+  for (const auto& item : safety.endpoints)
+    assert(!safetyConstraintActive(item));
 
   EndpointIntent endpoint{};
   assert(!setEndpointIntent(endpoint, kInvalidOutputEndpoint, 1.0F));

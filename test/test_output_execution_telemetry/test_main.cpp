@@ -67,9 +67,9 @@ void testSnapshotKeepsIntentResolutionTransportAndPhysicalTruthSeparate() {
   resolution.endpoints[2].held_by_dwell = true;
 
   output::OutputExecutionTelemetrySnapshot snapshot{};
-  assert(output::buildOutputExecutionTelemetry(
-      cycle, resolution, store, true, true, output::OutputLifecycleEvent::Recovery, true,
-      snapshot));
+  assert(output::buildOutputExecutionTelemetry(cycle, resolution, store, true, true,
+                                               output::OutputLifecycleEvent::Recovery, true,
+                                               snapshot));
   assert(snapshot.version == 2U);
   assert(snapshot.mode == output::SupervisorMode::Automatic);
   assert(snapshot.transport_active);
@@ -120,9 +120,9 @@ void testFailedHistoricalAttemptIsNotCurrentAndDoesNotInventCommandOrPhysicalTru
   resolution.endpoints[0].endpoint = kLamp;
 
   output::OutputExecutionTelemetrySnapshot snapshot{};
-  assert(output::buildOutputExecutionTelemetry(
-      cycle, resolution, store, false, false, output::OutputLifecycleEvent::Fault, false,
-      snapshot));
+  assert(output::buildOutputExecutionTelemetry(cycle, resolution, store, false, false,
+                                               output::OutputLifecycleEvent::Fault, false,
+                                               snapshot));
   const auto& lamp = snapshot.endpoints[0];
   assert(lamp.attempt_known);
   assert(!lamp.attempted_this_cycle);

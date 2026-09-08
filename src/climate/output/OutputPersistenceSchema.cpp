@@ -8,7 +8,9 @@ namespace {
 
 class Writer final {
 public:
-  explicit Writer(OutputPersistenceBlob& blob) noexcept : blob_(blob) { blob_.bytes.fill(0U); }
+  explicit Writer(OutputPersistenceBlob& blob) noexcept : blob_(blob) {
+    blob_.bytes.fill(0U);
+  }
 
   bool putU8(std::uint8_t value) noexcept {
     if (offset_ >= blob_.bytes.size()) {
@@ -30,7 +32,9 @@ public:
            putU8(static_cast<std::uint8_t>((value >> 24U) & 0xFFU));
   }
 
-  std::size_t offset() const noexcept { return offset_; }
+  std::size_t offset() const noexcept {
+    return offset_;
+  }
 
 private:
   OutputPersistenceBlob& blob_;
@@ -55,8 +59,7 @@ public:
     if (!getU8(low) || !getU8(high)) {
       return false;
     }
-    value = static_cast<std::uint16_t>(low) |
-            (static_cast<std::uint16_t>(high) << 8U);
+    value = static_cast<std::uint16_t>(low) | (static_cast<std::uint16_t>(high) << 8U);
     return true;
   }
 
@@ -68,14 +71,14 @@ public:
     if (!getU8(b0) || !getU8(b1) || !getU8(b2) || !getU8(b3)) {
       return false;
     }
-    value = static_cast<std::uint32_t>(b0) |
-            (static_cast<std::uint32_t>(b1) << 8U) |
-            (static_cast<std::uint32_t>(b2) << 16U) |
-            (static_cast<std::uint32_t>(b3) << 24U);
+    value = static_cast<std::uint32_t>(b0) | (static_cast<std::uint32_t>(b1) << 8U) |
+            (static_cast<std::uint32_t>(b2) << 16U) | (static_cast<std::uint32_t>(b3) << 24U);
     return true;
   }
 
-  std::size_t offset() const noexcept { return offset_; }
+  std::size_t offset() const noexcept {
+    return offset_;
+  }
 
 private:
   const std::uint8_t* data_{nullptr};
@@ -176,11 +179,9 @@ OutputPersistenceStatus encodeOutputPersistence(const OutputPersistenceSnapshot&
   }
 
   Writer writer(blob);
-  if (!writer.putU32(kOutputPersistenceMagic) ||
-      !writer.putU16(kOutputPersistenceSchemaVersion) ||
+  if (!writer.putU32(kOutputPersistenceMagic) || !writer.putU16(kOutputPersistenceSchemaVersion) ||
       !writer.putU16(static_cast<std::uint16_t>(kOutputPersistenceEncodedSize)) ||
-      !writer.putU32(0U) ||
-      !writer.putU16(snapshot.policy.version) ||
+      !writer.putU32(0U) || !writer.putU16(snapshot.policy.version) ||
       !writer.putU8(snapshot.policy.count) ||
       !writer.putU8(snapshot.policy.max_transition_failures)) {
     blob.bytes.fill(0U);
@@ -195,9 +196,8 @@ OutputPersistenceStatus encodeOutputPersistence(const OutputPersistenceSnapshot&
       return OutputPersistenceStatus::InvalidSnapshot;
     }
     for (const auto& action : endpoint.lifecycle) {
-      if (!writer.putU8(static_cast<std::uint8_t>(action.action)) ||
-          !writer.putU8(action.order) || !writer.putU32(action.delay_ms) ||
-          !writer.putU8(action.retransmit ? 1U : 0U) ||
+      if (!writer.putU8(static_cast<std::uint8_t>(action.action)) || !writer.putU8(action.order) ||
+          !writer.putU32(action.delay_ms) || !writer.putU8(action.retransmit ? 1U : 0U) ||
           !writer.putU8(action.max_retries)) {
         blob.bytes.fill(0U);
         return OutputPersistenceStatus::InvalidSnapshot;
@@ -224,16 +224,15 @@ OutputPersistenceStatus encodeOutputPersistence(const OutputPersistenceSnapshot&
     return OutputPersistenceStatus::InvalidSnapshot;
   }
 
-  const std::uint32_t checksum =
-      crc32(blob.bytes.data() + kOutputPersistenceHeaderSize,
-            blob.bytes.size() - kOutputPersistenceHeaderSize);
+  const std::uint32_t checksum = crc32(blob.bytes.data() + kOutputPersistenceHeaderSize,
+                                       blob.bytes.size() - kOutputPersistenceHeaderSize);
   writeU32At(blob, 8U, checksum);
   return OutputPersistenceStatus::Ok;
 }
 
-OutputPersistenceDecodeResult decodeOutputPersistence(const std::uint8_t* data,
-                                                       std::size_t size,
-                                                       const OutputPolicyConfig& safe_defaults) noexcept {
+OutputPersistenceDecodeResult
+decodeOutputPersistence(const std::uint8_t* data, std::size_t size,
+                        const OutputPolicyConfig& safe_defaults) noexcept {
   if (validateOutputPolicyConfig(safe_defaults) != OutputPolicyConfigStatus::Ok) {
     return fallbackResult(OutputPersistenceStatus::InvalidSafeDefaults, safe_defaults);
   }
@@ -246,8 +245,8 @@ OutputPersistenceDecodeResult decodeOutputPersistence(const std::uint8_t* data,
   std::uint16_t schema_version = 0U;
   std::uint16_t encoded_size = 0U;
   std::uint32_t stored_crc = 0U;
-  if (!reader.getU32(magic) || !reader.getU16(schema_version) ||
-      !reader.getU16(encoded_size) || !reader.getU32(stored_crc)) {
+  if (!reader.getU32(magic) || !reader.getU16(schema_version) || !reader.getU16(encoded_size) ||
+      !reader.getU32(stored_crc)) {
     return fallbackResult(OutputPersistenceStatus::InvalidLength, safe_defaults);
   }
   if (magic != kOutputPersistenceMagic) {
@@ -302,8 +301,7 @@ OutputPersistenceDecodeResult decodeOutputPersistence(const std::uint8_t* data,
     auto& command = decoded.commands[index];
     std::uint8_t has_command = 0U;
     std::uint8_t state = 0U;
-    if (!reader.getU16(command.endpoint) || !reader.getU8(has_command) ||
-        !reader.getU8(state)) {
+    if (!reader.getU16(command.endpoint) || !reader.getU8(has_command) || !reader.getU8(state)) {
       return fallbackResult(OutputPersistenceStatus::InvalidLength, safe_defaults);
     }
     if (has_command > 1U) {

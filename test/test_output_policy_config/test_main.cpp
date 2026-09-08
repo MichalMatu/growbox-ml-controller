@@ -43,7 +43,8 @@ void testSafeDefaults() {
   }
   assert(lamp->lifecycle[output::outputLifecycleEventIndex(output::OutputLifecycleEvent::Boot)]
              .action == output::OutputPolicyAction::ForceOff);
-  assert(lamp->lifecycle[output::outputLifecycleEventIndex(output::OutputLifecycleEvent::AutomationOff)]
+  assert(lamp->lifecycle[output::outputLifecycleEventIndex(
+                             output::OutputLifecycleEvent::AutomationOff)]
              .action == output::OutputPolicyAction::ApplySchedule);
   assert(lamp->lifecycle[output::outputLifecycleEventIndex(output::OutputLifecycleEvent::Recovery)]
              .action == output::OutputPolicyAction::ForceOff);
@@ -59,15 +60,18 @@ void testIdentityAndRoleValidation() {
 
   config = defaults();
   config.endpoints[1].role = output::OutputEndpointRole::ExhaustFan;
-  assert(output::validateOutputPolicyConfig(config) == output::OutputPolicyConfigStatus::DuplicateRole);
+  assert(output::validateOutputPolicyConfig(config) ==
+         output::OutputPolicyConfigStatus::DuplicateRole);
 
   config = defaults();
   config.endpoints[0].endpoint = output::kInvalidOutputEndpoint;
-  assert(output::validateOutputPolicyConfig(config) == output::OutputPolicyConfigStatus::InvalidEndpoint);
+  assert(output::validateOutputPolicyConfig(config) ==
+         output::OutputPolicyConfigStatus::InvalidEndpoint);
 
   config = defaults();
   config.endpoints[0].role = static_cast<output::OutputEndpointRole>(99U);
-  assert(output::validateOutputPolicyConfig(config) == output::OutputPolicyConfigStatus::InvalidRole);
+  assert(output::validateOutputPolicyConfig(config) ==
+         output::OutputPolicyConfigStatus::InvalidRole);
 
   config = defaults();
   config.version = output::kOutputPolicySchemaVersion + 1U;
@@ -78,24 +82,30 @@ void testIdentityAndRoleValidation() {
 void testLifecycleValidation() {
   auto config = defaults();
   auto& fan_boot =
-      config.endpoints[0].lifecycle[output::outputLifecycleEventIndex(output::OutputLifecycleEvent::Boot)];
+      config.endpoints[0]
+          .lifecycle[output::outputLifecycleEventIndex(output::OutputLifecycleEvent::Boot)];
   fan_boot.action = output::OutputPolicyAction::ApplySchedule;
   assert(output::validateOutputPolicyConfig(config) ==
          output::OutputPolicyConfigStatus::ApplyScheduleOnNonScheduleRole);
 
   config = defaults();
   auto& lamp_boot =
-      config.endpoints[1].lifecycle[output::outputLifecycleEventIndex(output::OutputLifecycleEvent::Boot)];
+      config.endpoints[1]
+          .lifecycle[output::outputLifecycleEventIndex(output::OutputLifecycleEvent::Boot)];
   lamp_boot.action = static_cast<output::OutputPolicyAction>(99U);
-  assert(output::validateOutputPolicyConfig(config) == output::OutputPolicyConfigStatus::InvalidAction);
+  assert(output::validateOutputPolicyConfig(config) ==
+         output::OutputPolicyConfigStatus::InvalidAction);
 
   config = defaults();
-  config.endpoints[0].lifecycle[0].order = static_cast<std::uint8_t>(output::kOutputEndpointCapacity);
-  assert(output::validateOutputPolicyConfig(config) == output::OutputPolicyConfigStatus::InvalidOrder);
+  config.endpoints[0].lifecycle[0].order =
+      static_cast<std::uint8_t>(output::kOutputEndpointCapacity);
+  assert(output::validateOutputPolicyConfig(config) ==
+         output::OutputPolicyConfigStatus::InvalidOrder);
 
   config = defaults();
   config.endpoints[0].lifecycle[0].order = config.endpoints[1].lifecycle[0].order;
-  assert(output::validateOutputPolicyConfig(config) == output::OutputPolicyConfigStatus::DuplicateOrder);
+  assert(output::validateOutputPolicyConfig(config) ==
+         output::OutputPolicyConfigStatus::DuplicateOrder);
 
   config = defaults();
   config.endpoints[0].lifecycle[0].delay_ms = output::kMaxLifecycleDelayMs + 1U;
@@ -104,7 +114,8 @@ void testLifecycleValidation() {
 
   config = defaults();
   config.endpoints[0].lifecycle[0].max_retries = output::kMaxLifecycleRetries + 1U;
-  assert(output::validateOutputPolicyConfig(config) == output::OutputPolicyConfigStatus::RetryOutOfRange);
+  assert(output::validateOutputPolicyConfig(config) ==
+         output::OutputPolicyConfigStatus::RetryOutOfRange);
 
   config = defaults();
   config.max_transition_failures = output::kMaxLifecycleContainmentFailures + 1U;

@@ -55,7 +55,8 @@ void testSuccessfulCommandProjectsCommandTruthNotPhysicalObservation() {
   const auto resolution = resolutionFor(BinaryOutputState::On);
   ExecutionReport report{};
   assert(appendExecutionResult(
-      report, {on, {TransportStatus::Completed, TransportError::None}, PhysicalOutputState::Unknown}));
+      report,
+      {on, {TransportStatus::Completed, TransportError::None}, PhysicalOutputState::Unknown}));
 
   ExecutedControlProjection projection{};
   assert(buildExecutedControlProjection(resolution, report, store, projection));
@@ -80,7 +81,8 @@ void testFailedAttemptKeepsPreviousSuccessfulState() {
   const auto resolution = resolutionFor(BinaryOutputState::On);
   ExecutionReport report{};
   assert(appendExecutionResult(
-      report, {on, {TransportStatus::Failed, TransportError::IoFailure}, PhysicalOutputState::Unknown}));
+      report,
+      {on, {TransportStatus::Failed, TransportError::IoFailure}, PhysicalOutputState::Unknown}));
 
   ExecutedControlProjection projection{};
   assert(buildExecutedControlProjection(resolution, report, store, projection));
@@ -129,7 +131,8 @@ void testMalformedReportEndpointIsRejected() {
   auto wrong = command(BinaryOutputState::On);
   wrong.endpoint = kOtherEndpoint;
   assert(appendExecutionResult(
-      report, {wrong, {TransportStatus::Completed, TransportError::None}, PhysicalOutputState::Unknown}));
+      report,
+      {wrong, {TransportStatus::Completed, TransportError::None}, PhysicalOutputState::Unknown}));
 
   ExecutedControlProjection projection{};
   assert(!buildExecutedControlProjection(resolution, report, store, projection));

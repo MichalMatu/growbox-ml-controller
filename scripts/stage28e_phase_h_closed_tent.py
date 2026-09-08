@@ -24,7 +24,6 @@ import time
 import urllib.request
 from collections import deque
 from dataclasses import dataclass
-from typing import Optional
 
 import serial
 
@@ -35,9 +34,7 @@ SHELLY_PROOF_SAMPLES = 8
 STAGE28D_OUTPUT_MARKER = "stage28d_output "
 LAMP_SAFETY_REASON_SAFE = 0
 LAMP_SAFETY_REASON_TIMER_OFF = 1
-H_SAFETY_CLEAR_REASONS = frozenset(
-    (LAMP_SAFETY_REASON_SAFE, LAMP_SAFETY_REASON_TIMER_OFF)
-)
+H_SAFETY_CLEAR_REASONS = frozenset((LAMP_SAFETY_REASON_SAFE, LAMP_SAFETY_REASON_TIMER_OFF))
 
 
 @dataclass
@@ -88,11 +85,7 @@ def is_stage28d_output_line(line: str) -> bool:
 
 def is_h_safety_clear(safety_latched: int, force_fan: int, reason: int) -> bool:
     # TimerOff is normal schedule state, not a thermal safety condition.
-    return (
-        safety_latched == 0
-        and force_fan == 0
-        and reason in H_SAFETY_CLEAR_REASONS
-    )
+    return safety_latched == 0 and force_fan == 0 and reason in H_SAFETY_CLEAR_REASONS
 
 
 def absolute_humidity_g_m3(temp_c: float, rh_pct: float) -> float:
@@ -101,7 +94,7 @@ def absolute_humidity_g_m3(temp_c: float, rh_pct: float) -> float:
     return 216.7 * vapor_hpa / (273.15 + temp_c)
 
 
-def slope_per_min(samples: list[tuple[float, float]]) -> Optional[float]:
+def slope_per_min(samples: list[tuple[float, float]]) -> float | None:
     if len(samples) < 4:
         return None
     t0 = samples[0][0]
@@ -115,11 +108,11 @@ def slope_per_min(samples: list[tuple[float, float]]) -> Optional[float]:
     return sum((x - mean_x) * (y - mean_y) for x, y in zip(xs, ys)) / denom
 
 
-def fmt(value: Optional[float], digits: int = 3) -> str:
+def fmt(value: float | None, digits: int = 3) -> str:
     return "na" if value is None else f"{value:.{digits}f}"
 
 
-def parse_env(line: str, now: float) -> Optional[EnvSample]:
+def parse_env(line: str, now: float) -> EnvSample | None:
     if "soak_v=2" not in line:
         return None
     values = dict(KV_RE.findall(line))
@@ -144,7 +137,7 @@ def parse_env(line: str, now: float) -> Optional[EnvSample]:
         return None
 
 
-def output_state(values: dict[str, str]) -> Optional[dict[str, float | int]]:
+def output_state(values: dict[str, str]) -> dict[str, float | int] | None:
     try:
         return {
             "request": float(values.get("requested_fan", "0")),
@@ -171,15 +164,15 @@ def observe(args: argparse.Namespace) -> int:
     handle = open_serial(args.port)
     opened = time.monotonic()
 
-    runtime_baseline: Optional[dict[str, str]] = None
+    runtime_baseline: dict[str, str] | None = None
     bad_after: list[str] = []
     clean_candidates: deque[tuple[float, dict[str, str]]] = deque(maxlen=4)
-    off_baseline: Optional[tuple[float, dict[str, str]]] = None
-    first_request: Optional[tuple[float, dict[str, str]]] = None
-    transition: Optional[tuple[float, dict[str, str]]] = None
-    transition_time: Optional[float] = None
-    pre_load_state: Optional[tuple[int, int]] = None
-    proof_load_state: Optional[tuple[int, int]] = None
+    off_baseline: tuple[float, dict[str, str]] | None = None
+    first_request: tuple[float, dict[str, str]] | None = None
+    transition: tuple[float, dict[str, str]] | None = None
+    transition_time: float | None = None
+    pre_load_state: tuple[int, int] | None = None
+    proof_load_state: tuple[int, int] | None = None
     proof_power_sealed = False
     post_state_confirmations = 0
 
@@ -206,8 +199,7 @@ def observe(args: argparse.Namespace) -> int:
                 print(line, flush=True)
 
                 if runtime_baseline is not None and (
-                    "ESP-ROM:esp32s3-" in line
-                    or "stage28e_runtime_lifecycle entry_count=" in line
+                    "ESP-ROM:esp32s3-" in line or "stage28e_runtime_lifecycle entry_count=" in line
                 ):
                     bad_after.append(line)
 
@@ -367,10 +359,10 @@ def observe(args: argparse.Namespace) -> int:
                             )
                             initial_tx = int(request_values.get("tx", "0"))
                             if transitions > initial_transitions and tx_count > initial_tx:
-                                if (
-                                    values.get("lamp_on") != request_values.get("lamp_on")
-                                    or values.get("humidifier_on")
-                                    != request_values.get("humidifier_on")
+                                if values.get("lamp_on") != request_values.get(
+                                    "lamp_on"
+                                ) or values.get("humidifier_on") != request_values.get(
+                                    "humidifier_on"
                                 ):
                                     raise AssertionError(
                                         "Shelly fan proof confounded by lamp/humidifier state change"
@@ -399,9 +391,7 @@ def observe(args: argparse.Namespace) -> int:
                 on, power, voltage, _ = shelly_status()
                 if on is not None and power is not None:
                     if not on:
-                        raise AssertionError(
-                            "Shelly master output turned off during closed-tent H"
-                        )
+                        raise AssertionError("Shelly master output turned off during closed-tent H")
                     if transition_time is None:
                         shelly_before.append(power)
                     elif not proof_power_sealed:
@@ -450,9 +440,7 @@ def observe(args: argparse.Namespace) -> int:
         pre_median = statistics.median(before_power) if before_power else None
         post_median = statistics.median(after_power) if after_power else None
         power_delta = (
-            None
-            if pre_median is None or post_median is None
-            else post_median - pre_median
+            None if pre_median is None or post_median is None else post_median - pre_median
         )
         assert pre_median is not None, "no Shelly evidence before fan transition"
         assert power_delta is not None
@@ -465,26 +453,18 @@ def observe(args: argparse.Namespace) -> int:
 
         request_time = first_request[0]
         pre_env = [
-            sample
-            for sample in env_samples
-            if request_time - 180.0 <= sample.t < request_time
+            sample for sample in env_samples if request_time - 180.0 <= sample.t < request_time
         ]
         post_env = [
             sample
             for sample in env_samples
-            if transition_time + 30.0
-            <= sample.t
-            <= transition_time + args.post_seconds
+            if transition_time + 30.0 <= sample.t <= transition_time + args.post_seconds
         ]
 
         pre_temp = slope_per_min([(s.t, s.tp_t) for s in pre_env])
         post_temp = slope_per_min([(s.t, s.tp_t) for s in post_env])
-        pre_ah = slope_per_min(
-            [(s.t, absolute_humidity_g_m3(s.tp_t, s.tp_rh)) for s in pre_env]
-        )
-        post_ah = slope_per_min(
-            [(s.t, absolute_humidity_g_m3(s.tp_t, s.tp_rh)) for s in post_env]
-        )
+        pre_ah = slope_per_min([(s.t, absolute_humidity_g_m3(s.tp_t, s.tp_rh)) for s in pre_env])
+        post_ah = slope_per_min([(s.t, absolute_humidity_g_m3(s.tp_t, s.tp_rh)) for s in post_env])
         pre_co2 = slope_per_min([(s.t, s.co2) for s in pre_env])
         post_co2 = slope_per_min([(s.t, s.co2) for s in post_env])
 
@@ -514,8 +494,7 @@ def observe(args: argparse.Namespace) -> int:
             flush=True,
         )
         print(
-            "STAGE28E_H_CLOSED_PHYSICAL_E2E_PASS "
-            f"closure_utc={args.closure_utc or 'unspecified'}",
+            f"STAGE28E_H_CLOSED_PHYSICAL_E2E_PASS closure_utc={args.closure_utc or 'unspecified'}",
             flush=True,
         )
         return 0

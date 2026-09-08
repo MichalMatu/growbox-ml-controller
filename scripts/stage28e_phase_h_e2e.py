@@ -68,8 +68,7 @@ def observe(args: argparse.Namespace) -> int:
                 print(line, flush=True)
 
                 if baseline is not None and (
-                    "ESP-ROM:esp32s3-" in line
-                    or "stage28e_runtime_lifecycle entry_count=" in line
+                    "ESP-ROM:esp32s3-" in line or "stage28e_runtime_lifecycle entry_count=" in line
                 ):
                     bad_after.append(line)
 
@@ -138,9 +137,7 @@ def observe(args: argparse.Namespace) -> int:
                         and applied >= 0.99
                         and tx_errors == 0
                     ):
-                        initial_transitions = int(
-                            first_request[1].get("arbiter_transitions", "0")
-                        )
+                        initial_transitions = int(first_request[1].get("arbiter_transitions", "0"))
                         initial_tx = int(first_request[1].get("tx", "0"))
                         if transitions > initial_transitions and tx_count > initial_tx:
                             transition = (now, values)
@@ -170,8 +167,12 @@ def observe(args: argparse.Namespace) -> int:
 
         assert baseline is not None, "no stabilized real-bounded baseline"
         assert not bad_after, ("post-baseline reset/lifecycle marker", bad_after[-3:])
-        assert first_request is not None, "natural requested_fan>=0.10 not observed in bounded window"
-        assert transition is not None, "AH request did not complete fan transition in bounded window"
+        assert first_request is not None, (
+            "natural requested_fan>=0.10 not observed in bounded window"
+        )
+        assert transition is not None, (
+            "AH request did not complete fan transition in bounded window"
+        )
 
         for _ in range(8):
             on, power = shelly_status()
@@ -189,10 +190,7 @@ def observe(args: argparse.Namespace) -> int:
             if raw:
                 line = raw.decode(errors="replace").strip()
                 print(line, flush=True)
-                if (
-                    "ESP-ROM:esp32s3-" in line
-                    or "stage28e_runtime_lifecycle entry_count=" in line
-                ):
+                if "ESP-ROM:esp32s3-" in line or "stage28e_runtime_lifecycle entry_count=" in line:
                     bad_after.append(line)
         assert not bad_after, ("post-transition reset/lifecycle marker", bad_after[-3:])
 
@@ -263,10 +261,9 @@ def recovery(args: argparse.Namespace) -> int:
                 print(text.strip(), flush=True)
 
         text = "".join(output)
-        assert (
-            "outputs=fake-locked" in text
-            or "Automatic output mode: fake-locked." in text
-        ), "recovery image not fake-locked"
+        assert "outputs=fake-locked" in text or "Automatic output mode: fake-locked." in text, (
+            "recovery image not fake-locked"
+        )
         assert "rf_ready=1" in text or "transport_ready=1" in text, "recovery RF unavailable"
         assert "manual RF TX blocked while automatic outputs are real-bounded" not in text
 
@@ -274,7 +271,9 @@ def recovery(args: argparse.Namespace) -> int:
             marker = f"manual_rf_tx device={device} state={state}"
             assert marker in text, marker
             line = text[text.index(marker) :].splitlines()[0]
-            assert "tx_queued=1" in line and "tx_started=1" in line and "tx_completed=1" in line, line
+            assert "tx_queued=1" in line and "tx_started=1" in line and "tx_completed=1" in line, (
+                line
+            )
 
         values: list[float] = []
         outputs: list[bool] = []

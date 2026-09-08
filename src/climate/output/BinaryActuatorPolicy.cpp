@@ -25,9 +25,9 @@ BinaryActuatorPolicy::sanitized(BinaryActuatorPolicyConfig config) noexcept {
   return config;
 }
 
-BinaryActuatorProposal BinaryActuatorPolicy::propose(
-    float requested_level, std::uint64_t monotonic_ms,
-    BinaryPolicyOverride override_mode) noexcept {
+BinaryActuatorProposal BinaryActuatorPolicy::propose(float requested_level,
+                                                     std::uint64_t monotonic_ms,
+                                                     BinaryPolicyOverride override_mode) noexcept {
   BinaryActuatorProposal proposal{};
   proposal.proposed_at_ms = monotonic_ms;
   proposal.generation = generation_;
@@ -84,8 +84,7 @@ BinaryActuatorProposal BinaryActuatorPolicy::propose(
 
 bool BinaryActuatorPolicy::commit(const BinaryActuatorProposal& proposal,
                                   bool command_completed) noexcept {
-  if (!proposal.command_required || proposal.held_by_dwell ||
-      proposal.generation != generation_) {
+  if (!proposal.command_required || proposal.held_by_dwell || proposal.generation != generation_) {
     return false;
   }
   if (!command_completed) {

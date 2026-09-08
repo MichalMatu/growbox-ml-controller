@@ -10,7 +10,7 @@ constexpr char kTag[] = "climate_stage27";
 } // namespace
 
 Stage28RfDiagnostics::Stage28RfDiagnostics(Stage28RfDiagnosticsConfig config,
-                                                 rf433::Rf433RmtLoopback& radio) noexcept
+                                           rf433::Rf433RmtLoopback& radio) noexcept
     : config_(config), radio_(radio) {}
 
 bool Stage28RfDiagnostics::begin(bool radio_ready) noexcept {
@@ -86,6 +86,5 @@ void Stage28RfDiagnostics::capturePassive() noexcept {
              symbol.level1);
   }
 }
-
 
 } // namespace growbox::app::climate_io::runtime

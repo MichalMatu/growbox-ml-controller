@@ -12,7 +12,9 @@ public:
   OutputSupervisorExecutor(OutputTransport& transport, OutputStateStore& state_store,
                            OutputSupervisorResolverConfig config) noexcept;
 
-  bool valid() const noexcept { return valid_; }
+  bool valid() const noexcept {
+    return valid_;
+  }
 
   // A transport failure is represented in ExecutionReport and does not make
   // this method fail. false is reserved for invalid supervisor contracts or

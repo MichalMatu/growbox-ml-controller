@@ -49,9 +49,10 @@ AirMoistureMetrics calculateAirMoistureMetrics(float temperature_c,
   return output;
 }
 
-VentilationGradientMetrics calculateVentilationGradients(
-    float inside_temperature_c, float inside_relative_humidity_pct,
-    float intake_temperature_c, float intake_relative_humidity_pct) noexcept {
+VentilationGradientMetrics
+calculateVentilationGradients(float inside_temperature_c, float inside_relative_humidity_pct,
+                              float intake_temperature_c,
+                              float intake_relative_humidity_pct) noexcept {
   VentilationGradientMetrics output{};
   const AirMoistureMetrics inside =
       calculateAirMoistureMetrics(inside_temperature_c, inside_relative_humidity_pct);

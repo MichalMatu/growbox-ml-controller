@@ -3,9 +3,8 @@
 namespace growbox::app::output {
 namespace {
 
-const EndpointIntent* findIntent(
-    const std::array<EndpointIntent, kOutputEndpointCapacity>& intents,
-    OutputEndpointId endpoint) noexcept {
+const EndpointIntent* findIntent(const std::array<EndpointIntent, kOutputEndpointCapacity>& intents,
+                                 OutputEndpointId endpoint) noexcept {
   for (const auto& candidate : intents) {
     if (endpointIntentActive(candidate) && candidate.endpoint == endpoint) {
       return &candidate;
@@ -24,9 +23,9 @@ const SafetyEndpointConstraint* findSafety(const SafetyEnvelope& safety,
   return nullptr;
 }
 
-OutputIntentTelemetry intentTelemetry(
-    const std::array<EndpointIntent, kOutputEndpointCapacity>& intents,
-    OutputEndpointId endpoint) noexcept {
+OutputIntentTelemetry
+intentTelemetry(const std::array<EndpointIntent, kOutputEndpointCapacity>& intents,
+                OutputEndpointId endpoint) noexcept {
   OutputIntentTelemetry result{};
   if (const auto* intent = findIntent(intents, endpoint)) {
     result.active = true;
@@ -39,10 +38,8 @@ OutputIntentTelemetry intentTelemetry(
 
 bool buildOutputExecutionTelemetry(const OutputSupervisorCycleInput& cycle,
                                    const OutputSupervisorResolution& resolution,
-                                   const OutputStateStore& state_store,
-                                   bool transport_active,
-                                   bool lifecycle_active,
-                                   OutputLifecycleEvent lifecycle_event,
+                                   const OutputStateStore& state_store, bool transport_active,
+                                   bool lifecycle_active, OutputLifecycleEvent lifecycle_event,
                                    bool automation_requested,
                                    OutputExecutionTelemetrySnapshot& output) noexcept {
   output = {};
@@ -91,7 +88,8 @@ bool buildOutputExecutionTelemetry(const OutputSupervisorCycleInput& cycle,
     endpoint.inhibited = resolved.inhibited;
 
     endpoint.attempt_known = state->has_attempt;
-    endpoint.attempted_this_cycle = state->has_attempt && state->last_attempt_ms == cycle.monotonic_ms;
+    endpoint.attempted_this_cycle =
+        state->has_attempt && state->last_attempt_ms == cycle.monotonic_ms;
     if (state->has_attempt) {
       endpoint.attempt_state = state->last_attempt.state;
       endpoint.attempt_source = state->last_attempt.source;

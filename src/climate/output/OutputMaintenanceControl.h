@@ -36,16 +36,19 @@ struct OutputMaintenanceReport {
 
 class OutputMaintenanceControl final {
 public:
-  OutputMaintenanceControl(const OutputPolicyConfig& policy,
-                           OutputSupervisorLifecycle& lifecycle,
+  OutputMaintenanceControl(const OutputPolicyConfig& policy, OutputSupervisorLifecycle& lifecycle,
                            OutputAutomationControl& automation_control,
                            OutputLifecycleExecutor& lifecycle_executor,
                            OutputStateStore& state_store,
                            OutputSupervisorResolverConfig resolver_config,
                            OutputTransport& raw_transport) noexcept;
 
-  bool valid() const noexcept { return valid_; }
-  SupervisorMode mode() const noexcept { return lifecycle_.mode(); }
+  bool valid() const noexcept {
+    return valid_;
+  }
+  SupervisorMode mode() const noexcept {
+    return lifecycle_.mode();
+  }
   bool transitionActive() const noexcept {
     return enter_pending_ || exit_pending_ || rearm_pending_ || raw_pending_ ||
            automation_control_.transitionActive() || lifecycle_executor_.active();
@@ -55,8 +58,7 @@ public:
   bool requestExit() noexcept;
   bool requestRaw(OutputEndpointRole role, BinaryOutputState state,
                   std::uint64_t monotonic_ms) noexcept;
-  OutputMaintenanceReport tick(std::uint64_t monotonic_ms,
-                               const SafetyEnvelope& safety) noexcept;
+  OutputMaintenanceReport tick(std::uint64_t monotonic_ms, const SafetyEnvelope& safety) noexcept;
   OutputMaintenanceReport report() const noexcept;
 
 private:

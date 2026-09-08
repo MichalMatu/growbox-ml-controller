@@ -50,8 +50,8 @@ ClimateSemanticOutputConfig makeClimateSemanticOutputConfig() noexcept {
   return makeClimateSemanticOutputConfig(makeOutputPolicyConfig());
 }
 
-ClimateSemanticOutputConfig makeClimateSemanticOutputConfig(
-    const OutputPolicyConfig& policy) noexcept {
+ClimateSemanticOutputConfig
+makeClimateSemanticOutputConfig(const OutputPolicyConfig& policy) noexcept {
   if (::growbox::app::output::validateOutputPolicyConfig(policy) != OutputPolicyConfigStatus::Ok) {
     return {};
   }
@@ -72,7 +72,7 @@ OutputBindingStatus validateOutputBindings(const ClimateSemanticOutputConfig& co
 }
 
 OutputBindingStatus validateOutputBindings(const ClimateSemanticOutputConfig& config,
-                                          const OutputPolicyConfig& policy) noexcept {
+                                           const OutputPolicyConfig& policy) noexcept {
   if (::growbox::app::output::validateOutputPolicyConfig(policy) != OutputPolicyConfigStatus::Ok) {
     return OutputBindingStatus::PolicyConfigInvalid;
   }
@@ -126,7 +126,8 @@ bool isScheduledLightEndpoint(ClimateEndpointId endpoint) noexcept {
   return isScheduledLightEndpoint(endpoint, makeOutputPolicyConfig());
 }
 
-bool isScheduledLightEndpoint(ClimateEndpointId endpoint, const OutputPolicyConfig& policy) noexcept {
+bool isScheduledLightEndpoint(ClimateEndpointId endpoint,
+                              const OutputPolicyConfig& policy) noexcept {
   if (::growbox::app::output::validateOutputPolicyConfig(policy) != OutputPolicyConfigStatus::Ok) {
     return false;
   }

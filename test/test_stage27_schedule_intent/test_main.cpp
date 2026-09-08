@@ -55,8 +55,7 @@ void testWarsawLightingBoundariesMatchExistingProfile() {
       1784145599ULL, // summer 21:59:59 local
       1784145600ULL, // summer 22:00:00 local
   };
-  constexpr std::array<float, 8U> kExpected{0.0F, 1.0F, 1.0F, 0.0F,
-                                            0.0F, 1.0F, 1.0F, 0.0F};
+  constexpr std::array<float, 8U> kExpected{0.0F, 1.0F, 1.0F, 0.0F, 0.0F, 1.0F, 1.0F, 0.0F};
 
   for (std::size_t i = 0U; i < kEpochs.size(); ++i) {
     ClimateScheduleConfigSnapshot profile{};

@@ -32,8 +32,7 @@ std::uint64_t arbiterUptimeMs() noexcept {
 void recordArbiterBreadcrumb(std::uint32_t instance_id, std::uint32_t construction_count,
                              std::uint32_t transition_count, std::uint32_t dwell_hold_count,
                              std::uint32_t safety_override_count,
-                             std::uint32_t continuity_fault_count,
-                             bool continuity_fault) noexcept {
+                             std::uint32_t continuity_fault_count, bool continuity_fault) noexcept {
   runtime::recordStage28eBreadcrumbArbiter(
       arbiterUptimeMs(), instance_id, construction_count, transition_count, dwell_hold_count,
       safety_override_count, continuity_fault_count, continuity_fault);
@@ -76,8 +75,8 @@ void Stage28dBinaryRoleArbiter::checkCounterContinuity() noexcept {
     counter_snapshot_initialized_ = true;
 #if defined(ESP_PLATFORM)
     recordArbiterBreadcrumb(instance_id_, constructionCount(), current.transitions,
-                            current.dwell_holds, current.safety_overrides,
-                            continuity_fault_count_, false);
+                            current.dwell_holds, current.safety_overrides, continuity_fault_count_,
+                            false);
 #endif
     return;
   }
@@ -110,8 +109,8 @@ void Stage28dBinaryRoleArbiter::checkCounterContinuity() noexcept {
   last_counter_snapshot_ = current;
 #if defined(ESP_PLATFORM)
   recordArbiterBreadcrumb(instance_id_, constructionCount(), current.transitions,
-                          current.dwell_holds, current.safety_overrides,
-                          continuity_fault_count_, continuity_fault);
+                          current.dwell_holds, current.safety_overrides, continuity_fault_count_,
+                          continuity_fault);
 #endif
 }
 
@@ -144,7 +143,7 @@ void Stage28dBinaryRoleArbiter::synchronizeSafeOff(std::uint64_t monotonic_ms) n
 }
 
 bool Stage28dBinaryRoleArbiter::apply(ClimateActuatorRole role, float level,
-                                     std::uint64_t monotonic_ms) noexcept {
+                                      std::uint64_t monotonic_ms) noexcept {
   checkCounterContinuity();
   if (role == ClimateActuatorRole::ExhaustFan) {
     return applyBinary(role, level, monotonic_ms, exhaust_policy_, safety_force_exhaust_);
@@ -156,7 +155,7 @@ bool Stage28dBinaryRoleArbiter::apply(ClimateActuatorRole role, float level,
 }
 
 float Stage28dBinaryRoleArbiter::appliedLevel(ClimateActuatorRole role,
-                                             float requested_level) const noexcept {
+                                              float requested_level) const noexcept {
   if (role == ClimateActuatorRole::ExhaustFan && exhaust_policy_.known()) {
     return exhaust_policy_.on() ? 1.0F : 0.0F;
   }
@@ -167,7 +166,7 @@ float Stage28dBinaryRoleArbiter::appliedLevel(ClimateActuatorRole role,
 }
 
 bool Stage28dBinaryRoleArbiter::forceSafeOff(ClimateActuatorRole role,
-                                            std::uint64_t monotonic_ms) noexcept {
+                                             std::uint64_t monotonic_ms) noexcept {
   checkCounterContinuity();
   if (role == ClimateActuatorRole::ExhaustFan) {
     return forceBinaryOff(role, monotonic_ms, exhaust_policy_);
@@ -178,9 +177,10 @@ bool Stage28dBinaryRoleArbiter::forceSafeOff(ClimateActuatorRole role,
   return downstream_.forceSafeOff(role, monotonic_ms);
 }
 
-bool Stage28dBinaryRoleArbiter::applyBinary(
-    ClimateActuatorRole role, float requested_level, std::uint64_t monotonic_ms,
-    ::growbox::app::output::BinaryActuatorPolicy& policy, bool force_on) noexcept {
+bool Stage28dBinaryRoleArbiter::applyBinary(ClimateActuatorRole role, float requested_level,
+                                            std::uint64_t monotonic_ms,
+                                            ::growbox::app::output::BinaryActuatorPolicy& policy,
+                                            bool force_on) noexcept {
   const auto override_mode = force_on ? ::growbox::app::output::BinaryPolicyOverride::ForceOn
                                       : ::growbox::app::output::BinaryPolicyOverride::None;
   const auto proposal = policy.propose(requested_level, monotonic_ms, override_mode);
@@ -204,8 +204,8 @@ bool Stage28dBinaryRoleArbiter::applyBinary(
 bool Stage28dBinaryRoleArbiter::forceBinaryOff(
     ClimateActuatorRole role, std::uint64_t monotonic_ms,
     ::growbox::app::output::BinaryActuatorPolicy& policy) noexcept {
-  const auto proposal = policy.propose(0.0F, monotonic_ms,
-                                       ::growbox::app::output::BinaryPolicyOverride::ForceOff);
+  const auto proposal =
+      policy.propose(0.0F, monotonic_ms, ::growbox::app::output::BinaryPolicyOverride::ForceOff);
   if (!downstream_.forceSafeOff(role, monotonic_ms)) {
     if (proposal.command_required) {
       (void)policy.commit(proposal, false);

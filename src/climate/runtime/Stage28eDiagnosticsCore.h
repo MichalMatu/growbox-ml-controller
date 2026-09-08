@@ -109,7 +109,8 @@ public:
     return index < levels_.size() ? levels_[index] : DiagnosticLogLevel::Error;
   }
 
-  constexpr bool enabled(DiagnosticLogModule module, DiagnosticLogLevel message_level) const noexcept {
+  constexpr bool enabled(DiagnosticLogModule module,
+                         DiagnosticLogLevel message_level) const noexcept {
     return static_cast<std::uint8_t>(message_level) <= static_cast<std::uint8_t>(level(module));
   }
 

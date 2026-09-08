@@ -45,8 +45,8 @@ output::OutputStateStore makeStore() {
   return store;
 }
 
-output::OutputSupervisorResolverConfig makeResolverConfig(output::BinaryActuatorPolicy& fan,
-                                                          output::BinaryActuatorPolicy& humidifier) {
+output::OutputSupervisorResolverConfig
+makeResolverConfig(output::BinaryActuatorPolicy& fan, output::BinaryActuatorPolicy& humidifier) {
   output::OutputSupervisorResolverConfig config{};
   config.endpoints[0] = {kFan, &fan};
   config.endpoints[1] = {kLamp, nullptr};
@@ -106,7 +106,8 @@ void testOrderedZeroDelayExecutesOneStepPerTick() {
 
 void testDelayedStepIsNotEarlyAcrossMonotonicWrap() {
   auto policy = makePolicy();
-  policy.endpoints[1].lifecycle[output::outputLifecycleEventIndex(output::OutputLifecycleEvent::Boot)]
+  policy.endpoints[1]
+      .lifecycle[output::outputLifecycleEventIndex(output::OutputLifecycleEvent::Boot)]
       .delay_ms = 20U;
   assert(output::validateOutputPolicyConfig(policy) == output::OutputPolicyConfigStatus::Ok);
   auto store = makeStore();
@@ -187,7 +188,8 @@ void testRetryExhaustionEntersBoundedFaultContainment() {
   ScriptedTransport transport;
   transport.scripted_count = 3U;
   for (std::size_t index = 0U; index < transport.scripted_count; ++index) {
-    transport.scripted[index] = {output::TransportStatus::Failed, output::TransportError::IoFailure};
+    transport.scripted[index] = {output::TransportStatus::Failed,
+                                 output::TransportError::IoFailure};
   }
   output::OutputLifecycleExecutor executor(policy, lifecycle, transport, store,
                                            makeResolverConfig(fan, humidifier));
@@ -210,7 +212,8 @@ void testRetryExhaustionEntersBoundedFaultContainment() {
 
 void testAutomationOffApplyScheduleUsesLifecycleCommandTruth() {
   auto policy = makePolicy();
-  const std::size_t off = output::outputLifecycleEventIndex(output::OutputLifecycleEvent::AutomationOff);
+  const std::size_t off =
+      output::outputLifecycleEventIndex(output::OutputLifecycleEvent::AutomationOff);
   noCommand(policy.endpoints[0].lifecycle[off], 1U);
   noCommand(policy.endpoints[2].lifecycle[off], 2U);
   assert(output::validateOutputPolicyConfig(policy) == output::OutputPolicyConfigStatus::Ok);
@@ -241,7 +244,8 @@ void testAutomationOffApplyScheduleUsesLifecycleCommandTruth() {
 
 void testRecoveryRestoreLastCommandRetransmitsWithoutPhysicalAssumption() {
   auto policy = makePolicy();
-  const std::size_t recovery = output::outputLifecycleEventIndex(output::OutputLifecycleEvent::Recovery);
+  const std::size_t recovery =
+      output::outputLifecycleEventIndex(output::OutputLifecycleEvent::Recovery);
   noCommand(policy.endpoints[1].lifecycle[recovery], 0U);
   policy.endpoints[0].lifecycle[recovery].action = output::OutputPolicyAction::RestoreLastCommand;
   policy.endpoints[0].lifecycle[recovery].order = 1U;

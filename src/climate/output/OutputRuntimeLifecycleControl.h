@@ -36,12 +36,18 @@ public:
   OutputRuntimeLifecycleControl(OutputSupervisorLifecycle& lifecycle,
                                 OutputLifecycleExecutor& executor) noexcept;
 
-  bool valid() const noexcept { return valid_; }
+  bool valid() const noexcept {
+    return valid_;
+  }
   bool transitionActive() const noexcept {
     return operation_ != OutputRuntimeLifecycleOperation::None;
   }
-  bool bootCompleted() const noexcept { return boot_completed_; }
-  OutputRuntimeLifecycleOperation operation() const noexcept { return operation_; }
+  bool bootCompleted() const noexcept {
+    return boot_completed_;
+  }
+  OutputRuntimeLifecycleOperation operation() const noexcept {
+    return operation_;
+  }
 
   bool beginBoot(std::uint64_t monotonic_ms, const ScheduleIntent& schedule) noexcept;
   bool requestRecovery(std::uint64_t monotonic_ms, const ScheduleIntent& schedule) noexcept;

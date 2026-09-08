@@ -4,19 +4,21 @@
 #include "climate/native/Ds3231ClockSource.h"
 #include "climate/native/Scd41InsideSource.h"
 #include "climate/runtime/Stage28RfDiagnostics.h"
-#include "climate/runtime/Stage28eDiagnosticsCore.h"
 #include "climate/runtime/Stage28ServiceConsoleCommand.h"
+#include "climate/runtime/Stage28eDiagnosticsCore.h"
 
 #include <array>
 #include <cstddef>
 #include <cstdint>
 
-namespace growbox::app::climate_io::storage { class Stage27TelemetryLogger; }
+namespace growbox::app::climate_io::storage {
+class Stage27TelemetryLogger;
+}
 namespace growbox::app::output {
 class OutputAutomationControl;
 class OutputManualControl;
 class OutputMaintenanceControl;
-}
+} // namespace growbox::app::output
 
 namespace growbox::app::climate_io::runtime {
 

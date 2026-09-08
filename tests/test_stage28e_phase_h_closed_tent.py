@@ -5,13 +5,14 @@ import sys
 import types
 from pathlib import Path
 
-
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "stage28e_phase_h_closed_tent.py"
 
 
 def load_observer():
     sys.modules.setdefault("serial", types.SimpleNamespace(Serial=object))
-    spec = importlib.util.spec_from_file_location("stage28e_phase_h_closed_tent_test_module", SCRIPT)
+    spec = importlib.util.spec_from_file_location(
+        "stage28e_phase_h_closed_tent_test_module", SCRIPT
+    )
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module

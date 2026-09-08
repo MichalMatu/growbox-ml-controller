@@ -17,10 +17,9 @@ OutputLifecycleExecutor::OutputLifecycleExecutor(
 }
 
 bool OutputLifecycleExecutor::validateComposition() const noexcept {
-  if (validateOutputPolicyConfig(policy_) != OutputPolicyConfigStatus::Ok ||
-      !lifecycle_.valid() || !state_store_.valid() ||
-      resolver_config_.count != policy_.count || resolver_config_.count == 0U ||
-      resolver_config_.count > kOutputEndpointCapacity) {
+  if (validateOutputPolicyConfig(policy_) != OutputPolicyConfigStatus::Ok || !lifecycle_.valid() ||
+      !state_store_.valid() || resolver_config_.count != policy_.count ||
+      resolver_config_.count == 0U || resolver_config_.count > kOutputEndpointCapacity) {
     return false;
   }
 
@@ -98,8 +97,7 @@ void OutputLifecycleExecutor::clearPlan() noexcept {
 }
 
 bool OutputLifecycleExecutor::buildStep(const OutputEndpointPolicy& endpoint,
-                                        OutputLifecycleEvent event,
-                                        std::uint64_t monotonic_ms,
+                                        OutputLifecycleEvent event, std::uint64_t monotonic_ms,
                                         const ScheduleIntent& schedule,
                                         PendingStep& step) noexcept {
   const std::size_t event_index = outputLifecycleEventIndex(event);
@@ -116,9 +114,8 @@ bool OutputLifecycleExecutor::buildStep(const OutputEndpointPolicy& endpoint,
   step.present = true;
   step.command.endpoint = endpoint.endpoint;
   step.command.source = OutputSource::Lifecycle;
-  step.command.reason = event == OutputLifecycleEvent::Fault
-                            ? OutputReason::FaultContainment
-                            : OutputReason::LifecyclePolicy;
+  step.command.reason = event == OutputLifecycleEvent::Fault ? OutputReason::FaultContainment
+                                                             : OutputReason::LifecyclePolicy;
   step.command.sequence = nextSequence();
   step.command.due_ms = monotonic_ms + static_cast<std::uint64_t>(action.delay_ms);
 
@@ -145,8 +142,7 @@ bool OutputLifecycleExecutor::buildStep(const OutputEndpointPolicy& endpoint,
   return false;
 }
 
-bool OutputLifecycleExecutor::buildPlan(OutputLifecycleEvent event,
-                                        std::uint64_t monotonic_ms,
+bool OutputLifecycleExecutor::buildPlan(OutputLifecycleEvent event, std::uint64_t monotonic_ms,
                                         const ScheduleIntent& schedule) noexcept {
   clearPlan();
   if (validateOutputPolicyConfig(policy_) != OutputPolicyConfigStatus::Ok) {
@@ -248,8 +244,8 @@ bool OutputLifecycleExecutor::start(const OutputLifecycleTransitionReport& trans
 
   schedule_snapshot_ = schedule;
   event_ = transition.policy_event;
-  containment_active_ = event_ == OutputLifecycleEvent::Fault &&
-                        lifecycle_.mode() == SupervisorMode::FaultLocked;
+  containment_active_ =
+      event_ == OutputLifecycleEvent::Fault && lifecycle_.mode() == SupervisorMode::FaultLocked;
   if (!buildPlan(event_, monotonic_ms, schedule_snapshot_)) {
     failClosed(OutputLifecycleExecutionStatus::InvalidPlan);
     return false;

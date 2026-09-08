@@ -59,8 +59,7 @@ void testFailedAndSuccessfulTransportRemainPhysicalUnknown() {
   assert(store.configure(kEndpoints, kEndpoints.size()));
 
   const auto first = command(2U, BinaryOutputState::On, 11U);
-  assert(store.recordAttempt(first, 500U,
-                             {TransportStatus::Failed, TransportError::IoFailure}));
+  assert(store.recordAttempt(first, 500U, {TransportStatus::Failed, TransportError::IoFailure}));
   const auto* failed = store.find(2U);
   assert(failed != nullptr && failed->has_attempt);
   assert(failed->last_attempt.sequence == 11U);
@@ -71,8 +70,7 @@ void testFailedAndSuccessfulTransportRemainPhysicalUnknown() {
   assert(failed->physical.state == PhysicalOutputState::Unknown);
 
   const auto second = command(2U, BinaryOutputState::Off, 12U);
-  assert(store.recordAttempt(second, 700U,
-                             {TransportStatus::Completed, TransportError::None}));
+  assert(store.recordAttempt(second, 700U, {TransportStatus::Completed, TransportError::None}));
   const auto* completed = store.find(2U);
   assert(completed != nullptr && completed->has_successful_command);
   assert(completed->last_successful_command.sequence == 12U);
@@ -95,8 +93,7 @@ void testIndependentFeedbackIsSeparateFromTransport() {
   assert(observed->physical.sequence == 21U);
 
   const auto tx = command(3U, BinaryOutputState::On, 22U);
-  assert(store.recordAttempt(tx, 1'100U,
-                             {TransportStatus::Completed, TransportError::None}));
+  assert(store.recordAttempt(tx, 1'100U, {TransportStatus::Completed, TransportError::None}));
   const auto* after_tx = store.find(3U);
   assert(after_tx != nullptr && after_tx->has_successful_command);
   assert(after_tx->last_successful_command.state == BinaryOutputState::On);
@@ -140,8 +137,8 @@ void testInvalidConfigurationAndCommandsFailClosed() {
   auto invalid_state = command(1U, BinaryOutputState::On, 1U);
   invalid_state.state = static_cast<BinaryOutputState>(0x7fU);
   assert(!store.recordResolved(invalid_state));
-  assert(!store.recordAttempt(invalid_state, 1U,
-                              {TransportStatus::Completed, TransportError::None}));
+  assert(
+      !store.recordAttempt(invalid_state, 1U, {TransportStatus::Completed, TransportError::None}));
   assert(!store.recordPhysicalObservation(99U, PhysicalOutputState::On, 1U));
 }
 

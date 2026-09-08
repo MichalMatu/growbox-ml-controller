@@ -25,14 +25,14 @@ enum class OutputBindingStatus : std::uint8_t {
 
 ::growbox::app::output::OutputPolicyConfig makeOutputPolicyConfig() noexcept;
 ClimateSemanticOutputConfig makeClimateSemanticOutputConfig() noexcept;
-ClimateSemanticOutputConfig makeClimateSemanticOutputConfig(
-    const ::growbox::app::output::OutputPolicyConfig& policy) noexcept;
+ClimateSemanticOutputConfig
+makeClimateSemanticOutputConfig(const ::growbox::app::output::OutputPolicyConfig& policy) noexcept;
 OutputBindingStatus validateOutputBindings(const ClimateSemanticOutputConfig& config) noexcept;
-OutputBindingStatus validateOutputBindings(
-    const ClimateSemanticOutputConfig& config,
-    const ::growbox::app::output::OutputPolicyConfig& policy) noexcept;
+OutputBindingStatus
+validateOutputBindings(const ClimateSemanticOutputConfig& config,
+                       const ::growbox::app::output::OutputPolicyConfig& policy) noexcept;
 bool isScheduledLightEndpoint(ClimateEndpointId endpoint) noexcept;
-bool isScheduledLightEndpoint(
-    ClimateEndpointId endpoint, const ::growbox::app::output::OutputPolicyConfig& policy) noexcept;
+bool isScheduledLightEndpoint(ClimateEndpointId endpoint,
+                              const ::growbox::app::output::OutputPolicyConfig& policy) noexcept;
 
 } // namespace growbox::app::climate_io::stage28d

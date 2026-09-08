@@ -36,15 +36,19 @@ struct OutputLifecycleExecutionReport {
 
 class OutputLifecycleExecutor final {
 public:
-  OutputLifecycleExecutor(const OutputPolicyConfig& policy,
-                          OutputSupervisorLifecycle& lifecycle,
-                          OutputTransport& transport,
-                          OutputStateStore& state_store,
+  OutputLifecycleExecutor(const OutputPolicyConfig& policy, OutputSupervisorLifecycle& lifecycle,
+                          OutputTransport& transport, OutputStateStore& state_store,
                           OutputSupervisorResolverConfig resolver_config) noexcept;
 
-  bool valid() const noexcept { return valid_; }
-  bool active() const noexcept { return active_; }
-  OutputLifecycleExecutionStatus status() const noexcept { return status_; }
+  bool valid() const noexcept {
+    return valid_;
+  }
+  bool active() const noexcept {
+    return active_;
+  }
+  OutputLifecycleExecutionStatus status() const noexcept {
+    return status_;
+  }
 
   bool start(const OutputLifecycleTransitionReport& transition, std::uint64_t monotonic_ms,
              const ScheduleIntent& schedule) noexcept;

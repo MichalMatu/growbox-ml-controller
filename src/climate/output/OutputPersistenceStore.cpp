@@ -7,9 +7,10 @@ OutputPersistenceStore::OutputPersistenceStore(OutputPersistenceBackend& backend
     : backend_(backend), safe_defaults_(safe_defaults),
       valid_(validateOutputPolicyConfig(safe_defaults_) == OutputPolicyConfigStatus::Ok) {}
 
-OutputPersistenceLoadResult OutputPersistenceStore::safeFallback(
-    OutputPersistenceStoreStatus status, OutputPersistenceBackendStatus backend_status,
-    OutputPersistenceStatus codec_status) const noexcept {
+OutputPersistenceLoadResult
+OutputPersistenceStore::safeFallback(OutputPersistenceStoreStatus status,
+                                     OutputPersistenceBackendStatus backend_status,
+                                     OutputPersistenceStatus codec_status) const noexcept {
   OutputPersistenceLoadResult result{};
   result.status = status;
   result.backend_status = backend_status;

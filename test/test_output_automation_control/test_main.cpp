@@ -1,5 +1,5 @@
-#include "climate/output/OutputAutomationControl.h"
 #include "climate/output/BinaryActuatorPolicy.h"
+#include "climate/output/OutputAutomationControl.h"
 #include "climate/output/OutputSupervisorResolver.h"
 
 #include <array>
@@ -23,8 +23,7 @@ public:
 
   std::array<output::OutputCommand, 32U> sent{};
   std::size_t sent_count{0U};
-  output::TxResult next_result{output::TransportStatus::Completed,
-                               output::TransportError::None};
+  output::TxResult next_result{output::TransportStatus::Completed, output::TransportError::None};
 };
 
 output::OutputPolicyConfig basePolicy() {
@@ -51,8 +50,8 @@ output::OutputStateStore makeStore() {
   return store;
 }
 
-output::OutputSupervisorResolverConfig makeResolverConfig(output::BinaryActuatorPolicy& fan,
-                                                          output::BinaryActuatorPolicy& humidifier) {
+output::OutputSupervisorResolverConfig
+makeResolverConfig(output::BinaryActuatorPolicy& fan, output::BinaryActuatorPolicy& humidifier) {
   output::OutputSupervisorResolverConfig config{};
   config.endpoints[0] = {kLamp, nullptr};
   config.endpoints[1] = {kFan, &fan};
@@ -106,7 +105,8 @@ void testAllAutomationOffActionsExecuteThroughHighLevelRequest() {
   for (const auto action_kind : actions) {
     auto policy = basePolicy();
     makeAutomationOffNoCommand(policy);
-    const auto event = output::outputLifecycleEventIndex(output::OutputLifecycleEvent::AutomationOff);
+    const auto event =
+        output::outputLifecycleEventIndex(output::OutputLifecycleEvent::AutomationOff);
     output::OutputEndpointPolicy* target = nullptr;
     for (std::size_t index = 0U; index < policy.count; ++index) {
       if ((action_kind == output::OutputPolicyAction::ApplySchedule &&
@@ -131,9 +131,8 @@ void testAllAutomationOffActionsExecuteThroughHighLevelRequest() {
       output::OutputCommand previous{};
       previous.endpoint = kFan;
       previous.state = output::BinaryOutputState::On;
-      assert(store.recordAttempt(previous, 50U,
-                                 {output::TransportStatus::Completed,
-                                  output::TransportError::None}));
+      assert(store.recordAttempt(
+          previous, 50U, {output::TransportStatus::Completed, output::TransportError::None}));
     }
     output::BinaryActuatorPolicy fan;
     output::BinaryActuatorPolicy humidifier;
