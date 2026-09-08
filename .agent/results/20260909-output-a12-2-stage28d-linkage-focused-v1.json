@@ -1,0 +1,88 @@
+{
+  "id": "20260909-output-a12-2-stage28d-linkage-focused-v1",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "started_at": "2026-09-08T22:57:34.548417+00:00",
+  "command_timeout": 900,
+  "edits": {},
+  "commands": [
+    {
+      "command": "git fetch -q origin mvp/environment-controller && test \"$(git rev-parse HEAD)\" = \"b5e03a5e73d42579e2cce47f74f9071472981827\" && test \"$(git rev-parse FETCH_HEAD)\" = \"b5e03a5e73d42579e2cce47f74f9071472981827\" && test -z \"$(git status --porcelain)\"",
+      "exit_code": 0,
+      "output": "",
+      "elapsed_seconds": 0.838,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 4.41,
+      "output_policy": "stream",
+      "captured_output_chars": 0,
+      "output_truncated": false,
+      "current_rss_mb": 4.41,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 2,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "bash -n scripts/quality_gate_push.sh && .venv/bin/pre-commit run --files scripts/quality_gate_push.sh && ${CXX:-c++} -std=c++17 -Wall -Wextra -Wpedantic -Isrc -Ilib/environment_control/src test/test_stage28d_rf_output_endpoint/test_main.cpp src/climate/Stage28dRfOutputEndpoint.cpp src/climate/Stage28dOutputBindings.cpp src/climate/ClimateSemanticOutput.cpp src/climate/output/OutputPolicyConfig.cpp src/climate/output/OutputStateStore.cpp src/climate/rf433/ClimateRf433EndpointRegistry.cpp -o /tmp/stage28d_rf_output_endpoint_tests && /tmp/stage28d_rf_output_endpoint_tests && git diff --check && echo A12_2_STAGE28D_LINKAGE_FOCUSED_PASS sha=b5e03a5e73d42579e2cce47f74f9071472981827 hardware_started=0",
+      "exit_code": 0,
+      "output": "trim trailing whitespace.................................................Passed\nfix end of files.........................................................Passed\ncheck for merge conflicts................................................Passed\ncheck yaml...........................................(no files to check)Skipped\ncheck json...........................................(no files to check)Skipped\ndetect private key.......................................................Passed\nruff.................................................(no files to check)Skipped\nruff-format..........................................(no files to check)Skipped\nclang-format.........................................(no files to check)Skipped\nenvironment schema (--check).........................(no files to check)Skipped\nA12_2_STAGE28D_LINKAGE_FOCUSED_PASS sha=b5e03a5e73d42579e2cce47f74f9071472981827 hardware_started=0\n",
+      "elapsed_seconds": 2.845,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 78.62,
+      "output_policy": "stream",
+      "captured_output_chars": 900,
+      "output_truncated": false,
+      "current_rss_mb": 78.62,
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 2,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 2,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.838
+    },
+    {
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 2,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 2.845
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.084
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.072
+  },
+  "finished_at": "2026-09-08T22:57:40.116153+00:00",
+  "task_digest": "08b272fd36ac341348d121bd9eade0879961c8c6f193136d5cb1f0064ab50dc9",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "attempt_id": "d01d3055e8dc24cb4fc14a2f",
+  "daemon_version": "4.18.19"
+}
