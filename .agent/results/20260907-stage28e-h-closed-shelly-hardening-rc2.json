@@ -1,9 +1,0 @@
-{
-  "id": "20260907-stage28e-h-closed-shelly-hardening-rc2",
-  "status": "failed",
-  "failure_reason": "invalid_task_file",
-  "started_at": null,
-  "finished_at": "2026-09-07T13:41:22.100920+00:00",
-  "daemon_version": "4.18.13",
-  "error": "JSONDecodeError: Invalid control character at: line 14 column 5877 (char 6614)"
-}
