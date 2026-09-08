@@ -1,6 +1,5 @@
 #include "climate/runtime/Stage27RuntimeAdapters.h"
 
-#include "climate/runtime/EuropeWarsawTime.h"
 #include "climate/runtime/Stage27ScheduleProfile.h"
 
 namespace growbox::app::climate_io::runtime {
@@ -48,16 +47,7 @@ bool Stage27NearbySource::sample(std::uint64_t monotonic_ms,
 
 bool FixedStage27ScheduleConfigSource::resolve(std::uint64_t, const ClimateWallClockSnapshot& clock,
                                                ClimateScheduleConfigSnapshot& output) noexcept {
-  if (!clock.valid) {
-    return false;
-  }
-
-  EuropeWarsawLocalTime local{};
-  if (!resolveEuropeWarsawLocalTime(clock.unix_time_s, local)) {
-    return false;
-  }
-
-  return buildMintScheduleProfile(local.hour, output);
+  return resolveMintScheduleProfile(clock, output);
 }
 
 ::growbox::climate::ClimateRuntimeConfig defaultRuntimeConfig() noexcept {

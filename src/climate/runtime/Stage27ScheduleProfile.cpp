@@ -1,5 +1,7 @@
 #include "climate/runtime/Stage27ScheduleProfile.h"
 
+#include "climate/runtime/EuropeWarsawTime.h"
+
 namespace growbox::app::climate_io::runtime {
 
 bool buildMintScheduleProfile(std::uint8_t local_hour,
@@ -27,6 +29,20 @@ bool buildMintScheduleProfile(std::uint8_t local_hour,
   output.targets.co2_ppm = 0.0F;
   output.schedule.light_level = day ? 1.0F : 0.0F;
   return true;
+}
+
+bool resolveMintScheduleProfile(const ClimateWallClockSnapshot& clock,
+                                ClimateScheduleConfigSnapshot& output) noexcept {
+  if (!clock.valid) {
+    return false;
+  }
+
+  EuropeWarsawLocalTime local{};
+  if (!resolveEuropeWarsawLocalTime(clock.unix_time_s, local)) {
+    return false;
+  }
+
+  return buildMintScheduleProfile(local.hour, output);
 }
 
 } // namespace growbox::app::climate_io::runtime

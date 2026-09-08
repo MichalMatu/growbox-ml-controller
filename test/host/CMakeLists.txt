@@ -286,6 +286,7 @@ add_executable(
   stage27_schedule_profile_tests
   "${PROJECT_ROOT}/test/test_stage27_schedule_profile/test_main.cpp"
   "${PROJECT_ROOT}/src/climate/runtime/Stage27ScheduleProfile.cpp"
+  "${PROJECT_ROOT}/src/climate/runtime/EuropeWarsawTime.cpp"
 )
 target_include_directories(
   stage27_schedule_profile_tests
@@ -295,6 +296,22 @@ target_include_directories(
 )
 target_compile_features(stage27_schedule_profile_tests PRIVATE cxx_std_17)
 target_compile_options(stage27_schedule_profile_tests PRIVATE -Wall -Wextra -Wpedantic)
+
+add_executable(
+  stage27_schedule_intent_tests
+  "${PROJECT_ROOT}/test/test_stage27_schedule_intent/test_main.cpp"
+  "${PROJECT_ROOT}/src/climate/runtime/Stage27ScheduleIntentAdapter.cpp"
+  "${PROJECT_ROOT}/src/climate/runtime/Stage27ScheduleProfile.cpp"
+  "${PROJECT_ROOT}/src/climate/runtime/EuropeWarsawTime.cpp"
+)
+target_include_directories(
+  stage27_schedule_intent_tests
+  PRIVATE
+    "${PROJECT_ROOT}/src"
+    "${PROJECT_ROOT}/lib/environment_control/src"
+)
+target_compile_features(stage27_schedule_intent_tests PRIVATE cxx_std_17)
+target_compile_options(stage27_schedule_intent_tests PRIVATE -Wall -Wextra -Wpedantic)
 
 add_executable(
   tp357_decoder_tests
@@ -424,6 +441,7 @@ add_test(NAME stage28d_lamp_safety_tests COMMAND stage28d_lamp_safety_tests)
 add_test(NAME climate_observability_metrics_tests COMMAND climate_observability_metrics_tests)
 add_test(NAME europe_warsaw_time_tests COMMAND europe_warsaw_time_tests)
 add_test(NAME stage27_schedule_profile_tests COMMAND stage27_schedule_profile_tests)
+add_test(NAME stage27_schedule_intent_tests COMMAND stage27_schedule_intent_tests)
 add_test(NAME tp357_decoder_tests COMMAND tp357_decoder_tests)
 add_test(NAME stage27_telemetry_tests COMMAND stage27_telemetry_tests)
 add_test(NAME ble_climate_state_tests COMMAND ble_climate_state_tests)
