@@ -1,6 +1,7 @@
 #pragma once
 
 #include "climate/ClimateIoAdapters.h"
+#include "climate/output/OutputTypes.h"
 
 #include <array>
 #include <cstddef>
@@ -9,10 +10,10 @@
 
 namespace growbox::app::climate_io {
 
-using ClimateEndpointId = std::uint16_t;
+using ClimateEndpointId = ::growbox::app::output::OutputEndpointId;
 inline constexpr std::size_t kClimateActuatorRoleCount = 6U;
 inline constexpr ClimateEndpointId kUnmappedClimateEndpoint =
-    std::numeric_limits<ClimateEndpointId>::max();
+    ::growbox::app::output::kInvalidOutputEndpoint;
 
 struct ClimateRoleEndpointMapping {
   bool enabled = false;

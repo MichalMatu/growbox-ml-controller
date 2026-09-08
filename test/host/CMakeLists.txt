@@ -185,6 +185,19 @@ target_compile_features(climate_composite_input_tests PRIVATE cxx_std_17)
 target_compile_options(climate_composite_input_tests PRIVATE -Wall -Wextra -Wpedantic)
 
 add_executable(
+  output_types_tests
+  "${PROJECT_ROOT}/test/test_output_types/test_main.cpp"
+)
+target_include_directories(
+  output_types_tests
+  PRIVATE
+    "${PROJECT_ROOT}/src"
+    "${PROJECT_ROOT}/lib/environment_control/src"
+)
+target_compile_features(output_types_tests PRIVATE cxx_std_17)
+target_compile_options(output_types_tests PRIVATE -Wall -Wextra -Wpedantic)
+
+add_executable(
   climate_semantic_output_tests
   "${PROJECT_ROOT}/test/test_climate_semantic_output/test_main.cpp"
   "${PROJECT_ROOT}/src/climate/ClimateIoAdapters.cpp"
@@ -384,6 +397,7 @@ add_test(NAME climate_deterministic_fake_runtime_tests COMMAND climate_determini
 add_test(NAME climate_fault_soak_tests COMMAND climate_fault_soak_tests)
 add_test(NAME climate_diagnostics_tests COMMAND climate_diagnostics_tests)
 add_test(NAME climate_composite_input_tests COMMAND climate_composite_input_tests)
+add_test(NAME output_types_tests COMMAND output_types_tests)
 add_test(NAME climate_semantic_output_tests COMMAND climate_semantic_output_tests)
 add_test(NAME stage28d_binary_role_arbiter_tests COMMAND stage28d_binary_role_arbiter_tests)
 add_test(NAME stage28d_rf_output_endpoint_tests COMMAND stage28d_rf_output_endpoint_tests)
