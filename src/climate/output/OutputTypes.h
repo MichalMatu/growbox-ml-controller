@@ -48,6 +48,8 @@ enum class SupervisorMode : std::uint8_t {
 
 enum class TransportStatus : std::uint8_t { NotAttempted = 0U, Completed, Failed };
 
+enum class PhysicalOutputState : std::uint8_t { Unknown = 0U, Off, On };
+
 enum class TransportError : std::uint8_t {
   None = 0U,
   InvalidEndpoint,
