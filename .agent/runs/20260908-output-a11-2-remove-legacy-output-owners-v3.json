@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260908-output-a11-2-remove-legacy-output-owners-v3",
+  "task_digest": "3b5d1504660e8a80edc54476e5701b543d266fe1433aef154300c7fa9e8ba406",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-08T18:04:18.146996+00:00",
+  "attempt_id": "bb9eb693e147263edefdea9b",
+  "daemon_version": "4.18.19",
+  "daemon_pid": 6383,
+  "updated_at": "2026-09-08T18:04:18.147140+00:00",
+  "pid": 6383
+}
