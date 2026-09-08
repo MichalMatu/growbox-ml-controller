@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260909-output-a12-2-final-full-software-gate-v4",
+  "task_digest": "11179af8f33ffcbb8626d33a195a7b9e02065bb4a11bf5e2562bc60367cb777b",
+  "idle_timeout": 900,
+  "task_timeout": 10800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-08T22:49:10.147930+00:00",
+  "attempt_id": "97498133495ba952933ab4bb",
+  "daemon_version": "4.18.19",
+  "daemon_pid": 23203,
+  "updated_at": "2026-09-08T22:49:10.148086+00:00",
+  "pid": 23203
+}
