@@ -52,6 +52,7 @@ public:
   bool recordResolved(const OutputCommand& command) noexcept;
   bool recordAttempt(const OutputCommand& command, std::uint64_t attempted_ms,
                      TxResult result) noexcept;
+  bool restoreLastSuccessfulCommand(OutputEndpointId endpoint, BinaryOutputState state) noexcept;
   bool recordPhysicalObservation(OutputEndpointId endpoint, PhysicalOutputState state,
                                  std::uint64_t observed_ms,
                                  std::uint64_t sequence = 0U) noexcept;

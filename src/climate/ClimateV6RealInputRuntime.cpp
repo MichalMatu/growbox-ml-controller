@@ -10,6 +10,9 @@
 #include "climate/output/ClimateOutputSupervisorSink.h"
 #include "climate/output/OutputAutomationControl.h"
 #include "climate/output/OutputLifecycleExecutor.h"
+#include "climate/output/OutputNvsBackend.h"
+#include "climate/output/OutputPersistenceCoordinator.h"
+#include "climate/output/OutputPersistenceStore.h"
 #include "climate/output/OutputSupervisorLifecycle.h"
 #include "climate/output/OutputSupervisorExecutor.h"
 #include "climate/output/OutputSupervisorResolver.h"
@@ -386,9 +389,26 @@ private:
     ESP_LOGE(kTag, "Output state-store shadow configuration failed");
   }
 
-  const auto semantic_output_config = stage28d::makeClimateSemanticOutputConfig();
+  const output::OutputPolicyConfig safe_output_policy = stage28d::makeOutputPolicyConfig();
+  static output::OutputNvsBackend output_nvs_backend;
+  static output::OutputPersistenceStore output_persistence_store(output_nvs_backend,
+                                                                 stage28d::makeOutputPolicyConfig());
+  static output::OutputPersistenceCoordinator output_persistence(output_persistence_store);
+  const auto persistence_init = output_state_store_ready
+                                    ? output_persistence.initialize(output_state_store)
+                                    : output::OutputPersistenceCoordinatorInitResult{};
+  const output::OutputPolicyConfig output_policy =
+      output_persistence.valid() ? output_persistence.policy() : safe_output_policy;
+  if (!output_persistence.valid()) {
+    ESP_LOGW(kTag, "Output persistence unavailable status=%u store_status=%u; using safe policy",
+             static_cast<unsigned>(persistence_init.status),
+             static_cast<unsigned>(persistence_init.load.status));
+  }
+
+  const auto semantic_output_config = stage28d::makeClimateSemanticOutputConfig(output_policy);
   const bool output_bindings_valid =
-      stage28d::validateOutputBindings(semantic_output_config) == stage28d::OutputBindingStatus::Ok;
+      stage28d::validateOutputBindings(semantic_output_config, output_policy) ==
+      stage28d::OutputBindingStatus::Ok;
   stage28d::Stage28dRfOutputEndpoint physical_endpoint(
       {GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED != 0 && rf_ready && output_bindings_valid, 0.5F},
       rf_output_transport, output_state_store_ready ? &output_state_store : nullptr);
@@ -438,7 +458,6 @@ private:
   supervisor_config.count = 3U;
 
   RuntimeOutputTransport supervisor_transport(rf_output_transport, real_output_ready);
-  const output::OutputPolicyConfig output_policy = stage28d::makeOutputPolicyConfig();
   output::OutputSupervisorLifecycle output_lifecycle(output_policy);
   output::OutputLifecycleExecutor lifecycle_executor(output_policy, output_lifecycle,
                                                      supervisor_transport, output_state_store,
@@ -534,6 +553,7 @@ private:
     stage28d::LampSafetyDecision lamp_decision{};
 
     const std::uint64_t control_started_us = static_cast<std::uint64_t>(esp_timer_get_time());
+    const bool real_transport_active_this_cycle = real_output_ready;
     if (GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED != 0 && real_output_ready &&
         !thermal_test_finished_safe) {
       const auto point = thermal_test_sequence.sample(now_ms - thermal_test_started_ms);
@@ -652,6 +672,15 @@ private:
         fail_safe_output_driver.disableReal();
         real_output_ready = false;
         ESP_LOGE(kTag, "Supervisor output fault safe_off=%d outputs=fake-locked", safe_off);
+      }
+    }
+    if (output_persistence.valid()) {
+      const auto persistence_status = output_persistence.syncFromStateStore(
+          output_state_store, real_transport_active_this_cycle);
+      if (persistence_status == output::OutputPersistenceCoordinatorStatus::InvalidPolicy ||
+          persistence_status == output::OutputPersistenceCoordinatorStatus::InvalidStateStore) {
+        ESP_LOGE(kTag, "Output persistence synchronization invalid status=%u",
+                 static_cast<unsigned>(persistence_status));
       }
     }
     runtime_timing.control_cycle.observe(

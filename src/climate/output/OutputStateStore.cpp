@@ -145,6 +145,25 @@ bool OutputStateStore::recordAttempt(const OutputCommand& command, std::uint64_t
   return true;
 }
 
+bool OutputStateStore::restoreLastSuccessfulCommand(OutputEndpointId endpoint,
+                                                    BinaryOutputState state) noexcept {
+  if (state != BinaryOutputState::Off && state != BinaryOutputState::On) {
+    return false;
+  }
+  OutputStateEntry* entry = findMutable(endpoint);
+  if (entry == nullptr) {
+    return false;
+  }
+
+  OutputCommand restored{};
+  restored.endpoint = endpoint;
+  restored.state = state;
+  entry->last_successful_command = restored;
+  entry->last_successful_ms = 0U;
+  entry->has_successful_command = true;
+  return true;
+}
+
 bool OutputStateStore::recordPhysicalObservation(OutputEndpointId endpoint,
                                                  PhysicalOutputState state,
                                                  std::uint64_t observed_ms,

@@ -11,6 +11,7 @@ idf_component_register(
     "climate/output/OutputStateStore.cpp"
     "climate/output/OutputPolicyConfig.cpp"
     "climate/output/OutputPersistenceSchema.cpp"
+    "climate/output/OutputPersistenceCoordinator.cpp"
     "climate/output/OutputPersistenceStore.cpp"
     "climate/output/OutputNvsBackend.cpp"
     "climate/output/OutputSupervisorLifecycle.cpp"
