@@ -1,0 +1,9 @@
+{
+  "event": "invalid_task_rejected",
+  "status": "failed",
+  "failure_reason": "invalid_task_file",
+  "updated_at": "2026-09-08T22:36:27.608169+00:00",
+  "task_id": "20260909-output-a12-2-final-full-software-gate-v2",
+  "daemon_version": "4.18.19",
+  "pid": 13208
+}
