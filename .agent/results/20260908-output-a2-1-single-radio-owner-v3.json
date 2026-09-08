@@ -1,9 +1,0 @@
-{
-  "id": "20260908-output-a2-1-single-radio-owner-v3",
-  "status": "failed",
-  "failure_reason": "invalid_task_file",
-  "started_at": null,
-  "finished_at": "2026-09-08T09:39:18.212026+00:00",
-  "daemon_version": "4.18.18",
-  "error": "JSONDecodeError: Invalid control character at: line 14 column 867 (char 1412)"
-}
