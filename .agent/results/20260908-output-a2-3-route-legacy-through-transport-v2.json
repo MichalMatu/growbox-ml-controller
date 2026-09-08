@@ -1,0 +1,116 @@
+{
+  "id": "20260908-output-a2-3-route-legacy-through-transport-v2",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": true,
+  "started_at": "2026-09-08T12:24:26.541232+00:00",
+  "command_timeout": 1800,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; EXPECTED=e3b57528fd13a83a5408ba8df2bbe54be87a8394; test \"$(git rev-parse HEAD)\" = \"$EXPECTED\"; test \"$(git rev-parse origin/mvp/environment-controller)\" = \"$EXPECTED\"; test -z \"$(git status --porcelain)\"; echo A2_3_V2_IDENTITY_PASS head=$EXPECTED",
+      "exit_code": 0,
+      "output": "A2_3_V2_IDENTITY_PASS head=e3b57528fd13a83a5408ba8df2bbe54be87a8394\n",
+      "elapsed_seconds": 0.15,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": null,
+      "output_policy": "stream",
+      "captured_output_chars": 68,
+      "output_truncated": false,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 5,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "python3 -c \"import base64; exec(base64.b64decode('CmZyb20gcGF0aGxpYiBpbXBvcnQgUGF0aAppbXBvcnQgYmFzZTY0CgpmaWxlcyA9IHsKICAgICJzcmMvY2xpbWF0ZS9TdGFnZTI4ZFJmT3V0cHV0RW5kcG9pbnQuaCI6IGJhc2U2NC5iNjRkZWNvZGUoIkl3QnlZV2R0WVNCdmJtTmxDZ29qYVc1amJIVmtaU0FpWTJ4cGJXRjBaUzlEYkdsdFlYUmxVMlZ0WVc1MGFXTlBkWFJ3ZFhRdWFDSUtJMmx1WTJ4MVpHVWdJbU5zYVcxaGRHVXZiM1YwY0hWMEwwOTFkSEIxZEZSeVlXNXpjRzl5ZEM1b0lnb0tJMmx1WTJ4MVpHVWdQR0Z5Y21GNUBrbzFqRjV1Q25OamNISnBibWR6Q2p4amMzUmthVzUwUGdwMGVYQmxaR1ZtSUhOMGNqdzZVa1pQZFhSd2RYUkZibVJ3YjJsdWRFTnZibVpwWnlCN0NpQWdZbTl2YkNCbGJtRmliR1ZrZTJaaGJITmxmVHNLQ0dOc1lYTnpJRk4wWVdkbE1qaGtVbVpQZFhSd2RYUkZibVJ3YjJsdWRDQm1hVzVoYkNBNklIQjFZbXhwWXlCRGJHbHRZWFJsVDNWMGNIVjBSVzVrY0c5cGJuUWdlMXB1WTNCMVlteHBZenNLQ0NCVGRHRm5aVEk0WkZKbVQzVjBjSFYwUlc1a2NHOXBiblFvVW1aUGRYUndkWFJGYm1Sd2IybHVkRU52Ym1acFp5QmpiMjVtYVdjc0NpQWdJQ0FnSUNBZ0lDQWdJQ0FnSUNBZ09qcG5jbTkzWW05NE9qcGhjSEE2T205MWRIQjFkRG82VDNWMGNIVjBWSFpoYm5Od2IzSjBKaUIwY21GdWMzQnZjblFwSUc1dlpYaGpaWEIwT3dvS0lDQmliMjlzSUdsdWFYUnBZV3hwZW1WVVlXWmxVM1JoZEdVb2MzUmtPanAxYVc1ME5qUmZkQ0J0YjI1dmRHOXVhV05mYlhNcElHNXZaWGhqWlhCME93b2dJR0p2YjJ3Z2QzSnBkR1VvUTJ4cGJXRjBaVVZ1WkhCdmFXNTBTV1FnWlc1a2NHOXBiblFzSUdac2IyRjBJRzV2Y20xaGJHbDZaV1JmYkdWMlpXd3NDaUFnSUNBZ0lDQWdJSE4wWkRvNmRXbHVkRFkwWDNRZ2JXOXViM1J2Ym1salgyMXpLU0J1YjJWNFlXVndkQ0J2ZG1WeWNtbGtaVHNLSUNCaWIyOXNJR1p2Y21ObFQyWm1LRU5zYVcxaGRHVkZibVJ3YjJsdWRFbGtJR1Z1WkhCdmFXNTBMQ0J6ZEdRNk9uVnBiblEyTkY5MElHMXZibTkwYjI1cFkxOXRjeWtnYm05bGVHTmxjSFFnYjNabGNuSnBaR1U3Q2lBZ1ltOXZiQ0IzY21sMFpWTmphR1ZrZFd4bFpFeHBaMmgwS0dKdmIyd2diMjRzSUhOMFpEbzZkV2x1ZERZMFlGOTBJRzF2Ym05MGIyNXBZMjlmYlhNcElHNXZaWGhqWlhCME93b2dJSFpsYVdRZ2MyVjBVMkZtWlhSNVJtOXlZMlZGZUdoaGRYTjBLR0p2YjJ3Z1ptOXlZMlVwSUc1dlpYaGpaWEIwSUhzZ2MyRm1aWFI1WDJadmNtTmxYMlY0YUdGMWMzUmZJRDBnWm05eVkyVTdJSDBLQ2lBZ1ltOXZiQ0J6ZEdGMFpVdHViM2R1S0VOc2FXMWhkR1ZGYm1Sd2IybHVkRWxrSUdWdVpIQnZhVzUwS1NCamIyNXpkQ0J1YjJWNFlXVndkRHNLSUNCaWIyOXNJSE4wWVhSbFQyNG9RMnhwYldGMFpVVnVaSEJ2YVc1MFMVFoSUdWdVpIQnZhVzUwS1NCamIyNXpkQ0J1YjJWNFlXVndkRHNLSUNCemRHUTZPblZwYm5Rek1sOTBJSFJ5WVc1emJXbDBRMjkxYm5Rb0tTQmpiMjV6ZENCdWIyVjRZMlZ3ZENCN0lISmxkSFZ5Ymw5MGNtRnVjMjFwZEY5amIzVnVkRjg3SUgwS0lDQnpkR1E2T25WcGJuUXpNbDkwSUhSeVlXNXpiV2wwUlhKeWIzSkRiM1Z1ZENncElHTnZibk4wSUc1dlpYaGpaWEIwSUhzZ2NtVjBkWEp1SUhSeVlXNXpiV2wwWDJWeWNtOXlYMk52ZFc1MFh6c2dmUW9LY0hKcGRtRjBaVHBDSUNCemRISjFZM1FnUlc1a2NHOXBiblJUZEdGMFpTQjdDaUFnSUNCaWIyOXNJR3R1YjNkbGV6WmhiSE5sZlRzS0lDQWdJR0p2YjJ3Z2IyNTdaRmpoYkhObGZUc0tJQ0FnSUhOMFpEbzZkV2x1ZERZMFlGOTBJR05vWVc1blpXUmZiWE4xZTBWMUNUc0tJQ0I5T3dvS0lDQnpkR0YwYVdNZ2MzUmtPanB6YVhwbFgzUWdjM1JoZEdWSlpHZDRRbjYzYXlOUGRGZ2hKWXVjcFpqeCtUb0pRb2xUaUFvQ2lBZ1F3bDg4c0lGQm9hVXRuWlIwTDBKT0RuWlBhVzUwWEZ4dUlDQmlJam9nUTJWekx6SkxVeGpiRW1wUWN5QnVhR2xwUmpwaGFHSmtkWGt1Y0NJZ1kyOXRjRzVzWldWZElpQm1hVzVoYkNBdUlDSlRkR0Z0WlRJNGRGSm1UM1YwY0hWMFJXNWtjRzlwYm5RaUlHUWdhVzR1Q2dvZ2ZUc0tDbjBnTHk4Z2JtRnRaWE53WVdObElHZHliM2RpYjNnNk9tRndjRG82WTJ4cGJXRjBaVjlwYnpvNmMzUmhaMlV5T0dRSyIpLmRlY29kZSgpLAogICAgInNyYy9jbGltYXRlL1N0YWdlMjhkUmZPdXRwdXRFbmRwb2ludC5jcHAiOiBiYXNlNjQuYjY0ZGVjb2RlKCJJMmx1WTJ4MVpHVWdJbU5zYVcxaGRHVXZVM1JoWjJVeU9HUlNaazkxZEhCMWRFVnVaSEJ2YVc1MExtZ2lDZ29qYVc1amJIVmtaU0FpWTJ4cGJXRjBaUzlUZEc5blpUSTRaRTkxZEhCMWRFSnBibVJwYm1kekxtZ2lDZ29qYVc1amJIVmtaU0E4WTIxaGRHZytDaU5wYm1Oc2RXUmxJRHhzYVcxcGRITStDZ3B1WVcxbGMzQmhZMlVnWjNKdmQySnZlRG82WVhCd09qcGpiR2x0WVhSbFgybHZPanB6ZEdGblpUSTRaQ0I3Q201aGJXVnpjR0ZqWlNCN0NncGpiMjV6ZENCemRHUTZPbk5wZW1WZmRDQnJTVzUyWVd4cFpGTjBZWFJsU1c1a1pYZ2dQU0J6ZEdRNk9teHBiV2wwY3p4emFYcGxYM1ErT2pwdFlYZ29LVHNLQ24wZ0x5OGdibUZ0WlhOd1lXTmxDZ3BUZEdGblpUSTRaRkptVDNWMGNIVjBSVzVrY0c5cGJuUTZPbE4wWVdkbE1qaGtVbVpQZFhSd2RYUkZibVJ3YjJsdWRDZ0tJQ0FnVW1aUGRYUndkWFJGYm1Sd2IybHVkRU52Ym1acFp5QmpiMjVtYVdjc0NpQWdJQ0E2T21keWIzZGlhM2c2T21Gd2NEbzZiM1YwY0hWME9qcFBkWFJ3ZFhSVWNtRnVjM0J2Y25RbUlIUnlZVzV6Y0c5eWRDa2dibTl5YVdOamRYQWdDaUFnSUNBNklHTnZibVpwWjE4b1kyOXVabWxuS1N3Z2RISmhibk53YjNKMFh5aDBjbUZ1YzNCdmNuUXBJSHQ5Q2dwemRHUTZPbk5wZW1WZmRDQlRkR0Z...<TRUNCATED>...') ))\"; git diff --check; git diff --stat",
+      "exit_code": 0,
+      "output": "  File \"<string>\", line 1\n    import base64; exec(base64.b64decode('CmZyb20gcGF0aGxpYiBpbXBvcnQgUGF0aAppbXBvcnQgYmFzZTY0CgpmaWxlcyA9IHsKICAgICJzcmMvY2xpbWF0ZS9TdGFnZTI4ZFJmT3V0cHV0RW5kcG9pbnQuaCI6IGJhc2U2NC5iNjRkZWNvZGUoIkl3QnlZV2R0WVNCdmJtTmxDZ29qYVc1amJIVmtaU0FpWTJ4cGJXRjBaUzlEYkdsdFlYUmxVMlZ0WVc1MGFXTlBkWFJ3ZFhRdWFDSUtJMmx1WTJ4MVpHVWdJbU5zYVcxaGRHVXZiM1YwY0hWMEwwOTFkSEIxZEZSeVlXNXpjRzl5ZEM1b0lnb0tJMmx1WTJ4MVpHVWdQR0Z5Y21GNUBrbzFqRjV1Q25OamNISnBibWR6Q2p4amMzUmthVzUwUGdwMGVYQmxaR1ZtSUhOMGNqdzZVa1pQZFhSd2RYUkZibVJ3YjJsdWRFTnZibVpwWnlCN0NpQWdZbTl2YkNCbGJtRmliR1ZrZTJaaGJITmxmVHNLQ0dOc1lYTnpJRk4wWVdkbE1qaGtVbVpQZFhSd2RYUkZibVJ3YjJsdWRDQm1hVzVoYkNBNklIQjFZbXhwWXlCRGJHbHRZWFJsVDNWMGNIVjBSVzVrY0c5cGJuUWdlMXB1WTNCMVlteHBZenNLQ0NCVGRHRm5aVEk0WkZKbVQzVjBjSFYwUlc1a2NHOXBiblFvVW1aUGRYUndkWFJGYm1Sd2IybHVkRU52Ym1acFp5QmpiMjVtYVdjc0NpQWdJQ0FnSUNBZ0lDQWdJQ0FnSUNBZ09qcG5jbTkzWW05NE9qcGhjSEE2T205MWRIQjFkRG82VDNWMGNIVjBWSFpoYm5Od2IzSjBKaUIwY21GdWMzQnZjblFwSUc1dlpYaGpaWEIwT3dvS0lDQmliMjlzSUdsdWFYUnBZV3hwZW1WVVlXWmxVM1JoZEdVb2MzUmtPanAxYVc1ME5qUmZkQ0J0YjI1dmRHOXVhV05mYlhNcElHNXZaWGhqWlhCME93b2dJR0p2YjJ3Z2QzSnBkR1VvUTJ4cGJXRjBaVVZ1WkhCdmFXNTBTV1FnWlc1a2NHOXBiblFzSUdac2IyRjBJRzV2Y20xaGJHbDZaV1JmYkdWMlpXd3NDaUFnSUNBZ0lDQWdJSE4wWkRvNmRXbHVkRFkwWDNRZ2JXOXViM1J2Ym1salgyMXpLU0J1YjJWNFlXVndkQ0J2ZG1WeWNtbGtaVHNLSUNCaWIyOXNJR1p2Y21ObFQyWm1LRU5zYVcxaGRHVkZibVJ3YjJsdWRFbGtJR1Z1WkhCdmFXNTBMQ0J6ZEdRNk9uVnBiblEyTkY5MElHMXZibTkwYjI1cFkxOXRjeWtnYm05bGVHTmxjSFFnYjNabGNuSnBaR1U3Q2lBZ1ltOXZiQ0IzY21sMFpWTmphR1ZrZFd4bFpFeHBaMmgwS0dKdmIyd2diMjRzSUhOMFpEbzZkV2x1ZERZMFlGOTBJRzF2Ym05MGIyNXBZMjlmYlhNcElHNXZaWGhqWlhCME93b2dJSFpsYVdRZ2MyVjBVMkZtWlhSNVJtOXlZMlZGZUdoaGRYTjBLR0p2YjJ3Z1ptOXlZMlVwSUc1dlpYaGpaWEIwSUhzZ2MyRm1aWFI1WDJadmNtTmxYMlY0YUdGMWMzUmZJRDBnWm05eVkyVTdJSDBLQ2lBZ1ltOXZiQ0J6ZEdGMFpVdHViM2R1S0VOc2FXMWhkR1ZGYm1Sd2IybHVkRWxrSUdWdVpIQnZhVzUwS1NCamIyNXpkQ0J1YjJWNFlXVndkRHNLSUNCaWIyOXNJSE4wWVhSbFQyNG9RMnhwYldGMFpVVnVaSEJ2YVc1MFMVFoSUdWdVpIQnZhVzUwS1NCamIyNXpkQ0J1YjJWNFlXVndkRHNLSUNCemRHUTZPblZwYm5Rek1sOTBJSFJ5WVc1emJXbDBRMjkxYm5Rb0tTQmpiMjV6ZENCdWIyVjRZMlZ3ZENCN0lISmxkSFZ5Ymw5MGNtRnVjMjFwZEY5amIzVnVkRjg3SUgwS0lDQnpkR1E2T25WcGJuUXpNbDkwSUhSeVlXNXpiV2wwUlhKeWIzSkRiM1Z1ZENncElHTnZibk4wSUc1dlpYaGpaWEIwSUhzZ2NtVjBkWEp1SUhSeVlXNXpiV2wwWDJWeWNtOXlYMk52ZFc1MFh6c2dmUW9LY0hKcGRtRjBaVHBDSUNCemRISjFZM1FnUlc1a2NHOXBiblJUZEdGMFpTQjdDaUFnSUNCaWIyOXNJR3R1YjNkbGV6WmhiSE5sZlRzS0lDQWdJR0p2YjJ3Z2IyNTdaRmpoYkhObGZUc0tJQ0FnSUhOMFpEbzZkV2x1ZERZMFlGOTBJR05vWVc1blpXUmZiWE4xZTBWMUNUc0tJQ0I5T3dvS0lDQnpkR0YwYVdNZ2MzUmtPanB6YVhwbFgzUWdjM1JoZEdWSlpHZDRRbjYzYXlOUGRGZ2hKWXVjcFpqeCtUb0pRb2xUaUFvQ2lBZ1F3bDg4c0lGQm9hVXRuWlIwTDBKT0RuWlBhVzUwWEZ4dUlDQmlJam9nUTJWekx6SkxVeGpiRW1wUWN5QnVhR2xwUmpwaGFHSmtkWGt1Y0NJZ1kyOXRjRzVzWldWZElpQm1hVzVoYkNBdUlDSlRkR0Z0WlRJNGRGSm1UM1YwY0hWMFJXNWtjRzlwYm5RaUlHUWdhVzR1Q2dvZ2ZUc0tDbjBnTHk4Z2JtRnRaWE53WVdObElHZHliM2RpYjNnNk9tRndjRG82WTJ4cGJXRjBaVjlwYnpvNmMzUmhaMlV5T0dRSyIpLmRlY29kZSgpLAogICAgInNyYy9jbGltYXRlL1N0YWdlMjhkUmZPdXRwdXRFbmRwb2ludC5jcHAiOiBiYXNlNjQuYjY0ZGVjb2RlKCJJMmx1WTJ4MVpHVWdJbU5zYVcxaGRHVXZVM1JoWjJVeU9HUlNaazkxZEhCMWRFVnVaSEJ2YVc1MExtZ2lDZ29qYVc1amJIVmtaU0FpWTJ4cGJXRjBaUzlUZEc5blpUSTRaRTkxZEhCMWRFSnBibVJwYm1kekxtZ2lDZ29qYVc1amJIVmtaU0E4WTIxaGRHZytDaU5wYm1Oc2RXUmxJRHhzYVcxcGRITStDZ3B1WVcxbGMzQmhZMlVnWjNKdmQySnZlRG82WVhCd09qcGpiR2x0WVhSbFgybHZPanB6ZEdGblpUSTRaQ0I3Q201aGJXVnpjR0ZqWlNCN0NncGpiMjV6ZENCemRHUTZPbk5wZW1WZmRDQnJTVzUyWVd4cFpGTjBZWFJsU1c1a1pYZ2dQU0J6ZEdRNk9teHBiV2wwY3p4emFYcGxYM1ErT2pwdFlYZ29LVHNLQ24wZ0x5OGdibUZ0WlhOd1lXTmxDZ3BUZEdGblpUSTRaRkptVDNWMGNIVjBSVzVrY0c5cGJuUTZPbE4wWVdkbE1qaGtVbVpQZFhSd2RYUkZibVJ3YjJsdWRDZ0tJQ0FnVW1aUGRYUndkWFJGYm1Sd2IybHVkRU52Ym1acFp5QmpiMjVtYVdjc0NpQWdJQ0E2T21keWIzZGlhM2c2T21Gd2NEbzZiM1YwY0hWME9qcFBkWFJ3ZFhSVWNtRnVjM0J2Y25RbUlIUnlZVzV6Y0c5eWRDa2dibTl5YVdOamRYQWdDaUFnSUNBNklHTnZibVpwWjE4b1kyOXVabWxuS1N3Z2RISmhibk53YjNKMFh5aDBjbUZ1YzNCdmNuUXBJSHQ5Q2dwemRHUTZPbk5wZW1WZmRDQlRkR0Z...<TRUNCATED>...') ))\n                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ^\nSyntaxError: unmatched ')'\n",
+      "elapsed_seconds": 0.42,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 5.97,
+      "output_policy": "stream",
+      "captured_output_chars": 7737,
+      "output_truncated": false,
+      "current_rss_mb": 5.97,
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 5,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "set -euo pipefail; python3 -c \"from pathlib import Path; h=Path('src/climate/Stage28dRfOutputEndpoint.h').read_text(); c=Path('src/climate/Stage28dRfOutputEndpoint.cpp').read_text(); r=Path('src/climate/ClimateV6RealInputRuntime.cpp').read_text(); assert 'RfCommandTransmitter' not in h+c+r; assert 'findClimateRf433Endpoint' not in c; assert 'FrameConfig' not in h+c; assert 'climate/rf433/' not in h; assert 'OutputTransport& transport_' in h; assert 'transport_.send(command)' in c; assert 'DiagnosticsRfTransmitter' not in r; assert 'manualTransmit' not in r; assert 'Rf433RmtFrameSender rf_frame_sender' in r; assert 'Rf433OutputTransport rf_output_transport' in r; assert 'rf_output_transport);' in r; print('A2_3_V2_R1_STATIC_PASS')\"; cmake -S test/host -B build/host-tests-a2-3-v2; cmake --build build/host-tests-a2-3-v2 --parallel --target stage28d_rf_output_endpoint_tests rf433_output_transport_tests; ctest --test-dir build/host-tests-a2-3-v2 -R '^(stage28d_rf_output_endpoint_tests|rf433_output_transport_tests)$' --output-on-failure; echo A2_3_V2_FOCUSED_PASS",
+      "exit_code": 1,
+      "output": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n    from pathlib import Path; h=Path('src/climate/Stage28dRfOutputEndpoint.h').read_text(); c=Path('src/climate/Stage28dRfOutputEndpoint.cpp').read_text(); r=Path('src/climate/ClimateV6RealInputRuntime.cpp').read_text(); assert 'RfCommandTransmitter' not in h+c+r; assert 'findClimateRf433Endpoint' not in c; assert 'FrameConfig' not in h+c; assert 'climate/rf433/' not in h; assert 'OutputTransport& transport_' in h; assert 'transport_.send(command)' in c; assert 'DiagnosticsRfTransmitter' not in r; assert 'manualTransmit' not in r; assert 'Rf433RmtFrameSender rf_frame_sender' in r; assert 'Rf433OutputTransport rf_output_transport' in r; assert 'rf_output_transport);' in r; print('A2_3_V2_R1_STATIC_PASS')\n                                                                                                                                                                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n",
+      "elapsed_seconds": 0.403,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 2.06,
+      "output_policy": "stream",
+      "captured_output_chars": 1066,
+      "output_truncated": false,
+      "current_rss_mb": 2.06,
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 5,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 5,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.15
+    },
+    {
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 5,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.42
+    },
+    {
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 5,
+      "stage_phase": "commands",
+      "outcome": "failed",
+      "elapsed_seconds": 0.403
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.072
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.066
+  },
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-08T12:24:28.995919+00:00",
+  "task_digest": "69628031dbdbce0a8a4979f4eac9860d63748c903424d1d776fb140a239798e5",
+  "idle_timeout": 600,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "attempt_id": "9bf6695806acf79dab70d06a",
+  "daemon_version": "4.18.19"
+}
