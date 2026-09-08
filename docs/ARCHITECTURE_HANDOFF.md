@@ -1,184 +1,169 @@
 # Execution Architecture Handoff
 
-Updated: 2026-09-08
+Updated: 2026-09-09
 Repository: `MichalMatu/growbox-ml-controller`
 Work branch: `mvp/environment-controller`
 Control branch: `agent-control`
 Local Agent binding: `815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5`
-Architecture-pause entry baseline: `157806442161e88edd8038e532e9dff333a19efb`
 Authoritative design: `docs/OUTPUT_EXECUTION_ARCHITECTURE.md`
+Implementation plan: `docs/OUTPUT_EXECUTION_IMPLEMENTATION_PLAN.md`
 
-## Current project decision
+## Current state
 
-Stage28E A-G are complete. Phase H remains open, but all further H v8 testing is intentionally suspended. The immediate workstream is a code-architecture audit and refactor of output execution, safety integration, lifecycle policy, state ownership, and transport separation.
+The OutputSupervisor migration is software-stabilized through A12.2.
 
-The current session stops at documentation/handoff. It does not run tests, builds, flashing, serial access, RF transmission, or hardware qualification.
+Software-qualified executable SHA:
 
-The next chat must start with a repository audit before changing production behavior.
+`1c59f3cfa239abbfbae721247d01d65a39d4bdfc`
 
-## Why H is suspended
+Terminal full-gate evidence:
 
-The current code has multiple execution/safety concepts spread across the climate actuator chain, thermal safety, RF endpoint, service-console diagnostics, startup safe-state logic, and recovery tooling. Continuing H would qualify an architecture that the project has now explicitly decided to restructure.
+`20260909-output-a12-2-final-full-software-gate-v8`
 
-The goal is not to hide outputs behind a final ON/OFF gate. The goal is to create one modular execution authority where:
+The final full gate passed Python software tests, all 49 host C++ tests, lint/format/schema/pre-push checks, fake-output and real-output software-only firmware builds, RF-enabled main-stack evidence, and the output/RF ownership invariant. It recorded `main_stack=16384`, `runtime_frame=32`, `firmware_bin=771888`, and `hardware_started=0`.
 
-- the climate engine computes intent;
-- safety computes constraints;
-- lifecycle/output policy decides startup/disable/recovery/fault actions;
-- `OutputSupervisor` resolves the final plan;
-- transport only transmits;
-- state/persistence records command truth without pretending one-way RF is acknowledged.
+The current branch may contain later documentation/tooling commits. Those later commits do not replace the exact A12-qualified executable identity unless production source is changed and requalified.
 
-## Frozen H evidence
+## Required architecture invariant
 
-Do not delete or rewrite the existing H evidence. It remains useful historical qualification data.
+> `OutputSupervisor` is the only normal production owner allowed to execute configured physical outputs.
 
-Key frozen facts:
+The qualified architecture establishes:
+
+- climate, schedule and normal manual paths produce intents;
+- safety produces constraints/forced actions through `SafetyEnvelope` and does not transmit;
+- `OutputSupervisor` resolves normal execution;
+- `BinaryActuatorPolicy` owns binary hysteresis/dwell only;
+- `Rf433OutputTransport` performs transport only;
+- `OutputStateStore` records command truth without fabricating physical acknowledgement;
+- raw RF TX is a maintenance capability available only through explicit `MaintenanceLocked` handling;
+- the repository ownership guard must reject any new hidden configured-output writer.
+
+## Historical H evidence
+
+Do not delete or rewrite historical H evidence, but do not execute the old H v8 workflow.
+
+Historical facts retained for reference:
 
 - formal Phase G exit: `7ddb995d1f6cd190fa110f21f0d8dc0eabc61d26`;
-- old qualified production identity: `5a4830db9d10e8cb73d4c617b09122f0844ad899`;
-- TimerOff-aware observer commit: `45065a34ce276ac5cdb7ef8cf0a1ad8a4bae1b0d`;
-- H v8 software preflight: `20260908-stage28e-h-v8-preflight-v1` PASS on `231eed28f64bdbdc4238fd8bce128264027702f2`;
-- H v8 hardware run was never started;
-- last documented bounded hardware recovery/final verification left the board RF-disabled `fake-locked`;
-- tent remains closed;
-- correct Growbox serial port is `/dev/cu.usbserial-1130`;
-- `/dev/cu.usbserial-10` must never be touched.
+- old pre-architecture production identity: `5a4830db9d10e8cb73d4c617b09122f0844ad899`;
+- old TimerOff-aware observer commit: `45065a34ce276ac5cdb7ef8cf0a1ad8a4bae1b0d`;
+- old H v8 software preflight: `20260908-stage28e-h-v8-preflight-v1` PASS on `231eed28f64bdbdc4238fd8bce128264027702f2`;
+- old H v8 hardware execution never started.
 
-Once production C++ changes, the old H v8 preflight is no longer a qualification of the new firmware.
+Those identities and tools are historical only because they predate the OutputSupervisor architecture.
 
-## Read order in the next chat
+## A13.1 — new OutputSupervisor H qualification contract
 
-1. `AGENTS.md`
-2. `docs/ARCHITECTURE_HANDOFF.md`
-3. `docs/OUTPUT_EXECUTION_ARCHITECTURE.md`
-4. `docs/CURRENT_STATUS.md`
-5. `docs/CONTINUATION_PLAN.md`
-6. `docs/GUIDANCE.md`
-7. `docs/STAGE28E_PHASE_H_HANDOFF.md` for frozen H evidence
-8. `docs/STAGE28D_AH_ARBITER_HANDOFF.md` for prior arbiter context
-9. `docs/PROJECT_ROADMAP.md`
+A13.1 is the active task.
 
-Then fetch the fresh work-branch HEAD and fresh `agent-control:.agent/status/daemon.json`. Do not continue from remembered chat state alone.
+Create a new qualification plan/tool contract for the A12-qualified identity. It must not reuse the historical H v8 observer as-is.
 
-## First task in the next chat — read-only architecture audit
-
-Before proposing production patches, inspect the actual current source and produce an evidence-backed audit. At minimum trace:
-
-1. normal climate decision -> actuator -> endpoint -> RF call graph;
-2. all direct and indirect RF/output write entry points;
-3. every output-state cache and owner;
-4. thermal safety, fail-safe, startup, recovery, and fault paths;
-5. schedule/lamp path;
-6. service-console/manual RF path;
-7. endpoint-role mapping and configuration validation;
-8. existing settings/persistence mechanisms suitable for output policy;
-9. task/thread ownership and reentrancy assumptions;
-10. `reconcileApplied` / previous-applied semantics;
-11. current host tests tied to the driver chain;
-12. memory/stack consequences of moving ownership into one supervisor.
-
-Write the audit to:
-
-`docs/OUTPUT_EXECUTION_ARCHITECTURE_AUDIT.md`
-
-The audit may correct the design document where repository evidence disproves an assumption. It must distinguish observed facts from proposed architecture.
-
-## Target architecture
-
-The working target is:
+The normal transition proof must follow the new architecture:
 
 ```text
-ControlIntent + ScheduleIntent + ManualIntent
-                    |
-SafetyPolicyEngine -> SafetyEnvelope
-                    |
-                    v
-             OutputSupervisor
-          mode + policy + state
-                    |
-              OutputPlan
-                    |
-                    v
-             OutputTransport
-                    |
-              RF433 initially
+natural climate ControlIntent
+-> OutputSupervisor input/resolution
+-> BinaryActuatorPolicy eligibility
+-> OutputPlan command
+-> RF433OutputTransport TxResult
+-> independent Shelly aggregate-power support
+-> environmental response support
 ```
 
-Supporting components:
+The observer contract must consume telemetry v2 and distinguish:
 
-- `BinaryActuatorPolicy` for hysteresis/dwell;
-- versioned `OutputPolicyConfig`;
-- `OutputStateStore` with honest commanded-vs-physical semantics;
-- optional future `OutputFeedbackProvider`;
-- telemetry that distinguishes requested/resolved/commanded/observed state.
+- supervisor mode;
+- automation request state;
+- control/schedule/manual intent activity;
+- safety envelope and safety reason;
+- selected source/reason;
+- resolved command and dwell hold;
+- command attempted this cycle;
+- attempted command source/reason;
+- transport status/error;
+- last-commanded state;
+- physical observation state and whether it is independently supported.
 
-## Required invariant
+A valid normal-control qualification transition must prove at minimum:
 
-After migration, no normal production code outside the execution module may directly transmit a configured output command.
+1. exact production identity is `1c59f3cfa239abbfbae721247d01d65a39d4bdfc`;
+2. supervisor mode is `Automatic`;
+3. `MaintenanceLocked` is not active;
+4. the fan control intent is natural climate intent, not injected test/manual intent;
+5. no active hard-safety override caused the counted normal transition;
+6. the fan target becomes eligible through binary policy rather than bypassing dwell/hysteresis accounting;
+7. an OutputSupervisor-owned command attempt is observed for the fan endpoint;
+8. `TxResult` is `Completed` with no transport error;
+9. one-way RF TX is treated only as transport completion, not physical acknowledgement;
+10. independent Shelly total-power evidence is temporally compatible with the fan transition and is not confounded by lamp/humidifier state changes;
+11. post-transition environmental evidence is collected as supporting evidence;
+12. no unexpected transport errors occur during the bounded proof;
+13. recovery/final safe state is supervisor-owned.
 
-Safety is not a second output owner. It provides a non-bypassable envelope to the supervisor.
+A13.1 is documentation/tooling only. It must not open serial, flash, transmit RF, or touch hardware.
 
-The service console is not a second output owner. Normal output commands become supervisor requests. Any low-level transport diagnostic must be isolated behind an explicit maintenance guard.
+## A13.2 — software-only H preflight
 
-## Automation OFF semantics
+After A13.1 is committed, run a new software-only preflight against the exact A12-qualified executable identity and the new H tooling.
 
-Disabling automation does not have to stop the control engine. The preferred design keeps climate calculation running for observe-only telemetry while the supervisor ignores normal control intent.
+The preflight may:
 
-The disable transition executes configured per-output lifecycle actions. The policy must be able to specify, per endpoint, actions such as:
+- parse/replay committed telemetry fixtures;
+- exercise observer state transitions with synthetic records;
+- run focused Python/tool tests;
+- compile/build the exact qualified source identity if needed for identity evidence.
 
-- no command;
-- force OFF;
-- force ON;
-- apply schedule;
-- restore last command;
-- ordered/bounded delayed execution.
+It must not:
 
-Safety remains active while automation is disabled.
+- open serial;
+- probe USB;
+- flash;
+- transmit RF;
+- access Shelly or other physical hardware;
+- run the historical H v8 observer;
+- start physical qualification.
 
-## Test and hardware policy during architecture work
+The terminal result must include `hardware_started=0`.
 
-For the remainder of this session: tests are paused.
+## Mandatory stop after A13.2
 
-In the next chat:
+After A13.2 PASS, stop before hardware.
 
-- start with a read-only/code-reading audit;
-- do not run H v8;
-- do not flash or access hardware for the audit;
-- once architecture implementation starts, use focused host tests for each coherent change;
-- run one full software gate only after the architecture stabilizes;
-- do not resume physical H qualification until a new exact firmware identity and new qualification plan exist.
+Do not begin physical H until the operator explicitly authorizes it.
+
+Only after that explicit authorization may a future hardware task use:
+
+`/dev/cu.usbserial-1130`
+
+Never touch:
+
+`/dev/cu.usbserial-10`
+
+Any future hardware task must verify the correct port internally, explicitly reject the forbidden port, use `resources: []`, verify the exact qualified firmware identity, remain bounded, preserve all safety invariants, and restore/prove the defined safe final state.
+
+## Safety invariants
+
+- deterministic rule controller remains authoritative;
+- ML remains shadow/research-only;
+- thermal trip remains `>=28 C`;
+- thermal recovery remains `<=26 C` continuously for 10 minutes;
+- safety remains active while automation is disabled;
+- one-way RF never implies physical acknowledgement;
+- Shelly master remains ON during future bounded qualification;
+- no raw RF TX outside `MaintenanceLocked`;
+- no hidden output owner outside `OutputSupervisor`.
 
 ## Local Agent contract
 
-Every Local Agent task must include exactly:
+Every Local Agent task must contain exactly:
 
-`"agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5"`
+```json
+{
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "mvp/environment-controller",
+  "resources": []
+}
+```
 
-Use `resources: []` for every repository task, including builds/tests and any future hardware work. Verify the exact device/port inside a future hardware task.
-
-Do not declare named resources or `machine`.
-
-## Stop conditions for the architecture refactor
-
-Stop and reassess rather than patch around the problem if:
-
-- two production paths still own the same physical output;
-- safety must call transport directly to function;
-- transport must know global automation/safety policy;
-- persisted command state is being treated as physical acknowledgement;
-- a refactor silently changes AH thresholds or climate-control semantics;
-- a large rewrite prevents behavior comparison with the current implementation;
-- the architecture requires hardware testing before its software contracts can be verified.
-
-## Resume conditions for Phase H
-
-Do not resume H merely because the old observer is ready. Resume physical qualification only after:
-
-1. architecture audit is complete;
-2. migration is complete enough that one output owner invariant is true;
-3. focused tests cover supervisor mode, safety precedence, lifecycle policy, dwell behavior, transport failure, and persistence semantics;
-4. one full software gate passes;
-5. production firmware identity is recorded;
-6. the H test plan is reviewed against the new execution architecture;
-7. the operator explicitly authorizes hardware qualification.
+Do not declare named resources or `machine`. Verify exact SHA in-task whenever source identity matters and read terminal `.agent/results/<task-id>.json` before reporting PASS.
