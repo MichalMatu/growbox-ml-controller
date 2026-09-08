@@ -1,9 +1,0 @@
-{
-  "id": "20260908-resource-policy-empty-01-mvp-v1",
-  "status": "failed",
-  "failure_reason": "invalid_task_file",
-  "started_at": null,
-  "finished_at": "2026-09-07T22:41:32.560123+00:00",
-  "daemon_version": "4.18.13",
-  "error": "JSONDecodeError: Invalid \\escape: line 13 column 1401 (char 1738)"
-}
