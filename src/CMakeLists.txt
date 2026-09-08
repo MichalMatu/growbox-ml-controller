@@ -27,8 +27,6 @@ idf_component_register(
     "climate/output/ClimateOutputSupervisorSink.cpp"
     "climate/Stage28dOutputBindings.cpp"
     "climate/Stage28dLampSafety.cpp"
-    "climate/Stage28dBinaryRoleArbiter.cpp"
-    "climate/Stage28dRfOutputEndpoint.cpp"
     "climate/Stage28dThermalTestSequence.cpp"
     "climate/ClimateDeterministicFake.cpp"
     "climate/ClimateDiagnostics.cpp"

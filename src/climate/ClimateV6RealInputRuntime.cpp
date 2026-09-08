@@ -5,7 +5,6 @@
 #include "climate/ClimateSemanticOutput.h"
 #include "climate/Stage28dLampSafety.h"
 #include "climate/Stage28dOutputBindings.h"
-#include "climate/Stage28dRfOutputEndpoint.h"
 #include "climate/output/BinaryActuatorPolicy.h"
 #include "climate/output/ClimateOutputSupervisorSink.h"
 #include "climate/output/OutputAutomationControl.h"
@@ -19,7 +18,6 @@
 #include "climate/output/OutputSupervisorLifecycle.h"
 #include "climate/output/OutputSupervisorExecutor.h"
 #include "climate/output/OutputSupervisorResolver.h"
-#include "climate/Stage28dThermalTestSequence.h"
 #include "climate/output/OutputStateStore.h"
 #include "climate/native/BleClimateScanner.h"
 #include "climate/native/Ds3231ClockSource.h"
@@ -115,7 +113,6 @@ namespace {
 constexpr char kTag[] = "climate_stage27";
 constexpr std::uint64_t kTickIntervalMs = 1'000U;
 constexpr std::uint32_t kTelemetryEveryTicks = 10U;
-constexpr unsigned kSafeStateAttempts = 3U;
 constexpr output::BinaryActuatorPolicyConfig kExhaustPolicyConfig{0.10F, 0.03F, 120'000U,
                                                                   120'000U};
 constexpr output::BinaryActuatorPolicyConfig kHumidifierPolicyConfig{0.10F, 0.03F, 180'000U,
@@ -143,36 +140,6 @@ runtime::Stage28RfDiagnosticsConfig rfDiagnosticsConfig() noexcept {
   config.rx_gpio = GROWBOX_RF433_RX_GPIO;
   return config;
 }
-
-class SwitchableRoleDriver final : public ClimateRoleDriver {
-public:
-  SwitchableRoleDriver(runtime::LockedFakeRoleDriver& fake_driver, ClimateRoleDriver& real_driver,
-                       bool real_enabled) noexcept
-      : fake_driver_(fake_driver), real_driver_(real_driver), real_enabled_(real_enabled) {}
-
-  bool apply(ClimateActuatorRole role, float level, std::uint64_t monotonic_ms) noexcept override {
-    return real_enabled_ ? real_driver_.apply(role, level, monotonic_ms)
-                         : fake_driver_.apply(role, level, monotonic_ms);
-  }
-
-  float appliedLevel(ClimateActuatorRole role, float requested_level) const noexcept override {
-    return real_enabled_ ? real_driver_.appliedLevel(role, requested_level)
-                         : fake_driver_.appliedLevel(role, requested_level);
-  }
-
-  bool forceSafeOff(ClimateActuatorRole role, std::uint64_t monotonic_ms) noexcept override {
-    return real_enabled_ ? real_driver_.forceSafeOff(role, monotonic_ms)
-                         : fake_driver_.forceSafeOff(role, monotonic_ms);
-  }
-
-  void disableReal() noexcept { real_enabled_ = false; }
-  bool realEnabled() const noexcept { return real_enabled_; }
-
-private:
-  runtime::LockedFakeRoleDriver& fake_driver_;
-  ClimateRoleDriver& real_driver_;
-  bool real_enabled_{false};
-};
 
 class RuntimeOutputTransport final : public output::OutputTransport {
 public:
@@ -222,23 +189,6 @@ bool commandStateOn(const output::OutputStateStore& store,
   const auto* state = store.find(endpoint);
   return state != nullptr && state->has_successful_command &&
          state->last_successful_command.state == output::BinaryOutputState::On;
-}
-
-void synchronizeSupervisorPoliciesSafeOff(output::BinaryActuatorPolicy& exhaust_policy,
-                                          output::BinaryActuatorPolicy& humidifier_policy,
-                                          std::uint64_t monotonic_ms) noexcept {
-  exhaust_policy.synchronize(output::BinaryOutputState::Off, monotonic_ms);
-  humidifier_policy.synchronize(output::BinaryOutputState::Off, monotonic_ms);
-}
-
-bool forceSafeStateWithRetries(stage28d::Stage28dRfOutputEndpoint& endpoint,
-                               std::uint64_t monotonic_ms) noexcept {
-  for (unsigned attempt = 0U; attempt < kSafeStateAttempts; ++attempt) {
-    if (endpoint.initializeSafeState(monotonic_ms)) {
-      return true;
-    }
-  }
-  return false;
 }
 
 runtime::Stage27PhysicalOutputSnapshot physicalOutputSnapshot(
@@ -322,14 +272,9 @@ public:
     return lamp_safety_;
   }
 
-  stage28d::ThermalTestSequence& thermalTestSequence() noexcept {
-    return thermal_test_sequence_;
-  }
-
 private:
   ::growbox::climate::ClimateRuntimeController runtime_controller_;
   stage28d::LampSafetyController lamp_safety_;
-  stage28d::ThermalTestSequence thermal_test_sequence_;
 };
 
 } // namespace
@@ -391,20 +336,19 @@ private:
       stage28d::OutputBindingStatus::Ok;
   bool real_transport_available =
       GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED != 0 && rf_ready && output_bindings_valid;
-  stage28d::Stage28dRfOutputEndpoint physical_endpoint(
-      {real_transport_available, 0.5F}, rf_output_transport,
-      output_state_store_ready ? &output_state_store : nullptr);
 
-  // Normal production startup is supervisor-owned below. The legacy thermal
-  // qualification path remains explicit migration debt until A11.2.
-  bool real_output_ready =
-      real_transport_available && GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED != 0;
-  if (GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED != 0 && !real_transport_available) {
-    ESP_LOGE(kTag, "Real-output transport unavailable; automatic outputs remain fake-locked");
+  // The pre-supervisor Gate6 qualification path was a direct configured-output
+  // writer. Keep the build knob fail-closed until A13 defines the replacement
+  // supervisor-owned hardware qualification contract.
+  if (GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED != 0) {
+    ESP_LOGW(kTag,
+             "Legacy Gate6 thermal qualification is retired; locking real transport until A13");
+    real_transport_available = false;
   }
 
-  if (GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED != 0 && !real_output_ready) {
-    ESP_LOGE(kTag, "Gate6 thermal sequence requested but real outputs are not safely armed");
+  bool real_output_ready = false;
+  if (GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED != 0 && !real_transport_available) {
+    ESP_LOGE(kTag, "Real-output transport unavailable; automatic outputs remain fake-locked");
   }
 
   runtime::RuntimeTimingMetrics runtime_timing{};
@@ -414,14 +358,6 @@ private:
   runtime::Stage27NearbySource outside(ble);
   runtime::FixedStage27ScheduleConfigSource schedule_config;
   CompositeClimateSnapshotProvider composite(inside, outside, clock, schedule_config);
-
-  // Legacy role transport remains only as an exceptional fail-safe path until A11.
-  // Normal climate and schedule execution below is supervisor-owned.
-  runtime::LockedFakeRoleDriver fake_output_driver;
-  MappedClimateRoleDriver mapped_output_driver(semantic_output_config, physical_endpoint);
-  SwitchableRoleDriver fail_safe_output_driver(fake_output_driver, mapped_output_driver,
-                                                real_output_ready);
-  ClimateActuatorAdapter fail_safe_actuator_adapter(fail_safe_output_driver);
 
   output::BinaryActuatorPolicy exhaust_policy(kExhaustPolicyConfig);
   output::BinaryActuatorPolicy humidifier_policy(kHumidifierPolicyConfig);
@@ -453,14 +389,12 @@ private:
   output::OutputSupervisorExecutor supervisor_executor(supervisor_transport, output_state_store,
                                                        supervisor_config);
   ClimateOutputSupervisorSink supervisor_sink(semantic_output_config, supervisor_resolver,
-                                              supervisor_executor, output_state_store,
-                                              &fail_safe_actuator_adapter);
+                                              supervisor_executor, output_state_store);
   if (!supervisor_sink.valid() || !lifecycle_ready) {
     ESP_LOGE(kTag, "Output supervisor/lifecycle composition invalid; physical execution locked");
     // There is no direct emergency writer here anymore. If the supervisor cannot
     // be composed, fail closed by disabling transport ownership for this boot.
     real_transport_available = false;
-    fail_safe_output_driver.disableReal();
     real_output_ready = false;
   }
 
@@ -475,10 +409,6 @@ private:
   auto& runtime_controller = runtime_control_owner.runtimeController();
   ClimateApplication application(runtime_controller, composite, supervisor_sink);
   auto& lamp_safety = runtime_control_owner.lampSafety();
-  auto& thermal_test_sequence = runtime_control_owner.thermalTestSequence();
-  const std::uint64_t thermal_test_started_ms = monotonicMilliseconds();
-  stage28d::ThermalTestPhase last_test_phase = stage28d::ThermalTestPhase::Complete;
-  bool thermal_test_finished_safe = false;
 
   const auto& boot_identity = runtime::bootIdentity(GROWBOX_FIRMWARE_GIT_SHA);
   const esp_reset_reason_t reset_reason =
@@ -525,57 +455,6 @@ private:
 
     const std::uint64_t control_started_us = static_cast<std::uint64_t>(esp_timer_get_time());
     const bool real_transport_active_this_cycle = real_transport_available;
-    if (GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED != 0 && real_output_ready &&
-        !thermal_test_finished_safe) {
-      const auto point = thermal_test_sequence.sample(now_ms - thermal_test_started_ms);
-      lamp_decision = lamp_safety.evaluate(
-          {point.scheduled_light_level, {point.temperature_c, true, 0U}, true, now_ms});
-      physical_endpoint.setSafetyForceExhaust(lamp_decision.force_exhaust_on);
-
-      bool physical_ok =
-          physical_endpoint.writeScheduledLight(lamp_decision.effective_lamp_on, now_ms);
-      physical_ok = physical_endpoint.write(stage28d::kExhaustFanEndpoint,
-                                             lamp_decision.force_exhaust_on ? 1.0F : 0.0F,
-                                             now_ms) &&
-                    physical_ok;
-      physical_ok = physical_endpoint.write(stage28d::kHumidifierEndpoint, 0.0F, now_ms) &&
-                    physical_ok;
-
-      decision.applied.exhaust_fan = lamp_decision.force_exhaust_on ? 1.0F : 0.0F;
-      decision.applied.humidifier = 0.0F;
-
-      if (point.phase != last_test_phase) {
-        last_test_phase = point.phase;
-        ESP_LOGI(kTag,
-                 "GATE6_THERMAL_PHASE phase=%s temp_c=%.2f lamp_on=%d fan_on=%d latched=%d "
-                 "reason=%u tx_count=%lu tx_errors=%lu physical_ok=%d",
-                 stage28d::thermalTestPhaseName(point.phase), static_cast<double>(point.temperature_c),
-                 lamp_decision.effective_lamp_on, lamp_decision.force_exhaust_on,
-                 lamp_decision.thermal_latched, static_cast<unsigned>(lamp_decision.reason),
-                 static_cast<unsigned long>(physical_endpoint.transmitCount()),
-                 static_cast<unsigned long>(physical_endpoint.transmitErrorCount()), physical_ok);
-      }
-
-      if (!physical_ok) {
-        ESP_LOGE(kTag, "Gate6 physical transition failed; forcing all outputs OFF");
-        const bool safe_off = forceSafeStateWithRetries(physical_endpoint, now_ms);
-        if (safe_off) {
-          synchronizeSupervisorPoliciesSafeOff(exhaust_policy, humidifier_policy, now_ms);
-        }
-        fail_safe_output_driver.disableReal();
-        real_output_ready = false;
-        ESP_LOGE(kTag, "GATE6_THERMAL_ABORT safe_off=%d outputs=fake-locked", safe_off);
-      } else if (point.complete) {
-        const bool safe_off = forceSafeStateWithRetries(physical_endpoint, now_ms);
-        thermal_test_finished_safe = safe_off;
-        if (safe_off) {
-          synchronizeSupervisorPoliciesSafeOff(exhaust_policy, humidifier_policy, now_ms);
-        }
-        fail_safe_output_driver.disableReal();
-        real_output_ready = false;
-        ESP_LOGI(kTag, "GATE6_THERMAL_SEQUENCE_COMPLETE safe_off=%d outputs=fake-locked", safe_off);
-      }
-    } else if (GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED == 0) {
       ClimateWallClockSnapshot rtc_snapshot{};
       native::BleClimateReading tp357{};
       const bool rtc_sampled = clock.sample(now_ms, rtc_snapshot) && rtc_snapshot.valid;
@@ -664,7 +543,6 @@ private:
         }
         real_output_ready = false;
       }
-    }
     if (output_persistence.valid()) {
       const auto persistence_status = output_persistence.syncFromStateStore(
           output_state_store, real_transport_active_this_cycle);
@@ -711,10 +589,8 @@ private:
                                                   humidifier_policy.dwellHoldCount()),
                static_cast<unsigned long>(exhaust_policy.overrideCount() +
                                                   humidifier_policy.overrideCount()),
-               static_cast<unsigned long>(physical_endpoint.transmitCount() +
-                                                  supervisor_transport.transmitCount()),
-               static_cast<unsigned long>(physical_endpoint.transmitErrorCount() +
-                                                  supervisor_transport.transmitErrorCount()));
+               static_cast<unsigned long>(supervisor_transport.transmitCount()),
+               static_cast<unsigned long>(supervisor_transport.transmitErrorCount()));
       runtime_timing.telemetry.observe(
           static_cast<std::uint64_t>(esp_timer_get_time()) - telemetry_started_us);
     }

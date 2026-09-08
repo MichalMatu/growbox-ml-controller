@@ -21,8 +21,7 @@ public:
       ClimateSemanticOutputConfig climate_config,
       ::growbox::app::output::OutputSupervisorResolver& resolver,
       ::growbox::app::output::OutputSupervisorExecutor& executor,
-      ::growbox::app::output::OutputStateStore& state_store,
-      ::growbox::climate::ClimateActuatorSink* fail_safe_fallback = nullptr) noexcept;
+      ::growbox::app::output::OutputStateStore& state_store) noexcept;
 
   bool valid() const noexcept;
   void setCycleContext(const ClimateOutputSupervisorCycleContext& context) noexcept {
@@ -68,7 +67,6 @@ private:
   ::growbox::app::output::OutputSupervisorResolver& resolver_;
   ::growbox::app::output::OutputSupervisorExecutor& executor_;
   ::growbox::app::output::OutputStateStore& state_store_;
-  ::growbox::climate::ClimateActuatorSink* fail_safe_fallback_{nullptr};
   ClimateOutputSupervisorCycleContext context_{};
   ::growbox::app::output::OutputSupervisorResolution last_resolution_{};
   ::growbox::app::output::ExecutionReport last_report_{};

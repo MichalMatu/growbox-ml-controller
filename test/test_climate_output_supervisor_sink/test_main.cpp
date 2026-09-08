@@ -35,25 +35,6 @@ public:
   }
 };
 
-class RecordingFailSafeSink final : public climate::ClimateActuatorSink {
-public:
-  bool apply(const climate::ClimatePolicyRequest&, std::uint64_t) noexcept override {
-    ++apply_calls;
-    return true;
-  }
-
-  bool applyFailSafeOff(std::uint64_t monotonic_ms) noexcept override {
-    ++fail_safe_calls;
-    last_fail_safe_ms = monotonic_ms;
-    return fail_safe_result;
-  }
-
-  bool fail_safe_result{true};
-  std::size_t apply_calls{0U};
-  std::size_t fail_safe_calls{0U};
-  std::uint64_t last_fail_safe_ms{0U};
-};
-
 output::BinaryActuatorPolicy makePolicy(std::uint64_t min_on_ms = 0U,
                                         std::uint64_t min_off_ms = 0U) {
   output::BinaryActuatorPolicyConfig config{};
@@ -128,9 +109,7 @@ void testCompleteClimateRequestUsesOneSupervisorCycleAndProjectsCommandTruth() {
   output::OutputSupervisorResolver resolver(supervisor_config);
   FakeTransport transport;
   output::OutputSupervisorExecutor executor(transport, store, supervisor_config);
-  RecordingFailSafeSink fallback;
-  climate_io::ClimateOutputSupervisorSink sink(makeClimateConfig(), resolver, executor, store,
-                                                &fallback);
+  climate_io::ClimateOutputSupervisorSink sink(makeClimateConfig(), resolver, executor, store);
   assert(sink.valid());
   sink.setCycleContext(scheduleContext(true));
 
@@ -308,7 +287,7 @@ void testRejectsUnsupportedOrNonFiniteClimateRequestBeforeTransport() {
   assert(transport.sent_count == 0U);
 }
 
-void testExceptionalFailSafeRemainsExplicitLegacyFallbackDebt() {
+void testFailSafeOffExecutesThroughSupervisorOnly() {
   auto fan = makePolicy();
   auto humidifier = makePolicy();
   auto store = makeStore();
@@ -316,20 +295,63 @@ void testExceptionalFailSafeRemainsExplicitLegacyFallbackDebt() {
   output::OutputSupervisorResolver resolver(supervisor_config);
   FakeTransport transport;
   output::OutputSupervisorExecutor executor(transport, store, supervisor_config);
-  RecordingFailSafeSink fallback;
-  climate_io::ClimateOutputSupervisorSink sink(makeClimateConfig(), resolver, executor, store,
-                                                &fallback);
+  climate_io::ClimateOutputSupervisorSink sink(makeClimateConfig(), resolver, executor, store);
+  sink.setCycleContext(scheduleContext(true));
 
-  assert(sink.applyFailSafeOff(50'000U));
-  assert(fallback.fail_safe_calls == 1U);
-  assert(fallback.last_fail_safe_ms == 50'000U);
-  assert(fallback.apply_calls == 0U);
-  assert(transport.sent_count == 0U);
-  assert(sink.lastReport().size == 0U);
+  climate::ClimatePolicyRequest projection{};
+  assert(sink.applyAndReport(request(1.0F, 1.0F), 50'000U, projection));
+  assert(transport.sent_count == 3U);
+  assert(store.find(kLamp)->last_successful_command.state == output::BinaryOutputState::On);
 
-  climate_io::ClimateOutputSupervisorSink no_fallback(makeClimateConfig(), resolver, executor,
-                                                       store, nullptr);
-  assert(!no_fallback.applyFailSafeOff(50'001U));
+  sink.setCycleContext(scheduleContext(true));
+  assert(sink.applyFailSafeOff(50'001U));
+  assert(transport.sent_count == 5U);
+  assert(sink.lastReport().size == 2U);
+  assert(transport.sent[3].endpoint == kFan);
+  assert(transport.sent[3].state == output::BinaryOutputState::Off);
+  assert(transport.sent[3].source == output::OutputSource::Safety);
+  assert(transport.sent[3].reason == output::OutputReason::FaultContainment);
+  assert(transport.sent[4].endpoint == kHumidifier);
+  assert(transport.sent[4].state == output::BinaryOutputState::Off);
+  assert(transport.sent[4].source == output::OutputSource::Safety);
+  assert(transport.sent[4].reason == output::OutputReason::FaultContainment);
+  assert(store.find(kLamp)->last_successful_command.state == output::BinaryOutputState::On);
+  assertPhysicalUnknown(store, kFan);
+  assertPhysicalUnknown(store, kHumidifier);
+}
+
+void testHardSafetyOverridesSupervisorFailSafeOff() {
+  auto fan = makePolicy();
+  auto humidifier = makePolicy();
+  auto store = makeStore();
+  const auto supervisor_config = makeSupervisorConfig(fan, humidifier);
+  output::OutputSupervisorResolver resolver(supervisor_config);
+  FakeTransport transport;
+  output::OutputSupervisorExecutor executor(transport, store, supervisor_config);
+  climate_io::ClimateOutputSupervisorSink sink(makeClimateConfig(), resolver, executor, store);
+  sink.setCycleContext(scheduleContext(false));
+
+  climate::ClimatePolicyRequest projection{};
+  assert(sink.applyAndReport(request(0.0F, 0.0F), 60'000U, projection));
+  assert(transport.sent_count == 3U);
+
+  auto context = scheduleContext(false);
+  context.safety.metadata.sequence = 91U;
+  context.safety.metadata.source = output::OutputSource::Safety;
+  context.safety.metadata.reason = output::OutputReason::ThermalSafety;
+  assert(output::setSafetyConstraint(context.safety.endpoints[0], kFan,
+                                     output::SafetyConstraint::ForceOn,
+                                     output::OutputReason::ThermalSafety));
+  sink.setCycleContext(context);
+
+  assert(sink.applyFailSafeOff(60'001U));
+  assert(transport.sent_count == 4U);
+  assert(sink.lastReport().size == 1U);
+  assert(transport.sent[3].endpoint == kFan);
+  assert(transport.sent[3].state == output::BinaryOutputState::On);
+  assert(transport.sent[3].source == output::OutputSource::Safety);
+  assert(transport.sent[3].reason == output::OutputReason::ThermalSafety);
+  assert(store.find(kHumidifier)->last_successful_command.state == output::BinaryOutputState::Off);
 }
 
 } // namespace
@@ -341,6 +363,7 @@ int main() {
   testDwellHoldReturnsHeldExecutionProjectionWithoutTransport();
   testSafetyContextOverridesClimateWithoutChangingProjectionMeaning();
   testRejectsUnsupportedOrNonFiniteClimateRequestBeforeTransport();
-  testExceptionalFailSafeRemainsExplicitLegacyFallbackDebt();
+  testFailSafeOffExecutesThroughSupervisorOnly();
+  testHardSafetyOverridesSupervisorFailSafeOff();
   return 0;
 }
