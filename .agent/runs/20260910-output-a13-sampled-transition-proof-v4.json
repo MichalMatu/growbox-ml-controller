@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260910-output-a13-sampled-transition-proof-v4",
+  "task_digest": "4dc91b0fbfe1647e820f491f6976e1f356061506206023ae6cde744fa34e60d6",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-10T16:25:59.587552+00:00",
+  "attempt_id": "8df8c341a7e1e8820e468ebf",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 93605,
+  "updated_at": "2026-09-10T16:25:59.587768+00:00",
+  "pid": 93605
+}
