@@ -278,9 +278,8 @@ bool ClimateOutputSupervisorSink::applyAndReport(
   ::growbox::climate::ClimateExecutionProjection execution{};
   const bool completed = applyAndReportExecution(request, monotonic_ms, execution);
   executed_projection = execution.executed;
-  return completed &&
-         execution.known_mask ==
-             static_cast<std::uint8_t>(::growbox::climate::ClimateExecutionKnownAll);
+  return completed && execution.known_mask ==
+                          static_cast<std::uint8_t>(::growbox::climate::ClimateExecutionKnownAll);
 }
 
 bool ClimateOutputSupervisorSink::applyFailSafeOff(std::uint64_t monotonic_ms) noexcept {
