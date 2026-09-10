@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260910-output-startup-partial-truth-focused-v1",
   "task_digest": "7972d9aab30dc50da86f96edc68ff66cd1665134bcc4230d3ab987061113a7a6",
-  "idle_timeout": 300,
-  "task_timeout": 1800,
-  "memory_limit_mb": 4096,
-  "started_at": "2026-09-10T14:36:23.060926+00:00",
+  "status": "failed",
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-10T14:36:26.994132+00:00",
   "attempt_id": "8d06bccba58d81eafa57d6ed",
   "daemon_version": "4.18.20",
   "daemon_pid": 63602,
-  "updated_at": "2026-09-10T14:36:23.061032+00:00",
+  "updated_at": "2026-09-10T14:36:27.523990+00:00",
   "pid": 63602
 }
