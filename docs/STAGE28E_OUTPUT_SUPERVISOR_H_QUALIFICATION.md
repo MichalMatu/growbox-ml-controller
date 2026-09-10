@@ -145,15 +145,17 @@ The counted transition must show:
 - selected source `Climate` and reason `ClimateDecision`;
 - resolved fan state ON;
 - `held_by_dwell=0` for the counted command cycle;
-- command attempt known and attempted this cycle;
-- attempted state ON;
-- attempt source `Climate`, reason `ClimateDecision`;
-- transport status `Completed`;
+- command attempt known;
+- latest attempted state ON;
+- latest attempt source `Climate`, reason `ClimateDecision`;
+- latest transport status `Completed`;
 - transport error `None`;
 - last-commanded state known and ON with climate source/reason;
 - transport active for the counted command.
 
 A command transmitted because of `Safety`, `Manual`, `Lifecycle` or `Maintenance` is not a valid normal-control Phase H transition.
+
+Output telemetry is sampled more slowly than the one-second control loop. `attempted_this_cycle=1` is therefore direct same-cycle strengthening when present, but is not required for acceptance. A first subsequent sample may prove the transition when the preceding accepted sample is fan OFF and the persistent latest-attempt, transport-result and last-successful-command fields all prove an intervening fan ON command owned by `Climate` / `ClimateDecision`. Missing attempt truth still fails closed.
 
 ### 4.5 Global transport cleanliness
 

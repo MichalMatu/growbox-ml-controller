@@ -276,8 +276,10 @@ def _assert_natural_fan_on_transition(snapshot: OutputSnapshot) -> None:
         raise QualificationContractError("fan did not resolve ON")
     if fan.held_by_dwell:
         raise QualificationContractError("counted fan transition is still held by dwell")
-    if not fan.attempt_known or not fan.attempted_this_cycle:
-        raise QualificationContractError("no OutputSupervisor command attempt in counted cycle")
+    if not fan.attempt_known:
+        raise QualificationContractError(
+            "no recorded OutputSupervisor command attempt for counted transition"
+        )
     if fan.attempt_state != BinaryOutputState.ON:
         raise QualificationContractError("counted command attempt is not fan ON")
     if fan.attempt_source != OutputSource.CLIMATE:
@@ -318,7 +320,12 @@ def find_natural_fan_transition(
         if snapshot.uptime_ms <= baseline.uptime_ms:
             raise QualificationContractError("telemetry uptime did not advance after baseline")
         fan = snapshot.endpoint(FAN_ENDPOINT)
-        if fan.attempted_this_cycle and fan.attempt_state == BinaryOutputState.ON:
+        if (
+            fan.resolved
+            and fan.resolved_state == BinaryOutputState.ON
+            and fan.last_command_known
+            and fan.last_command_state == BinaryOutputState.ON
+        ):
             _assert_natural_fan_on_transition(snapshot)
             return baseline, snapshot
     raise QualificationContractError("no qualifying natural fan OFF->ON transition found")

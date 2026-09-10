@@ -141,6 +141,25 @@ def test_replay_accepts_natural_supervisor_owned_transition() -> None:
     assert result.power_delta_w == pytest.approx(8.05)
 
 
+def test_replay_accepts_transition_sampled_after_command_cycle() -> None:
+    fixture = records()
+    transition = fixture[2]["out"]["ep"][0]
+    transition[20] = 0
+    result = replay_qualification(fixture, evidence())
+    assert result.transition_uptime_ms == 20_000
+
+
+def test_replay_rejects_sampled_transition_without_attempt_truth() -> None:
+    fixture = records()
+    transition = fixture[2]["out"]["ep"][0]
+    transition[19] = 0
+    transition[20] = 0
+    with pytest.raises(
+        QualificationContractError, match="no recorded OutputSupervisor command attempt"
+    ):
+        replay_qualification(fixture, evidence())
+
+
 def test_replay_rejects_wrong_firmware_identity() -> None:
     fixture = records()
     fixture[0]["fw"] = "deadbeef"
