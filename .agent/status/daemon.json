@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "daemon_version": "4.18.19",
+  "daemon_version": "4.18.20",
   "state": "idle",
-  "pid": 92503,
-  "updated_at": "2026-09-10T09:02:50.081019+00:00",
-  "self_revision": "8e04f75287630cb1db363f1b53c3c0b770e10dcc",
+  "pid": 1057,
+  "updated_at": "2026-09-10T09:07:58.225261+00:00",
+  "self_revision": "0bb99d790dbed19a528b4cb8ac238432134b5660",
   "poll_seconds": 15,
   "self_update_seconds": 60,
   "command_timeout_default": 900,
@@ -23,7 +23,7 @@
   "default_branch": "main",
   "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 92503,
-  "supervisor_pid": 88114,
+  "worker_pid": 1057,
+  "supervisor_pid": 826,
   "execution_variant": "parallel"
 }
