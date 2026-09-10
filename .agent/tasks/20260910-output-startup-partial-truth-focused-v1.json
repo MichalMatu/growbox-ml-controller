@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "id": "20260910-output-startup-partial-truth-focused-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "mvp/environment-controller",
+  "resources": [],
+  "allow_write": false,
+  "command_timeout": 900,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch -q origin mvp/environment-controller && test \"$(git rev-parse HEAD)\" = \"111a8bf2911d63a3735d393335e9db26ea17fde0\" && test \"$(git rev-parse FETCH_HEAD)\" = \"111a8bf2911d63a3735d393335e9db26ea17fde0\" && test -z \"$(git status --porcelain)\"",
+    ".venv/bin/pre-commit run --files src/climate/output/ClimateOutputSupervisorSink.cpp test/test_climate_output_supervisor_sink/test_main.cpp && cmake -S test/host -B build/host-tests && cmake --build build/host-tests --target climate_output_supervisor_sink_tests --parallel 2 && ctest --test-dir build/host-tests -R '^climate_output_supervisor_sink_tests$' --output-on-failure && git diff --check && echo OUTPUT_STARTUP_PARTIAL_TRUTH_FOCUSED_PASS sha=111a8bf2911d63a3735d393335e9db26ea17fde0 sink_test=PASS hardware_started=0"
+  ]
+}
