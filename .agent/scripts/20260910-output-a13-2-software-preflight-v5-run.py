@@ -5,7 +5,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-CURRENT = "2a19cd43"
+CURRENT = "2a19cd43646fe284a7ab41828178b2b8f17edea1"
 QUALIFIED = "02208d23f403bca3540dbbd652eb55703a044833"
 EXPECTED_CHANGED = {
     "docs/ARCHITECTURE_HANDOFF.md",
@@ -31,13 +31,12 @@ root = Path(output(["git", "rev-parse", "--show-toplevel"]))
 run(["git", "fetch", "-q", "origin", "mvp/environment-controller", QUALIFIED], cwd=root)
 head = output(["git", "rev-parse", "HEAD"], cwd=root)
 remote = output(["git", "rev-parse", "origin/mvp/environment-controller"], cwd=root)
-if not head.startswith(CURRENT) or not remote.startswith(CURRENT):
-    raise SystemExit(f"A13_2_IDENTITY_FAIL head={head} remote={remote} expected_prefix={CURRENT}")
+if head != CURRENT or remote != CURRENT:
+    raise SystemExit(f"A13_2_IDENTITY_FAIL head={head} remote={remote} expected={CURRENT}")
 if output(["git", "status", "--porcelain"], cwd=root):
     raise SystemExit("A13_2_IDENTITY_FAIL worktree is dirty")
 
-current_full = head
-changed = set(output(["git", "diff", "--name-only", f"{QUALIFIED}..{current_full}"], cwd=root).splitlines())
+changed = set(output(["git", "diff", "--name-only", f"{QUALIFIED}..{CURRENT}"], cwd=root).splitlines())
 if changed != EXPECTED_CHANGED:
     raise SystemExit(f"A13_2_SCOPE_FAIL changed={sorted(changed)!r}")
 run(
@@ -45,7 +44,7 @@ run(
         "git",
         "diff",
         "--quiet",
-        f"{QUALIFIED}..{current_full}",
+        f"{QUALIFIED}..{CURRENT}",
         "--",
         "src",
         "lib",
@@ -56,7 +55,7 @@ run(
     ],
     cwd=root,
 )
-print(f"A13_2_SCOPE_PASS current_sha={current_full} qualified_sha={QUALIFIED}", flush=True)
+print(f"A13_2_SCOPE_PASS current_sha={CURRENT} qualified_sha={QUALIFIED}", flush=True)
 
 run(
     [
@@ -171,7 +170,7 @@ if output(["git", "status", "--porcelain"], cwd=root):
     raise SystemExit("A13_2_FINAL_FAIL current worktree became dirty")
 print(
     "A13_2_SOFTWARE_PREFLIGHT_PASS "
-    f"current_sha={current_full} qualified_sha={QUALIFIED} "
+    f"current_sha={CURRENT} qualified_sha={QUALIFIED} "
     "scope=PASS contract_tests=PASS replay=PASS qualified_build=PASS "
     "serial_started=0 flash_started=0 rf_started=0 hardware_started=0",
     flush=True,
