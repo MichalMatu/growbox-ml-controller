@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260910-output-supervisor-h-doc-closeout-v2",
+  "task_digest": "cc82c41b8b3c32eef22641f7f28673497d52a09a92c4ced11637473835fa1d35",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-10T18:04:02.097915+00:00",
+  "attempt_id": "c4844f673b9b8509f57a0d11",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 85748,
+  "updated_at": "2026-09-10T18:04:02.098024+00:00",
+  "pid": 85748
+}
