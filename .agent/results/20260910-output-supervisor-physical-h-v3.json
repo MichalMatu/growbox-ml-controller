@@ -1,0 +1,116 @@
+{
+  "id": "20260910-output-supervisor-physical-h-v3",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "started_at": "2026-09-10T17:33:10.857445+00:00",
+  "command_timeout": 7200,
+  "edits": {},
+  "commands": [
+    {
+      "command": "git fetch -q origin mvp/environment-controller && git reset --hard FETCH_HEAD && test \"$(git rev-parse HEAD)\" = \"2a19cd43646fe284a7ab41828178b2b8f17edea1\" && test -z \"$(git status --porcelain)\"",
+      "exit_code": 0,
+      "output": "HEAD is now at 2a19cd43 Make H transition replay sampling-robust\n",
+      "elapsed_seconds": 0.821,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 7.92,
+      "output_policy": "stream",
+      "captured_output_chars": 65,
+      "output_truncated": false,
+      "current_rss_mb": 7.92,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "git fetch -q origin agent-control && git show FETCH_HEAD:.agent/scripts/20260910-output-supervisor-physical-h-v1.py > /tmp/growbox-output-supervisor-physical-h-v3.py && python3 - <<'PY'\nfrom pathlib import Path\np = Path('/tmp/growbox-output-supervisor-physical-h-v3.py')\ns = p.read_text()\nold = '''def shelly_get(path: str) -> dict[str, object]:\n    url = f\"http://{SHELLY_HOST}{path}\"\n    with urllib.request.urlopen(url, timeout=2.0) as response:\n        payload = json.load(response)\n    if not isinstance(payload, dict):\n        raise HFailure(f\"Shelly returned non-object for {path}\")\n    return payload\n\n\ndef shelly_sample() -> tuple[bool, float]:\n    meter = shelly_get(\"/meter/0\")\n    relay = shelly_get(\"/relay/0\")\n    if \"power\" not in meter or \"ison\" not in relay:\n        raise HFailure(\"Shelly Gen1 meter/relay fields are missing\")\n    return bool(relay[\"ison\"]), float(meter[\"power\"])\n'''\nnew = '''def shelly_sample() -> tuple[bool, float]:\n    url = f\"http://{SHELLY_HOST}/rpc/Switch.GetStatus?id=0\"\n    with urllib.request.urlopen(url, timeout=3.0) as response:\n        payload = json.load(response)\n    if not isinstance(payload, dict):\n        raise HFailure(\"Shelly RPC returned non-object status\")\n    if \"output\" not in payload or \"apower\" not in payload:\n        raise HFailure(\"Shelly RPC output/apower fields are missing\")\n    return bool(payload[\"output\"]), float(payload[\"apower\"])\n'''\nif s.count(old) != 1:\n    raise SystemExit('Shelly adapter patch anchor mismatch')\ns = s.replace(old, new, 1)\nold = '''            self.identity_ok = True\n            self.output_mode_ok = outputs == \"real-bounded\"\n            self.rf_ready = rf_ready == \"1\"\n            if not self.output_mode_ok or not self.rf_ready:\n                raise HFailure(f\"real output transport not ready outputs={outputs!r} rf_ready={rf_ready!r}\")\n            return\n'''\nnew = '''            self.identity_ok = True\n            self.output_mode_ok = outputs == \"real-bounded\"\n            self.rf_ready = rf_ready == \"1\"\n            return\n'''\nif s.count(old) != 1:\n    raise SystemExit('status readiness patch anchor mismatch')\ns = s.replace(old, new, 1)\nold = '''        if observer.identity_ok and observer.sd_mounted and env_ok and safety_clear:\n'''\nnew = '''        if (\n            observer.identity_ok\n            and observer.output_mode_ok\n            and observer.rf_ready\n            and observer.sd_mounted\n            and env_ok\n            and safety_clear\n        ):\n'''\nif s.count(old) != 1:\n    raise SystemExit('wait readiness patch anchor mismatch')\ns = s.replace(old, new, 1)\nold = '''        if not observer.identity_ok:\n            raise HFailure(\"could not verify exact firmware identity\")\n        session = discover_session(observer)\n        wait_until_ready(observer)\n        run_h(observer, session)\n'''\nnew = '''        if not observer.identity_ok:\n            raise HFailure(\"could not verify exact firmware identity\")\n        wait_until_ready(observer)\n        session = discover_session(observer)\n        run_h(observer, session)\n'''\nif s.count(old) != 1:\n    raise SystemExit('startup ordering patch anchor mismatch')\ns = s.replace(old, new, 1)\nfor forbidden in ('observer.send(\"fan ', 'observer.send(\"rf ', 'observer.send(\"maintenance '):\n    if forbidden in s:\n        raise SystemExit(f'forbidden direct actuator command in H runner: {forbidden}')\np.write_text(s)\nPY\nPYTHONPATH=\"$PWD\" .venv/bin/python -m py_compile /tmp/growbox-output-supervisor-physical-h-v3.py && echo H_RUNNER_V3_PREFLIGHT_PASS tooling_sha=2a19cd43646fe284a7ab41828178b2b8f17edea1 qualified_sha=02208d23f403bca3540dbbd652eb55703a044833 shelly_rpc=Switch.GetStatus startup_wait_s=900 direct_actuator_commands=0 serial_started=0 hardware_started=0",
+      "exit_code": 0,
+      "output": "H_RUNNER_V3_PREFLIGHT_PASS tooling_sha=2a19cd43646fe284a7ab41828178b2b8f17edea1 qualified_sha=02208d23f403bca3540dbbd652eb55703a044833 shelly_rpc=Switch.GetStatus startup_wait_s=900 direct_actuator_commands=0 serial_started=0 hardware_started=0\n",
+      "elapsed_seconds": 1.218,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 3.12,
+      "output_policy": "stream",
+      "captured_output_chars": 245,
+      "output_truncated": false,
+      "current_rss_mb": 3.12,
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "test -e /dev/cu.usbserial-1130 && test ! -e /dev/cu.usbserial-10 && PYTHONPATH=\"$PWD\" .venv/bin/python /tmp/growbox-output-supervisor-physical-h-v3.py",
+      "exit_code": 0,
+      "output": "H_SINGLE_OPEN port=/dev/cu.usbserial-1130 expected_port_open_reset=1 forbidden_port_untouched=/dev/cu.usbserial-10\nH_AUTOMATION_ON_REQUESTED supervisor_owned=1\nH_READY_PASS uptime_ms=630113 safety_latched=0 mode=automatic automation_requested=1\nH_SD_SESSION_PASS file=3F6B0A11.JL schema=growbox-log-v3 out_v=2\nH_WAITING_NATURAL baseline_s=0 tp357_c=23.2\nH_CLEAN_OFF_STARTED uptime_ms=651463\nH_WAITING_NATURAL baseline_s=53 tp357_c=23.2\nH_WAITING_NATURAL baseline_s=105 tp357_c=23.3\nH_WAITING_NATURAL baseline_s=169 tp357_c=23.4\nH_NATURAL_TRANSITION_CAPTURED uptime_ms=884293 requested_level=0.111 temp_trigger=0 humidity_trigger=1 temp_improvement_c=0.122 ah_gap_gm3=2.513\nH_SHELLY_PASS samples_before=8 samples_after=8 pre_w=22.000 post_w=24.800 delta_w=2.800\nH_ENVIRONMENT_PASS mechanism=humidity temp_gap_delta_c=0.190 ah_gap_delta_gm3=0.381\nOUTPUT_SUPERVISOR_H_REPLAY_PASS sha=02208d23f403bca3540dbbd652eb55703a044833 baseline_uptime_ms=651463 transition_uptime_ms=884293 power_delta_w=2.800 hardware_started=1\nOUTPUT_SUPERVISOR_H_PHYSICAL_EVIDENCE_PASS sha=02208d23f403bca3540dbbd652eb55703a044833 tooling_sha=2a19cd43646fe284a7ab41828178b2b8f17edea1 port=/dev/cu.usbserial-1130 shelly=192.168.0.16 power_delta_w=2.800 environmental=humidity temp_gap_delta_c=0.190 ah_gap_delta_gm3=0.381 raw_rf=0 forbidden_port_untouched=/dev/cu.usbserial-10 hardware_started=1\nH_FINAL_AUTOMATION_OFF_REQUESTED supervisor_owned=1\nH_FINAL_SAFE_STATE_PASS mode=disabled fan=off humidifier=off transport=clean\nOUTPUT_SUPERVISOR_H_PHYSICAL_PASS sha=02208d23f403bca3540dbbd652eb55703a044833 tooling_sha=2a19cd43646fe284a7ab41828178b2b8f17edea1 port=/dev/cu.usbserial-1130 shelly=192.168.0.16 raw_rf=0 forbidden_port_untouched=/dev/cu.usbserial-10 hardware_started=1\n",
+      "elapsed_seconds": 1013.951,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 32.33,
+      "output_policy": "stream",
+      "captured_output_chars": 1750,
+      "output_truncated": false,
+      "current_rss_mb": 13.55,
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.821
+    },
+    {
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 1.218
+    },
+    {
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 1013.951
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.121
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.075
+  },
+  "finished_at": "2026-09-10T17:50:08.519875+00:00",
+  "task_digest": "43179d394d4273c85cbadf60570c445fe17fe9b12bfc1fed3a4f1b511c2cf71e",
+  "idle_timeout": 3600,
+  "task_timeout": 10800,
+  "memory_limit_mb": 4096,
+  "attempt_id": "f4f6403d90ef4b9b4bed3c3c",
+  "daemon_version": "4.18.20"
+}
