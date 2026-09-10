@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "id": "20260910-output-hw-post-recovery-status-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "mvp/environment-controller",
+  "resources": [],
+  "allow_write": false,
+  "command_timeout": 300,
+  "task_timeout": 600,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch -q origin mvp/environment-controller && test \"$(git rev-parse HEAD)\" = \"014610e40ecfef96e7caddf1ee98deced2a4d64f\" && test \"$(git rev-parse FETCH_HEAD)\" = \"014610e40ecfef96e7caddf1ee98deced2a4d64f\" && test -z \"$(git status --porcelain)\"",
+    ".venv/bin/python -c 'import time,serial; port=\"/dev/cu.usbserial-1130\"; qualified=\"02208d23f403bca3540dbbd652eb55703a044833\"; forbidden=\"/dev/cu.usbserial-10\"; s=serial.Serial(port=None,baudrate=115200,timeout=0.2,write_timeout=1); s.dtr=False; s.rts=False; s.port=port; s.open(); lines=[]; start=time.monotonic(); nxt=0.0;\ntry:\n while time.monotonic()-start<25.0:\n  now=time.monotonic(); raw=s.readline();\n  if raw:\n   line=raw.decode(errors=\"replace\").strip(); lines.append(line); print(line,flush=True)\n  if now>=nxt:\n   s.write(b\"status\\nautomation status\\nsensors\\n\"); s.flush(); nxt=now+4.0\n  time.sleep(0.01)\nfinally:\n s.close()\ntext=\"\\n\".join(lines); ok_status=(f\"status firmware_sha={qualified}\" in text and \"outputs=real-bounded\" in text and \"rf_ready=1\" in text); ok_disabled=(\"automation mode=Disabled requested=off transition_active=0 request_pending=0\" in text); ok_safety=(\"safety_latched=0\" in text);\nassert ok_status, \"POST_RECOVERY_STATUS_FAIL qualified_real_status=0\"; assert ok_disabled, \"POST_RECOVERY_STATUS_FAIL disabled=0\"; assert ok_safety, \"POST_RECOVERY_STATUS_FAIL safety_clear=0\"; print(f\"OUTPUT_HW_POST_RECOVERY_STATUS_PASS sha={qualified} port={port} outputs=real-bounded mode=Disabled safety_latched=0 flash_started=0 raw_rf=0 forbidden_port_untouched={forbidden} hardware_started=1\")'"
+  ]
+}
