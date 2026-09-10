@@ -10,7 +10,7 @@ from enum import IntEnum
 from pathlib import Path
 from typing import Any
 
-QUALIFIED_SHA = "1c59f3cfa239abbfbae721247d01d65a39d4bdfc"
+QUALIFIED_SHA = "02208d23f403bca3540dbbd652eb55703a044833"
 FAN_ENDPOINT = 1
 OUTPUT_TELEMETRY_VERSION = 2
 LOG_SCHEMA = "growbox-log-v3"

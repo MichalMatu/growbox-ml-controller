@@ -1,6 +1,6 @@
 # Current controller status
 
-Updated: 2026-09-09
+Updated: 2026-09-10
 Development branch: `mvp/environment-controller`
 Latest handoff: `docs/ARCHITECTURE_HANDOFF.md`
 Execution architecture design: `docs/OUTPUT_EXECUTION_ARCHITECTURE.md`
@@ -17,11 +17,11 @@ The OutputSupervisor architecture has completed its final software qualification
 
 Exact software-qualified production identity:
 
-`1c59f3cfa239abbfbae721247d01d65a39d4bdfc`
+`02208d23f403bca3540dbbd652eb55703a044833`
 
 Terminal Local Agent evidence:
 
-`20260909-output-a12-2-final-full-software-gate-v8`
+`20260910-output-a12-2-final-full-software-gate-v9`
 
 Final A12.2 result:
 
@@ -35,8 +35,8 @@ Final A12.2 result:
 - output/RF ownership invariant: PASS;
 - configured main-task stack: `16384` bytes;
 - measured runtime frame: `32` bytes;
-- firmware binary: `771888` bytes;
-- text: `617445` bytes;
+- firmware binary: `771920` bytes;
+- text: `617469` bytes;
 - data: `154332` bytes;
 - bss: `1356861` bytes;
 - reported static DRAM metric: `1511193` bytes;
@@ -62,15 +62,16 @@ Standing ownership rules:
 
 ## Phase H state
 
-Phase H is **not PASS** and hardware qualification has **not started** for the OutputSupervisor architecture.
+Phase H is **not PASS**. An authorized hardware preflight started, failed safe in `FaultLocked`, and exposed a startup partial-command-truth defect that is now fixed and requalified in software.
 
 Historical H v8 is frozen and must not be reused. Its software preflight identity `231eed28f64bdbdc4238fd8bce128264027702f2` predates the new production architecture and is historical evidence only.
 
-The next authorized sequence is:
+The next sequence is:
 
-1. A13.1 — define a new OutputSupervisor H qualification contract and observer/tooling against telemetry v2;
-2. A13.2 — run a software-only H preflight for the exact A12-qualified identity with `hardware_started=0`;
-3. A13.3 — mandatory stop for explicit operator authorization before any hardware access.
+1. retarget A13.1 tooling/docs to the replacement A12-qualified SHA;
+2. rerun A13.2 software-only preflight with `hardware_started=0`;
+3. rerun the bounded hardware preflight on `/dev/cu.usbserial-1130`;
+4. only after that PASS, execute the natural Climate -> OutputSupervisor physical H proof.
 
 The new H contract must prove the normal chain:
 
@@ -88,7 +89,7 @@ It must distinguish request, selected/resolved command, transport completion and
 
 ## Hardware boundary
 
-Until A13.2 passes and the operator explicitly authorizes hardware qualification:
+Operator hardware authorization was granted on 2026-09-10. Because production source changed after the first physical preflight, no further hardware access is allowed until the replacement A13.2 software preflight passes:
 
 - no serial access;
 - no USB probing;

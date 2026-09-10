@@ -1,6 +1,6 @@
 # Execution Architecture Handoff
 
-Updated: 2026-09-09
+Updated: 2026-09-10
 Repository: `MichalMatu/growbox-ml-controller`
 Work branch: `mvp/environment-controller`
 Control branch: `agent-control`
@@ -14,13 +14,13 @@ The OutputSupervisor migration is software-stabilized through A12.2.
 
 Software-qualified executable SHA:
 
-`1c59f3cfa239abbfbae721247d01d65a39d4bdfc`
+`02208d23f403bca3540dbbd652eb55703a044833`
 
 Terminal full-gate evidence:
 
-`20260909-output-a12-2-final-full-software-gate-v8`
+`20260910-output-a12-2-final-full-software-gate-v9`
 
-The final full gate passed Python software tests, all 49 host C++ tests, lint/format/schema/pre-push checks, fake-output and real-output software-only firmware builds, RF-enabled main-stack evidence, and the output/RF ownership invariant. It recorded `main_stack=16384`, `runtime_frame=32`, `firmware_bin=771888`, and `hardware_started=0`.
+The final full gate passed Python software tests, all 49 host C++ tests, lint/format/schema/pre-push checks, fake-output and real-output software-only firmware builds, RF-enabled main-stack evidence, and the output/RF ownership invariant. It recorded `main_stack=16384`, `runtime_frame=32`, `firmware_bin=771920`, and `hardware_started=0`.
 
 The current branch may contain later documentation/tooling commits. Those later commits do not replace the exact A12-qualified executable identity unless production source is changed and requalified.
 
@@ -55,9 +55,7 @@ Those identities and tools are historical only because they predate the OutputSu
 
 ## A13.1 — new OutputSupervisor H qualification contract
 
-A13.1 is the active task.
-
-Create a new qualification plan/tool contract for the A12-qualified identity. It must not reuse the historical H v8 observer as-is.
+A13.1 retargeting is the active task after the hardware preflight exposed and software requalification fixed the startup partial-command-truth defect. The H contract itself remains unchanged in ownership semantics and must not reuse the historical H v8 observer as-is.
 
 The normal transition proof must follow the new architecture:
 
@@ -87,7 +85,7 @@ The observer contract must consume telemetry v2 and distinguish:
 
 A valid normal-control qualification transition must prove at minimum:
 
-1. exact production identity is `1c59f3cfa239abbfbae721247d01d65a39d4bdfc`;
+1. exact production identity is `02208d23f403bca3540dbbd652eb55703a044833`;
 2. supervisor mode is `Automatic`;
 3. `MaintenanceLocked` is not active;
 4. the fan control intent is natural climate intent, not injected test/manual intent;
@@ -126,13 +124,11 @@ It must not:
 
 The terminal result must include `hardware_started=0`.
 
-## Mandatory stop after A13.2
+## Hardware gate after A13.2
 
-After A13.2 PASS, stop before hardware.
+The operator explicitly authorized hardware qualification on 2026-09-10. Because production source changed after the initial hardware preflight, that authorization may be exercised again only after the replacement executable passes the retargeted A13.2 software preflight.
 
-Do not begin physical H until the operator explicitly authorizes it.
-
-Only after that explicit authorization may a future hardware task use:
+Only then may the bounded hardware task use:
 
 `/dev/cu.usbserial-1130`
 

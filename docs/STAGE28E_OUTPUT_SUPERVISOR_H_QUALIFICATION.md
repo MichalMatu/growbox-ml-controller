@@ -1,12 +1,12 @@
 # Stage28E OutputSupervisor Phase H Qualification
 
 Status: A13.1 SOFTWARE CONTRACT
-Updated: 2026-09-09
+Updated: 2026-09-10
 Repository: `MichalMatu/growbox-ml-controller`
 Work branch: `mvp/environment-controller`
-A12 software-qualified executable SHA: `1c59f3cfa239abbfbae721247d01d65a39d4bdfc`
+A12 software-qualified executable SHA: `02208d23f403bca3540dbbd652eb55703a044833`
 Historical H v8: frozen; do not execute
-Hardware authorization: NOT GRANTED
+Hardware authorization: GRANTED by operator on 2026-09-10
 
 ## 1. Purpose
 
@@ -30,11 +30,11 @@ natural climate ControlIntent
 
 Only this exact executable source identity is qualified by A12.2:
 
-`1c59f3cfa239abbfbae721247d01d65a39d4bdfc`
+`02208d23f403bca3540dbbd652eb55703a044833`
 
 Terminal A12.2 evidence:
 
-`20260909-output-a12-2-final-full-software-gate-v8`
+`20260910-output-a12-2-final-full-software-gate-v9`
 
 A later docs/tooling commit does not change this executable identity. Any production-source change after this identity requires new software qualification before hardware H can resume.
 
@@ -176,19 +176,19 @@ The future bounded hardware observer must collect independent evidence around th
 Requirements:
 
 - Shelly master remains ON;
-- at least three stable power samples exist before the counted transition;
-- at least three power samples exist after the counted transition;
+- exactly eight stable power samples are collected before the counted transition at 2 s cadence;
+- exactly eight power samples are collected after the counted transition at 2 s cadence;
 - lamp state does not change across the proof window;
 - humidifier state does not change across the proof window;
-- post-transition median power minus pre-transition median power meets a reviewed positive minimum threshold.
+- post-transition median power minus pre-transition median power is at least `+1.0 W`.
 
-The threshold is an explicit qualification parameter, not a hidden constant. It must be reviewed before hardware authorization.
+The `+1.0 W` minimum delta is frozen for the authorized hardware qualification and must not be weakened during execution.
 
 ### 6.2 Environmental response support
 
-A bounded post-transition environmental window must provide supporting evidence consistent with increased exhaust airflow. The exact acceptance metric/window must be frozen before the hardware task is authorized and must not weaken thermal safety.
+The authorized hardware qualification uses a 180 s pre-transition observation, ignores the first 30 s after the counted fan ON transition, and observes the post-transition response for up to 600 s. Supporting environmental response is accepted when the active trigger's gradient measurably contracts: for a temperature-driven transition, median `|TP357_T - Xiaomi_T|` decreases by at least `0.20 C`; for a humidity-driven transition, the inside-minus-outside absolute-humidity gap decreases by at least `0.30 g/m3`. If both triggers are active, satisfying either actually active mechanism is sufficient.
 
-Environmental response is supporting physical evidence, not a substitute for the supervisor/transport telemetry chain.
+The operator thermal guard is `27.5 C`; the firmware hard-safety policy remains authoritative. Environmental response is supporting physical evidence, not a substitute for the supervisor/transport telemetry chain.
 
 ## 7. Recovery and final state
 
@@ -250,13 +250,11 @@ The preflight must verify:
 
 A13.2 is not hardware qualification.
 
-## 10. Mandatory stop
+## 10. Hardware authorization gate
 
-After A13.2 PASS, stop and wait for explicit operator authorization.
+The operator explicitly authorized physical qualification on 2026-09-10. That authorization remains subordinate to software qualification: after any production-source change, hardware must stop until the replacement executable passes A12.2 and the retargeted A13.1/A13.2 gates.
 
-Do not tell the operator to connect the ESP32 before that explicit authorization step.
-
-When hardware is later explicitly authorized, only this Growbox serial port may be used:
+For the currently authorized hardware qualification, only this Growbox serial port may be used:
 
 `/dev/cu.usbserial-1130`
 
