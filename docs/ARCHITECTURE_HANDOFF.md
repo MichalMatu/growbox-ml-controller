@@ -10,7 +10,7 @@ Implementation plan: `docs/OUTPUT_EXECUTION_IMPLEMENTATION_PLAN.md`
 
 ## Current state
 
-The OutputSupervisor migration is software-stabilized through A12.2.
+The OutputSupervisor migration is software-stabilized through A12.2 and the authorized physical Phase H qualification is PASS.
 
 Software-qualified executable SHA:
 
@@ -23,6 +23,12 @@ Terminal full-gate evidence:
 The final full gate passed Python software tests, all 49 host C++ tests, lint/format/schema/pre-push checks, fake-output and real-output software-only firmware builds, RF-enabled main-stack evidence, and the output/RF ownership invariant. It recorded `main_stack=16384`, `runtime_frame=32`, `firmware_bin=771920`, and `hardware_started=0`.
 
 The current branch may contain later documentation/tooling commits. Those later commits do not replace the exact A12-qualified executable identity unless production source is changed and requalified.
+
+### Physical H terminal evidence
+
+Terminal Local Agent task `20260910-output-supervisor-physical-h-v3` passed against production SHA `02208d23f403bca3540dbbd652eb55703a044833` and tooling SHA `2a19cd43646fe284a7ab41828178b2b8f17edea1`.
+
+It proved a natural humidity-driven `ClimateDecision` fan OFF->ON transition, Shelly power delta `+2.8 W` (`22.0 W -> 24.8 W`, 8 + 8 samples), absolute-humidity gradient contraction `0.381 g/m3`, formal OutputSupervisor replay PASS, and supervisor-owned final `Disabled` state with fan/humidifier OFF and clean transport. No raw RF command path was used; `/dev/cu.usbserial-10` remained untouched.
 
 ## Required architecture invariant
 
@@ -55,7 +61,7 @@ Those identities and tools are historical only because they predate the OutputSu
 
 ## A13.1 — new OutputSupervisor H qualification contract
 
-A13.1 retargeting is the active task after the hardware preflight exposed and software requalification fixed the startup partial-command-truth defect. The H contract itself remains unchanged in ownership semantics and must not reuse the historical H v8 observer as-is.
+A13.1 retargeting and the sampling-robust replay update are complete. The physical H run is also complete; the H contract remains unchanged in ownership semantics and the historical H v8 observer must not be reused.
 
 The normal transition proof must follow the new architecture:
 
@@ -103,7 +109,7 @@ A13.1 is documentation/tooling only. It must not open serial, flash, transmit RF
 
 ## A13.2 — software-only H preflight
 
-After A13.1 is committed, run a new software-only preflight against the exact A12-qualified executable identity and the new H tooling.
+A13.2 software-only preflight completed successfully against the exact A12-qualified executable identity and the final H tooling before hardware execution.
 
 The preflight may:
 
@@ -124,11 +130,11 @@ It must not:
 
 The terminal result must include `hardware_started=0`.
 
-## Hardware gate after A13.2
+## Hardware qualification result
 
-The operator explicitly authorized hardware qualification on 2026-09-10. Because production source changed after the initial hardware preflight, that authorization may be exercised again only after the replacement executable passes the retargeted A13.2 software preflight.
+The operator-authorized bounded hardware qualification completed successfully on 2026-09-10 after A13.2 PASS.
 
-Only then may the bounded hardware task use:
+Qualified hardware path:
 
 `/dev/cu.usbserial-1130`
 
@@ -136,7 +142,9 @@ Never touch:
 
 `/dev/cu.usbserial-10`
 
-Any future hardware task must verify the correct port internally, explicitly reject the forbidden port, use `resources: []`, verify the exact qualified firmware identity, remain bounded, preserve all safety invariants, and restore/prove the defined safe final state.
+Terminal evidence is `20260910-output-supervisor-physical-h-v3`. The final run preserved all safety invariants, used only high-level supervisor-owned automation lifecycle commands, used no raw RF path, and restored/proved the safe final state.
+
+Any future production-source change invalidates the current executable qualification and requires A12/A13 requalification before a new hardware claim.
 
 ## Safety invariants
 

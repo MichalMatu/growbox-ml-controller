@@ -1,12 +1,35 @@
 # Stage28E OutputSupervisor Phase H Qualification
 
-Status: A13.1 SOFTWARE CONTRACT
+Status: PHYSICAL H PASS
 Updated: 2026-09-10
 Repository: `MichalMatu/growbox-ml-controller`
 Work branch: `mvp/environment-controller`
 A12 software-qualified executable SHA: `02208d23f403bca3540dbbd652eb55703a044833`
 Historical H v8: frozen; do not execute
 Hardware authorization: GRANTED by operator on 2026-09-10
+Terminal physical H evidence: `20260910-output-supervisor-physical-h-v3` PASS
+Physical H tooling SHA: `2a19cd43646fe284a7ab41828178b2b8f17edea1`
+
+### Terminal physical H result
+
+The authorized bounded hardware qualification passed on 2026-09-10 against exact production identity `02208d23f403bca3540dbbd652eb55703a044833`.
+
+Observed terminal evidence:
+
+- startup recovery reached `Automatic` with `safety_latched=0` at uptime `630113 ms`;
+- active SD session `3F6B0A11.JL` matched `growbox-log-v3` and output telemetry v2;
+- clean natural fan-OFF baseline began at uptime `651463 ms`;
+- natural `Climate` / `ClimateDecision` fan ON was captured at uptime `884293 ms` with requested level `0.111`;
+- the active trigger was humidity (`AH gap 2.513 g/m3` at transition); temperature trigger was not counted;
+- Shelly RPC produced exactly eight pre and eight post samples with median power `22.0 W -> 24.8 W`, delta `+2.8 W`;
+- the humidity environmental gradient contracted by `0.381 g/m3`, exceeding the frozen `0.30 g/m3` threshold;
+- formal OutputSupervisor replay passed for the exact qualified SHA;
+- no raw RF command path was used and `/dev/cu.usbserial-10` remained untouched;
+- final supervisor-owned `automation off` reached `Disabled` with fan OFF, humidifier OFF and transport clean.
+
+Terminal marker:
+
+`OUTPUT_SUPERVISOR_H_PHYSICAL_PASS sha=02208d23f403bca3540dbbd652eb55703a044833 tooling_sha=2a19cd43646fe284a7ab41828178b2b8f17edea1 port=/dev/cu.usbserial-1130 shelly=192.168.0.16 raw_rf=0 forbidden_port_untouched=/dev/cu.usbserial-10 hardware_started=1`
 
 ## 1. Purpose
 
@@ -171,7 +194,7 @@ Without an independent feedback provider, the firmware physical state remains `U
 
 ## 6. Independent supporting evidence
 
-The future bounded hardware observer must collect independent evidence around the counted fan transition.
+The successful bounded hardware observer collected independent evidence around the counted fan transition.
 
 ### 6.1 Shelly power support
 
@@ -194,7 +217,7 @@ The operator thermal guard is `27.5 C`; the firmware hard-safety policy remains 
 
 ## 7. Recovery and final state
 
-The eventual physical H task must make recovery/final-state execution supervisor-owned.
+The successful physical H task made recovery/final-state execution supervisor-owned.
 
 The qualification wrapper must:
 

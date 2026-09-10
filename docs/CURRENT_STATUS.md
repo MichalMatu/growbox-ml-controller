@@ -9,9 +9,9 @@ Frozen Phase H evidence: `docs/STAGE28E_PHASE_H_HANDOFF.md`
 
 ## Current transition
 
-**Stage27C FROZEN -> Stage28E A-G COMPLETE -> OUTPUT EXECUTION ARCHITECTURE A1-A12 COMPLETE -> A13 QUALIFICATION CONTRACT ACTIVE**
+**Stage27C FROZEN -> Stage28E A-G COMPLETE -> OUTPUT EXECUTION ARCHITECTURE A1-A12 COMPLETE -> A13 + PHYSICAL H COMPLETE**
 
-The OutputSupervisor architecture has completed its final software qualification. The old H v8 path remains historical and must not be executed.
+The OutputSupervisor architecture has completed its final software qualification and the authorized physical Phase H qualification. The old H v8 path remains historical and must not be executed.
 
 ## A12 software-qualified identity
 
@@ -62,18 +62,11 @@ Standing ownership rules:
 
 ## Phase H state
 
-Phase H is **not PASS**. An authorized hardware preflight started, failed safe in `FaultLocked`, and exposed a startup partial-command-truth defect that is now fixed and requalified in software.
+Phase H is **PASS** for exact production identity `02208d23f403bca3540dbbd652eb55703a044833` with tooling identity `2a19cd43646fe284a7ab41828178b2b8f17edea1`.
 
-Historical H v8 is frozen and must not be reused. Its software preflight identity `231eed28f64bdbdc4238fd8bce128264027702f2` predates the new production architecture and is historical evidence only.
+Terminal Local Agent evidence: `20260910-output-supervisor-physical-h-v3`.
 
-The next sequence is:
-
-1. retarget A13.1 tooling/docs to the replacement A12-qualified SHA;
-2. rerun A13.2 software-only preflight with `hardware_started=0`;
-3. rerun the bounded hardware preflight on `/dev/cu.usbserial-1130`;
-4. only after that PASS, execute the natural Climate -> OutputSupervisor physical H proof.
-
-The new H contract must prove the normal chain:
+The bounded single-open hardware run proved the normal production chain without manual fan commands or raw RF:
 
 ```text
 natural climate ControlIntent
@@ -81,24 +74,27 @@ natural climate ControlIntent
 -> BinaryActuatorPolicy eligibility
 -> OutputPlan command
 -> RF433OutputTransport TxResult
--> independent physical evidence
--> environmental response evidence
+-> independent Shelly aggregate-power support
+-> environmental response support
 ```
 
-It must distinguish request, selected/resolved command, transport completion and physical evidence. A successful one-way RF transmission must never be treated as physical acknowledgement.
+Counted evidence:
+
+- natural fan OFF baseline from uptime `651463 ms`;
+- natural humidity-driven `ClimateDecision` fan ON at uptime `884293 ms`, requested level `0.111`;
+- Shelly median power `22.0 W -> 24.8 W`, delta `+2.8 W` across exactly 8 + 8 samples;
+- inside-minus-outside absolute-humidity gradient contracted by `0.381 g/m3` (frozen requirement `>=0.30 g/m3`);
+- formal OutputSupervisor replay PASS on `02208d23f403bca3540dbbd652eb55703a044833`;
+- final supervisor-owned `automation off` reached `Disabled`, fan OFF, humidifier OFF, transport clean;
+- `raw_rf=0`; `/dev/cu.usbserial-10` remained untouched.
+
+One-way RF transport completion is still not treated as physical acknowledgement; Shelly and the environmental response remain independent supporting evidence.
 
 ## Hardware boundary
 
-Operator hardware authorization was granted on 2026-09-10. Because production source changed after the first physical preflight, no further hardware access is allowed until the replacement A13.2 software preflight passes:
+The authorized Phase H hardware run is complete. No further hardware execution is required to establish this Phase H PASS.
 
-- no serial access;
-- no USB probing;
-- no flashing;
-- no RF TX;
-- no physical-output tests;
-- `hardware_started=0`.
-
-Correct Growbox serial device for a future explicitly authorized hardware task:
+Qualified Growbox serial device:
 
 `/dev/cu.usbserial-1130`
 
@@ -106,15 +102,18 @@ Never touch:
 
 `/dev/cu.usbserial-10`
 
-Standing safety invariants:
+Standing safety invariants remain unchanged:
 
 - deterministic rule controller remains authoritative;
 - ML remains shadow/research-only;
 - thermal trip remains `>=28 C`;
 - thermal recovery remains `<=26 C` continuously for 10 minutes;
 - safety remains active when automation is disabled;
-- Shelly master stays ON during any future bounded qualification;
-- future hardware tasks must restore and prove the defined safe final state.
+- one-way RF never implies physical acknowledgement;
+- raw RF remains restricted to explicit `MaintenanceLocked` handling;
+- `OutputSupervisor` remains the only normal production owner of configured physical outputs.
+
+Any future production-source change invalidates the current A12/A13/physical-H executable qualification and requires requalification before further hardware claims.
 
 ## Local Agent execution identity
 
@@ -128,7 +127,6 @@ Every Local Agent task must use the exact binding, `work_branch: mvp/environment
 
 ## Immediate next work
 
-1. Define A13.1 against OutputSupervisor telemetry v2 and the A12-qualified SHA.
-2. Add software-testable parsing/replay fixtures for the new H observer contract.
-3. Run A13.2 software-only preflight with no serial, flash, RF TX or hardware access.
-4. Stop before hardware and require explicit operator authorization.
+Phase H is complete. No further Phase H execution is required unless production source changes or a new hardware qualification target is intentionally introduced.
+
+Preserve the terminal evidence above and the historical failed-safe attempts; do not rerun historical H v8.
