@@ -1,0 +1,89 @@
+{
+  "id": "20260910-output-hw-growbox-runtime-identification-v1",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "mvp/environment-controller",
+  "allow_write": false,
+  "started_at": "2026-09-10T13:46:00.074243+00:00",
+  "command_timeout": 300,
+  "edits": {},
+  "commands": [
+    {
+      "command": "git fetch -q origin mvp/environment-controller && test \"$(git rev-parse HEAD)\" = \"d9383a693f66851f5151a96f0341fd4eeaaf746d\" && test \"$(git rev-parse FETCH_HEAD)\" = \"d9383a693f66851f5151a96f0341fd4eeaaf746d\" && test -z \"$(git status --porcelain)\"",
+      "exit_code": 0,
+      "output": "",
+      "elapsed_seconds": 1.347,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 5.11,
+      "output_policy": "stream",
+      "captured_output_chars": 0,
+      "output_truncated": false,
+      "current_rss_mb": 5.11,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 2,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "test -e /dev/cu.usbserial-1130 && PY=.venv/bin/python; test -x \"$PY\" || PY=python3; \"$PY\" - <<'PY'\nimport sys, time\nimport serial\nPORT = '/dev/cu.usbserial-1130'\nFORBIDDEN = '/dev/cu.usbserial-10'\nser = serial.Serial(port=None, baudrate=115200, timeout=0.2, write_timeout=1)\nser.dtr = False\nser.rts = False\nser.port = PORT\nser.open()\ntry:\n    time.sleep(1.0)\n    ser.reset_input_buffer()\n    ser.write(b'status\\n')\n    ser.write(b'sensors\\n')\n    ser.flush()\n    deadline = time.monotonic() + 8.0\n    lines = []\n    while time.monotonic() < deadline:\n        raw = ser.readline()\n        if raw:\n            line = raw.decode(errors='replace').strip()\n            lines.append(line)\n            print(line, flush=True)\n    status = next((line for line in lines if line.startswith('status firmware_sha=')), None)\n    sensors = any(line.startswith('sensors:') for line in lines)\n    if status is None or 'outputs=' not in status or 'rf_ready=' not in status or not sensors:\n        print(f'GROWBOX_RUNTIME_IDENTIFICATION_FAIL port={PORT} forbidden_port_untouched={FORBIDDEN} flash_started=0 rf_started=0')\n        raise SystemExit(4)\n    print(f'GROWBOX_RUNTIME_IDENTIFICATION_PASS port={PORT} forbidden_port_untouched={FORBIDDEN} flash_started=0 rf_started=0 status={status}')\nfinally:\n    ser.close()\nPY",
+      "exit_code": 4,
+      "output": "_start: GPIO 44 and 43 are used as console UART I/O pins\nI (677) cpu_start: Pro cpu start user code\nI (677) cpu_start: cpu freq: 160000000 Hz\nI (678) app_init: Application information:\nI (682) app_init: Project name:     growbox_ml_controller\nI (687) app_init: App version:      stage27c-validated-2026-09-03-2\nI (693) app_init: Compile time:     Sep  7 2026 17:45:52\nI (698) app_init: ELF file SHA256:  046e020a3...\nI (703) app_init: ESP-IDF:          v5.5.4\nI (706) efuse_init: Min chip rev:     v0.0\nI (710) efuse_init: Max chip rev:     v0.99\nI (714) efuse_init: Chip rev:         v0.2\nI (718) heap_init: Initializing. RAM available for dynamic allocation:\nI (724) heap_init: At 3FCA7668 len 000420A8 (264 KiB): RAM\nI (729) heap_init: At 3FCE9710 len 00005724 (21 KiB): RAM\nI (735) heap_init: At 3FCF0000 len 00008000 (32 KiB): DRAM\nI (740) heap_init: At 600FE000 len 00001FE8 (7 KiB): RTCRAM\nI (745) esp_psram: Adding pool of 8192K of PSRAM memory to heap allocator\nI (753) spi_flash: detected chip: gd\nI (755) spi_flash: flash io: dio\nI (758) sleep_gpio: Configure to isolate all GPIO pins in sleep state\nI (764) sleep_gpio: Enable automatic switching of GPIO sleep configuration\nI (886) coexist: coex firmware version: 093e3d2\nI (887) coexist: coexist rom version e7ae62f\nI (888) main_task: Started on CPU0\nI (898) main_task: Calling app_main()\nstage28e_coredump present=1 valid=1 size=87620 get_err=0 check_err=0\nstage28e_breadcrumb previous_valid=0 write_seq=0 boot_seq=0 boot_id=00000000 reset_reason=0 last_log_seq=0 last_log_uptime_ms=0 last_log_module=0 last_log_level=0 fault_code=0 fault_seq=0 fault_uptime_ms=0 arbiter_instance=0 arbiter_constructions=0 arbiter_transitions=0 arbiter_dwell_holds=0 arbiter_safety_overrides=0 arbiter_continuity_faults=0\nstage28e_runtime_lifecycle entry_count=1 mode=climate-v6-real-inputs\nI (1118) climate_stage27: I2C probe: scd41_0x62=ESP_OK ds3231_0x68=ESP_OK\nI (1638) BLE_INIT: BT controller compile version [b7de11e]\nI (1638) BLE_INIT: Using main XTAL as clock source\nI (1638) BLE_INIT: Feature Config, ADV:1, BLE_50:1, DTM:1, SCAN:1, CCA:0, SMP:1, CONNECT:1\nI (1638) BLE_INIT: Bluetooth MAC: a0:85:e3:f9:fc:16\nI (1648) phy_init: phy_version 711,97bcf0a2,Aug 25 2025,19:04:10\nI (1698) NimBLE: GAP procedure initiated: stop advertising.\n\nI (1698) NimBLE: GAP procedure initiated: discovery;\nI (1698) NimBLE: own_addr_type=0 filter_policy=0 passive=1 limited=0 filter_duplicates=0\nI (1708) NimBLE: duration=forever\nI (1708) NimBLE:\n\nI (1718) stage27_sd: SD power GPIO42 initialized LOW\nI (1718) stage27_store: Telemetry storage started: sd=1 flash_fallback=1 cmd0_compat=0 queue_psram=1 queue_bytes=4736\nI (1728) stage28e_lifecycle: arbiter_construct instance_id=1 construction_count=1 self=0x3fcad210\nI (1738) climate_stage27: Stage27 real-input runtime: i2c=1 scd41=1 ds3231=1 ble=1 sd=1 flash_fallback=1 storage_logger=1 rf433_loopback=0 rf433_tx_gpio=8 rf433_rx_gpio=14 service_console=1 real_outputs_requested=0 real_outputs_ready=0 thermal_test=0 outputs=fake-locked\nu=1014 b=2bda979e s=1 INFO/SYS main/c0 boot firmware_sha=5a4830db9d10e8cb73d4c617b09122f0844ad899 reset_reason=1 started_us=3641\n=== Growbox service console ===\nAutomatic output mode: fake-locked.\n\nCommands:\n0 | help | ?                     show this menu\n1 | status                       firmware/runtime/heap/RF status\n2 | sensors                      SCD41, TP357, Xia01 outputs=fake-lockedu=1048 b=2bda979e s=2 INFO/WATCHDOG main/c0 heartbeat seq=1 uptime_ms=1025 internal_free=227236 internal_min=227236I (1808) climate_stage27: soak_v=2 firmware_sha=5a4830db9d10e8cb73d4c617b09122f0844ad899 uptime_ms=1025 reset_reason=1 input_sampled=1 io_status=0 heap_internal=227236 heap_internal_min=227236 heap_internal_largest=184320 heap_psram=8375720 heap_psram_min=8375720 heap_psram_largest=8257536 stack_free=8232 scd_available=1 scd_sample=0 scd_t=0.00 scd_rh=0.00 scd_co2=0 scd_age_ms=0 scd_read_errors=0 scd_invalid=0 scd_samples=0 rtc_available=1 rtc_trusted=1 rtc_reads=2 rtc_read_errors=0 rtc_untrusted=0 rtc_last_success_ms=1025 rtc_last_trusted_ms=1025 rtc_unix_time_s=1789047945 ble_scanning=1 ble_scan_starts=1 ble_scan_errors=0 ble_scan_restarts=0 ble_scan_completes=0 ble_adv_lock_drops=0 tp_sample=0 tp_t=0.00 tp_rh=0.00 tp_age_ms=0 tp_packets=0 tp_accepted=0 tp_rejected=0 xiaomi_sample=0 xiaomi_t=0.00 xiaomi_rh=0.00 xiaomi_age_ms=0 xiaomi_packets=0 xiaomi_accepted=0 xiaomi_rejected=0 runtime_status=0 runtime_mode=0 rule_arb=0 rule_safety=0 requested_fan=0.000 requested_humidifier=0.000 applied_heater=0.000 applied_cooler=0.000 applied_fan=0.000 applied_humidifier=0.000 applied_dehumidifier=0.000 applied_co2=0.000 physical_light=0 physical_fan=0 physical_humidifier=0 thermal_latched=1 force_fan=1 safety_reason=2 arbiter_transitions=0 arbiter_dwell_holds=0 arbiter_safety_overrides=0 storage_backend=none storage_sd_mounted=0 storage_flash_mounted=0 storage_sd_mount_errors=0 storage_flash_mount_errors=0 storage_write_errors=0 storage_queue_drops=0 storage_records_written=0 storage_records_skipped=0 storage_fallbacks=0 storage_sd_recoveries=0 storage_last_write_ms=0 sd_mounted=0 sd_mount_errors=0 sd_write_errors=0 sd_queue_drops=0 sd_records_written=0 sd_records_skipped=0 sd_last_write_ms=0 outputs=fake-locked\nI (1958) climate_stage27: stage28d_output real=0 lamp_known=0 lamp_on=0 fan_known=0 fan_on=0 humidifier_known=0 humidifier_on=0 safety_latched=1 force_fan=1 safety_reason=2 requested_fan=0.000 requested_humidifier=0.000 applied_fan=0.000 applied_humidifier=0.000 arbiter_transitions=0 arbiter_dwell_holds=0 arbiter_safety_overrides=0 tx=0 tx_errors=0\nomi and RTC snapshot\n3 | rf | rf list                 list known RF433 devices/codes\nrtc set-unix <epoch>             set DS3231 from UTC Unix seconds\nrf lamp on|off                   manual lamp socket transmit\nrf fan on|off                    manual fan socket transmit\nrf humidifier on|off             manual humidifier socket transmit\nrf rx [50..5000]                 capture/decode one RF frame\nsdlog status                     SD logger status/counters\nsdlog list                       list GBLOG/*.JL with sizes\nsdlog read <file.JL> <off> <n>  read 1..384 bytes as Base64 + CRC32\nsdlog selftest                   durable write/read/delete SD probe\nRTC stores UTC; lighting schedule converts UTC to Europe/Warsaw.\nRF transmit commands require the RF diagnostics transport to be enabled.\nManual RF TX is blocked while automatic outputs are real-bounded.\nManual TX is not physical load-state acknowledgement.\ngrowbox> I (2098) sdspi_transaction: cmd=5, R1 response: command not supported\nI (2238) stage27_sd: SD mounted SPI3 MOSI=40 MISO=13 CLK=39 CS=10 POWER=42\nI (2368) stage27_sd: SD session opened: /sdcard/GBLOG/6a17ea6f.JL\nGROWBOX_RUNTIME_IDENTIFICATION_FAIL port=/dev/cu.usbserial-1130 forbidden_port_untouched=/dev/cu.usbserial-10 flash_started=0 rf_started=0\n",
+      "elapsed_seconds": 9.514,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 12.27,
+      "output_policy": "stream",
+      "captured_output_chars": 6888,
+      "output_truncated": false,
+      "current_rss_mb": 10.3,
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 2,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 2,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 1.347
+    },
+    {
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 2,
+      "stage_phase": "commands",
+      "outcome": "failed",
+      "elapsed_seconds": 9.514
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.147
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.095
+  },
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-10T13:46:12.916642+00:00",
+  "task_digest": "98b1c87e2d290f11115bd0264802c9b9ea701f55806246b9d088508a828f4d8c",
+  "idle_timeout": 300,
+  "task_timeout": 900,
+  "memory_limit_mb": 4096,
+  "attempt_id": "0c950ff18b6d70524adcd9d9",
+  "daemon_version": "4.18.20"
+}
