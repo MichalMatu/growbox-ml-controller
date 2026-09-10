@@ -1,0 +1,9 @@
+{
+  "id": "20260910-output-supervisor-h-doc-closeout-v1",
+  "status": "failed",
+  "failure_reason": "invalid_task_file",
+  "started_at": null,
+  "finished_at": "2026-09-10T17:54:23.080525+00:00",
+  "daemon_version": "4.18.20",
+  "error": "JSONDecodeError: Invalid \\escape: line 17 column 114 (char 1174)"
+}
