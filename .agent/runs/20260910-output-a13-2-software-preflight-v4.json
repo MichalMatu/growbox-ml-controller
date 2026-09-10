@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260910-output-a13-2-software-preflight-v4",
+  "task_digest": "f66f9168d4e3ca06aeeb5483878d67633164ce99165ed5997d1033eac2cc53cb",
+  "idle_timeout": 900,
+  "task_timeout": 9000,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-10T15:03:52.038789+00:00",
+  "attempt_id": "8bb8418d541d58da2e9d14ef",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 6922,
+  "updated_at": "2026-09-10T15:03:52.038923+00:00",
+  "pid": 6922
+}
