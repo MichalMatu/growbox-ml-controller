@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260910-output-hw-preflight-v2",
+  "task_digest": "b56796f62c4db3e8d8c169350536465844b8d1c6bbbf56c552294ce3d048b6ff",
+  "idle_timeout": 300,
+  "task_timeout": 9000,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-10T15:10:45.605740+00:00",
+  "attempt_id": "f1eb313735ce7d0b90a09a26",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 17132,
+  "updated_at": "2026-09-10T15:10:45.605884+00:00",
+  "pid": 17132
+}
