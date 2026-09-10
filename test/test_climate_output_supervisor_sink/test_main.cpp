@@ -173,6 +173,40 @@ void testExecutionFeedbackIsCompleteCommandTruthAndNotPhysicalAck() {
   assertPhysicalUnknown(store, kHumidifier);
 }
 
+void testArmingReportsPartialCommandTruthWithoutInventingUnknownState() {
+  auto fan = makePolicy();
+  auto humidifier = makePolicy();
+  auto store = makeStore();
+  assert(store.restoreLastSuccessfulCommand(kFan, output::BinaryOutputState::Off));
+  const auto supervisor_config = makeSupervisorConfig(fan, humidifier);
+  output::OutputSupervisorResolver resolver(supervisor_config);
+  FakeTransport transport;
+  output::OutputSupervisorExecutor executor(transport, store, supervisor_config);
+  climate_io::ClimateOutputSupervisorSink sink(makeClimateConfig(), resolver, executor, store);
+
+  auto context = scheduleContext(false);
+  context.mode = output::SupervisorMode::Arming;
+  sink.setCycleContext(context);
+
+  climate::ClimateExecutionProjection execution{};
+  assert(sink.applyAndReportExecution(request(1.0F, 1.0F), 6'000U, execution));
+  assert(transport.sent_count == 0U);
+  assert(sink.lastReport().size == 0U);
+  assert(execution.known(climate::ClimateExecutionKnownHeater));
+  assert(execution.known(climate::ClimateExecutionKnownCooler));
+  assert(execution.known(climate::ClimateExecutionKnownExhaustFan));
+  assert(!execution.known(climate::ClimateExecutionKnownHumidifier));
+  assert(execution.known(climate::ClimateExecutionKnownDehumidifier));
+  assert(execution.known(climate::ClimateExecutionKnownCo2Doser));
+  assert(near(execution.executed.exhaust_fan, 0.0F));
+  assert(near(execution.executed.humidifier, 0.0F));
+
+  climate::ClimatePolicyRequest compatibility_projection{};
+  sink.setCycleContext(context);
+  assert(!sink.applyAndReport(request(1.0F, 1.0F), 6'001U, compatibility_projection));
+  assert(transport.sent_count == 0U);
+}
+
 void testPartialFailureReturnsFalseAndProjectsLastSuccessfulCommands() {
   auto fan = makePolicy();
   auto humidifier = makePolicy();
@@ -360,6 +394,7 @@ void testHardSafetyOverridesSupervisorFailSafeOff() {
 int main() {
   testCompleteClimateRequestUsesOneSupervisorCycleAndProjectsCommandTruth();
   testExecutionFeedbackIsCompleteCommandTruthAndNotPhysicalAck();
+  testArmingReportsPartialCommandTruthWithoutInventingUnknownState();
   testPartialFailureReturnsFalseAndProjectsLastSuccessfulCommands();
   testDwellHoldReturnsHeldExecutionProjectionWithoutTransport();
   testSafetyContextOverridesClimateWithoutChangingProjectionMeaning();

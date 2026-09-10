@@ -226,17 +226,22 @@ bool ClimateOutputSupervisorSink::projectExecutedClimate(
     }
     const auto* endpoint =
         ::growbox::app::output::findExecutedEndpointProjection(executed, mapping.endpoint);
-    if (endpoint == nullptr || !endpoint->has_executed_state) {
+    if (endpoint == nullptr) {
       projection = {};
       return false;
+    }
+    if (!endpoint->has_executed_state) {
+      // Lifecycle arming/recovery can legitimately leave command truth unknown
+      // for an endpoint that has not been executed yet. Preserve that unknown
+      // state in the mask instead of fabricating OFF or reporting an I/O fault.
+      continue;
     }
     const float level =
         endpoint->executed_state == ::growbox::app::output::BinaryOutputState::On ? 1.0F : 0.0F;
     setRoleLevel(projection.executed, role, level);
     projection.known_mask |= static_cast<std::uint8_t>(mask);
   }
-  return projection.known_mask ==
-         static_cast<std::uint8_t>(::growbox::climate::ClimateExecutionKnownAll);
+  return true;
 }
 
 bool ClimateOutputSupervisorSink::apply(const ::growbox::climate::ClimatePolicyRequest& request,
@@ -273,7 +278,9 @@ bool ClimateOutputSupervisorSink::applyAndReport(
   ::growbox::climate::ClimateExecutionProjection execution{};
   const bool completed = applyAndReportExecution(request, monotonic_ms, execution);
   executed_projection = execution.executed;
-  return completed;
+  return completed &&
+         execution.known_mask ==
+             static_cast<std::uint8_t>(::growbox::climate::ClimateExecutionKnownAll);
 }
 
 bool ClimateOutputSupervisorSink::applyFailSafeOff(std::uint64_t monotonic_ms) noexcept {
