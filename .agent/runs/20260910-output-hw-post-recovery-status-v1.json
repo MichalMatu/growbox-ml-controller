@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260910-output-hw-post-recovery-status-v1",
+  "task_digest": "b8f85c03b317023bcd243542cedb7d79751ca9d2186f01e0e228957169baf380",
+  "idle_timeout": 300,
+  "task_timeout": 600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-10T15:24:06.750417+00:00",
+  "attempt_id": "d4c6178027ed4c9d5374fbf8",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 32778,
+  "updated_at": "2026-09-10T15:24:06.750519+00:00",
+  "pid": 32778
+}
