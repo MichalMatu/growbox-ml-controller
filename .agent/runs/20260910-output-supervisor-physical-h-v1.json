@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260910-output-supervisor-physical-h-v1",
+  "task_digest": "66725ea8379b6375e3e79209ef6e4e2703687398ffb149b1091cd7a6071b4f7a",
+  "idle_timeout": 3600,
+  "task_timeout": 10800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-10T16:59:18.416306+00:00",
+  "attempt_id": "ebbeb66a5e489ec350641856",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 26649,
+  "updated_at": "2026-09-10T16:59:18.416444+00:00",
+  "pid": 26649
+}
