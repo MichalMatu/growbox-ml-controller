@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260911-quality-freeze-console-split-v1",
+  "task_digest": "d0ac63f7d7faf91a6ec041d2a8f90d567fdd9f968d7940bad0073da85db59f05",
+  "idle_timeout": 900,
+  "task_timeout": 18000,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-11T04:03:19.526367+00:00",
+  "attempt_id": "ef22d573e40de2f4105fdeea",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 61914,
+  "updated_at": "2026-09-11T04:03:19.526529+00:00",
+  "pid": 61914
+}
