@@ -1,6 +1,7 @@
 #pragma once
 
 #include "climate/ClimateSemanticOutput.h"
+#include "climate/output/BinaryActuatorPolicy.h"
 #include "climate/output/OutputPolicyConfig.h"
 #include "climate/rf433/ClimateRf433EndpointRegistry.h"
 
@@ -11,6 +12,11 @@ namespace growbox::app::climate_io::stage28d {
 inline constexpr ClimateEndpointId kExhaustFanEndpoint = rf433::kRemoteSocket1ClimateEndpoint;
 inline constexpr ClimateEndpointId kScheduledLightEndpoint = rf433::kRemoteSocket2ClimateEndpoint;
 inline constexpr ClimateEndpointId kHumidifierEndpoint = rf433::kRemoteSocket3ClimateEndpoint;
+
+inline constexpr ::growbox::app::output::BinaryActuatorPolicyConfig kExhaustFanBinaryPolicy{
+    0.10F, 0.03F, 120'000U, 120'000U};
+inline constexpr ::growbox::app::output::BinaryActuatorPolicyConfig kHumidifierBinaryPolicy{
+    0.10F, 0.03F, 180'000U, 180'000U};
 
 enum class OutputBindingStatus : std::uint8_t {
   Ok = 0U,
