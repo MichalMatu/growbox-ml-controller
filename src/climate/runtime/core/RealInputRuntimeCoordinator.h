@@ -13,12 +13,12 @@
 #include "climate/output/OutputRuntimeLifecycleControl.h"
 #include "climate/output/OutputStateStore.h"
 #include "climate/output/OutputSupervisorLifecycle.h"
-#include "climate/runtime/RuntimeCycleState.h"
-#include "climate/runtime/RuntimeOutputTransport.h"
 #include "climate/runtime/Stage27TelemetryReporter.h"
 #include "climate/runtime/Stage28RfDiagnostics.h"
 #include "climate/runtime/Stage28ServiceConsole.h"
 #include "climate/runtime/Stage28ePlatformDiagnostics.h"
+#include "climate/runtime/core/RuntimeCycleState.h"
+#include "climate/runtime/core/RuntimeOutputTransport.h"
 
 #include <cstdint>
 

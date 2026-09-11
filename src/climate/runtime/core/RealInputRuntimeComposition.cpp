@@ -1,4 +1,4 @@
-#include "climate/runtime/RealInputRuntimeComposition.h"
+#include "climate/runtime/core/RealInputRuntimeComposition.h"
 
 #include "climate/Stage28dOutputBindings.h"
 #include "climate/runtime/RuntimeBuildConfig.h"

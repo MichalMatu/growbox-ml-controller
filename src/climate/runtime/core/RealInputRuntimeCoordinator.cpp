@@ -1,4 +1,4 @@
-#include "climate/runtime/RealInputRuntimeCoordinator.h"
+#include "climate/runtime/core/RealInputRuntimeCoordinator.h"
 
 #include "climate/Stage28dOutputBindings.h"
 #include "climate/output/OutputExecutionTelemetry.h"

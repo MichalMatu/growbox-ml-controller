@@ -6,14 +6,14 @@
 #include "climate/native/Ds3231ClockSource.h"
 #include "climate/native/NativeI2cBus.h"
 #include "climate/native/Scd41InsideSource.h"
-#include "climate/runtime/RealInputRuntimeComposition.h"
-#include "climate/runtime/RealInputRuntimeCoordinator.h"
 #include "climate/runtime/RuntimeBuildConfig.h"
 #include "climate/runtime/Stage27RuntimeAdapters.h"
 #include "climate/runtime/Stage27TelemetryReporter.h"
 #include "climate/runtime/Stage28ServiceConsole.h"
 #include "climate/runtime/Stage28eLog.h"
 #include "climate/runtime/Stage28ePlatformDiagnostics.h"
+#include "climate/runtime/core/RealInputRuntimeComposition.h"
+#include "climate/runtime/core/RealInputRuntimeCoordinator.h"
 
 #include <esp_err.h>
 #include <esp_log.h>

@@ -51,7 +51,7 @@ SOURCES=(
   src/climate/application/ClimateSemanticOutput.cpp
   src/climate/ClimateDiagnostics.cpp
   src/climate/ClimateDeterministicFake.cpp
-  src/climate/runtime/RuntimeCycleState.cpp
+  src/climate/runtime/core/RuntimeCycleState.cpp
   src/climate/runtime/ServiceConsoleTextSink.cpp
 )
 

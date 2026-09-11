@@ -4,19 +4,21 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
 bootstrap = (root / "src/climate/ClimateV6RealInputRuntime.cpp").read_text(encoding="utf-8")
-coordinator = (root / "src/climate/runtime/RealInputRuntimeCoordinator.cpp").read_text(
+coordinator = (root / "src/climate/runtime/core/RealInputRuntimeCoordinator.cpp").read_text(
     encoding="utf-8"
 )
-coordinator_header = (root / "src/climate/runtime/RealInputRuntimeCoordinator.h").read_text(
+coordinator_header = (root / "src/climate/runtime/core/RealInputRuntimeCoordinator.h").read_text(
     encoding="utf-8"
 )
-composition = (root / "src/climate/runtime/RealInputRuntimeComposition.cpp").read_text(
+composition = (root / "src/climate/runtime/core/RealInputRuntimeComposition.cpp").read_text(
     encoding="utf-8"
 )
-composition += (root / "src/climate/runtime/RealInputRuntimeComposition.h").read_text(
+composition += (root / "src/climate/runtime/core/RealInputRuntimeComposition.h").read_text(
     encoding="utf-8"
 )
-transport = (root / "src/climate/runtime/RuntimeOutputTransport.cpp").read_text(encoding="utf-8")
+transport = (root / "src/climate/runtime/core/RuntimeOutputTransport.cpp").read_text(
+    encoding="utf-8"
+)
 runtime_adapters = (root / "src/climate/runtime/Stage27RuntimeAdapters.h").read_text(
     encoding="utf-8"
 )
@@ -64,7 +66,7 @@ for token in (
     if token not in coordinator_header:
         errors.append(f"coordinator-domain-boundary-missing:{token}")
 
-if '"climate/runtime/RealInputRuntimeComposition.h"' in coordinator_header:
+if '"climate/runtime/core/RealInputRuntimeComposition.h"' in coordinator_header:
     errors.append("coordinator-depends-on-composition-owner")
 
 for token in (
