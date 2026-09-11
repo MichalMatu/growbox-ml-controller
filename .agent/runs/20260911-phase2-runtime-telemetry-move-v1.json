@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260911-phase2-runtime-telemetry-move-v1",
+  "task_digest": "1aabf132eea2839f757e3c9f853d2173ad11a1ee23f4c88025512c3183710688",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-11T17:14:52.702963+00:00",
+  "attempt_id": "5d28f25d116fbf1f8e7a8620",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 45907,
+  "updated_at": "2026-09-11T17:14:52.703052+00:00",
+  "pid": 45907
+}
