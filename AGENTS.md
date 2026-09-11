@@ -2,14 +2,7 @@
 
 ## Local Agent — repository workflow
 
-This repository is registered in the shared `MichalMatu/local-agent` multi-repository supervisor.
-
-Canonical Local Agent source of truth:
-
-- repository: `MichalMatu/local-agent`
-- production/runtime branch: `main`
-- releases: `vX.Y.Z` tags matching `local_agent/version.py`
-- read repository-worker truth from `.agent/status/daemon.json`: `daemon_version`, `self_revision`, `execution_model` / `execution_variant`, current task state, and `supervisor_pid`; supervisor-wide fields such as `max_parallel_workers` are published by the shared supervisor and are not guaranteed to be repeated in every repository-worker status snapshot; do not pin a remembered daemon version here.
+This repository is registered in the shared `MichalMatu/local-agent` multi-repository supervisor. Read the live daemon version, revision and execution model from `.agent/status/daemon.json` on `agent-control`; do not hard-code a Local Agent release number in this repository.
 
 Repository identity:
 
@@ -18,116 +11,53 @@ Repository identity:
 - agent binding: `815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5`
 - control branch: `agent-control`
 - default source branch: `main`
-- current MVP work branch: `mvp/environment-controller`
-- execution model: one shared bounded-parallel supervisor with short-lived repository workers; one task per repository at a time, with cross-repository overlap only when resource admission permits it; `agent_multirepo.py` remains the serial fallback and enforces the same binding contract
-
-### Hardware / network constants
-
-- Canonical Shelly IP for this Growbox repository: `192.168.0.16`.
-- Use `http://192.168.0.16/rpc/Switch.GetStatus?id=0` for Shelly switch/power status (`output`, `apower`).
-- Treat `192.168.0.16` as authoritative unless the operator explicitly changes it. Do not guess, substitute, or network-scan for a different Shelly address when this device is intended.
-
-### Minimal fresh-chat resume command
-
-The operator should not need to restate project history in a new chat. After pointing the chat at this repository, the following short instruction is sufficient:
-
-`sprawdz w jakim miejscu jestesmy, napisz krotkie podsumowanie i kontynuujmy dalsza prace nad kodem`
-
-Treat that sentence, and obvious punctuation/Polish-diacritic variants of it, as an explicit request to restore current project context from repository evidence and continue development.
-
-On that request:
-
-1. Do not ask the operator to repeat previous work or paste an old handoff.
-2. Read `AGENTS.md`, `docs/FRESH_CHAT_BOOTSTRAP.md`, `docs/CURRENT_STATUS.md`, `docs/ARCHITECTURE_HANDOFF.md`, `docs/CONTINUATION_PLAN.md`, and `docs/PROJECT_ROADMAP.md`.
-3. Fetch the fresh `mvp/environment-controller` HEAD and inspect `agent-control:.agent/status/daemon.json` before editing or queueing work. If exact prior Local Agent evidence matters, read the relevant terminal result file.
-4. Inspect the current source for the area that is actually next; repository code outranks stale remembered context.
-5. Give the operator a short Polish summary: what is complete, where the branch currently is, what the most important remaining product work is, and what you will do next.
-6. Then continue the next sensible code-development task without requiring another context-restoration prompt. Ask a clarification only when a real product decision cannot be inferred safely; do not ask merely to recover context.
-7. Use sandbox/container first for analysis, replay, simulation, statistics, parsing, synthetic data and other compute that does not require the Mac or hardware. Use direct GitHub for bounded edits when sufficient. Use Local Agent only for Mac-local toolchains/builds/tests, local-network access, serial/USB/flash or physical devices.
-8. Stage28E, A12, A13 and Physical H are complete. Do not reopen or rerun them by default; revisit qualification only when a later production-source change materially invalidates the qualified execution/safety/output path or when a new hardware qualification target is intentionally introduced.
-9. Preserve standing safety and ownership invariants, including `OutputSupervisor` as the only normal production configured-output owner and ML as shadow/research-only.
+- execution model: one shared bounded-parallel supervisor; one task per repository at a time, with cross-repository overlap only when task resource admission permits it; the serial supervisor remains the fallback and enforces the same binding contract
 
 ### New chat bootstrap
 
 When starting work on this repository in a new chat/session:
 
-1. Read this `AGENTS.md`, `docs/CURRENT_STATUS.md`, `docs/ARCHITECTURE_HANDOFF.md`, `docs/CONTINUATION_PLAN.md`, and `docs/PROJECT_ROADMAP.md` before proposing or executing changes. Stage28E, A12, A13, and Physical H are complete. Read `docs/GUIDANCE.md`, `docs/STAGE28E_PHASE_H_HANDOFF.md`, and `docs/STAGE28D_AH_ARBITER_HANDOFF.md` only when historical diagnostics, qualification, or arbiter context is needed. Read `docs/STAGE27_NATIVE_IDF_HANDOFF.md` only when older native-platform decisions are needed.
-2. Inspect the exact GitHub branch relevant to the requested work. Do not assume `main` is the work branch.
-3. If Chat Bridge is active, require the wake envelope to identify exactly repository id `growbox-ml-controller`, repository `MichalMatu/growbox-ml-controller`, and agent binding `815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5`. Never infer or switch repository identity from remembered chat context; a different repository requires explicit Bridge Rebind.
-4. Inspect `.agent/status/daemon.json` on `agent-control` and verify `daemon_version` against `MichalMatu/local-agent/local_agent/version.py` when Local Agent compatibility matters.
-5. When exact daemon source identity matters, compare `.agent/status/daemon.json:self_revision` with `MichalMatu/local-agent/main`; do not infer synchronization from the version string alone.
-6. Use this repository's own `agent-control` branch for Local Agent tasks. Never send Growbox tasks through another repository's control branch.
-7. Verify `.agent/binding.json` on `agent-control` matches the repository identity above before queueing work when binding compatibility matters.
-8. For local execution, submit immutable task requests under `.agent/tasks/<task-id>.json` on `agent-control`, include exactly `"agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5"`, declare `resources`, and set `work_branch` explicitly whenever the task must run on a non-default branch such as `mvp/environment-controller`.
-9. Follow execution through `.agent/runs/<task-id>.json` and `.agent/status/daemon.json`.
-10. Read the terminal result from `.agent/results/<task-id>.json` before reporting completion.
-11. Prefer remote run/status/result evidence over asking the user to copy local terminal logs when Local Agent can provide the state directly.
-12. Keep repository workspaces isolated. A Growbox task must not publish results through another repository's Local Agent control plane.
-13. Do not reopen completed Stage25/26 work. Stage27 native-platform direction is frozen in `docs/STAGE27_NATIVE_IDF_HANDOFF.md`; current post-qualification product continuation is in `docs/CONTINUATION_PLAN.md` and `docs/CURRENT_STATUS.md`.
-14. Do not rerun Stage28E/A12/A13/Physical H by default. Those stages are complete for the qualified executable identity. Requalification is required only when a later production-source change invalidates the relevant qualified execution path or when a new hardware qualification target is intentionally introduced.
+1. Read this `AGENTS.md` and the current `README.md` before proposing or executing changes.
+2. Inspect the current GitHub state of the repository and the branch relevant to the requested work. Do not assume `main` is always the correct work branch; the README may identify an active integration branch.
+3. For repository-only software work, read `docs/SANDBOX_EXECUTION_FLOW.md` and prefer the exact ChatGPT Sandbox source snapshot plus matching dependency packs before creating a Local Agent task.
+4. If Chat Bridge is active, require the wake envelope to identify exactly repository id `growbox-ml-controller`, repository `MichalMatu/growbox-ml-controller`, and agent binding `815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5`. Never infer or switch repository identity from remembered chat context; a different repository requires explicit Bridge Rebind.
+5. Use this repository's own `agent-control` branch for Local Agent tasks. Never send Growbox tasks through another repository's control branch (for example LiteGraph).
+6. Verify `.agent/binding.json` on `agent-control` matches the repository identity above before queueing work when binding compatibility matters.
+7. For local execution, submit task requests under `.agent/tasks/<task-id>.json` on `agent-control`; every executable task must contain exactly `"agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5"` and explicit `resources`.
+8. Follow execution through `.agent/runs/<task-id>.json` and `.agent/status/daemon.json`.
+9. Read the terminal result from `.agent/results/<task-id>.json` before reporting completion.
+10. Prefer remote status/results from GitHub over asking the user to copy local terminal logs when Local Agent can provide the state directly.
+11. Keep repository workspaces isolated. A task for this repository must not read, modify, checkpoint, or publish results through another repository's Local Agent workspace.
 
-### Local Agent execution rules
+### ChatGPT Sandbox-first software execution
 
-- Local Agent is a deterministic executor, not a coding model. The planner chooses the exact bounded work; the daemon executes declared local commands/changes and reports evidence.
-- Hard binding is fail-closed: local registry `agent_binding == .agent/binding.json agent_binding == task.agent_binding` is required before claim/execution on both parallel and serial fallback paths. Missing repository binding reports `unbound`; a control mismatch reports `binding_error`; missing/wrong task binding is terminally rejected before any task command runs.
-- Never change, guess, or borrow another repository's binding to make a task run. Chat Bridge repository changes require explicit operator Rebind.
-- The planner may also make bounded source changes directly through GitHub on the work branch when that is more efficient, then use Local Agent for real local synchronization/build/test verification. See the hybrid workflow below.
-- Machine-generated task content, commands, prompts, logs, code comments, documentation changes and commit messages authored for Local Agent execution must be English-only.
-- Task ids and payloads are immutable within this repository. Interrupted tasks are never automatically replayed.
-- `expected_head` is not implemented. If exact source identity matters, verify the expected Git SHA explicitly in an early task stage.
-- Repository workers execute at most one pending task per turn. Different repositories may run concurrently only when their declared external resources permit it; every task must declare `resources` explicitly and invalid declarations are terminal task-contract errors.
-- Repository-local workers must not perform supervisor-wide `restart` or `self_update` actions. Those are owned by the shared supervisor/launchd administration path.
-- A repository worker may report current daemon version/revision through `.agent/status/daemon.json`; use that evidence before attempting any maintenance action.
-- Use bounded task timeouts/memory. The canonical defaults are command 900 s, no-output 300 s, whole-task 1800 s and process-group RSS 4096 MiB unless the task has a justified override.
-- Every task must declare `resources` explicitly; missing, malformed, duplicated, oversized, or non-canonical declarations are terminal task-contract errors with no compatibility fallback.
-- Every executable task in this repository uses `resources: []`, including builds/tests and USB, serial, flashing, monitor, and hardware work. `memory_limit_mb` remains an independent RSS watchdog.
-- Detect and verify the current device/port inside the task instead of reserving it as a scheduler resource.
-- Do not declare named resources or `machine` from this repository; host-global Local Agent maintenance belongs to the supervisor/administration path.
-- Successful stages must not leave background descendants.
-- Final results are durably spooled before remote publication; publication recovery must not re-execute commands.
-- When a Local Agent task is active and healthy, do not queue a duplicate or poll it every 30 seconds. With Chat Bridge, use no sooner than about two minutes for an early liveness re-check and normally 5-10 minutes for multi-minute builds/tests unless exact evidence supports a nearer completion. Explicit `NEXT=30s` remains available for deliberate operator/emergency use.
-- If exact current run/status evidence proves that an active task cannot achieve its intended outcome, publish repository-scoped `cancel_task` for that exact task id, wait for cancellation/terminal result evidence, and only then queue replacement work. Do not cancel merely because healthy work is slower than expected.
+For repository-only work, the default software worker is ChatGPT Sandbox, not Local Agent. GitHub `main` remains the source of truth. Persistent sandbox artifacts for this repository live only under `/GrowboxML/Sandbox/`; never reuse another repository's source snapshot or dependency pack implicitly.
 
-### Efficient verification workflow
+Use the exact `growbox-source-<sha>.tar.zst` snapshot for the Git SHA being worked on and materialize only the matching pack(s) needed by the changed surface:
 
-For non-trivial staged coding work, prefer:
+- `host` — Python 3.11, ML, portable C++ and host clang tooling
+- `web` — Node 22 / pnpm 11.10.0 frontend dependencies
+- `idf` — ESP-IDF 5.5.4, ESP32-S3 toolchain and `esp-clang`; load together with `host`
 
-```json
-"workflow_policy": "efficient-verification-v1"
-```
+After bootstrap, always source the generated sandbox `env.sh` and run `tools/sandbox/sandbox-doctor.sh` before claiming the environment is usable. Use `tools/sandbox/run-sandbox-check.sh host`, `web`, `idf` or `quality` for verification. Dependency-key mismatches are hard failures; do not bypass them or silently rebuild against a different source snapshot.
 
-Rules:
+Use Local Agent when the requested evidence actually depends on the Mac, USB/serial, flashing, a physical ESP32-S3, board E2E, screenshots that require the local desktop, or other machine-specific state. A successful sandbox IDF build is software evidence only and must never be reported as a flashed or hardware-tested board.
 
-- primary `steps` use `verification_level: "work"` or `"focused"`;
-- `verify_steps` use `"focused"` and exactly one final `"full"` stage;
-- the full stage must be the last verification stage;
-- do not mix legacy `commands` / `verify_commands` fields into an opted-in task;
-- if the full gate finds a defect and source changes, rerun the affected focused gate first, then rerun the final full gate.
-
-Use the narrowest meaningful verification while editing, then one broad final gate. Do not repeatedly run the complete suite after every small edit.
-
-### Direct GitHub work and local execution
-
-Use an available GitHub tool with write permission for bounded source/configuration/documentation changes when the exact diff and relevant CI can verify the outcome. A commit proves publication, not successful execution. Report the exact commit and completed checks. Do not create an artificial Local Agent task when GitHub evidence already provides the required verification.
-
-Use Local Agent for Mac command execution, local builds/tests, device access and machine-specific evidence. A hybrid flow may edit through GitHub and run a read-only local verification task for the exact committed SHA; verify that SHA explicitly in an early stage (`expected_head` is not a supported task field). Check current daemon/run evidence before a direct write and avoid racing a local task that is modifying the same branch. Follow this repository's branch policy.
-
-Local tasks retain their unique immutable ids, exact `agent_binding`, explicit `resources`, bounded limits and terminal result requirement. When Chat Bridge is active, both paths remain confined to its immutable repository binding. Use `STOP` only after the goal has the required CI or local result evidence. A different repository requires explicit operator Rebind. Canonical policy: `MichalMatu/local-agent/main/docs/AUTONOMOUS_CHAT_LOOP.md` and `docs/OPERATIONS.md`.
+Canonical details, Library layout and lifecycle: `docs/SANDBOX_EXECUTION_FLOW.md`.
 
 ### Control branch contract
 
-`agent-control` is a control plane, not a development branch. Product/source changes belong on the requested `work_branch`.
+`agent-control` is a control plane, not a development branch. Product/source changes belong on the requested source/work branch. The control branch is reserved for Local Agent binding, queue, status, run, result, and daemon-control files under `.agent/`.
 
-The control branch is reserved for Local Agent state under `.agent/`, including:
+The canonical Local Agent implementation and operational documentation live in `MichalMatu/local-agent`. If the control protocol changes, update this bootstrap section so future chats do not depend on remembered conversation context.
 
-- `.agent/binding.json`
-- `.agent/tasks/`
-- `.agent/runs/`
-- `.agent/results/`
-- `.agent/status/`
-- `.agent/daemon/`
+Hard binding is fail-closed. The executor requires local registry `agent_binding == .agent/binding.json agent_binding == task.agent_binding` before claim/execution. Missing repository binding reports `unbound`; a control mismatch reports `binding_error`; missing/wrong task binding is terminally rejected before any task command runs. Do not “repair” a task by changing or guessing its binding.
 
-The canonical implementation and operational documentation live in `MichalMatu/local-agent`. If that repository changes its control protocol, update this bootstrap section so future chats depend on repository evidence rather than remembered conversation context.
+Every task must declare `resources` explicitly. Missing or invalid declarations are terminal task-contract errors; there is no compatibility fallback. Every executable task in this repository uses `resources: []`, including builds/tests and USB/serial/flash/monitor/hardware work. Repository lease provides per-project serialization; detect and verify the current device/port inside the task instead of reserving it as a scheduler resource. Do not declare named resources or `machine` from this repository; host-global Local Agent maintenance belongs to the supervisor/administration path. `memory_limit_mb` remains an independent RSS watchdog. Read repository-worker truth such as `daemon_version`, `self_revision`, `execution_model` / `execution_variant`, current task state, and `supervisor_pid` from `.agent/status/daemon.json`. Supervisor-wide fields such as `max_parallel_workers` are not guaranteed to be repeated in every repository-worker status snapshot; read the shared supervisor status when that field matters. Do not pin a Local Agent release number here.
+
+For substantial coding tasks, prefer `workflow_policy: "efficient-verification-v1"` with explicit `work` / `focused` stages and exactly one final `full` verification stage. Task payloads are immutable: a claimed or interrupted task is not replayed automatically, so changed work or an intentional retry must use a new unique task id. A successful local task proves execution and verification; source publication remains an explicit final step.
+
+When a Local Agent task is active and healthy, do not queue a duplicate or poll it every 30 seconds. With Chat Bridge, use no sooner than about two minutes for an early liveness re-check and normally 5-10 minutes for multi-minute builds/tests unless exact evidence supports a nearer completion. Explicit `NEXT=30s` remains available for deliberate operator/emergency use. If exact current run/status evidence proves that the active task cannot achieve its intended outcome, publish repository-scoped `cancel_task` for that exact task id, wait for cancellation/terminal result evidence, and only then queue replacement work; do not cancel merely because healthy work is slower than expected.
 
 ## Panel UI (`tools/panel/static/`) — układ pól
 
@@ -180,3 +110,11 @@ Nie „optymalizuj” na jeden ekran kosztem pustych pól — lepiej zwarty pion
 - Render: `tools/panel/static/js/form.js` (`renderZoneCultivationCard`, `renderPotCard`, `renderActuatorGroupCell`, …)
 - Style: `tools/panel/static/panel.css` (`.card-stack`, `.compact-row`, `.pot-card`, `.cultivation-pot-card`)
 - Szkielet: `tools/panel/static/index.html`
+
+### Direct GitHub work and local execution
+
+Use an available GitHub tool with write permission for bounded source/configuration/documentation changes when the exact diff and relevant CI can verify the outcome. A commit proves publication, not successful execution. Report the exact commit and completed checks. Do not create an artificial Local Agent task when GitHub evidence already provides the required verification.
+
+For repository-only software execution, prefer the sandbox-first flow above. Use Local Agent for Mac command execution, local builds/tests when the sandbox pack cannot represent the required host state, device access and machine-specific evidence. A hybrid flow may edit through GitHub and run a read-only local verification task for the exact committed SHA; verify that SHA explicitly in an early stage (`expected_head` is not a supported task field). Check current daemon/run evidence before a direct write and avoid racing a local task that is modifying the same branch. Follow this repository's branch policy.
+
+Local tasks retain their unique immutable ids, exact `agent_binding`, explicit `resources`, bounded limits and terminal result requirement. When Chat Bridge is active, both paths remain confined to its immutable repository binding. Use `STOP` only after the goal has the required CI or local result evidence. A different repository requires explicit operator Rebind. Canonical policy: `MichalMatu/local-agent/main/docs/AUTONOMOUS_CHAT_LOOP.md` and `docs/OPERATIONS.md`.
