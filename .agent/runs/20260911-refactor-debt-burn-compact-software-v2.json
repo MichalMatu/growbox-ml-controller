@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260911-refactor-debt-burn-compact-software-v2",
+  "task_digest": "f7726a239bb13882f8f97bbe0d7dc7bf9c3da3331682c348e4f7236873c05e55",
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-11T07:39:47.118149+00:00",
+  "attempt_id": "de2d9f1c14a1063fe86a15cc",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 94573,
+  "updated_at": "2026-09-11T07:39:47.118287+00:00",
+  "pid": 94573
+}
