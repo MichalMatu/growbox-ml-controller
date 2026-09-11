@@ -138,6 +138,11 @@ void Stage27TelemetryReporter::record(
   snapshot.rule_safety_interventions = decision.rule.safety_interventions;
   snapshot.requested_exhaust_fan = decision.rule.safe.exhaust_fan;
   snapshot.requested_humidifier = decision.rule.safe.humidifier;
+  snapshot.ml_evaluated = decision.ml_evaluated;
+  snapshot.ml_arbitration_interventions = decision.ml.arbitration_interventions;
+  snapshot.ml_safety_interventions = decision.ml.safety_interventions;
+  snapshot.ml_safe_exhaust_fan = decision.ml.safe.exhaust_fan;
+  snapshot.ml_safe_humidifier = decision.ml.safe.humidifier;
   snapshot.applied_heater = decision.applied.heater;
   snapshot.applied_cooler = decision.applied.cooler;
   snapshot.applied_exhaust_fan = decision.applied.exhaust_fan;

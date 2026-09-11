@@ -68,6 +68,11 @@ struct Stage27TelemetrySnapshot {
   std::uint32_t rule_safety_interventions = 0U;
   float requested_exhaust_fan = 0.0F;
   float requested_humidifier = 0.0F;
+  bool ml_evaluated = false;
+  std::uint32_t ml_arbitration_interventions = 0U;
+  std::uint32_t ml_safety_interventions = 0U;
+  float ml_safe_exhaust_fan = 0.0F;
+  float ml_safe_humidifier = 0.0F;
   float applied_heater = 0.0F;
   float applied_cooler = 0.0F;
   float applied_exhaust_fan = 0.0F;

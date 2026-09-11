@@ -59,6 +59,11 @@ int main() {
   snapshot.runtime_mode = 2U;
   snapshot.requested_exhaust_fan = 0.29F;
   snapshot.requested_humidifier = 0.14F;
+  snapshot.ml_evaluated = true;
+  snapshot.ml_arbitration_interventions = 16U;
+  snapshot.ml_safety_interventions = 32U;
+  snapshot.ml_safe_exhaust_fan = 0.41F;
+  snapshot.ml_safe_humidifier = 0.22F;
   snapshot.applied_exhaust_fan = 1.0F;
   snapshot.applied_humidifier = 0.0F;
 
@@ -119,6 +124,7 @@ int main() {
   assert(std::strstr(sample_buffer, "\"t\":\"s\",\"v\":3") != nullptr);
   assert(std::strstr(sample_buffer, "\"out\":{\"v\":2,\"m\":2,\"ta\":1") != nullptr);
   assert(std::strstr(sample_buffer, "\"ep\":[[2,0,0.000,1,1.000") != nullptr);
+  assert(std::strstr(sample_buffer, "\"ml\":[1,16,32,0.290,0.140,0.410,0.220]") != nullptr);
   assert(std::strstr(sample_buffer, "\"physical_light\"") == nullptr);
 
   Stage27StorageStatus storage{};

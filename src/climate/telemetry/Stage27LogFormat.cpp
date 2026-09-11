@@ -128,6 +128,7 @@ std::size_t formatStage27SampleNdjson(char* buffer, std::size_t buffer_size,
       "],\"scd\":[%d,%d,%.2f,%.2f,%.0f,%" PRIu64 "],"
       "\"tp\":[%d,%.2f,%.2f,%" PRIu64 "],\"xm\":[%d,%.2f,%.2f,%" PRIu64 "],"
       "\"out\":%s,"
+      "\"ml\":[%d,%" PRIu32 ",%" PRIu32 ",%.3f,%.3f,%.3f,%.3f],"
       "\"c\":[%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%.3f,%.3f,%.3f,%.3f,%.3f,%.3f]}",
       snapshot.uptime_ms, snapshot.unix_time_s, flag(snapshot.input_sampled), snapshot.io_status,
       flag(snapshot.scd_sample), flag(snapshot.scd_available),
@@ -137,7 +138,12 @@ std::size_t formatStage27SampleNdjson(char* buffer, std::size_t buffer_size,
       static_cast<double>(snapshot.tp_humidity_pct), snapshot.tp_age_ms,
       flag(snapshot.xiaomi_sample), static_cast<double>(snapshot.xiaomi_temperature_c),
       static_cast<double>(snapshot.xiaomi_humidity_pct), snapshot.xiaomi_age_ms, output_json,
-      snapshot.runtime_status, snapshot.runtime_mode, snapshot.rule_arbitration_interventions,
+      flag(snapshot.ml_evaluated), snapshot.ml_arbitration_interventions,
+      snapshot.ml_safety_interventions, static_cast<double>(snapshot.requested_exhaust_fan),
+      static_cast<double>(snapshot.requested_humidifier),
+      static_cast<double>(snapshot.ml_safe_exhaust_fan),
+      static_cast<double>(snapshot.ml_safe_humidifier), snapshot.runtime_status,
+      snapshot.runtime_mode, snapshot.rule_arbitration_interventions,
       snapshot.rule_safety_interventions, static_cast<double>(snapshot.applied_heater),
       static_cast<double>(snapshot.applied_cooler),
       static_cast<double>(snapshot.applied_exhaust_fan),
