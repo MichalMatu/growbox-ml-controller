@@ -1,0 +1,88 @@
+{
+  "id": "20260911-phase0-workflow-branch-audit-v2",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "started_at": "2026-09-11T15:27:00.551964+00:00",
+  "command_timeout": 300,
+  "edits": {},
+  "commands": [
+    {
+      "command": "git fetch -q origin main && git reset --hard origin/main && git clean -fdx && test \"$(git rev-parse HEAD)\" = \"ed8242f52d1f80186809507d7d47ce8902907fb2\" && test -z \"$(git status --porcelain)\" && echo WORKFLOW_AUDIT_V2_BASE_PASS sha=$(git rev-parse HEAD)",
+      "exit_code": 0,
+      "output": "HEAD is now at ed8242f5 Fix host durability test mkstemp declaration\nRemoving .DS_Store\nRemoving .agent-hw-artifacts/\nRemoving .pytest_cache/\nRemoving .ruff_cache/\nRemoving .venv/\nRemoving build/\nRemoving scripts/__pycache__/\nRemoving sdkconfig\nRemoving tests/__pycache__/\nRemoving tools/__pycache__/\nRemoving tools/analysis/__pycache__/\nRemoving tools/ml/__pycache__/\nRemoving tools/ml/physics/__pycache__/\nRemoving tools/ml/twin/__pycache__/\nRemoving tools/panel/__pycache__/\nRemoving tools/schema/__pycache__/\nRemoving tools/serial/__pycache__/\nRemoving web/.DS_Store\nRemoving web/dist/\nRemoving web/node_modules/\nWORKFLOW_AUDIT_V2_BASE_PASS sha=ed8242f52d1f80186809507d7d47ce8902907fb2\n",
+      "elapsed_seconds": 8.914,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 2048,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 14.08,
+      "output_policy": "stream",
+      "captured_output_chars": 690,
+      "output_truncated": false,
+      "current_rss_mb": 14.08,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 2,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "echo DEAD_BRANCH_REFS_BEGIN; grep -RInE --exclude-dir=.git --binary-files=without-match 'mvp/environment-controller|refs/heads/mvp/environment-controller' . || true; echo DEAD_BRANCH_REFS_END; echo WORKFLOW_WRITE_ACTIONS_BEGIN; grep -RInE --binary-files=without-match 'contents:[[:space:]]*write|git push|branches:' .github/workflows || true; echo WORKFLOW_WRITE_ACTIONS_END",
+      "exit_code": 0,
+      "output": "DEAD_BRANCH_REFS_BEGIN\n./docs/STAGE27C_PRE_SOAK_HANDOFF.md:5:Work branch: `mvp/environment-controller`\n./docs/STAGE27C_PRE_SOAK_HANDOFF.md:26:Documentation-only commits created after this SHA may advance `mvp/environment-controller`. Do not confuse a later documentation HEAD with the firmware revision physically validated on the CrowPanel.\n./docs/STAGE28E_OUTPUT_SUPERVISOR_H_QUALIFICATION.md:6:Work branch: `mvp/environment-controller`\n./docs/STAGE28E_OUTPUT_SUPERVISOR_H_QUALIFICATION.md:260:  \"work_branch\": \"mvp/environment-controller\",\n./docs/STAGE27C_CONTINUATION_HANDOFF.md:5:Work branch: `mvp/environment-controller`\n./docs/STAGE27C_CONTINUATION_HANDOFF.md:19:This SHA is the **firmware-under-test identity**. Documentation-only commits created for this handoff may advance `mvp/environment-controller` after this SHA. Do not confuse a later docs HEAD with the firmware revision that generated the physical evidence.\n./docs/STAGE27C_CONTINUATION_HANDOFF.md:279:Product code and documentation belong on `mvp/environment-controller`, not on `agent-control`.\n./docs/STAGE27C_CONTINUATION_HANDOFF.md:356:1. Read `MichalMatu/growbox-ml-controller:AGENTS.md` on `mvp/environment-controller`.\n./docs/STAGE27C_CONTINUATION_HANDOFF.md:360:5. Fetch the **fresh** current `mvp/environment-controller` HEAD. Do not rely on the SHA captured in this handoff for repository HEAD after docs commits.\n./docs/STAGE27C_CONTINUATION_HANDOFF.md:373:> Continue the Growbox Stage27C CrowPanel work from the repository handoff. Read `AGENTS.md`, `docs/STAGE27C_CONTINUATION_HANDOFF.md`, `docs/STAGE27_NATIVE_IDF_HANDOFF.md`, and `docs/STAGE27C_CROWPANEL_BRINGUP.md` on `mvp/environment-controller`, plus the canonical `MichalMatu/local-agent` operations/autonomous-loop docs. Inspect fresh source HEAD and fresh agent-control daemon/run/result evidence before doing anything. Stage27C points 1-4 are closed. Point 5 has two valid ~90-minute soak chunks on firmware `cf957a7649ec02835f724951d34f0b408f5f6de2`; chunk03-v1 was intentionally interrupted and must never be replayed. Keep e-paper deferred, outputs fake/locked, no cross-sensor offsets, and use only new immutable Local Agent task ids. Do not resume autonomous work until I explicitly tell you to continue.\n./docs/STAGE28E_PHASE_C_HANDOFF.md:4:Work branch: `mvp/environment-controller`\n./docs/STAGE28E_PHASE_F_HANDOFF.md:4:Work branch: `mvp/environment-controller`\n./docs/OUTPUT_EXECUTION_ARCHITECTURE_AUDIT.md:6:Work branch: `mvp/environment-controller`\n./docs/STAGE28B_FINAL_EVIDENCE.md:5:Work branch: `mvp/environment-controller`\n./docs/ML_DECISION_REPORT.md:4:Branch: `mvp/environment-controller`\n./docs/GUIDANCE.md:16:- work branch: `mvp/environment-controller`\n./docs/STAGE28E_PHASE_A_HANDOFF.md:5:Work branch: `mvp/environment-controller`\n./docs/STAGE28E_PHASE_D_HANDOFF.md:4:Work branch: `mvp/environment-controller`\n./docs/STAGE28D_AH_ARBITER_HANDOFF.md:5:Work branch: `mvp/environment-controller`\n./docs/STAGE28D_AH_ARBITER_HANDOFF.md:274:`Read AGENTS.md, docs/STAGE28D_AH_ARBITER_HANDOFF.md, docs/PROJECT_ROADMAP.md, docs/CURRENT_STATUS.md and docs/CONTINUATION_PLAN.md. Fetch fresh mvp/environment-controller HEAD and agent-control daemon/result evidence. Treat V5 as the newest control-path evidence. Note that Local Agent updates occurred around the investigation, but V5 itself ran to completion on daemon 4.18.3 / PID 56140; correlate board reset/boot telemetry with the V5 timeline before blaming either the arbiter or Local Agent. Diagnose the arbiter_dwell_holds 43 -> 1 discontinuity before running more hardware.`\n./docs/STAGE27_NATIVE_IDF_HANDOFF.md:4:Work branch: `mvp/environment-controller`\n./docs/STAGE27_NATIVE_IDF_HANDOFF.md:222:3. fetch the current remote `mvp/environment-controller` HEAD;\n./docs/STAGE27_NATIVE_IDF_HANDOFF.md:245:2. planner commits a bounded change directly to `mvp/environment-controller`;\n./docs/STAGE27_NATIVE_IDF_HANDOFF.md:275:5. Fetch fresh remote HEAD of `mvp/environment-controller`.\n./docs/OUTPUT_EXECUTION_IMPLEMENTATION_PLAN.md:6:Work branch: `mvp/environment-controller`\n./docs/OUTPUT_EXECUTION_IMPLEMENTATION_PLAN.md:55:  \"work_branch\": \"mvp/environment-controller\",\n./docs/STAGE28E_PHASE_G_HANDOFF.md:6:Work branch: `mvp/environment-controller`\n./docs/STAGE27A_NATIVE_FEASIBILITY_FREEZE.md:4:Work branch: `mvp/environment-controller`\n./docs/RF433_DEVICE_CODES.md:4:Work branch: `mvp/environment-controller`\n./docs/STAGE28E_PHASE_B_HANDOFF.md:4:Work branch: `mvp/environment-controller`\n./docs/STAGE28E_PHASE_E_HANDOFF.md:4:Work branch: `mvp/environment-controller`\n./docs/STAGE27C_FINAL_EVIDENCE.md:5:Work branch: `mvp/environment-controller`\n./docs/MVP_ENVIRONMENT_CONTROLLER.md:4:Branch: `mvp/environment-controller`\n./docs/MVP_ENVIRONMENT_CONTROLLER.md:385:Work only on the existing `mvp/environment-controller` branch. Do not create another migration branch and do not modify `main`.\n./docs/STAGE28E_PHASE_H_HANDOFF.md:5:Work branch: `mvp/environment-controller`\n./docs/STAGE28E_PHASE_H_HANDOFF.md:428:- work branch: `mvp/environment-controller`;\n./docs/STAGE28E_PHASE_H_HANDOFF.md:466:> Continue Growbox Stage28E Phase H only in `MichalMatu/growbox-ml-controller`. First read `AGENTS.md`, `docs/STAGE28E_PHASE_H_HANDOFF.md`, `docs/CURRENT_STATUS.md`, `docs/CONTINUATION_PLAN.md`, `docs/GUIDANCE.md`, and `docs/ESP32_S3_SERIAL_PORT_RESET.md`. Fresh-check `mvp/environment-controller` HEAD and `agent-control:.agent/status/daemon.json`. A-G are complete; H remains open. Qualified production firmware identity is `5a4830db9d10e8cb73d4c617b09122f0844ad899`; TimerOff-aware observer commit is `45065a34ce276ac5cdb7ef8cf0a1ad8a4bae1b0d`; H v8 software preflight `20260908-stage28e-h-v8-preflight-v1` passed on `231eed28f64bdbdc4238fd8bce128264027702f2` with `24/24` host tests, v7 replay acceptance of `596` TimerOff samples, fake 12 KiB and real/recovery 16 KiB images, no production C/C++ delta and `hardware_started=0`. H v8 is prepared but not started. All repository tasks use `resources: []`; any hardware task must verify `/dev/cu.usbserial-1130` internally and refuse `/dev/cu.usbserial-10`. When H v8 is explicitly started, prove only the normal fan path and always finish with recovery plus final RF-disabled `fake-locked`. Do not add request/output forcing or begin production modularization before formal H PASS.\n./docs/MVP_REBUILD_CLEANUP_PLAN.md:4:Branch: `mvp/environment-controller`\n./docs/MVP_REBUILD_CLEANUP_PLAN.md:12:The repository history is already preserved by Git and the old working implementation remains available on `main` and historical commits/tags. Therefore obsolete code does not need to be kept as duplicate `legacy/`, `archive/`, `old/` or disabled directories on `mvp/environment-controller` merely for preservation.\n./docs/MVP_REBUILD_CLEANUP_PLAN.md:17:- work continues only on `mvp/environment-controller`;\n./docs/OUTPUT_EXECUTION_IMPLEMENTATION_PLAN_REAUDIT.md:6:Work branch: `mvp/environment-controller`\n./docs/AUTONOMOUS_TEST_RUNBOOK.md:5:Work branch: `mvp/environment-controller`\n./docs/OUTPUT_EXECUTION_ARCHITECTURE.md:6:Work branch: `mvp/environment-controller`\n./docs/OUTPUT_EXECUTION_ARCHITECTURE_R5_AUDIT.md:6:Work branch: `mvp/environment-controller`\n./docs/ML_DECISION_REPORT.json:2:  \"branch\": \"mvp/environment-controller\",\n./docs/STAGE27C_CROWPANEL_BRINGUP.md:5:Work branch: `mvp/environment-controller`\n./.github/workflows/ml-dagger-stage11-resume.yml:7:      - mvp/environment-controller\n./.github/workflows/ml-dagger-stage11-resume.yml:166:        if: github.ref == 'refs/heads/mvp/environment-controller'\n./.github/workflows/ml-dagger-stage11-resume.yml:179:          git push origin HEAD:mvp/environment-controller\n./.github/workflows/stage11-format-cleanup.yml:6:      - mvp/environment-controller\n./.github/workflows/stage11-format-cleanup.yml:54:          git push origin HEAD:mvp/environment-controller\n./.github/workflows/ml-co2-audit.yml:6:      - mvp/environment-controller\n./.github/workflows/ml-dagger-distributed.yml:7:      - mvp/environment-controller\n./.github/workflows/ml-dagger-distributed.yml:253:        if: github.ref == 'refs/heads/mvp/environment-controller'\n./.github/workflows/ml-dagger-distributed.yml:266:          git push origin HEAD:mvp/environment-controller\n./.github/workflows/stage27c-storage-gate.yml:6:      - mvp/environment-controller\n./continuation.md:5:Work branch: `mvp/environment-controller`\n./continuation.md:306:- work branch: `mvp/environment-controller`;\n./continuation.md:331:7. Fetch the fresh `mvp/environment-controller` HEAD.\n./continuation.md:391:> Continue `MichalMatu/growbox-ml-controller` on branch `mvp/environment-controller`. First read `AGENTS.md`, `continuation.md`, `docs/CURRENT_STATUS.md`, `docs/PRESTAGE28D_GOLDEN_CHECKPOINT.md`, `docs/CONTINUATION_PLAN.md`, then fetch fresh HEAD and `agent-control:.agent/status/daemon.json`. Treat `316b58e76de609069ddbf2667fe86f6218fb2143` as the exact hardware-soaked Golden firmware SHA. Stage27C and Stage28C are frozen. Stage28D is IN PROGRESS: semantic mapping validation and the neutral `remote_socket_1` endpoint registry are implemented, but no semantic actuator role is assigned, runtime outputs remain fake-locked, and no physical RF output gate is open.\nDEAD_BRANCH_REFS_END\nWORKFLOW_WRITE_ACTIONS_BEGIN\n.github/workflows/sandbox-pack.yml:12:    branches:\n.github/workflows/ml-dagger-stage11-resume.yml:6:    branches:\n.github/workflows/ml-dagger-stage11-resume.yml:12:  contents: write\n.github/workflows/ml-dagger-stage11-resume.yml:179:          git push origin HEAD:mvp/environment-controller\n.github/workflows/stage11-format-cleanup.yml:5:    branches:\n.github/workflows/stage11-format-cleanup.yml:12:  contents: write\n.github/workflows/stage11-format-cleanup.yml:54:          git push origin HEAD:mvp/environment-controller\n.github/workflows/ml-co2-audit.yml:5:    branches:\n.github/workflows/ml-dagger-distributed.yml:6:    branches:\n.github/workflows/ml-dagger-distributed.yml:14:  contents: write\n.github/workflows/ml-dagger-distributed.yml:266:          git push origin HEAD:mvp/environment-controller\n.github/workflows/stage27c-storage-gate.yml:5:    branches:\nWORKFLOW_WRITE_ACTIONS_END\n",
+      "elapsed_seconds": 0.661,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 2048,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 3.28,
+      "output_policy": "stream",
+      "captured_output_chars": 10175,
+      "output_truncated": false,
+      "current_rss_mb": 3.28,
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 2,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 2,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 8.914
+    },
+    {
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 2,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.661
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.082
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.071
+  },
+  "finished_at": "2026-09-11T15:27:12.051320+00:00",
+  "task_digest": "067c3b705b39cba658074f10729b6429950e58bc964ae13d3ac80055d58f2cf1",
+  "idle_timeout": 300,
+  "task_timeout": 600,
+  "memory_limit_mb": 2048,
+  "attempt_id": "4617f9256b58643d62936517",
+  "daemon_version": "4.18.20"
+}
