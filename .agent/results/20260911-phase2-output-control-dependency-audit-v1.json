@@ -1,0 +1,116 @@
+{
+  "id": "20260911-phase2-output-control-dependency-audit-v1",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "started_at": "2026-09-11T18:09:37.696287+00:00",
+  "command_timeout": 300,
+  "edits": {},
+  "commands": [
+    {
+      "command": "git fetch -q origin main && git reset --hard origin/main && test \"$(git rev-parse HEAD)\" = \"fba7ac5d1cb562619a827effd694f9f77c137225\" && test -z \"$(git status --porcelain)\" && echo OUTPUT_CONTROL_AUDIT_BASE_PASS",
+      "exit_code": 0,
+      "output": "HEAD is now at fba7ac5d Group output lifecycle components\nOUTPUT_CONTROL_AUDIT_BASE_PASS\n",
+      "elapsed_seconds": 0.919,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 2048,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 1.7,
+      "output_policy": "stream",
+      "captured_output_chars": 89,
+      "output_truncated": false,
+      "current_rss_mb": 1.7,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "for name in OutputAutomationControl OutputManualControl OutputMaintenanceControl; do echo =====$name=====; grep -RIn --exclude-dir=.git --binary-files=without-match \"$name\" src test tests scripts tools .github CMakeLists.txt 2>/dev/null || true; done",
+      "exit_code": 0,
+      "output": "=====OutputAutomationControl=====\nsrc/CMakeLists.txt:27:    \"climate/output/OutputAutomationControl.cpp\"\nsrc/climate/runtime/core/RealInputRuntimeComposition.h:7:#include \"climate/output/OutputAutomationControl.h\"\nsrc/climate/runtime/core/RealInputRuntimeComposition.h:141:  output::OutputAutomationControl& automationControl() noexcept {\nsrc/climate/runtime/core/RealInputRuntimeComposition.h:167:  output::OutputAutomationControl automation_control_;\nsrc/climate/runtime/core/RealInputRuntimeCoordinator.cpp:106:    if (automation_report.status == output::OutputAutomationControlStatus::Invalid ||\nsrc/climate/runtime/core/RealInputRuntimeCoordinator.h:8:#include \"climate/output/OutputAutomationControl.h\"\nsrc/climate/runtime/core/RealInputRuntimeCoordinator.h:39:  output::OutputAutomationControl& automation_control;\nsrc/climate/runtime/console/Stage28ServiceConsoleOutputCommands.cpp:3:#include \"climate/output/OutputAutomationControl.h\"\nsrc/climate/runtime/console/Stage28ServiceConsoleOutputCommands.h:9:class OutputAutomationControl;\nsrc/climate/runtime/console/Stage28ServiceConsoleOutputCommands.h:20:    ::growbox::app::output::OutputAutomationControl* automation_control{nullptr};\nsrc/climate/runtime/console/Stage28ServiceConsole.h:17:class OutputAutomationControl;\nsrc/climate/runtime/console/Stage28ServiceConsole.h:37:    ::growbox::app::output::OutputAutomationControl* automation_control{nullptr};\nsrc/climate/output/OutputAutomationControl.h:9:enum class OutputAutomationControlStatus : std::uint8_t {\nsrc/climate/output/OutputAutomationControl.h:17:struct OutputAutomationControlReport {\nsrc/climate/output/OutputAutomationControl.h:18:  OutputAutomationControlStatus status = OutputAutomationControlStatus::Ready;\nsrc/climate/output/OutputAutomationControl.h:27:class OutputAutomationControl final {\nsrc/climate/output/OutputAutomationControl.h:29:  OutputAutomationControl(OutputSupervisorLifecycle& lifecycle,\nsrc/climate/output/OutputAutomationControl.h:49:  OutputAutomationControlReport tick(std::uint64_t monotonic_ms, const ScheduleIntent& schedule,\nsrc/climate/output/OutputAutomationControl.h:56:  OutputAutomationControlReport makeReport(bool safety_deferred) const noexcept;\nsrc/climate/output/OutputMaintenanceControl.h:3:#include \"climate/output/OutputAutomationControl.h\"\nsrc/climate/output/OutputMaintenanceControl.h:40:                           OutputAutomationControl& automation_control,\nsrc/climate/output/OutputMaintenanceControl.h:80:  OutputAutomationControl& automation_control_;\nsrc/climate/output/OutputAutomationControl.cpp:1:#include \"climate/output/OutputAutomationControl.h\"\nsrc/climate/output/OutputAutomationControl.cpp:5:OutputAutomationControl::OutputAutomationControl(\nsrc/climate/output/OutputAutomationControl.cpp:11:bool OutputAutomationControl::requestEnabled(bool enabled) noexcept {\nsrc/climate/output/OutputAutomationControl.cpp:26:bool OutputAutomationControl::hardSafetyActive(const SafetyEnvelope& safety) noexcept {\nsrc/climate/output/OutputAutomationControl.cpp:40:bool OutputAutomationControl::completeArming() noexcept {\nsrc/climate/output/OutputAutomationControl.cpp:60:bool OutputAutomationControl::applyPendingRequest(std::uint64_t monotonic_ms,\nsrc/climate/output/OutputAutomationControl.cpp:107:OutputAutomationControlReport\nsrc/climate/output/OutputAutomationControl.cpp:108:OutputAutomationControl::makeReport(bool safety_deferred) const noexcept {\nsrc/climate/output/OutputAutomationControl.cpp:109:  OutputAutomationControlReport report{};\nsrc/climate/output/OutputAutomationControl.cpp:118:    report.status = OutputAutomationControlStatus::Invalid;\nsrc/climate/output/OutputAutomationControl.cpp:120:    report.status = OutputAutomationControlStatus::FaultLocked;\nsrc/climate/output/OutputAutomationControl.cpp:122:    report.status = OutputAutomationControlStatus::SafetyDeferred;\nsrc/climate/output/OutputAutomationControl.cpp:124:    report.status = OutputAutomationControlStatus::TransitionPending;\nsrc/climate/output/OutputAutomationControl.cpp:126:    report.status = OutputAutomationControlStatus::Ready;\nsrc/climate/output/OutputAutomationControl.cpp:131:OutputAutomationControlReport OutputAutomationControl::tick(std::uint64_t monotonic_ms,\nsrc/climate/output/OutputMaintenanceControl.cpp:9:                                                   OutputAutomationControl& automation_control,\ntest/test_output_maintenance_control/test_main.cpp:31:  output::OutputAutomationControl automation;\ntest/host/CMakeLists.txt:366:  \"${PROJECT_ROOT}/src/climate/output/OutputAutomationControl.cpp\"\ntest/host/CMakeLists.txt:393:  \"${PROJECT_ROOT}/src/climate/output/OutputAutomationControl.cpp\"\ntest/test_output_automation_control/test_main.cpp:2:#include \"climate/output/OutputAutomationControl.h\"\ntest/test_output_automation_control/test_main.cpp:90:void runUntilIdle(output::OutputAutomationControl& control, std::uint64_t& now,\ntest/test_output_automation_control/test_main.cpp:144:    output::OutputAutomationControl control(lifecycle, executor);\ntest/test_output_automation_control/test_main.cpp:192:  output::OutputAutomationControl control(lifecycle, executor);\ntest/test_output_automation_control/test_main.cpp:232:  output::OutputAutomationControl control(lifecycle, executor);\ntest/test_output_automation_control/test_main.cpp:267:  output::OutputAutomationControl control(lifecycle, executor);\nscripts/check_service_console_boundaries.py:8:    \"OutputAutomationControl.h\",\n=====OutputManualControl=====\nsrc/CMakeLists.txt:28:    \"climate/output/OutputManualControl.cpp\"\nsrc/climate/runtime/core/RealInputRuntimeComposition.h:9:#include \"climate/output/OutputManualControl.h\"\nsrc/climate/runtime/core/RealInputRuntimeComposition.h:145:  output::OutputManualControl& manualControl() noexcept {\nsrc/climate/runtime/core/RealInputRuntimeComposition.h:168:  output::OutputManualControl manual_control_;\nsrc/climate/runtime/core/RealInputRuntimeCoordinator.h:10:#include \"climate/output/OutputManualControl.h\"\nsrc/climate/runtime/core/RealInputRuntimeCoordinator.h:40:  output::OutputManualControl& manual_control;\nsrc/climate/runtime/console/Stage28ServiceConsoleOutputCommands.cpp:5:#include \"climate/output/OutputManualControl.h\"\nsrc/climate/runtime/console/Stage28ServiceConsoleOutputCommands.h:10:class OutputManualControl;\nsrc/climate/runtime/console/Stage28ServiceConsoleOutputCommands.h:21:    ::growbox::app::output::OutputManualControl* manual_control{nullptr};\nsrc/climate/runtime/console/Stage28ServiceConsole.h:18:class OutputManualControl;\nsrc/climate/runtime/console/Stage28ServiceConsole.h:38:    ::growbox::app::output::OutputManualControl* manual_control{nullptr};\nsrc/climate/output/OutputManualControl.h:29:class OutputManualControl final {\nsrc/climate/output/OutputManualControl.h:31:  OutputManualControl(const OutputPolicyConfig& policy,\nsrc/climate/output/OutputManualControl.cpp:1:#include \"climate/output/OutputManualControl.h\"\nsrc/climate/output/OutputManualControl.cpp:5:OutputManualControl::OutputManualControl(const OutputPolicyConfig& policy,\nsrc/climate/output/OutputManualControl.cpp:11:bool OutputManualControl::validState(BinaryOutputState state) noexcept {\nsrc/climate/output/OutputManualControl.cpp:15:std::uint64_t OutputManualControl::nextSequence() noexcept {\nsrc/climate/output/OutputManualControl.cpp:23:OutputManualRequestReport OutputManualControl::request(OutputEndpointRole role,\nsrc/climate/output/OutputManualControl.cpp:73:bool OutputManualControl::consume(ManualIntent& intent) noexcept {\ntest/host/CMakeLists.txt:381:  \"${PROJECT_ROOT}/src/climate/output/OutputManualControl.cpp\"\ntest/test_output_manual_control/test_main.cpp:1:#include \"climate/output/OutputManualControl.h\"\ntest/test_output_manual_control/test_main.cpp:26:  output::OutputManualControl control(config, lifecycle);\ntest/test_output_manual_control/test_main.cpp:54:  output::OutputManualControl control(config, lifecycle);\ntest/test_output_manual_control/test_main.cpp:71:  output::OutputManualControl control(config, lifecycle);\ntest/test_output_manual_control/test_main.cpp:96:  output::OutputManualControl control(invalid, lifecycle);\ntest/test_output_manual_control/test_main.cpp:106:  output::OutputManualControl control(config, lifecycle);\nscripts/check_service_console_boundaries.py:10:    \"OutputManualControl.h\",\n=====OutputMaintenanceControl=====\nsrc/CMakeLists.txt:29:    \"climate/output/OutputMaintenanceControl.cpp\"\nsrc/climate/runtime/core/RealInputRuntimeComposition.h:8:#include \"climate/output/OutputMaintenanceControl.h\"\nsrc/climate/runtime/core/RealInputRuntimeComposition.h:149:  output::OutputMaintenanceControl& maintenanceControl() noexcept {\nsrc/climate/runtime/core/RealInputRuntimeComposition.h:170:  output::OutputMaintenanceControl maintenance_control_;\nsrc/climate/runtime/core/RealInputRuntimeCoordinator.h:9:#include \"climate/output/OutputMaintenanceControl.h\"\nsrc/climate/runtime/core/RealInputRuntimeCoordinator.h:41:  output::OutputMaintenanceControl& maintenance_control;\nsrc/climate/runtime/console/Stage28ServiceConsoleOutputCommands.cpp:4:#include \"climate/output/OutputMaintenanceControl.h\"\nsrc/climate/runtime/console/Stage28ServiceConsoleOutputCommands.h:11:class OutputMaintenanceControl;\nsrc/climate/runtime/console/Stage28ServiceConsoleOutputCommands.h:22:    ::growbox::app::output::OutputMaintenanceControl* maintenance_control{nullptr};\nsrc/climate/runtime/console/Stage28ServiceConsole.h:19:class OutputMaintenanceControl;\nsrc/climate/runtime/console/Stage28ServiceConsole.h:39:    ::growbox::app::output::OutputMaintenanceControl* maintenance_control{nullptr};\nsrc/climate/output/OutputMaintenanceControl.h:37:class OutputMaintenanceControl final {\nsrc/climate/output/OutputMaintenanceControl.h:39:  OutputMaintenanceControl(const OutputPolicyConfig& policy, OutputSupervisorLifecycle& lifecycle,\nsrc/climate/output/OutputMaintenanceControl.cpp:1:#include \"climate/output/OutputMaintenanceControl.h\"\nsrc/climate/output/OutputMaintenanceControl.cpp:7:OutputMaintenanceControl::OutputMaintenanceControl(const OutputPolicyConfig& policy,\nsrc/climate/output/OutputMaintenanceControl.cpp:36:OutputMaintenanceControl::findBinding(OutputEndpointId endpoint) const noexcept {\nsrc/climate/output/OutputMaintenanceControl.cpp:52:OutputMaintenanceControl::findSafety(const SafetyEnvelope& safety,\nsrc/climate/output/OutputMaintenanceControl.cpp:62:bool OutputMaintenanceControl::safetyVetoes(const SafetyEndpointConstraint* safety,\nsrc/climate/output/OutputMaintenanceControl.cpp:79:bool OutputMaintenanceControl::binaryStateValid(BinaryOutputState state) noexcept {\nsrc/climate/output/OutputMaintenanceControl.cpp:83:std::uint64_t OutputMaintenanceControl::nextSequence() noexcept {\nsrc/climate/output/OutputMaintenanceControl.cpp:91:bool OutputMaintenanceControl::clearPhysicalUncertainty(OutputEndpointId endpoint) noexcept {\nsrc/climate/output/OutputMaintenanceControl.cpp:95:bool OutputMaintenanceControl::clearPhysicalUncertainty() noexcept {\nsrc/climate/output/OutputMaintenanceControl.cpp:104:void OutputMaintenanceControl::synchronizeBinary(const OutputCommand& command,\nsrc/climate/output/OutputMaintenanceControl.cpp:112:void OutputMaintenanceControl::failClosed() noexcept {\nsrc/climate/output/OutputMaintenanceControl.cpp:123:bool OutputMaintenanceControl::requestEnter() noexcept {\nsrc/climate/output/OutputMaintenanceControl.cpp:149:bool OutputMaintenanceControl::requestExit() noexcept {\nsrc/climate/output/OutputMaintenanceControl.cpp:163:bool OutputMaintenanceControl::requestRaw(OutputEndpointRole role, BinaryOutputState state,\nsrc/climate/output/OutputMaintenanceControl.cpp:197:OutputMaintenanceReport OutputMaintenanceControl::tick(std::uint64_t monotonic_ms,\nsrc/climate/output/OutputMaintenanceControl.cpp:301:OutputMaintenanceReport OutputMaintenanceControl::makeReport() const noexcept {\nsrc/climate/output/OutputMaintenanceControl.cpp:327:OutputMaintenanceReport OutputMaintenanceControl::report() const noexcept {\ntest/test_output_maintenance_control/test_main.cpp:1:#include \"climate/output/OutputMaintenanceControl.h\"\ntest/test_output_maintenance_control/test_main.cpp:33:  output::OutputMaintenanceControl maintenance;\ntest/host/CMakeLists.txt:392:  \"${PROJECT_ROOT}/src/climate/output/OutputMaintenanceControl.cpp\"\nscripts/check_output_rf_ownership.py:76:    \"src/climate/output/OutputMaintenanceControl.cpp\",\nscripts/check_output_rf_ownership.py:118:        \"src/climate/output/OutputMaintenanceControl.cpp\",\nscripts/check_service_console_boundaries.py:9:    \"OutputMaintenanceControl.h\",\n",
+      "elapsed_seconds": 0.351,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 2048,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 3.02,
+      "output_policy": "stream",
+      "captured_output_chars": 12561,
+      "output_truncated": false,
+      "current_rss_mb": 3.02,
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "echo =====CONTROL_PATH_GUARDS=====; grep -RIn --binary-files=without-match 'climate/output/OutputAutomationControl\\|climate/output/OutputManualControl\\|climate/output/OutputMaintenanceControl' src/CMakeLists.txt test/host/CMakeLists.txt scripts .github 2>/dev/null | sort || true; echo =====CONTROL_TEST_TARGETS=====; grep -nE 'output_(automation|manual|maintenance)_control_tests' test/host/CMakeLists.txt || true",
+      "exit_code": 0,
+      "output": "=====CONTROL_PATH_GUARDS=====\nscripts/check_output_rf_ownership.py:118:        \"src/climate/output/OutputMaintenanceControl.cpp\",\nscripts/check_output_rf_ownership.py:76:    \"src/climate/output/OutputMaintenanceControl.cpp\",\nsrc/CMakeLists.txt:27:    \"climate/output/OutputAutomationControl.cpp\"\nsrc/CMakeLists.txt:28:    \"climate/output/OutputManualControl.cpp\"\nsrc/CMakeLists.txt:29:    \"climate/output/OutputMaintenanceControl.cpp\"\ntest/host/CMakeLists.txt:366:  \"${PROJECT_ROOT}/src/climate/output/OutputAutomationControl.cpp\"\ntest/host/CMakeLists.txt:381:  \"${PROJECT_ROOT}/src/climate/output/OutputManualControl.cpp\"\ntest/host/CMakeLists.txt:392:  \"${PROJECT_ROOT}/src/climate/output/OutputMaintenanceControl.cpp\"\ntest/host/CMakeLists.txt:393:  \"${PROJECT_ROOT}/src/climate/output/OutputAutomationControl.cpp\"\n=====CONTROL_TEST_TARGETS=====\n364:  output_automation_control_tests\n374:target_include_directories(output_automation_control_tests PRIVATE \"${PROJECT_ROOT}/src\")\n375:target_compile_features(output_automation_control_tests PRIVATE cxx_std_17)\n376:target_compile_options(output_automation_control_tests PRIVATE -Wall -Wextra -Wpedantic)\n379:  output_manual_control_tests\n385:target_include_directories(output_manual_control_tests PRIVATE \"${PROJECT_ROOT}/src\")\n386:target_compile_features(output_manual_control_tests PRIVATE cxx_std_17)\n387:target_compile_options(output_manual_control_tests PRIVATE -Wall -Wextra -Wpedantic)\n390:  output_maintenance_control_tests\n400:target_include_directories(output_maintenance_control_tests PRIVATE \"${PROJECT_ROOT}/src\")\n401:target_compile_features(output_maintenance_control_tests PRIVATE cxx_std_17)\n402:target_compile_options(output_maintenance_control_tests PRIVATE -Wall -Wextra -Wpedantic)\n656:add_test(NAME output_automation_control_tests COMMAND output_automation_control_tests)\n657:add_test(NAME output_manual_control_tests COMMAND output_manual_control_tests)\n658:add_test(NAME output_maintenance_control_tests COMMAND output_maintenance_control_tests)\n",
+      "elapsed_seconds": 0.383,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 2048,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 2.22,
+      "output_policy": "stream",
+      "captured_output_chars": 2017,
+      "output_truncated": false,
+      "current_rss_mb": 2.22,
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.919
+    },
+    {
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.351
+    },
+    {
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.383
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.098
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.074
+  },
+  "finished_at": "2026-09-11T18:09:41.022813+00:00",
+  "task_digest": "0029240e8a9e2a0458338461a550f31a58688bf30025d9d6e196542fb2958f3a",
+  "idle_timeout": 180,
+  "task_timeout": 600,
+  "memory_limit_mb": 2048,
+  "attempt_id": "a47c7f16c5987fe763960bf5",
+  "daemon_version": "4.18.20"
+}
