@@ -14,27 +14,39 @@
 
 namespace growbox::app::climate_io::runtime {
 
-struct RealInputRuntimeServices final {
+struct RealInputRuntimeInputServices final {
   native::BleClimateScanner& ble;
   native::Ds3231ClockSource& clock;
+};
+
+struct RealInputRuntimeOutputServices final {
   stage28d::LampSafetyController& lamp_safety;
-  ClimateApplication& application;
   RuntimeExecutionStatus& execution_status;
-  RuntimeOutputTransport& supervisor_transport;
-  output::OutputSupervisorLifecycle& output_lifecycle;
+  RuntimeOutputTransport& transport;
+  output::OutputSupervisorLifecycle& lifecycle;
   output::OutputLifecycleExecutor& lifecycle_executor;
   output::OutputRuntimeLifecycleControl& runtime_lifecycle;
   output::OutputAutomationControl& automation_control;
   output::OutputManualControl& manual_control;
   output::OutputMaintenanceControl& maintenance_control;
   ClimateOutputSupervisorSink& supervisor_sink;
-  output::OutputPersistenceCoordinator& output_persistence;
-  output::OutputStateStore& output_state_store;
+  output::OutputPersistenceCoordinator& persistence;
+  output::OutputStateStore& state_store;
+  bool bindings_valid{false};
+};
+
+struct RealInputRuntimeSupportServices final {
   Stage28ServiceConsole& service_console;
   Stage28RfDiagnostics& rf_diagnostics;
   Stage27TelemetryReporter& telemetry_reporter;
-  RuntimeTimingMetrics& runtime_timing;
-  bool output_bindings_valid{false};
+  RuntimeTimingMetrics& timing;
+};
+
+struct RealInputRuntimeServices final {
+  RealInputRuntimeInputServices inputs;
+  ClimateApplication& application;
+  RealInputRuntimeOutputServices outputs;
+  RealInputRuntimeSupportServices support;
 };
 
 class RealInputRuntimeCoordinator final {
