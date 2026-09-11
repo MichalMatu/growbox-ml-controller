@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260911-phase1-application-move-v2",
+  "task_digest": "eedb1bc21ecb41e58bdcd8af313c08c43a9ab383f82be8e8c4f107e3d6b60243",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-11T15:59:04.691447+00:00",
+  "attempt_id": "89a2a0cae1eb04c3b649a0a7",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 65908,
+  "updated_at": "2026-09-11T15:59:04.691656+00:00",
+  "pid": 65908
+}
