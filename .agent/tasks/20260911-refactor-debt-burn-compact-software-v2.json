@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "id": "20260911-refactor-debt-burn-compact-software-v2",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "refactor/quality-freeze-final",
+  "resources": [],
+  "allow_write": false,
+  "command_timeout": 3600,
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch -q origin refactor/quality-freeze-final && git reset --hard FETCH_HEAD && test \"$(git rev-parse HEAD)\" = \"1a599a58eb57841206ab92c7a5cacf50f7463f78\" && test -z \"$(git status --porcelain)\" && git diff --check fa56b345b5e555a68fc5a880779dee6f931acf66..HEAD && echo REFACTOR_COMPACT_V2_BASE_PASS sha=$(git rev-parse HEAD) hardware_started=0",
+    "python3 scripts/check_runtime_config_ssot.py && python3 scripts/check_runtime_boundaries.py && python3 scripts/check_service_console_boundaries.py && python3 scripts/check_app_mode_boundaries.py && .venv/bin/python scripts/check_output_rf_ownership.py && echo REFACTOR_COMPACT_V2_GUARDS_PASS sha=$(git rev-parse HEAD) hardware_started=0",
+    "rm -rf build/runtime-output-transport-test && cmake -S test/test_runtime_output_transport -B build/runtime-output-transport-test && cmake --build build/runtime-output-transport-test --parallel 2 && build/runtime-output-transport-test/runtime_output_transport_tests && echo REFACTOR_TRANSPORT_REGRESSION_PASS sha=$(git rev-parse HEAD) hardware_started=0",
+    "rm -rf build/refactor-compact-host && cmake -S test/host -B build/refactor-compact-host && cmake --build build/refactor-compact-host --parallel 2 && ctest --test-dir build/refactor-compact-host --output-on-failure && echo REFACTOR_HOST_PASS sha=$(git rev-parse HEAD) hardware_started=0",
+    "rm -rf build/idf-refactor-compact-crowpanel && GROWBOX_FIRMWARE_GIT_SHA=1a599a58eb57841206ab92c7a5cacf50f7463f78 STAGE27C_BUILD_DIR=build/idf-refactor-compact-crowpanel bash scripts/stage27c_crowpanel.sh build && test \"$(git rev-parse HEAD)\" = \"1a599a58eb57841206ab92c7a5cacf50f7463f78\" && test -z \"$(git status --porcelain)\" && echo REFACTOR_COMPACT_SOFTWARE_PASS sha=$(git rev-parse HEAD) hardware_started=0"
+  ]
+}
