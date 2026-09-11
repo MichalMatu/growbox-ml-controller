@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "id": "20260911-phase2-output-control-move-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": true,
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch -q origin main && git reset --hard origin/main && test \"$(git rev-parse HEAD)\" = \"fba7ac5d1cb562619a827effd694f9f77c137225\" && test -z \"$(git status --porcelain)\"",
+    "mkdir -p src/climate/output/control && git mv src/climate/output/OutputAutomationControl.h src/climate/output/control/ && git mv src/climate/output/OutputAutomationControl.cpp src/climate/output/control/ && git mv src/climate/output/OutputManualControl.h src/climate/output/control/ && git mv src/climate/output/OutputManualControl.cpp src/climate/output/control/ && git mv src/climate/output/OutputMaintenanceControl.h src/climate/output/control/ && git mv src/climate/output/OutputMaintenanceControl.cpp src/climate/output/control/",
+    "for name in OutputAutomationControl OutputManualControl OutputMaintenanceControl; do git grep -Il \"climate/output/$name\" -- src test scripts | while read f; do perl -pi -e \"s#climate/output/$name#climate/output/control/$name#g\" \"$f\"; done; done; perl -pi -e 's#src/climate/output/OutputMaintenanceControl\\.cpp#src/climate/output/control/OutputMaintenanceControl.cpp#g' scripts/check_output_rf_ownership.py; git diff --check",
+    "pre-commit run --all-files || true; pre-commit run --all-files && python3 scripts/check_runtime_config_ssot.py && python3 scripts/check_app_mode_boundaries.py && python3 scripts/check_runtime_boundaries.py && python3 scripts/check_service_console_boundaries.py && python3 scripts/check_output_rf_ownership.py",
+    "cmake -S test/host -B build/host-tests && cmake --build build/host-tests --target output_automation_control_tests output_manual_control_tests output_maintenance_control_tests --parallel && ctest --test-dir build/host-tests -R '^(output_automation_control_tests|output_manual_control_tests|output_maintenance_control_tests)$' --output-on-failure",
+    "git diff --check && git add src test scripts && git commit -m 'Group output control components' && git push origin HEAD:main && git rev-parse HEAD"
+  ]
+}
