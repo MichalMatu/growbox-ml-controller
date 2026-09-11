@@ -1,5 +1,7 @@
 #include "DiagnosticsWireCodec.h"
 
+#include "climate/runtime/RuntimeBuildConfig.h"
+
 #include "EnvironmentSchema.h"
 #include "HeapDiagnostics.h"
 #include "JsonLineWriter.h"
@@ -8,10 +10,6 @@
 #include <esp_memory_utils.h>
 
 #include <sdkconfig.h>
-
-#ifndef GROWBOX_BOARD_PROFILE
-#define GROWBOX_BOARD_PROFILE "esp32s3-devkitc1-n16r8"
-#endif
 
 namespace growbox {
 namespace demo {
@@ -76,7 +74,8 @@ cJSON* buildDiagnosticsDocument(const DummyEnvironmentSimulator& simulator,
   cJSON_AddStringToObject(document, "type", "diagnostics");
   cJSON_AddNumberToObject(document, "schema_version", control::schema::kSchemaVersion);
   cJSON_AddStringToObject(document, "schema_hash", control::schema::kSchemaHash);
-  cJSON_AddStringToObject(document, "board_profile", GROWBOX_BOARD_PROFILE);
+  cJSON_AddStringToObject(document, "board_profile",
+                          ::growbox::app::climate_io::runtime_config::kBoardProfile);
   addHeapObject(document, "heap", heap);
   addMemoryObject(document, "memory", serial_line_buffer);
 

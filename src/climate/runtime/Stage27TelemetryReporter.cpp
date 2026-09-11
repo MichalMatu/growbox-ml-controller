@@ -1,0 +1,229 @@
+#include "climate/runtime/Stage27TelemetryReporter.h"
+
+#include "climate/runtime/RuntimeBuildConfig.h"
+
+#include "climate/runtime/Stage28eLog.h"
+#include "demo/protocol/HeapDiagnostics.h"
+
+#include <esp_heap_caps.h>
+#include <esp_log.h>
+
+#include <limits>
+
+namespace growbox::app::climate_io::runtime {
+namespace {
+constexpr char kTag[] = "climate_stage27";
+constexpr std::uint32_t kHeapIntegrityEveryReports = 6U;
+
+void incrementSaturating(std::uint32_t& value) noexcept {
+  if (value != std::numeric_limits<std::uint32_t>::max()) {
+    ++value;
+  }
+}
+} // namespace
+
+Stage27TelemetryReporter::Stage27TelemetryReporter(native::BleClimateScanner& ble,
+                                                   native::Scd41InsideSource& scd41,
+                                                   native::Ds3231ClockSource& clock,
+                                                   storage::Stage27TelemetryLogger& storage_logger,
+                                                   bool storage_logger_ready,
+                                                   std::int32_t reset_reason) noexcept
+    : ble_(ble), scd41_(scd41), clock_(clock), storage_logger_(storage_logger),
+      storage_logger_ready_(storage_logger_ready), reset_reason_(reset_reason) {}
+
+void Stage27TelemetryReporter::record(
+    std::uint64_t now_ms, const ::growbox::climate::ClimateLoopResult& loop_result,
+    const ::growbox::climate::ClimateRuntimeDecision& decision,
+    const ::growbox::app::output::OutputExecutionTelemetrySnapshot& output_execution) noexcept {
+  native::BleClimateReading tp357{};
+  native::BleClimateReading xiaomi{};
+  const bool tp357_sampled = ble_.sampleTp357(now_ms, tp357);
+  const bool xiaomi_sampled = ble_.sampleXiaomi(now_ms, xiaomi);
+
+  InsideEnvironmentSnapshot scd_diag{};
+  static_cast<void>(scd41_.sample(now_ms, scd_diag));
+  const auto heap = ::growbox::demo::wire::captureHeapSnapshot();
+  const auto task = ::growbox::demo::wire::captureTaskSnapshot();
+
+  incrementSaturating(heartbeat_sequence_);
+  GROWBOX_STAGE28E_LOG_INFO(DiagnosticLogModule::Watchdog,
+                            "heartbeat seq=%lu uptime_ms=%llu internal_free=%u internal_min=%u",
+                            static_cast<unsigned long>(heartbeat_sequence_),
+                            static_cast<unsigned long long>(now_ms), heap.free_internal,
+                            heap.min_free_internal);
+
+  if ((heartbeat_sequence_ % kHeapIntegrityEveryReports) == 0U) {
+    incrementSaturating(heap_integrity_check_count_);
+    const bool heap_ok = heap_caps_check_integrity_all(false);
+    if (!heap_ok) {
+      incrementSaturating(heap_integrity_failure_count_);
+      GROWBOX_STAGE28E_LOG_ERROR(
+          DiagnosticLogModule::Mem,
+          "heap_integrity_failed check=%lu failures=%lu uptime_ms=%llu internal_free=%u "
+          "internal_largest=%u",
+          static_cast<unsigned long>(heap_integrity_check_count_),
+          static_cast<unsigned long>(heap_integrity_failure_count_),
+          static_cast<unsigned long long>(now_ms), heap.free_internal, heap.largest_free_internal);
+    } else {
+      GROWBOX_STAGE28E_LOG_INFO(
+          DiagnosticLogModule::Mem,
+          "heap_integrity_ok check=%lu uptime_ms=%llu internal_free=%u internal_largest=%u",
+          static_cast<unsigned long>(heap_integrity_check_count_),
+          static_cast<unsigned long long>(now_ms), heap.free_internal, heap.largest_free_internal);
+    }
+  }
+
+  telemetry::Stage27TelemetrySnapshot snapshot{};
+  snapshot.uptime_ms = now_ms;
+  snapshot.unix_time_s = clock_.trusted() ? clock_.lastTrustedUnixTimeS() : 0U;
+  snapshot.reset_reason = reset_reason_;
+  snapshot.input_sampled = loop_result.input_sampled;
+  snapshot.io_status = static_cast<std::uint32_t>(loop_result.io_status);
+  snapshot.heap_internal = heap.free_internal;
+  snapshot.heap_internal_min = heap.min_free_internal;
+  snapshot.heap_internal_largest = heap.largest_free_internal;
+  snapshot.heap_psram = heap.free_psram;
+  snapshot.heap_psram_min = heap.min_free_psram;
+  snapshot.heap_psram_largest = heap.largest_free_psram;
+  snapshot.stack_free = task.main_stack_free_bytes;
+
+  snapshot.scd_available = scd41_.available();
+  snapshot.scd_sample = scd41_.hasMeasurement();
+  snapshot.scd_temperature_c =
+      scd_diag.air_temperature_c.valid ? scd_diag.air_temperature_c.value : 0.0F;
+  snapshot.scd_humidity_pct =
+      scd_diag.relative_humidity_pct.valid ? scd_diag.relative_humidity_pct.value : 0.0F;
+  snapshot.scd_co2_ppm = scd_diag.co2_ppm.valid ? scd_diag.co2_ppm.value : 0.0F;
+  snapshot.scd_age_ms = scd_diag.co2_ppm.valid ? scd_diag.co2_ppm.age_ms : 0U;
+  snapshot.scd_read_errors = scd41_.readErrorCount();
+  snapshot.scd_invalid = scd41_.invalidMeasurementCount();
+  snapshot.scd_samples = scd41_.successfulMeasurementCount();
+
+  snapshot.rtc_available = clock_.available();
+  snapshot.rtc_trusted = clock_.trusted();
+  snapshot.rtc_reads = clock_.successfulReadCount();
+  snapshot.rtc_read_errors = clock_.readErrorCount();
+  snapshot.rtc_untrusted = clock_.untrustedReadCount();
+  snapshot.rtc_last_success_ms = clock_.lastSuccessfulReadMs();
+  snapshot.rtc_last_trusted_ms = clock_.lastTrustedReadMs();
+
+  snapshot.ble_scanning = ble_.scanning();
+  snapshot.ble_scan_starts = ble_.scanStartCount();
+  snapshot.ble_scan_errors = ble_.scanStartErrorCount();
+  snapshot.ble_scan_restarts = ble_.scanRestartCount();
+  snapshot.ble_scan_completes = ble_.scanCompleteCount();
+  snapshot.ble_adv_lock_drops = ble_.advertisementLockDropCount();
+
+  snapshot.tp_sample = tp357_sampled;
+  snapshot.tp_temperature_c = tp357_sampled ? tp357.temperature_c : 0.0F;
+  snapshot.tp_humidity_pct = tp357_sampled ? tp357.relative_humidity_pct : 0.0F;
+  snapshot.tp_age_ms = tp357_sampled ? tp357.age_ms : 0U;
+  snapshot.tp_packets = ble_.tp357PacketCount();
+  snapshot.tp_accepted = ble_.tp357AcceptedCount();
+  snapshot.tp_rejected = ble_.tp357RejectedCount();
+
+  snapshot.xiaomi_sample = xiaomi_sampled;
+  snapshot.xiaomi_temperature_c = xiaomi_sampled ? xiaomi.temperature_c : 0.0F;
+  snapshot.xiaomi_humidity_pct = xiaomi_sampled ? xiaomi.relative_humidity_pct : 0.0F;
+  snapshot.xiaomi_age_ms = xiaomi_sampled ? xiaomi.age_ms : 0U;
+  snapshot.xiaomi_packets = ble_.xiaomiPacketCount();
+  snapshot.xiaomi_accepted = ble_.xiaomiAcceptedCount();
+  snapshot.xiaomi_rejected = ble_.xiaomiRejectedCount();
+
+  snapshot.runtime_status = static_cast<std::uint32_t>(decision.status);
+  snapshot.runtime_mode = static_cast<std::uint32_t>(decision.mode);
+  snapshot.rule_arbitration_interventions = decision.rule.arbitration_interventions;
+  snapshot.rule_safety_interventions = decision.rule.safety_interventions;
+  snapshot.requested_exhaust_fan = decision.rule.safe.exhaust_fan;
+  snapshot.requested_humidifier = decision.rule.safe.humidifier;
+  snapshot.ml_evaluated = decision.ml_evaluated;
+  snapshot.ml_arbitration_interventions = decision.ml.arbitration_interventions;
+  snapshot.ml_safety_interventions = decision.ml.safety_interventions;
+  snapshot.ml_safe_exhaust_fan = decision.ml.safe.exhaust_fan;
+  snapshot.ml_safe_humidifier = decision.ml.safe.humidifier;
+  snapshot.applied_heater = decision.applied.heater;
+  snapshot.applied_cooler = decision.applied.cooler;
+  snapshot.applied_exhaust_fan = decision.applied.exhaust_fan;
+  snapshot.applied_humidifier = decision.applied.humidifier;
+  snapshot.applied_dehumidifier = decision.applied.dehumidifier;
+  snapshot.applied_co2_doser = decision.applied.co2_doser;
+
+  snapshot.output = output_execution;
+
+  const auto storage_status = storage_logger_.status();
+  logRecord(snapshot, storage_status);
+  if (storage_logger_ready_) {
+    static_cast<void>(storage_logger_.enqueue(snapshot));
+  }
+}
+
+void Stage27TelemetryReporter::logRecord(
+    const telemetry::Stage27TelemetrySnapshot& snapshot,
+    const storage::Stage27StorageStatus& storage_status) noexcept {
+  ESP_LOGI(
+      kTag,
+      "soak_v=3 firmware_sha=%s uptime_ms=%llu reset_reason=%d input_sampled=%d io_status=%u "
+      "heap_internal=%u heap_internal_min=%u heap_internal_largest=%u "
+      "heap_psram=%u heap_psram_min=%u heap_psram_largest=%u stack_free=%u "
+      "scd_available=%d scd_sample=%d scd_t=%.2f scd_rh=%.2f scd_co2=%.0f "
+      "scd_age_ms=%llu scd_read_errors=%u scd_invalid=%u scd_samples=%u "
+      "rtc_available=%d rtc_trusted=%d rtc_reads=%u rtc_read_errors=%u rtc_untrusted=%u "
+      "rtc_last_success_ms=%llu rtc_last_trusted_ms=%llu rtc_unix_time_s=%llu "
+      "ble_scanning=%d ble_scan_starts=%u ble_scan_errors=%u ble_scan_restarts=%u "
+      "ble_scan_completes=%u ble_adv_lock_drops=%u "
+      "tp_sample=%d tp_t=%.2f tp_rh=%.2f tp_age_ms=%llu tp_packets=%u tp_accepted=%u "
+      "tp_rejected=%u xiaomi_sample=%d xiaomi_t=%.2f xiaomi_rh=%.2f "
+      "xiaomi_age_ms=%llu xiaomi_packets=%u xiaomi_accepted=%u xiaomi_rejected=%u "
+      "runtime_status=%u runtime_mode=%u rule_arb=%u rule_safety=%u "
+      "requested_fan=%.3f requested_humidifier=%.3f "
+      "applied_heater=%.3f applied_cooler=%.3f applied_fan=%.3f applied_humidifier=%.3f "
+      "applied_dehumidifier=%.3f applied_co2=%.3f "
+      "output_v=%u supervisor_mode=%u transport_active=%d lifecycle_active=%d "
+      "lifecycle_event=%u automation_requested=%d safety_latched=%d safety_reason=%u "
+      "storage_backend=%s storage_sd_mounted=%d storage_flash_mounted=%d "
+      "storage_sd_mount_errors=%u storage_flash_mount_errors=%u storage_write_errors=%u "
+      "storage_queue_drops=%u storage_records_written=%u storage_records_skipped=%u "
+      "storage_fallbacks=%u storage_sd_recoveries=%u storage_last_write_ms=%llu",
+      ::growbox::app::climate_io::runtime_config::kFirmwareGitSha,
+      static_cast<unsigned long long>(snapshot.uptime_ms), snapshot.reset_reason,
+      snapshot.input_sampled, snapshot.io_status, snapshot.heap_internal,
+      snapshot.heap_internal_min, snapshot.heap_internal_largest, snapshot.heap_psram,
+      snapshot.heap_psram_min, snapshot.heap_psram_largest, snapshot.stack_free,
+      snapshot.scd_available, snapshot.scd_sample, static_cast<double>(snapshot.scd_temperature_c),
+      static_cast<double>(snapshot.scd_humidity_pct), static_cast<double>(snapshot.scd_co2_ppm),
+      static_cast<unsigned long long>(snapshot.scd_age_ms), snapshot.scd_read_errors,
+      snapshot.scd_invalid, snapshot.scd_samples, snapshot.rtc_available, snapshot.rtc_trusted,
+      snapshot.rtc_reads, snapshot.rtc_read_errors, snapshot.rtc_untrusted,
+      static_cast<unsigned long long>(snapshot.rtc_last_success_ms),
+      static_cast<unsigned long long>(snapshot.rtc_last_trusted_ms),
+      static_cast<unsigned long long>(snapshot.unix_time_s), snapshot.ble_scanning,
+      snapshot.ble_scan_starts, snapshot.ble_scan_errors, snapshot.ble_scan_restarts,
+      snapshot.ble_scan_completes, snapshot.ble_adv_lock_drops, snapshot.tp_sample,
+      static_cast<double>(snapshot.tp_temperature_c), static_cast<double>(snapshot.tp_humidity_pct),
+      static_cast<unsigned long long>(snapshot.tp_age_ms), snapshot.tp_packets,
+      snapshot.tp_accepted, snapshot.tp_rejected, snapshot.xiaomi_sample,
+      static_cast<double>(snapshot.xiaomi_temperature_c),
+      static_cast<double>(snapshot.xiaomi_humidity_pct),
+      static_cast<unsigned long long>(snapshot.xiaomi_age_ms), snapshot.xiaomi_packets,
+      snapshot.xiaomi_accepted, snapshot.xiaomi_rejected, snapshot.runtime_status,
+      snapshot.runtime_mode, snapshot.rule_arbitration_interventions,
+      snapshot.rule_safety_interventions, static_cast<double>(snapshot.requested_exhaust_fan),
+      static_cast<double>(snapshot.requested_humidifier),
+      static_cast<double>(snapshot.applied_heater), static_cast<double>(snapshot.applied_cooler),
+      static_cast<double>(snapshot.applied_exhaust_fan),
+      static_cast<double>(snapshot.applied_humidifier),
+      static_cast<double>(snapshot.applied_dehumidifier),
+      static_cast<double>(snapshot.applied_co2_doser), snapshot.output.version,
+      static_cast<unsigned>(snapshot.output.mode), snapshot.output.transport_active,
+      snapshot.output.lifecycle_active, static_cast<unsigned>(snapshot.output.lifecycle_event),
+      snapshot.output.automation_requested, snapshot.output.safety_latched,
+      snapshot.output.safety_reason_code,
+      storage::stage27StorageBackendName(storage_status.active_backend), storage_status.sd_mounted,
+      storage_status.flash_mounted, storage_status.sd_mount_errors,
+      storage_status.flash_mount_errors, storage_status.write_errors, storage_status.queue_drops,
+      storage_status.records_written, storage_status.records_skipped,
+      storage_status.fallback_activations, storage_status.sd_recoveries,
+      static_cast<unsigned long long>(storage_status.last_write_ms));
+}
+
+} // namespace growbox::app::climate_io::runtime

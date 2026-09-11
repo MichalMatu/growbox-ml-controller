@@ -1,0 +1,288 @@
+# Stage28E OutputSupervisor Phase H Qualification
+
+Status: PHYSICAL H PASS
+Updated: 2026-09-10
+Repository: `MichalMatu/growbox-ml-controller`
+Work branch: `mvp/environment-controller`
+A12 software-qualified executable SHA: `02208d23f403bca3540dbbd652eb55703a044833`
+Historical H v8: frozen; do not execute
+Hardware authorization: GRANTED by operator on 2026-09-10
+Terminal physical H evidence: `20260910-output-supervisor-physical-h-v3` PASS
+Physical H tooling SHA: `2a19cd43646fe284a7ab41828178b2b8f17edea1`
+
+### Terminal physical H result
+
+The authorized bounded hardware qualification passed on 2026-09-10 against exact production identity `02208d23f403bca3540dbbd652eb55703a044833`.
+
+Observed terminal evidence:
+
+- startup recovery reached `Automatic` with `safety_latched=0` at uptime `630113 ms`;
+- active SD session `3F6B0A11.JL` matched `growbox-log-v3` and output telemetry v2;
+- clean natural fan-OFF baseline began at uptime `651463 ms`;
+- natural `Climate` / `ClimateDecision` fan ON was captured at uptime `884293 ms` with requested level `0.111`;
+- the active trigger was humidity (`AH gap 2.513 g/m3` at transition); temperature trigger was not counted;
+- Shelly RPC produced exactly eight pre and eight post samples with median power `22.0 W -> 24.8 W`, delta `+2.8 W`;
+- the humidity environmental gradient contracted by `0.381 g/m3`, exceeding the frozen `0.30 g/m3` threshold;
+- formal OutputSupervisor replay passed for the exact qualified SHA;
+- no raw RF command path was used and `/dev/cu.usbserial-10` remained untouched;
+- final supervisor-owned `automation off` reached `Disabled` with fan OFF, humidifier OFF and transport clean.
+
+Terminal marker:
+
+`OUTPUT_SUPERVISOR_H_PHYSICAL_PASS sha=02208d23f403bca3540dbbd652eb55703a044833 tooling_sha=2a19cd43646fe284a7ab41828178b2b8f17edea1 port=/dev/cu.usbserial-1130 shelly=192.168.0.16 raw_rf=0 forbidden_port_untouched=/dev/cu.usbserial-10 hardware_started=1`
+
+## 1. Purpose
+
+This document replaces the historical Phase H v8 observer contract for the OutputSupervisor architecture.
+
+The qualification goal is to prove one natural fan OFF->ON transition through the production execution chain without treating one-way RF transmission as physical acknowledgement:
+
+```text
+natural climate ControlIntent
+-> OutputSupervisor resolution
+-> BinaryActuatorPolicy eligibility
+-> OutputPlan fan ON command
+-> Rf433OutputTransport TxResult
+-> independent Shelly aggregate-power support
+-> environmental response support
+```
+
+`OutputSupervisor` remains the only normal production owner allowed to execute configured physical outputs.
+
+## 2. Qualified software identity
+
+Only this exact executable source identity is qualified by A12.2:
+
+`02208d23f403bca3540dbbd652eb55703a044833`
+
+Terminal A12.2 evidence:
+
+`20260910-output-a12-2-final-full-software-gate-v9`
+
+A later docs/tooling commit does not change this executable identity. Any production-source change after this identity requires new software qualification before hardware H can resume.
+
+## 3. Telemetry contract
+
+The observer consumes `growbox-log-v3` records with output telemetry version `out_v=2` / `out.v=2`.
+
+The compact output object fields are:
+
+- `m`: `SupervisorMode`;
+- `ta`: transport active;
+- `la`: lifecycle execution active;
+- `le`: lifecycle event;
+- `ae`: automation requested;
+- `sl`: safety latched;
+- `sr`: aggregate safety reason;
+- `ep`: fixed endpoint telemetry arrays.
+
+For each endpoint array, the observer uses these positions:
+
+| Index | Meaning |
+|---:|---|
+| 0 | endpoint id |
+| 1 | control intent active |
+| 2 | control intent level |
+| 3 | schedule intent active |
+| 5 | manual intent active |
+| 7 | safety constraint active |
+| 10 | selected |
+| 11 | selected level |
+| 12 | selected source |
+| 13 | selected reason |
+| 14 | resolved |
+| 15 | resolved binary state |
+| 16 | held by dwell |
+| 17 | safety override |
+| 18 | inhibited |
+| 19 | command attempt known |
+| 20 | attempted this cycle |
+| 21 | attempted binary state |
+| 22 | attempt source |
+| 23 | attempt reason |
+| 24 | transport status |
+| 25 | transport error |
+| 26 | last command known |
+| 27 | last commanded binary state |
+| 28 | last command source |
+| 29 | last command reason |
+| 30 | physical state |
+| 31 | physical state independently supported |
+
+Current fixed endpoint identities are:
+
+- `1`: exhaust fan / RF socket 1;
+- `2`: scheduled lamp / RF socket 2;
+- `3`: humidifier / RF socket 3.
+
+Important enum values used by the replay contract:
+
+- `SupervisorMode::Automatic = 2`;
+- `SupervisorMode::MaintenanceLocked = 6`;
+- `OutputSource::Climate = 1`;
+- `OutputReason::ClimateDecision = 1`;
+- `BinaryOutputState::Off = 0`, `On = 1`;
+- `TransportStatus::Completed = 1`, `Failed = 2`;
+- `TransportError::None = 0`;
+- `PhysicalOutputState::Unknown = 0`.
+
+## 4. Normal fan transition acceptance contract
+
+The counted fan transition must satisfy all of the following.
+
+### 4.1 Session identity
+
+- session schema is `growbox-log-v3`;
+- session advertises output telemetry v2;
+- session firmware identity equals the A12-qualified SHA exactly.
+
+### 4.2 Supervisor state
+
+For the baseline and counted transition:
+
+- supervisor mode is `Automatic`;
+- automation is requested;
+- `MaintenanceLocked` is not active;
+- lifecycle execution is not active during the counted normal transition.
+
+### 4.3 Clean OFF baseline
+
+Before the counted transition, fan endpoint 1 must show:
+
+- no active hard-safety constraint/override/inhibit;
+- no manual intent;
+- resolved state OFF;
+- last-commanded state known and OFF;
+- no transport error.
+
+Independent physical fan-OFF support for the eventual hardware run is established separately by the Shelly power baseline; command state alone is not physical acknowledgement.
+
+### 4.4 Natural climate fan ON transition
+
+The counted transition must show:
+
+- no aggregate safety latch;
+- no fan safety constraint, safety override or inhibit;
+- no manual intent;
+- active fan climate control intent with positive requested level;
+- selected source `Climate` and reason `ClimateDecision`;
+- resolved fan state ON;
+- `held_by_dwell=0` for the counted command cycle;
+- command attempt known;
+- latest attempted state ON;
+- latest attempt source `Climate`, reason `ClimateDecision`;
+- latest transport status `Completed`;
+- transport error `None`;
+- last-commanded state known and ON with climate source/reason;
+- transport active for the counted command.
+
+A command transmitted because of `Safety`, `Manual`, `Lifecycle` or `Maintenance` is not a valid normal-control Phase H transition.
+
+Output telemetry is sampled more slowly than the one-second control loop. `attempted_this_cycle=1` is therefore direct same-cycle strengthening when present, but is not required for acceptance. A first subsequent sample may prove the transition when the preceding accepted sample is fan OFF and the persistent latest-attempt, transport-result and last-successful-command fields all prove an intervening fan ON command owned by `Climate` / `ClimateDecision`. Missing attempt truth still fails closed.
+
+### 4.5 Global transport cleanliness
+
+No configured endpoint may report an unexpected transport error or `Failed` transport status during the analyzed proof window.
+
+## 5. Honest physical-state semantics
+
+One-way RF transport success means only that the transmit operation completed.
+
+The observer must reject telemetry that claims a physical ON/OFF state while `physical_independent=0`.
+
+Without an independent feedback provider, the firmware physical state remains `Unknown`. Shelly aggregate power is external supporting evidence and must not be written back as per-endpoint RF acknowledgement.
+
+## 6. Independent supporting evidence
+
+The successful bounded hardware observer collected independent evidence around the counted fan transition.
+
+### 6.1 Shelly power support
+
+Requirements:
+
+- Shelly master remains ON;
+- exactly eight stable power samples are collected before the counted transition at 2 s cadence;
+- exactly eight power samples are collected after the counted transition at 2 s cadence;
+- lamp state does not change across the proof window;
+- humidifier state does not change across the proof window;
+- post-transition median power minus pre-transition median power is at least `+1.0 W`.
+
+The `+1.0 W` minimum delta is frozen for the authorized hardware qualification and must not be weakened during execution.
+
+### 6.2 Environmental response support
+
+The authorized hardware qualification uses a 180 s pre-transition observation, ignores the first 30 s after the counted fan ON transition, and observes the post-transition response for up to 600 s. Supporting environmental response is accepted when the active trigger's gradient measurably contracts: for a temperature-driven transition, median `|TP357_T - Xiaomi_T|` decreases by at least `0.20 C`; for a humidity-driven transition, the inside-minus-outside absolute-humidity gap decreases by at least `0.30 g/m3`. If both triggers are active, satisfying either actually active mechanism is sufficient.
+
+The operator thermal guard is `27.5 C`; the firmware hard-safety policy remains authoritative. Environmental response is supporting physical evidence, not a substitute for the supervisor/transport telemetry chain.
+
+## 7. Recovery and final state
+
+The successful physical H task made recovery/final-state execution supervisor-owned.
+
+The qualification wrapper must:
+
+- execute a bounded supervisor lifecycle/recovery transition;
+- reject unexpected transport failures;
+- restore/prove the reviewed safe final state;
+- never use raw RF TX as recovery outside `MaintenanceLocked`;
+- preserve hard thermal safety throughout recovery.
+
+Historical H v8 recovery commands are not automatically valid for this architecture and must not be reused without review.
+
+## 8. A13.1 software tooling
+
+`tools/output_supervisor_h.py` is the software-only replay implementation of this contract.
+
+It:
+
+- parses committed/captured `growbox-log-v3` NDJSON records;
+- verifies the exact A12 firmware identity;
+- validates the OutputSupervisor-owned natural fan transition;
+- rejects safety/manual/maintenance ownership;
+- rejects transport errors;
+- rejects fabricated physical acknowledgement;
+- validates independent-evidence metadata supplied as JSON;
+- never opens serial;
+- never probes USB;
+- never accesses Shelly/network hardware;
+- never flashes;
+- never transmits RF.
+
+Focused tests live in `tests/test_output_supervisor_h.py`.
+
+## 9. A13.2 software-only preflight
+
+A13.2 must run on the Mac through Local Agent with:
+
+```json
+{
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "mvp/environment-controller",
+  "resources": []
+}
+```
+
+The preflight must verify:
+
+1. current branch ancestry contains exact A12-qualified executable SHA;
+2. no production C/C++ source changed after the qualified SHA unless a new A12 full qualification exists;
+3. the replay tool and focused tests pass;
+4. a positive synthetic replay produces the expected PASS marker;
+5. negative cases reject wrong SHA, manual/safety ownership, transport errors and fabricated physical acknowledgement;
+6. repository formatting/lint for the new A13.1 files passes;
+7. no serial, USB, flash, network hardware or RF command is executed;
+8. final marker includes `hardware_started=0`.
+
+A13.2 is not hardware qualification.
+
+## 10. Hardware authorization gate
+
+The operator explicitly authorized physical qualification on 2026-09-10. That authorization remains subordinate to software qualification: after any production-source change, hardware must stop until the replacement executable passes A12.2 and the retargeted A13.1/A13.2 gates.
+
+For the currently authorized hardware qualification, only this Growbox serial port may be used:
+
+`/dev/cu.usbserial-1130`
+
+Never touch:
+
+`/dev/cu.usbserial-10`

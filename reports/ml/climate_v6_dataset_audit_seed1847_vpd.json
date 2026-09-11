@@ -1,0 +1,404 @@
+{
+  "audit": {
+    "active_fraction": {
+      "co2_doser": 0.08208333333333333,
+      "cooler": 0.39152777777777775,
+      "dehumidifier": 0.1309722222222222,
+      "exhaust_fan": 0.2579166666666667,
+      "heater": 0.22277777777777777,
+      "humidifier": 0.14541666666666667
+    },
+    "all_zero_fraction": 0.22625,
+    "conflicting_humidity_rows": 0,
+    "conflicting_temperature_rows": 0,
+    "errors": [],
+    "family_counts": {
+      "actuator_missing": 480,
+      "co2_enrichment": 480,
+      "co2_unavailable": 480,
+      "cold_heating": 480,
+      "day_light_load": 480,
+      "day_to_night": 480,
+      "dry_humidification": 480,
+      "dry_vpd_control": 480,
+      "hot_cooling": 480,
+      "humid_dehumidification": 480,
+      "humid_vpd_control": 480,
+      "night_to_day": 480,
+      "outside_harmful": 480,
+      "outside_helpful": 480,
+      "sensor_fault": 480
+    },
+    "feature_count": 38,
+    "humidity_mode_counts": {
+      "RH": 6240,
+      "VPD": 960
+    },
+    "mean_level": {
+      "co2_doser": 0.05180555582046509,
+      "cooler": 0.2738819420337677,
+      "dehumidifier": 0.060520824044942856,
+      "exhaust_fan": 0.15187500417232513,
+      "heater": 0.15820832550525665,
+      "humidifier": 0.0782083198428154
+    },
+    "output_count": 6,
+    "ready_for_training": true,
+    "row_count": 7200,
+    "safe_fallback_fraction": 0.058333333333333334,
+    "split_counts": {
+      "test": 1200,
+      "train": 4800,
+      "validation": 1200
+    },
+    "warnings": []
+  },
+  "cache": {
+    "dataset": "build/climate_v6_full_seed1847_vpd.npz",
+    "metadata": "build/climate_v6_full_seed1847_vpd_metadata.npz"
+  },
+  "config": {
+    "families": 15,
+    "rows": 7200,
+    "scenarios_per_family": 6,
+    "steps_per_scenario": 80
+  },
+  "label_coverage": {
+    "test": {
+      "co2_doser": {
+        "active_count": 125,
+        "active_fraction": 0.10416666666666667,
+        "active_mean": 0.6320000290870667,
+        "active_p50": 0.5,
+        "active_p90": 1.0,
+        "max": 1.0,
+        "mean": 0.06583333015441895,
+        "rows": 1200,
+        "strong_count": 125,
+        "strong_fraction": 0.10416666666666667
+      },
+      "cooler": {
+        "active_count": 519,
+        "active_fraction": 0.4325,
+        "active_mean": 0.6856454610824585,
+        "active_p50": 0.699999988079071,
+        "active_p90": 1.0,
+        "max": 1.0,
+        "mean": 0.29654166102409363,
+        "rows": 1200,
+        "strong_count": 519,
+        "strong_fraction": 0.4325
+      },
+      "dehumidifier": {
+        "active_count": 164,
+        "active_fraction": 0.13666666666666666,
+        "active_mean": 0.5503047704696655,
+        "active_p50": 0.3499999940395355,
+        "active_p90": 1.0,
+        "max": 1.0,
+        "mean": 0.07520833611488342,
+        "rows": 1200,
+        "strong_count": 164,
+        "strong_fraction": 0.13666666666666666
+      },
+      "exhaust_fan": {
+        "active_count": 325,
+        "active_fraction": 0.2708333333333333,
+        "active_mean": 0.5907692313194275,
+        "active_p50": 0.5,
+        "active_p90": 1.0,
+        "max": 1.0,
+        "mean": 0.1599999964237213,
+        "rows": 1200,
+        "strong_count": 186,
+        "strong_fraction": 0.155
+      },
+      "heater": {
+        "active_count": 281,
+        "active_fraction": 0.23416666666666666,
+        "active_mean": 0.7161921262741089,
+        "active_p50": 0.699999988079071,
+        "active_p90": 1.0,
+        "max": 1.0,
+        "mean": 0.16770832240581512,
+        "rows": 1200,
+        "strong_count": 281,
+        "strong_fraction": 0.23416666666666666
+      },
+      "humidifier": {
+        "active_count": 187,
+        "active_fraction": 0.15583333333333332,
+        "active_mean": 0.46925124526023865,
+        "active_p50": 0.3499999940395355,
+        "active_p90": 0.699999988079071,
+        "max": 1.0,
+        "mean": 0.07312499731779099,
+        "rows": 1200,
+        "strong_count": 187,
+        "strong_fraction": 0.15583333333333332
+      }
+    },
+    "train": {
+      "co2_doser": {
+        "active_count": 377,
+        "active_fraction": 0.07854166666666666,
+        "active_mean": 0.6564986705780029,
+        "active_p50": 0.5,
+        "active_p90": 1.0,
+        "max": 1.0,
+        "mean": 0.05156249925494194,
+        "rows": 4800,
+        "strong_count": 377,
+        "strong_fraction": 0.07854166666666666
+      },
+      "cooler": {
+        "active_count": 1729,
+        "active_fraction": 0.36020833333333335,
+        "active_mean": 0.6879120469093323,
+        "active_p50": 0.699999988079071,
+        "active_p90": 1.0,
+        "max": 1.0,
+        "mean": 0.24779164791107178,
+        "rows": 4800,
+        "strong_count": 1729,
+        "strong_fraction": 0.36020833333333335
+      },
+      "dehumidifier": {
+        "active_count": 591,
+        "active_fraction": 0.123125,
+        "active_mean": 0.45846015214920044,
+        "active_p50": 0.3499999940395355,
+        "active_p90": 0.699999988079071,
+        "max": 1.0,
+        "mean": 0.056447919458150864,
+        "rows": 4800,
+        "strong_count": 591,
+        "strong_fraction": 0.123125
+      },
+      "exhaust_fan": {
+        "active_count": 1301,
+        "active_fraction": 0.2710416666666667,
+        "active_mean": 0.6014603972434998,
+        "active_p50": 0.5,
+        "active_p90": 1.0,
+        "max": 1.0,
+        "mean": 0.16302083432674408,
+        "rows": 4800,
+        "strong_count": 755,
+        "strong_fraction": 0.15729166666666666
+      },
+      "heater": {
+        "active_count": 1084,
+        "active_fraction": 0.22583333333333333,
+        "active_mean": 0.7042434811592102,
+        "active_p50": 0.699999988079071,
+        "active_p90": 1.0,
+        "max": 1.0,
+        "mean": 0.15904167294502258,
+        "rows": 4800,
+        "strong_count": 1084,
+        "strong_fraction": 0.22583333333333333
+      },
+      "humidifier": {
+        "active_count": 714,
+        "active_fraction": 0.14875,
+        "active_mean": 0.5446777939796448,
+        "active_p50": 0.3499999940395355,
+        "active_p90": 1.0,
+        "max": 1.0,
+        "mean": 0.08102083206176758,
+        "rows": 4800,
+        "strong_count": 714,
+        "strong_fraction": 0.14875
+      }
+    },
+    "validation": {
+      "co2_doser": {
+        "active_count": 89,
+        "active_fraction": 0.07416666666666667,
+        "active_mean": 0.5224719047546387,
+        "active_p50": 0.5,
+        "active_p90": 0.5,
+        "max": 1.0,
+        "mean": 0.038750000298023224,
+        "rows": 1200,
+        "strong_count": 89,
+        "strong_fraction": 0.07416666666666667
+      },
+      "cooler": {
+        "active_count": 571,
+        "active_fraction": 0.47583333333333333,
+        "active_mean": 0.7472854256629944,
+        "active_p50": 1.0,
+        "active_p90": 1.0,
+        "max": 1.0,
+        "mean": 0.3555833399295807,
+        "rows": 1200,
+        "strong_count": 571,
+        "strong_fraction": 0.47583333333333333
+      },
+      "dehumidifier": {
+        "active_count": 188,
+        "active_fraction": 0.15666666666666668,
+        "active_mean": 0.396542489528656,
+        "active_p50": 0.3499999940395355,
+        "active_p90": 0.699999988079071,
+        "max": 0.699999988079071,
+        "mean": 0.06212500110268593,
+        "rows": 1200,
+        "strong_count": 188,
+        "strong_fraction": 0.15666666666666668
+      },
+      "exhaust_fan": {
+        "active_count": 231,
+        "active_fraction": 0.1925,
+        "active_mean": 0.5151515007019043,
+        "active_p50": 0.25,
+        "active_p90": 1.0,
+        "max": 1.0,
+        "mean": 0.09916666895151138,
+        "rows": 1200,
+        "strong_count": 102,
+        "strong_fraction": 0.085
+      },
+      "heater": {
+        "active_count": 239,
+        "active_fraction": 0.19916666666666666,
+        "active_mean": 0.7299163341522217,
+        "active_p50": 1.0,
+        "active_p90": 1.0,
+        "max": 1.0,
+        "mean": 0.14537501335144043,
+        "rows": 1200,
+        "strong_count": 239,
+        "strong_fraction": 0.19916666666666666
+      },
+      "humidifier": {
+        "active_count": 146,
+        "active_fraction": 0.12166666666666667,
+        "active_mean": 0.59212327003479,
+        "active_p50": 0.3499999940395355,
+        "active_p90": 1.0,
+        "max": 1.0,
+        "mean": 0.07204166054725647,
+        "rows": 1200,
+        "strong_count": 146,
+        "strong_fraction": 0.12166666666666667
+      }
+    }
+  },
+  "schema_version": 6,
+  "seed": 1847,
+  "split_family_counts": {
+    "test": {
+      "actuator_missing": 80,
+      "co2_enrichment": 80,
+      "co2_unavailable": 80,
+      "cold_heating": 80,
+      "day_light_load": 80,
+      "day_to_night": 80,
+      "dry_humidification": 80,
+      "dry_vpd_control": 80,
+      "hot_cooling": 80,
+      "humid_dehumidification": 80,
+      "humid_vpd_control": 80,
+      "night_to_day": 80,
+      "outside_harmful": 80,
+      "outside_helpful": 80,
+      "sensor_fault": 80
+    },
+    "train": {
+      "actuator_missing": 320,
+      "co2_enrichment": 320,
+      "co2_unavailable": 320,
+      "cold_heating": 320,
+      "day_light_load": 320,
+      "day_to_night": 320,
+      "dry_humidification": 320,
+      "dry_vpd_control": 320,
+      "hot_cooling": 320,
+      "humid_dehumidification": 320,
+      "humid_vpd_control": 320,
+      "night_to_day": 320,
+      "outside_harmful": 320,
+      "outside_helpful": 320,
+      "sensor_fault": 320
+    },
+    "validation": {
+      "actuator_missing": 80,
+      "co2_enrichment": 80,
+      "co2_unavailable": 80,
+      "cold_heating": 80,
+      "day_light_load": 80,
+      "day_to_night": 80,
+      "dry_humidification": 80,
+      "dry_vpd_control": 80,
+      "hot_cooling": 80,
+      "humid_dehumidification": 80,
+      "humid_vpd_control": 80,
+      "night_to_day": 80,
+      "outside_harmful": 80,
+      "outside_helpful": 80,
+      "sensor_fault": 80
+    }
+  },
+  "split_humidity_mode_counts": {
+    "test": {
+      "RH": 1040,
+      "VPD": 160
+    },
+    "train": {
+      "RH": 4160,
+      "VPD": 640
+    },
+    "validation": {
+      "RH": 1040,
+      "VPD": 160
+    }
+  },
+  "vpd_output_coverage": {
+    "co2_doser": {
+      "active_count": 0,
+      "active_fraction": 0.0,
+      "max": 0.0,
+      "rows": 960,
+      "strong_count": 0
+    },
+    "cooler": {
+      "active_count": 43,
+      "active_fraction": 0.04479166666666667,
+      "max": 0.699999988079071,
+      "rows": 960,
+      "strong_count": 43
+    },
+    "dehumidifier": {
+      "active_count": 186,
+      "active_fraction": 0.19375,
+      "max": 1.0,
+      "rows": 960,
+      "strong_count": 186
+    },
+    "exhaust_fan": {
+      "active_count": 260,
+      "active_fraction": 0.2708333333333333,
+      "max": 1.0,
+      "rows": 960,
+      "strong_count": 108
+    },
+    "heater": {
+      "active_count": 436,
+      "active_fraction": 0.45416666666666666,
+      "max": 1.0,
+      "rows": 960,
+      "strong_count": 436
+    },
+    "humidifier": {
+      "active_count": 241,
+      "active_fraction": 0.25104166666666666,
+      "max": 1.0,
+      "rows": 960,
+      "strong_count": 241
+    }
+  },
+  "workers": 6
+}

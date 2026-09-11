@@ -8,14 +8,63 @@ if [[ ! -x "$PY" ]]; then
   PY="$(command -v python3)"
 fi
 
+HOST_BUILD_JOBS="${HOST_BUILD_JOBS:-2}"
+if [[ ! "${HOST_BUILD_JOBS}" =~ ^[1-9][0-9]*$ ]]; then
+  echo "HOST_BUILD_JOBS must be a positive integer, got: ${HOST_BUILD_JOBS}" >&2
+  exit 2
+fi
+export HOST_BUILD_JOBS
+
+echo "==> output execution ownership"
+"$PY" "${ROOT}/scripts/check_output_rf_ownership.py"
+
+echo "==> runtime configuration SSOT"
+"$PY" "${ROOT}/scripts/check_runtime_config_ssot.py"
+
+echo "==> runtime composition boundaries"
+"$PY" "${ROOT}/scripts/check_runtime_boundaries.py"
+
+echo "==> service console boundaries"
+"$PY" "${ROOT}/scripts/check_service_console_boundaries.py"
+
+echo "==> app-mode build boundaries"
+"$PY" "${ROOT}/scripts/check_app_mode_boundaries.py"
+
 echo "==> pytest"
 # Hardware board E2E needs a matching flashed firmware; exclude from pre-push.
 "$PY" -m pytest -q -m "not hardware"
 
-echo "==> host C++ tests"
+echo "==> host C++ tests (jobs=${HOST_BUILD_JOBS})"
 cmake -S test/host -B build/host-tests -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-cmake --build build/host-tests --parallel
+cmake --build build/host-tests --parallel "${HOST_BUILD_JOBS}"
 ctest --test-dir build/host-tests --output-on-failure
+
+echo "==> Stage28D bounded-output regression tests"
+HOST_CXX="${CXX:-c++}"
+"$HOST_CXX" -std=c++17 -Wall -Wextra -Wpedantic \
+  -Isrc -Ilib/environment_control/src \
+  test/test_stage28d_rf_output_endpoint/test_main.cpp \
+  src/climate/Stage28dRfOutputEndpoint.cpp \
+  src/climate/Stage28dOutputBindings.cpp \
+  src/climate/ClimateSemanticOutput.cpp \
+  src/climate/output/OutputPolicyConfig.cpp \
+  src/climate/output/OutputStateStore.cpp \
+  src/climate/rf433/ClimateRf433EndpointRegistry.cpp \
+  -o /tmp/stage28d_rf_output_endpoint_tests
+/tmp/stage28d_rf_output_endpoint_tests
+"$HOST_CXX" -std=c++17 -Wall -Wextra -Wpedantic \
+  -Isrc \
+  test/test_stage28d_thermal_sequence/test_main.cpp \
+  src/climate/Stage28dThermalTestSequence.cpp \
+  -o /tmp/stage28d_thermal_sequence_tests
+/tmp/stage28d_thermal_sequence_tests
+"$HOST_CXX" -std=c++17 -Wall -Wextra -Wpedantic \
+  -Isrc -Ilib/environment_control/src \
+  test/test_stage28d_binary_role_arbiter/test_main.cpp \
+  src/climate/Stage28dBinaryRoleArbiter.cpp \
+  src/climate/output/BinaryActuatorPolicy.cpp \
+  -o /tmp/stage28d_binary_role_arbiter_tests
+/tmp/stage28d_binary_role_arbiter_tests
 
 if [[ "${SKIP_CLANG_TIDY:-}" != "1" ]]; then
   bash "${ROOT}/scripts/run_clang_tidy_host.sh"
@@ -25,8 +74,17 @@ fi
 
 if [[ "${SKIP_IDF_BUILD:-}" != "1" ]]; then
   bash "${ROOT}/scripts/idf_gate_build.sh"
+  IDF_GATE_BUILD_DIR="build/idf-gate-v6-fake" IDF_GATE_APP_MODE="climate-v6-fake" \
+    bash "${ROOT}/scripts/idf_gate_build.sh"
+  # The real-input runtime requires the Stage27C BLE/NimBLE sdkconfig and actual
+  # CrowPanel board profile. A generic legacy sdkconfig does not expose NimBLE headers.
+  STAGE27C_BUILD_DIR="build/idf-gate-real-inputs-crowpanel" \
+    GROWBOX_RF433_LOOPBACK_ENABLED=0 \
+    GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 \
+    GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 \
+    bash "${ROOT}/scripts/stage27c_crowpanel.sh" build
 else
-  echo "==> idf build skipped (SKIP_IDF_BUILD=1)"
+  echo "==> idf builds skipped (SKIP_IDF_BUILD=1)"
 fi
 
 echo "quality gate (pre-push): OK"

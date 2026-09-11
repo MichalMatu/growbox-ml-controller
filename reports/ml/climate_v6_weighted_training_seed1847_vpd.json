@@ -1,0 +1,728 @@
+{
+  "artifact": {
+    "metadata_file": "reports/ml/climate_v6_model_seed1847_vpd.json",
+    "parameter_count": 2502,
+    "portable_max_prediction_delta": 5.960464477539063e-08,
+    "weights_file": "reports/ml/climate_v6_model_seed1847_vpd.npz"
+  },
+  "contract_hash": "8c5ba15ea43feb013bc4da4d4d7eabceaefd79e217b78ebe9a45956c1a830145",
+  "dataset": {
+    "cache": "build/climate_v6_full_seed1847_vpd.npz",
+    "humidity_mode_counts": {
+      "RH": 6240,
+      "VPD": 960
+    },
+    "metadata_cache": "build/climate_v6_full_seed1847_vpd_metadata.npz",
+    "rows": 7200,
+    "split_counts": {
+      "test": 1200,
+      "train": 4800,
+      "validation": 1200
+    },
+    "vpd_rows": 960
+  },
+  "git_commit": "ffe4cf12152f1235b734d41695f7ce3abb82e18c",
+  "schema_version": 6,
+  "training": {
+    "baseline": "adam_huber_baseline",
+    "candidates": [
+      {
+        "spec": {
+          "learning_rate": 0.001,
+          "loss": "huber",
+          "name": "adam_huber_baseline",
+          "optimizer": "adam",
+          "weighting": "none"
+        },
+        "validation": {
+          "balanced_mae": 0.06374539428278148,
+          "control_mae": 0.06606879385371461,
+          "macro_f1": 0.8541555763135794,
+          "macro_precision": 0.8081219677237149,
+          "macro_recall": 0.9145923203440267,
+          "mae": 0.041676960927194764,
+          "per_output": {
+            "co2_doser": {
+              "active_mae": 0.06387052031526907,
+              "balanced_mae": 0.0355204687206854,
+              "control_mae": 0.0355204687206854,
+              "f1": 0.9213483146067416,
+              "inactive_mae": 0.007170417126101725,
+              "mae": 0.011375674779298304,
+              "precision": 0.9213483146067416,
+              "recall": 0.9213483146067416,
+              "rmse": 0.06355564651695868,
+              "strong_count": 89,
+              "strong_mae": 0.06387052031526907,
+              "strong_recall": 0.9213483146067416
+            },
+            "cooler": {
+              "active_mae": 0.09728475895607534,
+              "balanced_mae": 0.07700463014552911,
+              "control_mae": 0.07700463014552911,
+              "f1": 0.8962722852512156,
+              "inactive_mae": 0.05672450133498287,
+              "mae": 0.07602442391968604,
+              "precision": 0.8340874811463047,
+              "recall": 0.968476357267951,
+              "rmse": 0.1932101780949764,
+              "strong_count": 571,
+              "strong_mae": 0.09728475895607534,
+              "strong_recall": 0.8353765323992994
+            },
+            "dehumidifier": {
+              "active_mae": 0.10578228230092754,
+              "balanced_mae": 0.06542037591760644,
+              "control_mae": 0.06542037591760644,
+              "f1": 0.8341968911917099,
+              "inactive_mae": 0.025058469534285352,
+              "mae": 0.037705200201059295,
+              "precision": 0.8131313131313131,
+              "recall": 0.8563829787234043,
+              "rmse": 0.0793982485321217,
+              "strong_count": 188,
+              "strong_mae": 0.10578228230092754,
+              "strong_recall": 0.601063829787234
+            },
+            "exhaust_fan": {
+              "active_mae": 0.11118371682685046,
+              "balanced_mae": 0.0763499749865321,
+              "control_mae": 0.09029037241213089,
+              "f1": 0.7056798623063683,
+              "inactive_mae": 0.04151623314621371,
+              "mae": 0.054927223754736285,
+              "precision": 0.5857142857142857,
+              "recall": 0.8874458874458875,
+              "rmse": 0.1289381866062868,
+              "strong_count": 102,
+              "strong_mae": 0.14456820224557876,
+              "strong_recall": 0.8529411764705882
+            },
+            "heater": {
+              "active_mae": 0.09536961164660596,
+              "balanced_mae": 0.05991879626451051,
+              "control_mae": 0.05991879626451051,
+              "f1": 0.8664122137404581,
+              "inactive_mae": 0.02446798088241506,
+              "mae": 0.03858922234294975,
+              "precision": 0.7964912280701755,
+              "recall": 0.9497907949790795,
+              "rmse": 0.12543259798313178,
+              "strong_count": 239,
+              "strong_mae": 0.09536961164660596,
+              "strong_recall": 0.9037656903765691
+            },
+            "humidifier": {
+              "active_mae": 0.11691640040594829,
+              "balanced_mae": 0.06825811966182531,
+              "control_mae": 0.06825811966182531,
+              "f1": 0.901023890784983,
+              "inactive_mae": 0.019599838917702332,
+              "mae": 0.031440020565438924,
+              "precision": 0.8979591836734694,
+              "recall": 0.9041095890410958,
+              "rmse": 0.09730328986784763,
+              "strong_count": 146,
+              "strong_mae": 0.11691640040594829,
+              "strong_recall": 0.7534246575342466
+            }
+          },
+          "rmse": 0.12213373668160628,
+          "strong_mae": 0.10396529597840083,
+          "strong_recall": 0.8113200335291131
+        }
+      },
+      {
+        "spec": {
+          "learning_rate": 0.001,
+          "loss": "huber",
+          "name": "adam_weighted_huber",
+          "optimizer": "adam",
+          "weighting": "control"
+        },
+        "validation": {
+          "balanced_mae": 0.0678924583117881,
+          "control_mae": 0.06953100787681266,
+          "macro_f1": 0.7456973580393719,
+          "macro_precision": 0.6360660886119315,
+          "macro_recall": 0.9465069574814665,
+          "mae": 0.04900671291435275,
+          "per_output": {
+            "co2_doser": {
+              "active_mae": 0.06215760891399022,
+              "balanced_mae": 0.03629782464269363,
+              "control_mae": 0.03629782464269363,
+              "f1": 0.901098901098901,
+              "inactive_mae": 0.010438040371397032,
+              "mae": 0.01427390837163936,
+              "precision": 0.8817204301075269,
+              "recall": 0.9213483146067416,
+              "rmse": 0.062378347893888554,
+              "strong_count": 89,
+              "strong_mae": 0.06215760891399022,
+              "strong_recall": 0.9213483146067416
+            },
+            "cooler": {
+              "active_mae": 0.08629915987234399,
+              "balanced_mae": 0.07926799311033711,
+              "control_mae": 0.07926799311033711,
+              "f1": 0.8016877637130801,
+              "inactive_mae": 0.07223682634833022,
+              "mae": 0.07892815338350677,
+              "precision": 0.6698002350176263,
+              "recall": 0.9982486865148862,
+              "rmse": 0.19013833860286672,
+              "strong_count": 571,
+              "strong_mae": 0.08629915987234399,
+              "strong_recall": 0.9106830122591943
+            },
+            "dehumidifier": {
+              "active_mae": 0.10122662929302835,
+              "balanced_mae": 0.06654263925080453,
+              "control_mae": 0.06654263925080453,
+              "f1": 0.8151898734177215,
+              "inactive_mae": 0.031858649208580704,
+              "mae": 0.04272629942181084,
+              "precision": 0.7777777777777778,
+              "recall": 0.8563829787234043,
+              "rmse": 0.07742646495665396,
+              "strong_count": 188,
+              "strong_mae": 0.10122662929302835,
+              "strong_recall": 0.3723404255319149
+            },
+            "exhaust_fan": {
+              "active_mae": 0.10305587423650862,
+              "balanced_mae": 0.08019231059883941,
+              "control_mae": 0.09002360798898679,
+              "f1": 0.5531914893617021,
+              "inactive_mae": 0.05732874696117021,
+              "mae": 0.06613121896167286,
+              "precision": 0.3890845070422535,
+              "recall": 0.9567099567099567,
+              "rmse": 0.13044248181876755,
+              "strong_count": 102,
+              "strong_mae": 0.13473411055975684,
+              "strong_recall": 0.8627450980392157
+            },
+            "heater": {
+              "active_mae": 0.10833460525862841,
+              "balanced_mae": 0.07116567598228007,
+              "control_mae": 0.07116567598228007,
+              "f1": 0.7363494539781591,
+              "inactive_mae": 0.03399674670593173,
+              "mae": 0.04880237020101049,
+              "precision": 0.5870646766169154,
+              "recall": 0.9874476987447699,
+              "rmse": 0.12574305473585207,
+              "strong_count": 239,
+              "strong_mae": 0.10833460525862841,
+              "strong_recall": 0.9037656903765691
+            },
+            "humidifier": {
+              "active_mae": 0.1144741818002642,
+              "balanced_mae": 0.07388830628577386,
+              "control_mae": 0.07388830628577386,
+              "f1": 0.6666666666666667,
+              "inactive_mae": 0.033302430771283524,
+              "mae": 0.043178327146476174,
+              "precision": 0.5109489051094891,
+              "recall": 0.958904109589041,
+              "rmse": 0.1009426612390913,
+              "strong_count": 146,
+              "strong_mae": 0.1144741818002642,
+              "strong_recall": 0.773972602739726
+            }
+          },
+          "rmse": 0.12182944451410087,
+          "strong_mae": 0.10120438261633534,
+          "strong_recall": 0.7908091905922269
+        }
+      },
+      {
+        "spec": {
+          "learning_rate": 0.001,
+          "loss": "mse",
+          "name": "adam_weighted_mse",
+          "optimizer": "adam",
+          "weighting": "control"
+        },
+        "validation": {
+          "balanced_mae": 0.07770293422215385,
+          "control_mae": 0.07884703360978529,
+          "macro_f1": 0.585809888705821,
+          "macro_precision": 0.42505481446771043,
+          "macro_recall": 0.9858437637424761,
+          "mae": 0.061905417735219494,
+          "per_output": {
+            "co2_doser": {
+              "active_mae": 0.0629293697185061,
+              "balanced_mae": 0.041706887287328714,
+              "control_mae": 0.041706887287328714,
+              "f1": 0.6518518518518519,
+              "inactive_mae": 0.020484404856151325,
+              "mae": 0.02363240641677597,
+              "precision": 0.4861878453038674,
+              "recall": 0.9887640449438202,
+              "rmse": 0.06388257484093558,
+              "strong_count": 89,
+              "strong_mae": 0.0629293697185061,
+              "strong_recall": 0.9213483146067416
+            },
+            "cooler": {
+              "active_mae": 0.0759799110127414,
+              "balanced_mae": 0.08514428899657092,
+              "control_mae": 0.08514428899657092,
+              "f1": 0.7784594410361282,
+              "inactive_mae": 0.09430866698040043,
+              "mae": 0.085587233932456,
+              "precision": 0.6372767857142857,
+              "recall": 1.0,
+              "rmse": 0.17414957413907753,
+              "strong_count": 571,
+              "strong_mae": 0.0759799110127414,
+              "strong_recall": 0.9369527145359019
+            },
+            "dehumidifier": {
+              "active_mae": 0.08902231070827296,
+              "balanced_mae": 0.07034596311194419,
+              "control_mae": 0.07034596311194419,
+              "f1": 0.4566326530612244,
+              "inactive_mae": 0.05166961551561543,
+              "mae": 0.05752153776246511,
+              "precision": 0.30033557046979864,
+              "recall": 0.9521276595744681,
+              "rmse": 0.08368942407354134,
+              "strong_count": 188,
+              "strong_mae": 0.08902231070827296,
+              "strong_recall": 0.6276595744680851
+            },
+            "exhaust_fan": {
+              "active_mae": 0.12759557607466782,
+              "balanced_mae": 0.10022226431054954,
+              "control_mae": 0.1070868606363381,
+              "f1": 0.45795339412360686,
+              "inactive_mae": 0.07284895254643124,
+              "mae": 0.08338767757561678,
+              "precision": 0.29894179894179895,
+              "recall": 0.9783549783549783,
+              "rmse": 0.14125068190649454,
+              "strong_count": 102,
+              "strong_mae": 0.09520452276018321,
+              "strong_recall": 0.9313725490196079
+            },
+            "heater": {
+              "active_mae": 0.11336781930910993,
+              "balanced_mae": 0.08440548890889042,
+              "control_mae": 0.08440548890889042,
+              "f1": 0.5776699029126214,
+              "inactive_mae": 0.055443158508670924,
+              "mae": 0.06697982011809168,
+              "precision": 0.40683760683760684,
+              "recall": 0.99581589958159,
+              "rmse": 0.12942512406751205,
+              "strong_count": 239,
+              "strong_mae": 0.11336781930910993,
+              "strong_recall": 0.9246861924686193
+            },
+            "humidifier": {
+              "active_mae": 0.12413132343798468,
+              "balanced_mae": 0.08439271271763936,
+              "control_mae": 0.08439271271763936,
+              "f1": 0.5922920892494928,
+              "inactive_mae": 0.04465410199729404,
+              "mae": 0.0543238306059114,
+              "precision": 0.4207492795389049,
+              "recall": 1.0,
+              "rmse": 0.10032523733520037,
+              "strong_count": 146,
+              "strong_mae": 0.12413132343798468,
+              "strong_recall": 0.7465753424657534
+            }
+          },
+          "rmse": 0.12123032374245019,
+          "strong_mae": 0.09343920949113305,
+          "strong_recall": 0.8480991145941181
+        }
+      },
+      {
+        "spec": {
+          "learning_rate": 0.02,
+          "loss": "huber",
+          "name": "sgd_weighted_huber",
+          "optimizer": "sgd",
+          "weighting": "control"
+        },
+        "validation": {
+          "balanced_mae": 0.17328611518508005,
+          "control_mae": 0.1740047050835547,
+          "macro_f1": 0.3543924535749115,
+          "macro_precision": 0.23142259251709998,
+          "macro_recall": 1.0,
+          "mae": 0.12868296520215355,
+          "per_output": {
+            "co2_doser": {
+              "active_mae": 0.43696869591648657,
+              "balanced_mae": 0.25430097693539,
+              "control_mae": 0.25430097693539,
+              "f1": 0.16776625824693686,
+              "inactive_mae": 0.07163325795429339,
+              "mae": 0.09872896960315605,
+              "precision": 0.09156378600823045,
+              "recall": 1.0,
+              "rmse": 0.14236241385656379,
+              "strong_count": 89,
+              "strong_mae": 0.43696869591648657,
+              "strong_recall": 0.0
+            },
+            "cooler": {
+              "active_mae": 0.1147219971500846,
+              "balanced_mae": 0.12285174427967523,
+              "control_mae": 0.12285174427967523,
+              "f1": 0.7006134969325153,
+              "inactive_mae": 0.13098149140926585,
+              "mae": 0.12324468205760543,
+              "precision": 0.5391879131255902,
+              "recall": 1.0,
+              "rmse": 0.20031239908175116,
+              "strong_count": 571,
+              "strong_mae": 0.1147219971500846,
+              "strong_recall": 0.8914185639229422
+            },
+            "dehumidifier": {
+              "active_mae": 0.1991487740677722,
+              "balanced_mae": 0.16319038901792438,
+              "control_mae": 0.16319038901792438,
+              "f1": 0.27187274041937814,
+              "inactive_mae": 0.12723200396807652,
+              "mae": 0.13849896461702882,
+              "precision": 0.15732217573221757,
+              "recall": 1.0,
+              "rmse": 0.16556340438931086,
+              "strong_count": 188,
+              "strong_mae": 0.1991487740677722,
+              "strong_recall": 0.005319148936170213
+            },
+            "exhaust_fan": {
+              "active_mae": 0.16484817314199554,
+              "balanced_mae": 0.16965971001493332,
+              "control_mae": 0.17397124940578146,
+              "f1": 0.3228511530398323,
+              "inactive_mae": 0.1744712468878711,
+              "mae": 0.17261880519179007,
+              "precision": 0.1925,
+              "recall": 1.0,
+              "rmse": 0.20574376138500272,
+              "strong_count": 102,
+              "strong_mae": 0.24963535835929945,
+              "strong_recall": 0.9117647058823529
+            },
+            "heater": {
+              "active_mae": 0.15356085652088022,
+              "balanced_mae": 0.12508007304196284,
+              "control_mae": 0.12508007304196284,
+              "f1": 0.44136657433056325,
+              "inactive_mae": 0.09659928956304548,
+              "mae": 0.10794413498214757,
+              "precision": 0.283175355450237,
+              "recall": 1.0,
+              "rmse": 0.15366813079340466,
+              "strong_count": 239,
+              "strong_mae": 0.15356085652088022,
+              "strong_recall": 0.9205020920502092
+            },
+            "humidifier": {
+              "active_mae": 0.30186493842773243,
+              "balanced_mae": 0.20463379782059446,
+              "control_mae": 0.20463379782059446,
+              "f1": 0.22188449848024316,
+              "inactive_mae": 0.10740265721345649,
+              "mae": 0.13106223476119339,
+              "precision": 0.12478632478632479,
+              "recall": 1.0,
+              "rmse": 0.17518155535346924,
+              "strong_count": 146,
+              "strong_mae": 0.30186493842773243,
+              "strong_recall": 0.6232876712328768
+            }
+          },
+          "rmse": 0.17532651543352917,
+          "strong_mae": 0.2426501034070426,
+          "strong_recall": 0.5587153636707586
+        }
+      },
+      {
+        "spec": {
+          "learning_rate": 0.02,
+          "loss": "mse",
+          "name": "sgd_weighted_mse",
+          "optimizer": "sgd",
+          "weighting": "control"
+        },
+        "validation": {
+          "balanced_mae": 0.08821027482559975,
+          "control_mae": 0.08864566830678722,
+          "macro_f1": 0.4662460148778094,
+          "macro_precision": 0.3181297809836819,
+          "macro_recall": 0.9959215747406792,
+          "mae": 0.07696080631375986,
+          "per_output": {
+            "co2_doser": {
+              "active_mae": 0.08650501474235835,
+              "balanced_mae": 0.06678728074472381,
+              "control_mae": 0.06678728074472381,
+              "f1": 0.3625254582484725,
+              "inactive_mae": 0.047069546747089276,
+              "mae": 0.0499943439567384,
+              "precision": 0.22139303482587064,
+              "recall": 1.0,
+              "rmse": 0.08942974829347403,
+              "strong_count": 89,
+              "strong_mae": 0.08650501474235835,
+              "strong_recall": 0.9213483146067416
+            },
+            "cooler": {
+              "active_mae": 0.08568503547153206,
+              "balanced_mae": 0.09437551090737292,
+              "control_mae": 0.09437551090737292,
+              "f1": 0.7603195739014647,
+              "inactive_mae": 0.10306598634321379,
+              "mae": 0.09479555055343857,
+              "precision": 0.6133190118152524,
+              "recall": 1.0,
+              "rmse": 0.192416937555126,
+              "strong_count": 571,
+              "strong_mae": 0.08568503547153206,
+              "strong_recall": 0.9264448336252189
+            },
+            "dehumidifier": {
+              "active_mae": 0.09255236688446491,
+              "balanced_mae": 0.09053723795724651,
+              "control_mae": 0.09053723795724651,
+              "f1": 0.3178694158075602,
+              "inactive_mae": 0.0885221090300281,
+              "mae": 0.08915351609388987,
+              "precision": 0.18954918032786885,
+              "recall": 0.9840425531914894,
+              "rmse": 0.10883430801037854,
+              "strong_count": 188,
+              "strong_mae": 0.09255236688446491,
+              "strong_recall": 0.5
+            },
+            "exhaust_fan": {
+              "active_mae": 0.1109189683515014,
+              "balanced_mae": 0.10091346937917345,
+              "control_mae": 0.10352583026629819,
+              "f1": 0.4088888888888888,
+              "inactive_mae": 0.0909079704068455,
+              "mae": 0.09476008751119176,
+              "precision": 0.25727069351230425,
+              "recall": 0.9956709956709957,
+              "rmse": 0.1457528858226529,
+              "strong_count": 102,
+              "strong_mae": 0.1005587570880558,
+              "strong_recall": 0.9411764705882353
+            },
+            "heater": {
+              "active_mae": 0.11169195264016735,
+              "balanced_mae": 0.08366022174321225,
+              "control_mae": 0.08366022174321225,
+              "f1": 0.5439999999999999,
+              "inactive_mae": 0.055628490846257164,
+              "mae": 0.06679446365354427,
+              "precision": 0.3742138364779874,
+              "recall": 0.99581589958159,
+              "rmse": 0.13295642576481256,
+              "strong_count": 239,
+              "strong_mae": 0.11169195264016735,
+              "strong_recall": 0.9037656903765691
+            },
+            "humidifier": {
+              "active_mae": 0.12830209400351733,
+              "balanced_mae": 0.09298792822186966,
+              "control_mae": 0.09298792822186966,
+              "f1": 0.4038727524204702,
+              "inactive_mae": 0.05767376244022198,
+              "mae": 0.06626687611375624,
+              "precision": 0.2530329289428076,
+              "recall": 1.0,
+              "rmse": 0.11017385478212048,
+              "strong_count": 146,
+              "strong_mae": 0.12830209400351733,
+              "strong_recall": 0.7328767123287672
+            }
+          },
+          "rmse": 0.13411839141430387,
+          "strong_mae": 0.10088253680501597,
+          "strong_recall": 0.8209353369209219
+        }
+      }
+    ],
+    "config": {
+      "active_loss_weight": 2.0,
+      "activity_threshold": 0.05,
+      "batch_size": 64,
+      "epochs": 28,
+      "hidden_units": 32,
+      "seed": 1847,
+      "strong_loss_weight": 5.0,
+      "strong_threshold": 0.3
+    },
+    "selection_metric": [
+      "validation.control_mae",
+      "validation.strong_mae",
+      "validation.balanced_mae",
+      "-validation.strong_recall",
+      "-validation.macro_f1",
+      "validation.mae"
+    ],
+    "validation_control_mae_relative_improvement_vs_baseline": 0.0,
+    "winner": "adam_huber_baseline",
+    "winner_test": {
+      "balanced_mae": 0.06312866673548113,
+      "control_mae": 0.06478480089810745,
+      "macro_f1": 0.8668466711553718,
+      "macro_precision": 0.8164742853436381,
+      "macro_recall": 0.9311450135032967,
+      "mae": 0.04069783006888915,
+      "per_output": {
+        "co2_doser": {
+          "active_mae": 0.09249739139527083,
+          "balanced_mae": 0.05199001568651705,
+          "control_mae": 0.05199001568651705,
+          "f1": 0.8995983935742972,
+          "inactive_mae": 0.011482639977763283,
+          "mae": 0.019921676583753652,
+          "precision": 0.9032258064516129,
+          "recall": 0.896,
+          "rmse": 0.101142999879539,
+          "strong_count": 125,
+          "strong_mae": 0.09249739139527083,
+          "strong_recall": 0.896
+        },
+        "cooler": {
+          "active_mae": 0.08747351427270038,
+          "balanced_mae": 0.06442990422168662,
+          "control_mae": 0.06442990422168662,
+          "f1": 0.8954954954954955,
+          "inactive_mae": 0.04138629417067288,
+          "mae": 0.06131901686479978,
+          "precision": 0.8409475465313029,
+          "recall": 0.9576107899807321,
+          "rmse": 0.14960773423365867,
+          "strong_count": 519,
+          "strong_mae": 0.08747351427270038,
+          "strong_recall": 0.8092485549132948
+        },
+        "dehumidifier": {
+          "active_mae": 0.15244179759025517,
+          "balanced_mae": 0.09080160689671184,
+          "control_mae": 0.09080160689671184,
+          "f1": 0.6878048780487804,
+          "inactive_mae": 0.02916141620316851,
+          "mae": 0.04600973499273702,
+          "precision": 0.573170731707317,
+          "recall": 0.8597560975609756,
+          "rmse": 0.10620162932539827,
+          "strong_count": 164,
+          "strong_mae": 0.15244179759025517,
+          "strong_recall": 0.725609756097561
+        },
+        "exhaust_fan": {
+          "active_mae": 0.1025887623644219,
+          "balanced_mae": 0.07024583788465831,
+          "control_mae": 0.08018264286041622,
+          "f1": 0.8657142857142858,
+          "inactive_mae": 0.037902913404894725,
+          "mae": 0.0554219974981,
+          "precision": 0.808,
+          "recall": 0.9323076923076923,
+          "rmse": 0.12579419360362135,
+          "strong_count": 186,
+          "strong_mae": 0.11007852465795573,
+          "strong_recall": 0.9032258064516129
+        },
+        "heater": {
+          "active_mae": 0.08396769956655774,
+          "balanced_mae": 0.052017763666027346,
+          "control_mae": 0.052017763666027346,
+          "f1": 0.9205298013245033,
+          "inactive_mae": 0.020067827765496957,
+          "mae": 0.03503104774557869,
+          "precision": 0.8606811145510835,
+          "recall": 0.9893238434163701,
+          "rmse": 0.08956566060003716,
+          "strong_count": 281,
+          "strong_mae": 0.08396769956655774,
+          "strong_recall": 0.896797153024911
+        },
+        "humidifier": {
+          "active_mae": 0.08241524783779872,
+          "balanced_mae": 0.04928687205728561,
+          "control_mae": 0.04928687205728561,
+          "f1": 0.9319371727748691,
+          "inactive_mae": 0.016158496276772506,
+          "mae": 0.026483506728365757,
+          "precision": 0.9128205128205128,
+          "recall": 0.9518716577540107,
+          "rmse": 0.067216991463041,
+          "strong_count": 187,
+          "strong_mae": 0.08241524783779872,
+          "strong_recall": 0.8128342245989305
+        }
+      },
+      "rmse": 0.1097386875589611,
+      "strong_mae": 0.10147902922008976,
+      "strong_recall": 0.8406192491810517
+    },
+    "winner_test_strong_ratio": {
+      "co2_doser": {
+        "mean_expected": 0.6320000290870667,
+        "mean_predicted": 0.5594207048416138,
+        "mean_prediction_to_teacher_ratio": 0.8925305008888245,
+        "p10_prediction_to_teacher_ratio": 0.3551754057407379,
+        "strong_count": 125,
+        "strong_recall": 0.896
+      },
+      "cooler": {
+        "mean_expected": 0.6856454610824585,
+        "mean_predicted": 0.6318311095237732,
+        "mean_prediction_to_teacher_ratio": 0.9025138020515442,
+        "p10_prediction_to_teacher_ratio": 0.671345055103302,
+        "strong_count": 519,
+        "strong_recall": 0.8092485549132948
+      },
+      "dehumidifier": {
+        "mean_expected": 0.5503047704696655,
+        "mean_predicted": 0.504078209400177,
+        "mean_prediction_to_teacher_ratio": 0.8869257569313049,
+        "p10_prediction_to_teacher_ratio": 0.10019660741090775,
+        "strong_count": 164,
+        "strong_recall": 0.725609756097561
+      },
+      "exhaust_fan": {
+        "mean_expected": 0.8454301357269287,
+        "mean_predicted": 0.7950838804244995,
+        "mean_prediction_to_teacher_ratio": 0.9422387480735779,
+        "p10_prediction_to_teacher_ratio": 0.604268491268158,
+        "strong_count": 186,
+        "strong_recall": 0.9032258064516129
+      },
+      "heater": {
+        "mean_expected": 0.7161921262741089,
+        "mean_predicted": 0.6873228549957275,
+        "mean_prediction_to_teacher_ratio": 0.9667050838470459,
+        "p10_prediction_to_teacher_ratio": 0.8110373616218567,
+        "strong_count": 281,
+        "strong_recall": 0.896797153024911
+      },
+      "humidifier": {
+        "mean_expected": 0.46925124526023865,
+        "mean_predicted": 0.4129559099674225,
+        "mean_prediction_to_teacher_ratio": 0.8846335411071777,
+        "p10_prediction_to_teacher_ratio": 0.37183457612991333,
+        "strong_count": 187,
+        "strong_recall": 0.8128342245989305
+      }
+    }
+  }
+}

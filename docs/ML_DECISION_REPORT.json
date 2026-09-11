@@ -1,0 +1,48 @@
+{
+  "branch": "mvp/environment-controller",
+  "burned_seeds": [
+    271828,
+    314159,
+    577215,
+    424242,
+    91273,
+    161803,
+    173205,
+    141421,
+    223607,
+    244949,
+    316227,
+    707107,
+    282843,
+    331643
+  ],
+  "contract": {
+    "features": 44,
+    "hidden_width": 32,
+    "outputs": 6,
+    "parameters": 2694
+  },
+  "date": "2026-08-28",
+  "decisions": {
+    "stage12_sequence_teacher": "pass",
+    "stage13_effective_observability": "keep",
+    "stage14_residual_policy": "no_go",
+    "stage15_deterministic_co2_exhaust_coupling": "no_go",
+    "stage16_sequence_dagger_iteration2": "stop"
+  },
+  "ml_active_qualified": false,
+  "next_stages": [
+    "runtime_policy_modes",
+    "shadow_diagnostics",
+    "trace_and_replay",
+    "python_cpp_parity",
+    "simulated_hil",
+    "hardware_calibration_later"
+  ],
+  "reserved_stage14ab_test_metrics_evaluated": false,
+  "runtime_authority": "rule",
+  "source_heads": {
+    "effective_observability": "34d164cd7b5a68ed7b46228e7aef8539c7539c6e",
+    "sequence_dagger_injection": "698d4e7e31a192a19b9f18cc0d11ea7a1a146fa6"
+  }
+}

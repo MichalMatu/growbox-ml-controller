@@ -43,6 +43,16 @@ SOURCES=(
   lib/environment_control/src/FeatureEncoder.cpp
   lib/environment_control/src/SafetySupervisor.cpp
   lib/environment_control/src/ModelRuntime.cpp
+  lib/environment_control/src/climate/ClimateFeatureEncoder.cpp
+  lib/environment_control/src/climate/ClimateTrendEstimator.cpp
+  src/climate/ClimateIoAdapters.cpp
+  src/climate/ClimateApplication.cpp
+  src/climate/ClimateCompositeInput.cpp
+  src/climate/ClimateSemanticOutput.cpp
+  src/climate/ClimateDiagnostics.cpp
+  src/climate/ClimateDeterministicFake.cpp
+  src/climate/runtime/RuntimeCycleState.cpp
+  src/climate/runtime/ServiceConsoleTextSink.cpp
 )
 
 CMAKE_ARGS=(-S test/host -B "${BUILD_DIR}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug)
@@ -61,10 +71,22 @@ fi
 
 echo "==> host clang-tidy (${BUILD_DIR})"
 rm -rf "${BUILD_DIR}"
+# CMake emits compile_commands.json during configure. clang-tidy consumes that
+# database directly, so compiling the complete host test tree here only wastes
+# CPU/RAM and duplicates the dedicated host-test build in quality_gate_push.sh.
 cmake "${CMAKE_ARGS[@]}"
-cmake --build "${BUILD_DIR}" --parallel
+
+if [[ ! -s "${BUILD_DIR}/compile_commands.json" ]]; then
+  echo "missing compile database: ${BUILD_DIR}/compile_commands.json" >&2
+  exit 1
+fi
 
 for file in "${SOURCES[@]}"; do
   echo "clang-tidy: ${file}"
-  "${CLANG_TIDY_BIN}" -p "${BUILD_DIR}" "${file}" --quiet "${EXTRA_TIDY_ARGS[@]}"
+  if [[ "${file}" == lib/environment_control/src/climate/* ]]; then
+    "${CLANG_TIDY_BIN}" -p "${BUILD_DIR}" "${file}" --quiet \
+      --warnings-as-errors=readability-braces-around-statements "${EXTRA_TIDY_ARGS[@]}"
+  else
+    "${CLANG_TIDY_BIN}" -p "${BUILD_DIR}" "${file}" --quiet "${EXTRA_TIDY_ARGS[@]}"
+  fi
 done

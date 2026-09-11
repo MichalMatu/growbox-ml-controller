@@ -1,92 +1,116 @@
 # Architecture
 
-Work plan and v2 I/O roadmap: [plan.md](plan.md). Hardware mapping: [IO_MAP.md](IO_MAP.md).
+Current status: [CURRENT_STATUS.md](CURRENT_STATUS.md).
+Product roadmap: [PROJECT_ROADMAP.md](PROJECT_ROADMAP.md).
+Output execution design: [OUTPUT_EXECUTION_ARCHITECTURE.md](OUTPUT_EXECUTION_ARCHITECTURE.md).
 
-## Design goals
+## Design rules
 
-The repository separates a portable, deterministic controller from every deployment concern. The
-same `environment_control` library is used by the ESP-IDF demonstration and is intended to move
-unchanged into GrowClip Nodeflow. The library does not depend on ESP-IDF, Arduino, serial I/O, JSON,
-GPIO, networking, FreeRTOS, a sensor driver, an actuator driver, or either simulator.
+The portable climate controller is independent from concrete sensor libraries and physical actuator transports. Hardware code produces semantic measurements and consumes semantic output intent through explicit application/runtime boundaries.
+
+Normal configured physical output execution has one owner: `OutputSupervisor`.
+
+Production deterministic Rule control remains authoritative. ML may be evaluated for shadow/research purposes but production composition does not enable unqualified ML authority.
+
+## Production real-input path
 
 ```text
-Standalone ESP-IDF demo                         GrowClip later
-----------------------                         --------------
-DummyEnvironmentSimulator                      Nodeflow sensor providers
-             |                                               |
-             +--------------- ControllerInput ---------------+
-                                      |
-                               FeatureEncoder
-                                      |
-                                ModelRuntime
-                                      |
-                              SafetySupervisor
-                                      |
-                           SafeControlDecision
-             +------------------------+-----------------------+
-             |                                                |
-Demo simulator adapter                           Nodeflow actuator bridge
+native sensor / RTC / schedule sources
+               |
+               v
+     ClimateApplication / climate-v6
+               |
+        ControlIntent + ScheduleIntent
+               |
+               +----------------------+
+               |                      |
+               v                      v
+       Lamp SafetyEnvelope      manual/maintenance lifecycle
+               |                      |
+               +----------+-----------+
+                          v
+                  OutputSupervisor
+              resolver + binary policy
+                          |
+                          v
+                 OutputPlan / command
+                          |
+                          v
+               RuntimeOutputTransport
+                          |
+                          v
+                 RF433OutputTransport
 ```
 
-## ESP-IDF project boundary
+One-way RF transport completion is command/transport evidence only; it is never treated as physical acknowledgement.
 
-The root is a native ESP-IDF project targeting ESP32-S3. `src/` is registered as the application
-component, `lib/environment_control` is a separate portable component, and
-`components/emlearn_runtime` provides only the dense-network API required by the generated model.
-The current CI firmware baseline is ESP-IDF 5.5.1.
+## Runtime composition
 
-The application component owns UART setup, monotonic scheduling, cJSON parsing/serialization,
-heap diagnostics, and the local demo lifecycle. It executes one controller cycle per wall-clock
-second, representing ten simulated seconds. No code path configures or writes GPIO.
+The real-input runtime is deliberately split by responsibility:
 
-## Layers
+- `ClimateV6RealInputRuntime.cpp` — thin bootstrap: initialize, validate, enter the loop;
+- `runtime/RealInputRuntimeComposition.*` — construction, ownership and lifetime wiring;
+- `runtime/RealInputRuntimeCoordinator.*` — one-cycle orchestration;
+- `runtime/RuntimeCycleState.*` — bounded cycle sequencing/cadence state;
+- `runtime/RuntimeOutputTransport.*` — physical transport availability/truth boundary;
+- `runtime/RuntimeOutputTelemetryLog.*` — output telemetry formatting/logging;
+- `runtime/Stage27RuntimeAdapters.*` — Stage27 source adapters and production runtime policy configuration;
+- `runtime/Stage27TelemetryReporter.*` — telemetry snapshot/storage reporting;
+- `runtime/Stage28RfDiagnostics.*` — RF diagnostics/passive capture;
+- `runtime/Stage28ServiceConsole*` — thin console IO/router plus output/storage/system domain handlers.
 
-### Contract and generated metadata
+The coordinator receives grouped input/output/support service bundles rather than a flat service-locator-like dependency bag.
 
-`schemas/environment-controller.json` owns field names, feature and output order, ranges,
-defaults, units, and availability semantics. The generator emits `EnvironmentSchema.h` and model
-metadata. A canonical schema hash is embedded in the schema header, model header, model manifest,
-and boot log. The model runtime refuses inference when these values differ.
+Invalid lifecycle/automation/maintenance reports fail closed by disabling physical transport readiness for the cycle rather than being silently discarded.
 
-### Portable controller library
+## Output truth model
 
-- `FeatureEncoder` validates finite values, applies validity masks, clamps inputs to contract
-  ranges, and normalizes the fixed-size feature vector.
-- `ModelRuntime` validates model metadata and invokes the generated emlearn model through a narrow,
-  status-code-based API.
-- `SafetySupervisor` deterministically enforces actuator availability and independent safety/timing
-  constraints. It does not rely on model behavior for safety.
-- `EnvironmentController` composes the three stages and returns the decision plus diagnostics. It
-  neither logs nor touches hardware.
+Requested, resolved, attempted/executed transport state and independently observed physical state are distinct concepts.
 
-Inference uses stack or caller-owned fixed-size objects. It does not allocate dynamically or throw
-exceptions.
+When physical transport is unavailable, `RuntimeOutputTransport` returns `NotAttempted` with `Unavailable`. It must not return `Completed`, because doing so would manufacture execution truth in `OutputStateStore`/projection.
 
-### Demonstration firmware
+`OutputSupervisor` owns normal configured output commands. Raw RF remains an explicit maintenance capability behind `MaintenanceLocked`.
 
-The ESP-IDF application runs a local closed loop against `DummyEnvironmentSimulator`. It uses the
-built-in `json` component only to parse bounded serial commands and serialize NDJSON records. The
-UART adapter is outside the controller library, and the simulator is not linked into the portable
-component.
+## Policy and safety ownership
 
-### Host pipeline
+- climate rule logic owns environmental control decisions;
+- `BinaryActuatorPolicy` owns binary hysteresis/deadband/dwell behavior;
+- Stage28 output bindings own endpoint/policy mapping;
+- lamp thermal safety owns the frozen `>=28 C` trip and `<=26 C` for 10 minutes recovery contract;
+- transport layers do not own climate policy;
+- maintenance diagnostics do not become a hidden normal-output path.
 
-The Python pipeline generates complete time-series scenarios from a growbox thermodynamics
-simulator (lumped-parameter, coupled T/RH/soil/fan/outside — see [plan.md](plan.md)), labels them
-with a deterministic finite-action rollout teacher, trains a small regression MLP, exports it
-through emlearn, compares Python and compiled-C predictions on golden vectors, and writes
-deterministic generated headers. Splits are by scenario seed, so steps from one simulated run
-cannot cross data partitions.
+The retired Stage28D thermal test-sequence helper is no longer part of production source; historical qualification evidence remains in Git history/docs.
 
-Portable C++ tests use ordinary CMake and CTest. They compile the same controller sources and the
-same generated model as the firmware build.
+## Configuration source of truth
 
-## Safety boundary
+Resolved runtime/build configuration is owned by CMake profiles under `config/` and exposed to production C++ through generated `runtime/RuntimeBuildConfig.h`.
 
-The model only proposes continuous values in `[0, 1]`. The safety supervisor can mask, clamp, or
-quantize proposals and reports a reason bitmask. Physical adapters remain responsible for mapping a
-safe normalized command to PWM, duty cycles, relay states, or timed pump pulses.
+Production C++ must not reintroduce fallback `GROWBOX_*` default tables. Preprocessor definitions are retained only for switches that genuinely require compile-time preprocessing.
 
-The demo is an integration test, not a validated agronomic controller. The bundled environment
-simulator targets training-grade thermodynamic fidelity (not runtime on real hardware — sensors
-provide state there). Hardware interlocks remain mandatory in a real deployment.
+Architecture/config guards enforce these boundaries.
+
+## Climate-v6 controller core
+
+`schemas/environment-controller.v6.json` and generated `ClimateContract.h` define the climate-v6 contract. The portable core lives under `lib/environment_control/src/climate/` and contains feature encoding, runtime rule/ML evaluation, trend estimation and the control loop.
+
+Policy modes exist in the portable research-capable core, but production real-input composition is statically configured for `Rule` authority with unqualified ML active control disabled.
+
+## Legacy isolation
+
+Legacy controller/demo code remains available only through the explicit `legacy` app mode. Production V6 targets do not compile the legacy controller ownership path by default.
+
+`src/main.cpp` is a small app-mode dispatcher; it no longer contains the legacy controller implementation or production control orchestration.
+
+## Verification layers
+
+- architecture/config ownership guards;
+- focused portable regression tests;
+- complete host C++ suite;
+- Python scientific/replay tests where applicable;
+- ESP-IDF production builds;
+- hardware qualification only when a fresh physical executable claim is required.
+
+Latest compact refactor verification on `1a599a58eb57841206ab92c7a5cacf50f7463f78` passed all guards, the focused runtime transport regression, `51/51` host tests and one CrowPanel real-input ESP-IDF build.
+
+Simulator/host/firmware-build PASS is software evidence, not physical acknowledgement or a new Physical H qualification.

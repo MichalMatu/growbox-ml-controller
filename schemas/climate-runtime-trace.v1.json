@@ -1,0 +1,192 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://growbox.local/schemas/climate-runtime-trace.v1.json",
+  "title": "Climate Runtime Trace Record",
+  "description": "One climate-v6 control step. Contains only runtime-observable/configured data; simulator-hidden physical truth is intentionally excluded.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "contract",
+    "monotonic_ms",
+    "sensor_timeout_ms",
+    "timestep_s",
+    "policy",
+    "model",
+    "measurements",
+    "targets",
+    "humidity_control_mode",
+    "light_level",
+    "capabilities",
+    "previous_action",
+    "trends",
+    "features",
+    "rule",
+    "ml",
+    "applied",
+    "effective_before",
+    "effective_after"
+  ],
+  "$defs": {
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["heater", "cooler", "exhaust_fan", "humidifier", "dehumidifier", "co2_doser"],
+      "properties": {
+        "heater": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "cooler": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "exhaust_fan": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "humidifier": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "dehumidifier": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "co2_doser": {"type": "number", "minimum": 0.0, "maximum": 1.0}
+      }
+    },
+    "measurement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "valid", "age_ms"],
+      "properties": {
+        "value": {"type": "number"},
+        "valid": {"type": "boolean"},
+        "age_ms": {"type": "integer", "minimum": 0}
+      }
+    },
+    "trend": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rate_per_min", "available"],
+      "properties": {
+        "rate_per_min": {"type": "number"},
+        "available": {"type": "boolean"}
+      }
+    },
+    "evaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["raw", "arbitrated", "safe", "arbitration_interventions", "safety_interventions"],
+      "properties": {
+        "raw": {"$ref": "#/$defs/action"},
+        "arbitrated": {"$ref": "#/$defs/action"},
+        "safe": {"$ref": "#/$defs/action"},
+        "arbitration_interventions": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "safety_interventions": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      }
+    },
+    "optionalEvaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evaluated", "raw", "arbitrated", "safe", "arbitration_interventions", "safety_interventions"],
+      "properties": {
+        "evaluated": {"type": "boolean"},
+        "raw": {"oneOf": [{"$ref": "#/$defs/action"}, {"type": "null"}]},
+        "arbitrated": {"oneOf": [{"$ref": "#/$defs/action"}, {"type": "null"}]},
+        "safe": {"oneOf": [{"$ref": "#/$defs/action"}, {"type": "null"}]},
+        "arbitration_interventions": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "safety_interventions": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      }
+    }
+  },
+  "properties": {
+    "schema_id": {"const": "climate-runtime-trace"},
+    "schema_version": {"const": 1},
+    "contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "schema_version", "hash"],
+      "properties": {
+        "id": {"const": "climate-mvp-v1"},
+        "schema_version": {"const": 6},
+        "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "monotonic_ms": {"type": "integer", "minimum": 0},
+    "sensor_timeout_ms": {"type": "integer", "minimum": 0},
+    "timestep_s": {"type": "number", "exclusiveMinimum": 0.0},
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "status", "authoritative_policy"],
+      "properties": {
+        "mode": {"enum": ["rule", "ml_shadow", "ml_active"]},
+        "status": {"enum": ["ok", "ml_provider_missing", "ml_inference_failed", "ml_active_not_allowed"]},
+        "authoritative_policy": {"enum": ["rule", "ml"]}
+      }
+    },
+    "model": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "contract_hash"],
+          "properties": {
+            "id": {"type": "string", "minLength": 1},
+            "contract_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+          }
+        }
+      ]
+    },
+    "measurements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["air_temperature_c", "relative_humidity_pct", "co2_ppm", "outside_temperature_c", "outside_humidity_pct"],
+      "properties": {
+        "air_temperature_c": {"$ref": "#/$defs/measurement"},
+        "relative_humidity_pct": {"$ref": "#/$defs/measurement"},
+        "co2_ppm": {"$ref": "#/$defs/measurement"},
+        "outside_temperature_c": {"$ref": "#/$defs/measurement"},
+        "outside_humidity_pct": {"$ref": "#/$defs/measurement"}
+      }
+    },
+    "targets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["air_temperature_c", "relative_humidity_pct", "air_vpd_kpa", "co2_enabled", "co2_ppm"],
+      "properties": {
+        "air_temperature_c": {"type": "number"},
+        "relative_humidity_pct": {"type": "number"},
+        "air_vpd_kpa": {"type": "number"},
+        "co2_enabled": {"type": "boolean"},
+        "co2_ppm": {"type": "number"}
+      }
+    },
+    "humidity_control_mode": {"enum": ["RH", "VPD"]},
+    "light_level": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["heater", "cooler", "exhaust_fan", "humidifier", "dehumidifier", "co2_doser"],
+      "properties": {
+        "heater": {"type": "boolean"},
+        "cooler": {"type": "boolean"},
+        "exhaust_fan": {"type": "boolean"},
+        "humidifier": {"type": "boolean"},
+        "dehumidifier": {"type": "boolean"},
+        "co2_doser": {"type": "boolean"}
+      }
+    },
+    "previous_action": {"$ref": "#/$defs/action"},
+    "trends": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["temperature", "humidity", "co2"],
+      "properties": {
+        "temperature": {"$ref": "#/$defs/trend"},
+        "humidity": {"$ref": "#/$defs/trend"},
+        "co2": {"$ref": "#/$defs/trend"}
+      }
+    },
+    "features": {
+      "type": "array",
+      "minItems": 44,
+      "maxItems": 44,
+      "items": {"type": "number", "minimum": 0.0, "maximum": 1.0}
+    },
+    "rule": {"$ref": "#/$defs/evaluation"},
+    "ml": {"$ref": "#/$defs/optionalEvaluation"},
+    "applied": {"$ref": "#/$defs/action"},
+    "effective_before": {"$ref": "#/$defs/action"},
+    "effective_after": {"$ref": "#/$defs/action"}
+  }
+}

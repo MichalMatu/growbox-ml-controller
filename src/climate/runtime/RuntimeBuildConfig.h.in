@@ -1,0 +1,30 @@
+#pragma once
+
+namespace growbox::app::climate_io::runtime_config {
+
+inline constexpr char kBoardProfile[] = "@GROWBOX_BOARD_PROFILE@";
+inline constexpr int kI2cSdaGpio = @GROWBOX_I2C_SDA_GPIO@;
+inline constexpr int kI2cSclGpio = @GROWBOX_I2C_SCL_GPIO@;
+inline constexpr char kBleTp357Mac[] = "@GROWBOX_BLE_TP357_MAC@";
+inline constexpr char kBleXiaomiMac[] = "@GROWBOX_BLE_XIAOMI_MAC@";
+inline constexpr char kFirmwareGitSha[] = "@GROWBOX_FIRMWARE_GIT_SHA@";
+
+inline constexpr bool kStage27SdEnabled = @GROWBOX_STAGE27_SD_ENABLED@ != 0;
+inline constexpr bool kStage27FlashFallbackEnabled = @GROWBOX_STAGE27_FLASH_FALLBACK_ENABLED@ != 0;
+inline constexpr bool kSdCmd0Precondition = @GROWBOX_SD_CMD0_PRECONDITION@ != 0;
+inline constexpr int kSdMosiGpio = @GROWBOX_SD_MOSI_GPIO@;
+inline constexpr int kSdMisoGpio = @GROWBOX_SD_MISO_GPIO@;
+inline constexpr int kSdSclkGpio = @GROWBOX_SD_SCLK_GPIO@;
+inline constexpr int kSdCsGpio = @GROWBOX_SD_CS_GPIO@;
+inline constexpr int kSdPowerGpio = @GROWBOX_SD_POWER_GPIO@;
+
+inline constexpr bool kRf433LoopbackEnabled = @GROWBOX_RF433_LOOPBACK_ENABLED@ != 0;
+inline constexpr bool kRf433RemoteCaptureEnabled = @GROWBOX_RF433_REMOTE_CAPTURE_ENABLED@ != 0;
+inline constexpr int kRf433TxGpio = @GROWBOX_RF433_TX_GPIO@;
+inline constexpr int kRf433RxGpio = @GROWBOX_RF433_RX_GPIO@;
+
+inline constexpr bool kServiceConsoleEnabled = @GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED@ != 0;
+inline constexpr bool kRealOutputsEnabled = @GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED@ != 0;
+inline constexpr bool kThermalTestSequenceEnabled = @GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED@ != 0;
+
+} // namespace growbox::app::climate_io::runtime_config

@@ -1,0 +1,6 @@
+# Stage28E Phase H RF-enabled overlay.
+# The 12 KiB Stage27C main stack was validated only in fake-locked builds.
+# Entering the ESP-IDF RMT channel initialization path requires additional main-task headroom.
+# Preserve the 12 KiB fake-locked baseline and restore the previous conservative 16 KiB
+# main stack only when RF433 support is enabled by scripts/stage27c_crowpanel.sh.
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=16384

@@ -1,0 +1,30 @@
+# Stage27C storage overlay for the CrowPanel N8R8 build.
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="config/idf/partitions_stage27c.csv"
+CONFIG_PARTITION_TABLE_OFFSET=0x8000
+
+# Internal fallback telemetry FAT uses wear levelling. Prefer 4 KiB sectors to reduce flash churn;
+# safety mode keeps one extra recovery sector for interrupted writes.
+CONFIG_WL_SECTOR_SIZE_4096=y
+CONFIG_WL_SECTOR_SIZE=4096
+CONFIG_WL_SECTOR_MODE_SAFE=y
+
+# Stage28E Phase E measured stack right-sizing. The bounded fake-locked hardware baseline
+# used about 5.2 KiB of the 16 KiB main stack, including service-console status sampling.
+# Keep a conservative 12 KiB Stage27C-only main stack rather than changing the global default.
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=12288
+
+# Stage28E Phase A task diagnostics. uxTaskGetSystemState() is gated by this option.
+CONFIG_FREERTOS_USE_TRACE_FACILITY=y
+
+# Stage28E Phase B crash evidence. Keep coredumps in flash as ELF, capture internal DRAM,
+# preserve the first dump until explicitly erased, and avoid coredump log strings in DRAM.
+CONFIG_ESP_COREDUMP_ENABLE_TO_FLASH=y
+CONFIG_ESP_COREDUMP_DATA_FORMAT_ELF=y
+CONFIG_ESP_COREDUMP_CHECKSUM_CRC32=y
+CONFIG_ESP_COREDUMP_CAPTURE_DRAM=y
+CONFIG_ESP_COREDUMP_CHECK_BOOT=y
+# CONFIG_ESP_COREDUMP_LOGS is not set
+CONFIG_ESP_COREDUMP_MAX_TASKS_NUM=16
+CONFIG_ESP_COREDUMP_FLASH_NO_OVERWRITE=y
+CONFIG_ESP_COREDUMP_STACK_SIZE=1792
