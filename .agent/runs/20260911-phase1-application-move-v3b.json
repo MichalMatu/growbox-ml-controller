@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 5,
+  "index": 6,
   "total": 6,
-  "command": "cmake -S test/host -B build/host-tests && cmake --build build/host-tests --target climate_io_adapter_tests climate_application_composition_tests climate_deterministic_fake_runtime_tests climate_fault_soak_tests climate_composite_input_tests climate_semantic_output_tests climate_output_supervisor_sink_tests --parallel && ctest --test-dir build/host-tests -R '^(climate_io_adapter_tests|climate_application_composition_tests|climate_deterministic_fake_runtime_tests|climate_fault_soak_tests|climate_composite_input_tests|climate_semantic_output_tests|climate_output_supervisor_sink_tests)$' --output-on-failure && echo APP_MOVE_V3B_TESTS_PASS",
-  "pid": 73906,
+  "command": "git add src test tests scripts tools .github CMakeLists.txt && git commit -m 'Group climate application layer' && git push origin HEAD:main && echo APP_MOVE_V3B_PUSH_PASS sha=$(git rev-parse HEAD)",
+  "pid": 74372,
   "timeout": 900,
   "idle_timeout": 300,
   "memory_limit_mb": 4096,
-  "started_at": "2026-09-11T16:04:51.904627+00:00",
-  "stage_name": "command-5",
-  "stage_index": 5,
+  "started_at": "2026-09-11T16:05:00.890522+00:00",
+  "stage_name": "command-6",
+  "stage_index": 6,
   "stage_total": 6,
   "stage_phase": "commands",
   "task_id": "20260911-phase1-application-move-v3b",
@@ -18,5 +18,5 @@
   "task_digest": "308f978a6c18d295789730d7525e54fbe0ee1d71b00848bf9629ae74bf642d81",
   "daemon_version": "4.18.20",
   "daemon_pid": 73036,
-  "updated_at": "2026-09-11T16:04:51.978725+00:00"
+  "updated_at": "2026-09-11T16:05:00.983600+00:00"
 }
