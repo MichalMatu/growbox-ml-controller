@@ -3,7 +3,7 @@
 #include "climate/Stage28dOutputBindings.h"
 #include "climate/output/OutputExecutionTelemetry.h"
 #include "climate/runtime/RuntimeOutputTelemetryLog.h"
-#include "climate/runtime/Stage27ScheduleIntentAdapter.h"
+#include "climate/runtime/schedule/Stage27ScheduleIntentAdapter.h"
 
 #include <esp_log.h>
 #include <esp_timer.h>

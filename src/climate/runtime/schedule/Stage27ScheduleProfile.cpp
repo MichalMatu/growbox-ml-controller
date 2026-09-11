@@ -1,6 +1,6 @@
-#include "climate/runtime/Stage27ScheduleProfile.h"
+#include "climate/runtime/schedule/Stage27ScheduleProfile.h"
 
-#include "climate/runtime/EuropeWarsawTime.h"
+#include "climate/runtime/schedule/EuropeWarsawTime.h"
 
 namespace growbox::app::climate_io::runtime {
 

@@ -1,7 +1,7 @@
 #include "climate/Stage28dLampSafety.h"
 #include "climate/Stage28dOutputBindings.h"
 #include "climate/output/OutputIntents.h"
-#include "climate/runtime/Stage27ScheduleIntentAdapter.h"
+#include "climate/runtime/schedule/Stage27ScheduleIntentAdapter.h"
 
 #include <cassert>
 #include <cstdint>

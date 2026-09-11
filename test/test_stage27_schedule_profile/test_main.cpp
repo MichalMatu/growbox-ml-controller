@@ -1,4 +1,4 @@
-#include "climate/runtime/Stage27ScheduleProfile.h"
+#include "climate/runtime/schedule/Stage27ScheduleProfile.h"
 
 #include <cassert>
 
