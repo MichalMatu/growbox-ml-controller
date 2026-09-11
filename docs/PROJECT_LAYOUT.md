@@ -1,58 +1,84 @@
 # Project layout
 
-Intentional repository structure. Current climate-v6 status is tracked in `CURRENT_STATUS.md`; legacy v4/v5 assets remain where required for migration/reproducibility.
+Intentional repository structure after the architecture cleanup. Current runtime status is tracked in `CURRENT_STATUS.md`; historical Stage27/Stage28 evidence remains under `docs/` for reproducibility.
 
 ```text
 .
-├── README.md                 # project entry
+├── README.md
 ├── LICENSE
-├── AGENTS.md                 # agent/UI notes (keep at root for tooling)
-├── Makefile                  # developer CLI
-├── CMakeLists.txt            # ESP-IDF project root (must stay here)
-├── pyproject.toml            # Python package metadata + tooling
-├── requirements-lock.txt     # pinned Python deps (pip convention)
+├── AGENTS.md
+├── Makefile
+├── CMakeLists.txt
+├── pyproject.toml
+├── requirements-lock.txt
 ├── requirements-dev.txt
 │
-├── config/                   # build / board configuration
-│   └── idf/                  # sdkconfig.defaults* profiles
-├── schemas/                  # environment-controller.json (ML + wire contract)
-├── docs/                     # human documentation
-│   ├── simulator/            # physics research + I/O inventory
-│   └── CHANGELOG.md
+├── config/
+│   ├── boards/                  # board profiles
+│   ├── runtime/                 # canonical runtime config + profiles
+│   └── idf/                     # sdkconfig/partition profiles
+├── schemas/                     # controller/trace contracts
+├── docs/                        # live docs + historical qualification evidence
+├── tools/                       # host tooling, ML/panel/sandbox helpers
+├── scripts/                     # quality/config/IDF/runtime guards and helpers
+├── examples/
+├── third_party/
 │
-├── tools/                    # host Python (ml, panel, serial, schema, analysis)
-├── scripts/                  # shell gates (CI, idf helpers)
-├── examples/                 # scenario JSONL samples
-├── third_party/              # research clones (see third_party/README.md; not build deps)
+├── lib/environment_control/     # portable controller core
+├── components/                  # ESP-IDF third-party/local components
+├── src/
+│   ├── main.cpp                 # thin app-mode dispatcher
+│   ├── legacy/                  # explicit legacy app mode only
+│   └── climate/
+│       ├── native/              # sensors/RTC/native I/O
+│       ├── output/              # OutputSupervisor architecture
+│       ├── rf433/               # RF protocol/transport
+│       ├── runtime/             # real-input composition/coordinator/console
+│       ├── storage/
+│       └── telemetry/
 │
-├── lib/environment_control/  # portable legacy + climate-v6 C++ controller core
-├── components/               # ESP-IDF extra components (emlearn)
-├── src/                      # ESP-IDF app; legacy demo plus climate-v6 I/O adapters
-│
-├── test/                     # host CMake / Unity (portable C++)
-├── tests/                    # pytest (Python + panel)
-│
-├── build/                    # local artifacts (gitignored)
-└── logs/                     # local captures (gitignored)
+├── test/                        # portable C++/host tests
+├── tests/                       # Python/scientific/tool tests
+├── build/                       # local artifacts, gitignored
+└── logs/                        # local captures, gitignored
 ```
 
-## What stays at the repository root
+## Runtime boundary map
 
-| File | Why |
-|------|-----|
-| `CMakeLists.txt` | ESP-IDF requires project CMake at root |
-| `Makefile` | primary developer entrypoint |
-| `README.md` / `LICENSE` | GitHub / packaging convention |
-| `pyproject.toml` + `requirements-*.txt` | pip / pre-commit / CI cache paths |
-| `AGENTS.md` | discovered from repo root by agent tooling |
-| `.pre-commit-config.yaml`, `.clang-*`, `.editorconfig` | tool defaults |
+The production real-input path is intentionally separated:
 
-## Where to put new work
+- `ClimateV6RealInputRuntime.cpp`: bootstrap only;
+- `runtime/RealInputRuntimeComposition.*`: ownership/lifetime wiring;
+- `runtime/RealInputRuntimeCoordinator.*`: cycle orchestration;
+- `runtime/RuntimeOutputTransport.*`: transport truth boundary;
+- `runtime/RuntimeOutputTelemetryLog.*`: telemetry formatting;
+- `output/*`: configured-output ownership/policy/execution;
+- `rf433/*`: policy-free RF transport.
+
+Do not move climate policy into transport or direct configured-output writes back into runtime/console code.
+
+## Configuration boundary
+
+Board/runtime defaults live under `config/` and are resolved by CMake. Production C++ consumes the generated typed `RuntimeBuildConfig.h`; do not add duplicate fallback default tables in source files.
+
+## Repository branches after cleanup
+
+- `main`: normal product development;
+- `agent-control`: Local Agent control state;
+- `gh-pages`: publishing output.
+
+Short-lived implementation/refactor branches should be deleted after their commits are fully integrated into `main`.
+
+## Where new work belongs
 
 | Work | Location |
-|------|----------|
-| Growbox physics / training sim | `tools/ml/` + notes in `docs/simulator/` |
-| Panel UI | `tools/panel/` |
-| Contract fields | `schemas/` then regenerate headers |
-| Board Kconfig defaults | `config/idf/` |
-| Docs | `docs/` (not root markdown dumps) |
+|---|---|
+| Portable controller behavior | `lib/environment_control/src/climate/` |
+| Real hardware/runtime orchestration | `src/climate/runtime/` / `src/climate/native/` |
+| Output ownership/policy | `src/climate/output/` |
+| RF433 transport/protocol | `src/climate/rf433/` |
+| Runtime/board configuration | `config/` |
+| Host analysis / ML / sandbox | `tools/` |
+| Quality/build helpers | `scripts/` |
+| Contracts | `schemas/` |
+| Current docs and historical evidence | `docs/` |
