@@ -1,135 +1,93 @@
 # Current controller status
 
-Updated: 2026-09-10
-Development branch: `mvp/environment-controller`
-Latest handoff: `docs/ARCHITECTURE_HANDOFF.md`
+Updated: 2026-09-11
+Repository: `MichalMatu/growbox-ml-controller`
+Primary development branch after cleanup: `main`
+Control branch: `agent-control`
 Fresh-chat entrypoint: `docs/FRESH_CHAT_BOOTSTRAP.md`
-Execution architecture design: `docs/OUTPUT_EXECUTION_ARCHITECTURE.md`
-Implementation plan: `docs/OUTPUT_EXECUTION_IMPLEMENTATION_PLAN.md`
-Frozen Phase H evidence: `docs/STAGE28E_PHASE_H_HANDOFF.md`
+Product roadmap: `docs/PROJECT_ROADMAP.md`
 
-## Current transition
+## Current phase
 
-**Stage27C FROZEN -> Stage28E A-G COMPLETE -> OUTPUT EXECUTION ARCHITECTURE A1-A12 COMPLETE -> A13 + PHYSICAL H COMPLETE**
+The architecture/quality refactor is complete and normal product development is the active phase.
 
-The OutputSupervisor architecture has completed its final software qualification and the authorized physical Phase H qualification. The old H v8 path remains historical and must not be executed.
+The latest code-bearing software-verified refactor identity is:
 
-## A12 software-qualified identity
+`1a599a58eb57841206ab92c7a5cacf50f7463f78`
 
-Exact software-qualified production identity:
+Compact verification on that exact SHA passed:
+
+- runtime/config/service-console/app-mode/output-ownership guards;
+- focused `RuntimeOutputTransport` regression test;
+- host C++ suite: `51/51` PASS;
+- one full CrowPanel ESP-IDF real-input build;
+- generated firmware binary size: `0xbc950` bytes;
+- `hardware_started=0`.
+
+Documentation-only descendants do not replace this code-bearing verification identity.
+
+## Architecture state
+
+The real-input firmware is no longer a monolithic runtime. The production path is split into:
+
+- `ClimateV6RealInputRuntime` — thin bootstrap/composition entry;
+- `RealInputRuntimeComposition` — dependency ownership and lifetime wiring;
+- `RealInputRuntimeCoordinator` — one-cycle orchestration;
+- `RuntimeOutputTransport` — explicit physical-transport truth boundary;
+- `RuntimeOutputTelemetryLog` — output telemetry formatting/logging;
+- domain service-console handlers behind a thin router/transport layer.
+
+`OutputSupervisor` remains the only normal production owner allowed to execute configured physical outputs.
+
+The runtime configuration source of truth is CMake/profile based and exported to C++ through the generated typed `RuntimeBuildConfig.h` interface. Production V6 builds do not rely on duplicated fallback defaults.
+
+The production controller is compile-time fenced to deterministic `Rule` authority. ML remains shadow/research-only unless a separate research build explicitly opts into another mode.
+
+When physical transport is unavailable (`fake-locked`), the runtime reports `NotAttempted/Unavailable`; it must never fabricate executed or physical output truth.
+
+## Frozen safety/output invariants
+
+- deterministic rule control remains authoritative;
+- ML remains shadow/research-only for production;
+- lamp thermal trip remains `>= 28 C`;
+- lamp recovery remains `<= 26 C` continuously for 10 minutes;
+- safety remains active while normal automation is disabled;
+- one-way RF completion is transport evidence, not physical acknowledgement;
+- raw RF remains restricted to explicit `MaintenanceLocked` handling;
+- configured physical output execution remains owned by `OutputSupervisor`.
+
+## Hardware qualification status
+
+Historical full Physical H remains valid evidence only for its exact executable identity:
 
 `02208d23f403bca3540dbbd652eb55703a044833`
 
-Terminal Local Agent evidence:
+Terminal historical evidence: `20260910-output-supervisor-physical-h-v3`.
 
-`20260910-output-a12-2-final-full-software-gate-v9`
+The later quality-refactor code changed production runtime composition and therefore does **not** inherit that exact executable hardware qualification. Refactor requalification attempts confirmed the correct firmware/port/runtime path but did not produce a new terminal frozen Physical H PASS marker. Do not claim otherwise.
 
-Final A12.2 result:
+This does not block ordinary software/product development. Re-run bounded physical qualification only when a future release explicitly requires a fresh hardware-qualified executable identity.
 
-- exact clean SHA: PASS;
-- Python software tests: PASS (`488 passed`, `3` optional Playwright visual tests skipped because Chromium was unavailable, `9` hardware tests deselected);
-- host C++ tests: PASS (`49/49`);
-- lint / format / schema / pre-push: PASS;
-- fake-output firmware build: PASS;
-- real-output firmware build, software-only: PASS;
-- RF-enabled production build evidence: PASS;
-- output/RF ownership invariant: PASS;
-- configured main-task stack: `16384` bytes;
-- measured runtime frame: `32` bytes;
-- firmware binary: `771920` bytes;
-- text: `617469` bytes;
-- data: `154332` bytes;
-- bss: `1356861` bytes;
-- reported static DRAM metric: `1511193` bytes;
-- `hardware_started=0`.
+Qualified Growbox serial device for any future physical qualification: `/dev/cu.usbserial-1130`.
 
-A12.2 initially exposed repository formatting and two stale standalone Stage28D linkage lists. Each source/build-graph defect was fixed with a bounded focused verification before the next full attempt. Failed full-gate attempts remain preserved as evidence. Only the final PASS SHA above is software-qualified.
+Never touch `/dev/cu.usbserial-10`.
 
-## Architecture invariant
+## Repository workflow
 
-> `OutputSupervisor` is the only normal production owner allowed to execute configured physical outputs.
+After repository cleanup, normal source work happens from `main`. `agent-control` remains the Local Agent control branch and `gh-pages` remains the publishing branch.
 
-Standing ownership rules:
+Local Agent tasks must use:
 
-- climate produces `ControlIntent` and does not transmit;
-- schedule/manual paths produce intents and do not directly transmit;
-- safety produces a non-bypassable `SafetyEnvelope` and does not transmit;
-- `OutputSupervisor` resolves mode, policy, intents and safety into execution;
-- `BinaryActuatorPolicy` owns hysteresis/dwell, not transport;
-- RF433 transport is narrow and policy-free;
-- state distinguishes requested/resolved/commanded/transport result from physical observation;
-- raw RF TX is allowed only through the explicit `MaintenanceLocked` path;
-- the static ownership guard must continue to pass.
-
-## Phase H state
-
-Phase H is **PASS** for exact production identity `02208d23f403bca3540dbbd652eb55703a044833` with tooling identity `2a19cd43646fe284a7ab41828178b2b8f17edea1`.
-
-Terminal Local Agent evidence: `20260910-output-supervisor-physical-h-v3`.
-
-The bounded single-open hardware run proved the normal production chain without manual fan commands or raw RF:
-
-```text
-natural climate ControlIntent
--> OutputSupervisor resolution
--> BinaryActuatorPolicy eligibility
--> OutputPlan command
--> RF433OutputTransport TxResult
--> independent Shelly aggregate-power support
--> environmental response support
+```json
+{
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": []
+}
 ```
 
-Counted evidence:
-
-- natural fan OFF baseline from uptime `651463 ms`;
-- natural humidity-driven `ClimateDecision` fan ON at uptime `884293 ms`, requested level `0.111`;
-- Shelly median power `22.0 W -> 24.8 W`, delta `+2.8 W` across exactly 8 + 8 samples;
-- inside-minus-outside absolute-humidity gradient contracted by `0.381 g/m3` (frozen requirement `>=0.30 g/m3`);
-- formal OutputSupervisor replay PASS on `02208d23f403bca3540dbbd652eb55703a044833`;
-- final supervisor-owned `automation off` reached `Disabled`, fan OFF, humidifier OFF, transport clean;
-- `raw_rf=0`; `/dev/cu.usbserial-10` remained untouched.
-
-One-way RF transport completion is still not treated as physical acknowledgement; Shelly and the environmental response remain independent supporting evidence.
-
-## Hardware boundary
-
-The authorized Phase H hardware run is complete. No further hardware execution is required to establish this Phase H PASS.
-
-Qualified Growbox serial device:
-
-`/dev/cu.usbserial-1130`
-
-Never touch:
-
-`/dev/cu.usbserial-10`
-
-Standing safety invariants remain unchanged:
-
-- deterministic rule controller remains authoritative;
-- ML remains shadow/research-only;
-- thermal trip remains `>=28 C`;
-- thermal recovery remains `<=26 C` continuously for 10 minutes;
-- safety remains active when automation is disabled;
-- one-way RF never implies physical acknowledgement;
-- raw RF remains restricted to explicit `MaintenanceLocked` handling;
-- `OutputSupervisor` remains the only normal production owner of configured physical outputs.
-
-Any future production-source change invalidates the current A12/A13/physical-H executable qualification and requires requalification before further hardware claims.
-
-## Local Agent execution identity
-
-- repository: `MichalMatu/growbox-ml-controller`;
-- repository id: `growbox-ml-controller`;
-- agent binding: `815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5`;
-- control branch: `agent-control`;
-- work branch: `mvp/environment-controller`.
-
-Every Local Agent task must use the exact binding, `work_branch: mvp/environment-controller`, and `resources: []`. Verify exact SHA in-task whenever source identity matters and read terminal `.agent/results/<task-id>.json` before reporting PASS.
+Use direct GitHub for bounded source/config/docs changes. Use Local Agent only when Mac-local builds/toolchains, local network, serial/USB/flash or physical devices are materially required.
 
 ## Immediate next work
 
-Phase H is complete. Resume normal product development rather than extending qualification for its own sake.
-
-The next chat should audit the current source and rank the best 3-5 improvements across controller temperature/humidity quality, configuration/UI, logging/history/plots, ML-shadow data/evaluation, and genuinely useful additional devices. Prefer small/medium high-value changes and use offline replay/simulation before new hardware experiments.
-
-Use `docs/CONTINUATION_PLAN.md` as the current fresh-context handoff and `docs/PROJECT_ROADMAP.md` as the current product roadmap. Preserve the terminal qualification evidence above and the historical failed-safe attempts; do not rerun historical H v8.
+Resume product development from `docs/PROJECT_ROADMAP.md`. The preferred next changes are small/medium, high-value improvements to controller behavior, configuration/UX, observability/replay, and ML-shadow evaluation. Avoid another broad architecture rewrite unless concrete evidence exposes a new responsibility or ownership problem.
