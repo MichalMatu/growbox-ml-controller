@@ -69,8 +69,15 @@ fi
 
 echo "==> host clang-tidy (${BUILD_DIR})"
 rm -rf "${BUILD_DIR}"
+# CMake emits compile_commands.json during configure. clang-tidy consumes that
+# database directly, so compiling the complete host test tree here only wastes
+# CPU/RAM and duplicates the dedicated host-test build in quality_gate_push.sh.
 cmake "${CMAKE_ARGS[@]}"
-cmake --build "${BUILD_DIR}" --parallel
+
+if [[ ! -s "${BUILD_DIR}/compile_commands.json" ]]; then
+  echo "missing compile database: ${BUILD_DIR}/compile_commands.json" >&2
+  exit 1
+fi
 
 for file in "${SOURCES[@]}"; do
   echo "clang-tidy: ${file}"
