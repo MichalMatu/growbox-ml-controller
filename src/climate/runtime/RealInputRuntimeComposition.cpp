@@ -8,10 +8,6 @@
 namespace growbox::app::climate_io::runtime {
 namespace {
 
-constexpr output::BinaryActuatorPolicyConfig kExhaustPolicyConfig{0.10F, 0.03F, 120'000U, 120'000U};
-constexpr output::BinaryActuatorPolicyConfig kHumidifierPolicyConfig{0.10F, 0.03F, 180'000U,
-                                                                     180'000U};
-
 storage::Stage27TelemetryLogger::Config makeStorageConfig() noexcept {
   storage::Stage27TelemetryLogger::Config config{};
   config.sd_pins = {runtime_config::kSdMosiGpio, runtime_config::kSdMisoGpio,
@@ -99,7 +95,8 @@ RuntimeOutputOwner::RuntimeOutputOwner(output::OutputTransport& real_transport,
                                        const output::OutputPolicyConfig& policy,
                                        output::OutputStateStore& state_store) noexcept
     : policy_(policy), semantic_output_config_(stage28d::makeClimateSemanticOutputConfig(policy_)),
-      exhaust_policy_(kExhaustPolicyConfig), humidifier_policy_(kHumidifierPolicyConfig),
+      exhaust_policy_(stage28d::kExhaustFanBinaryPolicy),
+      humidifier_policy_(stage28d::kHumidifierBinaryPolicy),
       supervisor_config_(makeRuntimeSupervisorConfig(exhaust_policy_, humidifier_policy_)),
       supervisor_transport_(real_transport, execution_status), output_lifecycle_(policy_),
       lifecycle_executor_(policy_, output_lifecycle_, supervisor_transport_, state_store,
