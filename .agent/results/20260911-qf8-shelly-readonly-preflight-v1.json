@@ -1,0 +1,60 @@
+{
+  "id": "20260911-qf8-shelly-readonly-preflight-v1",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "refactor/quality-freeze-final",
+  "allow_write": false,
+  "started_at": "2026-09-11T05:37:07.029197+00:00",
+  "command_timeout": 600,
+  "edits": {},
+  "commands": [
+    {
+      "command": "git fetch -q origin refactor/quality-freeze-final && git reset --hard FETCH_HEAD && test \"$(git rev-parse HEAD)\" = \"fa56b345b5e555a68fc5a880779dee6f931acf66\" && test -z \"$(git status --porcelain)\" && test -e /dev/cu.usbserial-1130 && test ! -e /dev/cu.usbserial-10 && .venv/bin/python - <<'PY'\nimport json, time, urllib.request\nurl='http://192.168.0.16/rpc/Switch.GetStatus?id=0'\nfor i in range(3):\n    with urllib.request.urlopen(url, timeout=5.0) as r:\n        p=json.load(r)\n    print(f\"SHELLY_PREFLIGHT sample={i+1} output={int(bool(p.get('output')))} apower={float(p.get('apower', float('nan'))):.3f}\", flush=True)\n    if i < 2:\n        time.sleep(2.0)\nprint('QF8_SHELLY_READONLY_PREFLIGHT_PASS hardware_state_changed=0 serial_opened=0')\nPY",
+      "exit_code": 0,
+      "output": "HEAD is now at fa56b345 Make IDF gate builds cache-independent\nSHELLY_PREFLIGHT sample=1 output=0 apower=0.000\nSHELLY_PREFLIGHT sample=2 output=0 apower=0.000\nSHELLY_PREFLIGHT sample=3 output=0 apower=0.000\nQF8_SHELLY_READONLY_PREFLIGHT_PASS hardware_state_changed=0 serial_opened=0\n",
+      "elapsed_seconds": 5.289,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 29.22,
+      "output_policy": "stream",
+      "captured_output_chars": 283,
+      "output_truncated": false,
+      "current_rss_mb": 29.22,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 5.289
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.105
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.076
+  },
+  "finished_at": "2026-09-11T05:37:14.064945+00:00",
+  "task_digest": "c586bd7398f8b4c66658dbbdb57bcae3e874ac5147a1ab9eb82313d0b47285b3",
+  "idle_timeout": 300,
+  "task_timeout": 1200,
+  "memory_limit_mb": 4096,
+  "attempt_id": "11da64d3b30b3e688ad66033",
+  "daemon_version": "4.18.20"
+}
