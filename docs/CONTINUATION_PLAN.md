@@ -1,195 +1,147 @@
 # Fresh-context continuation plan
 
-Updated: 2026-09-08
+Updated: 2026-09-11
+Repository: `MichalMatu/growbox-ml-controller`
 Work branch: `mvp/environment-controller`
 Control branch: `agent-control`
-Latest handoff: `docs/ARCHITECTURE_HANDOFF.md`
-Execution architecture design: `docs/OUTPUT_EXECUTION_ARCHITECTURE.md`
-Current status: `docs/CURRENT_STATUS.md`
-Frozen Phase H evidence: `docs/STAGE28E_PHASE_H_HANDOFF.md`
+Local Agent binding: `815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5`
 
 ## Read first in a new chat
 
 1. `AGENTS.md`
-2. `docs/ARCHITECTURE_HANDOFF.md`
-3. `docs/OUTPUT_EXECUTION_ARCHITECTURE.md`
-4. `docs/CURRENT_STATUS.md`
-5. this file
-6. `docs/GUIDANCE.md`
-7. `docs/STAGE28E_PHASE_H_HANDOFF.md` for frozen H evidence
-8. `docs/STAGE28D_AH_ARBITER_HANDOFF.md` for prior arbiter context
-9. `docs/PROJECT_ROADMAP.md`
-10. `docs/ESP32_S3_SERIAL_PORT_RESET.md` before any future serial/hardware work
+2. `docs/CURRENT_STATUS.md`
+3. `docs/ARCHITECTURE_HANDOFF.md`
+4. this file
+5. `docs/PROJECT_ROADMAP.md`
 
-Then fetch fresh `mvp/environment-controller` HEAD and fresh `agent-control:.agent/status/daemon.json`. Read relevant terminal `.agent/results/...` before deciding what has passed. Never continue from remembered chat state alone.
+Read `docs/GUIDANCE.md`, `docs/STAGE28E_PHASE_H_HANDOFF.md`, and `docs/STAGE28D_AH_ARBITER_HANDOFF.md` only when historical qualification, diagnostics, or arbiter evidence is needed. They are no longer the active development sequence.
+
+Then fetch fresh `mvp/environment-controller` HEAD and fresh `agent-control:.agent/status/daemon.json`. Never continue from remembered chat state alone.
 
 ## Current transition
 
-**Stage28E A-G COMPLETE -> H OPEN BUT SUSPENDED -> EXECUTION ARCHITECTURE AUDIT/REFACTOR ACTIVE**
+**Stage27C FROZEN -> Stage28E A-G COMPLETE -> OUTPUT EXECUTION ARCHITECTURE A1-A12 COMPLETE -> A13 + PHYSICAL H COMPLETE -> NORMAL PRODUCT DEVELOPMENT**
 
-Architecture-pause entry baseline:
+The execution-architecture qualification workstream is complete.
 
-`157806442161e88edd8038e532e9dff333a19efb`
+Qualified production executable identity:
 
-Formal Phase G exit gate:
+`02208d23f403bca3540dbbd652eb55703a044833`
 
-`7ddb995d1f6cd190fa110f21f0d8dc0eabc61d26`
+Terminal physical evidence:
 
-Old qualified production identity:
+`20260910-output-supervisor-physical-h-v3` PASS
 
-`5a4830db9d10e8cb73d4c617b09122f0844ad899`
+The current work branch may be a docs-only descendant of the qualified production SHA. Fetch the fresh branch HEAD before work; do not mistake later documentation commits for a new qualified executable identity.
 
-H v8 software preflight `20260908-stage28e-h-v8-preflight-v1` passed on `231eed28f64bdbdc4238fd8bce128264027702f2`, but H v8 hardware execution was never started.
+## What is complete
 
-That preflight is frozen historical evidence. It must not be reused to qualify production C++ changed by the architecture workstream.
+- `OutputSupervisor` is the only normal production owner allowed to execute configured physical outputs.
+- climate/schedule/manual paths produce intent rather than directly transmitting configured outputs.
+- hard safety remains non-bypassable and independent of normal automation ownership.
+- A12 full software qualification passed.
+- A13 replay/preflight qualification passed.
+- Physical H passed on the real Growbox with a natural humidity-driven `ClimateDecision` fan transition.
+- independent Shelly evidence showed `22.0 W -> 24.8 W` (`+2.8 W`).
+- the absolute-humidity gradient contracted by `0.381 g/m3`, exceeding the frozen `0.30 g/m3` threshold.
+- final supervisor-owned shutdown reached `Disabled`, fan OFF, humidifier OFF, transport clean.
+- historical H v8 is frozen and must not be run.
 
-## Explicit project decision
+No further A12/A13/H work is required merely to continue ordinary product development.
 
-Do **not** continue H v8 now.
+## Current product-development goal
 
-The previous sequencing decision — preserve the current production binary until H PASS and refactor afterward — is superseded by the 2026-09-08 project decision. We intentionally stop physical qualification first and correct the product architecture.
+Return to improving the actual growbox rather than qualification for its own sake.
 
-The target is not a final output kill switch. The target is modular ownership:
+Start with a read-only audit of the current code and identify the best next changes across:
 
-```text
-climate/schedule/manual intent
-            +
-      safety envelope
-            |
-            v
-     OutputSupervisor
-   mode + policy + state
-            |
-       OutputPlan
-            |
-            v
-      RF433 Transport
+- temperature and humidity control quality;
+- absolute-humidity ventilation decisions;
+- controller deadband, hysteresis, dwell and interaction between temperature/humidity goals;
+- growbox configuration and operator UX;
+- panel/UI usability;
+- logging, history, plots and replayability;
+- ML-shadow feature quality, labels and offline evaluation;
+- additional sensors/actuators only where they provide real product value.
+
+Do not assume all of these deserve implementation. Rank the best 3-5 candidates by practical value, implementation cost, risk, ESP32-S3 RAM/CPU/flash impact, and verification cost. Prefer small/medium changes with high user value and clean ownership.
+
+## First new-chat deliverable
+
+Before coding, report:
+
+`What we have -> biggest product gaps -> 3-5 best next changes -> recommended first change and why.`
+
+Ground this in current source, not only documentation.
+
+## Work-mode policy
+
+### Sandbox first
+
+Use the available sandbox/container aggressively for work that does not require the physical Mac or devices. Prefer it for code analysis, parsing telemetry, simulations, synthetic data, controller experiments, replay, statistics, comparison scripts, and other compute-heavy analysis.
+
+Do not consume Local Agent/Mac execution for computation that can be completed safely in the sandbox.
+
+The sandbox should not be assumed to have Internet access. Use GitHub tools for repository content and the sandbox for processing/computation.
+
+### Direct GitHub
+
+Use direct GitHub edits for bounded source/config/docs changes when the exact diff and relevant CI or focused verification are sufficient. A commit proves publication, not runtime correctness.
+
+### Local Agent
+
+Use Local Agent only when Mac-local execution is materially required, including PlatformIO/local toolchains, host builds/tests that depend on the local environment, pre-commit/pre-push, serial/USB/flash, local-network Shelly access, or physical hardware evidence.
+
+Local Agent is a deterministic executor; ChatGPT remains the planner. Never invoke or delegate to local Codex.
+
+Every Local Agent task must contain exactly:
+
+```json
+{
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "mvp/environment-controller",
+  "resources": []
+}
 ```
 
-`OutputSupervisor` must become the only normal production owner that can execute configured physical outputs.
+Check `.agent/status/daemon.json` before modifying the same branch. Do not duplicate a healthy active task or poll long tasks at 30-second cadence.
 
-## Architecture requirements
+## Hardware/network constants
 
-Read the full design in `docs/OUTPUT_EXECUTION_ARCHITECTURE.md`.
+Canonical Shelly IP:
 
-Minimum required separation:
+`192.168.0.16`
 
-- climate engine computes `ControlIntent`;
-- climate engine may continue observe-only calculation when automation is OFF;
-- safety computes non-bypassable constraints/forced actions and does not transmit;
-- schedule/manual sources produce intents and do not transmit;
-- per-output lifecycle policy defines boot/automation-off/recovery/fault actions;
-- lifecycle actions can define bounded ordering/timing and ON/OFF/no-command/schedule/restore behavior;
-- binary hysteresis/dwell is an execution policy independent of RF and temperature evaluation;
-- RF433 transport sends validated commands and reports transport results only;
-- persisted state distinguishes last commanded/transport result from actual physical state;
-- normal service-console output commands must pass through the supervisor;
-- raw transport diagnostics, if retained, require an explicit maintenance guard and cannot become a second invisible production owner.
+Canonical Shelly status endpoint:
 
-## First new-chat task: architecture audit
+`http://192.168.0.16/rpc/Switch.GetStatus?id=0`
 
-Start with a read-only/source-reading audit. No production behavior patch first.
+Do not guess, substitute, or network-scan for another Shelly address unless the operator explicitly changes it.
 
-Create:
+Qualified Growbox serial port:
 
-`docs/OUTPUT_EXECUTION_ARCHITECTURE_AUDIT.md`
+`/dev/cu.usbserial-1130`
 
-The audit must identify, with exact file/symbol evidence:
+Never touch:
 
-1. normal controller-to-output call graph;
-2. every direct and indirect RF/output writer;
-3. every output-state cache/owner;
-4. every thermal safety / fail-safe path;
-5. boot, disable, recovery, and fault output actions;
-6. schedule/lamp path;
-7. service-console/manual output path;
-8. endpoint-role mapping ownership and validation;
-9. persistence/settings mechanisms already present;
-10. control/safety/console/RF task and concurrency context;
-11. `reconcileApplied` and previous-applied semantics;
-12. tests coupled to current actuator/driver structure;
-13. memory/stack impact expected from the new supervisor/policy objects.
+`/dev/cu.usbserial-10`
 
-Distinguish observed source facts from design proposals. If the source disproves an assumption in the architecture design, update the design before implementing behavior.
+Do not use `/dev/cu.usbserial-1120` without separate authorization.
 
-## Planned implementation after the audit
+## Safety and ML invariants
 
-Use small coherent commits:
-
-1. contracts/types (`ControlIntent`, `SafetyEnvelope`, plan/report/config types);
-2. dumb RF transport split;
-3. safety-envelope adaptation;
-4. `OutputSupervisor` state machine + resolver + lifecycle policy;
-5. binary actuator policy integration without hardware ownership;
-6. climate decision/execution split and correct applied-state reconciliation;
-7. versioned policy + honest command-state persistence using an existing suitable store;
-8. service-console migration and maintenance diagnostics separation;
-9. removal of legacy duplicate state/safety/output ownership;
-10. invariant enforcement: one normal production output owner;
-11. focused host tests during each behavior-changing step;
-12. one full software gate after the architecture stabilizes;
-13. new firmware identity and new H qualification plan before any hardware execution.
-
-Do not perform a giant rewrite.
-
-## Frozen Phase H evidence
-
-The detailed H history remains in `docs/STAGE28E_PHASE_H_HANDOFF.md`.
-
-Relevant frozen facts:
-
-- H v7 primary was intentionally interrupted after the TimerOff observer defect was understood;
-- recovery and final fake-locked verification passed;
-- TimerOff-aware observer commit is `45065a34ce276ac5cdb7ef8cf0a1ad8a4bae1b0d`;
-- H v8 preflight passed but hardware did not start;
-- the existing observer/recovery scripts are retained but are not authorized to run during the architecture audit/refactor.
-
-The eventual H path remains conceptually useful, but the exact expected execution chain must be rewritten against the new supervisor architecture before physical qualification resumes.
-
-## Test and hardware policy
-
-For the current handoff session:
-
-- no tests;
-- no builds;
-- no serial;
-- no flash;
-- no RF commands;
-- no hardware qualification.
-
-In the next chat:
-
-- audit first without hardware;
-- once implementation begins, focused host tests are expected for coherent changes;
-- one full software gate only after stabilization;
-- no physical H continuation without a new exact firmware identity, reviewed plan, and explicit operator authorization.
-
-## Safety boundaries
-
-- correct serial: `/dev/cu.usbserial-1130`;
-- never touch `/dev/cu.usbserial-10`;
-- tent remains closed unless the operator explicitly changes that requirement;
 - deterministic rule controller remains authoritative;
-- ML remains shadow/research-only;
+- ML remains shadow/research-only and must not directly own physical outputs;
 - thermal trip remains `>=28 C`;
 - thermal recovery remains `<=26 C` continuously for 10 minutes;
-- ordinary automation-off configuration must not silently disable non-bypassable thermal protection;
-- Shelly master remains ON for future bounded qualification;
-- future output recovery semantics must be owned by firmware execution policy, not only qualification scripts.
+- one-way RF completion is transport evidence, not physical acknowledgement;
+- raw RF remains restricted to explicit `MaintenanceLocked` handling;
+- `OutputSupervisor` remains the only normal production owner of configured physical outputs.
 
-## Local Agent contract
+## When qualification must be revisited
 
-Every Local Agent task must use:
+Do not rerun A12/A13/H after UI/docs-only work or unrelated product changes.
 
-- exact `agent_binding`: `815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5`;
-- explicit `resources: []`;
-- `work_branch: mvp/environment-controller` when working on this MVP branch;
-- no named resources or `machine`;
-- explicit SHA verification when source identity matters;
-- terminal `.agent/results/<task-id>.json` evidence before reporting PASS.
+Requalification becomes necessary when a production-source change materially changes the qualified execution/safety/output path or when a new hardware qualification target is intentionally introduced. Scope the replacement verification to the actual change rather than blindly rerunning historical workflows.
 
-Any future hardware task must detect and verify `/dev/cu.usbserial-1130` internally and explicitly refuse `/dev/cu.usbserial-10`.
-
-## Recommended fresh-chat instruction
-
-`Continue only MichalMatu/growbox-ml-controller on mvp/environment-controller with Local Agent binding 815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5. Read AGENTS.md, docs/ARCHITECTURE_HANDOFF.md, docs/OUTPUT_EXECUTION_ARCHITECTURE.md, docs/CURRENT_STATUS.md and docs/CONTINUATION_PLAN.md first, then fresh-check work HEAD and agent-control daemon/result state. Stage28E A-G are complete; H remains open but is intentionally suspended before H v8. Do not start H v8, flash hardware or run physical-output tests. Start with a read-only audit of the actual execution architecture: enumerate every RF/output writer, output-state owner, safety/fail-safe path, boot/disable/recovery/fault action, schedule/manual path, endpoint mapping, persistence mechanism, task context and reconcileApplied/previous-state coupling. Write the evidence-backed audit to docs/OUTPUT_EXECUTION_ARCHITECTURE_AUDIT.md and reconcile it with docs/OUTPUT_EXECUTION_ARCHITECTURE.md before changing behavior. The target is one OutputSupervisor as the only normal production physical-output owner, SafetyPolicyEngine producing constraints, per-output lifecycle OutputPolicy, honest StateStore semantics and a dumb RF433 Transport. Automation OFF should stop execution of normal control intent while allowing the climate engine to keep calculating observe-only; safety remains active. After audit, implement in small commits with focused host tests, one full software gate only after stabilization, and create a new firmware identity/qualification plan before any hardware H continuation. Every Local Agent task uses resources: []; future hardware tasks must verify /dev/cu.usbserial-1130 internally and never touch /dev/cu.usbserial-10.`
+Historical Stage28E and H documents remain evidence; do not delete them and do not execute historical H v8.

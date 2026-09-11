@@ -30,6 +30,25 @@ Terminal Local Agent task `20260910-output-supervisor-physical-h-v3` passed agai
 
 It proved a natural humidity-driven `ClimateDecision` fan OFF->ON transition, Shelly power delta `+2.8 W` (`22.0 W -> 24.8 W`, 8 + 8 samples), absolute-humidity gradient contraction `0.381 g/m3`, formal OutputSupervisor replay PASS, and supervisor-owned final `Disabled` state with fan/humidifier OFF and clean transport. No raw RF command path was used; `/dev/cu.usbserial-10` remained untouched.
 
+## Post-H product-development handoff
+
+The execution-architecture workstream is complete. Normal product development may resume without further A12/A13/H work unless a later production-source change materially invalidates the qualified execution/safety/output path.
+
+Current fresh-context handoff: `docs/CONTINUATION_PLAN.md`.
+
+Current product roadmap: `docs/PROJECT_ROADMAP.md`.
+
+For the next development cycle, audit current source and rank high-value, low-risk improvements in controller temperature/humidity behavior, configuration/UI, logging/history/plots, ML-shadow evaluation, and useful additional devices. Prefer sandbox/offline replay and simulation before physical experiments.
+
+Canonical Shelly host is `192.168.0.16` (`/rpc/Switch.GetStatus?id=0`). Do not guess or scan for a substitute address unless the operator explicitly changes it.
+
+Work-mode boundary:
+
+- sandbox/container first for analysis, simulation, replay, statistics and compute-heavy work;
+- direct GitHub for bounded changes when exact diff plus focused verification is sufficient;
+- Local Agent for Mac-specific toolchains/builds, local-network access, serial/USB/flash and physical hardware;
+- Local Agent remains a deterministic executor; do not invoke local Codex.
+
 ## Required architecture invariant
 
 > `OutputSupervisor` is the only normal production owner allowed to execute configured physical outputs.

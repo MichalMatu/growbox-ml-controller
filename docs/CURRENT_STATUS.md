@@ -127,6 +127,8 @@ Every Local Agent task must use the exact binding, `work_branch: mvp/environment
 
 ## Immediate next work
 
-Phase H is complete. No further Phase H execution is required unless production source changes or a new hardware qualification target is intentionally introduced.
+Phase H is complete. Resume normal product development rather than extending qualification for its own sake.
 
-Preserve the terminal evidence above and the historical failed-safe attempts; do not rerun historical H v8.
+The next chat should audit the current source and rank the best 3-5 improvements across controller temperature/humidity quality, configuration/UI, logging/history/plots, ML-shadow data/evaluation, and genuinely useful additional devices. Prefer small/medium high-value changes and use offline replay/simulation before new hardware experiments.
+
+Use `docs/CONTINUATION_PLAN.md` as the current fresh-context handoff and `docs/PROJECT_ROADMAP.md` as the current product roadmap. Preserve the terminal qualification evidence above and the historical failed-safe attempts; do not rerun historical H v8.
