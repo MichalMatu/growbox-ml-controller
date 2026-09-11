@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260911-quality-freeze-config-ssot-v2",
+  "task_digest": "93503d4cc24ce8574ea570460796fdd4f5db6b8ffcf4f7ec05ff7212daf25fba",
+  "idle_timeout": 900,
+  "task_timeout": 12000,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-11T03:47:52.720088+00:00",
+  "attempt_id": "f534db6c7ac099730e97c3a0",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 36693,
+  "updated_at": "2026-09-11T03:47:52.720290+00:00",
+  "pid": 36693
+}
