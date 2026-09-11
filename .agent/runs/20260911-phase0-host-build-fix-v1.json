@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260911-phase0-host-build-fix-v1",
+  "task_digest": "781efbd743e2fd8ed8b3767ee5388a3709c8e3e8731b35003e5ff5409847032b",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-11T15:21:09.285047+00:00",
+  "attempt_id": "5727ca1463ac5e4d879a16d8",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 26590,
+  "updated_at": "2026-09-11T15:21:09.285171+00:00",
+  "pid": 26590
+}
