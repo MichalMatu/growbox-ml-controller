@@ -3,6 +3,7 @@
 #include "climate/ClimateCompositeInput.h"
 #include "climate/native/BleClimateScanner.h"
 #include "climate/native/Scd41InsideSource.h"
+#include "ClimateRuntimeController.h"
 
 #include <cstdint>
 
@@ -40,6 +41,18 @@ public:
                ClimateScheduleConfigSnapshot& output) noexcept override;
 };
 
-::growbox::climate::ClimateRuntimeConfig defaultRuntimeConfig() noexcept;
+inline constexpr ::growbox::climate::ClimateRuntimeConfig productionRuntimeConfig() noexcept {
+  ::growbox::climate::ClimateRuntimeConfig config{};
+  config.mode = ::growbox::climate::ClimatePolicyMode::Rule;
+  config.sensor_timeout_ms = ::growbox::climate::kDefaultSensorTimeoutMs;
+  config.timestep_s = 1.0F;
+  config.allow_unqualified_ml_active = false;
+  return config;
+}
+
+static_assert(productionRuntimeConfig().mode == ::growbox::climate::ClimatePolicyMode::Rule,
+              "Production runtime must keep deterministic rule control authoritative");
+static_assert(!productionRuntimeConfig().allow_unqualified_ml_active,
+              "Production runtime must not enable ML active authority");
 
 } // namespace growbox::app::climate_io::runtime
