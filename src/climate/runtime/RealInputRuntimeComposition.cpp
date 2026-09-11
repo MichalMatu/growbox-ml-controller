@@ -118,6 +118,6 @@ RuntimeOutputOwner::RuntimeOutputOwner(output::OutputTransport& real_transport,
 }
 
 RuntimeControlOwner::RuntimeControlOwner() noexcept
-    : runtime_controller_(nullptr, defaultRuntimeConfig()) {}
+    : runtime_controller_(nullptr, productionRuntimeConfig()) {}
 
 } // namespace growbox::app::climate_io::runtime
