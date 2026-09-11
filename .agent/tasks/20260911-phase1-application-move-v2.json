@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "id": "20260911-phase1-application-move-v2",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": true,
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch -q origin main && git reset --hard origin/main && git clean -fdx && test \"$(git rev-parse HEAD)\" = \"f2463114d18b8d58400fe1c716743b73fb450ecf\" && test -z \"$(git status --porcelain)\" && echo APP_MOVE_V2_BASE_PASS sha=$(git rev-parse HEAD)",
+    "mkdir -p src/climate/application && for name in ClimateApplication ClimateCompositeInput ClimateIoAdapters ClimateSemanticOutput; do git mv src/climate/${name}.h src/climate/application/${name}.h; git mv src/climate/${name}.cpp src/climate/application/${name}.cpp; done && python3 - <<'PY'\nfrom pathlib import Path\nimport subprocess\nrepls = {\n    'climate/ClimateApplication': 'climate/application/ClimateApplication',\n    'climate/ClimateCompositeInput': 'climate/application/ClimateCompositeInput',\n    'climate/ClimateIoAdapters': 'climate/application/ClimateIoAdapters',\n    'climate/ClimateSemanticOutput': 'climate/application/ClimateSemanticOutput',\n}\nactive_roots = ('src/', 'test/', 'tests/', 'scripts/', 'tools/', '.github/')\nfor rel in subprocess.check_output(['git','ls-files'], text=True).splitlines():\n    if not (rel == 'CMakeLists.txt' or rel.startswith(active_roots)):\n        continue\n    p = Path(rel)\n    try:\n        text = p.read_text()\n    except (UnicodeDecodeError, FileNotFoundError, IsADirectoryError):\n        continue\n    updated = text\n    for old, new in repls.items():\n        updated = updated.replace(old, new)\n    if updated != text:\n        p.write_text(updated)\nPY\ngit diff --check && ! git grep -nE 'src/climate/(ClimateApplication|ClimateCompositeInput|ClimateIoAdapters|ClimateSemanticOutput)|climate/(ClimateApplication|ClimateCompositeInput|ClimateIoAdapters|ClimateSemanticOutput)' -- src test tests scripts tools .github CMakeLists.txt && echo APP_MOVE_V2_PATHS_PASS",
+    "pre-commit run --all-files || true; pre-commit run --all-files && git diff --check && python3 scripts/check_runtime_boundaries.py && python3 scripts/check_service_console_boundaries.py && python3 scripts/check_output_rf_ownership.py && bash scripts/check_pre_hardware_readiness.sh && echo APP_MOVE_V2_GUARDS_PASS",
+    "cmake -S test/host -B build/host-tests && cmake --build build/host-tests --target climate_io_adapter_tests climate_application_composition_tests climate_deterministic_fake_runtime_tests climate_fault_soak_tests climate_composite_input_tests climate_semantic_output_tests climate_output_supervisor_sink_tests --parallel && ctest --test-dir build/host-tests -R '^(climate_io_adapter_tests|climate_application_composition_tests|climate_deterministic_fake_runtime_tests|climate_fault_soak_tests|climate_composite_input_tests|climate_semantic_output_tests|climate_output_supervisor_sink_tests)$' --output-on-failure && echo APP_MOVE_V2_FOCUSED_TESTS_PASS",
+    "git diff --check && test -z \"$(git status --porcelain | grep '^??' || true)\" && git add src test tests scripts tools .github CMakeLists.txt && git commit -m 'Group climate application layer' && git push origin HEAD:main && echo APP_MOVE_V2_PUSH_PASS sha=$(git rev-parse HEAD)"
+  ]
+}
