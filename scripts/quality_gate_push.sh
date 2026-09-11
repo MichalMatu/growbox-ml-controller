@@ -18,6 +18,9 @@ export HOST_BUILD_JOBS
 echo "==> output execution ownership"
 "$PY" "${ROOT}/scripts/check_output_rf_ownership.py"
 
+echo "==> runtime configuration SSOT"
+"$PY" "${ROOT}/scripts/check_runtime_config_ssot.py"
+
 echo "==> pytest"
 # Hardware board E2E needs a matching flashed firmware; exclude from pre-push.
 "$PY" -m pytest -q -m "not hardware"

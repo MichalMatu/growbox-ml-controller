@@ -119,31 +119,17 @@ else()
   message(FATAL_ERROR "Unsupported GROWBOX_APP_MODE: ${GROWBOX_APP_MODE}")
 endif()
 
-if(NOT DEFINED GROWBOX_BOARD_PROFILE)
-  set(GROWBOX_BOARD_PROFILE "esp32s3-devkitc1-n16r8")
-endif()
-set(GROWBOX_I2C_SDA_GPIO "8" CACHE STRING "Stage27 shared I2C SDA GPIO")
-set(GROWBOX_I2C_SCL_GPIO "9" CACHE STRING "Stage27 shared I2C SCL GPIO")
-set(GROWBOX_BLE_TP357_MAC "" CACHE STRING "Stage27 TP357 inside sensor MAC")
-set(GROWBOX_BLE_XIAOMI_MAC "" CACHE STRING "Stage27 Xiaomi nearby BTHome sensor MAC")
-set(GROWBOX_FIRMWARE_GIT_SHA "unknown" CACHE STRING "Exact Git SHA embedded in Stage27 firmware")
-set(GROWBOX_STAGE27_SD_ENABLED "0" CACHE STRING "Enable Stage27 SD telemetry backend")
-set(GROWBOX_STAGE27_FLASH_FALLBACK_ENABLED "0" CACHE STRING "Enable Stage27 internal-flash telemetry fallback")
-set(GROWBOX_SD_CMD0_PRECONDITION "0" CACHE STRING "Enable CrowPanel SD CMD0 compatibility precondition")
-set(GROWBOX_SD_MOSI_GPIO "40" CACHE STRING "Stage27 SD SPI MOSI GPIO")
-set(GROWBOX_SD_MISO_GPIO "13" CACHE STRING "Stage27 SD SPI MISO GPIO")
-set(GROWBOX_SD_SCLK_GPIO "39" CACHE STRING "Stage27 SD SPI clock GPIO")
-set(GROWBOX_SD_CS_GPIO "10" CACHE STRING "Stage27 SD SPI chip-select GPIO")
-set(GROWBOX_SD_POWER_GPIO "-1" CACHE STRING "Stage27 SD power-enable GPIO")
-set(GROWBOX_RF433_LOOPBACK_ENABLED "0" CACHE STRING "Enable Stage28 RF433 loopback transport")
-set(GROWBOX_RF433_REMOTE_CAPTURE_ENABLED "0" CACHE STRING "Enable Stage28C passive remote capture diagnostics")
-set(GROWBOX_RF433_TX_GPIO "8" CACHE STRING "Stage28 RF433 TX GPIO")
-set(GROWBOX_RF433_RX_GPIO "14" CACHE STRING "Stage28 RF433 RX GPIO")
-set(GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED "1" CACHE STRING "Enable Stage28 primary-serial service console")
-set(GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED "0" CACHE STRING "Enable bounded Stage28 real RF outputs")
-set(GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED "0" CACHE STRING "Enable bounded Gate6 thermal test sequence")
-set(GROWBOX_STAGE28E_LOG_COMPILE_LEVEL "2" CACHE STRING "Stage28E diagnostic compile-time log level 0=ERROR..4=TRACE")
-set(GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST "0" CACHE STRING "Run one bounded Stage28E breadcrumb software-restart self-test")
+get_filename_component(GROWBOX_PROJECT_ROOT "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
+include("${GROWBOX_PROJECT_ROOT}/config/runtime/GrowboxRuntimeConfig.cmake")
+
+set(GROWBOX_GENERATED_INCLUDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")
+file(MAKE_DIRECTORY "${GROWBOX_GENERATED_INCLUDE_DIR}/climate/runtime")
+configure_file(
+  "${CMAKE_CURRENT_LIST_DIR}/climate/runtime/RuntimeBuildConfig.h.in"
+  "${GROWBOX_GENERATED_INCLUDE_DIR}/climate/runtime/RuntimeBuildConfig.h"
+  @ONLY
+)
+target_include_directories(${COMPONENT_LIB} PRIVATE "${GROWBOX_GENERATED_INCLUDE_DIR}")
 
 target_compile_definitions(
   ${COMPONENT_LIB}

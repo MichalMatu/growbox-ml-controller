@@ -27,6 +27,7 @@
 #include "climate/rf433/Rf433OutputTransport.h"
 #include "climate/rf433/Rf433RmtFrameSender.h"
 #include "climate/rf433/Rf433RmtLoopback.h"
+#include "climate/runtime/RuntimeBuildConfig.h"
 #include "climate/runtime/Stage27RuntimeAdapters.h"
 #include "climate/runtime/Stage27ScheduleIntentAdapter.h"
 #include "climate/runtime/Stage27TelemetryReporter.h"
@@ -47,67 +48,6 @@
 #include <array>
 #include <cstdint>
 
-#ifndef GROWBOX_I2C_SDA_GPIO
-#define GROWBOX_I2C_SDA_GPIO 8
-#endif
-#ifndef GROWBOX_I2C_SCL_GPIO
-#define GROWBOX_I2C_SCL_GPIO 9
-#endif
-#ifndef GROWBOX_BLE_TP357_MAC
-#define GROWBOX_BLE_TP357_MAC ""
-#endif
-#ifndef GROWBOX_BLE_XIAOMI_MAC
-#define GROWBOX_BLE_XIAOMI_MAC ""
-#endif
-#ifndef GROWBOX_FIRMWARE_GIT_SHA
-#define GROWBOX_FIRMWARE_GIT_SHA "unknown"
-#endif
-#ifndef GROWBOX_STAGE27_SD_ENABLED
-#define GROWBOX_STAGE27_SD_ENABLED 0
-#endif
-#ifndef GROWBOX_STAGE27_FLASH_FALLBACK_ENABLED
-#define GROWBOX_STAGE27_FLASH_FALLBACK_ENABLED 0
-#endif
-#ifndef GROWBOX_SD_CMD0_PRECONDITION
-#define GROWBOX_SD_CMD0_PRECONDITION 0
-#endif
-#ifndef GROWBOX_SD_MOSI_GPIO
-#define GROWBOX_SD_MOSI_GPIO 40
-#endif
-#ifndef GROWBOX_SD_MISO_GPIO
-#define GROWBOX_SD_MISO_GPIO 13
-#endif
-#ifndef GROWBOX_SD_SCLK_GPIO
-#define GROWBOX_SD_SCLK_GPIO 39
-#endif
-#ifndef GROWBOX_SD_CS_GPIO
-#define GROWBOX_SD_CS_GPIO 10
-#endif
-#ifndef GROWBOX_SD_POWER_GPIO
-#define GROWBOX_SD_POWER_GPIO -1
-#endif
-#ifndef GROWBOX_RF433_LOOPBACK_ENABLED
-#define GROWBOX_RF433_LOOPBACK_ENABLED 0
-#endif
-#ifndef GROWBOX_RF433_REMOTE_CAPTURE_ENABLED
-#define GROWBOX_RF433_REMOTE_CAPTURE_ENABLED 0
-#endif
-#ifndef GROWBOX_RF433_TX_GPIO
-#define GROWBOX_RF433_TX_GPIO 8
-#endif
-#ifndef GROWBOX_RF433_RX_GPIO
-#define GROWBOX_RF433_RX_GPIO 14
-#endif
-#ifndef GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED
-#define GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED 1
-#endif
-#ifndef GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED
-#define GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED 0
-#endif
-#ifndef GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED
-#define GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED 0
-#endif
-
 namespace growbox::app::climate_io {
 namespace {
 
@@ -124,20 +64,21 @@ std::uint64_t monotonicMilliseconds() noexcept {
 
 storage::Stage27TelemetryLogger::Config makeStorageConfig() noexcept {
   storage::Stage27TelemetryLogger::Config config{};
-  config.sd_pins = {GROWBOX_SD_MOSI_GPIO, GROWBOX_SD_MISO_GPIO, GROWBOX_SD_SCLK_GPIO,
-                    GROWBOX_SD_CS_GPIO, GROWBOX_SD_POWER_GPIO};
-  config.sd_enabled = GROWBOX_STAGE27_SD_ENABLED != 0;
-  config.flash_fallback_enabled = GROWBOX_STAGE27_FLASH_FALLBACK_ENABLED != 0;
-  config.sd_cmd0_precondition = GROWBOX_SD_CMD0_PRECONDITION != 0;
+  config.sd_pins = {runtime_config::kSdMosiGpio, runtime_config::kSdMisoGpio,
+                    runtime_config::kSdSclkGpio, runtime_config::kSdCsGpio,
+                    runtime_config::kSdPowerGpio};
+  config.sd_enabled = runtime_config::kStage27SdEnabled;
+  config.flash_fallback_enabled = runtime_config::kStage27FlashFallbackEnabled;
+  config.sd_cmd0_precondition = runtime_config::kSdCmd0Precondition;
   return config;
 }
 
 runtime::Stage28RfDiagnosticsConfig rfDiagnosticsConfig() noexcept {
   runtime::Stage28RfDiagnosticsConfig config{};
-  config.enabled = GROWBOX_RF433_LOOPBACK_ENABLED != 0;
-  config.passive_capture = GROWBOX_RF433_REMOTE_CAPTURE_ENABLED != 0;
-  config.tx_gpio = GROWBOX_RF433_TX_GPIO;
-  config.rx_gpio = GROWBOX_RF433_RX_GPIO;
+  config.enabled = runtime_config::kRf433LoopbackEnabled;
+  config.passive_capture = runtime_config::kRf433RemoteCaptureEnabled;
+  config.tx_gpio = runtime_config::kRf433TxGpio;
+  config.rx_gpio = runtime_config::kRf433RxGpio;
   return config;
 }
 
@@ -353,7 +294,7 @@ private:
 } // namespace
 
 [[noreturn]] void runClimateV6RealInputRuntime() noexcept {
-  native::NativeI2cBus i2c(GROWBOX_I2C_SDA_GPIO, GROWBOX_I2C_SCL_GPIO);
+  native::NativeI2cBus i2c(runtime_config::kI2cSdaGpio, runtime_config::kI2cSclGpio);
   const bool i2c_ready = i2c.begin() == ESP_OK;
   const esp_err_t scd41_probe = i2c_ready ? i2c.probe(0x62U) : ESP_ERR_INVALID_STATE;
   const esp_err_t rtc_probe = i2c_ready ? i2c.probe(0x68U) : ESP_ERR_INVALID_STATE;
@@ -365,14 +306,14 @@ private:
   native::BleClimateScanner ble;
   const bool scd41_ready = i2c_ready && scd41.begin(i2c);
   const bool rtc_ready = i2c_ready && clock.begin(i2c);
-  const bool ble_ready = ble.begin(GROWBOX_BLE_TP357_MAC, GROWBOX_BLE_XIAOMI_MAC);
+  const bool ble_ready = ble.begin(runtime_config::kBleTp357Mac, runtime_config::kBleXiaomiMac);
 
   static RuntimeIoOwner runtime_io_owner;
   const auto& storage_config = runtime_io_owner.storageConfig();
   auto& storage_logger = runtime_io_owner.storageLogger();
   const bool storage_enabled = storage_config.sd_enabled || storage_config.flash_fallback_enabled;
   const bool storage_logger_ready =
-      storage_enabled && storage_logger.begin(GROWBOX_FIRMWARE_GIT_SHA);
+      storage_enabled && storage_logger.begin(runtime_config::kFirmwareGitSha);
   auto& rf_diagnostics = runtime_io_owner.rfDiagnostics();
   const bool rf_ready = runtime_io_owner.beginRf();
   static output::OutputStateStore output_state_store;
@@ -401,12 +342,12 @@ private:
   }
 
   static bool real_transport_available = false;
-  real_transport_available = GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED != 0 && rf_ready;
+  real_transport_available = runtime_config::kRealOutputsEnabled && rf_ready;
 
   // The pre-supervisor Gate6 qualification path was a direct configured-output
   // writer. Keep the build knob fail-closed until A13 defines the replacement
   // supervisor-owned hardware qualification contract.
-  if (GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED != 0) {
+  if (runtime_config::kThermalTestSequenceEnabled) {
     ESP_LOGW(kTag,
              "Legacy Gate6 thermal qualification is retired; locking real transport until A13");
     real_transport_available = false;
@@ -422,7 +363,7 @@ private:
 
   static bool real_output_ready = false;
   real_output_ready = false;
-  if (GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED != 0 && !real_transport_available) {
+  if (runtime_config::kRealOutputsEnabled && !real_transport_available) {
     ESP_LOGE(kTag, "Real-output transport unavailable; automatic outputs remain fake-locked");
   }
 
@@ -452,7 +393,7 @@ private:
   }
 
   runtime::Stage28ServiceConsole service_console(
-      {GROWBOX_STAGE28_SERVICE_CONSOLE_ENABLED != 0, GROWBOX_FIRMWARE_GIT_SHA, &real_output_ready,
+      {runtime_config::kServiceConsoleEnabled, runtime_config::kFirmwareGitSha, &real_output_ready,
        &storage_logger, &runtime_timing, &automation_control, &manual_control,
        &maintenance_control},
       ble, scd41, clock, rf_diagnostics);
@@ -463,7 +404,7 @@ private:
   ClimateApplication application(runtime_controller, composite, supervisor_sink);
   auto& lamp_safety = runtime_control_owner.lampSafety();
 
-  const auto& boot_identity = runtime::bootIdentity(GROWBOX_FIRMWARE_GIT_SHA);
+  const auto& boot_identity = runtime::bootIdentity(runtime_config::kFirmwareGitSha);
   const esp_reset_reason_t reset_reason =
       static_cast<esp_reset_reason_t>(boot_identity.reset_reason);
   runtime::configureStage28eLogging(boot_identity);
@@ -478,9 +419,9 @@ private:
            "thermal_test=%d outputs=%s",
            i2c_ready, scd41_ready, rtc_ready, ble_ready, storage_config.sd_enabled,
            storage_config.flash_fallback_enabled, storage_logger_ready, rf_ready,
-           GROWBOX_RF433_TX_GPIO, GROWBOX_RF433_RX_GPIO, service_console_ready,
-           GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED != 0, real_output_ready,
-           GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED != 0,
+           runtime_config::kRf433TxGpio, runtime_config::kRf433RxGpio, service_console_ready,
+           runtime_config::kRealOutputsEnabled, real_output_ready,
+           runtime_config::kThermalTestSequenceEnabled,
            real_output_ready ? "real-bounded" : "fake-locked");
   GROWBOX_STAGE28E_LOG_INFO(runtime::DiagnosticLogModule::Sys,
                             "boot firmware_sha=%s reset_reason=%d started_us=%llu outputs=%s",
