@@ -8,6 +8,13 @@ if [[ ! -x "$PY" ]]; then
   PY="$(command -v python3)"
 fi
 
+HOST_BUILD_JOBS="${HOST_BUILD_JOBS:-2}"
+if [[ ! "${HOST_BUILD_JOBS}" =~ ^[1-9][0-9]*$ ]]; then
+  echo "HOST_BUILD_JOBS must be a positive integer, got: ${HOST_BUILD_JOBS}" >&2
+  exit 2
+fi
+export HOST_BUILD_JOBS
+
 echo "==> output execution ownership"
 "$PY" "${ROOT}/scripts/check_output_rf_ownership.py"
 
@@ -15,9 +22,9 @@ echo "==> pytest"
 # Hardware board E2E needs a matching flashed firmware; exclude from pre-push.
 "$PY" -m pytest -q -m "not hardware"
 
-echo "==> host C++ tests"
+echo "==> host C++ tests (jobs=${HOST_BUILD_JOBS})"
 cmake -S test/host -B build/host-tests -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-cmake --build build/host-tests --parallel
+cmake --build build/host-tests --parallel "${HOST_BUILD_JOBS}"
 ctest --test-dir build/host-tests --output-on-failure
 
 echo "==> Stage28D bounded-output regression tests"
