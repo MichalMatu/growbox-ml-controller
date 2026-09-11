@@ -1,6 +1,6 @@
 #pragma once
 
-#include "climate/runtime/Stage28eDiagnosticsCore.h"
+#include "climate/runtime/diagnostics/Stage28eDiagnosticsCore.h"
 
 #include <esp_heap_caps.h>
 #include <esp_random.h>

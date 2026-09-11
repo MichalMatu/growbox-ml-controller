@@ -5,8 +5,8 @@
 #include "climate/native/Scd41InsideSource.h"
 #include "climate/rf433/Rf433HardwareConfig.h"
 #include "climate/runtime/EuropeWarsawTime.h"
-#include "climate/runtime/Stage28RfDiagnostics.h"
-#include "climate/runtime/Stage28ePlatformDiagnostics.h"
+#include "climate/runtime/diagnostics/Stage28RfDiagnostics.h"
+#include "climate/runtime/diagnostics/Stage28ePlatformDiagnostics.h"
 #include "climate/storage/Stage27TelemetryLogger.h"
 
 #include <array>

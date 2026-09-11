@@ -2,7 +2,7 @@
 
 #include "climate/runtime/RuntimeBuildConfig.h"
 
-#include "climate/runtime/Stage28eLog.h"
+#include "climate/runtime/diagnostics/Stage28eLog.h"
 #include "demo/protocol/HeapDiagnostics.h"
 
 #include <esp_heap_caps.h>

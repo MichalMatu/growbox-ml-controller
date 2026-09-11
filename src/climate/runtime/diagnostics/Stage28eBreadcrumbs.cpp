@@ -1,4 +1,4 @@
-#include "climate/runtime/Stage28eBreadcrumbs.h"
+#include "climate/runtime/diagnostics/Stage28eBreadcrumbs.h"
 
 #include <esp_attr.h>
 

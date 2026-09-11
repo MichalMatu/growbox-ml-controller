@@ -6,7 +6,7 @@
 #include <limits>
 
 #if defined(ESP_PLATFORM)
-#include "climate/runtime/Stage28eBreadcrumbs.h"
+#include "climate/runtime/diagnostics/Stage28eBreadcrumbs.h"
 
 #include <esp_log.h>
 #include <esp_timer.h>

@@ -6,8 +6,8 @@
 #include "legacy/LegacyRuntime.h"
 #endif
 #include "climate/runtime/RuntimeBuildConfig.h"
-#include "climate/runtime/Stage28eBreadcrumbs.h"
-#include "climate/runtime/Stage28ePlatformDiagnostics.h"
+#include "climate/runtime/diagnostics/Stage28eBreadcrumbs.h"
+#include "climate/runtime/diagnostics/Stage28ePlatformDiagnostics.h"
 
 #include <esp_core_dump.h>
 #include <esp_err.h>

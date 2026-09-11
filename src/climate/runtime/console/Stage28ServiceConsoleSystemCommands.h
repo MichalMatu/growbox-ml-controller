@@ -1,8 +1,8 @@
 #pragma once
 
-#include "climate/runtime/Stage28eDiagnosticsCore.h"
 #include "climate/runtime/console/ServiceConsoleTextSink.h"
 #include "climate/runtime/console/Stage28ServiceConsoleCommand.h"
+#include "climate/runtime/diagnostics/Stage28eDiagnosticsCore.h"
 
 #include <cstdint>
 

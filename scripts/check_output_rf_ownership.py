@@ -22,14 +22,14 @@ RADIO_TX = {
     "transmitAndReceive(": {
         "src/climate/rf433/Rf433RmtLoopback.cpp",
         "src/climate/rf433/Rf433RmtFrameSender.cpp",
-        "src/climate/runtime/Stage28RfDiagnostics.cpp",
+        "src/climate/runtime/diagnostics/Stage28RfDiagnostics.cpp",
     },
     "transmitFrame(": {
         "src/climate/rf433/Rf433RmtFrameSender.cpp",
         "src/climate/rf433/Rf433OutputTransport.cpp",
     },
     "manualTransmit(": {
-        "src/climate/runtime/Stage28RfDiagnostics.cpp",
+        "src/climate/runtime/diagnostics/Stage28RfDiagnostics.cpp",
         "src/climate/runtime/Stage28MaintenanceRfTransport.cpp",
     },
 }
@@ -111,7 +111,7 @@ def find_violations(root: Path = ROOT) -> list[str]:
         "src/climate/rf433/Rf433RmtLoopback.cpp",
         "src/climate/rf433/Rf433RmtFrameSender.cpp",
         "src/climate/rf433/Rf433OutputTransport.cpp",
-        "src/climate/runtime/Stage28RfDiagnostics.cpp",
+        "src/climate/runtime/diagnostics/Stage28RfDiagnostics.cpp",
         "src/climate/runtime/Stage28MaintenanceRfTransport.cpp",
         "src/climate/output/OutputSupervisorExecutor.cpp",
         "src/climate/output/OutputLifecycleExecutor.cpp",
@@ -190,17 +190,19 @@ def find_violations(root: Path = ROOT) -> list[str]:
                 f"maintenance-only guard missing {required_token!r}"
             )
 
-    diagnostics = (root / "src/climate/runtime/Stage28RfDiagnostics.cpp").read_text()
+    diagnostics = (root / "src/climate/runtime/diagnostics/Stage28RfDiagnostics.cpp").read_text()
     if "if (config_.passive_capture)" not in diagnostics or "capturePassive();" not in diagnostics:
-        errors.append("src/climate/runtime/Stage28RfDiagnostics.cpp: passive RX path missing")
+        errors.append(
+            "src/climate/runtime/diagnostics/Stage28RfDiagnostics.cpp: passive RX path missing"
+        )
     if diagnostics.count("transmitAndReceive(") != 1:
         errors.append(
-            "src/climate/runtime/Stage28RfDiagnostics.cpp: TX must remain only in explicit manualTransmit"
+            "src/climate/runtime/diagnostics/Stage28RfDiagnostics.cpp: TX must remain only in explicit manualTransmit"
         )
 
     for rel in (
-        "src/climate/runtime/Stage28RfDiagnostics.h",
-        "src/climate/runtime/Stage28RfDiagnostics.cpp",
+        "src/climate/runtime/diagnostics/Stage28RfDiagnostics.h",
+        "src/climate/runtime/diagnostics/Stage28RfDiagnostics.cpp",
         "src/climate/ClimateV6RealInputRuntime.cpp",
         "src/CMakeLists.txt",
         "scripts/stage27c_crowpanel.sh",

@@ -1,6 +1,6 @@
-#include "climate/runtime/Stage28eLog.h"
+#include "climate/runtime/diagnostics/Stage28eLog.h"
 
-#include "climate/runtime/Stage28eBreadcrumbs.h"
+#include "climate/runtime/diagnostics/Stage28eBreadcrumbs.h"
 
 #include <esp_log.h>
 #include <esp_system.h>

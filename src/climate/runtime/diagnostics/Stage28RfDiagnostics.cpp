@@ -1,4 +1,4 @@
-#include "climate/runtime/Stage28RfDiagnostics.h"
+#include "climate/runtime/diagnostics/Stage28RfDiagnostics.h"
 
 #include <esp_log.h>
 

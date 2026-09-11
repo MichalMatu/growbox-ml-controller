@@ -1,7 +1,7 @@
 #pragma once
 
 #include "climate/output/OutputTransport.h"
-#include "climate/runtime/Stage28RfDiagnostics.h"
+#include "climate/runtime/diagnostics/Stage28RfDiagnostics.h"
 
 namespace growbox::app::climate_io::runtime {
 
