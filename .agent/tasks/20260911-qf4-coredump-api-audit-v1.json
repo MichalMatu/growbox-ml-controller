@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "id": "20260911-qf4-coredump-api-audit-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "refactor/quality-freeze-final",
+  "resources": [],
+  "allow_write": false,
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 2048,
+  "commands": [
+    "git fetch -q origin refactor/quality-freeze-final && git reset --hard FETCH_HEAD && test \"$(git rev-parse HEAD)\" = \"38f19fe192cfab611cc6139dc21ead2e3affdd16\" && test -z \"$(git status --porcelain)\" && echo QF4_COREDUMP_AUDIT_BASE_PASS sha=$(git rev-parse HEAD) hardware_started=0",
+    "grep -R -n -E 'esp_core_dump_image_(get|check)|ESP_COREDUMP_ENABLE_TO_(FLASH|UART|NONE)' /Users/michal/esp/esp-idf/components/espcoredump/include /Users/michal/esp/esp-idf/components/espcoredump/src /Users/michal/esp/esp-idf/components/espcoredump/Kconfig* 2>/dev/null | head -n 200",
+    "grep -n -E '^CONFIG_ESP_COREDUMP' config/idf/sdkconfig.defaults || true; echo QF4_COREDUMP_API_AUDIT_PASS hardware_started=0"
+  ]
+}
