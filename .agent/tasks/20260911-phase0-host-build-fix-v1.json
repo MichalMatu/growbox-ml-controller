@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "id": "20260911-phase0-host-build-fix-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": true,
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch -q origin main && git reset --hard origin/main && test \"$(git rev-parse HEAD)\" = \"4232d773ebd062f3e1c142f10003c64ff51bf166\" && test -z \"$(git status --porcelain)\" && echo HOST_FIX_BASE_PASS sha=$(git rev-parse HEAD)",
+    "python3 - <<'PY'\nfrom pathlib import Path\np = Path('test/test_stage27_file_durability/test_main.cpp')\ns = p.read_text()\nold = '#include <cassert>\\n#include <cstdio>\\n#include <cstring>\\n'\nnew = '#include <cassert>\\n#include <cstdio>\\n#include <cstdlib>\\n#include <cstring>\\n'\nif old not in s:\n    raise SystemExit('expected include block not found')\np.write_text(s.replace(old, new, 1))\nPY\nchanged=$(git status --short | awk '{print $2}'); test \"$changed\" = \"test/test_stage27_file_durability/test_main.cpp\" || { git status --short; exit 1; }; git diff --check; pre-commit run --all-files; echo HOST_FIX_SCOPE_PASS; git diff -- test/test_stage27_file_durability/test_main.cpp",
+    "cmake -S test/host -B build/host-tests && cmake --build build/host-tests --target stage27_file_durability_tests --parallel && ctest --test-dir build/host-tests -R '^stage27_file_durability_tests$' --output-on-failure && cmake --build build/host-tests --parallel && ctest --test-dir build/host-tests --output-on-failure",
+    "test \"$(git status --short | awk '{print $2}')\" = \"test/test_stage27_file_durability/test_main.cpp\" && git add test/test_stage27_file_durability/test_main.cpp && git commit -m 'Fix POSIX host durability test declaration' && git push origin HEAD:main && echo HOST_FIX_PUSH_PASS sha=$(git rev-parse HEAD)"
+  ]
+}
