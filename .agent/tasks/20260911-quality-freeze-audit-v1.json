@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "id": "20260911-quality-freeze-audit-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "mvp/environment-controller",
+  "resources": [],
+  "allow_write": false,
+  "workflow_policy": "efficient-verification-v1",
+  "command_timeout": 7200,
+  "idle_timeout": 900,
+  "task_timeout": 18000,
+  "memory_limit_mb": 4096,
+  "steps": [
+    {
+      "name": "candidate-identity",
+      "command": "git fetch -q origin mvp/environment-controller && git reset --hard FETCH_HEAD && test \"$(git rev-parse HEAD)\" = \"100a7c9d618586b8b7c0add27084763261bee238\" && test -z \"$(git status --porcelain)\" && echo QUALITY_FREEZE_IDENTITY_PASS sha=$(git rev-parse HEAD) hardware_started=0",
+      "verification_level": "work"
+    },
+    {
+      "name": "architecture-guards",
+      "command": ".venv/bin/python scripts/check_output_rf_ownership.py && git diff --check && test -z \"$(git status --porcelain)\" && echo QUALITY_FREEZE_ARCHITECTURE_PASS hardware_started=0",
+      "verification_level": "focused"
+    }
+  ],
+  "verify_steps": [
+    {
+      "name": "full-quality-gate",
+      "command": "bash scripts/quality_gate_push.sh && test -z \"$(git status --porcelain)\" && echo QUALITY_FREEZE_FULL_PASS sha=$(git rev-parse HEAD) hardware_started=0",
+      "verification_level": "full"
+    }
+  ]
+}
