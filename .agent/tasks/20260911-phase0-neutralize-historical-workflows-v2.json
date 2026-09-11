@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "id": "20260911-phase0-neutralize-historical-workflows-v2",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": true,
+  "command_timeout": 300,
+  "idle_timeout": 300,
+  "task_timeout": 900,
+  "memory_limit_mb": 2048,
+  "commands": [
+    "git fetch -q origin main && git reset --hard origin/main && test \"$(git rev-parse HEAD)\" = \"ed8242f52d1f80186809507d7d47ce8902907fb2\" && test -z \"$(git status --porcelain)\" && echo WF_CLEANUP_BASE_PASS sha=$(git rev-parse HEAD)",
+    "python3 - <<'PY'\nfrom pathlib import Path\n\nfiles = {\n    Path('.github/workflows/ml-dagger-stage11-resume.yml'): (\n        '''on:\n  workflow_dispatch:\n  push:\n    branches:\n      - mvp/environment-controller\n    paths:\n      - \".github/workflows/ml-dagger-stage11-resume.yml\"\n''',\n        '''on:\n  workflow_dispatch:\n''',\n        '      - name: Commit final Stage 11 report\\n',\n    ),\n    Path('.github/workflows/ml-dagger-distributed.yml'): (\n        '''on:\n  workflow_dispatch:\n  push:\n    branches:\n      - mvp/environment-controller\n    paths:\n      - \".github/workflows/ml-dagger-distributed.yml\"\n      - \"tools/ml/run_dagger_distributed.py\"\n      - \"tests/test_climate_dagger_distributed.py\"\n''',\n        '''on:\n  workflow_dispatch:\n''',\n        '      - name: Commit final Stage 11 report\\n',\n    ),\n    Path('.github/workflows/stage11-format-cleanup.yml'): (\n        '''on:\n  push:\n    branches:\n      - mvp/environment-controller\n    paths:\n      - \".github/workflows/stage11-format-cleanup.yml\"\n      - \"tools/ml/climate_co2_audit.py\"\n''',\n        '''on:\n  workflow_dispatch:\n''',\n        '      - name: Commit formatting changes\\n',\n    ),\n}\n\nfor path, (old_trigger, new_trigger, disabled_step) in files.items():\n    text = path.read_text()\n    if old_trigger not in text:\n        raise SystemExit(f'expected trigger block not found: {path}')\n    text = text.replace(old_trigger, new_trigger, 1)\n    text = text.replace('  contents: write\\n', '  contents: read\\n', 1)\n    if disabled_step not in text:\n        raise SystemExit(f'expected write step not found: {path}')\n    text = text.split(disabled_step, 1)[0].rstrip() + '\\n'\n    path.write_text(text)\n\nprint('WF_CLEANUP_EDIT_PASS')\nPY\ngit diff --check\ngit diff -- .github/workflows/ml-dagger-stage11-resume.yml .github/workflows/ml-dagger-distributed.yml .github/workflows/stage11-format-cleanup.yml\ntest \"$(git status --short | wc -l | tr -d ' ')\" = \"3\"\n! grep -nE 'contents:[[:space:]]*write|git push|mvp/environment-controller' .github/workflows/ml-dagger-stage11-resume.yml .github/workflows/ml-dagger-distributed.yml .github/workflows/stage11-format-cleanup.yml\necho WF_CLEANUP_SCOPE_PASS",
+    "pre-commit run --files .github/workflows/ml-dagger-stage11-resume.yml .github/workflows/ml-dagger-distributed.yml .github/workflows/stage11-format-cleanup.yml && git diff --check && echo WF_CLEANUP_VERIFY_PASS",
+    "git add .github/workflows/ml-dagger-stage11-resume.yml .github/workflows/ml-dagger-distributed.yml .github/workflows/stage11-format-cleanup.yml && git commit -m \"Neutralize historical Stage 11 write workflows\" && git push origin HEAD:main && echo WF_CLEANUP_PUSH_PASS sha=$(git rev-parse HEAD)"
+  ]
+}
