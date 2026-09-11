@@ -117,8 +117,8 @@ def find_violations(root: Path = ROOT) -> list[str]:
         "src/climate/output/OutputLifecycleExecutor.cpp",
         "src/climate/output/OutputMaintenanceControl.cpp",
         "src/climate/ClimateV6RealInputRuntime.cpp",
-        "src/climate/runtime/Stage28ServiceConsole.cpp",
-        "src/climate/runtime/Stage28ServiceConsoleCommand.cpp",
+        "src/climate/runtime/console/Stage28ServiceConsole.cpp",
+        "src/climate/runtime/console/Stage28ServiceConsoleCommand.cpp",
         "src/CMakeLists.txt",
         "scripts/stage27c_crowpanel.sh",
     )
@@ -158,8 +158,8 @@ def find_violations(root: Path = ROOT) -> list[str]:
             )
 
     for rel in (
-        "src/climate/runtime/Stage28ServiceConsole.cpp",
-        "src/climate/runtime/Stage28ServiceConsoleCommand.cpp",
+        "src/climate/runtime/console/Stage28ServiceConsole.cpp",
+        "src/climate/runtime/console/Stage28ServiceConsoleCommand.cpp",
     ):
         text = (root / rel).read_text()
         for token in SERVICE_CONSOLE_FORBIDDEN:

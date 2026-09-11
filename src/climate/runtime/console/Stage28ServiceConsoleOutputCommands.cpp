@@ -1,4 +1,4 @@
-#include "climate/runtime/Stage28ServiceConsoleOutputCommands.h"
+#include "climate/runtime/console/Stage28ServiceConsoleOutputCommands.h"
 
 #include "climate/output/OutputAutomationControl.h"
 #include "climate/output/OutputMaintenanceControl.h"

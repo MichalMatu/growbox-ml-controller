@@ -9,9 +9,9 @@
 #include "climate/runtime/RuntimeBuildConfig.h"
 #include "climate/runtime/Stage27RuntimeAdapters.h"
 #include "climate/runtime/Stage27TelemetryReporter.h"
-#include "climate/runtime/Stage28ServiceConsole.h"
 #include "climate/runtime/Stage28eLog.h"
 #include "climate/runtime/Stage28ePlatformDiagnostics.h"
+#include "climate/runtime/console/Stage28ServiceConsole.h"
 #include "climate/runtime/core/RealInputRuntimeComposition.h"
 #include "climate/runtime/core/RealInputRuntimeCoordinator.h"
 

@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
-router = (root / "src/climate/runtime/Stage28ServiceConsole.cpp").read_text()
+router = (root / "src/climate/runtime/console/Stage28ServiceConsole.cpp").read_text()
 forbidden = (
     "OutputAutomationControl.h",
     "OutputMaintenanceControl.h",

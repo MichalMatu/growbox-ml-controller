@@ -1,4 +1,4 @@
-#include "climate/runtime/ServiceConsoleTextSink.h"
+#include "climate/runtime/console/ServiceConsoleTextSink.h"
 
 #include <cassert>
 #include <string>

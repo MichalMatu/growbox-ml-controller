@@ -1,4 +1,4 @@
-#include "climate/runtime/Stage28ServiceConsoleStorageCommands.h"
+#include "climate/runtime/console/Stage28ServiceConsoleStorageCommands.h"
 
 #include "climate/storage/Stage27FileDurability.h"
 #include "climate/storage/Stage27TelemetryLogger.h"

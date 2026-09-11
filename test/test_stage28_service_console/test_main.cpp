@@ -1,5 +1,5 @@
-#include "climate/runtime/Stage28ServiceConsoleCommand.h"
-#include "climate/runtime/Stage28ServiceConsoleRouter.h"
+#include "climate/runtime/console/Stage28ServiceConsoleCommand.h"
+#include "climate/runtime/console/Stage28ServiceConsoleRouter.h"
 #include <cassert>
 #include <cstring>
 using namespace growbox::app::climate_io::runtime;

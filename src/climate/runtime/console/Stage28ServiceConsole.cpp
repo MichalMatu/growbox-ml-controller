@@ -1,6 +1,6 @@
-#include "climate/runtime/Stage28ServiceConsole.h"
+#include "climate/runtime/console/Stage28ServiceConsole.h"
 
-#include "climate/runtime/Stage28ServiceConsoleRouter.h"
+#include "climate/runtime/console/Stage28ServiceConsoleRouter.h"
 
 #include <array>
 #include <cstring>

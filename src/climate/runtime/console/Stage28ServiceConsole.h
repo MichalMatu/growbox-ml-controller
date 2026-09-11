@@ -1,10 +1,10 @@
 #pragma once
 
-#include "climate/runtime/ServiceConsoleTextSink.h"
-#include "climate/runtime/Stage28ServiceConsoleOutputCommands.h"
-#include "climate/runtime/Stage28ServiceConsoleStorageCommands.h"
-#include "climate/runtime/Stage28ServiceConsoleSystemCommands.h"
 #include "climate/runtime/Stage28eDiagnosticsCore.h"
+#include "climate/runtime/console/ServiceConsoleTextSink.h"
+#include "climate/runtime/console/Stage28ServiceConsoleOutputCommands.h"
+#include "climate/runtime/console/Stage28ServiceConsoleStorageCommands.h"
+#include "climate/runtime/console/Stage28ServiceConsoleSystemCommands.h"
 
 #include <array>
 #include <cstddef>

@@ -1,4 +1,4 @@
-#include "climate/runtime/Stage28ServiceConsoleRouter.h"
+#include "climate/runtime/console/Stage28ServiceConsoleRouter.h"
 
 namespace growbox::app::climate_io::runtime {
 

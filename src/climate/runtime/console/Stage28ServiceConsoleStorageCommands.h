@@ -1,7 +1,7 @@
 #pragma once
 
-#include "climate/runtime/ServiceConsoleTextSink.h"
-#include "climate/runtime/Stage28ServiceConsoleCommand.h"
+#include "climate/runtime/console/ServiceConsoleTextSink.h"
+#include "climate/runtime/console/Stage28ServiceConsoleCommand.h"
 
 namespace growbox::app::climate_io::storage {
 class Stage27TelemetryLogger;

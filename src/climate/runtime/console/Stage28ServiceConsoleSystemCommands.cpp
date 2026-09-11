@@ -1,4 +1,4 @@
-#include "climate/runtime/Stage28ServiceConsoleSystemCommands.h"
+#include "climate/runtime/console/Stage28ServiceConsoleSystemCommands.h"
 
 #include "climate/native/BleClimateScanner.h"
 #include "climate/native/Ds3231ClockSource.h"

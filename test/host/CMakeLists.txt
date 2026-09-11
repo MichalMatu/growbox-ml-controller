@@ -589,8 +589,8 @@ target_compile_options(stage27_file_durability_tests PRIVATE -Wall -Wextra -Wped
 add_executable(
   stage28_service_console_tests
   "${PROJECT_ROOT}/test/test_stage28_service_console/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/runtime/Stage28ServiceConsoleCommand.cpp"
-  "${PROJECT_ROOT}/src/climate/runtime/Stage28ServiceConsoleRouter.cpp"
+  "${PROJECT_ROOT}/src/climate/runtime/console/Stage28ServiceConsoleCommand.cpp"
+  "${PROJECT_ROOT}/src/climate/runtime/console/Stage28ServiceConsoleRouter.cpp"
 )
 target_include_directories(stage28_service_console_tests PRIVATE "${PROJECT_ROOT}/src")
 target_compile_features(stage28_service_console_tests PRIVATE cxx_std_17)
@@ -725,7 +725,7 @@ add_test(NAME runtime_cycle_state_tests COMMAND runtime_cycle_state_tests)
 add_executable(
   service_console_text_sink_tests
   "${PROJECT_ROOT}/test/test_service_console_text_sink/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/runtime/ServiceConsoleTextSink.cpp"
+  "${PROJECT_ROOT}/src/climate/runtime/console/ServiceConsoleTextSink.cpp"
 )
 target_include_directories(service_console_text_sink_tests PRIVATE "${PROJECT_ROOT}/src")
 target_compile_features(service_console_text_sink_tests PRIVATE cxx_std_17)

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "climate/runtime/Stage28ServiceConsoleCommand.h"
+#include "climate/runtime/console/Stage28ServiceConsoleCommand.h"
 
 #include <cstdint>
 
