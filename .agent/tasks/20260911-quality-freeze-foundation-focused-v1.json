@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "id": "20260911-quality-freeze-foundation-focused-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "refactor/quality-freeze-final",
+  "resources": [],
+  "allow_write": false,
+  "command_timeout": 3600,
+  "idle_timeout": 600,
+  "task_timeout": 7200,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch -q origin refactor/quality-freeze-final && test \"$(git rev-parse HEAD)\" = \"1443b9b689f1f2f2a304e688dbd53d0cbfe52c21\" && test \"$(git rev-parse FETCH_HEAD)\" = \"1443b9b689f1f2f2a304e688dbd53d0cbfe52c21\" && test -z \"$(git status --porcelain)\" && echo QUALITY_FREEZE_FOUNDATION_IDENTITY_PASS sha=$(git rev-parse HEAD) hardware_started=0",
+    "bash -n scripts/run_clang_tidy_host.sh scripts/quality_gate_push.sh && .venv/bin/pre-commit run --files scripts/run_clang_tidy_host.sh scripts/quality_gate_push.sh docs/QUALITY_FREEZE_PLAN.md && HOST_BUILD_JOBS=2 cmake -S test/host -B build/host-tests -DCMAKE_EXPORT_COMPILE_COMMANDS=ON && HOST_BUILD_JOBS=2 cmake --build build/host-tests --parallel 2 && ctest --test-dir build/host-tests --output-on-failure && bash scripts/run_clang_tidy_host.sh && git diff --check && test -z \"$(git status --porcelain)\" && echo QUALITY_FREEZE_FOUNDATION_FOCUSED_PASS sha=$(git rev-parse HEAD) hardware_started=0"
+  ]
+}
