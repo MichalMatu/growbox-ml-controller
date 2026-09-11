@@ -12,6 +12,13 @@ SDKCONFIG_PATH="${IDF_GATE_SDKCONFIG_PATH:-${BUILD_DIR}/sdkconfig}"
 PROFILE="${IDF_GATE_PROFILE:-}"
 APP_MODE="${IDF_GATE_APP_MODE:-}"
 
+# Gate builds must not inherit cached CMake values from an earlier profile/app-mode run.
+# Canonical defaults are resolved by the project CMake configuration on every invocation.
+if [[ -z "${BUILD_DIR}" || "${BUILD_DIR}" == "/" ]]; then
+  echo "Refusing unsafe IDF gate build directory: '${BUILD_DIR}'" >&2
+  exit 2
+fi
+rm -rf "${BUILD_DIR}"
 mkdir -p "${BUILD_DIR}"
 
 CMAKE_ARGS=(
