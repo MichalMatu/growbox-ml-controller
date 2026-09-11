@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260911-phase2-output-lifecycle-dependency-audit-v1",
   "task_digest": "1912f57cad1709572c879a3e34b07a71c1cc06bba939ac1f1b7fb5de57e1bf1d",
-  "idle_timeout": 120,
-  "task_timeout": 600,
-  "memory_limit_mb": 2048,
-  "started_at": "2026-09-11T17:49:52.122182+00:00",
+  "status": "done",
+  "failure_reason": null,
+  "finished_at": "2026-09-11T17:49:55.478734+00:00",
   "attempt_id": "c898d294c078c84eb42b8ddf",
   "daemon_version": "4.18.20",
   "daemon_pid": 77151,
-  "updated_at": "2026-09-11T17:49:52.122322+00:00",
+  "updated_at": "2026-09-11T17:49:55.759928+00:00",
   "pid": 77151
 }
