@@ -50,12 +50,4 @@ bool FixedStage27ScheduleConfigSource::resolve(std::uint64_t, const ClimateWallC
   return resolveMintScheduleProfile(clock, output);
 }
 
-::growbox::climate::ClimateRuntimeConfig defaultRuntimeConfig() noexcept {
-  ::growbox::climate::ClimateRuntimeConfig config{};
-  config.mode = ::growbox::climate::ClimatePolicyMode::Rule;
-  config.sensor_timeout_ms = ::growbox::climate::kDefaultSensorTimeoutMs;
-  config.timestep_s = 1.0F;
-  return config;
-}
-
 } // namespace growbox::app::climate_io::runtime
