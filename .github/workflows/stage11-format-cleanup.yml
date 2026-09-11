@@ -1,15 +1,10 @@
 name: Stage 11 Format Cleanup
 
 on:
-  push:
-    branches:
-      - mvp/environment-controller
-    paths:
-      - ".github/workflows/stage11-format-cleanup.yml"
-      - "tools/ml/climate_co2_audit.py"
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   format-and-commit:
@@ -40,15 +35,3 @@ jobs:
 
       - name: Require clean quality gate after autofix
         run: pre-commit run --all-files
-
-      - name: Commit formatting changes
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -u
-          if git diff --cached --quiet; then
-            echo "No formatting changes required"
-            exit 0
-          fi
-          git commit -m "Format climate diagnostic tooling"
-          git push origin HEAD:mvp/environment-controller

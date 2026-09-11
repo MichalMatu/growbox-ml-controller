@@ -2,16 +2,9 @@ name: ML Distributed DAgger Stage 11
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - mvp/environment-controller
-    paths:
-      - ".github/workflows/ml-dagger-distributed.yml"
-      - "tools/ml/run_dagger_distributed.py"
-      - "tests/test_climate_dagger_distributed.py"
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: ml-stage11-${{ github.ref }}
@@ -248,19 +241,3 @@ jobs:
             reports/ml/climate_v6_model_stage11_candidate.json
           if-no-files-found: error
           retention-days: 30
-
-      - name: Commit final Stage 11 report
-        if: github.ref == 'refs/heads/mvp/environment-controller'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add \
-            reports/ml/climate_v6_stage11_distributed.json \
-            reports/ml/climate_v6_model_stage11_candidate.npz \
-            reports/ml/climate_v6_model_stage11_candidate.json
-          if git diff --cached --quiet; then
-            echo "No Stage 11 artifact changes to commit"
-            exit 0
-          fi
-          git commit -m "Run distributed climate DAgger architecture search"
-          git push origin HEAD:mvp/environment-controller
