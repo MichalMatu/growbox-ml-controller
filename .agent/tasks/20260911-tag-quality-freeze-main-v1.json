@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "id": "20260911-tag-quality-freeze-main-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": true,
+  "command_timeout": 600,
+  "idle_timeout": 300,
+  "task_timeout": 1200,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch -q --prune --tags origin && git reset --hard origin/main && test \"$(git rev-parse HEAD)\" = \"984e55baad1e1f6a319b28c2fab2d0309d4918cd\" && ! git show-ref --verify --quiet refs/tags/quality-freeze-2026-09-11 && echo TAG_PREFLIGHT_PASS sha=$(git rev-parse HEAD) tag=quality-freeze-2026-09-11",
+    "git tag -a quality-freeze-2026-09-11 984e55baad1e1f6a319b28c2fab2d0309d4918cd -m \"Quality freeze after architecture refactor, documentation refresh, branch cleanup and merge to main.\" && git push origin refs/tags/quality-freeze-2026-09-11 && git push origin --delete __noop_tag_helper_should_not_exist && git fetch -q --prune --tags origin && test \"$(git rev-list -n 1 quality-freeze-2026-09-11)\" = \"984e55baad1e1f6a319b28c2fab2d0309d4918cd\" && ! git ls-remote --exit-code --heads origin __noop_tag_helper_should_not_exist >/dev/null 2>&1 && echo TAG_QUALITY_FREEZE_PASS tag=quality-freeze-2026-09-11 target=$(git rev-list -n 1 quality-freeze-2026-09-11) helper_branch_removed=1"
+  ]
+}
