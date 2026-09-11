@@ -101,6 +101,7 @@ elseif(GROWBOX_APP_MODE STREQUAL "climate-v6-real-inputs")
       "climate/ClimateV6RealInputRuntime.cpp"
       "climate/runtime/RealInputRuntimeComposition.cpp"
       "climate/runtime/RealInputRuntimeCoordinator.cpp"
+      "climate/runtime/RuntimeOutputTelemetryLog.cpp"
       "climate/runtime/RuntimeCycleState.cpp"
       "climate/runtime/EuropeWarsawTime.cpp"
       "climate/runtime/Stage27ScheduleProfile.cpp"
