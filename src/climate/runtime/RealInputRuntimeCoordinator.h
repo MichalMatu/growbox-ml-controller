@@ -1,7 +1,7 @@
 #pragma once
 
-#include "climate/ClimateApplication.h"
 #include "climate/Stage28dLampSafety.h"
+#include "climate/application/ClimateApplication.h"
 #include "climate/native/BleClimateScanner.h"
 #include "climate/native/Ds3231ClockSource.h"
 #include "climate/output/ClimateOutputSupervisorSink.h"

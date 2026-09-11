@@ -1,4 +1,4 @@
-#include "climate/ClimateIoAdapters.h"
+#include "climate/application/ClimateIoAdapters.h"
 
 #include <array>
 #include <cassert>

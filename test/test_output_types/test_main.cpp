@@ -1,4 +1,4 @@
-#include "climate/ClimateSemanticOutput.h"
+#include "climate/application/ClimateSemanticOutput.h"
 #include "climate/output/OutputTypes.h"
 
 #include <cassert>

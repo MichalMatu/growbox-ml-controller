@@ -24,11 +24,11 @@ require_fixed src/climate/ClimateV6FakeRuntime.cpp '"output_backend", "fake"'
 require_fixed src/climate/ClimateV6FakeRuntime.cpp '"gpio_control", false'
 
 # Hardware-neutral seams required before physical bring-up.
-require_fixed src/climate/ClimateIoAdapters.h 'class ClimateSnapshotProvider'
-require_fixed src/climate/ClimateIoAdapters.h 'class ClimateRoleDriver'
-require_fixed src/climate/ClimateCompositeInput.h 'class CompositeClimateSnapshotProvider final : public ClimateSnapshotProvider'
-require_fixed src/climate/ClimateSemanticOutput.h 'class ClimateOutputEndpoint'
-require_fixed src/climate/ClimateSemanticOutput.h 'class MappedClimateRoleDriver final : public ClimateRoleDriver'
+require_fixed src/climate/application/ClimateIoAdapters.h 'class ClimateSnapshotProvider'
+require_fixed src/climate/application/ClimateIoAdapters.h 'class ClimateRoleDriver'
+require_fixed src/climate/application/ClimateCompositeInput.h 'class CompositeClimateSnapshotProvider final : public ClimateSnapshotProvider'
+require_fixed src/climate/application/ClimateSemanticOutput.h 'class ClimateOutputEndpoint'
+require_fixed src/climate/application/ClimateSemanticOutput.h 'class MappedClimateRoleDriver final : public ClimateRoleDriver'
 require_fixed src/climate/ClimateDiagnostics.h 'class ObservedClimateSnapshotProvider final : public ClimateSnapshotProvider'
 
 # The key host gates must remain registered in the common host suite.
@@ -45,12 +45,12 @@ done
 
 # The neutral application seams must not silently acquire concrete hardware/backend dependencies.
 neutral_files=(
-  src/climate/ClimateIoAdapters.h
-  src/climate/ClimateIoAdapters.cpp
-  src/climate/ClimateCompositeInput.h
-  src/climate/ClimateCompositeInput.cpp
-  src/climate/ClimateSemanticOutput.h
-  src/climate/ClimateSemanticOutput.cpp
+  src/climate/application/ClimateIoAdapters.h
+  src/climate/application/ClimateIoAdapters.cpp
+  src/climate/application/ClimateCompositeInput.h
+  src/climate/application/ClimateCompositeInput.cpp
+  src/climate/application/ClimateSemanticOutput.h
+  src/climate/application/ClimateSemanticOutput.cpp
 )
 forbidden='(#include[[:space:]]*[<"]driver/(gpio|i2c|ledc|spi)|#include[[:space:]]*[<"].*(nimble|esp_bt|mqtt|modbus)|SCD4[01]|DS3231|PCF8563|Shelly)'
 if grep -Ein "$forbidden" "${neutral_files[@]}"; then

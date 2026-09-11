@@ -1,7 +1,7 @@
 #include "climate/ClimateV6RealInputRuntime.h"
 
-#include "climate/ClimateApplication.h"
-#include "climate/ClimateCompositeInput.h"
+#include "climate/application/ClimateApplication.h"
+#include "climate/application/ClimateCompositeInput.h"
 #include "climate/native/BleClimateScanner.h"
 #include "climate/native/Ds3231ClockSource.h"
 #include "climate/native/NativeI2cBus.h"

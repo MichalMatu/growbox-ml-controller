@@ -1,4 +1,4 @@
-#include "climate/ClimateCompositeInput.h"
+#include "climate/application/ClimateCompositeInput.h"
 
 namespace growbox::app::climate_io {
 

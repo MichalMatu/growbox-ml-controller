@@ -1,5 +1,5 @@
-#include "climate/ClimateSemanticOutput.h"
 #include "climate/Stage28dOutputBindings.h"
+#include "climate/application/ClimateSemanticOutput.h"
 #include "climate/rf433/ClimateRf433EndpointRegistry.h"
 
 #include <cassert>

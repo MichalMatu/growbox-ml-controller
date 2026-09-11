@@ -1,6 +1,6 @@
 #pragma once
 
-#include "climate/ClimateSemanticOutput.h"
+#include "climate/application/ClimateSemanticOutput.h"
 #include "climate/rf433/Rf433HardwareConfig.h"
 
 namespace growbox::app::climate_io::rf433 {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "climate/ClimateIoAdapters.h"
+#include "climate/application/ClimateIoAdapters.h"
 
 #include <cstdint>
 #include <optional>

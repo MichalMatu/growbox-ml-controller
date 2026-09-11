@@ -46,7 +46,7 @@ HOST_CXX="${CXX:-c++}"
   test/test_stage28d_rf_output_endpoint/test_main.cpp \
   src/climate/Stage28dRfOutputEndpoint.cpp \
   src/climate/Stage28dOutputBindings.cpp \
-  src/climate/ClimateSemanticOutput.cpp \
+  src/climate/application/ClimateSemanticOutput.cpp \
   src/climate/output/OutputPolicyConfig.cpp \
   src/climate/output/OutputStateStore.cpp \
   src/climate/rf433/ClimateRf433EndpointRegistry.cpp \

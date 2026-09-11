@@ -81,7 +81,7 @@ target_compile_options(climate_virtual_hil_tests PRIVATE -Wall -Wextra -Wpedanti
 add_executable(
   climate_io_adapter_tests
   "${PROJECT_ROOT}/test/test_climate_io_adapters/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/ClimateIoAdapters.cpp"
+  "${PROJECT_ROOT}/src/climate/application/ClimateIoAdapters.cpp"
 )
 target_include_directories(
   climate_io_adapter_tests
@@ -95,8 +95,8 @@ target_compile_options(climate_io_adapter_tests PRIVATE -Wall -Wextra -Wpedantic
 add_executable(
   climate_application_composition_tests
   "${PROJECT_ROOT}/test/test_climate_application_composition/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/ClimateApplication.cpp"
-  "${PROJECT_ROOT}/src/climate/ClimateIoAdapters.cpp"
+  "${PROJECT_ROOT}/src/climate/application/ClimateApplication.cpp"
+  "${PROJECT_ROOT}/src/climate/application/ClimateIoAdapters.cpp"
   "${PROJECT_ROOT}/lib/environment_control/src/climate/ClimateControlLoop.cpp"
   "${PROJECT_ROOT}/lib/environment_control/src/climate/ClimateFeatureEncoder.cpp"
   "${PROJECT_ROOT}/lib/environment_control/src/climate/ClimateRuntimeController.cpp"
@@ -114,8 +114,8 @@ target_compile_options(climate_application_composition_tests PRIVATE -Wall -Wext
 add_executable(
   climate_deterministic_fake_runtime_tests
   "${PROJECT_ROOT}/test/test_climate_deterministic_fake_runtime/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/ClimateApplication.cpp"
-  "${PROJECT_ROOT}/src/climate/ClimateIoAdapters.cpp"
+  "${PROJECT_ROOT}/src/climate/application/ClimateApplication.cpp"
+  "${PROJECT_ROOT}/src/climate/application/ClimateIoAdapters.cpp"
   "${PROJECT_ROOT}/src/climate/ClimateDeterministicFake.cpp"
   "${PROJECT_ROOT}/lib/environment_control/src/climate/ClimateControlLoop.cpp"
   "${PROJECT_ROOT}/lib/environment_control/src/climate/ClimateFeatureEncoder.cpp"
@@ -148,8 +148,8 @@ target_compile_options(climate_diagnostics_tests PRIVATE -Wall -Wextra -Wpedanti
 add_executable(
   climate_fault_soak_tests
   "${PROJECT_ROOT}/test/test_climate_fault_soak/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/ClimateApplication.cpp"
-  "${PROJECT_ROOT}/src/climate/ClimateIoAdapters.cpp"
+  "${PROJECT_ROOT}/src/climate/application/ClimateApplication.cpp"
+  "${PROJECT_ROOT}/src/climate/application/ClimateIoAdapters.cpp"
   "${PROJECT_ROOT}/lib/environment_control/src/climate/ClimateControlLoop.cpp"
   "${PROJECT_ROOT}/lib/environment_control/src/climate/ClimateFeatureEncoder.cpp"
   "${PROJECT_ROOT}/lib/environment_control/src/climate/ClimateRuntimeController.cpp"
@@ -167,9 +167,9 @@ target_compile_options(climate_fault_soak_tests PRIVATE -Wall -Wextra -Wpedantic
 add_executable(
   climate_composite_input_tests
   "${PROJECT_ROOT}/test/test_climate_composite_input/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/ClimateCompositeInput.cpp"
-  "${PROJECT_ROOT}/src/climate/ClimateApplication.cpp"
-  "${PROJECT_ROOT}/src/climate/ClimateIoAdapters.cpp"
+  "${PROJECT_ROOT}/src/climate/application/ClimateCompositeInput.cpp"
+  "${PROJECT_ROOT}/src/climate/application/ClimateApplication.cpp"
+  "${PROJECT_ROOT}/src/climate/application/ClimateIoAdapters.cpp"
   "${PROJECT_ROOT}/lib/environment_control/src/climate/ClimateControlLoop.cpp"
   "${PROJECT_ROOT}/lib/environment_control/src/climate/ClimateFeatureEncoder.cpp"
   "${PROJECT_ROOT}/lib/environment_control/src/climate/ClimateRuntimeController.cpp"
@@ -255,7 +255,7 @@ add_executable(
   "${PROJECT_ROOT}/src/climate/output/OutputSupervisorResolver.cpp"
   "${PROJECT_ROOT}/src/climate/output/BinaryActuatorPolicy.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputStateStore.cpp"
-  "${PROJECT_ROOT}/src/climate/ClimateSemanticOutput.cpp"
+  "${PROJECT_ROOT}/src/climate/application/ClimateSemanticOutput.cpp"
 )
 target_include_directories(
   climate_output_supervisor_sink_tests
@@ -404,8 +404,8 @@ target_compile_options(output_maintenance_control_tests PRIVATE -Wall -Wextra -W
 add_executable(
   climate_semantic_output_tests
   "${PROJECT_ROOT}/test/test_climate_semantic_output/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/ClimateIoAdapters.cpp"
-  "${PROJECT_ROOT}/src/climate/ClimateSemanticOutput.cpp"
+  "${PROJECT_ROOT}/src/climate/application/ClimateIoAdapters.cpp"
+  "${PROJECT_ROOT}/src/climate/application/ClimateSemanticOutput.cpp"
   "${PROJECT_ROOT}/src/climate/rf433/ClimateRf433EndpointRegistry.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputPolicyConfig.cpp"
   "${PROJECT_ROOT}/src/climate/Stage28dOutputBindings.cpp"

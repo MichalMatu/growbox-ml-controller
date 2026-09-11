@@ -1,6 +1,6 @@
 #pragma once
 
-#include "climate/ClimateSemanticOutput.h"
+#include "climate/application/ClimateSemanticOutput.h"
 #include "climate/output/BinaryActuatorPolicy.h"
 #include "climate/output/OutputPolicyConfig.h"
 #include "climate/rf433/ClimateRf433EndpointRegistry.h"

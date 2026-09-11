@@ -45,10 +45,10 @@ SOURCES=(
   lib/environment_control/src/ModelRuntime.cpp
   lib/environment_control/src/climate/ClimateFeatureEncoder.cpp
   lib/environment_control/src/climate/ClimateTrendEstimator.cpp
-  src/climate/ClimateIoAdapters.cpp
-  src/climate/ClimateApplication.cpp
-  src/climate/ClimateCompositeInput.cpp
-  src/climate/ClimateSemanticOutput.cpp
+  src/climate/application/ClimateIoAdapters.cpp
+  src/climate/application/ClimateApplication.cpp
+  src/climate/application/ClimateCompositeInput.cpp
+  src/climate/application/ClimateSemanticOutput.cpp
   src/climate/ClimateDiagnostics.cpp
   src/climate/ClimateDeterministicFake.cpp
   src/climate/runtime/RuntimeCycleState.cpp

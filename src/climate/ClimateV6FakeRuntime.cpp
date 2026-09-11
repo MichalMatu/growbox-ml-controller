@@ -1,8 +1,8 @@
 #include "climate/ClimateV6FakeRuntime.h"
 
-#include "climate/ClimateApplication.h"
 #include "climate/ClimateDeterministicFake.h"
 #include "climate/ClimateDiagnostics.h"
+#include "climate/application/ClimateApplication.h"
 #include "demo/protocol/JsonLineWriter.h"
 
 #include <cJSON.h>

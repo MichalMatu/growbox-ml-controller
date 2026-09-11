@@ -1,6 +1,6 @@
 #pragma once
 
-#include "climate/ClimateCompositeInput.h"
+#include "climate/application/ClimateCompositeInput.h"
 #include "climate/native/BthomeV2Decoder.h"
 
 #include <freertos/FreeRTOS.h>

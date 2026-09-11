@@ -1,5 +1,5 @@
-#include "climate/ClimateApplication.h"
 #include "climate/ClimateDeterministicFake.h"
+#include "climate/application/ClimateApplication.h"
 
 #include <array>
 #include <cassert>

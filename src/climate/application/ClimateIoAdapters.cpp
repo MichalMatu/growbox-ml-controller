@@ -1,4 +1,4 @@
-#include "climate/ClimateIoAdapters.h"
+#include "climate/application/ClimateIoAdapters.h"
 
 namespace growbox::app::climate_io {
 namespace {
