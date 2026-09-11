@@ -143,26 +143,14 @@ constexpr std::uint64_t kTickIntervalMs = 1'000U;
                             execution_status.output_ready ? "real-bounded" : "fake-locked");
 
   runtime::RealInputRuntimeServices services{
-      ble,
-      clock,
-      control_owner.lampSafety(),
+      {ble, clock},
       application,
-      execution_status,
-      output_owner.transport(),
-      output_owner.lifecycle(),
-      output_owner.lifecycleExecutor(),
-      output_owner.runtimeLifecycle(),
-      output_owner.automationControl(),
-      output_owner.manualControl(),
-      output_owner.maintenanceControl(),
-      output_owner.supervisorSink(),
-      persistence_owner.persistence(),
-      persistence_owner.stateStore(),
-      service_console,
-      rf_diagnostics,
-      telemetry_reporter,
-      runtime_timing,
-      output_bindings_valid,
+      {control_owner.lampSafety(), execution_status, output_owner.transport(),
+       output_owner.lifecycle(), output_owner.lifecycleExecutor(), output_owner.runtimeLifecycle(),
+       output_owner.automationControl(), output_owner.manualControl(),
+       output_owner.maintenanceControl(), output_owner.supervisorSink(),
+       persistence_owner.persistence(), persistence_owner.stateStore(), output_bindings_valid},
+      {service_console, rf_diagnostics, telemetry_reporter, runtime_timing},
   };
   runtime::RealInputRuntimeCoordinator coordinator(services);
 
