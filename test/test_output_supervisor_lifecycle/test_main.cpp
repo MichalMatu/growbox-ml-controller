@@ -1,4 +1,4 @@
-#include "climate/output/OutputSupervisorLifecycle.h"
+#include "climate/output/lifecycle/OutputSupervisorLifecycle.h"
 
 #include <cassert>
 

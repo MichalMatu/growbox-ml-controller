@@ -1,6 +1,6 @@
 #pragma once
 
-#include "climate/output/OutputLifecycleExecutor.h"
+#include "climate/output/lifecycle/OutputLifecycleExecutor.h"
 
 #include <cstdint>
 

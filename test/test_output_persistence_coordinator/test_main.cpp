@@ -1,5 +1,5 @@
-#include "climate/output/OutputLifecycleExecutor.h"
-#include "climate/output/OutputSupervisorLifecycle.h"
+#include "climate/output/lifecycle/OutputLifecycleExecutor.h"
+#include "climate/output/lifecycle/OutputSupervisorLifecycle.h"
 #include "climate/output/persistence/OutputPersistenceCoordinator.h"
 
 #include <array>

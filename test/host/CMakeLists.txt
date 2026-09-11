@@ -303,8 +303,8 @@ add_executable(
   "${PROJECT_ROOT}/src/climate/output/persistence/OutputPersistenceSchema.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputPolicyConfig.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputStateStore.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputLifecycleExecutor.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputSupervisorLifecycle.cpp"
+  "${PROJECT_ROOT}/src/climate/output/lifecycle/OutputLifecycleExecutor.cpp"
+  "${PROJECT_ROOT}/src/climate/output/lifecycle/OutputSupervisorLifecycle.cpp"
   "${PROJECT_ROOT}/src/climate/output/BinaryActuatorPolicy.cpp"
 )
 target_include_directories(output_persistence_coordinator_tests PRIVATE "${PROJECT_ROOT}/src")
@@ -325,7 +325,7 @@ target_compile_options(output_persistence_store_tests PRIVATE -Wall -Wextra -Wpe
 add_executable(
   output_supervisor_lifecycle_tests
   "${PROJECT_ROOT}/test/test_output_supervisor_lifecycle/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputSupervisorLifecycle.cpp"
+  "${PROJECT_ROOT}/src/climate/output/lifecycle/OutputSupervisorLifecycle.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputPolicyConfig.cpp"
 )
 target_include_directories(output_supervisor_lifecycle_tests PRIVATE "${PROJECT_ROOT}/src")
@@ -335,8 +335,8 @@ target_compile_options(output_supervisor_lifecycle_tests PRIVATE -Wall -Wextra -
 add_executable(
   output_lifecycle_executor_tests
   "${PROJECT_ROOT}/test/test_output_lifecycle_executor/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputLifecycleExecutor.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputSupervisorLifecycle.cpp"
+  "${PROJECT_ROOT}/src/climate/output/lifecycle/OutputLifecycleExecutor.cpp"
+  "${PROJECT_ROOT}/src/climate/output/lifecycle/OutputSupervisorLifecycle.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputPolicyConfig.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputStateStore.cpp"
   "${PROJECT_ROOT}/src/climate/output/BinaryActuatorPolicy.cpp"
@@ -348,9 +348,9 @@ target_compile_options(output_lifecycle_executor_tests PRIVATE -Wall -Wextra -Wp
 add_executable(
   output_runtime_lifecycle_control_tests
   "${PROJECT_ROOT}/test/test_output_runtime_lifecycle_control/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputRuntimeLifecycleControl.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputLifecycleExecutor.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputSupervisorLifecycle.cpp"
+  "${PROJECT_ROOT}/src/climate/output/lifecycle/OutputRuntimeLifecycleControl.cpp"
+  "${PROJECT_ROOT}/src/climate/output/lifecycle/OutputLifecycleExecutor.cpp"
+  "${PROJECT_ROOT}/src/climate/output/lifecycle/OutputSupervisorLifecycle.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputSupervisorResolver.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputPolicyConfig.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputStateStore.cpp"
@@ -364,8 +364,8 @@ add_executable(
   output_automation_control_tests
   "${PROJECT_ROOT}/test/test_output_automation_control/test_main.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputAutomationControl.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputLifecycleExecutor.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputSupervisorLifecycle.cpp"
+  "${PROJECT_ROOT}/src/climate/output/lifecycle/OutputLifecycleExecutor.cpp"
+  "${PROJECT_ROOT}/src/climate/output/lifecycle/OutputSupervisorLifecycle.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputSupervisorResolver.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputPolicyConfig.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputStateStore.cpp"
@@ -379,7 +379,7 @@ add_executable(
   output_manual_control_tests
   "${PROJECT_ROOT}/test/test_output_manual_control/test_main.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputManualControl.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputSupervisorLifecycle.cpp"
+  "${PROJECT_ROOT}/src/climate/output/lifecycle/OutputSupervisorLifecycle.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputPolicyConfig.cpp"
 )
 target_include_directories(output_manual_control_tests PRIVATE "${PROJECT_ROOT}/src")
@@ -391,8 +391,8 @@ add_executable(
   "${PROJECT_ROOT}/test/test_output_maintenance_control/test_main.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputMaintenanceControl.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputAutomationControl.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputLifecycleExecutor.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputSupervisorLifecycle.cpp"
+  "${PROJECT_ROOT}/src/climate/output/lifecycle/OutputLifecycleExecutor.cpp"
+  "${PROJECT_ROOT}/src/climate/output/lifecycle/OutputSupervisorLifecycle.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputPolicyConfig.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputStateStore.cpp"
   "${PROJECT_ROOT}/src/climate/output/BinaryActuatorPolicy.cpp"

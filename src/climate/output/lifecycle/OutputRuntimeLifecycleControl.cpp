@@ -1,4 +1,4 @@
-#include "climate/output/OutputRuntimeLifecycleControl.h"
+#include "climate/output/lifecycle/OutputRuntimeLifecycleControl.h"
 
 namespace growbox::app::output {
 
