@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260911-phase2-runtime-console-dependency-audit-v1",
+  "task_digest": "99684a3665ea77957d8afc439a2a631460a620b6ef5a482a96a4cdd4d63a1d18",
+  "idle_timeout": 300,
+  "task_timeout": 900,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-11T16:20:44.759836+00:00",
+  "attempt_id": "1f72d43981c03684bd00b4cb",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 91749,
+  "updated_at": "2026-09-11T16:20:44.759959+00:00",
+  "pid": 91749
+}
