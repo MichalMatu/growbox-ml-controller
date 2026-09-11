@@ -21,6 +21,12 @@ Repository identity:
 - current MVP work branch: `mvp/environment-controller`
 - execution model: one shared bounded-parallel supervisor with short-lived repository workers; one task per repository at a time, with cross-repository overlap only when resource admission permits it; `agent_multirepo.py` remains the serial fallback and enforces the same binding contract
 
+### Hardware / network constants
+
+- Canonical Shelly IP for this Growbox repository: `192.168.0.16`.
+- Use `http://192.168.0.16/rpc/Switch.GetStatus?id=0` for Shelly switch/power status (`output`, `apower`).
+- Treat `192.168.0.16` as authoritative unless the operator explicitly changes it. Do not guess, substitute, or network-scan for a different Shelly address when this device is intended.
+
 ### New chat bootstrap
 
 When starting work on this repository in a new chat/session:
