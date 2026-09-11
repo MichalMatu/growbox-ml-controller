@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260911-phase0-precommit-fix-v1",
+  "task_digest": "f6e655b8d9c9df72ecc057a650359a2a79c310514f87a803736ff48b5db33a86",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-11T15:13:02.425907+00:00",
+  "attempt_id": "ec75e374ead0c96e5c4b88be",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 15537,
+  "updated_at": "2026-09-11T15:13:02.425979+00:00",
+  "pid": 15537
+}
