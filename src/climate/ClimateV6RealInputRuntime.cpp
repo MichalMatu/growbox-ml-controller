@@ -8,12 +8,12 @@
 #include "climate/native/Scd41InsideSource.h"
 #include "climate/runtime/RuntimeBuildConfig.h"
 #include "climate/runtime/Stage27RuntimeAdapters.h"
-#include "climate/runtime/Stage27TelemetryReporter.h"
 #include "climate/runtime/console/Stage28ServiceConsole.h"
 #include "climate/runtime/core/RealInputRuntimeComposition.h"
 #include "climate/runtime/core/RealInputRuntimeCoordinator.h"
 #include "climate/runtime/diagnostics/Stage28eLog.h"
 #include "climate/runtime/diagnostics/Stage28ePlatformDiagnostics.h"
+#include "climate/runtime/telemetry/Stage27TelemetryReporter.h"
 
 #include <esp_err.h>
 #include <esp_log.h>

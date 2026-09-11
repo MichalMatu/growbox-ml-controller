@@ -1,4 +1,4 @@
-#include "climate/runtime/Stage27TelemetryReporter.h"
+#include "climate/runtime/telemetry/Stage27TelemetryReporter.h"
 
 #include "climate/runtime/RuntimeBuildConfig.h"
 

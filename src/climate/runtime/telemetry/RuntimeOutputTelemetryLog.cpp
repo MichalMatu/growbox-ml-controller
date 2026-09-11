@@ -1,4 +1,4 @@
-#include "climate/runtime/RuntimeOutputTelemetryLog.h"
+#include "climate/runtime/telemetry/RuntimeOutputTelemetryLog.h"
 
 #include <esp_log.h>
 
