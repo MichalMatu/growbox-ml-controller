@@ -1,0 +1,116 @@
+{
+  "id": "20260911-phase2-runtime-remaining-classification-audit-v1",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "started_at": "2026-09-11T16:58:21.930626+00:00",
+  "command_timeout": 300,
+  "edits": {},
+  "commands": [
+    {
+      "command": "git fetch -q origin main && git reset --hard origin/main && test \"$(git rev-parse HEAD)\" = \"a257519f7756c31ad13cacc23b6477336de6df92\" && test -z \"$(git status --porcelain)\" && echo RUNTIME_REMAINING_AUDIT_BASE_PASS sha=$(git rev-parse HEAD)",
+      "exit_code": 0,
+      "output": "HEAD is now at a257519f Group runtime diagnostics\nRUNTIME_REMAINING_AUDIT_BASE_PASS sha=a257519f7756c31ad13cacc23b6477336de6df92\n",
+      "elapsed_seconds": 1.064,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 2048,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 3.0,
+      "output_policy": "stream",
+      "captured_output_chars": 129,
+      "output_truncated": false,
+      "current_rss_mb": 3.0,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "for name in EuropeWarsawTime RuntimeBuildConfig RuntimeOutputTelemetryLog Stage27RuntimeAdapters Stage27ScheduleIntentAdapter Stage27ScheduleProfile Stage27TelemetryReporter Stage28MaintenanceRfTransport; do echo =====$name=====; grep -RIn --exclude-dir=.git --binary-files=without-match \"$name\" src test tests scripts tools .github CMakeLists.txt 2>/dev/null || true; done",
+      "exit_code": 0,
+      "output": "=====EuropeWarsawTime=====\nsrc/CMakeLists.txt:106:      \"climate/runtime/EuropeWarsawTime.cpp\"\nsrc/climate/runtime/EuropeWarsawTime.cpp:1:#include \"climate/runtime/EuropeWarsawTime.h\"\nsrc/climate/runtime/Stage27ScheduleProfile.cpp:3:#include \"climate/runtime/EuropeWarsawTime.h\"\nsrc/climate/runtime/console/Stage28ServiceConsoleSystemCommands.cpp:7:#include \"climate/runtime/EuropeWarsawTime.h\"\ntest/test_europe_warsaw_time/test_main.cpp:1:#include \"climate/runtime/EuropeWarsawTime.h\"\ntest/host/CMakeLists.txt:468:  \"${PROJECT_ROOT}/src/climate/runtime/EuropeWarsawTime.cpp\"\ntest/host/CMakeLists.txt:478:  \"${PROJECT_ROOT}/src/climate/runtime/EuropeWarsawTime.cpp\"\ntest/host/CMakeLists.txt:494:  \"${PROJECT_ROOT}/src/climate/runtime/EuropeWarsawTime.cpp\"\ntest/host/CMakeLists.txt:510:  \"${PROJECT_ROOT}/src/climate/runtime/EuropeWarsawTime.cpp\"\n=====RuntimeBuildConfig=====\nsrc/demo/protocol/DiagnosticsWireCodec.cpp:3:#include \"climate/runtime/RuntimeBuildConfig.h\"\nsrc/CMakeLists.txt:149:  \"${CMAKE_CURRENT_LIST_DIR}/climate/runtime/RuntimeBuildConfig.h.in\"\nsrc/CMakeLists.txt:150:  \"${GROWBOX_GENERATED_INCLUDE_DIR}/climate/runtime/RuntimeBuildConfig.h\"\nsrc/CMakeLists.txt:156:# available exclusively through the generated RuntimeBuildConfig.h typed interface.\nsrc/legacy/LegacyRuntime.cpp:3:#include \"climate/runtime/RuntimeBuildConfig.h\"\nsrc/climate/runtime/core/RealInputRuntimeComposition.cpp:4:#include \"climate/runtime/RuntimeBuildConfig.h\"\nsrc/climate/runtime/Stage27TelemetryReporter.cpp:3:#include \"climate/runtime/RuntimeBuildConfig.h\"\nsrc/climate/ClimateV6RealInputRuntime.cpp:9:#include \"climate/runtime/RuntimeBuildConfig.h\"\nsrc/main.cpp:8:#include \"climate/runtime/RuntimeBuildConfig.h\"\nscripts/check_runtime_boundaries.py:41:    '\"climate/runtime/RuntimeBuildConfig.h\"',\nscripts/check_runtime_config_ssot.py:13:BUILD_CONFIG = ROOT / \"src/climate/runtime/RuntimeBuildConfig.h.in\"\nscripts/check_runtime_config_ssot.py:70:                        f\"{token}; use RuntimeBuildConfig instead\"\nscripts/check_runtime_config_ssot.py:73:if '\"climate/runtime/RuntimeBuildConfig.h\"' not in runtime_text:\nscripts/check_runtime_config_ssot.py:74:    fail(\"real-input runtime does not consume the generated RuntimeBuildConfig\")\nscripts/check_runtime_config_ssot.py:77:        fail(f\"generated RuntimeBuildConfig is missing {token}\")\nscripts/check_runtime_config_ssot.py:81:if \"RuntimeBuildConfig.h.in\" not in cmake_text or \"configure_file\" not in cmake_text:\nscripts/check_runtime_config_ssot.py:82:    fail(\"src/CMakeLists.txt does not generate RuntimeBuildConfig.h\")\n=====RuntimeOutputTelemetryLog=====\nsrc/CMakeLists.txt:104:      \"climate/runtime/RuntimeOutputTelemetryLog.cpp\"\nsrc/climate/runtime/core/RealInputRuntimeCoordinator.cpp:5:#include \"climate/runtime/RuntimeOutputTelemetryLog.h\"\nsrc/climate/runtime/RuntimeOutputTelemetryLog.cpp:1:#include \"climate/runtime/RuntimeOutputTelemetryLog.h\"\n=====Stage27RuntimeAdapters=====\nsrc/CMakeLists.txt:109:      \"climate/runtime/Stage27RuntimeAdapters.cpp\"\nsrc/climate/runtime/core/RealInputRuntimeComposition.h:22:#include \"climate/runtime/Stage27RuntimeAdapters.h\"\nsrc/climate/runtime/Stage27RuntimeAdapters.cpp:1:#include \"climate/runtime/Stage27RuntimeAdapters.h\"\nsrc/climate/ClimateV6RealInputRuntime.cpp:10:#include \"climate/runtime/Stage27RuntimeAdapters.h\"\nscripts/check_runtime_boundaries.py:22:runtime_adapters = (root / \"src/climate/runtime/Stage27RuntimeAdapters.h\").read_text(\n=====Stage27ScheduleIntentAdapter=====\nsrc/CMakeLists.txt:108:      \"climate/runtime/Stage27ScheduleIntentAdapter.cpp\"\nsrc/climate/runtime/core/RealInputRuntimeCoordinator.cpp:6:#include \"climate/runtime/Stage27ScheduleIntentAdapter.h\"\nsrc/climate/runtime/Stage27ScheduleIntentAdapter.cpp:1:#include \"climate/runtime/Stage27ScheduleIntentAdapter.h\"\ntest/host/CMakeLists.txt:492:  \"${PROJECT_ROOT}/src/climate/runtime/Stage27ScheduleIntentAdapter.cpp\"\ntest/host/CMakeLists.txt:508:  \"${PROJECT_ROOT}/src/climate/runtime/Stage27ScheduleIntentAdapter.cpp\"\ntest/test_stage28d_output_intent_parity/test_main.cpp:4:#include \"climate/runtime/Stage27ScheduleIntentAdapter.h\"\ntest/test_stage27_schedule_intent/test_main.cpp:3:#include \"climate/runtime/Stage27ScheduleIntentAdapter.h\"\n=====Stage27ScheduleProfile=====\nsrc/CMakeLists.txt:107:      \"climate/runtime/Stage27ScheduleProfile.cpp\"\nsrc/climate/runtime/Stage27ScheduleProfile.cpp:1:#include \"climate/runtime/Stage27ScheduleProfile.h\"\nsrc/climate/runtime/Stage27RuntimeAdapters.cpp:3:#include \"climate/runtime/Stage27ScheduleProfile.h\"\nsrc/climate/runtime/Stage27ScheduleIntentAdapter.cpp:4:#include \"climate/runtime/Stage27ScheduleProfile.h\"\ntest/host/CMakeLists.txt:477:  \"${PROJECT_ROOT}/src/climate/runtime/Stage27ScheduleProfile.cpp\"\ntest/host/CMakeLists.txt:493:  \"${PROJECT_ROOT}/src/climate/runtime/Stage27ScheduleProfile.cpp\"\ntest/host/CMakeLists.txt:509:  \"${PROJECT_ROOT}/src/climate/runtime/Stage27ScheduleProfile.cpp\"\ntest/test_stage27_schedule_profile/test_main.cpp:1:#include \"climate/runtime/Stage27ScheduleProfile.h\"\ntest/test_stage27_schedule_intent/test_main.cpp:4:#include \"climate/runtime/Stage27ScheduleProfile.h\"\n=====Stage27TelemetryReporter=====\nsrc/CMakeLists.txt:110:      \"climate/runtime/Stage27TelemetryReporter.cpp\"\nsrc/climate/runtime/core/RealInputRuntimeCoordinator.h:16:#include \"climate/runtime/Stage27TelemetryReporter.h\"\nsrc/climate/runtime/core/RealInputRuntimeCoordinator.h:51:  Stage27TelemetryReporter& telemetry_reporter;\nsrc/climate/runtime/Stage27TelemetryReporter.cpp:1:#include \"climate/runtime/Stage27TelemetryReporter.h\"\nsrc/climate/runtime/Stage27TelemetryReporter.cpp:25:Stage27TelemetryReporter::Stage27TelemetryReporter(native::BleClimateScanner& ble,\nsrc/climate/runtime/Stage27TelemetryReporter.cpp:34:void Stage27TelemetryReporter::record(\nsrc/climate/runtime/Stage27TelemetryReporter.cpp:160:void Stage27TelemetryReporter::logRecord(\nsrc/climate/runtime/Stage27TelemetryReporter.h:16:class Stage27TelemetryReporter final {\nsrc/climate/runtime/Stage27TelemetryReporter.h:18:  Stage27TelemetryReporter(native::BleClimateScanner& ble, native::Scd41InsideSource& scd41,\nsrc/climate/ClimateV6RealInputRuntime.cpp:11:#include \"climate/runtime/Stage27TelemetryReporter.h\"\nsrc/climate/ClimateV6RealInputRuntime.cpp:124:  runtime::Stage27TelemetryReporter telemetry_reporter(ble, scd41, clock, storage_logger,\n=====Stage28MaintenanceRfTransport=====\nsrc/CMakeLists.txt:112:      \"climate/runtime/Stage28MaintenanceRfTransport.cpp\"\nsrc/climate/runtime/Stage28MaintenanceRfTransport.h:8:class Stage28MaintenanceRfTransport final : public ::growbox::app::output::OutputTransport {\nsrc/climate/runtime/Stage28MaintenanceRfTransport.h:10:  explicit Stage28MaintenanceRfTransport(Stage28RfDiagnostics& diagnostics) noexcept\nsrc/climate/runtime/core/RealInputRuntimeComposition.h:23:#include \"climate/runtime/Stage28MaintenanceRfTransport.h\"\nsrc/climate/runtime/core/RealInputRuntimeComposition.h:169:  Stage28MaintenanceRfTransport maintenance_rf_transport_;\nsrc/climate/runtime/Stage28MaintenanceRfTransport.cpp:1:#include \"climate/runtime/Stage28MaintenanceRfTransport.h\"\nsrc/climate/runtime/Stage28MaintenanceRfTransport.cpp:8:Stage28MaintenanceRfTransport::send(const ::growbox::app::output::OutputCommand& command) noexcept {\nscripts/check_output_rf_ownership.py:33:        \"src/climate/runtime/Stage28MaintenanceRfTransport.cpp\",\nscripts/check_output_rf_ownership.py:115:        \"src/climate/runtime/Stage28MaintenanceRfTransport.cpp\",\nscripts/check_output_rf_ownership.py:181:    maintenance = (root / \"src/climate/runtime/Stage28MaintenanceRfTransport.cpp\").read_text()\nscripts/check_output_rf_ownership.py:189:                \"src/climate/runtime/Stage28MaintenanceRfTransport.cpp: \"\n",
+      "elapsed_seconds": 0.777,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 2048,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 1.92,
+      "output_policy": "stream",
+      "captured_output_chars": 7729,
+      "output_truncated": false,
+      "current_rss_mb": 1.92,
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "echo =====RUNTIME_ROOT_FILES=====; find src/climate/runtime -maxdepth 1 -type f -print | sort; echo =====PATH_GUARDS=====; grep -RIn --binary-files=without-match 'climate/runtime/EuropeWarsawTime\\|climate/runtime/RuntimeBuildConfig\\|climate/runtime/RuntimeOutputTelemetryLog\\|climate/runtime/Stage27RuntimeAdapters\\|climate/runtime/Stage27ScheduleIntentAdapter\\|climate/runtime/Stage27ScheduleProfile\\|climate/runtime/Stage27TelemetryReporter\\|climate/runtime/Stage28MaintenanceRfTransport' src/CMakeLists.txt test/host/CMakeLists.txt scripts .github 2>/dev/null | sort || true",
+      "exit_code": 0,
+      "output": "=====RUNTIME_ROOT_FILES=====\nsrc/climate/runtime/EuropeWarsawTime.cpp\nsrc/climate/runtime/EuropeWarsawTime.h\nsrc/climate/runtime/RuntimeBuildConfig.h.in\nsrc/climate/runtime/RuntimeOutputTelemetryLog.cpp\nsrc/climate/runtime/RuntimeOutputTelemetryLog.h\nsrc/climate/runtime/Stage27RuntimeAdapters.cpp\nsrc/climate/runtime/Stage27RuntimeAdapters.h\nsrc/climate/runtime/Stage27ScheduleIntentAdapter.cpp\nsrc/climate/runtime/Stage27ScheduleIntentAdapter.h\nsrc/climate/runtime/Stage27ScheduleProfile.cpp\nsrc/climate/runtime/Stage27ScheduleProfile.h\nsrc/climate/runtime/Stage27TelemetryReporter.cpp\nsrc/climate/runtime/Stage27TelemetryReporter.h\nsrc/climate/runtime/Stage28MaintenanceRfTransport.cpp\nsrc/climate/runtime/Stage28MaintenanceRfTransport.h\n=====PATH_GUARDS=====\nscripts/check_output_rf_ownership.py:115:        \"src/climate/runtime/Stage28MaintenanceRfTransport.cpp\",\nscripts/check_output_rf_ownership.py:181:    maintenance = (root / \"src/climate/runtime/Stage28MaintenanceRfTransport.cpp\").read_text()\nscripts/check_output_rf_ownership.py:189:                \"src/climate/runtime/Stage28MaintenanceRfTransport.cpp: \"\nscripts/check_output_rf_ownership.py:33:        \"src/climate/runtime/Stage28MaintenanceRfTransport.cpp\",\nscripts/check_runtime_boundaries.py:22:runtime_adapters = (root / \"src/climate/runtime/Stage27RuntimeAdapters.h\").read_text(\nscripts/check_runtime_boundaries.py:41:    '\"climate/runtime/RuntimeBuildConfig.h\"',\nscripts/check_runtime_config_ssot.py:13:BUILD_CONFIG = ROOT / \"src/climate/runtime/RuntimeBuildConfig.h.in\"\nscripts/check_runtime_config_ssot.py:73:if '\"climate/runtime/RuntimeBuildConfig.h\"' not in runtime_text:\nsrc/CMakeLists.txt:104:      \"climate/runtime/RuntimeOutputTelemetryLog.cpp\"\nsrc/CMakeLists.txt:106:      \"climate/runtime/EuropeWarsawTime.cpp\"\nsrc/CMakeLists.txt:107:      \"climate/runtime/Stage27ScheduleProfile.cpp\"\nsrc/CMakeLists.txt:108:      \"climate/runtime/Stage27ScheduleIntentAdapter.cpp\"\nsrc/CMakeLists.txt:109:      \"climate/runtime/Stage27RuntimeAdapters.cpp\"\nsrc/CMakeLists.txt:110:      \"climate/runtime/Stage27TelemetryReporter.cpp\"\nsrc/CMakeLists.txt:112:      \"climate/runtime/Stage28MaintenanceRfTransport.cpp\"\nsrc/CMakeLists.txt:149:  \"${CMAKE_CURRENT_LIST_DIR}/climate/runtime/RuntimeBuildConfig.h.in\"\nsrc/CMakeLists.txt:150:  \"${GROWBOX_GENERATED_INCLUDE_DIR}/climate/runtime/RuntimeBuildConfig.h\"\ntest/host/CMakeLists.txt:468:  \"${PROJECT_ROOT}/src/climate/runtime/EuropeWarsawTime.cpp\"\ntest/host/CMakeLists.txt:477:  \"${PROJECT_ROOT}/src/climate/runtime/Stage27ScheduleProfile.cpp\"\ntest/host/CMakeLists.txt:478:  \"${PROJECT_ROOT}/src/climate/runtime/EuropeWarsawTime.cpp\"\ntest/host/CMakeLists.txt:492:  \"${PROJECT_ROOT}/src/climate/runtime/Stage27ScheduleIntentAdapter.cpp\"\ntest/host/CMakeLists.txt:493:  \"${PROJECT_ROOT}/src/climate/runtime/Stage27ScheduleProfile.cpp\"\ntest/host/CMakeLists.txt:494:  \"${PROJECT_ROOT}/src/climate/runtime/EuropeWarsawTime.cpp\"\ntest/host/CMakeLists.txt:508:  \"${PROJECT_ROOT}/src/climate/runtime/Stage27ScheduleIntentAdapter.cpp\"\ntest/host/CMakeLists.txt:509:  \"${PROJECT_ROOT}/src/climate/runtime/Stage27ScheduleProfile.cpp\"\ntest/host/CMakeLists.txt:510:  \"${PROJECT_ROOT}/src/climate/runtime/EuropeWarsawTime.cpp\"\n",
+      "elapsed_seconds": 0.136,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 2048,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 2.31,
+      "output_policy": "stream",
+      "captured_output_chars": 3220,
+      "output_truncated": false,
+      "current_rss_mb": 2.31,
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 1.064
+    },
+    {
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.777
+    },
+    {
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.136
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.093
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.073
+  },
+  "finished_at": "2026-09-11T16:58:25.818192+00:00",
+  "task_digest": "5e0182683defb1a39f1181e51ff1ff2280d148708fe6c51a6d3ff92f6d890f4e",
+  "idle_timeout": 300,
+  "task_timeout": 900,
+  "memory_limit_mb": 2048,
+  "attempt_id": "5ec67de6e68aaaea933dcf1c",
+  "daemon_version": "4.18.20"
+}
