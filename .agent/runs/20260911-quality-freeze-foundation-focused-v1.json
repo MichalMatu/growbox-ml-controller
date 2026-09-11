@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260911-quality-freeze-foundation-focused-v1",
+  "task_digest": "bc06fcd3d844d12e0ff61f9ad0b3989df7b44ab417b1971c556246e54b2acf1d",
+  "idle_timeout": 600,
+  "task_timeout": 7200,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-11T03:40:30.811861+00:00",
+  "attempt_id": "3ef9817190106c6424fbcabc",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 29737,
+  "updated_at": "2026-09-11T03:40:30.812000+00:00",
+  "pid": 29737
+}
