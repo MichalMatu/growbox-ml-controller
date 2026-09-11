@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260911-phase2-output-control-dependency-audit-v1",
+  "task_digest": "0029240e8a9e2a0458338461a550f31a58688bf30025d9d6e196542fb2958f3a",
+  "idle_timeout": 180,
+  "task_timeout": 600,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-11T18:09:37.696256+00:00",
+  "attempt_id": "a47c7f16c5987fe763960bf5",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 94952,
+  "updated_at": "2026-09-11T18:09:37.696321+00:00",
+  "pid": 94952
+}
