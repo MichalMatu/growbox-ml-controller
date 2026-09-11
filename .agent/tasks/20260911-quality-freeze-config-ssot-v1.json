@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "id": "20260911-quality-freeze-config-ssot-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "refactor/quality-freeze-final",
+  "resources": [],
+  "allow_write": true,
+  "command_timeout": 7200,
+  "idle_timeout": 900,
+  "task_timeout": 12000,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch -q origin refactor/quality-freeze-final && git reset --hard FETCH_HEAD && test \"$(git rev-parse HEAD)\" = \"74e6daeb2de58bffe389a9ac2c42ee9f0dd12429\" && test -z \"$(git status --porcelain)\" && echo QF1_BASE_PASS sha=$(git rev-parse HEAD) hardware_started=0",
+    "python3 tools/refactor_qf1_config_ssot.py && rm tools/refactor_qf1_config_ssot.py && python3 scripts/check_runtime_config_ssot.py && bash -n scripts/stage27c_crowpanel.sh scripts/quality_gate_push.sh && git diff --check",
+    ".venv/bin/pre-commit run --files src/CMakeLists.txt src/climate/ClimateV6RealInputRuntime.cpp scripts/stage27c_crowpanel.sh scripts/quality_gate_push.sh scripts/check_runtime_config_ssot.py config/runtime/GrowboxRuntimeConfig.cmake config/boards/esp32s3-devkitc1-n16r8.cmake config/boards/crowpanel-esp32s3-2_9-n8r8.cmake config/runtime/profiles/generic.cmake config/runtime/profiles/stage27c-crowpanel.cmake src/climate/runtime/RuntimeBuildConfig.h.in && STAGE27C_BUILD_DIR=build/qf1-crowpanel bash scripts/stage27c_crowpanel.sh build && git diff --check && git add -A && git commit -m \"Centralize runtime build configuration\" && git push origin HEAD:refactor/quality-freeze-final && echo QF1_CONFIG_SSOT_PASS sha=$(git rev-parse HEAD) hardware_started=0"
+  ]
+}
