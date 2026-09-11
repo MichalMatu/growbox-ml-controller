@@ -33,11 +33,13 @@ void RealInputRuntimeCoordinator::tick(std::uint64_t loop_started_us) noexcept {
   stage28d::LampSafetyDecision lamp_decision{};
 
   const std::uint64_t control_started_us = static_cast<std::uint64_t>(esp_timer_get_time());
-  const bool real_transport_active_this_cycle = services_.outputs.execution_status.transport_available;
+  const bool real_transport_active_this_cycle =
+      services_.outputs.execution_status.transport_available;
 
   ClimateWallClockSnapshot rtc_snapshot{};
   native::BleClimateReading tp357{};
-  const bool rtc_sampled = services_.inputs.clock.sample(now_ms, rtc_snapshot) && rtc_snapshot.valid;
+  const bool rtc_sampled =
+      services_.inputs.clock.sample(now_ms, rtc_snapshot) && rtc_snapshot.valid;
   const bool tp357_sampled = services_.inputs.ble.sampleTp357(now_ms, tp357);
 
   output::ScheduleIntent schedule_intent{};
@@ -147,8 +149,8 @@ void RealInputRuntimeCoordinator::tick(std::uint64_t loop_started_us) noexcept {
                static_cast<unsigned>(persistence_status));
     }
   }
-  services_.support.timing.control_cycle.observe(
-      static_cast<std::uint64_t>(esp_timer_get_time()) - control_started_us);
+  services_.support.timing.control_cycle.observe(static_cast<std::uint64_t>(esp_timer_get_time()) -
+                                                 control_started_us);
 
   if (cycle_state_.telemetryDue()) {
     const std::uint64_t telemetry_started_us = static_cast<std::uint64_t>(esp_timer_get_time());
@@ -177,8 +179,8 @@ void RealInputRuntimeCoordinator::tick(std::uint64_t loop_started_us) noexcept {
     logOutputExecutionTelemetry(output_telemetry, services_.outputs.transport.transmitCount(),
                                 services_.outputs.transport.transmitErrorCount());
 
-    services_.support.timing.telemetry.observe(
-        static_cast<std::uint64_t>(esp_timer_get_time()) - telemetry_started_us);
+    services_.support.timing.telemetry.observe(static_cast<std::uint64_t>(esp_timer_get_time()) -
+                                               telemetry_started_us);
   }
 
   services_.support.timing.loop_active.observe(static_cast<std::uint64_t>(esp_timer_get_time()) -

@@ -15,7 +15,8 @@ void check(bool condition, const char* message) {
 
 class FakeTransport final : public growbox::app::output::OutputTransport {
 public:
-  growbox::app::output::TxResult send(const growbox::app::output::OutputCommand&) noexcept override {
+  growbox::app::output::TxResult
+  send(const growbox::app::output::OutputCommand&) noexcept override {
     ++calls;
     return result;
   }

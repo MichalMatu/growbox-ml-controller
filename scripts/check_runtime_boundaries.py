@@ -4,7 +4,9 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
 bootstrap = (root / "src/climate/ClimateV6RealInputRuntime.cpp").read_text(encoding="utf-8")
-coordinator = (root / "src/climate/runtime/RealInputRuntimeCoordinator.cpp").read_text(encoding="utf-8")
+coordinator = (root / "src/climate/runtime/RealInputRuntimeCoordinator.cpp").read_text(
+    encoding="utf-8"
+)
 coordinator_header = (root / "src/climate/runtime/RealInputRuntimeCoordinator.h").read_text(
     encoding="utf-8"
 )
