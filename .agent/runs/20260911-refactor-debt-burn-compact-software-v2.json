@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 4,
+  "index": 5,
   "total": 5,
-  "command": "rm -rf build/refactor-compact-host && cmake -S test/host -B build/refactor-compact-host && cmake --build build/refactor-compact-host --parallel 2 && ctest --test-dir build/refactor-compact-host --output-on-failure && echo REFACTOR_HOST_PASS sha=$(git rev-parse HEAD) hardware_started=0",
-  "pid": 95562,
+  "command": "rm -rf build/idf-refactor-compact-crowpanel && GROWBOX_FIRMWARE_GIT_SHA=1a599a58eb57841206ab92c7a5cacf50f7463f78 STAGE27C_BUILD_DIR=build/idf-refactor-compact-crowpanel bash scripts/stage27c_crowpanel.sh build && test \"$(git rev-parse HEAD)\" = \"1a599a58eb57841206ab92c7a5cacf50f7463f78\" && test -z \"$(git status --porcelain)\" && echo REFACTOR_COMPACT_SOFTWARE_PASS sha=$(git rev-parse HEAD) hardware_started=0",
+  "pid": 99762,
   "timeout": 3600,
   "idle_timeout": 900,
   "memory_limit_mb": 4096,
-  "started_at": "2026-09-11T07:39:56.841564+00:00",
-  "stage_name": "command-4",
-  "stage_index": 4,
+  "started_at": "2026-09-11T07:41:23.859273+00:00",
+  "stage_name": "command-5",
+  "stage_index": 5,
   "stage_total": 5,
   "stage_phase": "commands",
   "task_id": "20260911-refactor-debt-burn-compact-software-v2",
@@ -18,5 +18,5 @@
   "task_digest": "f7726a239bb13882f8f97bbe0d7dc7bf9c3da3331682c348e4f7236873c05e55",
   "daemon_version": "4.18.20",
   "daemon_pid": 94573,
-  "updated_at": "2026-09-11T07:39:56.963611+00:00"
+  "updated_at": "2026-09-11T07:41:23.933722+00:00"
 }
