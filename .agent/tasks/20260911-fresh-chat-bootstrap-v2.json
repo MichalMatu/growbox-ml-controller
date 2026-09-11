@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "id": "20260911-fresh-chat-bootstrap-v2",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "mvp/environment-controller",
+  "resources": [],
+  "allow_write": true,
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch -q origin mvp/environment-controller && git reset --hard FETCH_HEAD && rm -f docs/FRESH_CHAT_BOOTSTRAP.md && test \"$(git rev-parse HEAD)\" = \"ab1ea38ad482f508c490a37e3e8a5fcf01e852c6\" && test -z \"$(git status --porcelain)\"",
+    "git fetch -q origin agent-control && git show FETCH_HEAD:.agent/scripts/20260911-fresh-chat-bootstrap-v1.py > /tmp/fresh-chat-bootstrap-v2.py && python3 /tmp/fresh-chat-bootstrap-v2.py && git diff --check && test \"$(git diff --name-only | sort | tr '\\n' ' ')\" = \"AGENTS.md docs/CONTINUATION_PLAN.md docs/CURRENT_STATUS.md \" && test \"$(git ls-files --others --exclude-standard | sort | tr '\\n' ' ')\" = \"docs/FRESH_CHAT_BOOTSTRAP.md \"",
+    "grep -Fq 'Minimal fresh-chat resume command' AGENTS.md && grep -Fq 'sprawdz w jakim miejscu jestesmy, napisz krotkie podsumowanie i kontynuujmy dalsza prace nad kodem' AGENTS.md docs/FRESH_CHAT_BOOTSTRAP.md docs/CONTINUATION_PLAN.md && grep -Fq 'Fresh-chat entrypoint: `docs/FRESH_CHAT_BOOTSTRAP.md`' docs/CURRENT_STATUS.md && git add AGENTS.md docs/CONTINUATION_PLAN.md docs/CURRENT_STATUS.md docs/FRESH_CHAT_BOOTSTRAP.md && git commit -m 'Add minimal fresh chat resume contract' && git push origin HEAD:mvp/environment-controller && echo FRESH_CHAT_BOOTSTRAP_PASS"
+  ]
+}
