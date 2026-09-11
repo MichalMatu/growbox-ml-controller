@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "id": "20260911-phase0-precommit-fix-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": true,
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch -q origin main && git reset --hard origin/main && test \"$(git rev-parse HEAD)\" = \"984e55baad1e1f6a319b28c2fab2d0309d4918cd\" && test -z \"$(git status --porcelain)\" && echo PHASE0_FIX_BASE_PASS sha=$(git rev-parse HEAD)",
+    "pre-commit run --all-files || true; changed=$(git status --short | awk '{print $2}' | sort); expected=$(printf '%s\\n' scripts/check_runtime_boundaries.py src/climate/runtime/RealInputRuntimeCoordinator.cpp test/test_runtime_output_transport/test_main.cpp | sort); test \"$changed\" = \"$expected\" || { echo UNEXPECTED_CHANGED_FILES; git status --short; exit 1; }; git diff --check; echo PHASE0_FORMAT_SCOPE_PASS; git diff -- scripts/check_runtime_boundaries.py src/climate/runtime/RealInputRuntimeCoordinator.cpp test/test_runtime_output_transport/test_main.cpp",
+    "pre-commit run --all-files && git diff --check && git add scripts/check_runtime_boundaries.py src/climate/runtime/RealInputRuntimeCoordinator.cpp test/test_runtime_output_transport/test_main.cpp && git diff --cached --quiet && { echo NO_FORMAT_CHANGES; exit 1; } || true; test -z \"$(git status --porcelain | grep '^??' || true)\"; git commit -m 'Fix formatting baseline after refactor merge' && git push origin HEAD:main && echo PHASE0_FIX_PUSH_PASS sha=$(git rev-parse HEAD)"
+  ]
+}
