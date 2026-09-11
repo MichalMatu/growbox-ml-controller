@@ -47,7 +47,7 @@ makeRuntimeSupervisorConfig(output::BinaryActuatorPolicy& exhaust_policy,
 
 output::TxResult RuntimeOutputTransport::send(const output::OutputCommand& command) noexcept {
   if (!execution_status_.transport_available) {
-    return {output::TransportStatus::Completed, output::TransportError::None};
+    return {output::TransportStatus::NotAttempted, output::TransportError::Unavailable};
   }
   const auto result = real_transport_.send(command);
   if (result.status == output::TransportStatus::Completed) {
