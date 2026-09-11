@@ -39,7 +39,12 @@ void emitCoreDumpBootDiagnostics() noexcept {
   std::size_t dump_size = 0U;
   const esp_err_t get_result = esp_core_dump_image_get(&dump_address, &dump_size);
   const bool present = get_result == ESP_OK && dump_size > 0U;
-  const esp_err_t check_result = present ? esp_core_dump_image_check() : get_result;
+  esp_err_t check_result = get_result;
+#if CONFIG_ESP_COREDUMP_ENABLE_TO_FLASH
+  if (present) {
+    check_result = esp_core_dump_image_check();
+  }
+#endif
   std::printf("stage28e_coredump present=%d valid=%d size=%lu get_err=%ld check_err=%ld\n", present,
               present && check_result == ESP_OK, static_cast<unsigned long>(dump_size),
               static_cast<long>(get_result), static_cast<long>(check_result));
