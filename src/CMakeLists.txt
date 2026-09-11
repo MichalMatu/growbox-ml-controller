@@ -36,7 +36,6 @@ idf_component_register(
     "climate/output/ClimateOutputSupervisorSink.cpp"
     "climate/Stage28dOutputBindings.cpp"
     "climate/Stage28dLampSafety.cpp"
-    "climate/Stage28dThermalTestSequence.cpp"
     "climate/runtime/Stage28eBreadcrumbs.cpp"
   INCLUDE_DIRS
     "."
