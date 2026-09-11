@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260911-qf6-growbox-fallback-audit-v1",
+  "task_digest": "16085bdba53e512baef9e9976ea2aae273e25851f75d4dae072c76c4b49c52b1",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-11T04:36:43.500749+00:00",
+  "attempt_id": "74dddb329f31bb0051919559",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 33222,
+  "updated_at": "2026-09-11T04:36:43.500901+00:00",
+  "pid": 33222
+}
