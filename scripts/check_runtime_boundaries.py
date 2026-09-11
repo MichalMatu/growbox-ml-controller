@@ -15,6 +15,9 @@ composition += (root / "src/climate/runtime/RealInputRuntimeComposition.h").read
     encoding="utf-8"
 )
 transport = (root / "src/climate/runtime/RuntimeOutputTransport.cpp").read_text(encoding="utf-8")
+runtime_adapters = (root / "src/climate/runtime/Stage27RuntimeAdapters.h").read_text(
+    encoding="utf-8"
+)
 errors = []
 
 for token in (
@@ -59,6 +62,9 @@ for token in (
     if token not in coordinator_header:
         errors.append(f"coordinator-domain-boundary-missing:{token}")
 
+if '"climate/runtime/RealInputRuntimeComposition.h"' in coordinator_header:
+    errors.append("coordinator-depends-on-composition-owner")
+
 for token in (
     "RuntimeOutputOwner::RuntimeOutputOwner",
     "OutputSupervisorResolver",
@@ -86,6 +92,15 @@ else:
     locked_body = locked_block[1].split("}", 1)[0]
     if "TransportStatus::Completed" in locked_body:
         errors.append("locked-transport-fabricates-completed")
+
+for token in (
+    "productionRuntimeConfig()",
+    "ClimatePolicyMode::Rule",
+    "allow_unqualified_ml_active = false",
+    "static_assert(productionRuntimeConfig().mode",
+):
+    if token not in runtime_adapters:
+        errors.append(f"production-rule-authority-fence-missing:{token}")
 
 if errors:
     print("RUNTIME_BOUNDARY_FAIL " + ",".join(errors), file=sys.stderr)
