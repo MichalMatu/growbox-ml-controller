@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260911-qf4-coredump-api-audit-v1",
   "task_digest": "43dd199db14855d4b7098e88ac298ab980ba915ff6263d37e94b14c942668b25",
-  "idle_timeout": 300,
-  "task_timeout": 1800,
-  "memory_limit_mb": 2048,
-  "started_at": "2026-09-11T04:16:48.779015+00:00",
+  "status": "done",
+  "failure_reason": null,
+  "finished_at": "2026-09-11T04:16:51.683312+00:00",
   "attempt_id": "4d27f186e80e686b69f9c986",
   "daemon_version": "4.18.20",
   "daemon_pid": 86760,
-  "updated_at": "2026-09-11T04:16:48.779182+00:00",
+  "updated_at": "2026-09-11T04:16:51.965436+00:00",
   "pid": 86760
 }
