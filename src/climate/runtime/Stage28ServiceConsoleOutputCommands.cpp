@@ -10,13 +10,20 @@ namespace {
 const char* supervisorModeName(::growbox::app::output::SupervisorMode mode) noexcept {
   using ::growbox::app::output::SupervisorMode;
   switch (mode) {
-  case SupervisorMode::BootLocked: return "boot-locked";
-  case SupervisorMode::Arming: return "arming";
-  case SupervisorMode::Automatic: return "automatic";
-  case SupervisorMode::Recovering: return "recovering";
-  case SupervisorMode::Disabled: return "disabled";
-  case SupervisorMode::FaultLocked: return "fault-locked";
-  case SupervisorMode::MaintenanceLocked: return "maintenance-locked";
+  case SupervisorMode::BootLocked:
+    return "boot-locked";
+  case SupervisorMode::Arming:
+    return "arming";
+  case SupervisorMode::Automatic:
+    return "automatic";
+  case SupervisorMode::Recovering:
+    return "recovering";
+  case SupervisorMode::Disabled:
+    return "disabled";
+  case SupervisorMode::FaultLocked:
+    return "fault-locked";
+  case SupervisorMode::MaintenanceLocked:
+    return "maintenance-locked";
   }
   return "unknown";
 }
@@ -32,17 +39,34 @@ const char* Stage28ServiceConsoleOutputCommands::outputModeName() const noexcept
 }
 
 bool Stage28ServiceConsoleOutputCommands::handle(const ServiceConsoleCommand& command,
-                                                  std::uint64_t now_ms) noexcept {
+                                                 std::uint64_t now_ms) noexcept {
   switch (command.kind) {
-  case ServiceConsoleCommandKind::ManualOutput: handleManualOutput(command, now_ms); return true;
-  case ServiceConsoleCommandKind::AutomationStatus: printAutomationStatus(); return true;
-  case ServiceConsoleCommandKind::AutomationEnable: handleAutomationRequest(true); return true;
-  case ServiceConsoleCommandKind::AutomationDisable: handleAutomationRequest(false); return true;
-  case ServiceConsoleCommandKind::MaintenanceStatus: printMaintenanceStatus(); return true;
-  case ServiceConsoleCommandKind::MaintenanceEnter: handleMaintenanceRequest(true); return true;
-  case ServiceConsoleCommandKind::MaintenanceExit: handleMaintenanceRequest(false); return true;
-  case ServiceConsoleCommandKind::MaintenanceRawOutput: handleMaintenanceRaw(command, now_ms); return true;
-  default: return false;
+  case ServiceConsoleCommandKind::ManualOutput:
+    handleManualOutput(command, now_ms);
+    return true;
+  case ServiceConsoleCommandKind::AutomationStatus:
+    printAutomationStatus();
+    return true;
+  case ServiceConsoleCommandKind::AutomationEnable:
+    handleAutomationRequest(true);
+    return true;
+  case ServiceConsoleCommandKind::AutomationDisable:
+    handleAutomationRequest(false);
+    return true;
+  case ServiceConsoleCommandKind::MaintenanceStatus:
+    printMaintenanceStatus();
+    return true;
+  case ServiceConsoleCommandKind::MaintenanceEnter:
+    handleMaintenanceRequest(true);
+    return true;
+  case ServiceConsoleCommandKind::MaintenanceExit:
+    handleMaintenanceRequest(false);
+    return true;
+  case ServiceConsoleCommandKind::MaintenanceRawOutput:
+    handleMaintenanceRaw(command, now_ms);
+    return true;
+  default:
+    return false;
   }
 }
 
@@ -61,9 +85,10 @@ void Stage28ServiceConsoleOutputCommands::printAutomationStatus() noexcept {
     return;
   }
   const auto& control = *config_.automation_control;
-  sink_.writeFormatted("automation mode=%s requested=%s transition_active=%d request_pending=%d\r\n",
-                 supervisorModeName(control.mode()), control.requestedEnabled() ? "on" : "off",
-                 control.transitionActive(), control.requestPending());
+  sink_.writeFormatted(
+      "automation mode=%s requested=%s transition_active=%d request_pending=%d\r\n",
+      supervisorModeName(control.mode()), control.requestedEnabled() ? "on" : "off",
+      control.transitionActive(), control.requestPending());
 }
 
 void Stage28ServiceConsoleOutputCommands::handleAutomationRequest(bool enabled) noexcept {
@@ -72,8 +97,8 @@ void Stage28ServiceConsoleOutputCommands::handleAutomationRequest(bool enabled) 
     return;
   }
   const bool accepted = config_.automation_control->requestEnabled(enabled);
-  sink_.writeFormatted("automation request=%s accepted=%d mode=%s\r\n", enabled ? "on" : "off", accepted,
-                 supervisorModeName(config_.automation_control->mode()));
+  sink_.writeFormatted("automation request=%s accepted=%d mode=%s\r\n", enabled ? "on" : "off",
+                       accepted, supervisorModeName(config_.automation_control->mode()));
 }
 
 void Stage28ServiceConsoleOutputCommands::printMaintenanceStatus() noexcept {
@@ -102,11 +127,11 @@ void Stage28ServiceConsoleOutputCommands::handleMaintenanceRequest(bool enter) n
   const bool accepted = enter ? config_.maintenance_control->requestEnter()
                               : config_.maintenance_control->requestExit();
   sink_.writeFormatted("maintenance request=%s accepted=%d mode=%s\r\n", enter ? "enter" : "exit",
-                 accepted, supervisorModeName(config_.maintenance_control->mode()));
+                       accepted, supervisorModeName(config_.maintenance_control->mode()));
 }
 
 void Stage28ServiceConsoleOutputCommands::handleMaintenanceRaw(const ServiceConsoleCommand& command,
-                                                 std::uint64_t now_ms) noexcept {
+                                                               std::uint64_t now_ms) noexcept {
   if (config_.maintenance_control == nullptr) {
     sink_.writeText("error: maintenance control unavailable\r\n");
     return;
@@ -129,14 +154,14 @@ void Stage28ServiceConsoleOutputCommands::handleMaintenanceRaw(const ServiceCons
                          : ::growbox::app::output::BinaryOutputState::Off;
   const bool accepted = config_.maintenance_control->requestRaw(role, state, now_ms);
   sink_.writeFormatted("maintenance_raw device=%s state=%s accepted=%d mode=%s queued_only=1 "
-                 "physical_state=unknown\r\n",
-                 serviceConsoleRfDeviceName(command.device),
-                 serviceConsoleRfStateName(command.state), accepted,
-                 supervisorModeName(config_.maintenance_control->mode()));
+                       "physical_state=unknown\r\n",
+                       serviceConsoleRfDeviceName(command.device),
+                       serviceConsoleRfStateName(command.state), accepted,
+                       supervisorModeName(config_.maintenance_control->mode()));
 }
 
 void Stage28ServiceConsoleOutputCommands::handleManualOutput(const ServiceConsoleCommand& command,
-                                               std::uint64_t now_ms) noexcept {
+                                                             std::uint64_t now_ms) noexcept {
   if (config_.manual_control == nullptr) {
     sink_.writeText("error: manual output control unavailable\r\n");
     return;
@@ -183,12 +208,12 @@ void Stage28ServiceConsoleOutputCommands::handleManualOutput(const ServiceConsol
   }
 
   sink_.writeFormatted("manual_output device=%s state=%s accepted=%d status=%s mode=%s endpoint=%u "
-                 "sequence=%llu outputs=%s physical_state=unconfirmed\r\n",
-                 serviceConsoleRfDeviceName(command.device),
-                 serviceConsoleRfStateName(command.state),
-                 report.status == OutputManualRequestStatus::Accepted, status,
-                 supervisorModeName(report.mode), static_cast<unsigned>(report.endpoint),
-                 static_cast<unsigned long long>(report.sequence), outputModeName());
+                       "sequence=%llu outputs=%s physical_state=unconfirmed\r\n",
+                       serviceConsoleRfDeviceName(command.device),
+                       serviceConsoleRfStateName(command.state),
+                       report.status == OutputManualRequestStatus::Accepted, status,
+                       supervisorModeName(report.mode), static_cast<unsigned>(report.endpoint),
+                       static_cast<unsigned long long>(report.sequence), outputModeName());
 }
 
 } // namespace growbox::app::climate_io::runtime

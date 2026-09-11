@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-from pathlib import Path
 import sys
+from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
 bootstrap = (root / "src/climate/ClimateV6RealInputRuntime.cpp").read_text()

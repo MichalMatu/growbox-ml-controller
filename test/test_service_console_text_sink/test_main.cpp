@@ -15,7 +15,7 @@ public:
   }
   std::string output;
 };
-}
+} // namespace
 
 int main() {
   BufferSink sink;

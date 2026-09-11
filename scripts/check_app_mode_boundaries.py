@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-from pathlib import Path
 import sys
+from pathlib import Path
+
 root = Path(__file__).resolve().parents[1]
 top = (root / "CMakeLists.txt").read_text()
 src = (root / "src/CMakeLists.txt").read_text()
@@ -17,17 +18,32 @@ for name, text in (("src", src), ("environment_control", env)):
         errors.append(f"app-mode-component-bridge-missing:{name}")
 if 'set(GROWBOX_APP_MODE "legacy" CACHE STRING' in src:
     errors.append("src-duplicates-app-mode-default")
-for token in ("EnvironmentController.h", "ModelRuntime.h", "DummyEnvironmentSimulator", "SerialJsonProtocol"):
+for token in (
+    "EnvironmentController.h",
+    "ModelRuntime.h",
+    "DummyEnvironmentSimulator",
+    "SerialJsonProtocol",
+):
     if token in main:
         errors.append(f"legacy-leak-main:{token}")
     if token not in legacy:
         errors.append(f"legacy-runtime-missing:{token}")
 base = src.split('if(GROWBOX_APP_MODE STREQUAL "legacy")', 1)[0]
-for token in ("demo/DummyEnvironmentSimulator.cpp", "demo/SerialJsonProtocol.cpp", "climate/ClimateV6FakeRuntime.cpp"):
+for token in (
+    "demo/DummyEnvironmentSimulator.cpp",
+    "demo/SerialJsonProtocol.cpp",
+    "climate/ClimateV6FakeRuntime.cpp",
+):
     if token in base:
         errors.append(f"mode-source-in-common-list:{token}")
-legacy_block, rest = env.split('elseif(', 1)
-for token in ("src/EnvironmentController.cpp", "src/EnvironmentTypes.cpp", "src/FeatureEncoder.cpp", "src/ModelRuntime.cpp", "src/SafetySupervisor.cpp"):
+legacy_block, rest = env.split("elseif(", 1)
+for token in (
+    "src/EnvironmentController.cpp",
+    "src/EnvironmentTypes.cpp",
+    "src/FeatureEncoder.cpp",
+    "src/ModelRuntime.cpp",
+    "src/SafetySupervisor.cpp",
+):
     if token not in legacy_block:
         errors.append(f"legacy-source-not-gated:{token}")
     if token in rest:

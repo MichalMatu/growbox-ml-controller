@@ -8,9 +8,9 @@
 #include <cstdio>
 #include <cstring>
 #include <dirent.h>
+#include <mbedtls/base64.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <mbedtls/base64.h>
 
 namespace growbox::app::climate_io::runtime {
 namespace {
@@ -43,11 +43,20 @@ std::uint32_t crc32(const std::uint8_t* data, std::size_t length) noexcept {
 
 bool Stage28ServiceConsoleStorageCommands::handle(const ServiceConsoleCommand& command) noexcept {
   switch (command.kind) {
-  case ServiceConsoleCommandKind::SdLogStatus: printSdLogStatus(); return true;
-  case ServiceConsoleCommandKind::SdLogList: printSdLogList(); return true;
-  case ServiceConsoleCommandKind::SdLogRead: handleSdLogRead(command); return true;
-  case ServiceConsoleCommandKind::SdLogSelfTest: handleSdLogSelfTest(); return true;
-  default: return false;
+  case ServiceConsoleCommandKind::SdLogStatus:
+    printSdLogStatus();
+    return true;
+  case ServiceConsoleCommandKind::SdLogList:
+    printSdLogList();
+    return true;
+  case ServiceConsoleCommandKind::SdLogRead:
+    handleSdLogRead(command);
+    return true;
+  case ServiceConsoleCommandKind::SdLogSelfTest:
+    handleSdLogSelfTest();
+    return true;
+  default:
+    return false;
   }
 }
 
@@ -58,16 +67,16 @@ void Stage28ServiceConsoleStorageCommands::printSdLogStatus() noexcept {
   }
   const auto status = storage_logger_->status();
   sink_.writeFormatted("sdlog_status available=1 active=%s sd_mounted=%d sd_mount_errors=%lu "
-                 "write_errors=%lu queue_drops=%lu records_written=%lu records_skipped=%lu "
-                 "sd_recoveries=%lu last_write_ms=%llu\r\n",
-                 storage::stage27StorageBackendName(status.active_backend), status.sd_mounted,
-                 static_cast<unsigned long>(status.sd_mount_errors),
-                 static_cast<unsigned long>(status.write_errors),
-                 static_cast<unsigned long>(status.queue_drops),
-                 static_cast<unsigned long>(status.records_written),
-                 static_cast<unsigned long>(status.records_skipped),
-                 static_cast<unsigned long>(status.sd_recoveries),
-                 static_cast<unsigned long long>(status.last_write_ms));
+                       "write_errors=%lu queue_drops=%lu records_written=%lu records_skipped=%lu "
+                       "sd_recoveries=%lu last_write_ms=%llu\r\n",
+                       storage::stage27StorageBackendName(status.active_backend), status.sd_mounted,
+                       static_cast<unsigned long>(status.sd_mount_errors),
+                       static_cast<unsigned long>(status.write_errors),
+                       static_cast<unsigned long>(status.queue_drops),
+                       static_cast<unsigned long>(status.records_written),
+                       static_cast<unsigned long>(status.records_skipped),
+                       static_cast<unsigned long>(status.sd_recoveries),
+                       static_cast<unsigned long long>(status.last_write_ms));
 }
 
 void Stage28ServiceConsoleStorageCommands::printSdLogList() noexcept {
@@ -93,14 +102,15 @@ void Stage28ServiceConsoleStorageCommands::printSdLogList() noexcept {
     if (::stat(path, &st) != 0)
       continue;
     sink_.writeFormatted("sdlog_file name=%s size=%llu\r\n", entry->d_name,
-                   static_cast<unsigned long long>(st.st_size));
+                         static_cast<unsigned long long>(st.st_size));
     ++count;
   }
   ::closedir(directory);
   sink_.writeFormatted("sdlog_list_end count=%lu\r\n", static_cast<unsigned long>(count));
 }
 
-void Stage28ServiceConsoleStorageCommands::handleSdLogRead(const ServiceConsoleCommand& command) noexcept {
+void Stage28ServiceConsoleStorageCommands::handleSdLogRead(
+    const ServiceConsoleCommand& command) noexcept {
   if (storage_logger_ == nullptr || !storage_logger_->status().sd_mounted) {
     sink_.writeText("sdlog_error op=read reason=sd_not_mounted\r\n");
     return;
@@ -186,8 +196,8 @@ void Stage28ServiceConsoleStorageCommands::handleSdLogSelfTest() noexcept {
   if (!durable.ok || durable.size_bytes != expected) {
     ::unlink(kSdSelfTestPath);
     sink_.writeFormatted("sdlog_selftest ok=0 reason=durability step=%s errno=%d size=%llu\r\n",
-                   storage::stage27FileDurabilityStepName(durable.failed_step),
-                   durable.error_number, static_cast<unsigned long long>(durable.size_bytes));
+                         storage::stage27FileDurabilityStepName(durable.failed_step),
+                         durable.error_number, static_cast<unsigned long long>(durable.size_bytes));
     return;
   }
   file = std::fopen(kSdSelfTestPath, "rb");
@@ -202,7 +212,8 @@ void Stage28ServiceConsoleStorageCommands::handleSdLogSelfTest() noexcept {
   const bool match = got == expected && std::memcmp(readback.data(), payload, expected) == 0;
   const int unlink_result = ::unlink(kSdSelfTestPath);
   sink_.writeFormatted("sdlog_selftest ok=%d size=%llu readback=%d cleanup=%d\r\n", match,
-                 static_cast<unsigned long long>(durable.size_bytes), match, unlink_result == 0);
+                       static_cast<unsigned long long>(durable.size_bytes), match,
+                       unlink_result == 0);
 }
 
 } // namespace growbox::app::climate_io::runtime
