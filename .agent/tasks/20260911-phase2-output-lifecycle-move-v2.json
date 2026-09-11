@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "id": "20260911-phase2-output-lifecycle-move-v2",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": true,
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch -q origin main && git reset --hard origin/main && test \"$(git rev-parse HEAD)\" = \"3a1cddebc0aa6dff304eb0e376cd62ef8002fcf8\" && test -z \"$(git status --porcelain)\"",
+    "mkdir -p src/climate/output/lifecycle && git mv src/climate/output/OutputSupervisorLifecycle.h src/climate/output/lifecycle/ && git mv src/climate/output/OutputSupervisorLifecycle.cpp src/climate/output/lifecycle/ && git mv src/climate/output/OutputLifecycleExecutor.h src/climate/output/lifecycle/ && git mv src/climate/output/OutputLifecycleExecutor.cpp src/climate/output/lifecycle/ && git mv src/climate/output/OutputRuntimeLifecycleControl.h src/climate/output/lifecycle/ && git mv src/climate/output/OutputRuntimeLifecycleControl.cpp src/climate/output/lifecycle/",
+    "grep -RIl 'climate/output/OutputSupervisorLifecycle' src test scripts | xargs sed -i '' 's#climate/output/OutputSupervisorLifecycle#climate/output/lifecycle/OutputSupervisorLifecycle#g'; grep -RIl 'climate/output/OutputLifecycleExecutor' src test scripts | xargs sed -i '' 's#climate/output/OutputLifecycleExecutor#climate/output/lifecycle/OutputLifecycleExecutor#g'; grep -RIl 'climate/output/OutputRuntimeLifecycleControl' src test scripts | xargs sed -i '' 's#climate/output/OutputRuntimeLifecycleControl#climate/output/lifecycle/OutputRuntimeLifecycleControl#g'; git diff --check",
+    "pre-commit run --all-files || true; pre-commit run --all-files && python3 scripts/check_runtime_config_ssot.py && python3 scripts/check_app_mode_boundaries.py && python3 scripts/check_runtime_boundaries.py && python3 scripts/check_service_console_boundaries.py && python3 scripts/check_output_rf_ownership.py",
+    "cmake -S test/host -B build/host-tests && cmake --build build/host-tests --target output_supervisor_lifecycle_tests output_lifecycle_executor_tests output_runtime_lifecycle_control_tests output_automation_control_tests output_manual_control_tests output_maintenance_control_tests output_persistence_coordinator_tests --parallel && ctest --test-dir build/host-tests -R 'output_(supervisor_lifecycle|lifecycle_executor|runtime_lifecycle_control|automation_control|manual_control|maintenance_control|persistence_coordinator)_tests' --output-on-failure",
+    "git diff --check && git add src test scripts && git commit -m 'Group output lifecycle components' && git push origin HEAD:main && git rev-parse HEAD"
+  ]
+}
