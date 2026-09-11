@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260911-quality-freeze-app-mode-boundaries-v3",
+  "task_digest": "eadc882dc7fca7fbdb38ad92352ac7ef06f0f33c262256205f5a8d2b37e26d57",
+  "idle_timeout": 900,
+  "task_timeout": 18000,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-11T04:11:41.252901+00:00",
+  "attempt_id": "c305fdba25f46cffb31b6f0c",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 76608,
+  "updated_at": "2026-09-11T04:11:41.253001+00:00",
+  "pid": 76608
+}
