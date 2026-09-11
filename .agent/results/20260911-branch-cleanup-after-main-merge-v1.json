@@ -1,0 +1,88 @@
+{
+  "id": "20260911-branch-cleanup-after-main-merge-v1",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": true,
+  "started_at": "2026-09-11T08:02:17.718241+00:00",
+  "command_timeout": 600,
+  "edits": {},
+  "commands": [
+    {
+      "command": "git fetch -q --prune origin main mvp/environment-controller refactor/quality-freeze-final && git reset --hard origin/main && test \"$(git rev-parse HEAD)\" = \"984e55baad1e1f6a319b28c2fab2d0309d4918cd\" && git merge-base --is-ancestor origin/mvp/environment-controller origin/main && git merge-base --is-ancestor origin/refactor/quality-freeze-final origin/main && echo BRANCH_CLEANUP_PREFLIGHT_PASS main=$(git rev-parse HEAD) mvp=$(git rev-parse origin/mvp/environment-controller) refactor=$(git rev-parse origin/refactor/quality-freeze-final)",
+      "exit_code": 0,
+      "output": "HEAD is now at 984e55ba Merge completed quality refactor and documentation cleanup\nBRANCH_CLEANUP_PREFLIGHT_PASS main=984e55baad1e1f6a319b28c2fab2d0309d4918cd mvp=fa56b345b5e555a68fc5a880779dee6f931acf66 refactor=342c84f2a3521cc31471c3870fb484bcf3ac92c7\n",
+      "elapsed_seconds": 0.962,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 2.58,
+      "output_policy": "stream",
+      "captured_output_chars": 254,
+      "output_truncated": false,
+      "current_rss_mb": 2.58,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 2,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "git push origin --delete mvp/environment-controller refactor/quality-freeze-final && git fetch -q --prune origin && test -z \"$(git for-each-ref --format='%(refname:short)' refs/remotes/origin/mvp/environment-controller refs/remotes/origin/refactor/quality-freeze-final)\" && echo BRANCH_CLEANUP_PASS main=$(git rev-parse origin/main) deleted=mvp/environment-controller,refactor/quality-freeze-final kept=agent-control,gh-pages",
+      "exit_code": 0,
+      "output": "To https://github.com/MichalMatu/growbox-ml-controller.git\n - [deleted]           mvp/environment-controller\n - [deleted]           refactor/quality-freeze-final\nBRANCH_CLEANUP_PASS main=984e55baad1e1f6a319b28c2fab2d0309d4918cd deleted=mvp/environment-controller,refactor/quality-freeze-final kept=agent-control,gh-pages\n",
+      "elapsed_seconds": 2.952,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 19.17,
+      "output_policy": "stream",
+      "captured_output_chars": 321,
+      "output_truncated": false,
+      "current_rss_mb": 19.17,
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 2,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 2,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.962
+    },
+    {
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 2,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 2.952
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.272
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.073
+  },
+  "finished_at": "2026-09-11T08:02:23.869818+00:00",
+  "task_digest": "5f24c71592be8adbb5eea0c9bd141ad20efe228bba83d4d4372f944a5a3cfce0",
+  "idle_timeout": 300,
+  "task_timeout": 1200,
+  "memory_limit_mb": 4096,
+  "attempt_id": "dd858d91e3d95c9f905ade37",
+  "daemon_version": "4.18.20"
+}
