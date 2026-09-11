@@ -1,0 +1,9 @@
+{
+  "id": "20260911-phase0-neutralize-historical-workflows-v1",
+  "status": "failed",
+  "failure_reason": "invalid_task_file",
+  "started_at": null,
+  "finished_at": "2026-09-11T15:34:46.709999+00:00",
+  "daemon_version": "4.18.20",
+  "error": "JSONDecodeError: Expecting ',' delimiter: line 16 column 718 (char 1403)"
+}
