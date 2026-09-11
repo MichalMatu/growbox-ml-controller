@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "id": "20260911-phase2-runtime-schedule-move-v2",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": true,
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch -q origin main && git reset --hard origin/main && test \"$(git rev-parse HEAD)\" = \"a257519f7756c31ad13cacc23b6477336de6df92\" && test -z \"$(git status --porcelain)\"",
+    "mkdir -p src/climate/runtime/schedule && git mv src/climate/runtime/EuropeWarsawTime.h src/climate/runtime/schedule/EuropeWarsawTime.h && git mv src/climate/runtime/EuropeWarsawTime.cpp src/climate/runtime/schedule/EuropeWarsawTime.cpp && git mv src/climate/runtime/Stage27ScheduleProfile.h src/climate/runtime/schedule/Stage27ScheduleProfile.h && git mv src/climate/runtime/Stage27ScheduleProfile.cpp src/climate/runtime/schedule/Stage27ScheduleProfile.cpp && git mv src/climate/runtime/Stage27ScheduleIntentAdapter.h src/climate/runtime/schedule/Stage27ScheduleIntentAdapter.h && git mv src/climate/runtime/Stage27ScheduleIntentAdapter.cpp src/climate/runtime/schedule/Stage27ScheduleIntentAdapter.cpp",
+    "git grep -Il 'climate/runtime/EuropeWarsawTime' -- src test scripts | xargs perl -pi -e 's#climate/runtime/EuropeWarsawTime#climate/runtime/schedule/EuropeWarsawTime#g'; git grep -Il 'climate/runtime/Stage27ScheduleProfile' -- src test scripts | xargs perl -pi -e 's#climate/runtime/Stage27ScheduleProfile#climate/runtime/schedule/Stage27ScheduleProfile#g'; git grep -Il 'climate/runtime/Stage27ScheduleIntentAdapter' -- src test scripts | xargs perl -pi -e 's#climate/runtime/Stage27ScheduleIntentAdapter#climate/runtime/schedule/Stage27ScheduleIntentAdapter#g'; git diff --check",
+    "pre-commit run --all-files || true; pre-commit run --all-files && python3 scripts/check_runtime_config_ssot.py && python3 scripts/check_app_mode_boundaries.py && python3 scripts/check_runtime_boundaries.py && python3 scripts/check_service_console_boundaries.py && python3 scripts/check_output_rf_ownership.py",
+    "cmake -S test/host -B build/host-tests && cmake --build build/host-tests --target europe_warsaw_time_tests stage27_schedule_profile_tests stage27_schedule_intent_tests stage28d_output_intent_parity_tests --parallel && ctest --test-dir build/host-tests -R '^(europe_warsaw_time_tests|stage27_schedule_profile_tests|stage27_schedule_intent_tests|stage28d_output_intent_parity_tests)$' --output-on-failure",
+    "git diff --check && git add src test scripts && git commit -m 'Group runtime schedule components' && git push origin HEAD:main && git rev-parse HEAD"
+  ]
+}
