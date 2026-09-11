@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "id": "20260911-quality-freeze-final-software-gate-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "refactor/quality-freeze-final",
+  "resources": [],
+  "allow_write": false,
+  "command_timeout": 7200,
+  "idle_timeout": 1200,
+  "task_timeout": 21600,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch -q origin refactor/quality-freeze-final && git reset --hard FETCH_HEAD && test \"$(git rev-parse HEAD)\" = \"af2f6bdbdde57ee56c456f9de990e9e03a333af1\" && test -z \"$(git status --porcelain)\" && echo QF7_BASE_PASS sha=$(git rev-parse HEAD) hardware_started=0",
+    ".venv/bin/pre-commit run --all-files && HOST_BUILD_JOBS=2 bash scripts/quality_gate_push.sh && python3 scripts/check_runtime_config_ssot.py && python3 scripts/check_runtime_boundaries.py && python3 scripts/check_service_console_boundaries.py && python3 scripts/check_app_mode_boundaries.py && .venv/bin/python scripts/check_output_rf_ownership.py && test \"$(git rev-parse HEAD)\" = \"af2f6bdbdde57ee56c456f9de990e9e03a333af1\" && test -z \"$(git status --porcelain)\" && echo QF7_FINAL_SOFTWARE_GATE_PASS sha=$(git rev-parse HEAD) hardware_started=0"
+  ]
+}
