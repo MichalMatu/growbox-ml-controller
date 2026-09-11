@@ -1,4 +1,4 @@
-#include "climate/output/OutputMaintenanceControl.h"
+#include "climate/output/control/OutputMaintenanceControl.h"
 
 #include <array>
 #include <cassert>

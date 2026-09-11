@@ -1,8 +1,8 @@
 #include "climate/runtime/console/Stage28ServiceConsoleOutputCommands.h"
 
-#include "climate/output/OutputAutomationControl.h"
-#include "climate/output/OutputMaintenanceControl.h"
-#include "climate/output/OutputManualControl.h"
+#include "climate/output/control/OutputAutomationControl.h"
+#include "climate/output/control/OutputMaintenanceControl.h"
+#include "climate/output/control/OutputManualControl.h"
 
 namespace growbox::app::climate_io::runtime {
 namespace {

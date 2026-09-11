@@ -1,4 +1,4 @@
-#include "climate/output/OutputAutomationControl.h"
+#include "climate/output/control/OutputAutomationControl.h"
 
 namespace growbox::app::output {
 

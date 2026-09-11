@@ -1,8 +1,8 @@
 #pragma once
 
-#include "climate/output/OutputAutomationControl.h"
 #include "climate/output/OutputStateStore.h"
 #include "climate/output/OutputTransport.h"
+#include "climate/output/control/OutputAutomationControl.h"
 
 #include <cstdint>
 

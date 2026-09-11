@@ -363,7 +363,7 @@ target_compile_options(output_runtime_lifecycle_control_tests PRIVATE -Wall -Wex
 add_executable(
   output_automation_control_tests
   "${PROJECT_ROOT}/test/test_output_automation_control/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputAutomationControl.cpp"
+  "${PROJECT_ROOT}/src/climate/output/control/OutputAutomationControl.cpp"
   "${PROJECT_ROOT}/src/climate/output/lifecycle/OutputLifecycleExecutor.cpp"
   "${PROJECT_ROOT}/src/climate/output/lifecycle/OutputSupervisorLifecycle.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputSupervisorResolver.cpp"
@@ -378,7 +378,7 @@ target_compile_options(output_automation_control_tests PRIVATE -Wall -Wextra -Wp
 add_executable(
   output_manual_control_tests
   "${PROJECT_ROOT}/test/test_output_manual_control/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputManualControl.cpp"
+  "${PROJECT_ROOT}/src/climate/output/control/OutputManualControl.cpp"
   "${PROJECT_ROOT}/src/climate/output/lifecycle/OutputSupervisorLifecycle.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputPolicyConfig.cpp"
 )
@@ -389,8 +389,8 @@ target_compile_options(output_manual_control_tests PRIVATE -Wall -Wextra -Wpedan
 add_executable(
   output_maintenance_control_tests
   "${PROJECT_ROOT}/test/test_output_maintenance_control/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputMaintenanceControl.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputAutomationControl.cpp"
+  "${PROJECT_ROOT}/src/climate/output/control/OutputMaintenanceControl.cpp"
+  "${PROJECT_ROOT}/src/climate/output/control/OutputAutomationControl.cpp"
   "${PROJECT_ROOT}/src/climate/output/lifecycle/OutputLifecycleExecutor.cpp"
   "${PROJECT_ROOT}/src/climate/output/lifecycle/OutputSupervisorLifecycle.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputPolicyConfig.cpp"

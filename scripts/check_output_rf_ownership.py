@@ -73,7 +73,7 @@ RAW_SEND_RE = re.compile(r"(?<![A-Za-z0-9_])(transport_|raw_transport_)\.send\("
 RAW_SEND_ALLOW = {
     "src/climate/output/OutputSupervisorExecutor.cpp",
     "src/climate/output/lifecycle/OutputLifecycleExecutor.cpp",
-    "src/climate/output/OutputMaintenanceControl.cpp",
+    "src/climate/output/control/OutputMaintenanceControl.cpp",
 }
 
 # These files remain only as host compatibility/parity evidence. A separate
@@ -115,7 +115,7 @@ def find_violations(root: Path = ROOT) -> list[str]:
         "src/climate/runtime/Stage28MaintenanceRfTransport.cpp",
         "src/climate/output/OutputSupervisorExecutor.cpp",
         "src/climate/output/lifecycle/OutputLifecycleExecutor.cpp",
-        "src/climate/output/OutputMaintenanceControl.cpp",
+        "src/climate/output/control/OutputMaintenanceControl.cpp",
         "src/climate/ClimateV6RealInputRuntime.cpp",
         "src/climate/runtime/console/Stage28ServiceConsole.cpp",
         "src/climate/runtime/console/Stage28ServiceConsoleCommand.cpp",
