@@ -24,6 +24,9 @@ echo "==> runtime configuration SSOT"
 echo "==> service console boundaries"
 "$PY" "${ROOT}/scripts/check_service_console_boundaries.py"
 
+echo "==> app-mode build boundaries"
+"$PY" "${ROOT}/scripts/check_app_mode_boundaries.py"
+
 echo "==> pytest"
 # Hardware board E2E needs a matching flashed firmware; exclude from pre-push.
 "$PY" -m pytest -q -m "not hardware"
@@ -68,6 +71,8 @@ fi
 
 if [[ "${SKIP_IDF_BUILD:-}" != "1" ]]; then
   bash "${ROOT}/scripts/idf_gate_build.sh"
+  IDF_GATE_BUILD_DIR="build/idf-gate-v6-fake" IDF_GATE_APP_MODE="climate-v6-fake" \
+    bash "${ROOT}/scripts/idf_gate_build.sh"
   # The real-input runtime requires the Stage27C BLE/NimBLE sdkconfig and actual
   # CrowPanel board profile. A generic legacy sdkconfig does not expose NimBLE headers.
   STAGE27C_BUILD_DIR="build/idf-gate-real-inputs-crowpanel" \

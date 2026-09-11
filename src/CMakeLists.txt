@@ -1,6 +1,14 @@
+if(NOT DEFINED GROWBOX_APP_MODE OR GROWBOX_APP_MODE STREQUAL "")
+  set(GROWBOX_APP_MODE "$ENV{GROWBOX_APP_MODE}")
+endif()
+if(GROWBOX_APP_MODE STREQUAL "")
+  message(FATAL_ERROR "GROWBOX_APP_MODE was not exported by the project root")
+endif()
+
 idf_component_register(
   SRCS
     "main.cpp"
+    "demo/protocol/HeapDiagnostics.cpp"
     "climate/ClimateIoAdapters.cpp"
     "climate/ClimateApplication.cpp"
     "climate/ClimateCompositeInput.cpp"
@@ -29,18 +37,7 @@ idf_component_register(
     "climate/Stage28dOutputBindings.cpp"
     "climate/Stage28dLampSafety.cpp"
     "climate/Stage28dThermalTestSequence.cpp"
-    "climate/ClimateDeterministicFake.cpp"
-    "climate/ClimateDiagnostics.cpp"
     "climate/runtime/Stage28eBreadcrumbs.cpp"
-    "climate/ClimateV6FakeRuntime.cpp"
-    "demo/DummyEnvironmentSimulator.cpp"
-    "demo/SerialJsonProtocol.cpp"
-    "demo/protocol/JsonLineWriter.cpp"
-    "demo/protocol/ScenarioWireCodec.cpp"
-    "demo/protocol/DecisionWireCodec.cpp"
-    "demo/protocol/DiagnosticsWireCodec.cpp"
-    "demo/protocol/HeapDiagnostics.cpp"
-    "demo/protocol/StatusWireCodec.cpp"
   INCLUDE_DIRS
     "."
     "demo"
@@ -69,17 +66,32 @@ idf_component_register(
 target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_17)
 target_compile_options(${COMPONENT_LIB} PRIVATE -Wall -Wextra -Wpedantic)
 
-set(GROWBOX_APP_MODE "legacy" CACHE STRING "Growbox application runtime")
-set_property(
-  CACHE GROWBOX_APP_MODE
-  PROPERTY STRINGS "legacy" "climate-v6-fake" "climate-v6-real-inputs"
-)
 if(GROWBOX_APP_MODE STREQUAL "legacy")
   set(GROWBOX_APP_CLIMATE_V6_FAKE 0)
   set(GROWBOX_APP_CLIMATE_V6_REAL_INPUTS 0)
+  target_sources(
+    ${COMPONENT_LIB}
+    PRIVATE
+      "legacy/LegacyRuntime.cpp"
+      "demo/DummyEnvironmentSimulator.cpp"
+      "demo/SerialJsonProtocol.cpp"
+      "demo/protocol/JsonLineWriter.cpp"
+      "demo/protocol/ScenarioWireCodec.cpp"
+      "demo/protocol/DecisionWireCodec.cpp"
+      "demo/protocol/DiagnosticsWireCodec.cpp"
+      "demo/protocol/StatusWireCodec.cpp"
+  )
 elseif(GROWBOX_APP_MODE STREQUAL "climate-v6-fake")
   set(GROWBOX_APP_CLIMATE_V6_FAKE 1)
   set(GROWBOX_APP_CLIMATE_V6_REAL_INPUTS 0)
+  target_sources(
+    ${COMPONENT_LIB}
+    PRIVATE
+      "climate/ClimateV6FakeRuntime.cpp"
+      "climate/ClimateDeterministicFake.cpp"
+      "climate/ClimateDiagnostics.cpp"
+      "demo/protocol/JsonLineWriter.cpp"
+  )
 elseif(GROWBOX_APP_MODE STREQUAL "climate-v6-real-inputs")
   set(GROWBOX_APP_CLIMATE_V6_FAKE 0)
   set(GROWBOX_APP_CLIMATE_V6_REAL_INPUTS 1)
