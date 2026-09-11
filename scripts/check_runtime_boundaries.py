@@ -3,10 +3,18 @@ import sys
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
-bootstrap = (root / "src/climate/ClimateV6RealInputRuntime.cpp").read_text()
-coordinator = (root / "src/climate/runtime/RealInputRuntimeCoordinator.cpp").read_text()
-composition = (root / "src/climate/runtime/RealInputRuntimeComposition.cpp").read_text()
-composition += (root / "src/climate/runtime/RealInputRuntimeComposition.h").read_text()
+bootstrap = (root / "src/climate/ClimateV6RealInputRuntime.cpp").read_text(encoding="utf-8")
+coordinator = (root / "src/climate/runtime/RealInputRuntimeCoordinator.cpp").read_text(encoding="utf-8")
+coordinator_header = (root / "src/climate/runtime/RealInputRuntimeCoordinator.h").read_text(
+    encoding="utf-8"
+)
+composition = (root / "src/climate/runtime/RealInputRuntimeComposition.cpp").read_text(
+    encoding="utf-8"
+)
+composition += (root / "src/climate/runtime/RealInputRuntimeComposition.h").read_text(
+    encoding="utf-8"
+)
+transport = (root / "src/climate/runtime/RuntimeOutputTransport.cpp").read_text(encoding="utf-8")
 errors = []
 
 for token in (
@@ -31,16 +39,25 @@ for token in (
 for token in (
     "buildStage27ScheduleIntent",
     "buildLampSafetyEnvelope",
-    "services_.runtime_lifecycle.tick",
-    "services_.automation_control.tick",
-    "services_.maintenance_control.tick",
-    "services_.supervisor_sink.setCycleContext",
+    "services_.outputs.runtime_lifecycle.tick",
+    "services_.outputs.automation_control.tick",
+    "services_.outputs.maintenance_control.tick",
+    "services_.outputs.supervisor_sink.setCycleContext",
     "services_.application.tick",
-    "services_.output_persistence.syncFromStateStore",
+    "services_.outputs.persistence.syncFromStateStore",
     "buildOutputExecutionTelemetry",
+    "logOutputExecutionTelemetry",
 ):
     if token not in coordinator:
         errors.append(f"coordinator-cycle-step-missing:{token}")
+
+for token in (
+    "RealInputRuntimeInputServices",
+    "RealInputRuntimeOutputServices",
+    "RealInputRuntimeSupportServices",
+):
+    if token not in coordinator_header:
+        errors.append(f"coordinator-domain-boundary-missing:{token}")
 
 for token in (
     "RuntimeOutputOwner::RuntimeOutputOwner",
@@ -50,6 +67,25 @@ for token in (
 ):
     if token not in composition:
         errors.append(f"composition-owner-missing:{token}")
+
+if "RuntimeOutputTransport::send" in composition:
+    errors.append("transport-implementation-leaked-to-composition")
+
+for token in (
+    "TransportStatus::NotAttempted",
+    "TransportError::Unavailable",
+    "!execution_status_.transport_available",
+):
+    if token not in transport:
+        errors.append(f"locked-transport-truth-contract-missing:{token}")
+
+locked_block = transport.split("if (!execution_status_.transport_available)", 1)
+if len(locked_block) != 2:
+    errors.append("locked-transport-guard-missing")
+else:
+    locked_body = locked_block[1].split("}", 1)[0]
+    if "TransportStatus::Completed" in locked_body:
+        errors.append("locked-transport-fabricates-completed")
 
 if errors:
     print("RUNTIME_BOUNDARY_FAIL " + ",".join(errors), file=sys.stderr)
