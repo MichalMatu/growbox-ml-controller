@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260911-quality-freeze-final-software-gate-v1",
+  "task_digest": "4bdd760a3f1204c8224023cbb5330616b45828d09f41adf595bc759b49bd2683",
+  "idle_timeout": 1200,
+  "task_timeout": 21600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-11T04:48:03.171075+00:00",
+  "attempt_id": "e083d66615037123bc65819b",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 60219,
+  "updated_at": "2026-09-11T04:48:03.171202+00:00",
+  "pid": 60219
+}
