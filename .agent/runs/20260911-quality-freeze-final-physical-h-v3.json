@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 2,
+  "index": 4,
   "total": 4,
-  "command": ".venv/bin/python - <<'PY'\nimport json, time, urllib.request\nurl='http://192.168.0.16/rpc/Switch.GetStatus?id=0'\nfor i in range(3):\n    with urllib.request.urlopen(url, timeout=3.0) as r:\n        p=json.load(r)\n    if not isinstance(p, dict) or p.get('output') is not True or 'apower' not in p:\n        raise SystemExit(f'QF8_V3_SHELLY_PREFLIGHT_FAIL sample={i+1} payload={p!r}')\n    print(f'QF8_V3_SHELLY_SAMPLE_PASS sample={i+1} output=1 apower={float(p[\"apower\"]):.3f}', flush=True)\n    time.sleep(1.0)\nprint('QF8_V3_SHELLY_PREFLIGHT_PASS samples=3 output=1 read_only=1', flush=True)\nPY",
-  "pid": 43255,
+  "command": "test -e /dev/cu.usbserial-1130 && test ! -e /dev/cu.usbserial-10 && PYTHONPATH=\"$PWD\" .venv/bin/python /tmp/growbox-qf8-final-physical-h-v3.py && test -e /dev/cu.usbserial-1130 && test ! -e /dev/cu.usbserial-10 && test \"$(git rev-parse HEAD)\" = \"fa56b345b5e555a68fc5a880779dee6f931acf66\" && test -z \"$(git status --porcelain)\" && echo QF8_FINAL_PHYSICAL_H_V3_PASS sha=fa56b345b5e555a68fc5a880779dee6f931acf66 port=/dev/cu.usbserial-1130 shelly_valid_samples=8+8 raw_rf=0 forbidden_port_untouched=/dev/cu.usbserial-10 hardware_started=1",
+  "pid": 43370,
   "timeout": 7200,
   "idle_timeout": 3600,
   "memory_limit_mb": 4096,
-  "started_at": "2026-09-11T05:50:19.438150+00:00",
-  "stage_name": "command-2",
-  "stage_index": 2,
+  "started_at": "2026-09-11T05:50:24.264311+00:00",
+  "stage_name": "command-4",
+  "stage_index": 4,
   "stage_total": 4,
   "stage_phase": "commands",
   "task_id": "20260911-quality-freeze-final-physical-h-v3",
@@ -18,5 +18,5 @@
   "task_digest": "bb2c8a98f43ee90a3814c96dc422cacbc0ae714351924b962a784d7d301f628b",
   "daemon_version": "4.18.20",
   "daemon_pid": 43044,
-  "updated_at": "2026-09-11T05:50:19.510510+00:00"
+  "updated_at": "2026-09-11T05:50:24.338175+00:00"
 }
