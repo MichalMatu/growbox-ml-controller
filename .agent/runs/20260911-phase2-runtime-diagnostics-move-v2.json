@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 4,
+  "index": 6,
   "total": 6,
-  "command": "pre-commit run --all-files || true; pre-commit run --all-files && python3 scripts/check_runtime_config_ssot.py && python3 scripts/check_app_mode_boundaries.py && python3 scripts/check_runtime_boundaries.py && python3 scripts/check_service_console_boundaries.py && python3 scripts/check_output_rf_ownership.py && echo RUNTIME_DIAGNOSTICS_MOVE_GUARDS_PASS",
-  "pid": 19715,
+  "command": "git diff --check && git add src test scripts .github CMakeLists.txt && git commit -m 'Group runtime diagnostics' && git push origin HEAD:main && echo RUNTIME_DIAGNOSTICS_MOVE_PUSH_PASS sha=$(git rev-parse HEAD)",
+  "pid": 20073,
   "timeout": 900,
   "idle_timeout": 300,
   "memory_limit_mb": 4096,
-  "started_at": "2026-09-11T16:49:33.798519+00:00",
-  "stage_name": "command-4",
-  "stage_index": 4,
+  "started_at": "2026-09-11T16:49:40.483256+00:00",
+  "stage_name": "command-6",
+  "stage_index": 6,
   "stage_total": 6,
   "stage_phase": "commands",
   "task_id": "20260911-phase2-runtime-diagnostics-move-v2",
@@ -18,5 +18,5 @@
   "task_digest": "d8d809bbc8d92704f7b3d3285c32c943c20255309b2b0c4c7aebdb794a833313",
   "daemon_version": "4.18.20",
   "daemon_pid": 19539,
-  "updated_at": "2026-09-11T16:49:33.868879+00:00"
+  "updated_at": "2026-09-11T16:49:40.568317+00:00"
 }
