@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260911-fresh-chat-bootstrap-v1",
   "task_digest": "ca7c094f0fb254e67f00b17d7ca69d77aa531da28e63317b7707b850e52f43a0",
-  "idle_timeout": 300,
-  "task_timeout": 1800,
-  "memory_limit_mb": 4096,
-  "started_at": "2026-09-11T02:34:10.963401+00:00",
+  "status": "failed",
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-11T02:34:14.631979+00:00",
   "attempt_id": "efd8db7cd4b7e75d7a031d25",
   "daemon_version": "4.18.20",
   "daemon_pid": 66388,
-  "updated_at": "2026-09-11T02:34:10.963541+00:00",
+  "updated_at": "2026-09-11T02:34:15.106039+00:00",
   "pid": 66388
 }
