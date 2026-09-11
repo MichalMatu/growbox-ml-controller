@@ -1,5 +1,6 @@
 #include "climate/runtime/RealInputRuntimeCoordinator.h"
 
+#include "climate/Stage28dOutputBindings.h"
 #include "climate/output/OutputExecutionTelemetry.h"
 #include "climate/runtime/Stage27ScheduleIntentAdapter.h"
 
@@ -43,7 +44,8 @@ void RealInputRuntimeCoordinator::tick(std::uint64_t loop_started_us) noexcept {
   output::ScheduleIntent schedule_intent{};
   const std::uint64_t schedule_sequence = cycle_state_.nextOutputIntentSequence();
   const bool schedule_intent_ready =
-      rtc_sampled && buildStage27ScheduleIntent(now_ms, rtc_snapshot, schedule_sequence, schedule_intent);
+      rtc_sampled &&
+      buildStage27ScheduleIntent(now_ms, rtc_snapshot, schedule_sequence, schedule_intent);
   if (!schedule_intent_ready) {
     schedule_intent = {};
     schedule_intent.metadata.sequence = schedule_sequence;
@@ -61,8 +63,8 @@ void RealInputRuntimeCoordinator::tick(std::uint64_t loop_started_us) noexcept {
   const float scheduled_light = output::endpointIntentActive(schedule_intent.endpoints[0])
                                     ? schedule_intent.endpoints[0].level
                                     : 0.0F;
-  const stage28d::LampSafetyInput lamp_safety_input{
-      scheduled_light, safety_temperature, services_.output_bindings_valid, now_ms};
+  const stage28d::LampSafetyInput lamp_safety_input{scheduled_light, safety_temperature,
+                                                    services_.output_bindings_valid, now_ms};
   lamp_decision = services_.lamp_safety.evaluate(lamp_safety_input);
 
   stage28d::LampSafetyEnvelopeSnapshot safety_snapshot{};
@@ -86,9 +88,9 @@ void RealInputRuntimeCoordinator::tick(std::uint64_t loop_started_us) noexcept {
     }
   }
 
-  // Runtime boot/recovery/fault owns the lifecycle executor only while its own transition is active.
-  // Automation/maintenance retain executor ownership outside those windows. Hard safety defers
-  // lifecycle TX and remains executable by the supervisor resolver below.
+  // Runtime boot/recovery/fault owns the lifecycle executor only while its own transition is
+  // active. Automation/maintenance retain executor ownership outside those windows. Hard safety
+  // defers lifecycle TX and remains executable by the supervisor resolver below.
   (void)services_.runtime_lifecycle.tick(now_ms, safety_snapshot.envelope);
   if (!services_.runtime_lifecycle.transitionActive()) {
     (void)services_.automation_control.tick(now_ms, schedule_intent, safety_snapshot.envelope);
@@ -96,7 +98,8 @@ void RealInputRuntimeCoordinator::tick(std::uint64_t loop_started_us) noexcept {
   }
 
   services_.execution_status.output_ready =
-      services_.execution_status.transport_available && services_.runtime_lifecycle.bootCompleted() &&
+      services_.execution_status.transport_available &&
+      services_.runtime_lifecycle.bootCompleted() &&
       services_.output_lifecycle.mode() != output::SupervisorMode::FaultLocked;
 
   output::ManualIntent manual_intent{};
@@ -129,8 +132,8 @@ void RealInputRuntimeCoordinator::tick(std::uint64_t loop_started_us) noexcept {
                static_cast<unsigned>(persistence_status));
     }
   }
-  services_.runtime_timing.control_cycle.observe(
-      static_cast<std::uint64_t>(esp_timer_get_time()) - control_started_us);
+  services_.runtime_timing.control_cycle.observe(static_cast<std::uint64_t>(esp_timer_get_time()) -
+                                                 control_started_us);
 
   if (cycle_state_.telemetryDue()) {
     const std::uint64_t telemetry_started_us = static_cast<std::uint64_t>(esp_timer_get_time());
@@ -160,7 +163,8 @@ void RealInputRuntimeCoordinator::tick(std::uint64_t loop_started_us) noexcept {
              "lifecycle_event=%u automation_requested=%d safety_latched=%d safety_reason=%u "
              "tx=%lu tx_errors=%lu",
              static_cast<unsigned>(output_telemetry.mode), output_telemetry.transport_active,
-             output_telemetry.lifecycle_active, static_cast<unsigned>(output_telemetry.lifecycle_event),
+             output_telemetry.lifecycle_active,
+             static_cast<unsigned>(output_telemetry.lifecycle_event),
              output_telemetry.automation_requested, output_telemetry.safety_latched,
              output_telemetry.safety_reason_code,
              static_cast<unsigned long>(services_.supervisor_transport.transmitCount()),
@@ -195,12 +199,12 @@ void RealInputRuntimeCoordinator::tick(std::uint64_t loop_started_us) noexcept {
                static_cast<unsigned>(endpoint.physical_state), endpoint.physical_independent);
     }
 
-    services_.runtime_timing.telemetry.observe(
-        static_cast<std::uint64_t>(esp_timer_get_time()) - telemetry_started_us);
+    services_.runtime_timing.telemetry.observe(static_cast<std::uint64_t>(esp_timer_get_time()) -
+                                               telemetry_started_us);
   }
 
-  services_.runtime_timing.loop_active.observe(
-      static_cast<std::uint64_t>(esp_timer_get_time()) - loop_started_us);
+  services_.runtime_timing.loop_active.observe(static_cast<std::uint64_t>(esp_timer_get_time()) -
+                                               loop_started_us);
 }
 
 } // namespace growbox::app::climate_io::runtime

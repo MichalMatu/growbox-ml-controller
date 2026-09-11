@@ -708,3 +708,14 @@ target_include_directories(binary_actuator_policy_tests PRIVATE "${PROJECT_ROOT}
 target_compile_features(binary_actuator_policy_tests PRIVATE cxx_std_17)
 target_compile_options(binary_actuator_policy_tests PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME binary_actuator_policy_tests COMMAND binary_actuator_policy_tests)
+
+
+add_executable(
+  runtime_cycle_state_tests
+  "${PROJECT_ROOT}/test/test_runtime_cycle_state/test_main.cpp"
+  "${PROJECT_ROOT}/src/climate/runtime/RuntimeCycleState.cpp"
+)
+target_include_directories(runtime_cycle_state_tests PRIVATE "${PROJECT_ROOT}/src")
+target_compile_features(runtime_cycle_state_tests PRIVATE cxx_std_17)
+target_compile_options(runtime_cycle_state_tests PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME runtime_cycle_state_tests COMMAND runtime_cycle_state_tests)

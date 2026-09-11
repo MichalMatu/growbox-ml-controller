@@ -83,7 +83,8 @@ void RuntimePersistenceOwner::initialize() noexcept {
   static constexpr std::array<output::OutputEndpointId, output::kOutputEndpointCapacity>
       kShadowOutputEndpoints{stage28d::kExhaustFanEndpoint, stage28d::kScheduledLightEndpoint,
                              stage28d::kHumidifierEndpoint};
-  state_store_ready_ = state_store_.configure(kShadowOutputEndpoints, kShadowOutputEndpoints.size());
+  state_store_ready_ =
+      state_store_.configure(kShadowOutputEndpoints, kShadowOutputEndpoints.size());
   init_result_ = state_store_ready_ ? persistence_.initialize(state_store_)
                                     : output::OutputPersistenceCoordinatorInitResult{};
 }

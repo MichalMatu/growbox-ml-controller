@@ -80,9 +80,9 @@ constexpr std::uint64_t kTickIntervalMs = 1'000U;
     execution_status.transport_available = false;
   }
 
-  static runtime::RuntimeOutputOwner output_owner(
-      io_owner.rfOutputTransport(), execution_status, rf_diagnostics, persistence_owner.policy(),
-      persistence_owner.stateStore());
+  static runtime::RuntimeOutputOwner output_owner(io_owner.rfOutputTransport(), execution_status,
+                                                  rf_diagnostics, persistence_owner.policy(),
+                                                  persistence_owner.stateStore());
   const bool output_bindings_valid = output_owner.bindingsValid();
   if (!output_bindings_valid) {
     execution_status.transport_available = false;

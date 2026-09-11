@@ -51,6 +51,7 @@ SOURCES=(
   src/climate/ClimateSemanticOutput.cpp
   src/climate/ClimateDiagnostics.cpp
   src/climate/ClimateDeterministicFake.cpp
+  src/climate/runtime/RuntimeCycleState.cpp
 )
 
 CMAKE_ARGS=(-S test/host -B "${BUILD_DIR}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug)
