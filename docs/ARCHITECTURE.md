@@ -1,122 +1,116 @@
 # Architecture
 
 Current status: [CURRENT_STATUS.md](CURRENT_STATUS.md).
-Hardware plan: [MVP_HARDWARE_SENSOR_SET.md](MVP_HARDWARE_SENSOR_SET.md).
-Scientific decisions: [ML_DECISION_REPORT.md](ML_DECISION_REPORT.md).
+Product roadmap: [PROJECT_ROADMAP.md](PROJECT_ROADMAP.md).
+Output execution design: [OUTPUT_EXECUTION_ARCHITECTURE.md](OUTPUT_EXECUTION_ARCHITECTURE.md).
 
-## Design rule
+## Design rules
 
-The climate controller is independent from sensor libraries and physical actuator endpoints.
-Hardware produces semantic measurements and consumes semantic role commands. The controller does
-not know whether a value came from I2C, BLE, MQTT, a simulator or a recorded trace.
+The portable climate controller is independent from concrete sensor libraries and physical actuator transports. Hardware code produces semantic measurements and consumes semantic output intent through explicit application/runtime boundaries.
 
-## Current climate-v6 path
+Normal configured physical output execution has one owner: `OutputSupervisor`.
+
+Production deterministic Rule control remains authoritative. ML may be evaluated for shadow/research purposes but production composition does not enable unqualified ML authority.
+
+## Production real-input path
 
 ```text
-sensor/config/time providers
-           |
-           v
-  ClimateInputSnapshot
-           |
-           v
-  ClimateInputAdapter
-           |
-           v
-   ClimateControlLoop
-           |
-           v
-ClimateRuntimeController
-   |               |
-   | Rule          | optional ML
-   |               | (shadow by default)
-   +-------+-------+
-           |
-      arbitration
-           |
-  deterministic safety
-           |
-           v
-   semantic safe command
-           |
-           v
- ClimateActuatorAdapter
-           |
-           v
-   semantic role driver
-           |
-           v
-GPIO / relay / PWM / remote device later
+native sensor / RTC / schedule sources
+               |
+               v
+     ClimateApplication / climate-v6
+               |
+        ControlIntent + ScheduleIntent
+               |
+               +----------------------+
+               |                      |
+               v                      v
+       Lamp SafetyEnvelope      manual/maintenance lifecycle
+               |                      |
+               +----------+-----------+
+                          v
+                  OutputSupervisor
+              resolver + binary policy
+                          |
+                          v
+                 OutputPlan / command
+                          |
+                          v
+               RuntimeOutputTransport
+                          |
+                          v
+                 RF433OutputTransport
 ```
 
-`ClimateControlLoop` is the I/O-facing safety boundary. If input acquisition fails, it passes an
-invalid/default input into the runtime so deterministic safety resolves to OFF. If an actuator
-command is rejected, it attempts all-OFF, resets unconfirmed runtime actuator state, and latches
-an actuator fault if OFF also fails.
+One-way RF transport completion is command/transport evidence only; it is never treated as physical acknowledgement.
 
-The loop owns confirmed previous-applied actions. The runtime owns trend estimation and the
-effective-actuator estimator. Sensor/configuration adapters must not duplicate those states.
+## Runtime composition
 
-## Policy modes
+The real-input runtime is deliberately split by responsibility:
 
-- `Rule` — authoritative default and current production recommendation.
-- `MlShadow` — ML is evaluated and recorded but Rule remains authoritative.
-- `MlActive` — explicit research-only opt-in; not qualified for real actuation.
+- `ClimateV6RealInputRuntime.cpp` — thin bootstrap: initialize, validate, enter the loop;
+- `runtime/RealInputRuntimeComposition.*` — construction, ownership and lifetime wiring;
+- `runtime/RealInputRuntimeCoordinator.*` — one-cycle orchestration;
+- `runtime/RuntimeCycleState.*` — bounded cycle sequencing/cadence state;
+- `runtime/RuntimeOutputTransport.*` — physical transport availability/truth boundary;
+- `runtime/RuntimeOutputTelemetryLog.*` — output telemetry formatting/logging;
+- `runtime/Stage27RuntimeAdapters.*` — Stage27 source adapters and production runtime policy configuration;
+- `runtime/Stage27TelemetryReporter.*` — telemetry snapshot/storage reporting;
+- `runtime/Stage28RfDiagnostics.*` — RF diagnostics/passive capture;
+- `runtime/Stage28ServiceConsole*` — thin console IO/router plus output/storage/system domain handlers.
 
-Arbitration and deterministic safety remain authoritative regardless of policy mode.
+The coordinator receives grouped input/output/support service bundles rather than a flat service-locator-like dependency bag.
 
-## Climate-v6 contract
+Invalid lifecycle/automation/maintenance reports fail closed by disabling physical transport readiness for the cycle rather than being silently discarded.
 
-`schemas/environment-controller.v6.json` and generated `ClimateContract.h` define schema v6,
-contract `climate-mvp-v1`, 44 features and 6 ML-controlled semantic outputs. Inputs contain only
-runtime-observable state: measurements with validity/freshness, targets, schedule level, trends,
-previous applied actions, estimated effective actions and role capabilities.
+## Output truth model
 
-The older root `schemas/environment-controller.json` and legacy `EnvironmentController` demo are
-retained during migration because the serial demo/browser history still depends on them. They
-are not the architecture for new climate-v6 runtime work.
+Requested, resolved, attempted/executed transport state and independently observed physical state are distinct concepts.
 
-## Application I/O boundary
+When physical transport is unavailable, `RuntimeOutputTransport` returns `NotAttempted` with `Unavailable`. It must not return `Completed`, because doing so would manufacture execution truth in `OutputStateStore`/projection.
 
-`src/climate/ClimateIoAdapters.*` provides the narrow application seam:
+`OutputSupervisor` owns normal configured output commands. Raw RF remains an explicit maintenance capability behind `MaintenanceLocked`.
 
-- `ClimateSnapshotProvider` produces measurements, target/configuration state, schedule level,
-  capabilities and sensor timeout;
-- `ClimateInputAdapter` maps that snapshot to `ClimateInputSource`;
-- `ClimateRoleDriver` accepts one normalized semantic role command at a time;
-- `ClimateActuatorAdapter` maps all six climate outputs and reports failure if any role fails.
+## Policy and safety ownership
 
-Concrete SCD41/BLE/RTC/GPIO dependencies stay outside `lib/environment_control`.
+- climate rule logic owns environmental control decisions;
+- `BinaryActuatorPolicy` owns binary hysteresis/deadband/dwell behavior;
+- Stage28 output bindings own endpoint/policy mapping;
+- lamp thermal safety owns the frozen `>=28 C` trip and `<=26 C` for 10 minutes recovery contract;
+- transport layers do not own climate policy;
+- maintenance diagnostics do not become a hidden normal-output path.
 
-## Real-input runtime composition and RF433 boundary
+The retired Stage28D thermal test-sequence helper is no longer part of production source; historical qualification evidence remains in Git history/docs.
 
-The ESP32-S3 real-input application is deliberately split so the top-level runtime remains orchestration rather than a god object:
+## Configuration source of truth
 
-- `ClimateV6RealInputRuntime.cpp` wires lifecycle and the one-second application tick;
-- `runtime/Stage27RuntimeAdapters.*` owns Stage27 physical-source adapters and the locked fake role driver;
-- `runtime/Stage27TelemetryReporter.*` owns diagnostic snapshot construction/logging/storage enqueue;
-- `runtime/Stage28RfDiagnostics.*` owns passive RF capture and bounded self-loopback diagnostics;
-- `rf433/Rf433ProtocolCodec.*` owns portable protocol encode/decode;
-- `rf433/Rf433RmtLoopback.*` owns ESP-IDF RMT transport;
-- `rf433/Rf433HardwareConfig.h` owns frozen neutral remote/socket identities;
-- `rf433/Rf433RmtTuning.h` owns the hardware-qualified receive envelope that host tests lock.
+Resolved runtime/build configuration is owned by CMake profiles under `config/` and exposed to production C++ through generated `runtime/RuntimeBuildConfig.h`.
 
-The current qualified RX envelope is 100 kHz resolution, 10 us minimum signal and 20 ms idle/max signal. Hardware identity remains below semantic role mapping. A local `SelfTx` classification is transport evidence, not physical socket-state acknowledgement.
+Production C++ must not reintroduce fallback `GROWBOX_*` default tables. Preprocessor definitions are retained only for switches that genuinely require compile-time preprocessing.
+
+Architecture/config guards enforce these boundaries.
+
+## Climate-v6 controller core
+
+`schemas/environment-controller.v6.json` and generated `ClimateContract.h` define the climate-v6 contract. The portable core lives under `lib/environment_control/src/climate/` and contains feature encoding, runtime rule/ML evaluation, trend estimation and the control loop.
+
+Policy modes exist in the portable research-capable core, but production real-input composition is statically configured for `Rule` authority with unqualified ML active control disabled.
+
+## Legacy isolation
+
+Legacy controller/demo code remains available only through the explicit `legacy` app mode. Production V6 targets do not compile the legacy controller ownership path by default.
+
+`src/main.cpp` is a small app-mode dispatcher; it no longer contains the legacy controller implementation or production control orchestration.
 
 ## Verification layers
 
-- Python scientific/simulator tests;
-- Python/C++ golden runtime parity;
-- portable C++ climate-v6 tests;
-- `ClimateControlLoop` failure tests;
-- multi-step virtual HIL tests;
-- application I/O adapter mapping tests;
-- real ESP-IDF ESP32-S3 compile gate;
-- GitHub Actions CI on ESP-IDF v5.5.4.
+- architecture/config ownership guards;
+- focused portable regression tests;
+- complete host C++ suite;
+- Python scientific/replay tests where applicable;
+- ESP-IDF production builds;
+- hardware qualification only when a fresh physical executable claim is required.
 
-Simulator or virtual-HIL PASS establishes software behavior, not real hardware readiness.
+Latest compact refactor verification on `1a599a58eb57841206ab92c7a5cacf50f7463f78` passed all guards, the focused runtime transport regression, `51/51` host tests and one CrowPanel real-input ESP-IDF build.
 
-## Preserved legacy demo
-
-`src/main.cpp` still drives `DummyEnvironmentSimulator` through the older
-`EnvironmentController` and bounded UART/NDJSON protocol. This remains a reference/demo path
-until climate-v6 has concrete providers. Do not silently mix the legacy and climate-v6 contracts.
+Simulator/host/firmware-build PASS is software evidence, not physical acknowledgement or a new Physical H qualification.
