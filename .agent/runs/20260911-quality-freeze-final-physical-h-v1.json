@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260911-quality-freeze-final-physical-h-v1",
+  "task_digest": "f5cc2bd4bd5b031e5124c471fe955985680b7b957c43136c6f7ecd1a3382cbd1",
+  "idle_timeout": 3600,
+  "task_timeout": 21600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-11T05:13:35.521893+00:00",
+  "attempt_id": "74c748d817643829151bd3fb",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 96007,
+  "updated_at": "2026-09-11T05:13:35.522082+00:00",
+  "pid": 96007
+}
