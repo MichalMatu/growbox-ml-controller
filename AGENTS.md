@@ -27,6 +27,26 @@ Repository identity:
 - Use `http://192.168.0.16/rpc/Switch.GetStatus?id=0` for Shelly switch/power status (`output`, `apower`).
 - Treat `192.168.0.16` as authoritative unless the operator explicitly changes it. Do not guess, substitute, or network-scan for a different Shelly address when this device is intended.
 
+### Minimal fresh-chat resume command
+
+The operator should not need to restate project history in a new chat. After pointing the chat at this repository, the following short instruction is sufficient:
+
+`sprawdz w jakim miejscu jestesmy, napisz krotkie podsumowanie i kontynuujmy dalsza prace nad kodem`
+
+Treat that sentence, and obvious punctuation/Polish-diacritic variants of it, as an explicit request to restore current project context from repository evidence and continue development.
+
+On that request:
+
+1. Do not ask the operator to repeat previous work or paste an old handoff.
+2. Read `AGENTS.md`, `docs/FRESH_CHAT_BOOTSTRAP.md`, `docs/CURRENT_STATUS.md`, `docs/ARCHITECTURE_HANDOFF.md`, `docs/CONTINUATION_PLAN.md`, and `docs/PROJECT_ROADMAP.md`.
+3. Fetch the fresh `mvp/environment-controller` HEAD and inspect `agent-control:.agent/status/daemon.json` before editing or queueing work. If exact prior Local Agent evidence matters, read the relevant terminal result file.
+4. Inspect the current source for the area that is actually next; repository code outranks stale remembered context.
+5. Give the operator a short Polish summary: what is complete, where the branch currently is, what the most important remaining product work is, and what you will do next.
+6. Then continue the next sensible code-development task without requiring another context-restoration prompt. Ask a clarification only when a real product decision cannot be inferred safely; do not ask merely to recover context.
+7. Use sandbox/container first for analysis, replay, simulation, statistics, parsing, synthetic data and other compute that does not require the Mac or hardware. Use direct GitHub for bounded edits when sufficient. Use Local Agent only for Mac-local toolchains/builds/tests, local-network access, serial/USB/flash or physical devices.
+8. Stage28E, A12, A13 and Physical H are complete. Do not reopen or rerun them by default; revisit qualification only when a later production-source change materially invalidates the qualified execution/safety/output path or when a new hardware qualification target is intentionally introduced.
+9. Preserve standing safety and ownership invariants, including `OutputSupervisor` as the only normal production configured-output owner and ML as shadow/research-only.
+
 ### New chat bootstrap
 
 When starting work on this repository in a new chat/session:

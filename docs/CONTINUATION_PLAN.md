@@ -5,14 +5,24 @@ Repository: `MichalMatu/growbox-ml-controller`
 Work branch: `mvp/environment-controller`
 Control branch: `agent-control`
 Local Agent binding: `815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5`
+Fresh-chat entrypoint: `docs/FRESH_CHAT_BOOTSTRAP.md`
+
+## Minimal operator resume command
+
+After selecting this repository in a new chat, the operator may simply write:
+
+`sprawdz w jakim miejscu jestesmy, napisz krotkie podsumowanie i kontynuujmy dalsza prace nad kodem`
+
+That is sufficient authorization to restore context from repository evidence, provide a short status summary, and continue the next sensible development task. Do not ask the operator to repeat project history merely to resume work. Follow `docs/FRESH_CHAT_BOOTSTRAP.md`.
 
 ## Read first in a new chat
 
 1. `AGENTS.md`
-2. `docs/CURRENT_STATUS.md`
-3. `docs/ARCHITECTURE_HANDOFF.md`
-4. this file
-5. `docs/PROJECT_ROADMAP.md`
+2. `docs/FRESH_CHAT_BOOTSTRAP.md`
+3. `docs/CURRENT_STATUS.md`
+4. `docs/ARCHITECTURE_HANDOFF.md`
+5. this file
+6. `docs/PROJECT_ROADMAP.md`
 
 Read `docs/GUIDANCE.md`, `docs/STAGE28E_PHASE_H_HANDOFF.md`, and `docs/STAGE28D_AH_ARBITER_HANDOFF.md` only when historical qualification, diagnostics, or arbiter evidence is needed. They are no longer the active development sequence.
 

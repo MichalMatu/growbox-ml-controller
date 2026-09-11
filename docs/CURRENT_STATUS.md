@@ -3,6 +3,7 @@
 Updated: 2026-09-10
 Development branch: `mvp/environment-controller`
 Latest handoff: `docs/ARCHITECTURE_HANDOFF.md`
+Fresh-chat entrypoint: `docs/FRESH_CHAT_BOOTSTRAP.md`
 Execution architecture design: `docs/OUTPUT_EXECUTION_ARCHITECTURE.md`
 Implementation plan: `docs/OUTPUT_EXECUTION_IMPLEMENTATION_PLAN.md`
 Frozen Phase H evidence: `docs/STAGE28E_PHASE_H_HANDOFF.md`
