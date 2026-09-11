@@ -719,3 +719,14 @@ target_include_directories(runtime_cycle_state_tests PRIVATE "${PROJECT_ROOT}/sr
 target_compile_features(runtime_cycle_state_tests PRIVATE cxx_std_17)
 target_compile_options(runtime_cycle_state_tests PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME runtime_cycle_state_tests COMMAND runtime_cycle_state_tests)
+
+
+add_executable(
+  service_console_text_sink_tests
+  "${PROJECT_ROOT}/test/test_service_console_text_sink/test_main.cpp"
+  "${PROJECT_ROOT}/src/climate/runtime/ServiceConsoleTextSink.cpp"
+)
+target_include_directories(service_console_text_sink_tests PRIVATE "${PROJECT_ROOT}/src")
+target_compile_features(service_console_text_sink_tests PRIVATE cxx_std_17)
+target_compile_options(service_console_text_sink_tests PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME service_console_text_sink_tests COMMAND service_console_text_sink_tests)

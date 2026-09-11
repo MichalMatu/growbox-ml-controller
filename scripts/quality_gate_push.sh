@@ -21,6 +21,9 @@ echo "==> output execution ownership"
 echo "==> runtime configuration SSOT"
 "$PY" "${ROOT}/scripts/check_runtime_config_ssot.py"
 
+echo "==> service console boundaries"
+"$PY" "${ROOT}/scripts/check_service_console_boundaries.py"
+
 echo "==> pytest"
 # Hardware board E2E needs a matching flashed firmware; exclude from pre-push.
 "$PY" -m pytest -q -m "not hardware"
