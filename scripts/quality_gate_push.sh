@@ -21,6 +21,9 @@ echo "==> output execution ownership"
 echo "==> runtime configuration SSOT"
 "$PY" "${ROOT}/scripts/check_runtime_config_ssot.py"
 
+echo "==> runtime composition boundaries"
+"$PY" "${ROOT}/scripts/check_runtime_boundaries.py"
+
 echo "==> service console boundaries"
 "$PY" "${ROOT}/scripts/check_service_console_boundaries.py"
 

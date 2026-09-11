@@ -1,5 +1,7 @@
 #include "legacy/LegacyRuntime.h"
 
+#include "climate/runtime/RuntimeBuildConfig.h"
+
 #include <cJSON.h>
 #include <driver/usb_serial_jtag.h>
 
@@ -19,10 +21,6 @@
 
 #include <array>
 #include <cstring>
-
-#ifndef GROWBOX_BOARD_PROFILE
-#define GROWBOX_BOARD_PROFILE "esp32s3-devkitc1-n16r8"
-#endif
 
 namespace {
 
@@ -65,7 +63,8 @@ void emitStartup() noexcept {
   cJSON_AddBoolToObject(document, "model_compatible", ModelRuntime::isCompatible());
   cJSON_AddNumberToObject(document, "model_inputs", ModelRuntime::inputCount());
   cJSON_AddNumberToObject(document, "model_outputs", ModelRuntime::outputCount());
-  cJSON_AddStringToObject(document, "board_profile", GROWBOX_BOARD_PROFILE);
+  cJSON_AddStringToObject(document, "board_profile",
+                          ::growbox::app::climate_io::runtime_config::kBoardProfile);
   cJSON_AddBoolToObject(document, "gpio_control", false);
   cJSON_AddNumberToObject(document, "real_step_interval_ms", kRealStepIntervalMs);
   cJSON_AddNumberToObject(document, "simulation_step_s", kSimulationStepSeconds);
@@ -144,6 +143,7 @@ namespace growbox::app::legacy {
       runControllerStep();
     }
     vTaskDelay(1);
-  }}
+  }
+}
 
 } // namespace growbox::app::legacy

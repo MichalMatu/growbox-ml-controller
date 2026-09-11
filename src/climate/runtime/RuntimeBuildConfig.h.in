@@ -2,6 +2,7 @@
 
 namespace growbox::app::climate_io::runtime_config {
 
+inline constexpr char kBoardProfile[] = "@GROWBOX_BOARD_PROFILE@";
 inline constexpr int kI2cSdaGpio = @GROWBOX_I2C_SDA_GPIO@;
 inline constexpr int kI2cSclGpio = @GROWBOX_I2C_SCL_GPIO@;
 inline constexpr char kBleTp357Mac[] = "@GROWBOX_BLE_TP357_MAC@";

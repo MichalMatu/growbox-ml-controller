@@ -1,4 +1,5 @@
 #include "climate/runtime/Stage28ServiceConsoleCommand.h"
+#include "climate/runtime/Stage28ServiceConsoleRouter.h"
 #include <cassert>
 #include <cstring>
 using namespace growbox::app::climate_io::runtime;
@@ -87,6 +88,32 @@ void testInvalidCommandsFailClosed() {
   assert(parseServiceConsoleCommand("rf lamp maybe").kind == ServiceConsoleCommandKind::Invalid);
   assert(parseServiceConsoleCommand("sdlog erase all").kind == ServiceConsoleCommandKind::Invalid);
 }
+void testCommandDomains() {
+  const auto expect = [](ServiceConsoleCommandKind kind, ServiceConsoleCommandDomain domain) {
+    assert(serviceConsoleCommandDomain(kind) == domain);
+  };
+  expect(ServiceConsoleCommandKind::None, ServiceConsoleCommandDomain::None);
+  expect(ServiceConsoleCommandKind::Help, ServiceConsoleCommandDomain::Builtin);
+  expect(ServiceConsoleCommandKind::Status, ServiceConsoleCommandDomain::System);
+  expect(ServiceConsoleCommandKind::Sensors, ServiceConsoleCommandDomain::System);
+  expect(ServiceConsoleCommandKind::RfList, ServiceConsoleCommandDomain::System);
+  expect(ServiceConsoleCommandKind::RfReceive, ServiceConsoleCommandDomain::System);
+  expect(ServiceConsoleCommandKind::RtcSetUnix, ServiceConsoleCommandDomain::System);
+  expect(ServiceConsoleCommandKind::ManualOutput, ServiceConsoleCommandDomain::Output);
+  expect(ServiceConsoleCommandKind::AutomationStatus, ServiceConsoleCommandDomain::Output);
+  expect(ServiceConsoleCommandKind::AutomationEnable, ServiceConsoleCommandDomain::Output);
+  expect(ServiceConsoleCommandKind::AutomationDisable, ServiceConsoleCommandDomain::Output);
+  expect(ServiceConsoleCommandKind::MaintenanceStatus, ServiceConsoleCommandDomain::Output);
+  expect(ServiceConsoleCommandKind::MaintenanceEnter, ServiceConsoleCommandDomain::Output);
+  expect(ServiceConsoleCommandKind::MaintenanceExit, ServiceConsoleCommandDomain::Output);
+  expect(ServiceConsoleCommandKind::MaintenanceRawOutput, ServiceConsoleCommandDomain::Output);
+  expect(ServiceConsoleCommandKind::SdLogStatus, ServiceConsoleCommandDomain::Storage);
+  expect(ServiceConsoleCommandKind::SdLogList, ServiceConsoleCommandDomain::Storage);
+  expect(ServiceConsoleCommandKind::SdLogRead, ServiceConsoleCommandDomain::Storage);
+  expect(ServiceConsoleCommandKind::SdLogSelfTest, ServiceConsoleCommandDomain::Storage);
+  expect(ServiceConsoleCommandKind::Invalid, ServiceConsoleCommandDomain::Invalid);
+  expect(static_cast<ServiceConsoleCommandKind>(255U), ServiceConsoleCommandDomain::Invalid);
+}
 } // namespace
 int main() {
   testReadOnlyMenuCommands();
@@ -97,5 +124,6 @@ int main() {
   testRtcSetUnixCommand();
   testSdLogCommands();
   testInvalidCommandsFailClosed();
+  testCommandDomains();
   return 0;
 }

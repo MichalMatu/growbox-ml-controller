@@ -590,6 +590,7 @@ add_executable(
   stage28_service_console_tests
   "${PROJECT_ROOT}/test/test_stage28_service_console/test_main.cpp"
   "${PROJECT_ROOT}/src/climate/runtime/Stage28ServiceConsoleCommand.cpp"
+  "${PROJECT_ROOT}/src/climate/runtime/Stage28ServiceConsoleRouter.cpp"
 )
 target_include_directories(stage28_service_console_tests PRIVATE "${PROJECT_ROOT}/src")
 target_compile_features(stage28_service_console_tests PRIVATE cxx_std_17)

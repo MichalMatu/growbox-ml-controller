@@ -8,6 +8,8 @@ ROOT = Path(__file__).resolve().parents[1]
 RUNTIME = ROOT / "src/climate/ClimateV6RealInputRuntime.cpp"
 CMAKE = ROOT / "src/CMakeLists.txt"
 CROWPANEL = ROOT / "scripts/stage27c_crowpanel.sh"
+IDF_GATE = ROOT / "scripts/idf_gate_build.sh"
+BUILD_CONFIG = ROOT / "src/climate/runtime/RuntimeBuildConfig.h.in"
 
 
 def fail(message: str) -> None:
@@ -18,18 +20,34 @@ def fail(message: str) -> None:
 runtime_text = RUNTIME.read_text(encoding="utf-8")
 cmake_text = CMAKE.read_text(encoding="utf-8")
 crowpanel_text = CROWPANEL.read_text(encoding="utf-8")
+idf_gate_text = IDF_GATE.read_text(encoding="utf-8")
+build_config_text = BUILD_CONFIG.read_text(encoding="utf-8")
 
-for forbidden in ("#ifndef GROWBOX_", "#define GROWBOX_"):
-    if forbidden in runtime_text:
-        fail(f"{RUNTIME.relative_to(ROOT)} contains fallback macro '{forbidden}'")
+for path in sorted((ROOT / "src").rglob("*")):
+    if path.suffix not in {".cpp", ".cc", ".h", ".hpp"}:
+        continue
+    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        if line.lstrip().startswith("#ifndef GROWBOX_"):
+            fail(f"{path.relative_to(ROOT)}:{line_number} contains a production fallback default")
 
 if '"climate/runtime/RuntimeBuildConfig.h"' not in runtime_text:
     fail("real-input runtime does not consume the generated RuntimeBuildConfig")
+for token in ("kBoardProfile", "kFirmwareGitSha"):
+    if token not in build_config_text:
+        fail(f"generated RuntimeBuildConfig is missing {token}")
 
 if "config/runtime/GrowboxRuntimeConfig.cmake" not in cmake_text:
     fail("src/CMakeLists.txt does not include canonical GrowboxRuntimeConfig.cmake")
 if "RuntimeBuildConfig.h.in" not in cmake_text or "configure_file" not in cmake_text:
     fail("src/CMakeLists.txt does not generate RuntimeBuildConfig.h")
+
+# Generic gate forwards explicit overrides only. Defaults belong to canonical CMake.
+if 'PROFILE="${IDF_GATE_PROFILE:-}"' not in idf_gate_text:
+    fail("generic IDF gate does not defer the board default to canonical CMake")
+if 'APP_MODE="${IDF_GATE_APP_MODE:-}"' not in idf_gate_text:
+    fail("generic IDF gate does not defer the app-mode default to the project root")
+if "esp32s3-devkitc1-n16r8" in idf_gate_text:
+    fail("generic IDF gate duplicates the canonical board-profile default")
 
 # The CrowPanel launcher may select profiles and forward explicit user overrides,
 # but board pin values belong only to config/boards/*.cmake.
@@ -52,7 +70,7 @@ required_files = (
     ROOT / "config/boards/crowpanel-esp32s3-2_9-n8r8.cmake",
     ROOT / "config/runtime/profiles/generic.cmake",
     ROOT / "config/runtime/profiles/stage27c-crowpanel.cmake",
-    ROOT / "src/climate/runtime/RuntimeBuildConfig.h.in",
+    BUILD_CONFIG,
 )
 for path in required_files:
     if not path.is_file():

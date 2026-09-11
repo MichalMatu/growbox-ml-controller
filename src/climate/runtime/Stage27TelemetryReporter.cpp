@@ -1,5 +1,7 @@
 #include "climate/runtime/Stage27TelemetryReporter.h"
 
+#include "climate/runtime/RuntimeBuildConfig.h"
+
 #include "climate/runtime/Stage28eLog.h"
 #include "demo/protocol/HeapDiagnostics.h"
 
@@ -7,10 +9,6 @@
 #include <esp_log.h>
 
 #include <limits>
-
-#ifndef GROWBOX_FIRMWARE_GIT_SHA
-#define GROWBOX_FIRMWARE_GIT_SHA "unknown"
-#endif
 
 namespace growbox::app::climate_io::runtime {
 namespace {
@@ -186,8 +184,9 @@ void Stage27TelemetryReporter::logRecord(
       "storage_sd_mount_errors=%u storage_flash_mount_errors=%u storage_write_errors=%u "
       "storage_queue_drops=%u storage_records_written=%u storage_records_skipped=%u "
       "storage_fallbacks=%u storage_sd_recoveries=%u storage_last_write_ms=%llu",
-      GROWBOX_FIRMWARE_GIT_SHA, static_cast<unsigned long long>(snapshot.uptime_ms),
-      snapshot.reset_reason, snapshot.input_sampled, snapshot.io_status, snapshot.heap_internal,
+      ::growbox::app::climate_io::runtime_config::kFirmwareGitSha,
+      static_cast<unsigned long long>(snapshot.uptime_ms), snapshot.reset_reason,
+      snapshot.input_sampled, snapshot.io_status, snapshot.heap_internal,
       snapshot.heap_internal_min, snapshot.heap_internal_largest, snapshot.heap_psram,
       snapshot.heap_psram_min, snapshot.heap_psram_largest, snapshot.stack_free,
       snapshot.scd_available, snapshot.scd_sample, static_cast<double>(snapshot.scd_temperature_c),

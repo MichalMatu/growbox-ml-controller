@@ -1,13 +1,3 @@
-#ifndef GROWBOX_APP_CLIMATE_V6_FAKE
-#define GROWBOX_APP_CLIMATE_V6_FAKE 0
-#endif
-#ifndef GROWBOX_APP_CLIMATE_V6_REAL_INPUTS
-#define GROWBOX_APP_CLIMATE_V6_REAL_INPUTS 0
-#endif
-#ifndef GROWBOX_FIRMWARE_GIT_SHA
-#define GROWBOX_FIRMWARE_GIT_SHA "unknown"
-#endif
-
 #if GROWBOX_APP_CLIMATE_V6_FAKE
 #include "climate/ClimateV6FakeRuntime.h"
 #elif GROWBOX_APP_CLIMATE_V6_REAL_INPUTS
@@ -15,6 +5,7 @@
 #else
 #include "legacy/LegacyRuntime.h"
 #endif
+#include "climate/runtime/RuntimeBuildConfig.h"
 #include "climate/runtime/Stage28eBreadcrumbs.h"
 #include "climate/runtime/Stage28ePlatformDiagnostics.h"
 
@@ -84,7 +75,8 @@ void emitBreadcrumbBootDiagnostics() noexcept {
       static_cast<unsigned long>(previous.arbiter_safety_override_count),
       static_cast<unsigned long>(previous.arbiter_continuity_fault_count));
 
-  const BootIdentity& boot = bootIdentity(GROWBOX_FIRMWARE_GIT_SHA);
+  const BootIdentity& boot =
+      bootIdentity(::growbox::app::climate_io::runtime_config::kFirmwareGitSha);
   beginStage28eBreadcrumb(boot.boot_id, boot.reset_reason);
 }
 

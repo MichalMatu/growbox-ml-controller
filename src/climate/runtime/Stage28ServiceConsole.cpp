@@ -1,5 +1,7 @@
 #include "climate/runtime/Stage28ServiceConsole.h"
 
+#include "climate/runtime/Stage28ServiceConsoleRouter.h"
+
 #include <array>
 #include <cstring>
 #include <driver/uart.h>
@@ -113,16 +115,33 @@ void Stage28ServiceConsole::poll(std::uint64_t now_ms) noexcept {
 
 void Stage28ServiceConsole::processLine(std::uint64_t now_ms) noexcept {
   const ServiceConsoleCommand command = parseServiceConsoleCommand(line_.data());
-  if (command.kind == ServiceConsoleCommandKind::None) {
+  const ServiceConsoleCommandDomain domain = serviceConsoleCommandDomain(command.kind);
+  switch (domain) {
+  case ServiceConsoleCommandDomain::None:
     return;
-  }
-  if (command.kind == ServiceConsoleCommandKind::Help) {
-    printHelp();
-    return;
-  }
-  if (output_commands_.handle(command, now_ms) || storage_commands_.handle(command) ||
-      system_commands_.handle(command, now_ms)) {
-    return;
+  case ServiceConsoleCommandDomain::Builtin:
+    if (command.kind == ServiceConsoleCommandKind::Help) {
+      printHelp();
+      return;
+    }
+    break;
+  case ServiceConsoleCommandDomain::Output:
+    if (output_commands_.handle(command, now_ms)) {
+      return;
+    }
+    break;
+  case ServiceConsoleCommandDomain::Storage:
+    if (storage_commands_.handle(command)) {
+      return;
+    }
+    break;
+  case ServiceConsoleCommandDomain::System:
+    if (system_commands_.handle(command, now_ms)) {
+      return;
+    }
+    break;
+  case ServiceConsoleCommandDomain::Invalid:
+    break;
   }
   writeText("error: unknown/invalid command; type 'help'\r\n");
 }

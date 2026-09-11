@@ -14,10 +14,6 @@
 #include <cstdio>
 #include <cstring>
 
-#ifndef GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST
-#define GROWBOX_STAGE28E_BREADCRUMB_RESTART_SELFTEST 0
-#endif
-
 namespace growbox::app::climate_io::runtime {
 namespace {
 

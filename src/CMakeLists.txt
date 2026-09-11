@@ -115,6 +115,7 @@ elseif(GROWBOX_APP_MODE STREQUAL "climate-v6-real-inputs")
       "climate/runtime/Stage28ServiceConsoleStorageCommands.cpp"
       "climate/runtime/Stage28ServiceConsoleSystemCommands.cpp"
       "climate/runtime/Stage28ServiceConsoleCommand.cpp"
+      "climate/runtime/Stage28ServiceConsoleRouter.cpp"
       "climate/runtime/Stage28eLog.cpp"
       "climate/telemetry/Stage27LogFormat.cpp"
       "climate/storage/Stage27TelemetryLogger.cpp"
