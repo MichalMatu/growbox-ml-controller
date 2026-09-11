@@ -2,12 +2,11 @@
 
 #include "climate/Stage28dOutputBindings.h"
 #include "climate/output/OutputExecutionTelemetry.h"
+#include "climate/runtime/RuntimeOutputTelemetryLog.h"
 #include "climate/runtime/Stage27ScheduleIntentAdapter.h"
 
 #include <esp_log.h>
 #include <esp_timer.h>
-
-#include <cstddef>
 
 namespace growbox::app::climate_io::runtime {
 namespace {
@@ -175,46 +174,8 @@ void RealInputRuntimeCoordinator::tick(std::uint64_t loop_started_us) noexcept {
     }
 
     services_.support.telemetry_reporter.record(now_ms, loop_result, decision, output_telemetry);
-    ESP_LOGI(kTag,
-             "output_exec_v=2 supervisor_mode=%u transport_active=%d lifecycle_active=%d "
-             "lifecycle_event=%u automation_requested=%d safety_latched=%d safety_reason=%u "
-             "tx=%lu tx_errors=%lu",
-             static_cast<unsigned>(output_telemetry.mode), output_telemetry.transport_active,
-             output_telemetry.lifecycle_active,
-             static_cast<unsigned>(output_telemetry.lifecycle_event),
-             output_telemetry.automation_requested, output_telemetry.safety_latched,
-             output_telemetry.safety_reason_code,
-             static_cast<unsigned long>(services_.outputs.transport.transmitCount()),
-             static_cast<unsigned long>(services_.outputs.transport.transmitErrorCount()));
-
-    for (std::size_t index = 0U; index < output_telemetry.endpoint_count; ++index) {
-      const auto& endpoint = output_telemetry.endpoints[index];
-      ESP_LOGI(kTag,
-               "output_endpoint endpoint=%u control=%d/%.3f schedule=%d/%.3f manual=%d/%.3f "
-               "safety=%d/%u/%u selected=%d/%.3f/%u/%u resolved=%d/%u dwell=%d "
-               "override=%d inhibited=%d attempt=%d current=%d state=%u source=%u reason=%u "
-               "transport=%u error=%u last_command=%d/%u/%u/%u physical_state=%u independent=%d",
-               static_cast<unsigned>(endpoint.endpoint), endpoint.control.active,
-               static_cast<double>(endpoint.control.level), endpoint.schedule.active,
-               static_cast<double>(endpoint.schedule.level), endpoint.manual.active,
-               static_cast<double>(endpoint.manual.level), endpoint.safety_active,
-               static_cast<unsigned>(endpoint.safety_constraint),
-               static_cast<unsigned>(endpoint.safety_reason), endpoint.selected,
-               static_cast<double>(endpoint.selected_level),
-               static_cast<unsigned>(endpoint.selected_source),
-               static_cast<unsigned>(endpoint.selected_reason), endpoint.resolved,
-               static_cast<unsigned>(endpoint.resolved_state), endpoint.held_by_dwell,
-               endpoint.safety_override, endpoint.inhibited, endpoint.attempt_known,
-               endpoint.attempted_this_cycle, static_cast<unsigned>(endpoint.attempt_state),
-               static_cast<unsigned>(endpoint.attempt_source),
-               static_cast<unsigned>(endpoint.attempt_reason),
-               static_cast<unsigned>(endpoint.transport_status),
-               static_cast<unsigned>(endpoint.transport_error), endpoint.last_command_known,
-               static_cast<unsigned>(endpoint.last_command_state),
-               static_cast<unsigned>(endpoint.last_command_source),
-               static_cast<unsigned>(endpoint.last_command_reason),
-               static_cast<unsigned>(endpoint.physical_state), endpoint.physical_independent);
-    }
+    logOutputExecutionTelemetry(output_telemetry, services_.outputs.transport.transmitCount(),
+                                services_.outputs.transport.transmitErrorCount());
 
     services_.support.timing.telemetry.observe(
         static_cast<std::uint64_t>(esp_timer_get_time()) - telemetry_started_us);
