@@ -1,4 +1,4 @@
-#include "climate/output/OutputPersistenceSchema.h"
+#include "climate/output/persistence/OutputPersistenceSchema.h"
 
 #include <cassert>
 #include <cstddef>

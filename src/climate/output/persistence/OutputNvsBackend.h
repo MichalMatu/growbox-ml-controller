@@ -1,6 +1,6 @@
 #pragma once
 
-#include "climate/output/OutputPersistenceStore.h"
+#include "climate/output/persistence/OutputPersistenceStore.h"
 
 namespace growbox::app::output {
 

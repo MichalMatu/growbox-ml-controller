@@ -1,4 +1,4 @@
-#include "climate/output/OutputPersistenceStore.h"
+#include "climate/output/persistence/OutputPersistenceStore.h"
 
 #include <cassert>
 #include <cstddef>

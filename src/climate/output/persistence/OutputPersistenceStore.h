@@ -1,6 +1,6 @@
 #pragma once
 
-#include "climate/output/OutputPersistenceSchema.h"
+#include "climate/output/persistence/OutputPersistenceSchema.h"
 
 #include <cstddef>
 #include <cstdint>

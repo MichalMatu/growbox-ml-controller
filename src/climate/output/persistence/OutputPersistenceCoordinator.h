@@ -1,7 +1,7 @@
 #pragma once
 
-#include "climate/output/OutputPersistenceStore.h"
 #include "climate/output/OutputStateStore.h"
+#include "climate/output/persistence/OutputPersistenceStore.h"
 
 #include <cstdint>
 

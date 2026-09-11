@@ -1,4 +1,4 @@
-#include "climate/output/OutputPersistenceCoordinator.h"
+#include "climate/output/persistence/OutputPersistenceCoordinator.h"
 
 #include <cstddef>
 

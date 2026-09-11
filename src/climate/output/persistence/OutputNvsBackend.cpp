@@ -1,4 +1,4 @@
-#include "climate/output/OutputNvsBackend.h"
+#include "climate/output/persistence/OutputNvsBackend.h"
 
 #include <nvs.h>
 

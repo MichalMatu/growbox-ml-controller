@@ -288,7 +288,7 @@ target_compile_options(output_execution_telemetry_tests PRIVATE -Wall -Wextra -W
 add_executable(
   output_persistence_schema_tests
   "${PROJECT_ROOT}/test/test_output_persistence_schema/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputPersistenceSchema.cpp"
+  "${PROJECT_ROOT}/src/climate/output/persistence/OutputPersistenceSchema.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputPolicyConfig.cpp"
 )
 target_include_directories(output_persistence_schema_tests PRIVATE "${PROJECT_ROOT}/src")
@@ -298,9 +298,9 @@ target_compile_options(output_persistence_schema_tests PRIVATE -Wall -Wextra -Wp
 add_executable(
   output_persistence_coordinator_tests
   "${PROJECT_ROOT}/test/test_output_persistence_coordinator/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputPersistenceCoordinator.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputPersistenceStore.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputPersistenceSchema.cpp"
+  "${PROJECT_ROOT}/src/climate/output/persistence/OutputPersistenceCoordinator.cpp"
+  "${PROJECT_ROOT}/src/climate/output/persistence/OutputPersistenceStore.cpp"
+  "${PROJECT_ROOT}/src/climate/output/persistence/OutputPersistenceSchema.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputPolicyConfig.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputStateStore.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputLifecycleExecutor.cpp"
@@ -314,8 +314,8 @@ target_compile_options(output_persistence_coordinator_tests PRIVATE -Wall -Wextr
 add_executable(
   output_persistence_store_tests
   "${PROJECT_ROOT}/test/test_output_persistence_store/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputPersistenceStore.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputPersistenceSchema.cpp"
+  "${PROJECT_ROOT}/src/climate/output/persistence/OutputPersistenceStore.cpp"
+  "${PROJECT_ROOT}/src/climate/output/persistence/OutputPersistenceSchema.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputPolicyConfig.cpp"
 )
 target_include_directories(output_persistence_store_tests PRIVATE "${PROJECT_ROOT}/src")
