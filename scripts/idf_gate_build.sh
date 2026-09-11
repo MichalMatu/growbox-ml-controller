@@ -9,7 +9,7 @@ source "${ROOT}/scripts/source_idf.sh"
 BUILD_DIR="${IDF_GATE_BUILD_DIR:-build/idf-gate}"
 SDKCONFIG_DEFAULTS="${IDF_GATE_SDKCONFIG:-config/idf/sdkconfig.defaults}"
 SDKCONFIG_PATH="${IDF_GATE_SDKCONFIG_PATH:-${BUILD_DIR}/sdkconfig}"
-PROFILE="${IDF_GATE_PROFILE:-esp32s3-devkitc1-n8}"
+PROFILE="${IDF_GATE_PROFILE:-esp32s3-devkitc1-n16r8}"
 APP_MODE="${IDF_GATE_APP_MODE:-legacy}"
 
 mkdir -p "${BUILD_DIR}"
