@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260911-phase0-workflow-branch-audit-v1",
+  "task_digest": "d7304269d1c84b6f524c4161d6fc69a2320f61acd1f28789a868bed5d1142a80",
+  "idle_timeout": 300,
+  "task_timeout": 600,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-11T15:17:20.210848+00:00",
+  "attempt_id": "f7a78db3c6dd11961918c516",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 23075,
+  "updated_at": "2026-09-11T15:17:20.210946+00:00",
+  "pid": 23075
+}
