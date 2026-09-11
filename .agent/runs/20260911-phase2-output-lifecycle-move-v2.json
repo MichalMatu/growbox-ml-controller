@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260911-phase2-output-lifecycle-move-v2",
+  "task_digest": "1c081ec8f66d015f695d9b2409e1d3a05deaad1d78c9646737e47ffd673d1a47",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-11T18:00:18.254036+00:00",
+  "attempt_id": "eb952f45850f0eb274e7acc8",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 85356,
+  "updated_at": "2026-09-11T18:00:18.254166+00:00",
+  "pid": 85356
+}
