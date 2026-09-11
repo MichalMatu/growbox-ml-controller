@@ -1,213 +1,109 @@
 # Final architecture and quality freeze plan
 
-Status: active
-Scope branch: `refactor/quality-freeze-final`
-Base product branch: `mvp/environment-controller`
-Base SHA: `100a7c9d618586b8b7c0add27084763261bee238`
+Status: **closed**
+Started from product SHA: `100a7c9d618586b8b7c0add27084763261bee238`
+Latest code-bearing compact software verification: `1a599a58eb57841206ab92c7a5cacf50f7463f78`
 
-## Goal
+## Outcome
 
-Complete the remaining architecture cleanup once, preserve all qualified safety/output invariants, and finish with one exact-SHA software quality gate plus any hardware requalification that is materially required by the final production-source diff.
+The planned architecture cleanup is complete. The final production structure has:
 
-The end state must have:
-
-- one production climate controller path;
+- one production climate-v6 path;
 - one authoritative runtime/build configuration source;
 - `OutputSupervisor` as the only normal configured physical-output owner;
-- a thin real-input runtime composition root;
+- a thin real-input bootstrap plus separate composition/coordinator boundaries;
 - a thin service-console transport/router with domain handlers;
-- legacy controller code isolated from the production V6 target;
-- architecture guards that make the boundaries executable constraints rather than documentation only;
-- deterministic bounded build/test tooling;
-- final exact-SHA evidence before the refactor is declared frozen.
+- legacy controller code isolated from production V6 builds;
+- executable architecture/config ownership guards;
+- bounded deterministic host/build tooling;
+- explicit transport truth semantics that do not fabricate execution when physical transport is unavailable.
 
-## Frozen invariants
+## Frozen invariants preserved
 
-The cleanup must not change these product contracts unless a separate explicit product decision is made:
-
-- deterministic rule control remains authoritative;
-- ML remains shadow/research-only and cannot become active control implicitly;
+- deterministic Rule control remains authoritative in production;
+- ML remains shadow/research-only;
 - lamp thermal trip remains `>= 28 C`;
 - lamp recovery remains `<= 26 C` continuously for 10 minutes;
-- safety remains active while automation is disabled;
+- safety remains active while normal automation is disabled;
 - one-way RF transmission is not physical acknowledgement;
-- raw RF remains available only through explicit `MaintenanceLocked` capability;
+- raw RF remains restricted to explicit `MaintenanceLocked` handling;
 - configured physical output execution remains owned by `OutputSupervisor`;
-- no runtime refactor may fabricate executed/physical output truth.
+- unavailable transport must not fabricate executed/physical output truth.
 
-## QF-0 — deterministic verification foundation
+## Stage result summary
 
-Problem:
+### QF-0 — verification foundation: DONE
 
-- `scripts/run_clang_tidy_host.sh` performs an unnecessary full host build only to obtain `compile_commands.json`;
-- host builds use unbounded `--parallel`, which made the previous quality gate exceed the Local Agent memory limit.
+Host build parallelism was bounded and clang-tidy setup no longer requires a redundant full build just to create compile commands.
 
-Changes:
+### QF-1 — runtime/build configuration SSOT: DONE
 
-- configure the clang-tidy host build tree without compiling it;
-- introduce a bounded `HOST_BUILD_JOBS` default for actual host builds;
-- validate the job-count input;
-- use the same bounded value from the quality gate;
-- retain an environment override for larger developer machines.
+Canonical CMake/profile configuration now generates typed `RuntimeBuildConfig.h`. Production C++ fallback-default duplication was removed and guards enforce the boundary.
 
-Acceptance:
+### QF-2 — real-input runtime split: DONE
 
-- focused host tests pass;
-- clang-tidy runs from the configured compile database without the redundant build;
-- the quality gate no longer depends on all host cores being available.
+`ClimateV6RealInputRuntime` is a thin bootstrap. Construction/lifetimes live in `RealInputRuntimeComposition`; one-cycle orchestration lives in `RealInputRuntimeCoordinator`.
 
-## QF-1 — runtime/build configuration SSOT
+### QF-3 — service-console split: DONE
 
-Problem:
+Console line IO/routing is separated from output, storage and system command handlers.
 
-Board/runtime values and feature defaults are duplicated between `src/CMakeLists.txt`, fallback preprocessor definitions in `ClimateV6RealInputRuntime.cpp`, and board scripts such as `scripts/stage27c_crowpanel.sh`.
+### QF-4 — legacy isolation: DONE
 
-Target design:
+Production V6 builds no longer compile the legacy controller path by default. App-mode selection is explicit.
 
-- CMake owns resolved build configuration;
-- one generated/typed runtime build configuration header exposes resolved values to C++;
-- board scripts select profiles and intentional overrides instead of restating generic defaults;
-- production C++ does not contain a second fallback-default table;
-- configuration validation rejects incompatible feature/pin combinations where both features can be enabled together.
+### QF-5 — architecture guards: DONE
 
-Acceptance:
+Guards cover output/RF ownership, runtime/config boundaries, service-console boundaries and app-mode isolation.
 
-- one authoritative default per setting;
-- no production fallback macros duplicating CMake defaults;
-- host/unit coverage for generated/resolved configuration where practical;
-- CrowPanel real-input and fake-output build profiles still resolve to the intended pins/features.
+### QF-6 — post-refactor audit/debt burn: DONE
 
-## QF-2 — split `ClimateV6RealInputRuntime`
+The re-audit found and fixed additional debt:
 
-Problem:
+- `fake-locked` transport no longer reports false `Completed` execution;
+- `RuntimeOutputTransport` is a separate focused boundary with regression coverage;
+- coordinator dependencies are grouped by domain instead of a flat dependency bag;
+- invalid lifecycle/automation/maintenance reports fail closed instead of being ignored;
+- binary output policy constants moved out of composition wiring;
+- output telemetry formatting moved out of coordinator orchestration;
+- production Rule authority received an explicit compile-time fence;
+- duplicated compile-definition runtime surface was reduced;
+- retired Gate6 thermal test-sequence code was removed.
 
-`ClimateV6RealInputRuntime.cpp` is currently both composition root and runtime behavior owner. It contains resource construction, lifecycle logic, control-cycle orchestration, persistence synchronization, schedule/lamp-safety handling and telemetry.
+### QF-7 — software verification: DONE
 
-Target design:
+The original broad QF-7 software gate passed on `fa56b345b5e555a68fc5a880779dee6f931acf66`.
 
-- a composition object owns construction/lifetimes of runtime dependencies;
-- a small runtime coordinator owns one-cycle orchestration;
-- lifecycle/fault handling has an explicit boundary;
-- `runClimateV6RealInputRuntime()` becomes approximately initialize -> validate -> run;
-- raw mutable readiness booleans are replaced by an explicit runtime execution-status abstraction where this improves lifetime/state clarity.
+After the additional debt burn, compact software verification passed on exact code-bearing SHA `1a599a58eb57841206ab92c7a5cacf50f7463f78`:
 
-Non-goal:
+- all architecture/config guards PASS;
+- focused runtime transport regression PASS;
+- host C++ `51/51` PASS;
+- one CrowPanel real-input ESP-IDF build PASS;
+- firmware binary `0xbc950` bytes;
+- `hardware_started=0`.
 
-Do not create a renamed monolithic `RuntimeManager`. New classes must each have one cohesive responsibility.
+### QF-8 — hardware requalification: NOT RE-EARNED FOR FINAL REFACTOR SHA
 
-Acceptance:
+Historical full Physical H remains valid only for its historical executable `02208d23f403bca3540dbbd652eb55703a044833`.
 
-- behavior-preserving tests remain green;
-- output ownership guard remains green;
-- runtime file becomes a composition entry point rather than a behavior container;
-- safety, lifecycle and output truth semantics are unchanged.
+Refactor hardware attempts confirmed the expected board/port/runtime path and safe shutdown behavior, but the final frozen Physical H contract did not produce a terminal PASS on the refactor executable. The long-run contract waited for a 180-second clean fan-OFF baseline followed by a natural OFF->ON transition and did not obtain that transition during the final attempt.
 
-## QF-3 — split `Stage28ServiceConsole`
+Therefore:
 
-Problem:
+- do not transfer the historical Physical H claim to `fa56...`, `1a599...` or later descendants;
+- do not block ordinary software/product development on repeating the old long test;
+- run a bounded fresh physical qualification only when a future release explicitly needs a new hardware-qualified executable identity.
 
-`Stage28ServiceConsole` mixes terminal IO/routing with output control, storage/logging, sensor/system diagnostics, RTC and RF diagnostics.
+## Definition-of-done interpretation
 
-Target design:
+The architecture/software quality-freeze goal is complete. A fresh physical-executable qualification remains a separate release gate when required; it is not claimed as completed for the final refactor SHA.
 
-Keep `Stage28ServiceConsole` responsible for line IO, parsing and dispatch only. Extract coarse domain handlers:
+This distinction intentionally preserves evidence integrity instead of calling an incomplete hardware run a PASS.
 
-- output commands: manual, automation, maintenance;
-- storage commands: SD status/list/read/self-test;
-- system commands: status, sensors, RTC and RF diagnostics.
+## Post-freeze workflow
 
-The existing `Stage28ServiceConsoleCommand` parser remains the parser SSOT.
+Normal development proceeds from `main` after branch cleanup. Prefer focused verification and small coherent changes. Do not reopen the broad quality-freeze workstream unless new evidence shows a concrete architecture ownership/responsibility defect.
 
-Acceptance:
-
-- no direct normal RF/output ownership is introduced;
-- service-console tests cover dispatch and each handler domain;
-- adding one future command does not require adding another unrelated dependency to the console transport/router.
-
-## QF-4 — isolate legacy controller architecture
-
-Problem:
-
-The legacy environment controller and V6 climate controller are still compiled from the same component, and the source tree still makes both architectures appear equally production-relevant.
-
-Target design:
-
-- production V6 builds do not compile/link legacy controller/safety implementations by default;
-- legacy code remains available only through an explicit demo/reference/test target where still needed;
-- production app-mode selection is explicit and fail-closed;
-- existing comparison/test use-cases are preserved deliberately rather than accidentally.
-
-Acceptance:
-
-- a build/architecture guard detects accidental legacy linkage into the production V6 target;
-- V6 real-input and fake builds remain green;
-- legacy tests/demos that are intentionally retained have an explicit build path.
-
-## QF-5 — architecture guards and dependency review
-
-Extend executable architecture checks only where they protect real boundaries discovered during QF-1..QF-4. At minimum verify:
-
-- configured output writes cannot bypass `OutputSupervisor`;
-- raw RF remains restricted to maintenance/diagnostic boundaries;
-- production V6 does not link retired/legacy controller ownership;
-- runtime configuration defaults have one source;
-- service-console refactor does not reintroduce direct configured-output transport ownership.
-
-Avoid style-only guards and LOC-only thresholds.
-
-## QF-6 — post-refactor code audit
-
-Perform a fresh audit of the final candidate, not merely the moved files. Review:
-
-- class responsibility and dependency direction;
-- mutable-state ownership and SSOT;
-- lifetime/reference safety;
-- duplicated policy/configuration;
-- failure/fail-closed paths;
-- dead compatibility paths;
-- public APIs;
-- stack/DRAM/PSRAM consequences;
-- test coverage of the newly introduced boundaries.
-
-Do not split cohesive components solely because they are large. In particular, do not split `ClimateRuntimeController` unless the final dependency audit finds a concrete responsibility violation.
-
-## QF-7 — exact-SHA software gate
-
-Iteration uses focused verification. The final candidate receives one broad software gate on one exact SHA:
-
-- output/RF ownership and new architecture guards;
-- Python tests excluding hardware;
-- complete host C++ tests;
-- focused Stage28D regressions;
-- host clang-tidy;
-- required schema/config checks;
-- generic IDF build;
-- CrowPanel real-input fake-output build;
-- any additional production build matrix introduced by the legacy/config split;
-- clean-tree and exact-SHA identity checks.
-
-A failed final gate is not waived. Fix the defect, rerun affected focused verification, then rerun the final broad gate.
-
-## QF-8 — hardware requalification decision
-
-After the final production diff is frozen, compare it with the last physically qualified executable path.
-
-- Documentation/test/tool-only changes do not trigger hardware work.
-- Production-source changes that materially touch runtime composition, output execution, safety or hardware configuration require the current bounded physical qualification contract on the final SHA.
-- Never claim historical physical qualification for a later executable SHA.
-
-Qualified Growbox serial remains `/dev/cu.usbserial-1130` when physical qualification is required. `/dev/cu.usbserial-10` must not be touched.
-
-## Execution policy
-
-- Work happens on `refactor/quality-freeze-final`, based on the exact recorded MVP SHA.
-- Direct GitHub edits are preferred for bounded, reviewable source/config/doc changes.
-- Local Agent is used for Mac-local builds, ESP-IDF, clang-tidy and physical hardware evidence.
-- Local Agent tasks use the repository binding `815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5`, `resources: []`, explicit work branch and bounded limits.
-- No concurrent write task may race a direct GitHub write.
-- Use focused verification during implementation and one final full software stage.
-- Only after final evidence is green should `mvp/environment-controller` be fast-forwarded to the frozen candidate.
-
-## Definition of done
-
-This refactor is complete only when all planned architecture changes are implemented or explicitly demonstrated unnecessary by final code evidence, the exact final SHA passes the full software gate, required physical qualification (if triggered) passes on that same executable identity, and the product branch is advanced to that verified SHA.
+Current status: `docs/CURRENT_STATUS.md`.
+Current roadmap: `docs/PROJECT_ROADMAP.md`.
