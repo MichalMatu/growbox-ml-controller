@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "eink-display-transactional-refresh-test-20260913-0053",
+  "task_digest": "716021a9b2c1f01d7e698debb2680e00a57da74aec4d54e1adc536758ca11931",
+  "idle_timeout": 300,
+  "task_timeout": 2400,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-12T22:52:15.812982+00:00",
+  "attempt_id": "2b4d101bb9ff4f21ef905c84",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 19904,
+  "updated_at": "2026-09-12T22:52:15.813036+00:00",
+  "pid": 19904
+}
