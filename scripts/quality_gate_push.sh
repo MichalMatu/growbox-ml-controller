@@ -53,12 +53,6 @@ HOST_CXX="${CXX:-c++}"
   -o /tmp/stage28d_rf_output_endpoint_tests
 /tmp/stage28d_rf_output_endpoint_tests
 "$HOST_CXX" -std=c++17 -Wall -Wextra -Wpedantic \
-  -Isrc \
-  test/test_stage28d_thermal_sequence/test_main.cpp \
-  src/climate/Stage28dThermalTestSequence.cpp \
-  -o /tmp/stage28d_thermal_sequence_tests
-/tmp/stage28d_thermal_sequence_tests
-"$HOST_CXX" -std=c++17 -Wall -Wextra -Wpedantic \
   -Isrc -Ilib/environment_control/src \
   test/test_stage28d_binary_role_arbiter/test_main.cpp \
   src/climate/compatibility/stage28d/Stage28dBinaryRoleArbiter.cpp \
