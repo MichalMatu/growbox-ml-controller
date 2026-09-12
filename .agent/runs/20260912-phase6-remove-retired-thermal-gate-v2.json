@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 5,
+  "index": 6,
   "total": 9,
-  "command": "cmake -S test/host -B build/host-tests -DCMAKE_EXPORT_COMPILE_COMMANDS=ON && cmake --build build/host-tests --parallel 2 && ctest --test-dir build/host-tests --output-on-failure",
-  "pid": 49243,
+  "command": "HOST_CXX=\"${CXX:-c++}\"; \"$HOST_CXX\" -std=c++17 -Wall -Wextra -Wpedantic -Isrc -Ilib/environment_control/src test/test_stage28d_rf_output_endpoint/test_main.cpp src/climate/compatibility/stage28d/Stage28dRfOutputEndpoint.cpp src/climate/OutputBindings.cpp src/climate/application/ClimateSemanticOutput.cpp src/climate/output/policy/OutputPolicyConfig.cpp src/climate/output/OutputStateStore.cpp src/climate/rf433/ClimateRf433EndpointRegistry.cpp -o /tmp/stage28d_rf_output_endpoint_tests && /tmp/stage28d_rf_output_endpoint_tests && \"$HOST_CXX\" -std=c++17 -Wall -Wextra -Wpedantic -Isrc -Ilib/environment_control/src test/test_stage28d_binary_role_arbiter/test_main.cpp src/climate/compatibility/stage28d/Stage28dBinaryRoleArbiter.cpp src/climate/output/policy/BinaryActuatorPolicy.cpp -o /tmp/stage28d_binary_role_arbiter_tests && /tmp/stage28d_binary_role_arbiter_tests",
+  "pid": 49718,
   "timeout": 3600,
   "idle_timeout": 900,
   "memory_limit_mb": 6144,
-  "started_at": "2026-09-12T09:18:42.186536+00:00",
-  "stage_name": "command-5",
-  "stage_index": 5,
+  "started_at": "2026-09-12T09:18:45.182486+00:00",
+  "stage_name": "command-6",
+  "stage_index": 6,
   "stage_total": 9,
   "stage_phase": "commands",
   "task_id": "20260912-phase6-remove-retired-thermal-gate-v2",
@@ -18,5 +18,5 @@
   "task_digest": "a9be53b84ffe15212885c68da790045b2ca87f7cb3e718000b9dd97b05b20ad9",
   "daemon_version": "4.18.20",
   "daemon_pid": 48073,
-  "updated_at": "2026-09-12T09:18:42.256675+00:00"
+  "updated_at": "2026-09-12T09:18:45.238482+00:00"
 }
