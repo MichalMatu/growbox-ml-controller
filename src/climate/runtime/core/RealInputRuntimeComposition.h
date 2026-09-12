@@ -19,8 +19,8 @@
 #include "climate/rf433/Rf433OutputTransport.h"
 #include "climate/rf433/Rf433RmtFrameSender.h"
 #include "climate/rf433/Rf433RmtLoopback.h"
+#include "climate/runtime/MaintenanceRfTransport.h"
 #include "climate/runtime/Stage27RuntimeAdapters.h"
-#include "climate/runtime/Stage28MaintenanceRfTransport.h"
 #include "climate/runtime/core/RuntimeOutputTransport.h"
 #include "climate/runtime/diagnostics/Stage28RfDiagnostics.h"
 #include "climate/storage/Stage27TelemetryLogger.h"
@@ -166,7 +166,7 @@ private:
   output::OutputRuntimeLifecycleControl runtime_lifecycle_;
   output::OutputAutomationControl automation_control_;
   output::OutputManualControl manual_control_;
-  Stage28MaintenanceRfTransport maintenance_rf_transport_;
+  MaintenanceRfTransport maintenance_rf_transport_;
   output::OutputMaintenanceControl maintenance_control_;
   output::OutputSupervisorResolver supervisor_resolver_;
   output::OutputSupervisorExecutor supervisor_executor_;

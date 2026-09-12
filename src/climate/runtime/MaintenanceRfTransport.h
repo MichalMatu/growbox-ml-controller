@@ -5,9 +5,9 @@
 
 namespace growbox::app::climate_io::runtime {
 
-class Stage28MaintenanceRfTransport final : public ::growbox::app::output::OutputTransport {
+class MaintenanceRfTransport final : public ::growbox::app::output::OutputTransport {
 public:
-  explicit Stage28MaintenanceRfTransport(Stage28RfDiagnostics& diagnostics) noexcept
+  explicit MaintenanceRfTransport(Stage28RfDiagnostics& diagnostics) noexcept
       : diagnostics_(diagnostics) {}
 
   ::growbox::app::output::TxResult

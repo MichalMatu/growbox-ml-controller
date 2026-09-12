@@ -30,7 +30,7 @@ RADIO_TX = {
     },
     "manualTransmit(": {
         "src/climate/runtime/diagnostics/Stage28RfDiagnostics.cpp",
-        "src/climate/runtime/Stage28MaintenanceRfTransport.cpp",
+        "src/climate/runtime/MaintenanceRfTransport.cpp",
     },
 }
 
@@ -112,7 +112,7 @@ def find_violations(root: Path = ROOT) -> list[str]:
         "src/climate/rf433/Rf433RmtFrameSender.cpp",
         "src/climate/rf433/Rf433OutputTransport.cpp",
         "src/climate/runtime/diagnostics/Stage28RfDiagnostics.cpp",
-        "src/climate/runtime/Stage28MaintenanceRfTransport.cpp",
+        "src/climate/runtime/MaintenanceRfTransport.cpp",
         "src/climate/output/supervisor/OutputSupervisorExecutor.cpp",
         "src/climate/output/lifecycle/OutputLifecycleExecutor.cpp",
         "src/climate/output/control/OutputMaintenanceControl.cpp",
@@ -178,7 +178,7 @@ def find_violations(root: Path = ROOT) -> list[str]:
                 f"src/climate/rf433/Rf433OutputTransport.cpp: normal transport depends on diagnostics {token!r}"
             )
 
-    maintenance = (root / "src/climate/runtime/Stage28MaintenanceRfTransport.cpp").read_text()
+    maintenance = (root / "src/climate/runtime/MaintenanceRfTransport.cpp").read_text()
     for required_token in (
         "OutputSource::Maintenance",
         "OutputReason::MaintenanceRequest",
@@ -186,7 +186,7 @@ def find_violations(root: Path = ROOT) -> list[str]:
     ):
         if required_token not in maintenance:
             errors.append(
-                "src/climate/runtime/Stage28MaintenanceRfTransport.cpp: "
+                "src/climate/runtime/MaintenanceRfTransport.cpp: "
                 f"maintenance-only guard missing {required_token!r}"
             )
 

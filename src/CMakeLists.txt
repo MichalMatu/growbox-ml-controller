@@ -109,7 +109,7 @@ elseif(GROWBOX_APP_MODE STREQUAL "climate-v6-real-inputs")
       "climate/runtime/Stage27RuntimeAdapters.cpp"
       "climate/runtime/telemetry/Stage27TelemetryReporter.cpp"
       "climate/runtime/diagnostics/Stage28RfDiagnostics.cpp"
-      "climate/runtime/Stage28MaintenanceRfTransport.cpp"
+      "climate/runtime/MaintenanceRfTransport.cpp"
       "climate/runtime/console/Stage28ServiceConsole.cpp"
       "climate/runtime/console/ServiceConsoleTextSink.cpp"
       "climate/runtime/console/Stage28ServiceConsoleOutputCommands.cpp"
