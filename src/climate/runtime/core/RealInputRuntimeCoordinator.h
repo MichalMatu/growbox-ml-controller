@@ -1,6 +1,6 @@
 #pragma once
 
-#include "climate/Stage28dLampSafety.h"
+#include "climate/LampSafety.h"
 #include "climate/application/ClimateApplication.h"
 #include "climate/input/ble/BleClimateScanner.h"
 #include "climate/input/rtc/Ds3231ClockSource.h"

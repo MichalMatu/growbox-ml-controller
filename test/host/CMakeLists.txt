@@ -442,7 +442,7 @@ target_compile_options(stage28d_rf_output_endpoint_tests PRIVATE -Wall -Wextra -
 add_executable(
   stage28d_lamp_safety_tests
   "${PROJECT_ROOT}/test/test_stage28d_lamp_safety/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/Stage28dLampSafety.cpp"
+  "${PROJECT_ROOT}/src/climate/LampSafety.cpp"
 )
 target_include_directories(
   stage28d_lamp_safety_tests
@@ -508,7 +508,7 @@ add_executable(
   "${PROJECT_ROOT}/src/climate/runtime/schedule/Stage27ScheduleIntentAdapter.cpp"
   "${PROJECT_ROOT}/src/climate/runtime/schedule/Stage27ScheduleProfile.cpp"
   "${PROJECT_ROOT}/src/climate/runtime/schedule/EuropeWarsawTime.cpp"
-  "${PROJECT_ROOT}/src/climate/Stage28dLampSafety.cpp"
+  "${PROJECT_ROOT}/src/climate/LampSafety.cpp"
 )
 target_include_directories(
   stage28d_output_intent_parity_tests

@@ -1,4 +1,4 @@
-#include "climate/Stage28dLampSafety.h"
+#include "climate/LampSafety.h"
 #include "climate/Stage28dOutputBindings.h"
 
 #include <cassert>

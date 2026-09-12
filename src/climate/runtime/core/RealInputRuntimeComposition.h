@@ -1,6 +1,6 @@
 #pragma once
 
-#include "climate/Stage28dLampSafety.h"
+#include "climate/LampSafety.h"
 #include "climate/application/ClimateSemanticOutput.h"
 #include "climate/output/OutputStateStore.h"
 #include "climate/output/control/OutputAutomationControl.h"
