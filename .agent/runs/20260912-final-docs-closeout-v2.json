@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260912-final-docs-closeout-v2",
+  "task_digest": "bdefc362bcbb738c7e9333665fd7f91ca9f7b193e21606bf21a3d4c70854fb93",
+  "idle_timeout": 180,
+  "task_timeout": 1800,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-12T14:35:20.826527+00:00",
+  "attempt_id": "67c22957bf483b038a96b261",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 17561,
+  "updated_at": "2026-09-12T14:35:20.826597+00:00",
+  "pid": 17561
+}
