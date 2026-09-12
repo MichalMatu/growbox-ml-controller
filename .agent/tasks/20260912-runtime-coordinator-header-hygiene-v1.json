@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "id": "20260912-runtime-coordinator-header-hygiene-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": true,
+  "command_timeout": 7200,
+  "idle_timeout": 600,
+  "task_timeout": 10800,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "test -z \"$(git status --porcelain)\" && git fetch -q origin main agent-control && git merge --ff-only origin/main && test \"$(git rev-parse HEAD)\" = \"17c3cd6f04bda071cbf253ea77cbb339c55f81c8\"",
+    "git show b5a7ae93bc1f57f7679b63b78b82802e6f0ee623:.agent/helpers/trim_runtime_coordinator_header.py > /tmp/trim_runtime_coordinator_header.py && python3 /tmp/trim_runtime_coordinator_header.py && git diff --check",
+    "(pre-commit run --all-files || pre-commit run --all-files) && python3 scripts/check_runtime_config_ssot.py && python3 scripts/check_app_mode_boundaries.py && python3 scripts/check_runtime_boundaries.py && python3 scripts/check_service_console_boundaries.py && python3 scripts/check_output_rf_ownership.py && test \"$(grep -c '^#include' src/climate/runtime/core/RealInputRuntimeCoordinator.h)\" -eq 2",
+    "cmake -S test/host -B build/host-tests && cmake --build build/host-tests --parallel 2 && ctest --test-dir build/host-tests --output-on-failure",
+    "bash scripts/run_clang_tidy_host.sh",
+    "STAGE27C_BUILD_DIR=build/idf-gate-real-inputs-crowpanel GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 bash scripts/stage27c_crowpanel.sh build",
+    "git diff --check && git diff --stat && git add src/climate/runtime/core/RealInputRuntimeCoordinator.h src/climate/runtime/core/RealInputRuntimeCoordinator.cpp && git commit -m 'Reduce runtime coordinator header coupling' && git push origin HEAD:main && git rev-parse HEAD"
+  ]
+}
