@@ -474,7 +474,7 @@ target_compile_options(europe_warsaw_time_tests PRIVATE -Wall -Wextra -Wpedantic
 add_executable(
   stage27_schedule_profile_tests
   "${PROJECT_ROOT}/test/test_stage27_schedule_profile/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/runtime/schedule/Stage27ScheduleProfile.cpp"
+  "${PROJECT_ROOT}/src/climate/runtime/schedule/ScheduleProfile.cpp"
   "${PROJECT_ROOT}/src/climate/runtime/schedule/EuropeWarsawTime.cpp"
 )
 target_include_directories(
@@ -490,7 +490,7 @@ add_executable(
   stage27_schedule_intent_tests
   "${PROJECT_ROOT}/test/test_stage27_schedule_intent/test_main.cpp"
   "${PROJECT_ROOT}/src/climate/runtime/schedule/Stage27ScheduleIntentAdapter.cpp"
-  "${PROJECT_ROOT}/src/climate/runtime/schedule/Stage27ScheduleProfile.cpp"
+  "${PROJECT_ROOT}/src/climate/runtime/schedule/ScheduleProfile.cpp"
   "${PROJECT_ROOT}/src/climate/runtime/schedule/EuropeWarsawTime.cpp"
 )
 target_include_directories(
@@ -506,7 +506,7 @@ add_executable(
   stage28d_output_intent_parity_tests
   "${PROJECT_ROOT}/test/test_stage28d_output_intent_parity/test_main.cpp"
   "${PROJECT_ROOT}/src/climate/runtime/schedule/Stage27ScheduleIntentAdapter.cpp"
-  "${PROJECT_ROOT}/src/climate/runtime/schedule/Stage27ScheduleProfile.cpp"
+  "${PROJECT_ROOT}/src/climate/runtime/schedule/ScheduleProfile.cpp"
   "${PROJECT_ROOT}/src/climate/runtime/schedule/EuropeWarsawTime.cpp"
   "${PROJECT_ROOT}/src/climate/LampSafety.cpp"
 )

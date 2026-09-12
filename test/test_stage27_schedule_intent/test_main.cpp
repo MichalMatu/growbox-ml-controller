@@ -1,7 +1,7 @@
 #include "climate/OutputBindings.h"
 #include "climate/output/OutputIntents.h"
+#include "climate/runtime/schedule/ScheduleProfile.h"
 #include "climate/runtime/schedule/Stage27ScheduleIntentAdapter.h"
-#include "climate/runtime/schedule/Stage27ScheduleProfile.h"
 
 #include <array>
 #include <cassert>

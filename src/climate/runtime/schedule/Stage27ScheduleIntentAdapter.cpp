@@ -1,7 +1,7 @@
 #include "climate/runtime/schedule/Stage27ScheduleIntentAdapter.h"
 
 #include "climate/OutputBindings.h"
-#include "climate/runtime/schedule/Stage27ScheduleProfile.h"
+#include "climate/runtime/schedule/ScheduleProfile.h"
 
 namespace growbox::app::climate_io::runtime {
 

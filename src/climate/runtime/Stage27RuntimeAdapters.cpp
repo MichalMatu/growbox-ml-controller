@@ -1,6 +1,6 @@
 #include "climate/runtime/Stage27RuntimeAdapters.h"
 
-#include "climate/runtime/schedule/Stage27ScheduleProfile.h"
+#include "climate/runtime/schedule/ScheduleProfile.h"
 
 namespace growbox::app::climate_io::runtime {
 
