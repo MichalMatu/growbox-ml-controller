@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "id": "20260912-phase5-stage-name-audit-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": false,
+  "command_timeout": 300,
+  "idle_timeout": 120,
+  "task_timeout": 900,
+  "memory_limit_mb": 2048,
+  "commands": [
+    "git fetch -q origin main && git reset --hard origin/main && test \"$(git rev-parse HEAD)\" = \"a88665094a63233b3d5e6416c45d09f2b0b11360\" && test -z \"$(git status --porcelain)\" && echo PHASE5_STAGE_AUDIT_BASE_PASS",
+    "echo =====STAGE_FILES=====; find src test tests scripts .github -type f 2>/dev/null | grep -E 'Stage27|Stage28|Stage28d' | sort || true",
+    "echo =====ACTIVE_STAGE_REFS=====; git grep -n -E 'Stage27|Stage28|Stage28d' -- src test tests scripts .github 2>/dev/null || true",
+    "echo =====CMAKE_STAGE_REFS=====; git grep -n -E 'Stage27|Stage28|Stage28d' -- '*CMakeLists.txt' '*.cmake' 2>/dev/null || true"
+  ]
+}
