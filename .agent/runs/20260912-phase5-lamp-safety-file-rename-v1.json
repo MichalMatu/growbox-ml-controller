@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260912-phase5-lamp-safety-file-rename-v1",
+  "task_digest": "860c65401f98382f40252536d129eea74946ecc0b5234bf084fb31f156f272bf",
+  "idle_timeout": 300,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-12T06:31:07.885971+00:00",
+  "attempt_id": "055742a866409714bf1b1e8d",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 76343,
+  "updated_at": "2026-09-12T06:31:07.886034+00:00",
+  "pid": 76343
+}
