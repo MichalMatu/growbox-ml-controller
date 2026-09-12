@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 4,
+  "index": 5,
   "total": 6,
-  "command": "pre-commit run --all-files || true; pre-commit run --all-files && python3 scripts/check_runtime_config_ssot.py && python3 scripts/check_app_mode_boundaries.py && python3 scripts/check_runtime_boundaries.py && python3 scripts/check_service_console_boundaries.py && python3 scripts/check_output_rf_ownership.py",
-  "pid": 7035,
+  "command": "cmake -S test/host -B build/host-tests && cmake --build build/host-tests --target tp357_decoder_tests ble_climate_state_tests stage27_native_inputs_tests stage27_fault_freshness_tests --parallel && ctest --test-dir build/host-tests -R '^(tp357_decoder_tests|ble_climate_state_tests|stage27_native_inputs_tests|stage27_fault_freshness_tests)$' --output-on-failure",
+  "pid": 7565,
   "timeout": 900,
   "idle_timeout": 300,
   "memory_limit_mb": 4096,
-  "started_at": "2026-09-12T03:59:00.829508+00:00",
-  "stage_name": "command-4",
-  "stage_index": 4,
+  "started_at": "2026-09-12T03:59:09.977221+00:00",
+  "stage_name": "command-5",
+  "stage_index": 5,
   "stage_total": 6,
   "stage_phase": "commands",
   "task_id": "20260912-phase2-input-ble-move-v1",
@@ -18,5 +18,5 @@
   "task_digest": "e8517f3d5b29dced5c10e6b3bd5ce68c9ee0cd65ff37569d80839004c2c483fd",
   "daemon_version": "4.18.20",
   "daemon_pid": 6361,
-  "updated_at": "2026-09-12T03:59:00.923353+00:00"
+  "updated_at": "2026-09-12T03:59:10.067563+00:00"
 }
