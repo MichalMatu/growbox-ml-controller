@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "eink-clay-presenter-test-20260912-2128",
+  "task_digest": "6cc1a91b6afcfc2cf6167b205e9599bc355dfa4f172d22f117df745ed025e273",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-12T19:21:34.500755+00:00",
+  "attempt_id": "0fb487f59c106096c3e73a3f",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 23020,
+  "updated_at": "2026-09-12T19:21:34.500886+00:00",
+  "pid": 23020
+}
