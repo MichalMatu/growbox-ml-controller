@@ -1,0 +1,16 @@
+{
+  "id": "eink-clay-observation-test-20260912-2120",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "feature/eink-clay-status",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 4096,
+  "command_timeout": 900,
+  "task_timeout": 1800,
+  "commands": [
+    "set -euo pipefail; expected=a528017fad4c5289169131d39a18dc2f8561ea5b; actual=$(git rev-parse HEAD); echo HEAD=$actual; test \"$actual\" = \"$expected\"; cmake -S test/host -B build/eink-host; cmake --build build/eink-host --target climate_composite_input_tests --parallel; ctest --test-dir build/eink-host -R '^climate_composite_input_tests$' --output-on-failure; git status --short"
+  ]
+}
