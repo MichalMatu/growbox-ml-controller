@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "id": "20260912-current-main-safe-flash-v3",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": false,
+  "command_timeout": 1800,
+  "idle_timeout": 300,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "test -z \"$(git status --porcelain)\" && git fetch -q origin main && git merge --ff-only origin/main && test \"$(git rev-parse HEAD)\" = \"87a05da3675acd338857dc2f69dfef19e7a94b88\"",
+    "bash -lc 'export IDF_PYTHON_ENV_PATH=\"$HOME/.espressif/python_env/idf5.5_py3.13_env\"; source \"$HOME/esp/esp-idf/export.sh\" >/dev/null; test -e /dev/cu.usbserial-1130; esptool.py --port /dev/cu.usbserial-1130 chip_id 2>&1 | tee /tmp/growbox-chip-id-v3.txt; grep -q \"ESP32-S3\" /tmp/growbox-chip-id-v3.txt'",
+    "bash -lc 'export IDF_PYTHON_ENV_PATH=\"$HOME/.espressif/python_env/idf5.5_py3.13_env\"; source \"$HOME/esp/esp-idf/export.sh\" >/dev/null; rm -rf build/idf-hwqual-87a05; PORT=/dev/cu.usbserial-1130 STAGE27C_BUILD_DIR=build/idf-hwqual-87a05 GROWBOX_FIRMWARE_GIT_SHA=87a05da3675acd338857dc2f69dfef19e7a94b88 GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 bash scripts/stage27c_crowpanel.sh flash'",
+    "rm -rf build/hwqual-87a05-soak && \"$HOME/.espressif/python_env/idf5.5_py3.13_env/bin/python\" tools/stage27c_soak.py --port /dev/cu.usbserial-1130 --output-dir build/hwqual-87a05-soak --duration 120 --progress-seconds 30 --expected-sha 87a05da3675acd338857dc2f69dfef19e7a94b88 --strict",
+    "cat build/hwqual-87a05-soak/summary.json && test -z \"$(git status --porcelain)\" && test \"$(git rev-parse HEAD)\" = \"87a05da3675acd338857dc2f69dfef19e7a94b88\""
+  ]
+}
