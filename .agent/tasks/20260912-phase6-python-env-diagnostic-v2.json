@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "id": "20260912-phase6-python-env-diagnostic-v2",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": false,
+  "command_timeout": 300,
+  "idle_timeout": 120,
+  "task_timeout": 900,
+  "memory_limit_mb": 2048,
+  "commands": [
+    "git fetch -q origin main && git reset --hard origin/main && test \"$(git rev-parse HEAD)\" = \"94698dcbf8ff7538d1ab2cee3bcabaca1358885a\" && test -z \"$(git status --porcelain)\"",
+    "echo CANDIDATES_BEGIN; for py in \"$PWD/.venv/bin/python\" \"$PWD/venv/bin/python\" \"/opt/homebrew/bin/python3\" \"/usr/local/bin/python3\" \"/usr/bin/python3\" \"$HOME/.platformio/penv/bin/python3\"; do if [ -x \"$py\" ]; then echo \"PY=$py\"; \"$py\" -c 'import sys; print(\"EXE=\" + sys.executable); print(\"VER=\" + sys.version.split()[0])'; \"$py\" -c 'import pytest; print(\"PYTEST=\" + pytest.__version__)' || echo PYTEST_MISSING; fi; done; echo CANDIDATES_END",
+    "echo VENV_CFG_BEGIN; find \"$HOME\" -maxdepth 5 -name pyvenv.cfg -print 2>/dev/null | head -50; echo VENV_CFG_END",
+    "find \"$HOME\" -maxdepth 5 -name pyvenv.cfg -print 2>/dev/null | head -50 | while read cfg; do d=$(dirname \"$cfg\"); py=\"$d/bin/python\"; if [ -x \"$py\" ]; then echo \"VENV=$d\"; \"$py\" -c 'import pytest,sys; print(\"PYTEST_OK\", sys.executable, pytest.__version__)' 2>/dev/null || true; fi; done",
+    "git diff --check && test -z \"$(git status --porcelain)\""
+  ]
+}
