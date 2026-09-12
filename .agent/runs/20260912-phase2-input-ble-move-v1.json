@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260912-phase2-input-ble-move-v1",
+  "task_digest": "e8517f3d5b29dced5c10e6b3bd5ce68c9ee0cd65ff37569d80839004c2c483fd",
+  "idle_timeout": 300,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-12T03:58:56.804735+00:00",
+  "attempt_id": "7a556a5ccea21b327efe9d86",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 6361,
+  "updated_at": "2026-09-12T03:58:56.804854+00:00",
+  "pid": 6361
+}
