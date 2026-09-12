@@ -1,0 +1,105 @@
+{
+  "id": "20260912-final-release-hardening-v1",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": true,
+  "started_at": "2026-09-12T13:08:59.437093+00:00",
+  "command_timeout": 7200,
+  "edits": {},
+  "commands": [
+    {
+      "command": "test -z \"$(git status --porcelain)\" && git fetch -q origin main agent-control && git merge --ff-only origin/main && test \"$(git rev-parse HEAD)\" = \"87a05da3675acd338857dc2f69dfef19e7a94b88\"",
+      "exit_code": 0,
+      "output": "Already up to date.\n",
+      "elapsed_seconds": 1.514,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 3.73,
+      "output_policy": "stream",
+      "captured_output_chars": 20,
+      "output_truncated": false,
+      "current_rss_mb": 3.73,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 8,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "git show 369e78d8642b505abf274a5ad9c1cc6a46a093ee:.agent/helpers/final_release_hardening.py > /tmp/final_release_hardening.py && git show 9666373f0aed1da18007124b6c89857d9c288863:.agent/helpers/final_release_hardening_status_fix.py > /tmp/final_release_hardening_status_fix.py && python3 /tmp/final_release_hardening.py && python3 /tmp/final_release_hardening_status_fix.py && git diff --check && printf '%s\n' '=== PATCH FILES ===' && git diff --name-only | sort",
+      "exit_code": 1,
+      "output": "Traceback (most recent call last):\n  File \"/tmp/final_release_hardening.py\", line 134, in <module>\n    raise RuntimeError(\"tests/test_stage27c_soak.py already exists\")\nRuntimeError: tests/test_stage27c_soak.py already exists\n",
+      "elapsed_seconds": 0.458,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 2.06,
+      "output_policy": "stream",
+      "captured_output_chars": 225,
+      "output_truncated": false,
+      "current_rss_mb": 2.06,
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 8,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 8,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 1.514
+    },
+    {
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 8,
+      "stage_phase": "commands",
+      "outcome": "failed",
+      "elapsed_seconds": 0.458
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": " M src/climate/output/LampSafety.cpp\n M test/test_stage28d_lamp_safety/test_main.cpp\n M tools/stage27c_soak.py\n",
+    "elapsed_seconds": 0.097
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "diff --git a/src/climate/output/LampSafety.cpp b/src/climate/output/LampSafety.cpp\nindex 48a7b0f82..0f4ba992d 100644\n--- a/src/climate/output/LampSafety.cpp\n+++ b/src/climate/output/LampSafety.cpp\n@@ -45,7 +45,6 @@ LampSafetyDecision LampSafetyController::evaluate(const LampSafetyInput& input)\n   const bool temperature_usable = temperature.valid && std::isfinite(temperature.value) &&\n                                   temperature.age_ms <= config_.temperature_timeout_ms;\n   if (!temperature_usable) {\n-    thermal_latched_ = true;\n     recovery_running_ = false;\n     output.effective_lamp_on = false;\n     output.force_exhaust_on = input.exhaust_fan_available;\ndiff --git a/test/test_stage28d_lamp_safety/test_main.cpp b/test/test_stage28d_lamp_safety/test_main.cpp\nindex 7ea42670a..6241decd3 100644\n--- a/test/test_stage28d_lamp_safety/test_main.cpp\n+++ b/test/test_stage28d_lamp_safety/test_main.cpp\n@@ -104,6 +104,55 @@ void testStaleInvalidAndNonFiniteTemperatureFailClosed() {\n   assert(nonfinite.force_exhaust_on);\n }\n \n+void testInitialTemperatureUnavailableDoesNotStartThermalRecovery() {\n+  LampSafetyController controller;\n+  const auto unavailable = controller.evaluate(input(1.0F, 24.0F, false, 0U, 1U));\n+  assert(!unavailable.effective_lamp_on);\n+  assert(unavailable.force_exhaust_on);\n+  assert(unavailable.thermal_latched);\n+  assert(unavailable.reason == LampSafetyReason::TemperatureUnavailable);\n+\n+  const auto valid = controller.evaluate(input(1.0F, 27.0F, true, 0U, 2U));\n+  assert(valid.effective_lamp_on);\n+  assert(!valid.force_exhaust_on);\n+  assert(!valid.thermal_latched);\n+  assert(!valid.recovery_running);\n+  assert(valid.reason == LampSafetyReason::Safe);\n+}\n+\n+void testTemperatureUnavailablePreservesRealOvertemperatureLatch() {\n+  LampSafetyController controller;\n+  const auto tripped = controller.evaluate(input(1.0F, 29.0F, true, 0U, 0U));\n+  assert(tripped.thermal_latched);\n+  assert(tripped.reason == LampSafetyReason::OverTemperature);\n+\n+  const auto unavailable = controller.evaluate(input(1.0F, 24.0F, false, 0U, 100U));\n+  assert(!unavailable.effective_lamp_on);\n+  assert(unavailable.thermal_latched);\n+  assert(unavailable.reason == LampSafetyReason::TemperatureUnavailable);\n+\n+  const auto warm = controller.evaluate(input(1.0F, 27.0F, true, 0U, 200U));\n+  assert(!warm.effective_lamp_on);\n+  assert(warm.thermal_latched);\n+  assert(!warm.recovery_running);\n+  assert(warm.reason == LampSafetyReason::RecoveryHold);\n+\n+  const auto recovery_start = controller.evaluate(input(1.0F, 25.5F, true, 0U, 1'000U));\n+  assert(!recovery_start.effective_lamp_on);\n+  assert(recovery_start.thermal_latched);\n+  assert(recovery_start.recovery_running);\n+\n+  const auto almost = controller.evaluate(input(1.0F, 25.5F, true, 0U, 600'999U));\n+  assert(!almost.effective_lamp_on);\n+  assert(almost.thermal_latched);\n+\n+  const auto recovered = controller.evaluate(input(1.0F, 25.5F, true, 0U, 601'000U));\n+  assert(recovered.effective_lamp_on);\n+  assert(!recovered.thermal_latched);\n+  assert(!recovered.recovery_running);\n+  assert(recovered.reason == LampSafetyReason::Safe);\n+}\n+\n void testNoFanCapabilityDoesNotInventActuation() {\n   LampSafetyController controller;\n   auto decision = controller.evaluate(input(1.0F, 28.5F, true, 0U, 0U, false));\n@@ -213,6 +262,8 @@ int main() {\n   testRecoveryRequires26OrBelowForTenMinutes();\n   testRecoveryHoldResetsAbove26();\n   testStaleInvalidAndNonFiniteTemperatureFailClosed();\n+  testInitialTemperatureUnavailableDoesNotStartThermalRecovery();\n+  testTemperatureUnavailablePreservesRealOvertemperatureLatch();\n   testNoFanCapabilityDoesNotInventActuation();\n   testInvalidConfigFailsClosed();\n   testEnvelopeLeavesScheduleAuthorityUnconstrainedWhenThermallySafe();\ndiff --git a/tools/stage27c_soak.py b/tools/stage27c_soak.py\nindex 97281a0f5..7ac56fa1c 100644\n--- a/tools/stage27c_soak.py\n+++ b/tools/stage27c_soak.py\n@@ -19,7 +19,7 @@ if __package__ in {None, \"\"}:\n serial = importlib.import_module(\"serial\")\n list_ports = importlib.import_module(\"serial.tools.list_ports\")\n \n-SOAK_MARKER = \"soak_v=2 \"\n+SOAK_MARKERS = ((3, \"soak_v=3 \"), (2, \"soak_v=2 \"))\n CH340_VID = 0x1A86\n CH340_PID = 0x7523\n COUNTER_KEYS = (\n@@ -41,7 +41,7 @@ COUNTER_KEYS = (\n     \"xiaomi_accepted\",\n     \"xiaomi_rejected\",\n )\n-REQUIRED_KEYS = {\n+COMMON_REQUIRED_KEYS = {\n     \"firmware_sha\",\n     \"uptime_ms\",\n     \"reset_reason\",\n@@ -70,7 +70,18 @@ REQUIRED_KEYS = {\n     \"xiaomi_packets\",\n     \"xiaomi_accepted\",\n     \"xiaomi_rejected\",\n-    \"outputs\",\n+}\n+REQUIRED_KEYS_BY_VERSION = {\n+    2: COMMON_REQUIRED_KEYS | {\"outputs\"},\n+    3: COMMON_REQUIRED_KEYS | {\"output_v\", \"transport_active\"},\n+}\n+V3_STORAGE_ALIASES = {\n+    \"storage_sd_mounted\": \"sd_mounted\",\n+    \"storage_sd_mount_errors\": \"sd_mount_errors\",\n+    \"storage_write_errors\": \"sd_write_errors\",\n+    \"storage_queue_drops\": \"sd_queue_drops\",\n+    \"storage_records_written\": \"sd_records_written\",\n+    \"storage_records_skipped\": \"sd_records_skipped\",\n }\n \n \n@@ -90,20 +101,35 @@ def _coerce(value: str) -> Any:\n \n \n def parse_soak_line(line: str) -> dict[str, Any] | None:\n-    marker_index = line.find(SOAK_MARKER)\n-    if marker_index < 0:\n+    version: int | None = None\n+    payload: str | None = None\n+    for candidate_version, marker in SOAK_MARKERS:\n+        marker_index = line.find(marker)\n+        if marker_index >= 0:\n+            version = candidate_version\n+            payload = line[marker_index + len(marker) :].strip()\n+            break\n+    if version is None or payload is None:\n         return None\n-    payload = line[marker_index + len(SOAK_MARKER) :].strip()\n-    record: dict[str, Any] = {\"soak_v\": 2}\n+\n+    record: dict[str, Any] = {\"soak_v\": version}\n     for token in payload.split():\n         if \"=\" not in token:\n             continue\n         key, value = token.split(\"=\", 1)\n         if key:\n             record[key] = _coerce(value)\n-    missing = sorted(REQUIRED_KEYS.difference(record))\n+\n+    missing = sorted(REQUIRED_KEYS_BY_VERSION[version].difference(record))\n     if missing:\n-        raise ValueError(f\"missing Stage27C soak fields: {', '.join(missing)}\")\n+        raise ValueError(\n+            f\"missing Stage27C soak v{version} fields: {', '.join(missing)}\"\n+        )\n+\n+    if version == 3:\n+        for source, target in V3_STORAGE_ALIASES.items():\n+            if source in record:\n+                record[target] = record[source]\n     return record\n \n \n@@ -164,11 +190,18 @@ class SoakSummary:\n         if self.expected_sha is not None and sha != self.expected_sha:\n             self.unexpected_sha_records += 1\n \n-        if record[\"outputs\"] != \"fake-locked\":\n+        soak_version = int(record[\"soak_v\"])\n+        if soak_version == 2:\n+            if record[\"outputs\"] != \"fake-locked\":\n+                self.bad_outputs += 1\n+        elif int(record[\"output_v\"]) != 2 or int(record[\"transport_active\"]) != 0:\n             self.bad_outputs += 1\n         if int(record[\"ble_scanning\"]) != 1:\n             self.ble_not_scanning_records += 1\n-        if int(record.get(\"io_status\", 0)) != 0:\n+        # v3 output ownership moved behind OutputSupervisor. With the physical transport\n+        # intentionally disabled, the legacy loop can report ActuatorApplyFailed/FaultLatched\n+        # while the v3 physical-output fence is healthy. Preserve the legacy v2 check only.\n+        if soak_version == 2 and int(record.get(\"io_status\", 0)) != 0:\n             self.nonzero_io_status_records += 1\n \n         for key in COUNTER_KEYS:\n",
+    "elapsed_seconds": 0.024
+  },
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-12T13:09:03.385692+00:00",
+  "workspace_checkpoint": {
+    "version": 2,
+    "task_id": "20260912-final-release-hardening-v1",
+    "reason": "task-exit",
+    "created_at": "2026-09-12T13:09:03.808905+00:00",
+    "base_head": "87a05da3675acd338857dc2f69dfef19e7a94b88",
+    "work_branch": "agent-work",
+    "path": "/Users/michal/agent-workspace/repos/growbox-ml-controller/checkpoints/20260912-final-release-hardening-v1/1789218543650552000-task-exit",
+    "tracked_patch": "tracked.patch",
+    "untracked_root": "untracked",
+    "untracked_files": [],
+    "tracked_patch_bytes": 7700,
+    "untracked_bytes": 0,
+    "total_bytes": 7700,
+    "status": " M src/climate/output/LampSafety.cpp\n M test/test_stage28d_lamp_safety/test_main.cpp\n M tools/stage27c_soak.py\n"
+  },
+  "task_digest": "4da1399478a0563c328e1b1dc8594446c48111fce3c5f29c445b642f7f2fc2a1",
+  "idle_timeout": 900,
+  "task_timeout": 14400,
+  "memory_limit_mb": 4096,
+  "attempt_id": "37c8a9466c6004b7a10f3781",
+  "daemon_version": "4.18.20"
+}
