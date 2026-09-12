@@ -6,8 +6,8 @@
 #include "climate/input/i2c/NativeI2cBus.h"
 #include "climate/input/rtc/Ds3231ClockSource.h"
 #include "climate/input/sensors/Scd41InsideSource.h"
+#include "climate/runtime/RuntimeAdapters.h"
 #include "climate/runtime/RuntimeBuildConfig.h"
-#include "climate/runtime/Stage27RuntimeAdapters.h"
 #include "climate/runtime/console/Stage28ServiceConsole.h"
 #include "climate/runtime/core/RealInputRuntimeComposition.h"
 #include "climate/runtime/core/RealInputRuntimeCoordinator.h"
@@ -94,9 +94,9 @@ constexpr std::uint64_t kTickIntervalMs = 1'000U;
   static runtime::RuntimeTimingMetrics runtime_timing{};
   runtime_timing.loop_active.budget_us = kTickIntervalMs * 1000U;
 
-  runtime::Stage27InsideSource inside(ble, scd41);
-  runtime::Stage27NearbySource outside(ble);
-  runtime::FixedStage27ScheduleConfigSource schedule_config;
+  runtime::RuntimeInsideSource inside(ble, scd41);
+  runtime::RuntimeNearbySource outside(ble);
+  runtime::MintScheduleConfigSource schedule_config;
   CompositeClimateSnapshotProvider composite(inside, outside, clock, schedule_config);
 
   if (!output_owner.valid()) {

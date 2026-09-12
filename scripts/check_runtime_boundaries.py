@@ -19,9 +19,7 @@ composition += (root / "src/climate/runtime/core/RealInputRuntimeComposition.h")
 transport = (root / "src/climate/runtime/core/RuntimeOutputTransport.cpp").read_text(
     encoding="utf-8"
 )
-runtime_adapters = (root / "src/climate/runtime/Stage27RuntimeAdapters.h").read_text(
-    encoding="utf-8"
-)
+runtime_adapters = (root / "src/climate/runtime/RuntimeAdapters.h").read_text(encoding="utf-8")
 errors = []
 
 for token in (

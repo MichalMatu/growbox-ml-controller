@@ -14,9 +14,9 @@ public:
   bool apply(ClimateActuatorRole role, float level, std::uint64_t monotonic_ms) noexcept override;
 };
 
-class Stage27InsideSource final : public InsideEnvironmentSource {
+class RuntimeInsideSource final : public InsideEnvironmentSource {
 public:
-  Stage27InsideSource(native::BleClimateScanner& ble, native::Scd41InsideSource& scd41) noexcept;
+  RuntimeInsideSource(native::BleClimateScanner& ble, native::Scd41InsideSource& scd41) noexcept;
 
   bool sample(std::uint64_t monotonic_ms, InsideEnvironmentSnapshot& output) noexcept override;
 
@@ -25,9 +25,9 @@ private:
   native::Scd41InsideSource& scd41_;
 };
 
-class Stage27NearbySource final : public OutsideEnvironmentSource {
+class RuntimeNearbySource final : public OutsideEnvironmentSource {
 public:
-  explicit Stage27NearbySource(native::BleClimateScanner& ble) noexcept;
+  explicit RuntimeNearbySource(native::BleClimateScanner& ble) noexcept;
 
   bool sample(std::uint64_t monotonic_ms, OutsideEnvironmentSnapshot& output) noexcept override;
 
@@ -35,7 +35,7 @@ private:
   native::BleClimateScanner& ble_;
 };
 
-class FixedStage27ScheduleConfigSource final : public ClimateScheduleConfigSource {
+class MintScheduleConfigSource final : public ClimateScheduleConfigSource {
 public:
   bool resolve(std::uint64_t monotonic_ms, const ClimateWallClockSnapshot& clock,
                ClimateScheduleConfigSnapshot& output) noexcept override;

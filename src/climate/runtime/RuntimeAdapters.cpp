@@ -1,4 +1,4 @@
-#include "climate/runtime/Stage27RuntimeAdapters.h"
+#include "climate/runtime/RuntimeAdapters.h"
 
 #include "climate/runtime/schedule/ScheduleProfile.h"
 
@@ -8,11 +8,11 @@ bool LockedFakeRoleDriver::apply(ClimateActuatorRole, float, std::uint64_t) noex
   return true;
 }
 
-Stage27InsideSource::Stage27InsideSource(native::BleClimateScanner& ble,
+RuntimeInsideSource::RuntimeInsideSource(native::BleClimateScanner& ble,
                                          native::Scd41InsideSource& scd41) noexcept
     : ble_(ble), scd41_(scd41) {}
 
-bool Stage27InsideSource::sample(std::uint64_t monotonic_ms,
+bool RuntimeInsideSource::sample(std::uint64_t monotonic_ms,
                                  InsideEnvironmentSnapshot& output) noexcept {
   output = {};
 
@@ -31,9 +31,9 @@ bool Stage27InsideSource::sample(std::uint64_t monotonic_ms,
   return tp357_sampled || output.co2_ppm.valid;
 }
 
-Stage27NearbySource::Stage27NearbySource(native::BleClimateScanner& ble) noexcept : ble_(ble) {}
+RuntimeNearbySource::RuntimeNearbySource(native::BleClimateScanner& ble) noexcept : ble_(ble) {}
 
-bool Stage27NearbySource::sample(std::uint64_t monotonic_ms,
+bool RuntimeNearbySource::sample(std::uint64_t monotonic_ms,
                                  OutsideEnvironmentSnapshot& output) noexcept {
   output = {};
   native::BleClimateReading xiaomi{};
@@ -45,8 +45,8 @@ bool Stage27NearbySource::sample(std::uint64_t monotonic_ms,
   return true;
 }
 
-bool FixedStage27ScheduleConfigSource::resolve(std::uint64_t, const ClimateWallClockSnapshot& clock,
-                                               ClimateScheduleConfigSnapshot& output) noexcept {
+bool MintScheduleConfigSource::resolve(std::uint64_t, const ClimateWallClockSnapshot& clock,
+                                       ClimateScheduleConfigSnapshot& output) noexcept {
   return resolveMintScheduleProfile(clock, output);
 }
 

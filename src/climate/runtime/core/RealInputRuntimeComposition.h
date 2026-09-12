@@ -20,7 +20,7 @@
 #include "climate/rf433/Rf433RmtFrameSender.h"
 #include "climate/rf433/Rf433RmtLoopback.h"
 #include "climate/runtime/MaintenanceRfTransport.h"
-#include "climate/runtime/Stage27RuntimeAdapters.h"
+#include "climate/runtime/RuntimeAdapters.h"
 #include "climate/runtime/core/RuntimeOutputTransport.h"
 #include "climate/runtime/diagnostics/RfDiagnostics.h"
 #include "climate/storage/Stage27TelemetryLogger.h"
