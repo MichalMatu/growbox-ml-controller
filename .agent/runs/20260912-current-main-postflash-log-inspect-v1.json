@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260912-current-main-postflash-log-inspect-v1",
   "task_digest": "abb62a133249036ac92d81c334c4560a4b6468d7d102e8428bb3a1186f08404d",
-  "idle_timeout": 120,
-  "task_timeout": 600,
-  "memory_limit_mb": 2048,
-  "started_at": "2026-09-12T12:37:45.215053+00:00",
+  "status": "done",
+  "failure_reason": null,
+  "finished_at": "2026-09-12T12:37:48.658256+00:00",
   "attempt_id": "0afe1cc75e5b4d4a94eb98ed",
   "daemon_version": "4.18.20",
   "daemon_pid": 44474,
-  "updated_at": "2026-09-12T12:37:45.215243+00:00",
+  "updated_at": "2026-09-12T12:37:48.940426+00:00",
   "pid": 44474
 }
