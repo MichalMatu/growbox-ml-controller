@@ -1,9 +1,27 @@
 #include "climate/runtime/core/RealInputRuntimeCoordinator.h"
 
+#include "climate/application/ClimateApplication.h"
+#include "climate/input/ble/BleClimateScanner.h"
+#include "climate/input/rtc/Ds3231ClockSource.h"
+#include "climate/output/LampSafety.h"
 #include "climate/output/OutputBindings.h"
 #include "climate/output/OutputExecutionTelemetry.h"
+#include "climate/output/OutputStateStore.h"
+#include "climate/output/control/OutputAutomationControl.h"
+#include "climate/output/control/OutputMaintenanceControl.h"
+#include "climate/output/control/OutputManualControl.h"
+#include "climate/output/lifecycle/OutputLifecycleExecutor.h"
+#include "climate/output/lifecycle/OutputRuntimeLifecycleControl.h"
+#include "climate/output/lifecycle/OutputSupervisorLifecycle.h"
+#include "climate/output/persistence/OutputPersistenceCoordinator.h"
+#include "climate/output/supervisor/ClimateOutputSupervisorSink.h"
+#include "climate/runtime/console/Stage28ServiceConsole.h"
+#include "climate/runtime/core/RuntimeOutputTransport.h"
+#include "climate/runtime/diagnostics/RfDiagnostics.h"
+#include "climate/runtime/diagnostics/Stage28eDiagnosticsCore.h"
 #include "climate/runtime/schedule/ScheduleIntentAdapter.h"
 #include "climate/runtime/telemetry/RuntimeOutputTelemetryLog.h"
+#include "climate/runtime/telemetry/TelemetryReporter.h"
 
 #include <esp_log.h>
 #include <esp_timer.h>

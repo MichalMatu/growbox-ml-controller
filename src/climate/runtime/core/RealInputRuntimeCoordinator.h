@@ -1,28 +1,40 @@
 #pragma once
 
-#include "climate/application/ClimateApplication.h"
-#include "climate/input/ble/BleClimateScanner.h"
-#include "climate/input/rtc/Ds3231ClockSource.h"
-#include "climate/output/LampSafety.h"
-#include "climate/output/OutputStateStore.h"
-#include "climate/output/control/OutputAutomationControl.h"
-#include "climate/output/control/OutputMaintenanceControl.h"
-#include "climate/output/control/OutputManualControl.h"
-#include "climate/output/lifecycle/OutputLifecycleExecutor.h"
-#include "climate/output/lifecycle/OutputRuntimeLifecycleControl.h"
-#include "climate/output/lifecycle/OutputSupervisorLifecycle.h"
-#include "climate/output/persistence/OutputPersistenceCoordinator.h"
-#include "climate/output/supervisor/ClimateOutputSupervisorSink.h"
-#include "climate/runtime/console/Stage28ServiceConsole.h"
 #include "climate/runtime/core/RuntimeCycleState.h"
-#include "climate/runtime/core/RuntimeOutputTransport.h"
-#include "climate/runtime/diagnostics/RfDiagnostics.h"
-#include "climate/runtime/diagnostics/Stage28ePlatformDiagnostics.h"
-#include "climate/runtime/telemetry/TelemetryReporter.h"
 
 #include <cstdint>
 
-namespace growbox::app::climate_io::runtime {
+namespace growbox::app::output {
+class OutputAutomationControl;
+class OutputLifecycleExecutor;
+class OutputMaintenanceControl;
+class OutputManualControl;
+class OutputPersistenceCoordinator;
+class OutputRuntimeLifecycleControl;
+class OutputStateStore;
+class OutputSupervisorLifecycle;
+} // namespace growbox::app::output
+
+namespace growbox::app::climate_io {
+class ClimateApplication;
+class ClimateOutputSupervisorSink;
+
+namespace native {
+class BleClimateScanner;
+class Ds3231ClockSource;
+} // namespace native
+
+namespace stage28d {
+class LampSafetyController;
+} // namespace stage28d
+
+namespace runtime {
+class RfDiagnostics;
+class RuntimeOutputTransport;
+class Stage28ServiceConsole;
+class TelemetryReporter;
+struct RuntimeExecutionStatus;
+struct RuntimeTimingMetrics;
 
 struct RealInputRuntimeInputServices final {
   native::BleClimateScanner& ble;
@@ -71,4 +83,5 @@ private:
   RuntimeCycleState cycle_state_{};
 };
 
-} // namespace growbox::app::climate_io::runtime
+} // namespace runtime
+} // namespace growbox::app::climate_io
