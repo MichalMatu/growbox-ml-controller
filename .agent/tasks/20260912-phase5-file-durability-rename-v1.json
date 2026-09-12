@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "id": "20260912-phase5-file-durability-rename-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": true,
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch -q origin main && git reset --hard origin/main && test \"$(git rev-parse HEAD)\" = \"ee71eae88c16891eaf9112c8331a2e165c617904\" && test -z \"$(git status --porcelain)\"",
+    "git mv src/climate/storage/Stage27FileDurability.h src/climate/storage/FileDurability.h && git mv src/climate/storage/Stage27FileDurability.cpp src/climate/storage/FileDurability.cpp",
+    "python3 -c \"from pathlib import Path; import subprocess; pats=['Stage27FileDurability','stage27FlushSyncAndStat','stage27FileDurabilityStepName']; out=subprocess.check_output(['git','grep','-Il','-e',pats[0],'-e',pats[1],'-e',pats[2],'--','src','test','scripts','.github'], text=True); files=[Path(p) for p in out.splitlines()]; [(p.write_text(p.read_text().replace('climate/storage/Stage27FileDurability','climate/storage/FileDurability').replace('Stage27FileDurability','FileDurability').replace('stage27FlushSyncAndStat','flushSyncAndStat').replace('stage27FileDurabilityStepName','fileDurabilityStepName'))) for p in files]\"",
+    "test -f src/climate/storage/FileDurability.h && test -f src/climate/storage/FileDurability.cpp && test ! -e src/climate/storage/Stage27FileDurability.h && test ! -e src/climate/storage/Stage27FileDurability.cpp && ! git grep -n -e 'Stage27FileDurability' -e 'stage27FlushSyncAndStat' -e 'stage27FileDurabilityStepName' -- src test scripts .github && git diff --check",
+    "pre-commit run --all-files || true; pre-commit run --all-files && python3 scripts/check_runtime_config_ssot.py && python3 scripts/check_app_mode_boundaries.py && python3 scripts/check_runtime_boundaries.py && python3 scripts/check_service_console_boundaries.py && python3 scripts/check_output_rf_ownership.py",
+    "cmake -S test/host -B build/host-tests && cmake --build build/host-tests --parallel && ctest --test-dir build/host-tests --output-on-failure",
+    "git diff --check && git add src test scripts .github && git commit -m 'Drop stage prefix from file durability helper' && git push origin HEAD:main && git rev-parse HEAD"
+  ]
+}
