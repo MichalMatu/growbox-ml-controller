@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "id": "20260912-final-docs-closeout-v2",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": true,
+  "command_timeout": 600,
+  "idle_timeout": 180,
+  "task_timeout": 1800,
+  "memory_limit_mb": 2048,
+  "commands": [
+    "test -z \"$(git status --porcelain)\" && git fetch -q origin main agent-control && git merge --ff-only origin/main && test \"$(git rev-parse HEAD)\" = \"e03763d019af405087a5fa9c6713a7165d2e623f\"",
+    "git show e1f7b7e1155100930fd84289a4e235b6035140f1:.agent/helpers/final_docs_closeout_v2.py > /tmp/final_docs_closeout_v2.py && python3 /tmp/final_docs_closeout_v2.py && git diff --check && python3 -c 'import subprocess; f=sorted(subprocess.check_output([\"git\",\"diff\",\"--name-only\"], text=True).splitlines()); e=sorted([\"docs/CURRENT_STATUS.md\",\"docs/CHANGELOG.md\",\"docs/PROJECT_ROADMAP.md\",\"docs/FRESH_CHAT_BOOTSTRAP.md\",\"docs/CONTINUATION_PLAN.md\"]); assert f==e,(f,e)' && git diff --stat",
+    "pre-commit run --files docs/CURRENT_STATUS.md docs/CHANGELOG.md docs/PROJECT_ROADMAP.md docs/FRESH_CHAT_BOOTSTRAP.md docs/CONTINUATION_PLAN.md",
+    "git add docs/CURRENT_STATUS.md docs/CHANGELOG.md docs/PROJECT_ROADMAP.md docs/FRESH_CHAT_BOOTSTRAP.md docs/CONTINUATION_PLAN.md && git diff --cached --check && git commit -m 'Close release hardening documentation' && git push origin HEAD:main && git rev-parse HEAD",
+    "test -z \"$(git status --porcelain)\" && git show --stat --oneline --decorate -1"
+  ]
+}
