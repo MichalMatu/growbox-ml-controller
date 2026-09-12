@@ -22,7 +22,7 @@
 #include "climate/runtime/MaintenanceRfTransport.h"
 #include "climate/runtime/Stage27RuntimeAdapters.h"
 #include "climate/runtime/core/RuntimeOutputTransport.h"
-#include "climate/runtime/diagnostics/Stage28RfDiagnostics.h"
+#include "climate/runtime/diagnostics/RfDiagnostics.h"
 #include "climate/storage/Stage27TelemetryLogger.h"
 
 namespace growbox::app::climate_io::runtime {
@@ -44,7 +44,7 @@ public:
 
   bool beginRf() noexcept;
 
-  Stage28RfDiagnostics& rfDiagnostics() noexcept {
+  RfDiagnostics& rfDiagnostics() noexcept {
     return rf_diagnostics_;
   }
 
@@ -55,9 +55,9 @@ public:
 private:
   storage::Stage27TelemetryLogger::Config storage_config_{};
   storage::Stage27TelemetryLogger storage_logger_;
-  Stage28RfDiagnosticsConfig rf_diagnostics_config_{};
+  RfDiagnosticsConfig rf_diagnostics_config_{};
   rf433::Rf433RmtLoopback rf_radio_;
-  Stage28RfDiagnostics rf_diagnostics_;
+  RfDiagnostics rf_diagnostics_;
   rf433::Rf433RmtFrameSender rf_frame_sender_;
   rf433::Rf433OutputTransport rf_output_transport_;
 };
@@ -107,7 +107,7 @@ private:
 class RuntimeOutputOwner final {
 public:
   RuntimeOutputOwner(output::OutputTransport& real_transport,
-                     RuntimeExecutionStatus& execution_status, Stage28RfDiagnostics& diagnostics,
+                     RuntimeExecutionStatus& execution_status, RfDiagnostics& diagnostics,
                      const output::OutputPolicyConfig& policy,
                      output::OutputStateStore& state_store) noexcept;
 

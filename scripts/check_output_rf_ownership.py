@@ -22,14 +22,14 @@ RADIO_TX = {
     "transmitAndReceive(": {
         "src/climate/rf433/Rf433RmtLoopback.cpp",
         "src/climate/rf433/Rf433RmtFrameSender.cpp",
-        "src/climate/runtime/diagnostics/Stage28RfDiagnostics.cpp",
+        "src/climate/runtime/diagnostics/RfDiagnostics.cpp",
     },
     "transmitFrame(": {
         "src/climate/rf433/Rf433RmtFrameSender.cpp",
         "src/climate/rf433/Rf433OutputTransport.cpp",
     },
     "manualTransmit(": {
-        "src/climate/runtime/diagnostics/Stage28RfDiagnostics.cpp",
+        "src/climate/runtime/diagnostics/RfDiagnostics.cpp",
         "src/climate/runtime/MaintenanceRfTransport.cpp",
     },
 }
@@ -111,7 +111,7 @@ def find_violations(root: Path = ROOT) -> list[str]:
         "src/climate/rf433/Rf433RmtLoopback.cpp",
         "src/climate/rf433/Rf433RmtFrameSender.cpp",
         "src/climate/rf433/Rf433OutputTransport.cpp",
-        "src/climate/runtime/diagnostics/Stage28RfDiagnostics.cpp",
+        "src/climate/runtime/diagnostics/RfDiagnostics.cpp",
         "src/climate/runtime/MaintenanceRfTransport.cpp",
         "src/climate/output/supervisor/OutputSupervisorExecutor.cpp",
         "src/climate/output/lifecycle/OutputLifecycleExecutor.cpp",
@@ -172,7 +172,7 @@ def find_violations(root: Path = ROOT) -> list[str]:
             errors.append(f"src/CMakeLists.txt: legacy execution owner still compiled {token}")
 
     output_transport = (root / "src/climate/rf433/Rf433OutputTransport.cpp").read_text()
-    for token in ("Stage28RfDiagnostics", "manualTransmit("):
+    for token in ("RfDiagnostics", "manualTransmit("):
         if token in output_transport:
             errors.append(
                 f"src/climate/rf433/Rf433OutputTransport.cpp: normal transport depends on diagnostics {token!r}"
@@ -190,19 +190,17 @@ def find_violations(root: Path = ROOT) -> list[str]:
                 f"maintenance-only guard missing {required_token!r}"
             )
 
-    diagnostics = (root / "src/climate/runtime/diagnostics/Stage28RfDiagnostics.cpp").read_text()
+    diagnostics = (root / "src/climate/runtime/diagnostics/RfDiagnostics.cpp").read_text()
     if "if (config_.passive_capture)" not in diagnostics or "capturePassive();" not in diagnostics:
-        errors.append(
-            "src/climate/runtime/diagnostics/Stage28RfDiagnostics.cpp: passive RX path missing"
-        )
+        errors.append("src/climate/runtime/diagnostics/RfDiagnostics.cpp: passive RX path missing")
     if diagnostics.count("transmitAndReceive(") != 1:
         errors.append(
-            "src/climate/runtime/diagnostics/Stage28RfDiagnostics.cpp: TX must remain only in explicit manualTransmit"
+            "src/climate/runtime/diagnostics/RfDiagnostics.cpp: TX must remain only in explicit manualTransmit"
         )
 
     for rel in (
-        "src/climate/runtime/diagnostics/Stage28RfDiagnostics.h",
-        "src/climate/runtime/diagnostics/Stage28RfDiagnostics.cpp",
+        "src/climate/runtime/diagnostics/RfDiagnostics.h",
+        "src/climate/runtime/diagnostics/RfDiagnostics.cpp",
         "src/climate/ClimateV6RealInputRuntime.cpp",
         "src/CMakeLists.txt",
         "scripts/stage27c_crowpanel.sh",

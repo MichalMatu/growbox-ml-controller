@@ -16,7 +16,7 @@
 #include "climate/runtime/console/Stage28ServiceConsole.h"
 #include "climate/runtime/core/RuntimeCycleState.h"
 #include "climate/runtime/core/RuntimeOutputTransport.h"
-#include "climate/runtime/diagnostics/Stage28RfDiagnostics.h"
+#include "climate/runtime/diagnostics/RfDiagnostics.h"
 #include "climate/runtime/diagnostics/Stage28ePlatformDiagnostics.h"
 #include "climate/runtime/telemetry/Stage27TelemetryReporter.h"
 
@@ -47,7 +47,7 @@ struct RealInputRuntimeOutputServices final {
 
 struct RealInputRuntimeSupportServices final {
   Stage28ServiceConsole& service_console;
-  Stage28RfDiagnostics& rf_diagnostics;
+  RfDiagnostics& rf_diagnostics;
   Stage27TelemetryReporter& telemetry_reporter;
   RuntimeTimingMetrics& timing;
 };

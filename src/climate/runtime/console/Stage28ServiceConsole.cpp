@@ -20,7 +20,7 @@ constexpr int kServiceConsoleTxBufferBytes = 2048;
 Stage28ServiceConsole::Stage28ServiceConsole(Config config, native::BleClimateScanner& ble,
                                              native::Scd41InsideSource& scd41,
                                              native::Ds3231ClockSource& clock,
-                                             Stage28RfDiagnostics& rf_diagnostics) noexcept
+                                             RfDiagnostics& rf_diagnostics) noexcept
     : enabled_(config.enabled), real_outputs_active_(config.real_outputs_active),
       output_commands_({config.real_outputs_active, config.automation_control,
                         config.manual_control, config.maintenance_control},

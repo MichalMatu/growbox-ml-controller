@@ -1,4 +1,4 @@
-#include "climate/runtime/diagnostics/Stage28RfDiagnostics.h"
+#include "climate/runtime/diagnostics/RfDiagnostics.h"
 
 #include <esp_log.h>
 
@@ -9,16 +9,15 @@ namespace {
 constexpr char kTag[] = "climate_stage27";
 } // namespace
 
-Stage28RfDiagnostics::Stage28RfDiagnostics(Stage28RfDiagnosticsConfig config,
-                                           rf433::Rf433RmtLoopback& radio) noexcept
+RfDiagnostics::RfDiagnostics(RfDiagnosticsConfig config, rf433::Rf433RmtLoopback& radio) noexcept
     : config_(config), radio_(radio) {}
 
-bool Stage28RfDiagnostics::begin(bool radio_ready) noexcept {
+bool RfDiagnostics::begin(bool radio_ready) noexcept {
   ready_ = config_.enabled && radio_ready;
   return ready_;
 }
 
-void Stage28RfDiagnostics::tick(std::uint64_t now_ms) noexcept {
+void RfDiagnostics::tick(std::uint64_t now_ms) noexcept {
   (void)now_ms;
   if (!ready_) {
     return;
@@ -29,8 +28,8 @@ void Stage28RfDiagnostics::tick(std::uint64_t now_ms) noexcept {
   }
 }
 
-bool Stage28RfDiagnostics::manualTransmit(const rf433::FrameConfig& frame,
-                                          rf433::LoopbackEvidence& evidence) noexcept {
+bool RfDiagnostics::manualTransmit(const rf433::FrameConfig& frame,
+                                   rf433::LoopbackEvidence& evidence) noexcept {
   evidence = {};
   if (!ready_) {
     return false;
@@ -39,13 +38,13 @@ bool Stage28RfDiagnostics::manualTransmit(const rf433::FrameConfig& frame,
   return evidence.tx_completed;
 }
 
-bool Stage28RfDiagnostics::manualReceive(std::uint32_t timeout_ms,
-                                         rf433::ReceiveEvidence& evidence) noexcept {
+bool RfDiagnostics::manualReceive(std::uint32_t timeout_ms,
+                                  rf433::ReceiveEvidence& evidence) noexcept {
   evidence = {};
   return ready_ && timeout_ms > 0U && radio_.receiveOnce(timeout_ms, evidence);
 }
 
-void Stage28RfDiagnostics::capturePassive() noexcept {
+void RfDiagnostics::capturePassive() noexcept {
   if (!capture_ready_logged_) {
     capture_ready_logged_ = true;
     ESP_LOGI(kTag,

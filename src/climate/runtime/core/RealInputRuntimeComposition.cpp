@@ -19,8 +19,8 @@ storage::Stage27TelemetryLogger::Config makeStorageConfig() noexcept {
   return config;
 }
 
-Stage28RfDiagnosticsConfig makeRfDiagnosticsConfig() noexcept {
-  Stage28RfDiagnosticsConfig config{};
+RfDiagnosticsConfig makeRfDiagnosticsConfig() noexcept {
+  RfDiagnosticsConfig config{};
   config.enabled = runtime_config::kRf433LoopbackEnabled;
   config.passive_capture = runtime_config::kRf433RemoteCaptureEnabled;
   config.tx_gpio = runtime_config::kRf433TxGpio;
@@ -78,7 +78,7 @@ const output::OutputPolicyConfig& RuntimePersistenceOwner::policy() const noexce
 
 RuntimeOutputOwner::RuntimeOutputOwner(output::OutputTransport& real_transport,
                                        RuntimeExecutionStatus& execution_status,
-                                       Stage28RfDiagnostics& diagnostics,
+                                       RfDiagnostics& diagnostics,
                                        const output::OutputPolicyConfig& policy,
                                        output::OutputStateStore& state_store) noexcept
     : policy_(policy), semantic_output_config_(stage28d::makeClimateSemanticOutputConfig(policy_)),

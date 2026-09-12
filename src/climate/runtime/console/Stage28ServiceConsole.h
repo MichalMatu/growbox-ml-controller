@@ -24,7 +24,7 @@ class Scd41InsideSource;
 class Ds3231ClockSource;
 } // namespace growbox::app::climate_io::native
 namespace growbox::app::climate_io::runtime {
-class Stage28RfDiagnostics;
+class RfDiagnostics;
 
 class Stage28ServiceConsole final : public ServiceConsoleTextSink {
 public:
@@ -41,7 +41,7 @@ public:
 
   Stage28ServiceConsole(Config config, native::BleClimateScanner& ble,
                         native::Scd41InsideSource& scd41, native::Ds3231ClockSource& clock,
-                        Stage28RfDiagnostics& rf_diagnostics) noexcept;
+                        RfDiagnostics& rf_diagnostics) noexcept;
   bool begin() noexcept;
   void poll(std::uint64_t now_ms) noexcept;
   bool ready() const noexcept {

@@ -4,7 +4,7 @@
 #include "climate/input/rtc/Ds3231ClockSource.h"
 #include "climate/input/sensors/Scd41InsideSource.h"
 #include "climate/rf433/Rf433HardwareConfig.h"
-#include "climate/runtime/diagnostics/Stage28RfDiagnostics.h"
+#include "climate/runtime/diagnostics/RfDiagnostics.h"
 #include "climate/runtime/diagnostics/Stage28ePlatformDiagnostics.h"
 #include "climate/runtime/schedule/EuropeWarsawTime.h"
 #include "climate/storage/Stage27TelemetryLogger.h"

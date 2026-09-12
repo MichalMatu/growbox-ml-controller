@@ -6,7 +6,7 @@
 
 namespace growbox::app::climate_io::runtime {
 
-struct Stage28RfDiagnosticsConfig {
+struct RfDiagnosticsConfig {
   bool enabled{false};
   bool passive_capture{false};
   int tx_gpio{8};
@@ -15,9 +15,9 @@ struct Stage28RfDiagnosticsConfig {
   std::uint32_t manual_tx_timeout_ms{1'500U};
 };
 
-class Stage28RfDiagnostics final {
+class RfDiagnostics final {
 public:
-  Stage28RfDiagnostics(Stage28RfDiagnosticsConfig config, rf433::Rf433RmtLoopback& radio) noexcept;
+  RfDiagnostics(RfDiagnosticsConfig config, rf433::Rf433RmtLoopback& radio) noexcept;
 
   bool begin(bool radio_ready) noexcept;
   void tick(std::uint64_t now_ms) noexcept;
@@ -31,7 +31,7 @@ public:
 private:
   void capturePassive() noexcept;
 
-  Stage28RfDiagnosticsConfig config_{};
+  RfDiagnosticsConfig config_{};
   rf433::Rf433RmtLoopback& radio_;
   bool ready_{false};
   bool capture_ready_logged_{false};
