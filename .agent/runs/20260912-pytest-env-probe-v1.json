@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260912-pytest-env-probe-v1",
+  "task_digest": "c75d26072bc7894c235978aabada6af8895f243120a9f254d08bf1a07ba031d6",
+  "idle_timeout": 120,
+  "task_timeout": 600,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-12T13:34:03.240281+00:00",
+  "attempt_id": "a0eb27f1eaae68f143297ef7",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 20913,
+  "updated_at": "2026-09-12T13:34:03.240352+00:00",
+  "pid": 20913
+}
