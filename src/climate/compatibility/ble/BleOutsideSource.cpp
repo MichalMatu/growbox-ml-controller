@@ -1,4 +1,4 @@
-#include "climate/native/BleOutsideSource.h"
+#include "climate/compatibility/ble/BleOutsideSource.h"
 
 #include <esp_err.h>
 #include <esp_timer.h>
