@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260912-user-checkout-reaudit-v1",
+  "task_digest": "728d07bfc823db4b7fbed7d8ce9ae1000385c768647fd728fab57ca1812532dd",
+  "idle_timeout": 120,
+  "task_timeout": 1200,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-12T09:34:54.690124+00:00",
+  "attempt_id": "cfa5a43320dcb38f07ce72f2",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 85607,
+  "updated_at": "2026-09-12T09:34:54.690220+00:00",
+  "pid": 85607
+}
