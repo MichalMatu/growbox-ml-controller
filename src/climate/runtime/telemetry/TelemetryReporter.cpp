@@ -1,4 +1,4 @@
-#include "climate/runtime/telemetry/Stage27TelemetryReporter.h"
+#include "climate/runtime/telemetry/TelemetryReporter.h"
 
 #include "climate/runtime/RuntimeBuildConfig.h"
 
@@ -22,16 +22,15 @@ void incrementSaturating(std::uint32_t& value) noexcept {
 }
 } // namespace
 
-Stage27TelemetryReporter::Stage27TelemetryReporter(native::BleClimateScanner& ble,
-                                                   native::Scd41InsideSource& scd41,
-                                                   native::Ds3231ClockSource& clock,
-                                                   storage::Stage27TelemetryLogger& storage_logger,
-                                                   bool storage_logger_ready,
-                                                   std::int32_t reset_reason) noexcept
+TelemetryReporter::TelemetryReporter(native::BleClimateScanner& ble,
+                                     native::Scd41InsideSource& scd41,
+                                     native::Ds3231ClockSource& clock,
+                                     storage::Stage27TelemetryLogger& storage_logger,
+                                     bool storage_logger_ready, std::int32_t reset_reason) noexcept
     : ble_(ble), scd41_(scd41), clock_(clock), storage_logger_(storage_logger),
       storage_logger_ready_(storage_logger_ready), reset_reason_(reset_reason) {}
 
-void Stage27TelemetryReporter::record(
+void TelemetryReporter::record(
     std::uint64_t now_ms, const ::growbox::climate::ClimateLoopResult& loop_result,
     const ::growbox::climate::ClimateRuntimeDecision& decision,
     const ::growbox::app::output::OutputExecutionTelemetrySnapshot& output_execution) noexcept {
@@ -157,9 +156,8 @@ void Stage27TelemetryReporter::record(
   }
 }
 
-void Stage27TelemetryReporter::logRecord(
-    const telemetry::Stage27TelemetrySnapshot& snapshot,
-    const storage::Stage27StorageStatus& storage_status) noexcept {
+void TelemetryReporter::logRecord(const telemetry::Stage27TelemetrySnapshot& snapshot,
+                                  const storage::Stage27StorageStatus& storage_status) noexcept {
   ESP_LOGI(
       kTag,
       "soak_v=3 firmware_sha=%s uptime_ms=%llu reset_reason=%d input_sampled=%d io_status=%u "

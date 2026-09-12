@@ -13,12 +13,12 @@
 
 namespace growbox::app::climate_io::runtime {
 
-class Stage27TelemetryReporter final {
+class TelemetryReporter final {
 public:
-  Stage27TelemetryReporter(native::BleClimateScanner& ble, native::Scd41InsideSource& scd41,
-                           native::Ds3231ClockSource& clock,
-                           storage::Stage27TelemetryLogger& storage_logger,
-                           bool storage_logger_ready, std::int32_t reset_reason) noexcept;
+  TelemetryReporter(native::BleClimateScanner& ble, native::Scd41InsideSource& scd41,
+                    native::Ds3231ClockSource& clock,
+                    storage::Stage27TelemetryLogger& storage_logger, bool storage_logger_ready,
+                    std::int32_t reset_reason) noexcept;
 
   void record(std::uint64_t now_ms, const ::growbox::climate::ClimateLoopResult& loop_result,
               const ::growbox::climate::ClimateRuntimeDecision& decision,

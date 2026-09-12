@@ -18,7 +18,7 @@
 #include "climate/runtime/core/RuntimeOutputTransport.h"
 #include "climate/runtime/diagnostics/RfDiagnostics.h"
 #include "climate/runtime/diagnostics/Stage28ePlatformDiagnostics.h"
-#include "climate/runtime/telemetry/Stage27TelemetryReporter.h"
+#include "climate/runtime/telemetry/TelemetryReporter.h"
 
 #include <cstdint>
 
@@ -48,7 +48,7 @@ struct RealInputRuntimeOutputServices final {
 struct RealInputRuntimeSupportServices final {
   Stage28ServiceConsole& service_console;
   RfDiagnostics& rf_diagnostics;
-  Stage27TelemetryReporter& telemetry_reporter;
+  TelemetryReporter& telemetry_reporter;
   RuntimeTimingMetrics& timing;
 };
 

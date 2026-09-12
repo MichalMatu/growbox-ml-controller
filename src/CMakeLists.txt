@@ -107,7 +107,7 @@ elseif(GROWBOX_APP_MODE STREQUAL "climate-v6-real-inputs")
       "climate/runtime/schedule/Stage27ScheduleProfile.cpp"
       "climate/runtime/schedule/Stage27ScheduleIntentAdapter.cpp"
       "climate/runtime/Stage27RuntimeAdapters.cpp"
-      "climate/runtime/telemetry/Stage27TelemetryReporter.cpp"
+      "climate/runtime/telemetry/TelemetryReporter.cpp"
       "climate/runtime/diagnostics/RfDiagnostics.cpp"
       "climate/runtime/MaintenanceRfTransport.cpp"
       "climate/runtime/console/Stage28ServiceConsole.cpp"
