@@ -1,0 +1,9 @@
+{
+  "id": "eink-display-runtime-integration-audit-20260912-2119",
+  "status": "failed",
+  "failure_reason": "invalid_task_file",
+  "started_at": null,
+  "finished_at": "2026-09-12T21:18:50.054894+00:00",
+  "daemon_version": "4.18.20",
+  "error": "JSONDecodeError: Invalid \\escape: line 12 column 516 (char 843)"
+}
