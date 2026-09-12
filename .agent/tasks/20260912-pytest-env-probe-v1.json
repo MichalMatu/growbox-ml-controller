@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "id": "20260912-pytest-env-probe-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": false,
+  "command_timeout": 300,
+  "idle_timeout": 120,
+  "task_timeout": 600,
+  "memory_limit_mb": 2048,
+  "commands": [
+    "test -z \"$(git status --porcelain)\" && git fetch -q origin main && git merge --ff-only origin/main && test \"$(git rev-parse HEAD)\" = \"87a05da3675acd338857dc2f69dfef19e7a94b88\"",
+    "bash -lc 'printf \"=== PATH PYTHONS ===\\n\"; command -v -a python3 2>/dev/null || true; command -v -a python 2>/dev/null || true; printf \"=== CANDIDATES ===\\n\"; for p in /opt/homebrew/bin/python3 /usr/local/bin/python3 /usr/bin/python3 \"$HOME/Documents/PlatformIO/Projects/ml/.venv/bin/python\" \"$HOME/Documents/PlatformIO/Projects/ml/venv/bin/python\" \"$HOME/.platformio/penv/bin/python3\" \"$HOME/.espressif/python_env/idf5.5_py3.13_env/bin/python\"; do if [ -x \"$p\" ]; then echo \"PY=$p\"; \"$p\" --version 2>&1; \"$p\" -m pytest --version 2>&1 || true; fi; done'",
+    "bash -lc 'printf \"=== NEARBY VENVS ===\\n\"; find \"$HOME/Documents/PlatformIO/Projects\" -maxdepth 4 -type f -path \"*/bin/python*\" -perm -111 2>/dev/null | head -80 | while read p; do echo \"PY=$p\"; \"$p\" -m pytest --version 2>&1 || true; done'",
+    "test -z \"$(git status --porcelain)\" && test \"$(git rev-parse HEAD)\" = \"87a05da3675acd338857dc2f69dfef19e7a94b88\""
+  ]
+}
