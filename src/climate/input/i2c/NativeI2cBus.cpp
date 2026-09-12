@@ -1,4 +1,4 @@
-#include "climate/native/NativeI2cBus.h"
+#include "climate/input/i2c/NativeI2cBus.h"
 
 #include <driver/gpio.h>
 

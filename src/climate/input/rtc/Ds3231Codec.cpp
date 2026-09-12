@@ -1,4 +1,4 @@
-#include "climate/native/Ds3231Codec.h"
+#include "climate/input/rtc/Ds3231Codec.h"
 
 #include <cstdint>
 

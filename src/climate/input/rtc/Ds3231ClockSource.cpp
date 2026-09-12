@@ -1,6 +1,6 @@
-#include "climate/native/Ds3231ClockSource.h"
+#include "climate/input/rtc/Ds3231ClockSource.h"
 
-#include "climate/native/Ds3231Codec.h"
+#include "climate/input/rtc/Ds3231Codec.h"
 
 #include <array>
 

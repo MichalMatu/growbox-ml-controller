@@ -552,7 +552,7 @@ add_executable(
   stage27_native_inputs_tests
   "${PROJECT_ROOT}/test/test_stage27_native_inputs/test_main.cpp"
   "${PROJECT_ROOT}/src/climate/input/ble/BthomeV2Decoder.cpp"
-  "${PROJECT_ROOT}/src/climate/native/Ds3231Codec.cpp"
+  "${PROJECT_ROOT}/src/climate/input/rtc/Ds3231Codec.cpp"
 )
 target_include_directories(stage27_native_inputs_tests PRIVATE "${PROJECT_ROOT}/src")
 target_compile_features(stage27_native_inputs_tests PRIVATE cxx_std_17)
