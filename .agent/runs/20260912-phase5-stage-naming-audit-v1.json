@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260912-phase5-stage-naming-audit-v1",
+  "task_digest": "3fbd75e9abd19ed7c5bfe19b68e60d8bb9c1105aa9f82054ecad2409cc5d3908",
+  "idle_timeout": 120,
+  "task_timeout": 900,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-12T05:35:52.956768+00:00",
+  "attempt_id": "1bde7e29fed42f9ff0b66672",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 18016,
+  "updated_at": "2026-09-12T05:35:52.956934+00:00",
+  "pid": 18016
+}
