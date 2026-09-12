@@ -1,0 +1,14 @@
+{
+  "id": "eink-display-host-workflow-test-20260913-0137",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "feature/eink-clay-status",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 1800,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "set -euo pipefail; expected=86472b3585d41ec874d47608e066e458f12f9f88; actual=$(git rev-parse HEAD); echo HEAD=$actual; test \"$actual\" = \"$expected\"; bash -n scripts/test_display_host.sh scripts/quality_gate_push.sh; grep -F 'scripts/test_display_host.sh' scripts/quality_gate_push.sh; HOST_BUILD_JOBS=2 make test-host; git diff --check; git status --short"
+  ]
+}
