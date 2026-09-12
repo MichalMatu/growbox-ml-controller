@@ -25,7 +25,7 @@ runtime_adapters = (root / "src/climate/runtime/Stage27RuntimeAdapters.h").read_
 errors = []
 
 for token in (
-    "buildStage27ScheduleIntent",
+    "buildScheduleIntent",
     "buildLampSafetyEnvelope",
     "syncFromStateStore",
     "buildOutputExecutionTelemetry",
@@ -44,7 +44,7 @@ for token in (
         errors.append(f"bootstrap-boundary-missing:{token}")
 
 for token in (
-    "buildStage27ScheduleIntent",
+    "buildScheduleIntent",
     "buildLampSafetyEnvelope",
     "services_.outputs.runtime_lifecycle.tick",
     "services_.outputs.automation_control.tick",

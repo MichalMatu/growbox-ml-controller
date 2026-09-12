@@ -489,7 +489,7 @@ target_compile_options(stage27_schedule_profile_tests PRIVATE -Wall -Wextra -Wpe
 add_executable(
   stage27_schedule_intent_tests
   "${PROJECT_ROOT}/test/test_stage27_schedule_intent/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/runtime/schedule/Stage27ScheduleIntentAdapter.cpp"
+  "${PROJECT_ROOT}/src/climate/runtime/schedule/ScheduleIntentAdapter.cpp"
   "${PROJECT_ROOT}/src/climate/runtime/schedule/ScheduleProfile.cpp"
   "${PROJECT_ROOT}/src/climate/runtime/schedule/EuropeWarsawTime.cpp"
 )
@@ -505,7 +505,7 @@ target_compile_options(stage27_schedule_intent_tests PRIVATE -Wall -Wextra -Wped
 add_executable(
   stage28d_output_intent_parity_tests
   "${PROJECT_ROOT}/test/test_stage28d_output_intent_parity/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/runtime/schedule/Stage27ScheduleIntentAdapter.cpp"
+  "${PROJECT_ROOT}/src/climate/runtime/schedule/ScheduleIntentAdapter.cpp"
   "${PROJECT_ROOT}/src/climate/runtime/schedule/ScheduleProfile.cpp"
   "${PROJECT_ROOT}/src/climate/runtime/schedule/EuropeWarsawTime.cpp"
   "${PROJECT_ROOT}/src/climate/LampSafety.cpp"

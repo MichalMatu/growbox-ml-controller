@@ -1,7 +1,7 @@
 #include "climate/LampSafety.h"
 #include "climate/OutputBindings.h"
 #include "climate/output/OutputIntents.h"
-#include "climate/runtime/schedule/Stage27ScheduleIntentAdapter.h"
+#include "climate/runtime/schedule/ScheduleIntentAdapter.h"
 
 #include <cassert>
 #include <cstdint>
@@ -11,7 +11,7 @@ namespace {
 
 namespace output = growbox::app::output;
 using growbox::app::climate_io::ClimateWallClockSnapshot;
-using growbox::app::climate_io::runtime::buildStage27ScheduleIntent;
+using growbox::app::climate_io::runtime::buildScheduleIntent;
 using growbox::app::climate_io::stage28d::buildLampSafetyEnvelope;
 using growbox::app::climate_io::stage28d::kExhaustFanEndpoint;
 using growbox::app::climate_io::stage28d::kScheduledLightEndpoint;
@@ -72,7 +72,7 @@ ShadowProjection projectShadow(const output::ScheduleIntent& schedule,
 output::ScheduleIntent scheduleAt(std::uint64_t unix_time_s, std::uint64_t now_ms) {
   output::ScheduleIntent intent{};
   const ClimateWallClockSnapshot clock{true, unix_time_s};
-  assert(buildStage27ScheduleIntent(now_ms, clock, now_ms + 1U, intent));
+  assert(buildScheduleIntent(now_ms, clock, now_ms + 1U, intent));
   return intent;
 }
 

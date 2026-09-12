@@ -2,7 +2,7 @@
 
 #include "climate/OutputBindings.h"
 #include "climate/output/OutputExecutionTelemetry.h"
-#include "climate/runtime/schedule/Stage27ScheduleIntentAdapter.h"
+#include "climate/runtime/schedule/ScheduleIntentAdapter.h"
 #include "climate/runtime/telemetry/RuntimeOutputTelemetryLog.h"
 
 #include <esp_log.h>
@@ -45,8 +45,7 @@ void RealInputRuntimeCoordinator::tick(std::uint64_t loop_started_us) noexcept {
   output::ScheduleIntent schedule_intent{};
   const std::uint64_t schedule_sequence = cycle_state_.nextOutputIntentSequence();
   const bool schedule_intent_ready =
-      rtc_sampled &&
-      buildStage27ScheduleIntent(now_ms, rtc_snapshot, schedule_sequence, schedule_intent);
+      rtc_sampled && buildScheduleIntent(now_ms, rtc_snapshot, schedule_sequence, schedule_intent);
   if (!schedule_intent_ready) {
     schedule_intent = {};
     schedule_intent.metadata.sequence = schedule_sequence;

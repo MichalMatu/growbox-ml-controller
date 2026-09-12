@@ -1,13 +1,13 @@
-#include "climate/runtime/schedule/Stage27ScheduleIntentAdapter.h"
+#include "climate/runtime/schedule/ScheduleIntentAdapter.h"
 
 #include "climate/OutputBindings.h"
 #include "climate/runtime/schedule/ScheduleProfile.h"
 
 namespace growbox::app::climate_io::runtime {
 
-bool buildStage27ScheduleIntent(std::uint64_t monotonic_ms, const ClimateWallClockSnapshot& clock,
-                                std::uint64_t sequence,
-                                ::growbox::app::output::ScheduleIntent& output) noexcept {
+bool buildScheduleIntent(std::uint64_t monotonic_ms, const ClimateWallClockSnapshot& clock,
+                         std::uint64_t sequence,
+                         ::growbox::app::output::ScheduleIntent& output) noexcept {
   output = {};
 
   ClimateScheduleConfigSnapshot profile{};

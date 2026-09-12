@@ -1,7 +1,7 @@
 #include "climate/OutputBindings.h"
 #include "climate/output/OutputIntents.h"
+#include "climate/runtime/schedule/ScheduleIntentAdapter.h"
 #include "climate/runtime/schedule/ScheduleProfile.h"
-#include "climate/runtime/schedule/Stage27ScheduleIntentAdapter.h"
 
 #include <array>
 #include <cassert>
@@ -12,7 +12,7 @@ namespace {
 namespace output = growbox::app::output;
 using growbox::app::climate_io::ClimateScheduleConfigSnapshot;
 using growbox::app::climate_io::ClimateWallClockSnapshot;
-using growbox::app::climate_io::runtime::buildStage27ScheduleIntent;
+using growbox::app::climate_io::runtime::buildScheduleIntent;
 using growbox::app::climate_io::runtime::resolveMintScheduleProfile;
 using growbox::app::climate_io::stage28d::kScheduledLightEndpoint;
 
@@ -23,7 +23,7 @@ ClimateWallClockSnapshot clockAt(std::uint64_t unix_time_s) {
 output::ScheduleIntent intentAt(std::uint64_t unix_time_s, std::uint64_t sequence = 7U,
                                 std::uint64_t monotonic_ms = 1234U) {
   output::ScheduleIntent intent{};
-  assert(buildStage27ScheduleIntent(monotonic_ms, clockAt(unix_time_s), sequence, intent));
+  assert(buildScheduleIntent(monotonic_ms, clockAt(unix_time_s), sequence, intent));
   return intent;
 }
 
@@ -73,7 +73,7 @@ void testInvalidClockFailsClosedAndClearsIntent() {
   assert(output::setEndpointIntent(intent.endpoints[0], kScheduledLightEndpoint, 1.0F));
 
   ClimateWallClockSnapshot invalid{};
-  assert(!buildStage27ScheduleIntent(1U, invalid, 2U, intent));
+  assert(!buildScheduleIntent(1U, invalid, 2U, intent));
   assert(intent.metadata.source == output::OutputSource::None);
   assert(intent.metadata.reason == output::OutputReason::None);
   for (const auto& endpoint : intent.endpoints) {
