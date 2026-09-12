@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "id": "20260912-phase3-ble-outside-compat-move-v2",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": true,
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch -q origin main && git reset --hard origin/main && test \"$(git rev-parse HEAD)\" = \"8800adb72b9f867a090bf8066c98e2b181f993ce\" && test -z \"$(git status --porcelain)\"",
+    "mkdir -p src/climate/compatibility/ble && git mv src/climate/native/BleOutsideSource.h src/climate/compatibility/ble/ && git mv src/climate/native/BleOutsideSource.cpp src/climate/compatibility/ble/",
+    "refs=$(git grep -Il 'climate/native/BleOutsideSource' -- src test tests scripts || true); if [ -n \"$refs\" ]; then printf '%s\\n' \"$refs\" | xargs perl -pi -e 's#climate/native/BleOutsideSource#climate/compatibility/ble/BleOutsideSource#g'; fi; git diff --check; ! git grep -n 'climate/native/BleOutsideSource' -- src test tests scripts; ! grep -n 'BleOutsideSource' src/CMakeLists.txt; ! grep -n 'compatibility/ble' src/CMakeLists.txt",
+    "pre-commit run --all-files || true; pre-commit run --all-files && python3 scripts/check_runtime_config_ssot.py && python3 scripts/check_app_mode_boundaries.py && python3 scripts/check_runtime_boundaries.py && python3 scripts/check_service_console_boundaries.py && python3 scripts/check_output_rf_ownership.py",
+    "cmake -S test/host -B build/host-tests && cmake --build build/host-tests --target ble_climate_state_tests --parallel && ctest --test-dir build/host-tests -R '^ble_climate_state_tests$' --output-on-failure",
+    "git diff --check && git add src test tests scripts && git commit -m 'Isolate legacy BLE outside source' && git push origin HEAD:main && git rev-parse HEAD"
+  ]
+}
