@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "eink-display-render-list-test-20260912-2034",
+  "task_digest": "df4cabeb14b480d38791e45c3e0396898dd28bf6234a8e300be252e272b3c935",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-12T20:33:44.997429+00:00",
+  "attempt_id": "b73666592609614d964d6704",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 92342,
+  "updated_at": "2026-09-12T20:33:44.997482+00:00",
+  "pid": 92342
+}
