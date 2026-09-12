@@ -1,4 +1,4 @@
-#include "climate/Stage28dOutputBindings.h"
+#include "climate/OutputBindings.h"
 #include "climate/application/ClimateSemanticOutput.h"
 #include "climate/rf433/ClimateRf433EndpointRegistry.h"
 

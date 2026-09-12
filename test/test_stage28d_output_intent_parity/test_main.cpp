@@ -1,5 +1,5 @@
 #include "climate/LampSafety.h"
-#include "climate/Stage28dOutputBindings.h"
+#include "climate/OutputBindings.h"
 #include "climate/output/OutputIntents.h"
 #include "climate/runtime/schedule/Stage27ScheduleIntentAdapter.h"
 

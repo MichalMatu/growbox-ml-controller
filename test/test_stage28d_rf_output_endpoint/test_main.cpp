@@ -1,4 +1,4 @@
-#include "climate/Stage28dOutputBindings.h"
+#include "climate/OutputBindings.h"
 #include "climate/compatibility/stage28d/Stage28dRfOutputEndpoint.h"
 #include "climate/output/OutputStateStore.h"
 #include "climate/output/OutputTransport.h"
