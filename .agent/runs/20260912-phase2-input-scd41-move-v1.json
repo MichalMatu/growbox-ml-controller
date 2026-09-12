@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 4,
+  "index": 5,
   "total": 6,
-  "command": "pre-commit run --all-files || true; pre-commit run --all-files && python3 scripts/check_runtime_config_ssot.py && python3 scripts/check_app_mode_boundaries.py && python3 scripts/check_runtime_boundaries.py && python3 scripts/check_service_console_boundaries.py && python3 scripts/check_output_rf_ownership.py",
-  "pid": 35584,
+  "command": "cmake -S test/host -B build/host-tests && cmake --build build/host-tests --parallel && ctest --test-dir build/host-tests --output-on-failure",
+  "pid": 35898,
   "timeout": 1200,
   "idle_timeout": 300,
   "memory_limit_mb": 4096,
-  "started_at": "2026-09-12T04:17:58.413549+00:00",
-  "stage_name": "command-4",
-  "stage_index": 4,
+  "started_at": "2026-09-12T04:18:02.910388+00:00",
+  "stage_name": "command-5",
+  "stage_index": 5,
   "stage_total": 6,
   "stage_phase": "commands",
   "task_id": "20260912-phase2-input-scd41-move-v1",
@@ -18,5 +18,5 @@
   "task_digest": "d63dca5e93cfab8770d191618487aefa4c7fe0d0f8a9faadebdc875cbfef4c0b",
   "daemon_version": "4.18.20",
   "daemon_pid": 35223,
-  "updated_at": "2026-09-12T04:17:58.434528+00:00"
+  "updated_at": "2026-09-12T04:18:02.942590+00:00"
 }
