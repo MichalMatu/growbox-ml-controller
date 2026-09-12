@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260912-phase2-output-supervisor-dependency-audit-v2",
   "task_digest": "d816d534ee3b66f0fa366e732313c94b41996143df9eb2195c39683333d1a686",
-  "idle_timeout": 120,
-  "task_timeout": 600,
-  "memory_limit_mb": 2048,
-  "started_at": "2026-09-12T02:56:46.297619+00:00",
+  "status": "done",
+  "failure_reason": null,
+  "finished_at": "2026-09-12T02:56:49.689969+00:00",
   "attempt_id": "29f8ad2afb65990cd1b09a96",
   "daemon_version": "4.18.20",
   "daemon_pid": 40634,
-  "updated_at": "2026-09-12T02:56:46.297704+00:00",
+  "updated_at": "2026-09-12T02:56:49.981731+00:00",
   "pid": 40634
 }
