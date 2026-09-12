@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "eink-display-firmware-sha-test-20260913-0039",
   "task_digest": "c4920c84433ffa93e7b9b1c30149b377a075909043609da4dfc0c310bfc7b037",
-  "idle_timeout": 300,
-  "task_timeout": 1800,
-  "memory_limit_mb": 4096,
-  "started_at": "2026-09-12T22:38:03.843066+00:00",
+  "status": "failed",
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-12T22:38:06.358878+00:00",
   "attempt_id": "16d1ed3cb27360663f1e0745",
   "daemon_version": "4.18.20",
   "daemon_pid": 8305,
-  "updated_at": "2026-09-12T22:38:03.843122+00:00",
+  "updated_at": "2026-09-12T22:38:06.626710+00:00",
   "pid": 8305
 }
