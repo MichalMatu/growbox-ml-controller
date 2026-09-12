@@ -10,7 +10,7 @@
 
 namespace growbox::app::climate_io::storage {
 
-class Stage27FlashStorageBackend final : public Stage27LogStorageBackend {
+class FlashStorageBackend final : public Stage27LogStorageBackend {
 public:
   Stage27StorageBackendKind kind() const noexcept override {
     return Stage27StorageBackendKind::Flash;

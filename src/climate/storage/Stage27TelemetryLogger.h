@@ -1,6 +1,6 @@
 #pragma once
 
-#include "climate/storage/Stage27FlashStorageBackend.h"
+#include "climate/storage/FlashStorageBackend.h"
 #include "climate/storage/Stage27SdStorageBackend.h"
 #include "climate/storage/Stage27StorageTypes.h"
 #include "climate/telemetry/Stage27Telemetry.h"
@@ -62,7 +62,7 @@ private:
 
   Config config_{};
   Stage27SdStorageBackend sd_backend_;
-  Stage27FlashStorageBackend flash_backend_;
+  FlashStorageBackend flash_backend_;
   Stage27LogStorageBackend* active_backend_ = nullptr;
   bool sd_initialized_ = false;
   bool flash_initialized_ = false;

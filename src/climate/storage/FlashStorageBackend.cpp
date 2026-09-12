@@ -1,4 +1,4 @@
-#include "climate/storage/Stage27FlashStorageBackend.h"
+#include "climate/storage/FlashStorageBackend.h"
 
 #include <esp_err.h>
 #include <esp_log.h>
@@ -17,7 +17,7 @@ constexpr char kPartitionLabel[] = "telemetry";
 
 } // namespace
 
-bool Stage27FlashStorageBackend::mount() noexcept {
+bool FlashStorageBackend::mount() noexcept {
   if (mounted_) {
     return true;
   }
@@ -41,8 +41,8 @@ bool Stage27FlashStorageBackend::mount() noexcept {
   return true;
 }
 
-bool Stage27FlashStorageBackend::beginSession(const char* session_header,
-                                              std::uint32_t session_id) noexcept {
+bool FlashStorageBackend::beginSession(const char* session_header,
+                                       std::uint32_t session_id) noexcept {
   if (!mounted_ || session_header == nullptr) {
     return false;
   }
@@ -67,7 +67,7 @@ bool Stage27FlashStorageBackend::beginSession(const char* session_header,
   return openSegment();
 }
 
-bool Stage27FlashStorageBackend::appendLine(const char* data, std::size_t length) noexcept {
+bool FlashStorageBackend::appendLine(const char* data, std::size_t length) noexcept {
   if (file_ == nullptr || data == nullptr || length == 0U || length >= kSegmentMaxBytes) {
     return false;
   }
@@ -91,7 +91,7 @@ bool Stage27FlashStorageBackend::appendLine(const char* data, std::size_t length
   return true;
 }
 
-void Stage27FlashStorageBackend::close() noexcept {
+void FlashStorageBackend::close() noexcept {
   closeFile();
   if (!mounted_) {
     return;
@@ -104,7 +104,7 @@ void Stage27FlashStorageBackend::close() noexcept {
   wl_handle_ = WL_INVALID_HANDLE;
 }
 
-bool Stage27FlashStorageBackend::openSegment() noexcept {
+bool FlashStorageBackend::openSegment() noexcept {
   std::snprintf(session_path_, sizeof(session_path_), "%s/F%" PRIu32 ".JL", kMountPoint,
                 current_slot_);
   file_ = std::fopen(session_path_, "w");
@@ -132,7 +132,7 @@ bool Stage27FlashStorageBackend::openSegment() noexcept {
   return true;
 }
 
-void Stage27FlashStorageBackend::closeFile() noexcept {
+void FlashStorageBackend::closeFile() noexcept {
   if (file_ != nullptr) {
     std::fclose(file_);
     file_ = nullptr;
