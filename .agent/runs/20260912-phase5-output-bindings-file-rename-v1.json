@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260912-phase5-output-bindings-file-rename-v1",
+  "task_digest": "cdfdcd7ea5ae3ac0c4f18b67ee02d653a894d8fe44382de5fed543d8395c4465",
+  "idle_timeout": 300,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-12T06:43:48.156582+00:00",
+  "attempt_id": "b1f01e72b00a155686104c42",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 93987,
+  "updated_at": "2026-09-12T06:43:48.157016+00:00",
+  "pid": 93987
+}
