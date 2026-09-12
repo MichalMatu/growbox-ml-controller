@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260912-deep-structure-reaudit-v1",
+  "task_digest": "030cf0b79cfbd8dc87107d7caabe6beba9b1b2a1541be6c54c9f8d6842a39182",
+  "idle_timeout": 180,
+  "task_timeout": 1800,
+  "memory_limit_mb": 3072,
+  "started_at": "2026-09-12T09:50:08.617847+00:00",
+  "attempt_id": "defa50403cc2c07c19c0649a",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 7244,
+  "updated_at": "2026-09-12T09:50:08.617910+00:00",
+  "pid": 7244
+}
