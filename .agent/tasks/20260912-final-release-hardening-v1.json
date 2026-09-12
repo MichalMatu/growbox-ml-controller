@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "id": "20260912-final-release-hardening-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": true,
+  "command_timeout": 7200,
+  "idle_timeout": 900,
+  "task_timeout": 14400,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "test -z \"$(git status --porcelain)\" && git fetch -q origin main agent-control && git merge --ff-only origin/main && test \"$(git rev-parse HEAD)\" = \"87a05da3675acd338857dc2f69dfef19e7a94b88\"",
+    "git show 369e78d8642b505abf274a5ad9c1cc6a46a093ee:.agent/helpers/final_release_hardening.py > /tmp/final_release_hardening.py && git show 9666373f0aed1da18007124b6c89857d9c288863:.agent/helpers/final_release_hardening_status_fix.py > /tmp/final_release_hardening_status_fix.py && python3 /tmp/final_release_hardening.py && python3 /tmp/final_release_hardening_status_fix.py && git diff --check && printf '%s\n' '=== PATCH FILES ===' && git diff --name-only | sort",
+    "cmake -S test/host -B build/host-tests && cmake --build build/host-tests --target stage28d_lamp_safety_tests --parallel 2 && ./build/host-tests/stage28d_lamp_safety_tests && python3 -m pytest -q tests/test_stage27c_soak.py",
+    "(pre-commit run --all-files || pre-commit run --all-files) && python3 scripts/check_runtime_config_ssot.py && python3 scripts/check_app_mode_boundaries.py && python3 scripts/check_runtime_boundaries.py && python3 scripts/check_service_console_boundaries.py && python3 scripts/check_output_rf_ownership.py && git diff --check",
+    "cmake -S test/host -B build/host-tests && cmake --build build/host-tests --parallel 2 && ctest --test-dir build/host-tests --output-on-failure && python3 -m pytest -q",
+    "bash scripts/run_clang_tidy_host.sh",
+    "bash scripts/idf_gate_build.sh && IDF_GATE_BUILD_DIR=build/idf-gate-v6-fake IDF_GATE_APP_MODE=climate-v6-fake bash scripts/idf_gate_build.sh && STAGE27C_BUILD_DIR=build/idf-gate-real-inputs-crowpanel GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 bash scripts/stage27c_crowpanel.sh build",
+    "test -z \"$(git status --porcelain --untracked-files=no | grep -v '^ M ' || true)\" || true; git diff --check && git status --short && git add src/climate/output/LampSafety.cpp test/test_stage28d_lamp_safety/test_main.cpp tools/stage27c_soak.py tests/test_stage27c_soak.py docs/CURRENT_STATUS.md docs/CHANGELOG.md && git diff --cached --check && git commit -m 'Harden final soak and lamp safety closeout' && git push origin HEAD:main && git rev-parse HEAD"
+  ]
+}
