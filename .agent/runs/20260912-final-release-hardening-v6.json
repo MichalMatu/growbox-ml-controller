@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 4,
+  "index": 5,
   "total": 8,
-  "command": "\"$HOME/Documents/PlatformIO/Projects/ml/.venv/bin/python\" scripts/check_runtime_config_ssot.py && \"$HOME/Documents/PlatformIO/Projects/ml/.venv/bin/python\" scripts/check_app_mode_boundaries.py && \"$HOME/Documents/PlatformIO/Projects/ml/.venv/bin/python\" scripts/check_runtime_boundaries.py && \"$HOME/Documents/PlatformIO/Projects/ml/.venv/bin/python\" scripts/check_service_console_boundaries.py && \"$HOME/Documents/PlatformIO/Projects/ml/.venv/bin/python\" scripts/check_output_rf_ownership.py && cmake -S test/host -B build/host-tests && cmake --build build/host-tests --parallel 2 && ctest --test-dir build/host-tests --output-on-failure",
-  "pid": 55188,
+  "command": "bash scripts/run_clang_tidy_host.sh",
+  "pid": 55926,
   "timeout": 7200,
   "idle_timeout": 900,
   "memory_limit_mb": 4096,
-  "started_at": "2026-09-12T13:59:56.625539+00:00",
-  "stage_name": "command-4",
-  "stage_index": 4,
+  "started_at": "2026-09-12T14:00:07.389131+00:00",
+  "stage_name": "command-5",
+  "stage_index": 5,
   "stage_total": 8,
   "stage_phase": "commands",
   "task_id": "20260912-final-release-hardening-v6",
@@ -18,5 +18,5 @@
   "task_digest": "d5468a1e7d24ec3ec3cedbb4f4681fa95da1e8bfa65124127e568ee663317854",
   "daemon_version": "4.18.20",
   "daemon_pid": 49921,
-  "updated_at": "2026-09-12T13:59:56.675259+00:00"
+  "updated_at": "2026-09-12T14:00:07.522314+00:00"
 }
