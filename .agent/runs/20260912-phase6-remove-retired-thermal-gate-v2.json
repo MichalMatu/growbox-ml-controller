@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 4,
+  "index": 5,
   "total": 9,
-  "command": "pre-commit run --all-files || true; pre-commit run --all-files && python3 scripts/check_runtime_config_ssot.py && python3 scripts/check_app_mode_boundaries.py && python3 scripts/check_runtime_boundaries.py && python3 scripts/check_service_console_boundaries.py && python3 scripts/check_output_rf_ownership.py",
-  "pid": 48693,
+  "command": "cmake -S test/host -B build/host-tests -DCMAKE_EXPORT_COMPILE_COMMANDS=ON && cmake --build build/host-tests --parallel 2 && ctest --test-dir build/host-tests --output-on-failure",
+  "pid": 49243,
   "timeout": 3600,
   "idle_timeout": 900,
   "memory_limit_mb": 6144,
-  "started_at": "2026-09-12T09:18:34.386122+00:00",
-  "stage_name": "command-4",
-  "stage_index": 4,
+  "started_at": "2026-09-12T09:18:42.186536+00:00",
+  "stage_name": "command-5",
+  "stage_index": 5,
   "stage_total": 9,
   "stage_phase": "commands",
   "task_id": "20260912-phase6-remove-retired-thermal-gate-v2",
@@ -18,5 +18,5 @@
   "task_digest": "a9be53b84ffe15212885c68da790045b2ca87f7cb3e718000b9dd97b05b20ad9",
   "daemon_version": "4.18.20",
   "daemon_pid": 48073,
-  "updated_at": "2026-09-12T09:18:34.446143+00:00"
+  "updated_at": "2026-09-12T09:18:42.256675+00:00"
 }
