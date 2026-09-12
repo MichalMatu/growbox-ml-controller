@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 4,
+  "index": 5,
   "total": 7,
-  "command": "pre-commit run --all-files || true; pre-commit run --all-files && python3 scripts/check_runtime_config_ssot.py && python3 scripts/check_app_mode_boundaries.py && python3 scripts/check_runtime_boundaries.py && python3 scripts/check_service_console_boundaries.py && python3 scripts/check_output_rf_ownership.py",
-  "pid": 70536,
+  "command": "cmake -S test/host -B build/host-tests && cmake --build build/host-tests --parallel 2 && ctest --test-dir build/host-tests --output-on-failure",
+  "pid": 70891,
   "timeout": 1800,
   "idle_timeout": 300,
   "memory_limit_mb": 4096,
-  "started_at": "2026-09-12T10:31:33.187065+00:00",
-  "stage_name": "command-4",
-  "stage_index": 4,
+  "started_at": "2026-09-12T10:31:40.465406+00:00",
+  "stage_name": "command-5",
+  "stage_index": 5,
   "stage_total": 7,
   "stage_phase": "commands",
   "task_id": "20260912-remove-unused-observability-v3",
@@ -18,5 +18,5 @@
   "task_digest": "375938e4d1c51b4948ca639fb4561f83afad9b322ab9afa1ee4be41fa7b7645f",
   "daemon_version": "4.18.20",
   "daemon_pid": 70199,
-  "updated_at": "2026-09-12T10:31:33.267762+00:00"
+  "updated_at": "2026-09-12T10:31:40.518472+00:00"
 }
