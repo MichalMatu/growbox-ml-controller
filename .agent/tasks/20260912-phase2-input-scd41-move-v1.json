@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "id": "20260912-phase2-input-scd41-move-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": true,
+  "command_timeout": 1200,
+  "idle_timeout": 300,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch -q origin main && git reset --hard origin/main && test \"$(git rev-parse HEAD)\" = \"31a9a95576aa752b86cc64d789ff11ab61415dfe\" && test -z \"$(git status --porcelain)\"",
+    "mkdir -p src/climate/input/sensors && git mv src/climate/native/Scd41InsideSource.h src/climate/input/sensors/ && git mv src/climate/native/Scd41InsideSource.cpp src/climate/input/sensors/",
+    "git grep -Il -e 'climate/native/Scd41InsideSource' -- src test tests scripts | xargs perl -pi -e 's#climate/native/Scd41InsideSource#climate/input/sensors/Scd41InsideSource#g'; git diff --check; ! git grep -n -e 'climate/native/Scd41InsideSource' -- src test tests scripts",
+    "pre-commit run --all-files || true; pre-commit run --all-files && python3 scripts/check_runtime_config_ssot.py && python3 scripts/check_app_mode_boundaries.py && python3 scripts/check_runtime_boundaries.py && python3 scripts/check_service_console_boundaries.py && python3 scripts/check_output_rf_ownership.py",
+    "cmake -S test/host -B build/host-tests && cmake --build build/host-tests --parallel && ctest --test-dir build/host-tests --output-on-failure",
+    "git diff --check && git add src test tests scripts && git commit -m 'Group SCD41 input components' && git push origin HEAD:main && git rev-parse HEAD"
+  ]
+}
