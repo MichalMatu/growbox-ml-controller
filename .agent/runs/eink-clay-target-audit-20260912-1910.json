@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "eink-clay-target-audit-20260912-1910",
+  "task_digest": "42b68ebc6d7116b3073d7b18fa869d803b27881f83b7812d6fd47a61bbe71269",
+  "idle_timeout": 300,
+  "task_timeout": 900,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-12T19:10:29.708945+00:00",
+  "attempt_id": "dfe95bc7bf1a678d04eceee9",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 8485,
+  "updated_at": "2026-09-12T19:10:29.709007+00:00",
+  "pid": 8485
+}
