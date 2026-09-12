@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260912-phase5-stage-name-audit-v1",
+  "task_digest": "d48c04e0d496da078c2b4ec3467a733f148993806aaf7a5e9ac762a6246ba469",
+  "idle_timeout": 120,
+  "task_timeout": 900,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-12T06:28:58.166600+00:00",
+  "attempt_id": "d94e53c8b2e46b0455d5c986",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 72265,
+  "updated_at": "2026-09-12T06:28:58.166763+00:00",
+  "pid": 72265
+}
