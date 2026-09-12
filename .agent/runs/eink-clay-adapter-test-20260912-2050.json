@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "eink-clay-adapter-test-20260912-2050",
+  "task_digest": "69ce24846628c29a9a10a5e50cd1d90391e6a6d5b4def7d054feb89739fab996",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-12T20:50:13.000650+00:00",
+  "attempt_id": "f58706534417131782546a74",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 7022,
+  "updated_at": "2026-09-12T20:50:13.000720+00:00",
+  "pid": 7022
+}
