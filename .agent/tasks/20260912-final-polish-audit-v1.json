@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "id": "20260912-final-polish-audit-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": false,
+  "command_timeout": 300,
+  "idle_timeout": 120,
+  "task_timeout": 900,
+  "memory_limit_mb": 2048,
+  "commands": [
+    "test -z \"$(git status --porcelain)\" && git fetch -q origin main && git merge --ff-only origin/main && test \"$(git rev-parse HEAD)\" = \"87a05da3675acd338857dc2f69dfef19e7a94b88\"",
+    "printf '%s\\n' '=== SOAK TOOL ==='; sed -n '1,320p' tools/stage27c_soak.py",
+    "printf '%s\\n' '=== RELEVANT TEST FILES ==='; find test -type f | sort | grep -Ei 'stage27c|soak|lamp.*safety' || true; printf '%s\\n' '=== LAMP SAFETY TEST ==='; sed -n '1,360p' test/test_stage28d_lamp_safety/test_main.cpp",
+    "printf '%s\\n' '=== SOAK V3 EMITTER ==='; grep -R -n -E 'soak_v=3|output_v=' src/climate | head -80; printf '%s\\n' '=== LAMP SAFETY SOURCE ==='; sed -n '1,300p' src/climate/output/LampSafety.cpp; printf '%s\\n' '=== HEADER ==='; sed -n '1,220p' src/climate/output/LampSafety.h",
+    "printf '%s\\n' '=== PYTHON TEST CONFIG ==='; find . -maxdepth 3 -type f \( -name '*test*.py' -o -name 'pyproject.toml' -o -name 'pytest.ini' -o -name 'requirements*.txt' \) -print | sort; git status --short --branch"
+  ]
+}
