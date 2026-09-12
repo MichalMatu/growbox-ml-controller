@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260912-output-top-level-move-v1",
+  "task_digest": "4715443c3dd00b45165a76aff697b45536ab2cd73edb52be62f2650151724c5b",
+  "idle_timeout": 900,
+  "task_timeout": 10800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-12T10:44:49.501137+00:00",
+  "attempt_id": "cce979e4d663f850ec3dcd1b",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 93458,
+  "updated_at": "2026-09-12T10:44:49.501304+00:00",
+  "pid": 93458
+}
