@@ -1,0 +1,14 @@
+{
+  "id": "eink-display-transactional-refresh-test-20260913-0053",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "feature/eink-clay-status",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 1200,
+  "task_timeout": 2400,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "set -euo pipefail; expected=84e05a618e6bfe65a88604fc4ed5bfa35bb36087; actual=$(git rev-parse HEAD); echo HEAD=$actual; test \"$actual\" = \"$expected\"; source scripts/source_idf.sh; test -f build/eink-display-real-input/build.ninja; ninja -C build/eink-display-real-input esp-idf/src/CMakeFiles/__idf_src.dir/climate/display/DisplayPresenter.cpp.obj esp-idf/src/CMakeFiles/__idf_src.dir/climate/ClimateV6RealInputRuntime.cpp.obj esp-idf/src/CMakeFiles/__idf_src.dir/climate/runtime/telemetry/TelemetryReporter.cpp.obj; cmake -S test/test_display_observer -B build/eink-display-observer-transactional; cmake --build build/eink-display-observer-transactional --parallel; ctest --test-dir build/eink-display-observer-transactional --output-on-failure; cmake -S test/test_display_runtime -B build/eink-display-runtime-transactional; cmake --build build/eink-display-runtime-transactional --parallel; ctest --test-dir build/eink-display-runtime-transactional --output-on-failure; cmake -S test/test_display_presenter -B build/eink-display-presenter-transactional; cmake --build build/eink-display-presenter-transactional --parallel; ctest --test-dir build/eink-display-presenter-transactional --output-on-failure; git diff --check; if git grep -n -E 'std::(vector|string)|new |delete ' -- src/climate/display; then echo dynamic_display_pattern_found; exit 1; fi; git status --short"
+  ]
+}
