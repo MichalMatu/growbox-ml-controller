@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "id": "20260912-final-structure-reaudit-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": false,
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 2400,
+  "memory_limit_mb": 3072,
+  "commands": [
+    "test -z \"$(git status --porcelain)\" && git fetch -q origin main && git merge --ff-only origin/main && test \"$(git rev-parse HEAD)\" = \"0a7097a30280ec0f7bb408799c07093761d63e88\" && test \"$(git rev-parse origin/main)\" = \"0a7097a30280ec0f7bb408799c07093761d63e88\"",
+    "echo '=== TOP LEVEL CLIMATE ==='; find src/climate -maxdepth 1 -type f -print | sort; echo '=== DIRECTORY COUNTS ==='; find src/climate -type f | awk -F/ '{print $3}' | sort | uniq -c | sort -nr",
+    "python3 - <<'PY'\nfrom pathlib import Path\nimport re\nroot=Path('src/climate')\nfiles=[p for p in root.rglob('*') if p.suffix in {'.h','.hpp','.c','.cc','.cpp'}]\nprint('=== LARGE FILES ===')\nrows=[]\nfor p in files:\n    try: n=sum(1 for _ in p.open(errors='ignore'))\n    except OSError: continue\n    rows.append((n,str(p)))\nfor n,p in sorted(rows, reverse=True)[:35]: print(f'{n:5d} {p}')\nprint('=== HEADER INCLUDE HOTSPOTS ===')\nfor p in sorted([p for p in files if p.suffix in {'.h','.hpp'}], key=lambda p: sum(1 for l in p.open(errors='ignore') if l.startswith('#include')), reverse=True)[:25]:\n    c=sum(1 for l in p.open(errors='ignore') if l.startswith('#include'))\n    print(f'{c:3d} {p}')\nPY",
+    "python3 - <<'PY'\nfrom pathlib import Path\nimport re\nroot=Path('src')\nheaders={str(p.relative_to(root)):p for p in Path('src/climate').rglob('*.h')}\ng={k:set() for k in headers}\nrx=re.compile(r'^#include \\\"([^\\\"]+)\\\"')\nfor k,p in headers.items():\n    for line in p.read_text(errors='ignore').splitlines():\n        m=rx.match(line)\n        if m and m.group(1) in headers: g[k].add(m.group(1))\nstate={}; stack=[]; cycles=[]\ndef dfs(n):\n    state[n]=1; stack.append(n)\n    for v in g[n]:\n        if state.get(v,0)==0: dfs(v)\n        elif state.get(v)==1:\n            i=stack.index(v); cycles.append(stack[i:]+[v])\n    stack.pop(); state[n]=2\nfor n in g:\n    if state.get(n,0)==0: dfs(n)\nprint('=== INCLUDE GRAPH ===')\nprint('headers',len(headers),'edges',sum(map(len,g.values())),'cycles',len(cycles))\nfor c in cycles[:20]: print(' -> '.join(c))\nPY",
+    "echo '=== CPP WIRING CANDIDATES ==='; for f in $(git ls-files 'src/climate/**/*.cpp' 'src/climate/*.cpp'); do if ! git grep -F -q \"${f#src/}\" -- src/CMakeLists.txt test/host/CMakeLists.txt scripts .github 2>/dev/null && ! git grep -F -q \"$f\" -- src/CMakeLists.txt test/host/CMakeLists.txt scripts .github 2>/dev/null; then echo \"NO_BUILD_REF $f\"; fi; done; echo '=== STAGE PREFIX PATHS ==='; git ls-files src/climate | grep -E '(^|/)(Stage27|Stage28|Stage28d|Stage28e)' || true",
+    "echo '=== TODO FIXME HACK ==='; git grep -n -E 'TODO|FIXME|HACK|XXX' -- src/climate lib/environment_control src/main.cpp || true; echo '=== ROOT MAIN ==='; sed -n '1,220p' src/main.cpp; echo '=== FINAL STATUS ==='; git status --short --branch"
+  ]
+}
