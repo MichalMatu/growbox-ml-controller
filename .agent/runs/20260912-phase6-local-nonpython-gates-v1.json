@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260912-phase6-local-nonpython-gates-v1",
+  "task_digest": "26a7ca319494f83a170c72694fbb86d9970503f0444caf6eba23de22bc5e03d9",
+  "idle_timeout": 900,
+  "task_timeout": 7200,
+  "memory_limit_mb": 6144,
+  "started_at": "2026-09-12T08:50:47.258189+00:00",
+  "attempt_id": "e46d7e59fcb44a153e59ab81",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 24680,
+  "updated_at": "2026-09-12T08:50:47.258336+00:00",
+  "pid": 24680
+}
