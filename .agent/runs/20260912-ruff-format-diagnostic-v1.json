@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260912-ruff-format-diagnostic-v1",
+  "task_digest": "08a6931c88a4ae4c6f2adc340f449f794ac58d31893677609e556192456ebad6",
+  "idle_timeout": 120,
+  "task_timeout": 600,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-12T03:24:36.962274+00:00",
+  "attempt_id": "e15b1618bcc9cb1e69e914b6",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 68484,
+  "updated_at": "2026-09-12T03:24:36.962361+00:00",
+  "pid": 68484
+}
