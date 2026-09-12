@@ -1,0 +1,14 @@
+{
+  "id": "eink-display-snapshot-test-20260912-1925",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "feature/eink-clay-status",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 900,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "set -euo pipefail; expected=5e9c4e05c7be6ed7e1c3756e942a3572eb0d05e6; actual=$(git rev-parse HEAD); echo HEAD=$actual; test \"$actual\" = \"$expected\"; cmake -S test/host -B build/eink-display-snapshot; cmake --build build/eink-display-snapshot --target output_execution_telemetry_tests --parallel; ctest --test-dir build/eink-display-snapshot -R '^output_execution_telemetry_tests$' --output-on-failure; git status --short"
+  ]
+}
