@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "id": "20260912-phase2-native-structure-audit-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": false,
+  "command_timeout": 300,
+  "idle_timeout": 120,
+  "task_timeout": 900,
+  "memory_limit_mb": 2048,
+  "commands": [
+    "git fetch -q origin main && git reset --hard origin/main && test \"$(git rev-parse HEAD)\" = \"7291e2e680801d89dd94fd295bb7b4b767a2a3fe\" && test -z \"$(git status --porcelain)\" && echo NATIVE_AUDIT_BASE_PASS",
+    "echo =====NATIVE_FILES=====; find src/climate/native -maxdepth 1 -type f -print | sort; echo =====NATIVE_INCLUDES=====; for f in src/climate/native/*.h src/climate/native/*.cpp; do echo =====$f=====; grep -n '^#include' \"$f\" || true; done",
+    "echo =====NATIVE_REFS=====; git grep -n 'climate/native/' -- src test tests scripts tools .github CMakeLists.txt || true; echo =====NATIVE_PATH_REFS=====; git grep -n 'src/climate/native/' -- src test tests scripts tools .github CMakeLists.txt || true",
+    "echo =====NATIVE_TEST_TARGET_HINTS=====; grep -n -Ei 'ble|bthome|ds3231|i2c|scd|sensor|native' test/host/CMakeLists.txt || true; echo =====NATIVE_BUILD_REFS=====; grep -n 'climate/native/' src/CMakeLists.txt test/host/CMakeLists.txt scripts/quality_gate_push.sh 2>/dev/null || true"
+  ]
+}
