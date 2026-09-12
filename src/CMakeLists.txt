@@ -33,8 +33,8 @@ idf_component_register(
     "climate/output/supervisor/OutputSupervisorResolver.cpp"
     "climate/output/supervisor/OutputSupervisorExecutor.cpp"
     "climate/output/supervisor/ClimateOutputSupervisorSink.cpp"
-    "climate/OutputBindings.cpp"
-    "climate/LampSafety.cpp"
+    "climate/output/OutputBindings.cpp"
+    "climate/output/LampSafety.cpp"
     "climate/runtime/diagnostics/Stage28eBreadcrumbs.cpp"
   INCLUDE_DIRS
     "."

@@ -408,7 +408,7 @@ add_executable(
   "${PROJECT_ROOT}/src/climate/application/ClimateSemanticOutput.cpp"
   "${PROJECT_ROOT}/src/climate/rf433/ClimateRf433EndpointRegistry.cpp"
   "${PROJECT_ROOT}/src/climate/output/policy/OutputPolicyConfig.cpp"
-  "${PROJECT_ROOT}/src/climate/OutputBindings.cpp"
+  "${PROJECT_ROOT}/src/climate/output/OutputBindings.cpp"
 )
 target_include_directories(
   climate_semantic_output_tests
@@ -442,7 +442,7 @@ target_compile_options(stage28d_rf_output_endpoint_tests PRIVATE -Wall -Wextra -
 add_executable(
   stage28d_lamp_safety_tests
   "${PROJECT_ROOT}/test/test_stage28d_lamp_safety/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/LampSafety.cpp"
+  "${PROJECT_ROOT}/src/climate/output/LampSafety.cpp"
 )
 target_include_directories(
   stage28d_lamp_safety_tests
@@ -499,7 +499,7 @@ add_executable(
   "${PROJECT_ROOT}/src/climate/runtime/schedule/ScheduleIntentAdapter.cpp"
   "${PROJECT_ROOT}/src/climate/runtime/schedule/ScheduleProfile.cpp"
   "${PROJECT_ROOT}/src/climate/runtime/schedule/EuropeWarsawTime.cpp"
-  "${PROJECT_ROOT}/src/climate/LampSafety.cpp"
+  "${PROJECT_ROOT}/src/climate/output/LampSafety.cpp"
 )
 target_include_directories(
   stage28d_output_intent_parity_tests

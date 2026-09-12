@@ -1,5 +1,5 @@
-#include "climate/LampSafety.h"
-#include "climate/OutputBindings.h"
+#include "climate/output/LampSafety.h"
+#include "climate/output/OutputBindings.h"
 
 #include <cassert>
 #include <cstdint>

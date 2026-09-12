@@ -1,7 +1,7 @@
 #pragma once
 
-#include "climate/LampSafety.h"
 #include "climate/application/ClimateSemanticOutput.h"
+#include "climate/output/LampSafety.h"
 #include "climate/output/OutputStateStore.h"
 #include "climate/output/control/OutputAutomationControl.h"
 #include "climate/output/control/OutputMaintenanceControl.h"

@@ -1,9 +1,9 @@
 #pragma once
 
-#include "climate/LampSafety.h"
 #include "climate/application/ClimateApplication.h"
 #include "climate/input/ble/BleClimateScanner.h"
 #include "climate/input/rtc/Ds3231ClockSource.h"
+#include "climate/output/LampSafety.h"
 #include "climate/output/OutputStateStore.h"
 #include "climate/output/control/OutputAutomationControl.h"
 #include "climate/output/control/OutputMaintenanceControl.h"

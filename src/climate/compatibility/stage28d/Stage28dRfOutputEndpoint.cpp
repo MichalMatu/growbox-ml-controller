@@ -1,6 +1,6 @@
 #include "climate/compatibility/stage28d/Stage28dRfOutputEndpoint.h"
 
-#include "climate/OutputBindings.h"
+#include "climate/output/OutputBindings.h"
 
 #include <cmath>
 #include <limits>

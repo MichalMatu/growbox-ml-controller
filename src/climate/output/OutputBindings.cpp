@@ -1,4 +1,4 @@
-#include "climate/OutputBindings.h"
+#include "climate/output/OutputBindings.h"
 
 namespace growbox::app::climate_io::stage28d {
 namespace {

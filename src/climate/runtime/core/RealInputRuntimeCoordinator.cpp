@@ -1,6 +1,6 @@
 #include "climate/runtime/core/RealInputRuntimeCoordinator.h"
 
-#include "climate/OutputBindings.h"
+#include "climate/output/OutputBindings.h"
 #include "climate/output/OutputExecutionTelemetry.h"
 #include "climate/runtime/schedule/ScheduleIntentAdapter.h"
 #include "climate/runtime/telemetry/RuntimeOutputTelemetryLog.h"

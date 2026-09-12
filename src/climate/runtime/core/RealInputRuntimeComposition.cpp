@@ -1,6 +1,6 @@
 #include "climate/runtime/core/RealInputRuntimeComposition.h"
 
-#include "climate/OutputBindings.h"
+#include "climate/output/OutputBindings.h"
 #include "climate/runtime/RuntimeBuildConfig.h"
 
 #include <array>

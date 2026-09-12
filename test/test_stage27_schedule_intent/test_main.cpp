@@ -1,4 +1,4 @@
-#include "climate/OutputBindings.h"
+#include "climate/output/OutputBindings.h"
 #include "climate/output/OutputIntents.h"
 #include "climate/runtime/schedule/ScheduleIntentAdapter.h"
 #include "climate/runtime/schedule/ScheduleProfile.h"
