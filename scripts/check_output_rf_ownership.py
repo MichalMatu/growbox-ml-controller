@@ -65,8 +65,8 @@ SERVICE_CONSOLE_FORBIDDEN = (
 )
 
 LEGACY_FIRMWARE_SOURCES = (
-    '"climate/Stage28dBinaryRoleArbiter.cpp"',
-    '"climate/Stage28dRfOutputEndpoint.cpp"',
+    '"climate/compatibility/stage28d/Stage28dBinaryRoleArbiter.cpp"',
+    '"climate/compatibility/stage28d/Stage28dRfOutputEndpoint.cpp"',
 )
 
 RAW_SEND_RE = re.compile(r"(?<![A-Za-z0-9_])(transport_|raw_transport_)\.send\(")
@@ -79,8 +79,8 @@ RAW_SEND_ALLOW = {
 # These files remain only as host compatibility/parity evidence. A separate
 # CMake invariant below forbids compiling them into production firmware again.
 RETIRED_COMPAT_CPP = {
-    "src/climate/Stage28dBinaryRoleArbiter.cpp",
-    "src/climate/Stage28dRfOutputEndpoint.cpp",
+    "src/climate/compatibility/stage28d/Stage28dBinaryRoleArbiter.cpp",
+    "src/climate/compatibility/stage28d/Stage28dRfOutputEndpoint.cpp",
 }
 
 

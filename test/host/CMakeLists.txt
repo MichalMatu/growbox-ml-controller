@@ -422,7 +422,7 @@ target_compile_options(climate_semantic_output_tests PRIVATE -Wall -Wextra -Wped
 add_executable(
   stage28d_binary_role_arbiter_tests
   "${PROJECT_ROOT}/test/test_stage28d_binary_role_arbiter/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/Stage28dBinaryRoleArbiter.cpp"
+  "${PROJECT_ROOT}/src/climate/compatibility/stage28d/Stage28dBinaryRoleArbiter.cpp"
   "${PROJECT_ROOT}/src/climate/output/policy/BinaryActuatorPolicy.cpp"
 )
 target_include_directories(stage28d_binary_role_arbiter_tests PRIVATE "${PROJECT_ROOT}/src" "${PROJECT_ROOT}/lib/environment_control/src")
@@ -432,7 +432,7 @@ target_compile_options(stage28d_binary_role_arbiter_tests PRIVATE -Wall -Wextra 
 add_executable(
   stage28d_rf_output_endpoint_tests
   "${PROJECT_ROOT}/test/test_stage28d_rf_output_endpoint/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/Stage28dRfOutputEndpoint.cpp"
+  "${PROJECT_ROOT}/src/climate/compatibility/stage28d/Stage28dRfOutputEndpoint.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputStateStore.cpp"
 )
 target_include_directories(stage28d_rf_output_endpoint_tests PRIVATE "${PROJECT_ROOT}/src" "${PROJECT_ROOT}/lib/environment_control/src")

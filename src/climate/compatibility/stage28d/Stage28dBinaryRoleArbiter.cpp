@@ -1,4 +1,4 @@
-#include "climate/Stage28dBinaryRoleArbiter.h"
+#include "climate/compatibility/stage28d/Stage28dBinaryRoleArbiter.h"
 
 #include <algorithm>
 #include <atomic>

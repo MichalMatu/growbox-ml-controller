@@ -20,7 +20,9 @@ def test_repository_output_execution_ownership_is_single_owner():
 
 def test_retired_compatibility_sources_are_not_production_scan_targets(tmp_path):
     guard = load_guard()
-    retired = tmp_path / "src" / "climate" / "Stage28dRfOutputEndpoint.cpp"
+    retired = (
+        tmp_path / "src" / "climate" / "compatibility" / "stage28d" / "Stage28dRfOutputEndpoint.cpp"
+    )
     retired.parent.mkdir(parents=True)
     retired.write_text("transport_.send(command);\n")
     active = tmp_path / "src" / "climate" / "output" / "supervisor" / "OutputSupervisorExecutor.cpp"
