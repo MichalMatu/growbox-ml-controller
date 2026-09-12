@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260912-phase2-native-structure-audit-v1",
+  "task_digest": "67a94d343520efe20df27b8da57ee4fb032b1844dbacc5d8c67473dd38f17a53",
+  "idle_timeout": 120,
+  "task_timeout": 900,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-12T03:52:46.677659+00:00",
+  "attempt_id": "f8de4b7d5118f1150403e989",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 97003,
+  "updated_at": "2026-09-12T03:52:46.677713+00:00",
+  "pid": 97003
+}
