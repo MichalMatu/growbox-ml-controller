@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "id": "20260912-dead-climate-modules-cleanup-v2",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": true,
+  "command_timeout": 1800,
+  "idle_timeout": 600,
+  "task_timeout": 5400,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "test -z \"$(git status --porcelain)\" && git fetch -q origin main && git merge --ff-only origin/main && test \"$(git rev-parse HEAD)\" = \"a07b5a14f4bb3ab8b8ca866aafb52a1390ef69ab\"",
+    "python3 -c \"from pathlib import Path; files=['src/climate/storage/Stage27SdDataLogger.cpp','src/climate/storage/Stage27SdDataLogger.h','src/climate/telemetry/Stage27Telemetry.cpp','src/climate/compatibility/ble/BleOutsideSource.cpp','src/climate/compatibility/ble/BleOutsideSource.h']; [Path(p).unlink() for p in files]\"",
+    "! git grep -n -E 'Stage27SdDataLogger|formatStage27TelemetryNdjson|BleOutsideSource' -- src test scripts .github CMakeLists.txt && test -f src/climate/telemetry/Stage27Telemetry.h && git diff --check",
+    "pre-commit run --all-files || true; pre-commit run --all-files && python3 scripts/check_runtime_config_ssot.py && python3 scripts/check_app_mode_boundaries.py && python3 scripts/check_runtime_boundaries.py && python3 scripts/check_service_console_boundaries.py && python3 scripts/check_output_rf_ownership.py",
+    "cmake -S test/host -B build/host-tests && cmake --build build/host-tests --parallel 2 && ctest --test-dir build/host-tests --output-on-failure",
+    "STAGE27C_BUILD_DIR=build/idf-dead-cleanup-real-inputs GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 bash scripts/stage27c_crowpanel.sh build",
+    "git diff --check && git add -u && git commit -m 'Remove retired climate modules' && git push origin HEAD:main && git rev-parse HEAD"
+  ]
+}
