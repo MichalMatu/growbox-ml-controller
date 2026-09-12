@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "id": "20260912-phase3-compatibility-source-audit-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": false,
+  "command_timeout": 300,
+  "idle_timeout": 120,
+  "task_timeout": 900,
+  "memory_limit_mb": 2048,
+  "commands": [
+    "git fetch -q origin main && git reset --hard origin/main && test \"$(git rev-parse HEAD)\" = \"3ab26a98b5b4e82f756e8440b8fda776313b6c83\" && test -z \"$(git status --porcelain)\" && echo COMPAT_AUDIT_BASE_PASS",
+    "echo =====CANDIDATE_FILES=====; find src/climate -maxdepth 2 -type f \\( -name 'Stage28d*' -o -path 'src/climate/native/*' \\) -print | sort; echo =====PRODUCTION_CMAKE_REFS=====; grep -n -E 'Stage28d|climate/native/' src/CMakeLists.txt || true",
+    "echo =====SOURCE_REFS=====; git grep -n -E 'Stage28d(BinaryRoleArbiter|RfOutputEndpoint|LampSafety|OutputBindings)|BleOutsideSource' -- src test tests scripts tools .github CMakeLists.txt || true",
+    "echo =====TEST_BUILD_REFS=====; grep -n -E 'stage28d|BleOutsideSource|native/' test/host/CMakeLists.txt || true; echo =====GUARD_REFS=====; git grep -n -E 'Stage28d|BleOutsideSource|native/' -- scripts tests .github || true"
+  ]
+}
