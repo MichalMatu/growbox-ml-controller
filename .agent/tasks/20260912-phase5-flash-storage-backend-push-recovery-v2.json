@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "id": "20260912-phase5-flash-storage-backend-push-recovery-v2",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": true,
+  "command_timeout": 300,
+  "idle_timeout": 120,
+  "task_timeout": 900,
+  "memory_limit_mb": 2048,
+  "commands": [
+    "git fetch -q origin main && test \"$(git rev-parse origin/main)\" = \"95cda446dc05d0a8e71bcf332fe86398a84d62d0\" && git cat-file -e a4cb9ce0134f4a9efbb99c0e66f3c92d4b696df7^{commit} && test \"$(git rev-parse a4cb9ce0134f4a9efbb99c0e66f3c92d4b696df7^)\" = \"95cda446dc05d0a8e71bcf332fe86398a84d62d0\" && test \"$(git log -1 --format=%s a4cb9ce0134f4a9efbb99c0e66f3c92d4b696df7)\" = \"Drop stage prefix from flash storage backend\" && test \"$(git diff --name-only 95cda446dc05d0a8e71bcf332fe86398a84d62d0..a4cb9ce0134f4a9efbb99c0e66f3c92d4b696df7 | wc -l | tr -d ' ')\" = \"4\" && git diff --check 95cda446dc05d0a8e71bcf332fe86398a84d62d0..a4cb9ce0134f4a9efbb99c0e66f3c92d4b696df7",
+    "git push origin a4cb9ce0134f4a9efbb99c0e66f3c92d4b696df7:refs/heads/main",
+    "git fetch -q origin main && test \"$(git rev-parse origin/main)\" = \"a4cb9ce0134f4a9efbb99c0e66f3c92d4b696df7\" && echo PUSH_RECOVERY_OK=a4cb9ce0134f4a9efbb99c0e66f3c92d4b696df7"
+  ]
+}
