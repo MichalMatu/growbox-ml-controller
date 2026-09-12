@@ -1,0 +1,14 @@
+{
+  "id": "eink-clay-adapter-test-20260912-2050",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "feature/eink-clay-status",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 900,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "set -euo pipefail; expected=a6f8b43643d08b0b8192bd0378fed947ff604e5d; actual=$(git rev-parse HEAD); echo HEAD=$actual; test \"$actual\" = \"$expected\"; cmake -S test/test_display_presenter -B build/eink-clay-adapter; cmake --build build/eink-clay-adapter --parallel; ctest --test-dir build/eink-clay-adapter --output-on-failure; if git grep -n -E 'std::(vector|string)|\\bnew\\b|\\bdelete\\b' -- src/climate/display; then echo dynamic_display_pattern_found; exit 1; fi; git status --short"
+  ]
+}
