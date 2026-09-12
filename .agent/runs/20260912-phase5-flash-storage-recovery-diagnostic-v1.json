@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260912-phase5-flash-storage-recovery-diagnostic-v1",
   "task_digest": "a9ec582a7dfe93bc4b5743c52267abd3013191e6cda5a63b8bb6195e158b798a",
-  "idle_timeout": 120,
-  "task_timeout": 900,
-  "memory_limit_mb": 2048,
-  "started_at": "2026-09-12T07:52:15.539796+00:00",
+  "status": "done",
+  "failure_reason": null,
+  "finished_at": "2026-09-12T07:52:18.606626+00:00",
   "attempt_id": "d3b90a12767ede327c1de225",
   "daemon_version": "4.18.20",
   "daemon_pid": 72363,
-  "updated_at": "2026-09-12T07:52:15.539976+00:00",
+  "updated_at": "2026-09-12T07:52:18.900188+00:00",
   "pid": 72363
 }
