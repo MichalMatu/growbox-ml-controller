@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "id": "20260912-idf-python-env-probe-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": false,
+  "command_timeout": 300,
+  "idle_timeout": 120,
+  "task_timeout": 600,
+  "memory_limit_mb": 2048,
+  "commands": [
+    "test -z \"$(git status --porcelain)\" && git fetch -q origin main && git merge --ff-only origin/main && test \"$(git rev-parse HEAD)\" = \"87a05da3675acd338857dc2f69dfef19e7a94b88\"",
+    "echo '=== PYTHON ENVS ==='; ls -ld \"$HOME\"/.espressif/python_env/idf5.5_py3.*_env 2>/dev/null || true; find \"$HOME/.espressif/python_env\" -maxdepth 2 -type f -path '*/idf5.5_py3.*_env/bin/python*' -print 2>/dev/null | sort",
+    "test -x \"$HOME/.espressif/python_env/idf5.5_py3.13_env/bin/python\" && \"$HOME/.espressif/python_env/idf5.5_py3.13_env/bin/python\" --version && \"$HOME/.espressif/python_env/idf5.5_py3.13_env/bin/python\" -m esptool version",
+    "bash -lc 'export IDF_PYTHON_ENV_PATH=\"$HOME/.espressif/python_env/idf5.5_py3.13_env\"; source \"$HOME/esp/esp-idf/export.sh\" >/tmp/idf-export-probe.log 2>&1; rc=$?; cat /tmp/idf-export-probe.log; echo RC=$rc; command -v idf.py || true; command -v esptool.py || true; idf.py --version || true; exit $rc'",
+    "git status --short --branch"
+  ]
+}
