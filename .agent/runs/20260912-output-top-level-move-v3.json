@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 6,
+  "index": 7,
   "total": 8,
-  "command": "bash scripts/run_clang_tidy_host.sh",
-  "pid": 22612,
+  "command": "bash scripts/idf_gate_build.sh && IDF_GATE_BUILD_DIR=build/idf-gate-v6-fake IDF_GATE_APP_MODE=climate-v6-fake bash scripts/idf_gate_build.sh && STAGE27C_BUILD_DIR=build/idf-gate-real-inputs-crowpanel GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 bash scripts/stage27c_crowpanel.sh build",
+  "pid": 23168,
   "timeout": 7200,
   "idle_timeout": 600,
   "memory_limit_mb": 4096,
-  "started_at": "2026-09-12T11:06:54.159224+00:00",
-  "stage_name": "command-6",
-  "stage_index": 6,
+  "started_at": "2026-09-12T11:07:18.041125+00:00",
+  "stage_name": "command-7",
+  "stage_index": 7,
   "stage_total": 8,
   "stage_phase": "commands",
   "task_id": "20260912-output-top-level-move-v3",
@@ -18,5 +18,5 @@
   "task_digest": "19b8d05ab09f81dc83bec641bd5ef4290d9481aac27db3e1c7ed462301e662a1",
   "daemon_version": "4.18.20",
   "daemon_pid": 21339,
-  "updated_at": "2026-09-12T11:06:54.231032+00:00"
+  "updated_at": "2026-09-12T11:07:18.109085+00:00"
 }
