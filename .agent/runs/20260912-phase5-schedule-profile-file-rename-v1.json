@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 5,
+  "index": 6,
   "total": 7,
-  "command": "pre-commit run --all-files || true; pre-commit run --all-files && python3 scripts/check_runtime_config_ssot.py && python3 scripts/check_app_mode_boundaries.py && python3 scripts/check_runtime_boundaries.py && python3 scripts/check_service_console_boundaries.py && python3 scripts/check_output_rf_ownership.py",
-  "pid": 2024,
+  "command": "cmake -S test/host -B build/host-tests && cmake --build build/host-tests --parallel && ctest --test-dir build/host-tests --output-on-failure",
+  "pid": 2398,
   "timeout": 900,
   "idle_timeout": 300,
   "memory_limit_mb": 4096,
-  "started_at": "2026-09-12T06:49:41.283100+00:00",
-  "stage_name": "command-5",
-  "stage_index": 5,
+  "started_at": "2026-09-12T06:49:51.259560+00:00",
+  "stage_name": "command-6",
+  "stage_index": 6,
   "stage_total": 7,
   "stage_phase": "commands",
   "task_id": "20260912-phase5-schedule-profile-file-rename-v1",
@@ -18,5 +18,5 @@
   "task_digest": "cb316dd402b6710bd2c3a2f2e4ac523f3e237047c32aea822c82be0b35983c9a",
   "daemon_version": "4.18.20",
   "daemon_pid": 1731,
-  "updated_at": "2026-09-12T06:49:41.354815+00:00"
+  "updated_at": "2026-09-12T06:49:51.343343+00:00"
 }
