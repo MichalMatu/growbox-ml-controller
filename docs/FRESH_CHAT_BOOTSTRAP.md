@@ -1,6 +1,6 @@
 # Fresh chat bootstrap
 
-Updated: 2026-09-11
+Updated: 2026-09-12
 Repository: `MichalMatu/growbox-ml-controller`
 Primary development branch after cleanup: `main`
 Control branch: `agent-control`
@@ -24,11 +24,11 @@ Historical Stage27/Stage28 handoffs are evidence only unless a task specifically
 
 ## Current phase
 
-Architecture cleanup is complete. The active phase is normal product development.
+Architecture cleanup and release-readiness hardening are complete. The active phase is normal product development, beginning with the roadmap's Controller behavior quality workstream.
 
-Latest code-bearing compact software verification: `1a599a58eb57841206ab92c7a5cacf50f7463f78`.
+Latest code-bearing bounded hardware-qualified identity: `e03763d019af405087a5fa9c6713a7165d2e623f`. It passed local software gates, GitHub CI #865, Sandbox Pack #63 and `20260912-final-main-hardware-qualification-v1`.
 
-Do not confuse that software verification with the historical full Physical H qualification, which belongs to exact executable `02208d23f403bca3540dbbd652eb55703a044833`.
+Do not confuse the current bounded safe real-input/fake-locked qualification with the historical full Physical H run, which remains attached to exact executable `02208d23f403bca3540dbbd652eb55703a044833`. Documentation-only descendants do not replace either executable identity.
 
 ## Work mode
 

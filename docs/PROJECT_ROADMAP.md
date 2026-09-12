@@ -1,6 +1,6 @@
 # Growbox ML project roadmap
 
-Updated: 2026-09-11
+Updated: 2026-09-12
 Repository: `MichalMatu/growbox-ml-controller`
 Primary development branch after cleanup: `main`
 Control branch: `agent-control`
@@ -25,9 +25,9 @@ The project is a native ESP-IDF ESP32-S3 growbox controller using real sensors, 
 
 The architecture-cleanup workstream is finished. Do not start another broad refactor by default. New work should improve actual growbox behavior or operator value while preserving the current ownership and safety boundaries.
 
-Latest code-bearing compact software verification: `1a599a58eb57841206ab92c7a5cacf50f7463f78`.
+Latest code-bearing release-hardening and bounded hardware qualification identity: `e03763d019af405087a5fa9c6713a7165d2e623f`. It passed local guards/tests/clang-tidy/ESP-IDF builds, GitHub CI #865, Sandbox Pack #63 and `20260912-final-main-hardware-qualification-v1`.
 
-Historical full Physical H qualification remains evidence for executable `02208d23f403bca3540dbbd652eb55703a044833`; it is not automatically transferable to later refactor SHAs.
+Historical full Physical H qualification remains evidence for executable `02208d23f403bca3540dbbd652eb55703a044833`; the 2026-09-12 bounded qualification above is the current safe real-input/fake-locked evidence and must not be mislabeled as the historical full Physical H run.
 
 ## Completed platform milestones
 
@@ -56,6 +56,10 @@ Historical full Physical H qualification remains evidence for executable `02208d
 - runtime/build configuration defaults have one CMake/profile source of truth.
 
 ## Active product roadmap
+
+### Next selected bounded task
+
+Start with **Controller behavior quality**: build a baseline from current real telemetry/replay, quantify temperature/humidity and absolute-humidity ventilation behavior, and select exactly one tuning candidate. Record baseline metrics and acceptance criteria before implementation so the change is evidence-backed and reversible.
 
 ### 1. Controller behavior quality
 

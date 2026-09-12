@@ -1,6 +1,6 @@
 # Fresh-context continuation plan
 
-Updated: 2026-09-11
+Updated: 2026-09-12
 Repository: `MichalMatu/growbox-ml-controller`
 Primary development branch after cleanup: `main`
 Control branch: `agent-control`
@@ -28,13 +28,13 @@ Fetch fresh `main` HEAD and fresh `agent-control:.agent/status/daemon.json` befo
 
 `Stage27/28 platform qualification -> OutputSupervisor architecture -> quality refactor -> NORMAL PRODUCT DEVELOPMENT`
 
-Latest code-bearing compact software verification:
+Latest code-bearing release-hardening identity:
 
-`1a599a58eb57841206ab92c7a5cacf50f7463f78`
+`e03763d019af405087a5fa9c6713a7165d2e623f`
 
-It passed architecture/config guards, the focused runtime transport truth regression, `51/51` host tests and one CrowPanel real-input ESP-IDF build.
+It passed 500 Python tests (12 hardware/visual skips), `50/50` host C++ tests, all five architecture/config ownership guards, host clang-tidy, three ESP-IDF builds, GitHub CI #865, Sandbox Pack #63 and bounded current-board qualification `20260912-final-main-hardware-qualification-v1`.
 
-Historical full Physical H remains frozen evidence for executable `02208d23f403bca3540dbbd652eb55703a044833`. Later refactor SHAs do not inherit that exact physical qualification.
+Historical full Physical H remains frozen evidence for executable `02208d23f403bca3540dbbd652eb55703a044833`. The current bounded safe real-input/fake-locked qualification is separate evidence and must not be mislabeled as full Physical H.
 
 ## What is complete
 
@@ -51,15 +51,9 @@ Historical full Physical H remains frozen evidence for executable `02208d23f403b
 
 ## Next development goal
 
-Improve the product rather than continue architecture work for its own sake. Use `docs/PROJECT_ROADMAP.md` to rank the next change. Prefer small/medium changes with high practical growbox value and software-verifiable behavior.
+The next selected bounded task is **Controller behavior quality**. Build a real-telemetry/replay baseline, quantify temperature/humidity interaction and absolute-humidity ventilation behavior, then choose exactly one tuning candidate. Define baseline metrics and acceptance criteria before implementation.
 
-Likely areas:
-
-- temperature/humidity control quality and tuning;
-- configuration/operator UX;
-- logging/history/explainability/replay;
-- ML-shadow data and evaluation;
-- additional devices only when a concrete use case justifies them.
+After that bounded task, continue ranking work from `docs/PROJECT_ROADMAP.md` across configuration/operator UX, logging/history/explainability, ML-shadow quality and justified device expansion.
 
 ## Work-mode policy
 

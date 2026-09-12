@@ -15,7 +15,7 @@ The architecture/quality refactor and the follow-up structural cleanup are compl
 - `tools/stage27c_soak.py` accepts both historical `soak_v=2` and current `soak_v=3`; v3 fake-output acceptance uses the explicit `output_v=2` / `transport_active=0` physical-output fence rather than the legacy loop `io_status`;
 - startup `TemperatureUnavailable` remains fail-closed for the current cycle but no longer invents an over-temperature latch or a 10-minute recovery hold; a real thermal trip remains latched across later temporary temperature unavailability.
 
-The exact acceptance identity is intentionally not duplicated in this status file because the firmware embeds the Git SHA. Final closeout requires the same exact `main` commit to pass the repository guards, host/Python tests, clang-tidy, ESP-IDF builds, canonical GitHub checks and the bounded hardware task `20260912-final-main-hardware-qualification-v1`. The terminal task evidence is authoritative for physical qualification.
+Final release-readiness hardening is closed on code-bearing executable `e03763d019af405087a5fa9c6713a7165d2e623f`. That exact identity passed repository guards, host/Python tests, clang-tidy, ESP-IDF builds, canonical GitHub checks and bounded hardware task `20260912-final-main-hardware-qualification-v1`. The strict 120 s `soak_v=3` run completed with zero violations, and the first valid SCD41 sample released startup fail-closed state immediately (`safety_latched=0`, `safety_reason=0`) instead of entering the historical false recovery hold.
 
 ## Structural cleanup closeout
 
@@ -73,7 +73,7 @@ Historical full Physical H remains valid evidence only for its exact executable 
 
 Terminal historical evidence: `20260910-output-supervisor-physical-h-v3`.
 
-`0a7097a30280ec0f7bb408799c07093761d63e88` is the software-verified structural-cleanup baseline. Current `main` adds the final release-readiness hardening above. Treat the current executable as hardware-qualified only when `20260912-final-main-hardware-qualification-v1` is terminal PASS on that exact same commit; do not infer qualification from an ancestor or a documentation-only descendant.
+`0a7097a30280ec0f7bb408799c07093761d63e88` is the structural-cleanup baseline. Final code-bearing hardening identity `e03763d019af405087a5fa9c6713a7165d2e623f` is hardware-qualified: Local Agent task `20260912-final-main-hardware-qualification-v1` finished PASS on `/dev/cu.usbserial-1130`, with real inputs and physical outputs/RF loopback/thermal-test sequence disabled. GitHub CI #865 and Sandbox Pack #63 also passed on the same code-bearing SHA. A later documentation-only descendant does not change firmware source and does not replace the exact executable qualification identity above.
 
 Qualified Growbox serial device for the next physical qualification: `/dev/cu.usbserial-1130`.
 
@@ -103,4 +103,4 @@ Use direct GitHub for bounded source/config/docs changes. Use Local Agent when M
 
 ## Immediate next work
 
-After the exact current `main` commit has green canonical checks and terminal PASS from `20260912-final-main-hardware-qualification-v1`, resume normal product development from `docs/PROJECT_ROADMAP.md`. The cleanup/hardening line is closed at that point; avoid another broad architecture rewrite unless concrete evidence exposes a new responsibility or ownership problem.
+The cleanup/hardening line is closed. The next selected product task is **Controller behavior quality**. First, build a replay/telemetry baseline from real growbox data and identify one measurable tuning improvement in temperature/humidity interaction, absolute-humidity ventilation, targets, deadbands, hysteresis or dwell. Define baseline metrics and acceptance criteria before changing production behavior. Avoid another broad architecture rewrite unless concrete evidence exposes a new responsibility or ownership problem.

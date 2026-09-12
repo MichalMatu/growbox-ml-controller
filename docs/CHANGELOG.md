@@ -11,6 +11,10 @@ All notable changes to this project are documented here.
 - Kept missing/stale lamp temperature fail-closed without synthesizing a thermal trip; a genuine over-temperature trip still survives temporary temperature loss and requires the full recovery hold.
 - Added regression coverage for both parser versions and both lamp-safety state-history cases.
 - Confirmed the intended long-lived remote branches are only `main`, `agent-control` and `gh-pages`; the latter two are required control/publishing branches, not cleanup candidates.
+- Final code-bearing hardening identity: `e03763d019af405087a5fa9c6713a7165d2e623f`. Local verification passed 500 Python tests (12 hardware/visual skips), all 50 host C++ tests, five architecture/config ownership guards, host clang-tidy and three ESP-IDF builds.
+- Canonical GitHub verification passed CI #865 and Sandbox Pack #63 on the same code-bearing SHA.
+- Bounded current-board qualification `20260912-final-main-hardware-qualification-v1` passed on `/dev/cu.usbserial-1130`: strict 120 s `soak_v=3` reported zero violations, no reset/disconnect/SHA mismatch, and the first valid SCD41 sample cleared startup fail-closed state without a false `RecoveryHold`.
+- Closeout leaves product development ready to move to the roadmap's first priority: evidence-backed controller behavior quality using real telemetry/replay baselines before tuning production behavior.
 
 ### Structural cleanup closeout — 2026-09-12
 
