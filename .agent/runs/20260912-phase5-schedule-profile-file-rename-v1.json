@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260912-phase5-schedule-profile-file-rename-v1",
+  "task_digest": "cb316dd402b6710bd2c3a2f2e4ac523f3e237047c32aea822c82be0b35983c9a",
+  "idle_timeout": 300,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-12T06:49:37.250082+00:00",
+  "attempt_id": "6187c0c3feff10e9ad1868f3",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 1731,
+  "updated_at": "2026-09-12T06:49:37.250163+00:00",
+  "pid": 1731
+}
