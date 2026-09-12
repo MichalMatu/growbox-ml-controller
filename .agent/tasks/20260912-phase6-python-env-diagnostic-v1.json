@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "id": "20260912-phase6-python-env-diagnostic-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": false,
+  "command_timeout": 300,
+  "idle_timeout": 120,
+  "task_timeout": 900,
+  "memory_limit_mb": 2048,
+  "commands": [
+    "git fetch -q origin main && git reset --hard origin/main && test \"$(git rev-parse HEAD)\" = \"94698dcbf8ff7538d1ab2cee3bcabaca1358885a\" && test -z \"$(git status --porcelain)\"",
+    "echo PATH=$PATH; echo WHICH_BEGIN; which -a python3 || true; which -a python || true; command -v uv || true; echo WHICH_END",
+    "for py in .venv/bin/python .venv/bin/python3 /opt/homebrew/bin/python3 /usr/local/bin/python3 /usr/bin/python3 /Users/michal/.platformio/penv/bin/python3; do if [ -x \"$py\" ]; then echo ===$py===; \"$py\" --version; \"$py\" -c 'import sys, importlib.util; print(sys.executable); print(\"PYTEST_AVAILABLE=\" + str(importlib.util.find_spec(\"pytest\") is not None))'; fi; done",
+    "echo PYTHON_PROJECT_FILES_BEGIN; find . -maxdepth 2 -type f \( -name 'pyproject.toml' -o -name 'requirements*.txt' -o -name 'Pipfile' -o -name 'uv.lock' \) -print | sort; echo PYTHON_PROJECT_FILES_END; git status --short"
+  ]
+}
