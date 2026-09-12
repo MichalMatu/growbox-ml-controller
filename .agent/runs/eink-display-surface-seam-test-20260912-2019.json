@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "eink-display-surface-seam-test-20260912-2019",
+  "task_digest": "32ac5172e6b8dfe7e8be4114cfd7d7fc511bb5b94ddabefcca52ce34b5cf3302",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-12T20:19:09.758400+00:00",
+  "attempt_id": "5576e570d477028e1cc4a3e8",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 77306,
+  "updated_at": "2026-09-12T20:19:09.758545+00:00",
+  "pid": 77306
+}
