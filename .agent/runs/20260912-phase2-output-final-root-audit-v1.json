@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260912-phase2-output-final-root-audit-v1",
+  "task_digest": "c0992ca8eba24d225206b7f7e4589fd8909b2a33470bee82c331bf6f7e092855",
+  "idle_timeout": 120,
+  "task_timeout": 600,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-12T03:09:18.509724+00:00",
+  "attempt_id": "745e3cd4c487a610bfd383e7",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 54416,
+  "updated_at": "2026-09-12T03:09:18.509836+00:00",
+  "pid": 54416
+}
