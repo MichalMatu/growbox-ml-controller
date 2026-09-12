@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260912-phase3-compatibility-source-audit-v1",
+  "task_digest": "8947c5a37e669088388505c47857aa2fd34805ef94355b0e1e23e467b31892e9",
+  "idle_timeout": 120,
+  "task_timeout": 900,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-12T04:28:27.762741+00:00",
+  "attempt_id": "5565f4cd72677ec8ae2bf57e",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 47719,
+  "updated_at": "2026-09-12T04:28:27.762791+00:00",
+  "pid": 47719
+}
