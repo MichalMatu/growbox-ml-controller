@@ -580,7 +580,7 @@ target_compile_options(stage27_fault_freshness_tests PRIVATE -Wall -Wextra -Wped
 add_executable(
   stage27_file_durability_tests
   "${PROJECT_ROOT}/test/test_stage27_file_durability/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/storage/Stage27FileDurability.cpp"
+  "${PROJECT_ROOT}/src/climate/storage/FileDurability.cpp"
 )
 target_include_directories(stage27_file_durability_tests PRIVATE "${PROJECT_ROOT}/src")
 target_compile_features(stage27_file_durability_tests PRIVATE cxx_std_17)

@@ -120,7 +120,7 @@ elseif(GROWBOX_APP_MODE STREQUAL "climate-v6-real-inputs")
       "climate/runtime/diagnostics/Stage28eLog.cpp"
       "climate/telemetry/Stage27LogFormat.cpp"
       "climate/storage/Stage27TelemetryLogger.cpp"
-      "climate/storage/Stage27FileDurability.cpp"
+      "climate/storage/FileDurability.cpp"
       "climate/storage/Stage27SdStorageBackend.cpp"
       "climate/storage/Stage27FlashStorageBackend.cpp"
       "climate/storage/crowpanel/CrowPanelSdPrecondition.cpp"

@@ -9,7 +9,7 @@ forbidden = (
     "OutputMaintenanceControl.h",
     "OutputManualControl.h",
     "Stage27TelemetryLogger.h",
-    "Stage27FileDurability.h",
+    "FileDurability.h",
     "Rf433HardwareConfig.h",
     "printSdLogStatus",
     "handleSdLogRead",

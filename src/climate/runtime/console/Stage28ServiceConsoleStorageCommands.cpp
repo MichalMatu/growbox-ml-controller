@@ -1,6 +1,6 @@
 #include "climate/runtime/console/Stage28ServiceConsoleStorageCommands.h"
 
-#include "climate/storage/Stage27FileDurability.h"
+#include "climate/storage/FileDurability.h"
 #include "climate/storage/Stage27TelemetryLogger.h"
 
 #include <array>
@@ -191,13 +191,13 @@ void Stage28ServiceConsoleStorageCommands::handleSdLogSelfTest() noexcept {
     sink_.writeFormatted("sdlog_selftest ok=0 reason=write errno=%d\r\n", e);
     return;
   }
-  const auto durable = storage::stage27FlushSyncAndStat(file);
+  const auto durable = storage::flushSyncAndStat(file);
   std::fclose(file);
   if (!durable.ok || durable.size_bytes != expected) {
     ::unlink(kSdSelfTestPath);
     sink_.writeFormatted("sdlog_selftest ok=0 reason=durability step=%s errno=%d size=%llu\r\n",
-                         storage::stage27FileDurabilityStepName(durable.failed_step),
-                         durable.error_number, static_cast<unsigned long long>(durable.size_bytes));
+                         storage::fileDurabilityStepName(durable.failed_step), durable.error_number,
+                         static_cast<unsigned long long>(durable.size_bytes));
     return;
   }
   file = std::fopen(kSdSelfTestPath, "rb");

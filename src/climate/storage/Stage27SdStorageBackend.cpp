@@ -1,6 +1,6 @@
 #include "climate/storage/Stage27SdStorageBackend.h"
 
-#include "climate/storage/Stage27FileDurability.h"
+#include "climate/storage/FileDurability.h"
 
 #include "climate/storage/crowpanel/CrowPanelSdPrecondition.h"
 
@@ -48,10 +48,10 @@ bool writeLineDurably(std::FILE* file, const char* data, std::size_t length,
     return false;
   }
 
-  const Stage27FileDurabilityResult durability = stage27FlushSyncAndStat(file);
+  const FileDurabilityResult durability = flushSyncAndStat(file);
   if (!durability.ok) {
     ESP_LOGW(kTag, "%s durability failed step=%s errno=%d", context,
-             stage27FileDurabilityStepName(durability.failed_step), durability.error_number);
+             fileDurabilityStepName(durability.failed_step), durability.error_number);
     return false;
   }
   if (durability.size_bytes == 0U) {

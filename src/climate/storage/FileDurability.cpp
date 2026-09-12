@@ -1,4 +1,4 @@
-#include "climate/storage/Stage27FileDurability.h"
+#include "climate/storage/FileDurability.h"
 
 #include <cerrno>
 #include <sys/stat.h>
@@ -6,17 +6,17 @@
 
 namespace growbox::app::climate_io::storage {
 
-Stage27FileDurabilityResult stage27FlushSyncAndStat(std::FILE* file) noexcept {
-  Stage27FileDurabilityResult result{};
+FileDurabilityResult flushSyncAndStat(std::FILE* file) noexcept {
+  FileDurabilityResult result{};
   if (file == nullptr) {
-    result.failed_step = Stage27FileDurabilityStep::Descriptor;
+    result.failed_step = FileDurabilityStep::Descriptor;
     result.error_number = EINVAL;
     return result;
   }
 
   errno = 0;
   if (std::fflush(file) != 0) {
-    result.failed_step = Stage27FileDurabilityStep::Flush;
+    result.failed_step = FileDurabilityStep::Flush;
     result.error_number = errno;
     return result;
   }
@@ -24,14 +24,14 @@ Stage27FileDurabilityResult stage27FlushSyncAndStat(std::FILE* file) noexcept {
   errno = 0;
   const int descriptor = ::fileno(file);
   if (descriptor < 0) {
-    result.failed_step = Stage27FileDurabilityStep::Descriptor;
+    result.failed_step = FileDurabilityStep::Descriptor;
     result.error_number = errno;
     return result;
   }
 
   errno = 0;
   if (::fsync(descriptor) != 0) {
-    result.failed_step = Stage27FileDurabilityStep::Sync;
+    result.failed_step = FileDurabilityStep::Sync;
     result.error_number = errno;
     return result;
   }
@@ -39,7 +39,7 @@ Stage27FileDurabilityResult stage27FlushSyncAndStat(std::FILE* file) noexcept {
   struct stat file_stat{};
   errno = 0;
   if (::fstat(descriptor, &file_stat) != 0) {
-    result.failed_step = Stage27FileDurabilityStep::Stat;
+    result.failed_step = FileDurabilityStep::Stat;
     result.error_number = errno;
     return result;
   }
@@ -49,17 +49,17 @@ Stage27FileDurabilityResult stage27FlushSyncAndStat(std::FILE* file) noexcept {
   return result;
 }
 
-const char* stage27FileDurabilityStepName(Stage27FileDurabilityStep step) noexcept {
+const char* fileDurabilityStepName(FileDurabilityStep step) noexcept {
   switch (step) {
-  case Stage27FileDurabilityStep::Flush:
+  case FileDurabilityStep::Flush:
     return "fflush";
-  case Stage27FileDurabilityStep::Descriptor:
+  case FileDurabilityStep::Descriptor:
     return "fileno";
-  case Stage27FileDurabilityStep::Sync:
+  case FileDurabilityStep::Sync:
     return "fsync";
-  case Stage27FileDurabilityStep::Stat:
+  case FileDurabilityStep::Stat:
     return "fstat";
-  case Stage27FileDurabilityStep::None:
+  case FileDurabilityStep::None:
   default:
     return "none";
   }

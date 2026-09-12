@@ -1,4 +1,4 @@
-#include "climate/storage/Stage27FileDurability.h"
+#include "climate/storage/FileDurability.h"
 
 #include <cassert>
 #include <cstdio>
@@ -17,9 +17,9 @@ int main() {
   assert(file != nullptr);
   constexpr char payload[] = "durable-record\n";
   assert(std::fwrite(payload, 1U, sizeof(payload) - 1U, file) == sizeof(payload) - 1U);
-  const auto result = stage27FlushSyncAndStat(file);
+  const auto result = flushSyncAndStat(file);
   assert(result.ok);
-  assert(result.failed_step == Stage27FileDurabilityStep::None);
+  assert(result.failed_step == FileDurabilityStep::None);
   assert(result.size_bytes == sizeof(payload) - 1U);
   struct stat st{};
   assert(::stat(path, &st) == 0);
@@ -27,8 +27,8 @@ int main() {
   std::fclose(file);
   assert(::unlink(path) == 0);
 
-  const auto invalid = stage27FlushSyncAndStat(nullptr);
+  const auto invalid = flushSyncAndStat(nullptr);
   assert(!invalid.ok);
-  assert(invalid.failed_step == Stage27FileDurabilityStep::Descriptor);
+  assert(invalid.failed_step == FileDurabilityStep::Descriptor);
   return 0;
 }
