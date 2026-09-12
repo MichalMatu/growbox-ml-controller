@@ -1,7 +1,7 @@
 #pragma once
 
 #include "climate/application/ClimateSemanticOutput.h"
-#include "climate/output/OutputSupervisorExecutor.h"
+#include "climate/output/supervisor/OutputSupervisorExecutor.h"
 
 #include <cstdint>
 

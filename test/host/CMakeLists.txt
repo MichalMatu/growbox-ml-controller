@@ -216,7 +216,7 @@ target_compile_options(output_types_tests PRIVATE -Wall -Wextra -Wpedantic)
 add_executable(
   output_supervisor_resolver_tests
   "${PROJECT_ROOT}/test/test_output_supervisor_resolver/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputSupervisorResolver.cpp"
+  "${PROJECT_ROOT}/src/climate/output/supervisor/OutputSupervisorResolver.cpp"
   "${PROJECT_ROOT}/src/climate/output/BinaryActuatorPolicy.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputStateStore.cpp"
 )
@@ -227,8 +227,8 @@ target_compile_options(output_supervisor_resolver_tests PRIVATE -Wall -Wextra -W
 add_executable(
   output_supervisor_executor_tests
   "${PROJECT_ROOT}/test/test_output_supervisor_executor/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputSupervisorExecutor.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputSupervisorResolver.cpp"
+  "${PROJECT_ROOT}/src/climate/output/supervisor/OutputSupervisorExecutor.cpp"
+  "${PROJECT_ROOT}/src/climate/output/supervisor/OutputSupervisorResolver.cpp"
   "${PROJECT_ROOT}/src/climate/output/BinaryActuatorPolicy.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputStateStore.cpp"
 )
@@ -249,10 +249,10 @@ target_compile_options(output_execution_projection_tests PRIVATE -Wall -Wextra -
 add_executable(
   climate_output_supervisor_sink_tests
   "${PROJECT_ROOT}/test/test_climate_output_supervisor_sink/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/output/ClimateOutputSupervisorSink.cpp"
+  "${PROJECT_ROOT}/src/climate/output/supervisor/ClimateOutputSupervisorSink.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputExecutionProjection.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputSupervisorExecutor.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputSupervisorResolver.cpp"
+  "${PROJECT_ROOT}/src/climate/output/supervisor/OutputSupervisorExecutor.cpp"
+  "${PROJECT_ROOT}/src/climate/output/supervisor/OutputSupervisorResolver.cpp"
   "${PROJECT_ROOT}/src/climate/output/BinaryActuatorPolicy.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputStateStore.cpp"
   "${PROJECT_ROOT}/src/climate/application/ClimateSemanticOutput.cpp"
@@ -351,7 +351,7 @@ add_executable(
   "${PROJECT_ROOT}/src/climate/output/lifecycle/OutputRuntimeLifecycleControl.cpp"
   "${PROJECT_ROOT}/src/climate/output/lifecycle/OutputLifecycleExecutor.cpp"
   "${PROJECT_ROOT}/src/climate/output/lifecycle/OutputSupervisorLifecycle.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputSupervisorResolver.cpp"
+  "${PROJECT_ROOT}/src/climate/output/supervisor/OutputSupervisorResolver.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputPolicyConfig.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputStateStore.cpp"
   "${PROJECT_ROOT}/src/climate/output/BinaryActuatorPolicy.cpp"
@@ -366,7 +366,7 @@ add_executable(
   "${PROJECT_ROOT}/src/climate/output/control/OutputAutomationControl.cpp"
   "${PROJECT_ROOT}/src/climate/output/lifecycle/OutputLifecycleExecutor.cpp"
   "${PROJECT_ROOT}/src/climate/output/lifecycle/OutputSupervisorLifecycle.cpp"
-  "${PROJECT_ROOT}/src/climate/output/OutputSupervisorResolver.cpp"
+  "${PROJECT_ROOT}/src/climate/output/supervisor/OutputSupervisorResolver.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputPolicyConfig.cpp"
   "${PROJECT_ROOT}/src/climate/output/OutputStateStore.cpp"
   "${PROJECT_ROOT}/src/climate/output/BinaryActuatorPolicy.cpp"

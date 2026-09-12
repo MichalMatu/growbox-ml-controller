@@ -1,4 +1,4 @@
-#include "climate/output/ClimateOutputSupervisorSink.h"
+#include "climate/output/supervisor/ClimateOutputSupervisorSink.h"
 
 #include <array>
 #include <cassert>

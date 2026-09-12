@@ -1,6 +1,6 @@
 #pragma once
 
-#include "climate/output/OutputSupervisorResolver.h"
+#include "climate/output/supervisor/OutputSupervisorResolver.h"
 
 namespace growbox::app::output {
 

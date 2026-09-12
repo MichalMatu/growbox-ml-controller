@@ -1,7 +1,7 @@
 #pragma once
 
 #include "climate/output/OutputPolicyConfig.h"
-#include "climate/output/OutputSupervisorResolver.h"
+#include "climate/output/supervisor/OutputSupervisorResolver.h"
 
 #include <array>
 #include <cstddef>

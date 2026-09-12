@@ -27,7 +27,7 @@ def test_retired_compatibility_sources_are_not_production_scan_targets(tmp_path)
     active.parent.mkdir(parents=True)
     active.write_text("transport_.send(command);\n")
     assert [guard.relative(tmp_path, path) for path in guard.production_cpp(tmp_path)] == [
-        "src/climate/output/OutputSupervisorExecutor.cpp"
+        "src/climate/output/supervisor/OutputSupervisorExecutor.cpp"
     ]
 
 

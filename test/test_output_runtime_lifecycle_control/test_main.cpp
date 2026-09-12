@@ -1,5 +1,5 @@
-#include "climate/output/OutputSupervisorResolver.h"
 #include "climate/output/lifecycle/OutputRuntimeLifecycleControl.h"
+#include "climate/output/supervisor/OutputSupervisorResolver.h"
 
 #include <array>
 #include <cassert>
