@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260912-local-branch-cleanup-v1",
+  "task_digest": "d9f20334234536592f8a22adfb6a88d8df225764dfe200075f4b39dc5ca4a974",
+  "idle_timeout": 120,
+  "task_timeout": 900,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-12T09:42:57.555764+00:00",
+  "attempt_id": "0a9ac5542cc713b4ffee4174",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 96310,
+  "updated_at": "2026-09-12T09:42:57.555850+00:00",
+  "pid": 96310
+}
