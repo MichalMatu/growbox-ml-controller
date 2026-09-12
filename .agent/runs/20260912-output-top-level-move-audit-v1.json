@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260912-output-top-level-move-audit-v1",
+  "task_digest": "ad40d2636d2219a869c1bb7fd035b5add2e8821e59f7c7c48cce8d9152dd8ca2",
+  "idle_timeout": 180,
+  "task_timeout": 1800,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-12T10:37:50.690389+00:00",
+  "attempt_id": "dc814a3b105a0b34cb9bbe48",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 83052,
+  "updated_at": "2026-09-12T10:37:50.690450+00:00",
+  "pid": 83052
+}
