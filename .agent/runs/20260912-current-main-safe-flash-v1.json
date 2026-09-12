@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260912-current-main-safe-flash-v1",
   "task_digest": "82339aa7c427d3a41268eea2e9868b5b70d01c1433b275eb802a476ed49fe73e",
-  "idle_timeout": 300,
-  "task_timeout": 3600,
-  "memory_limit_mb": 4096,
-  "started_at": "2026-09-12T11:58:50.277568+00:00",
+  "status": "failed",
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-12T11:58:53.959743+00:00",
   "attempt_id": "fd4fddb215b21def99fa808c",
   "daemon_version": "4.18.20",
   "daemon_pid": 97462,
-  "updated_at": "2026-09-12T11:58:50.277636+00:00",
+  "updated_at": "2026-09-12T11:58:54.244479+00:00",
   "pid": 97462
 }
