@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "id": "20260912-phase5-flash-storage-recovery-diagnostic-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": false,
+  "command_timeout": 300,
+  "idle_timeout": 120,
+  "task_timeout": 900,
+  "memory_limit_mb": 2048,
+  "commands": [
+    "git fetch -q origin main; echo HEAD=$(git rev-parse HEAD); echo ORIGIN_MAIN=$(git rev-parse origin/main); echo STATUS_BEGIN; git status --short; echo STATUS_END; echo LOCAL_BRANCH=$(git branch --show-current); if git cat-file -e a4cb9ce0^{commit} 2>/dev/null; then echo A4CB_EXISTS=1; echo A4CB_FULL=$(git rev-parse a4cb9ce0); echo A4CB_PARENT=$(git rev-parse a4cb9ce0^); echo A4CB_SUBJECT=$(git log -1 --format=%s a4cb9ce0); git diff --stat 95cda446dc05d0a8e71bcf332fe86398a84d62d0..a4cb9ce0; else echo A4CB_EXISTS=0; fi; echo REFLOG_BEGIN; git reflog -8 --oneline || true; echo REFLOG_END"
+  ]
+}
