@@ -1,4 +1,4 @@
-#include "climate/storage/Stage27SdStorageBackend.h"
+#include "climate/storage/SdStorageBackend.h"
 
 #include "climate/storage/FileDurability.h"
 
@@ -63,7 +63,7 @@ bool writeLineDurably(std::FILE* file, const char* data, std::size_t length,
 
 } // namespace
 
-bool Stage27SdStorageBackend::initialize() noexcept {
+bool SdStorageBackend::initialize() noexcept {
   if (pins_.power < 0) {
     power_configured_ = true;
     return true;
@@ -87,7 +87,7 @@ bool Stage27SdStorageBackend::initialize() noexcept {
   return true;
 }
 
-bool Stage27SdStorageBackend::mount() noexcept {
+bool SdStorageBackend::mount() noexcept {
   if (card_ != nullptr) {
     return true;
   }
@@ -154,8 +154,7 @@ bool Stage27SdStorageBackend::mount() noexcept {
   return true;
 }
 
-bool Stage27SdStorageBackend::beginSession(const char* session_header,
-                                           std::uint32_t session_id) noexcept {
+bool SdStorageBackend::beginSession(const char* session_header, std::uint32_t session_id) noexcept {
   if (card_ == nullptr || session_header == nullptr) {
     return false;
   }
@@ -179,14 +178,14 @@ bool Stage27SdStorageBackend::beginSession(const char* session_header,
   return true;
 }
 
-bool Stage27SdStorageBackend::appendLine(const char* data, std::size_t length) noexcept {
+bool SdStorageBackend::appendLine(const char* data, std::size_t length) noexcept {
   if (file_ == nullptr || data == nullptr || length == 0U) {
     return false;
   }
   return writeLineDurably(file_, data, length, "telemetry_record");
 }
 
-void Stage27SdStorageBackend::close() noexcept {
+void SdStorageBackend::close() noexcept {
   closeFile();
   if (card_ != nullptr) {
     const esp_err_t unmount_error = esp_vfs_fat_sdcard_unmount(kMountPoint, card_);
@@ -199,7 +198,7 @@ void Stage27SdStorageBackend::close() noexcept {
   disablePower();
 }
 
-bool Stage27SdStorageBackend::enablePower() noexcept {
+bool SdStorageBackend::enablePower() noexcept {
   if (pins_.power < 0) {
     return true;
   }
@@ -212,7 +211,7 @@ bool Stage27SdStorageBackend::enablePower() noexcept {
   return true;
 }
 
-void Stage27SdStorageBackend::disablePower() noexcept {
+void SdStorageBackend::disablePower() noexcept {
   if (pins_.power < 0 || !power_configured_) {
     return;
   }
@@ -222,7 +221,7 @@ void Stage27SdStorageBackend::disablePower() noexcept {
   }
 }
 
-void Stage27SdStorageBackend::releaseSpiBus() noexcept {
+void SdStorageBackend::releaseSpiBus() noexcept {
   if (!spi_initialized_) {
     return;
   }
@@ -234,7 +233,7 @@ void Stage27SdStorageBackend::releaseSpiBus() noexcept {
   ESP_LOGW(kTag, "SPI3 bus release failed: %s", esp_err_to_name(error));
 }
 
-void Stage27SdStorageBackend::closeFile() noexcept {
+void SdStorageBackend::closeFile() noexcept {
   if (file_ != nullptr) {
     std::fclose(file_);
     file_ = nullptr;

@@ -9,7 +9,7 @@
 
 namespace growbox::app::climate_io::storage {
 
-class Stage27SdStorageBackend final : public Stage27LogStorageBackend {
+class SdStorageBackend final : public Stage27LogStorageBackend {
 public:
   struct Pins {
     int mosi = 40;
@@ -19,7 +19,7 @@ public:
     int power = -1;
   };
 
-  Stage27SdStorageBackend(Pins pins, bool use_cmd0_precondition) noexcept
+  SdStorageBackend(Pins pins, bool use_cmd0_precondition) noexcept
       : pins_(pins), use_cmd0_precondition_(use_cmd0_precondition) {}
 
   Stage27StorageBackendKind kind() const noexcept override {

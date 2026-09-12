@@ -1,7 +1,7 @@
 #pragma once
 
 #include "climate/storage/FlashStorageBackend.h"
-#include "climate/storage/Stage27SdStorageBackend.h"
+#include "climate/storage/SdStorageBackend.h"
 #include "climate/storage/Stage27StorageTypes.h"
 #include "climate/telemetry/Stage27Telemetry.h"
 
@@ -17,7 +17,7 @@ namespace growbox::app::climate_io::storage {
 class Stage27TelemetryLogger {
 public:
   struct Config {
-    Stage27SdStorageBackend::Pins sd_pins{};
+    SdStorageBackend::Pins sd_pins{};
     bool sd_enabled = true;
     bool flash_fallback_enabled = false;
     bool sd_cmd0_precondition = false;
@@ -61,7 +61,7 @@ private:
   static constexpr std::uint64_t kMountRetryMs = 60'000U;
 
   Config config_{};
-  Stage27SdStorageBackend sd_backend_;
+  SdStorageBackend sd_backend_;
   FlashStorageBackend flash_backend_;
   Stage27LogStorageBackend* active_backend_ = nullptr;
   bool sd_initialized_ = false;
