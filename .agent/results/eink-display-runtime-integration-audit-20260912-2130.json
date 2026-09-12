@@ -1,0 +1,60 @@
+{
+  "id": "eink-display-runtime-integration-audit-20260912-2130",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "feature/eink-clay-status",
+  "allow_write": false,
+  "started_at": "2026-09-12T21:33:42.300622+00:00",
+  "command_timeout": 900,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; expected=d4cc47ef5769f935c0c870b0d984c995a767eb2d; actual=$(git rev-parse HEAD); echo HEAD=$actual; test \"$actual\" = \"$expected\"; echo '--- TelemetryReporter references ---'; git grep -n 'TelemetryReporter' -- src test; echo '--- storage/runtime ownership references ---'; git grep -n -E 'Stage27TelemetryLogger|storage_logger_ready|telemetry_reporter' -- src test || true; echo '--- likely runtime entry files ---'; find src -maxdepth 3 -type f | sort | grep -E 'Runtime.*cpp|main.cpp' || true; git status --short",
+      "exit_code": 0,
+      "output": "HEAD=d4cc47ef5769f935c0c870b0d984c995a767eb2d\n--- TelemetryReporter references ---\nsrc/CMakeLists.txt:109:      \"climate/runtime/telemetry/TelemetryReporter.cpp\"\nsrc/climate/ClimateV6RealInputRuntime.cpp:16:#include \"climate/runtime/telemetry/TelemetryReporter.h\"\nsrc/climate/ClimateV6RealInputRuntime.cpp:124:  runtime::TelemetryReporter telemetry_reporter(ble, scd41, clock, storage_logger,\nsrc/climate/runtime/core/RealInputRuntimeCoordinator.cpp:24:#include \"climate/runtime/telemetry/TelemetryReporter.h\"\nsrc/climate/runtime/core/RealInputRuntimeCoordinator.h:35:class TelemetryReporter;\nsrc/climate/runtime/core/RealInputRuntimeCoordinator.h:63:  TelemetryReporter& telemetry_reporter;\nsrc/climate/runtime/telemetry/TelemetryReporter.cpp:1:#include \"climate/runtime/telemetry/TelemetryReporter.h\"\nsrc/climate/runtime/telemetry/TelemetryReporter.cpp:25:TelemetryReporter::TelemetryReporter(native::BleClimateScanner& ble,\nsrc/climate/runtime/telemetry/TelemetryReporter.cpp:33:void TelemetryReporter::record(\nsrc/climate/runtime/telemetry/TelemetryReporter.cpp:159:void TelemetryReporter::logRecord(const telemetry::Stage27TelemetrySnapshot& snapshot,\nsrc/climate/runtime/telemetry/TelemetryReporter.h:16:class TelemetryReporter final {\nsrc/climate/runtime/telemetry/TelemetryReporter.h:18:  TelemetryReporter(native::BleClimateScanner& ble, native::Scd41InsideSource& scd41,\n--- storage/runtime ownership references ---\nsrc/CMakeLists.txt:121:      \"climate/storage/Stage27TelemetryLogger.cpp\"\nsrc/climate/ClimateV6RealInputRuntime.cpp:54:  const bool storage_logger_ready =\nsrc/climate/ClimateV6RealInputRuntime.cpp:124:  runtime::TelemetryReporter telemetry_reporter(ble, scd41, clock, storage_logger,\nsrc/climate/ClimateV6RealInputRuntime.cpp:125:                                                storage_logger_ready,\nsrc/climate/ClimateV6RealInputRuntime.cpp:134:           storage_config.flash_fallback_enabled, storage_logger_ready, rf_ready,\nsrc/climate/ClimateV6RealInputRuntime.cpp:153:      {service_console, rf_diagnostics, telemetry_reporter, runtime_timing},\nsrc/climate/runtime/console/Stage28ServiceConsole.h:14:class Stage27TelemetryLogger;\nsrc/climate/runtime/console/Stage28ServiceConsole.h:35:    const storage::Stage27TelemetryLogger* storage_logger{nullptr};\nsrc/climate/runtime/console/Stage28ServiceConsoleStorageCommands.cpp:4:#include \"climate/storage/Stage27TelemetryLogger.h\"\nsrc/climate/runtime/console/Stage28ServiceConsoleStorageCommands.h:7:class Stage27TelemetryLogger;\nsrc/climate/runtime/console/Stage28ServiceConsoleStorageCommands.h:14:  Stage28ServiceConsoleStorageCommands(const storage::Stage27TelemetryLogger* storage_logger,\nsrc/climate/runtime/console/Stage28ServiceConsoleStorageCommands.h:26:  const storage::Stage27TelemetryLogger* storage_logger_{nullptr};\nsrc/climate/runtime/console/Stage28ServiceConsoleSystemCommands.cpp:10:#include \"climate/storage/Stage27TelemetryLogger.h\"\nsrc/climate/runtime/console/Stage28ServiceConsoleSystemCommands.cpp:43:    return storage::Stage27TelemetryLogger::taskStackBytes();\nsrc/climate/runtime/core/RealInputRuntimeComposition.cpp:11:storage::Stage27TelemetryLogger::Config makeStorageConfig() noexcept {\nsrc/climate/runtime/core/RealInputRuntimeComposition.cpp:12:  storage::Stage27TelemetryLogger::Config config{};\nsrc/climate/runtime/core/RealInputRuntimeComposition.h:26:#include \"climate/storage/Stage27TelemetryLogger.h\"\nsrc/climate/runtime/core/RealInputRuntimeComposition.h:37:  const storage::Stage27TelemetryLogger::Config& storageConfig() const noexcept {\nsrc/climate/runtime/core/RealInputRuntimeComposition.h:41:  storage::Stage27TelemetryLogger& storageLogger() noexcept {\nsrc/climate/runtime/core/RealInputRuntimeComposition.h:56:  storage::Stage27TelemetryLogger::Config storage_config_{};\nsrc/climate/runtime/core/RealInputRuntimeComposition.h:57:  storage::Stage27TelemetryLogger storage_logger_;\nsrc/climate/runtime/core/RealInputRuntimeCoordinator.cpp:195:    services_.support.telemetry_reporter.record(now_ms, loop_result, decision, output_telemetry);\nsrc/climate/runtime/core/RealInputRuntimeCoordinator.h:63:  TelemetryReporter& telemetry_reporter;\nsrc/climate/runtime/telemetry/TelemetryReporter.cpp:28:                                     storage::Stage27TelemetryLogger& storage_logger,\nsrc/climate/runtime/telemetry/TelemetryReporter.cpp:29:                                     bool storage_logger_ready, std::int32_t reset_reason) noexcept\nsrc/climate/runtime/telemetry/TelemetryReporter.cpp:31:      storage_logger_ready_(storage_logger_ready), reset_reason_(reset_reason) {}\nsrc/climate/runtime/telemetry/TelemetryReporter.cpp:154:  if (storage_logger_ready_) {\nsrc/climate/runtime/telemetry/TelemetryReporter.h:9:#include \"climate/storage/Stage27TelemetryLogger.h\"\nsrc/climate/runtime/telemetry/TelemetryReporter.h:20:                    storage::Stage27TelemetryLogger& storage_logger, bool storage_logger_ready,\nsrc/climate/runtime/telemetry/TelemetryReporter.h:35:  storage::Stage27TelemetryLogger& storage_logger_;\nsrc/climate/runtime/telemetry/TelemetryReporter.h:36:  bool storage_logger_ready_{false};\nsrc/climate/storage/Stage27TelemetryLogger.cpp:1:#include \"climate/storage/Stage27TelemetryLogger.h\"\nsrc/climate/storage/Stage27TelemetryLogger.cpp:20:bool Stage27TelemetryLogger::begin(const char* firmware_sha) noexcept {\nsrc/climate/storage/Stage27TelemetryLogger.cpp:64:  if (xTaskCreate(&Stage27TelemetryLogger::taskEntry, \"stage27_store\", taskStackBytes(), this,\nsrc/climate/storage/Stage27TelemetryLogger.cpp:84:bool Stage27TelemetryLogger::enqueue(const telemetry::Stage27TelemetrySnapshot& snapshot) noexcept {\nsrc/climate/storage/Stage27TelemetryLogger.cpp:95:Stage27StorageStatus Stage27TelemetryLogger::status() const noexcept {\nsrc/climate/storage/Stage27TelemetryLogger.cpp:113:void Stage27TelemetryLogger::taskEntry(void* context) noexcept {\nsrc/climate/storage/Stage27TelemetryLogger.cpp:114:  static_cast<Stage27TelemetryLogger*>(context)->taskLoop();\nsrc/climate/storage/Stage27TelemetryLogger.cpp:117:void Stage27TelemetryLogger::taskLoop() noexcept {\nsrc/climate/storage/Stage27TelemetryLogger.cpp:150:bool Stage27TelemetryLogger::ensureActiveStorage(\nsrc/climate/storage/Stage27TelemetryLogger.cpp:174:bool Stage27TelemetryLogger::tryActivateSd(\nsrc/climate/storage/Stage27TelemetryLogger.cpp:203:bool Stage27TelemetryLogger::tryActivateFlash(\nsrc/climate/storage/Stage27TelemetryLogger.cpp:227:void Stage27TelemetryLogger::deactivateFailedBackend(std::uint64_t now_ms) noexcept {\nsrc/climate/storage/Stage27TelemetryLogger.cpp:244:void Stage27TelemetryLogger::setActiveBackend(Stage27LogStorageBackend* backend) noexcept {\nsrc/climate/storage/Stage27TelemetryLogger.cpp:254:Stage27TelemetryLogger::PersistResult Stage27TelemetryLogger::ensureActiveSession(\nsrc/climate/storage/Stage27TelemetryLogger.cpp:287:Stage27TelemetryLogger::PersistResult Stage27TelemetryLogger::persistSnapshot(\nsrc/climate/storage/Stage27TelemetryLogger.cpp:332:Stage27TelemetryLogger::PersistResult\nsrc/climate/storage/Stage27TelemetryLogger.cpp:333:Stage27TelemetryLogger::appendFormatted(const char* line, std::size_t length,\nsrc/climate/storage/Stage27TelemetryLogger.h:17:class Stage27TelemetryLogger {\nsrc/climate/storage/Stage27TelemetryLogger.h:26:  explicit Stage27TelemetryLogger(Config config) noexcept\n--- likely runtime entry files ---\nsrc/climate/ClimateV6FakeRuntime.cpp\nsrc/climate/ClimateV6RealInputRuntime.cpp\nsrc/climate/runtime/RuntimeAdapters.cpp\nsrc/legacy/LegacyRuntime.cpp\nsrc/main.cpp\n",
+      "elapsed_seconds": 0.393,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 3.33,
+      "output_policy": "stream",
+      "captured_output_chars": 7538,
+      "output_truncated": false,
+      "current_rss_mb": 3.33,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.393
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.085
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.065
+  },
+  "finished_at": "2026-09-12T21:33:44.532215+00:00",
+  "task_digest": "912bb14cf7d45741f51698427249d2b687c9d575da1d14a216ef7a9f8ee1817d",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "attempt_id": "c1b52fd68f7fb121d3c035c0",
+  "daemon_version": "4.18.20"
+}
