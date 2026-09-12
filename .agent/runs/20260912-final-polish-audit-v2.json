@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260912-final-polish-audit-v2",
+  "task_digest": "37f67dcf56a655c370b989356c9947def38e13c10043d6213ea613f218a1e3a9",
+  "idle_timeout": 120,
+  "task_timeout": 900,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-12T12:55:52.283827+00:00",
+  "attempt_id": "f8c481ab7bf29cf09d3dedb8",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 65420,
+  "updated_at": "2026-09-12T12:55:52.283896+00:00",
+  "pid": 65420
+}
