@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 4,
+  "index": 5,
   "total": 6,
-  "command": "pre-commit run --all-files || true; pre-commit run --all-files && python3 scripts/check_runtime_config_ssot.py && python3 scripts/check_app_mode_boundaries.py && python3 scripts/check_runtime_boundaries.py && python3 scripts/check_service_console_boundaries.py && python3 scripts/check_output_rf_ownership.py",
-  "pid": 51424,
+  "command": "cmake -S test/host -B build/host-tests && cmake --build build/host-tests --target output_supervisor_resolver_tests output_supervisor_executor_tests output_execution_projection_tests climate_output_supervisor_sink_tests output_execution_telemetry_tests output_lifecycle_executor_tests output_runtime_lifecycle_control_tests output_automation_control_tests output_maintenance_control_tests --parallel && ctest --test-dir build/host-tests -R 'output_(supervisor_resolver|supervisor_executor|execution_projection|execution_telemetry|lifecycle_executor|runtime_lifecycle_control|automation_control|maintenance_control)_tests|climate_output_supervisor_sink_tests' --output-on-failure",
+  "pid": 51700,
   "timeout": 900,
   "idle_timeout": 300,
   "memory_limit_mb": 4096,
-  "started_at": "2026-09-12T03:06:58.351930+00:00",
-  "stage_name": "command-4",
-  "stage_index": 4,
+  "started_at": "2026-09-12T03:07:02.927690+00:00",
+  "stage_name": "command-5",
+  "stage_index": 5,
   "stage_total": 6,
   "stage_phase": "commands",
   "task_id": "20260912-phase2-output-supervisor-move-v2",
@@ -18,5 +18,5 @@
   "task_digest": "939e82384b6a17d5bac6f8026eda56f57755e672b847edb78fedcfd3f1231e29",
   "daemon_version": "4.18.20",
   "daemon_pid": 51097,
-  "updated_at": "2026-09-12T03:06:58.423651+00:00"
+  "updated_at": "2026-09-12T03:07:03.007800+00:00"
 }
