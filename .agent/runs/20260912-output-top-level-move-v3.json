@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 5,
+  "index": 6,
   "total": 8,
-  "command": "CXX_BIN=\"${CXX:-c++}\"; \"$CXX_BIN\" -std=c++17 -Wall -Wextra -Wpedantic -Isrc -Ilib/environment_control/src test/test_stage28d_rf_output_endpoint/test_main.cpp src/climate/compatibility/stage28d/Stage28dRfOutputEndpoint.cpp src/climate/output/OutputBindings.cpp src/climate/application/ClimateSemanticOutput.cpp src/climate/output/policy/OutputPolicyConfig.cpp src/climate/output/OutputStateStore.cpp src/climate/rf433/ClimateRf433EndpointRegistry.cpp -o /tmp/stage28d_rf_output_endpoint_tests && /tmp/stage28d_rf_output_endpoint_tests && \"$CXX_BIN\" -std=c++17 -Wall -Wextra -Wpedantic -Isrc -Ilib/environment_control/src test/test_stage28d_binary_role_arbiter/test_main.cpp src/climate/compatibility/stage28d/Stage28dBinaryRoleArbiter.cpp src/climate/output/policy/BinaryActuatorPolicy.cpp -o /tmp/stage28d_binary_role_arbiter_tests && /tmp/stage28d_binary_role_arbiter_tests",
-  "pid": 22504,
+  "command": "bash scripts/run_clang_tidy_host.sh",
+  "pid": 22612,
   "timeout": 7200,
   "idle_timeout": 600,
   "memory_limit_mb": 4096,
-  "started_at": "2026-09-12T11:06:50.325895+00:00",
-  "stage_name": "command-5",
-  "stage_index": 5,
+  "started_at": "2026-09-12T11:06:54.159224+00:00",
+  "stage_name": "command-6",
+  "stage_index": 6,
   "stage_total": 8,
   "stage_phase": "commands",
   "task_id": "20260912-output-top-level-move-v3",
@@ -18,5 +18,5 @@
   "task_digest": "19b8d05ab09f81dc83bec641bd5ef4290d9481aac27db3e1c7ed462301e662a1",
   "daemon_version": "4.18.20",
   "daemon_pid": 21339,
-  "updated_at": "2026-09-12T11:06:50.397578+00:00"
+  "updated_at": "2026-09-12T11:06:54.231032+00:00"
 }
