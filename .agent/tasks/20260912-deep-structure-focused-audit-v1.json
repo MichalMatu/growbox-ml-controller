@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "id": "20260912-deep-structure-focused-audit-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": false,
+  "command_timeout": 600,
+  "idle_timeout": 180,
+  "task_timeout": 1800,
+  "memory_limit_mb": 3072,
+  "commands": [
+    "P=\"$HOME/Documents/PlatformIO/Projects/ml\"; git -C \"$P\" fetch -q origin main; test \"$(git -C \"$P\" branch --show-current)\" = main; test \"$(git -C \"$P\" rev-parse HEAD)\" = \"a07b5a14f4bb3ab8b8ca866aafb52a1390ef69ab\"; test \"$(git -C \"$P\" rev-parse origin/main)\" = \"a07b5a14f4bb3ab8b8ca866aafb52a1390ef69ab\"; test -z \"$(git -C \"$P\" status --porcelain)\"",
+    "cd \"$HOME/Documents/PlatformIO/Projects/ml\"; echo '=== DEAD-CANDIDATE REFERENCES ==='; for s in Stage27SdDataLogger formatStage27TelemetryNdjson BleOutsideSource; do echo \"--- $s ---\"; git grep -n \"$s\" -- src test scripts .github CMakeLists.txt || true; done",
+    "cd \"$HOME/Documents/PlatformIO/Projects/ml\"; echo '=== DEAD-CANDIDATE HISTORY ==='; for f in src/climate/storage/Stage27SdDataLogger.cpp src/climate/telemetry/Stage27Telemetry.cpp src/climate/compatibility/ble/BleOutsideSource.cpp; do echo \"--- $f ---\"; git log --all --oneline --follow -12 -- \"$f\"; done",
+    "cd \"$HOME/Documents/PlatformIO/Projects/ml\"; echo '=== TOP-LEVEL CONSUMERS ==='; for f in OutputBindings LampSafety ClimateV6FakeRuntime ClimateV6RealInputRuntime ClimateDeterministicFake ClimateDiagnostics ClimateObservabilityMetrics; do echo \"--- $f ---\"; git grep -l \"climate/$f.h\" -- src test scripts .github CMakeLists.txt || true; done",
+    "cd \"$HOME/Documents/PlatformIO/Projects/ml\"; python3 - <<'PY'\nfrom pathlib import Path\nfrom collections import Counter\nprint('=== REPO CODE SHAPE ===')\nfor root in ['src','lib','ml','scripts','test','tools','web']:\n p=Path(root)\n if not p.exists(): continue\n files=[x for x in p.rglob('*') if x.is_file()]\n code=[x for x in files if x.suffix.lower() in {'.cpp','.cc','.c','.h','.hpp','.py','.js','.ts','.svelte','.sh','.cmake'}]\n print(f'{root}|files={len(files)}|code={len(code)}')\nprint('=== LARGE CODE FILES WHOLE REPO ===')\nrows=[]\nfor root in ['src','lib','ml','scripts','tools','web']:\n p=Path(root)\n if not p.exists(): continue\n for x in p.rglob('*'):\n  if x.is_file() and x.suffix.lower() in {'.cpp','.cc','.c','.h','.hpp','.py','.js','.ts','.svelte','.sh'}:\n   try: n=sum(1 for _ in x.open(errors='ignore'))\n   except OSError: continue\n   rows.append((n,str(x)))\nfor n,p in sorted(rows,reverse=True)[:50]: print(f'{n:5d} {p}')\nPY",
+    "cd \"$HOME/Documents/PlatformIO/Projects/ml\"; echo '=== LARGE CLIMATE FILE FUNCTION MARKERS ==='; for f in src/climate/output/lifecycle/OutputLifecycleExecutor.cpp src/climate/output/supervisor/ClimateOutputSupervisorSink.cpp src/climate/output/control/OutputMaintenanceControl.cpp src/climate/output/persistence/OutputPersistenceSchema.cpp src/climate/ClimateV6FakeRuntime.cpp src/climate/runtime/core/RealInputRuntimeComposition.h src/climate/runtime/core/RealInputRuntimeCoordinator.h; do echo \"--- $f ---\"; grep -nE '^[A-Za-z_].*::[A-Za-z_].*\\(' \"$f\" | head -80 || true; done",
+    "cd \"$HOME/Documents/PlatformIO/Projects/ml\"; git status --short --branch"
+  ]
+}
