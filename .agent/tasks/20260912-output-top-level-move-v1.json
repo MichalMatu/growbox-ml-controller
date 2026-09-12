@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "id": "20260912-output-top-level-move-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": true,
+  "command_timeout": 7200,
+  "idle_timeout": 900,
+  "task_timeout": 10800,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "test -z \"$(git status --porcelain)\" && git fetch -q origin main agent-control && git merge --ff-only origin/main && test \"$(git rev-parse HEAD)\" = \"ba25b925591ad391102750e1fba6fa5b36488a83\"",
+    "git show 62850d146c6f252b676246802ad653d2907ef0fc:.agent/helpers/move_output_top_level.py > /tmp/move_output_top_level.py && python3 /tmp/move_output_top_level.py",
+    "test -f src/climate/output/OutputBindings.cpp && test -f src/climate/output/OutputBindings.h && test -f src/climate/output/LampSafety.cpp && test -f src/climate/output/LampSafety.h && test ! -e src/climate/OutputBindings.cpp && test ! -e src/climate/OutputBindings.h && test ! -e src/climate/LampSafety.cpp && test ! -e src/climate/LampSafety.h && ! git grep -n -E 'climate/(OutputBindings|LampSafety)\\.(h|cpp)|src/climate/(OutputBindings|LampSafety)\\.cpp' -- src test scripts .github CMakeLists.txt && git diff --check",
+    "pre-commit run --all-files || true; pre-commit run --all-files",
+    "HOST_BUILD_JOBS=2 bash scripts/quality_gate_push.sh",
+    "git diff --check && git add -A && git commit -m 'Move output helpers into output module' && git push origin HEAD:main && git rev-parse HEAD"
+  ]
+}
