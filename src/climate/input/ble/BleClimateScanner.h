@@ -1,6 +1,6 @@
 #pragma once
 
-#include "climate/native/BleClimateState.h"
+#include "climate/input/ble/BleClimateState.h"
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>

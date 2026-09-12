@@ -2,7 +2,7 @@
 
 #include "climate/Stage28dLampSafety.h"
 #include "climate/application/ClimateApplication.h"
-#include "climate/native/BleClimateScanner.h"
+#include "climate/input/ble/BleClimateScanner.h"
 #include "climate/native/Ds3231ClockSource.h"
 #include "climate/output/OutputStateStore.h"
 #include "climate/output/control/OutputAutomationControl.h"

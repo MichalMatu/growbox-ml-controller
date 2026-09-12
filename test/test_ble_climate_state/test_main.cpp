@@ -1,4 +1,4 @@
-#include "climate/native/BleClimateState.h"
+#include "climate/input/ble/BleClimateState.h"
 
 #include <array>
 #include <cassert>

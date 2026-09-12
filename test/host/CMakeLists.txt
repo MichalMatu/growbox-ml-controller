@@ -522,7 +522,7 @@ target_compile_options(stage28d_output_intent_parity_tests PRIVATE -Wall -Wextra
 add_executable(
   tp357_decoder_tests
   "${PROJECT_ROOT}/test/test_tp357_decoder/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/native/Tp357Decoder.cpp"
+  "${PROJECT_ROOT}/src/climate/input/ble/Tp357Decoder.cpp"
 )
 target_include_directories(tp357_decoder_tests PRIVATE "${PROJECT_ROOT}/src")
 target_compile_features(tp357_decoder_tests PRIVATE cxx_std_17)
@@ -540,9 +540,9 @@ target_compile_options(stage27_telemetry_tests PRIVATE -Wall -Wextra -Wpedantic)
 add_executable(
   ble_climate_state_tests
   "${PROJECT_ROOT}/test/test_ble_climate_state/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/native/BleClimateState.cpp"
-  "${PROJECT_ROOT}/src/climate/native/BthomeV2Decoder.cpp"
-  "${PROJECT_ROOT}/src/climate/native/Tp357Decoder.cpp"
+  "${PROJECT_ROOT}/src/climate/input/ble/BleClimateState.cpp"
+  "${PROJECT_ROOT}/src/climate/input/ble/BthomeV2Decoder.cpp"
+  "${PROJECT_ROOT}/src/climate/input/ble/Tp357Decoder.cpp"
 )
 target_include_directories(ble_climate_state_tests PRIVATE "${PROJECT_ROOT}/src")
 target_compile_features(ble_climate_state_tests PRIVATE cxx_std_17)
@@ -551,7 +551,7 @@ target_compile_options(ble_climate_state_tests PRIVATE -Wall -Wextra -Wpedantic)
 add_executable(
   stage27_native_inputs_tests
   "${PROJECT_ROOT}/test/test_stage27_native_inputs/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/native/BthomeV2Decoder.cpp"
+  "${PROJECT_ROOT}/src/climate/input/ble/BthomeV2Decoder.cpp"
   "${PROJECT_ROOT}/src/climate/native/Ds3231Codec.cpp"
 )
 target_include_directories(stage27_native_inputs_tests PRIVATE "${PROJECT_ROOT}/src")
@@ -561,9 +561,9 @@ target_compile_options(stage27_native_inputs_tests PRIVATE -Wall -Wextra -Wpedan
 add_executable(
   stage27_fault_freshness_tests
   "${PROJECT_ROOT}/test/test_stage27_fault_freshness/test_main.cpp"
-  "${PROJECT_ROOT}/src/climate/native/BleClimateState.cpp"
-  "${PROJECT_ROOT}/src/climate/native/BthomeV2Decoder.cpp"
-  "${PROJECT_ROOT}/src/climate/native/Tp357Decoder.cpp"
+  "${PROJECT_ROOT}/src/climate/input/ble/BleClimateState.cpp"
+  "${PROJECT_ROOT}/src/climate/input/ble/BthomeV2Decoder.cpp"
+  "${PROJECT_ROOT}/src/climate/input/ble/Tp357Decoder.cpp"
   "${PROJECT_ROOT}/lib/environment_control/src/climate/ClimateFeatureEncoder.cpp"
   "${PROJECT_ROOT}/lib/environment_control/src/climate/ClimateRuntimeController.cpp"
   "${PROJECT_ROOT}/lib/environment_control/src/climate/ClimateTrendEstimator.cpp"

@@ -2,7 +2,7 @@
 
 #include "climate/application/ClimateApplication.h"
 #include "climate/application/ClimateCompositeInput.h"
-#include "climate/native/BleClimateScanner.h"
+#include "climate/input/ble/BleClimateScanner.h"
 #include "climate/native/Ds3231ClockSource.h"
 #include "climate/native/Scd41InsideSource.h"
 #include "climate/output/OutputExecutionTelemetry.h"

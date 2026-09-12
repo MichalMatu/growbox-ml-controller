@@ -1,4 +1,4 @@
-#include "climate/native/BleClimateScanner.h"
+#include "climate/input/ble/BleClimateScanner.h"
 
 #include <esp_err.h>
 #include <esp_timer.h>

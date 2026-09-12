@@ -1,4 +1,4 @@
-#include "climate/native/BthomeV2Decoder.h"
+#include "climate/input/ble/BthomeV2Decoder.h"
 #include "climate/native/Ds3231Codec.h"
 
 #include <array>

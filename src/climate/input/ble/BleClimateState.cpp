@@ -1,7 +1,7 @@
-#include "climate/native/BleClimateState.h"
+#include "climate/input/ble/BleClimateState.h"
 
-#include "climate/native/BthomeV2Decoder.h"
-#include "climate/native/Tp357Decoder.h"
+#include "climate/input/ble/BthomeV2Decoder.h"
+#include "climate/input/ble/Tp357Decoder.h"
 
 #include <cctype>
 #include <cstring>
