@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "id": "20260912-final-local-sync-closeout-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": true,
+  "command_timeout": 300,
+  "idle_timeout": 120,
+  "task_timeout": 900,
+  "memory_limit_mb": 2048,
+  "commands": [
+    "P=\"$HOME/Documents/PlatformIO/Projects/ml\"; test -d \"$P/.git\"; O=$(git -C \"$P\" remote get-url origin); case \"$O\" in https://github.com/MichalMatu/growbox-ml-controller|https://github.com/MichalMatu/growbox-ml-controller.git|git@github.com:MichalMatu/growbox-ml-controller.git|ssh://git@github.com/MichalMatu/growbox-ml-controller.git) ;; *) echo BOUND_REPO_MISMATCH; exit 42;; esac; test -z \"$(git -C \"$P\" status --porcelain)\"; test \"$(git -C \"$P\" branch --show-current)\" = main; git -C \"$P\" fetch -q --prune origin; git -C \"$P\" merge --ff-only origin/main; test \"$(git -C \"$P\" rev-parse HEAD)\" = \"5b985f40f60a8856a3efbdddf036e4b17d2447b1\"",
+    "P=\"$HOME/Documents/PlatformIO/Projects/ml\"; test \"$(git -C \"$P\" for-each-ref --format='%(refname:short)' refs/heads | tr '\\n' ' ')\" = \"main \"; test -z \"$(git -C \"$P\" status --porcelain)\"; printf '%s\\n' '=== LOCAL ==='; git -C \"$P\" status --short --branch; git -C \"$P\" rev-parse HEAD; printf '%s\\n' '=== REMOTE HEADS ==='; git -C \"$P\" ls-remote --heads origin | awk '{sub(\"refs/heads/\",\"\",$2); print $2}' | sort",
+    "P=\"$HOME/Documents/PlatformIO/Projects/ml\"; grep -q 'e03763d019af405087a5fa9c6713a7165d2e623f' \"$P/docs/CURRENT_STATUS.md\"; grep -q 'Controller behavior quality' \"$P/docs/PROJECT_ROADMAP.md\"; test -z \"$(git -C \"$P\" status --porcelain)\"; test \"$(git -C \"$P\" rev-parse HEAD)\" = \"5b985f40f60a8856a3efbdddf036e4b17d2447b1\""
+  ]
+}
