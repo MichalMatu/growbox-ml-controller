@@ -2,7 +2,6 @@
 
 #include "climate/Stage28dLampSafety.h"
 #include "climate/application/ClimateSemanticOutput.h"
-#include "climate/output/BinaryActuatorPolicy.h"
 #include "climate/output/OutputStateStore.h"
 #include "climate/output/control/OutputAutomationControl.h"
 #include "climate/output/control/OutputMaintenanceControl.h"
@@ -13,6 +12,7 @@
 #include "climate/output/persistence/OutputNvsBackend.h"
 #include "climate/output/persistence/OutputPersistenceCoordinator.h"
 #include "climate/output/persistence/OutputPersistenceStore.h"
+#include "climate/output/policy/BinaryActuatorPolicy.h"
 #include "climate/output/supervisor/ClimateOutputSupervisorSink.h"
 #include "climate/output/supervisor/OutputSupervisorExecutor.h"
 #include "climate/output/supervisor/OutputSupervisorResolver.h"

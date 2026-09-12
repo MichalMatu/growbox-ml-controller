@@ -1,4 +1,4 @@
-#include "climate/output/BinaryActuatorPolicy.h"
+#include "climate/output/policy/BinaryActuatorPolicy.h"
 
 #include <algorithm>
 #include <cmath>

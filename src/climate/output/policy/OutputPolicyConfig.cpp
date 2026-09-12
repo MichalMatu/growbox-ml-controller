@@ -1,4 +1,4 @@
-#include "climate/output/OutputPolicyConfig.h"
+#include "climate/output/policy/OutputPolicyConfig.h"
 
 #include <array>
 #include <cstddef>

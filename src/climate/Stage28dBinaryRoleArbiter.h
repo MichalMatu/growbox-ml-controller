@@ -1,7 +1,7 @@
 #pragma once
 
 #include "climate/application/ClimateIoAdapters.h"
-#include "climate/output/BinaryActuatorPolicy.h"
+#include "climate/output/policy/BinaryActuatorPolicy.h"
 
 #include <cstdint>
 

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "climate/output/OutputIntents.h"
-#include "climate/output/OutputPolicyConfig.h"
 #include "climate/output/lifecycle/OutputSupervisorLifecycle.h"
+#include "climate/output/policy/OutputPolicyConfig.h"
 
 #include <cstdint>
 

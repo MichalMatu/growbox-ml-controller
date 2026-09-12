@@ -1,5 +1,5 @@
-#include "climate/output/BinaryActuatorPolicy.h"
 #include "climate/output/control/OutputAutomationControl.h"
+#include "climate/output/policy/BinaryActuatorPolicy.h"
 #include "climate/output/supervisor/OutputSupervisorResolver.h"
 
 #include <array>

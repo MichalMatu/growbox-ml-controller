@@ -1,8 +1,8 @@
 #pragma once
 
-#include "climate/output/BinaryActuatorPolicy.h"
 #include "climate/output/OutputExecution.h"
 #include "climate/output/OutputStateStore.h"
+#include "climate/output/policy/BinaryActuatorPolicy.h"
 
 #include <array>
 #include <cstddef>

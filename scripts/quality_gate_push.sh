@@ -47,7 +47,7 @@ HOST_CXX="${CXX:-c++}"
   src/climate/Stage28dRfOutputEndpoint.cpp \
   src/climate/Stage28dOutputBindings.cpp \
   src/climate/application/ClimateSemanticOutput.cpp \
-  src/climate/output/OutputPolicyConfig.cpp \
+  src/climate/output/policy/OutputPolicyConfig.cpp \
   src/climate/output/OutputStateStore.cpp \
   src/climate/rf433/ClimateRf433EndpointRegistry.cpp \
   -o /tmp/stage28d_rf_output_endpoint_tests
@@ -62,7 +62,7 @@ HOST_CXX="${CXX:-c++}"
   -Isrc -Ilib/environment_control/src \
   test/test_stage28d_binary_role_arbiter/test_main.cpp \
   src/climate/Stage28dBinaryRoleArbiter.cpp \
-  src/climate/output/BinaryActuatorPolicy.cpp \
+  src/climate/output/policy/BinaryActuatorPolicy.cpp \
   -o /tmp/stage28d_binary_role_arbiter_tests
 /tmp/stage28d_binary_role_arbiter_tests
 
