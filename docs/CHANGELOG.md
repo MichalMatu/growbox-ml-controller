@@ -4,6 +4,17 @@ All notable changes to this project are documented here.
 
 ## Unreleased
 
+### Structural cleanup closeout — 2026-09-12
+
+- Removed retired `BleOutsideSource`, `Stage27SdDataLogger` and obsolete `Stage27Telemetry.cpp` implementation.
+- Removed unused `ClimateObservabilityMetrics` and its standalone host-test target.
+- Moved `LampSafety` and `OutputBindings` under `src/climate/output/` while preserving namespaces and behavior.
+- Reduced `RealInputRuntimeCoordinator.h` coupling to two direct includes by moving concrete dependencies into the implementation file.
+- Final code-bearing identity: `0a7097a30280ec0f7bb408799c07093761d63e88`.
+- Final software verification on that code line passed all runtime/config/service-console/app-mode/output-ownership guards, `50/50` host C++ tests, host clang-tidy, the CrowPanel real-input ESP-IDF build, GitHub CI #863 and Sandbox Pack #61.
+- Final read-only structure re-audit reported zero include cycles, zero climate `.cpp` files without build/reference wiring and no remaining structural cleanup with a clear benefit-to-churn justification.
+- The current code-bearing identity is ready to flash but is **not yet hardware-qualified**. Historical Physical H qualification remains attached only to `02208d23f403bca3540dbbd652eb55703a044833` until a new bounded physical run passes.
+
 ### Architecture and runtime quality cleanup — 2026-09-11
 
 - Split the real-input runtime into thin bootstrap, composition, coordinator, cycle-state, output-transport and output-telemetry boundaries.
