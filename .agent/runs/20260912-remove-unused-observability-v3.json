@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 5,
+  "index": 6,
   "total": 7,
-  "command": "cmake -S test/host -B build/host-tests && cmake --build build/host-tests --parallel 2 && ctest --test-dir build/host-tests --output-on-failure",
-  "pid": 70891,
+  "command": "STAGE27C_BUILD_DIR=build/idf-observability-cleanup-real-inputs GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 bash scripts/stage27c_crowpanel.sh build",
+  "pid": 71374,
   "timeout": 1800,
   "idle_timeout": 300,
   "memory_limit_mb": 4096,
-  "started_at": "2026-09-12T10:31:40.465406+00:00",
-  "stage_name": "command-5",
-  "stage_index": 5,
+  "started_at": "2026-09-12T10:31:45.066079+00:00",
+  "stage_name": "command-6",
+  "stage_index": 6,
   "stage_total": 7,
   "stage_phase": "commands",
   "task_id": "20260912-remove-unused-observability-v3",
@@ -18,5 +18,5 @@
   "task_digest": "375938e4d1c51b4948ca639fb4561f83afad9b322ab9afa1ee4be41fa7b7645f",
   "daemon_version": "4.18.20",
   "daemon_pid": 70199,
-  "updated_at": "2026-09-12T10:31:40.518472+00:00"
+  "updated_at": "2026-09-12T10:31:45.436088+00:00"
 }
