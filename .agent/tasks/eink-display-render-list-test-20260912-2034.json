@@ -1,0 +1,14 @@
+{
+  "id": "eink-display-render-list-test-20260912-2034",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "feature/eink-clay-status",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 900,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "set -euo pipefail; expected=06b970a685954b4ce2e439951e8e7017e86ae3a2; actual=$(git rev-parse HEAD); echo HEAD=$actual; test \"$actual\" = \"$expected\"; cmake -S test/test_display_presenter -B build/eink-display-render-list; cmake --build build/eink-display-render-list --parallel; ctest --test-dir build/eink-display-render-list --output-on-failure; if git grep -n -E 'std::(vector|string)|\bnew\b|\bdelete\b' -- src/climate/display; then echo dynamic_display_pattern_found; exit 1; fi; git status --short"
+  ]
+}
