@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 5,
+  "index": 6,
   "total": 7,
-  "command": "pre-commit run --all-files || true; pre-commit run --all-files && python3 scripts/check_runtime_config_ssot.py && python3 scripts/check_app_mode_boundaries.py && python3 scripts/check_runtime_boundaries.py && python3 scripts/check_service_console_boundaries.py && python3 scripts/check_output_rf_ownership.py",
-  "pid": 76661,
+  "command": "cmake -S test/host -B build/host-tests && cmake --build build/host-tests --parallel && ctest --test-dir build/host-tests --output-on-failure",
+  "pid": 76954,
   "timeout": 900,
   "idle_timeout": 300,
   "memory_limit_mb": 4096,
-  "started_at": "2026-09-12T06:31:11.666478+00:00",
-  "stage_name": "command-5",
-  "stage_index": 5,
+  "started_at": "2026-09-12T06:31:17.318718+00:00",
+  "stage_name": "command-6",
+  "stage_index": 6,
   "stage_total": 7,
   "stage_phase": "commands",
   "task_id": "20260912-phase5-lamp-safety-file-rename-v1",
@@ -18,5 +18,5 @@
   "task_digest": "860c65401f98382f40252536d129eea74946ecc0b5234bf084fb31f156f272bf",
   "daemon_version": "4.18.20",
   "daemon_pid": 76343,
-  "updated_at": "2026-09-12T06:31:11.746940+00:00"
+  "updated_at": "2026-09-12T06:31:17.338623+00:00"
 }
