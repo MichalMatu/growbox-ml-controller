@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "id": "20260912-phase5-remaining-stage-audit-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": false,
+  "command_timeout": 300,
+  "idle_timeout": 120,
+  "task_timeout": 900,
+  "memory_limit_mb": 2048,
+  "commands": [
+    "git fetch -q origin main && git reset --hard origin/main && test \"$(git rev-parse HEAD)\" = \"ee71eae88c16891eaf9112c8331a2e165c617904\" && test -z \"$(git status --porcelain)\"",
+    "find src/climate -type f | sort | grep -E '/Stage(27|28)' || true",
+    "git grep -n -E 'Stage(27|28)[A-Za-z0-9_]*' -- src test scripts .github || true",
+    "for token in Stage27FileDurability Stage27SdStorageBackend Stage27FlashStorageBackend Stage27StorageTypes Stage27TelemetryLogger Stage27LogFormat Stage27Telemetry Stage28ServiceConsole Stage28e; do echo ===$token===; git grep -n \"$token\" -- src test scripts .github || true; done",
+    "git status --short && git diff --check"
+  ]
+}
