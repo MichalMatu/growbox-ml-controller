@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260912-phase5-flash-storage-backend-push-recovery-v1",
   "task_digest": "737b34c96f0a218b2022a0b283bd181abe7ffdd2bd1437ac238b0f46459eb7a2",
-  "idle_timeout": 120,
-  "task_timeout": 900,
-  "memory_limit_mb": 2048,
-  "started_at": "2026-09-12T07:47:21.468446+00:00",
+  "status": "failed",
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-12T07:47:24.285947+00:00",
   "attempt_id": "fbe13965e5ee128875822864",
   "daemon_version": "4.18.20",
   "daemon_pid": 68669,
-  "updated_at": "2026-09-12T07:47:21.468584+00:00",
+  "updated_at": "2026-09-12T07:47:24.565200+00:00",
   "pid": 68669
 }
