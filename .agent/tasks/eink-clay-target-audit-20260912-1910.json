@@ -1,0 +1,14 @@
+{
+  "id": "eink-clay-target-audit-20260912-1910",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 2048,
+  "command_timeout": 300,
+  "task_timeout": 900,
+  "commands": [
+    "set -euo pipefail; test \"$(git rev-parse HEAD)\" = \"3d77da42e5ae7b206129bdcfe5aac6f0efc62197\"; printf 'HEAD '; git rev-parse HEAD; printf '%s\\n' '--- status ---'; git status --short; printf '%s\\n' '--- relevant files ---'; git ls-files 'src/**' 'lib/**' 'test/**' 'tests/**' 'config/**' | grep -Ei '(climate|runtime|output|input|diagnostic|sensor|scd|gpio|board|storage|sd|rtc|time|button|display|eink|epd|CMakeLists)' | sed -n '1,260p'; printf '%s\\n' '--- runtime/state/output/input refs ---'; rg -n --glob '!src/legacy/**' --glob '!web/**' --glob '!tools/panel/**' '(SCD4|SCD41|gpio_num_t|GPIO_NUM_|OutputSupervisor|requested|effective|safety|lifecycle|automation|maintenance|storage|sd_|SD|RTC|time_valid|sample.*fresh|fresh.*sample)' src lib test tests config | sed -n '1,360p'; printf '%s\\n' '--- cmake ---'; sed -n '1,260p' src/CMakeLists.txt; printf '%s\\n' '--- runtime cycle state ---'; sed -n '1,220p' src/climate/runtime/core/RuntimeCycleState.h; sed -n '1,220p' src/climate/runtime/core/RuntimeCycleState.cpp; printf '%s\\n' '--- composition ---'; sed -n '1,320p' src/climate/runtime/core/RealInputRuntimeComposition.h; printf '%s\\n' '--- main ---'; sed -n '1,240p' src/main.cpp"
+  ]
+}
