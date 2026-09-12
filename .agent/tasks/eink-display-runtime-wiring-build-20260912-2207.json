@@ -1,0 +1,14 @@
+{
+  "id": "eink-display-runtime-wiring-build-20260912-2207",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "feature/eink-clay-status",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 1800,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "set -euo pipefail; expected=2c6b6ff509a7fd08a6a0cccd49eaf21984cbac33; actual=$(git rev-parse HEAD); echo HEAD=$actual; test \"$actual\" = \"$expected\"; bash scripts/run_idf.sh -B build/eink-display-real-input -D \"SDKCONFIG_DEFAULTS=config/idf/sdkconfig.defaults;config/idf/sdkconfig.defaults.n16r8\" -D GROWBOX_BOARD_PROFILE=esp32s3-devkitc1-n16r8 -D GROWBOX_APP_MODE=climate-v6-real-inputs build; cmake -S test/test_display_observer -B build/eink-display-observer-final; cmake --build build/eink-display-observer-final --parallel; ctest --test-dir build/eink-display-observer-final --output-on-failure; cmake -S test/test_display_runtime -B build/eink-display-runtime-final; cmake --build build/eink-display-runtime-final --parallel; ctest --test-dir build/eink-display-runtime-final --output-on-failure; cmake -S test/test_display_presenter -B build/eink-display-presenter-final; cmake --build build/eink-display-presenter-final --parallel; ctest --test-dir build/eink-display-presenter-final --output-on-failure; if git grep -n -E 'std::(vector|string)|new |delete ' -- src/climate/display; then echo dynamic_display_pattern_found; exit 1; fi; git status --short"
+  ]
+}
