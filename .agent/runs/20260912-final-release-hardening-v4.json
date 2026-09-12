@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260912-final-release-hardening-v4",
+  "task_digest": "32e689a44bdc30a03678041d0d223ce29214c62ab652f7783cd2a1e202565b1c",
+  "idle_timeout": 900,
+  "task_timeout": 14400,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-12T13:29:50.432392+00:00",
+  "attempt_id": "3236f891c27aabe5d830ec2f",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 9004,
+  "updated_at": "2026-09-12T13:29:50.432449+00:00",
+  "pid": 9004
+}
