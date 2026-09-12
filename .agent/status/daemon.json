@@ -2,8 +2,8 @@
   "version": 1,
   "daemon_version": "4.18.20",
   "state": "idle",
-  "pid": 17561,
-  "updated_at": "2026-09-12T14:35:43.757664+00:00",
+  "pid": 20125,
+  "updated_at": "2026-09-12T14:37:56.473879+00:00",
   "self_revision": "3914aedf1143a4cc8713d38d9f3961e086f5e343",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -23,8 +23,7 @@
   "default_branch": "main",
   "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 17561,
-  "supervisor_pid": 15567,
-  "last_task_id": "20260912-final-docs-closeout-v2",
+  "worker_pid": 20125,
+  "supervisor_pid": 20021,
   "execution_variant": "parallel"
 }
