@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "id": "20260912-current-main-postflash-log-inspect-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": false,
+  "command_timeout": 300,
+  "idle_timeout": 120,
+  "task_timeout": 600,
+  "memory_limit_mb": 2048,
+  "commands": [
+    "test -z \"$(git status --porcelain)\" && test \"$(git rev-parse HEAD)\" = \"87a05da3675acd338857dc2f69dfef19e7a94b88\"",
+    "echo '=== SUMMARY ==='; cat build/hwqual-87a05-soak/summary.json 2>/dev/null || true; echo '=== FILES ==='; find build/hwqual-87a05-soak -maxdepth 1 -type f -print -exec wc -l {} \\; 2>/dev/null || true",
+    "echo '=== RAW TAIL ==='; tail -n 200 build/hwqual-87a05-soak/raw-001.log 2>/dev/null || true; echo '=== NDJSON TAIL ==='; tail -n 50 build/hwqual-87a05-soak/soak.ndjson 2>/dev/null || true",
+    "git status --short --branch"
+  ]
+}
