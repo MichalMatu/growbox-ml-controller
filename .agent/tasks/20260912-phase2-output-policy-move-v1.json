@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "id": "20260912-phase2-output-policy-move-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": true,
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 2400,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch -q origin main && git reset --hard origin/main && test \"$(git rev-parse HEAD)\" = \"ddd12462c9a22b484f68fbc66863f070ab1676d4\" && test -z \"$(git status --porcelain)\"",
+    "mkdir -p src/climate/output/policy && git mv src/climate/output/BinaryActuatorPolicy.h src/climate/output/policy/ && git mv src/climate/output/BinaryActuatorPolicy.cpp src/climate/output/policy/ && git mv src/climate/output/OutputPolicyConfig.h src/climate/output/policy/ && git mv src/climate/output/OutputPolicyConfig.cpp src/climate/output/policy/",
+    "git grep -Il -e 'climate/output/BinaryActuatorPolicy' -e 'climate/output/OutputPolicyConfig' -- src test tests scripts | xargs perl -pi -e 's#climate/output/BinaryActuatorPolicy#climate/output/policy/BinaryActuatorPolicy#g; s#climate/output/OutputPolicyConfig#climate/output/policy/OutputPolicyConfig#g'; git diff --check; ! git grep -n -e 'climate/output/BinaryActuatorPolicy' -e 'climate/output/OutputPolicyConfig' -- src test tests scripts",
+    "pre-commit run --all-files || true; pre-commit run --all-files && python3 scripts/check_runtime_config_ssot.py && python3 scripts/check_app_mode_boundaries.py && python3 scripts/check_runtime_boundaries.py && python3 scripts/check_service_console_boundaries.py && python3 scripts/check_output_rf_ownership.py && bash -n scripts/quality_gate_push.sh",
+    "cmake -S test/host -B build/host-tests && cmake --build build/host-tests --target binary_actuator_policy_tests output_policy_config_tests output_supervisor_resolver_tests output_supervisor_executor_tests climate_output_supervisor_sink_tests output_execution_telemetry_tests output_persistence_schema_tests output_persistence_store_tests output_persistence_coordinator_tests output_supervisor_lifecycle_tests output_lifecycle_executor_tests output_runtime_lifecycle_control_tests output_automation_control_tests output_manual_control_tests output_maintenance_control_tests climate_semantic_output_tests stage28d_binary_role_arbiter_tests --parallel && ctest --test-dir build/host-tests -R '^(binary_actuator_policy_tests|output_policy_config_tests|output_supervisor_resolver_tests|output_supervisor_executor_tests|climate_output_supervisor_sink_tests|output_execution_telemetry_tests|output_persistence_schema_tests|output_persistence_store_tests|output_persistence_coordinator_tests|output_supervisor_lifecycle_tests|output_lifecycle_executor_tests|output_runtime_lifecycle_control_tests|output_automation_control_tests|output_manual_control_tests|output_maintenance_control_tests|climate_semantic_output_tests|stage28d_binary_role_arbiter_tests)$' --output-on-failure",
+    "git diff --check && git add src test tests scripts && git commit -m 'Group output policy components' && git push origin HEAD:main && git rev-parse HEAD"
+  ]
+}
