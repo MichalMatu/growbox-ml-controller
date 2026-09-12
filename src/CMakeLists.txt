@@ -13,7 +13,6 @@ idf_component_register(
     "climate/application/ClimateApplication.cpp"
     "climate/application/ClimateCompositeInput.cpp"
     "climate/application/ClimateSemanticOutput.cpp"
-    "climate/ClimateObservabilityMetrics.cpp"
     "climate/rf433/ClimateRf433EndpointRegistry.cpp"
     "climate/rf433/Rf433OutputTransport.cpp"
     "climate/output/OutputStateStore.cpp"
