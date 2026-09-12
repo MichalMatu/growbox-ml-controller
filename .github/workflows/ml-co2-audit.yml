@@ -1,11 +1,6 @@
 name: Climate CO2 Exhaust Audit
 
 on:
-  push:
-    branches:
-      - mvp/environment-controller
-    paths:
-      - ".github/workflows/ml-co2-audit.yml"
   workflow_dispatch:
 
 permissions:
