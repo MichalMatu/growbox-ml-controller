@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "id": "20260912-final-release-hardening-v5",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": true,
+  "command_timeout": 7200,
+  "idle_timeout": 900,
+  "task_timeout": 14400,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "test -z \"$(git status --porcelain)\" && git fetch -q origin main agent-control && git merge --ff-only origin/main && test \"$(git rev-parse HEAD)\" = \"87a05da3675acd338857dc2f69dfef19e7a94b88\" && test -x \"$HOME/Documents/PlatformIO/Projects/ml/.venv/bin/python\" && \"$HOME/Documents/PlatformIO/Projects/ml/.venv/bin/python\" -m pytest --version && test -x \"$HOME/.espressif/python_env/idf5.5_py3.13_env/bin/python\"",
+    "cp tests/test_stage27c_soak.py /tmp/stage27c_soak_existing.py && rm tests/test_stage27c_soak.py && git show 369e78d8642b505abf274a5ad9c1cc6a46a093ee:.agent/helpers/final_release_hardening.py > /tmp/final_release_hardening.py && git show 9666373f0aed1da18007124b6c89857d9c288863:.agent/helpers/final_release_hardening_status_fix.py > /tmp/final_release_hardening_status_fix.py && git show dd8f5c0dd70e12dd4e6ea395a77d324b6b7e6a2d:.agent/helpers/append_stage27c_v3_tests.py > /tmp/append_stage27c_v3_tests.py && python3 /tmp/final_release_hardening.py && cp /tmp/stage27c_soak_existing.py tests/test_stage27c_soak.py && python3 /tmp/append_stage27c_v3_tests.py && python3 /tmp/final_release_hardening_status_fix.py && python3 -c 'from pathlib import Path; p=Path(\"tests/test_stage27c_soak.py\"); p.write_text(p.read_text(encoding=\"utf-8\").rstrip()+\"\\n\", encoding=\"utf-8\")' && git diff --check",
+    "(pre-commit run --all-files || pre-commit run --all-files) && cmake -S test/host -B build/host-tests && cmake --build build/host-tests --target stage28d_lamp_safety_tests --parallel 2 && ctest --test-dir build/host-tests -R '^stage28d_lamp_safety_tests$' --output-on-failure && \"$HOME/Documents/PlatformIO/Projects/ml/.venv/bin/python\" -m pytest -q tests/test_stage27c_soak.py",
+    "\"$HOME/Documents/PlatformIO/Projects/ml/.venv/bin/python\" scripts/check_runtime_config_ssot.py && \"$HOME/Documents/PlatformIO/Projects/ml/.venv/bin/python\" scripts/check_app_mode_boundaries.py && \"$HOME/Documents/PlatformIO/Projects/ml/.venv/bin/python\" scripts/check_runtime_boundaries.py && \"$HOME/Documents/PlatformIO/Projects/ml/.venv/bin/python\" scripts/check_service_console_boundaries.py && \"$HOME/Documents/PlatformIO/Projects/ml/.venv/bin/python\" scripts/check_output_rf_ownership.py && cmake --build build/host-tests --parallel 2 && ctest --test-dir build/host-tests --output-on-failure && \"$HOME/Documents/PlatformIO/Projects/ml/.venv/bin/python\" -m pytest -q",
+    "bash scripts/run_clang_tidy_host.sh",
+    "bash -lc 'export IDF_PYTHON_ENV_PATH=\"$HOME/.espressif/python_env/idf5.5_py3.13_env\"; source \"$HOME/esp/esp-idf/export.sh\" >/dev/null; bash scripts/idf_gate_build.sh && IDF_GATE_BUILD_DIR=build/idf-gate-v6-fake IDF_GATE_APP_MODE=climate-v6-fake bash scripts/idf_gate_build.sh && STAGE27C_BUILD_DIR=build/idf-gate-real-inputs-crowpanel GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 bash scripts/stage27c_crowpanel.sh build'",
+    "git diff --check && test -n \"$(git status --porcelain)\" && git add src/climate/output/LampSafety.cpp test/test_stage28d_lamp_safety/test_main.cpp tools/stage27c_soak.py tests/test_stage27c_soak.py docs/CURRENT_STATUS.md docs/CHANGELOG.md && git diff --cached --check && git commit -m 'Harden startup safety and soak validation' && git push origin HEAD:main && git rev-parse HEAD",
+    "test -z \"$(git status --porcelain)\" && git rev-parse HEAD && git status --short"
+  ]
+}
