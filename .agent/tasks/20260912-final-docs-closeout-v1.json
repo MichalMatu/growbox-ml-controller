@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "id": "20260912-final-docs-closeout-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": true,
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 2048,
+  "commands": [
+    "test -z \"$(git status --porcelain)\" && git fetch -q origin main agent-control && git merge --ff-only origin/main && test \"$(git rev-parse HEAD)\" = \"e03763d019af405087a5fa9c6713a7165d2e623f\"",
+    "python3 - <<'PY'\nfrom pathlib import Path\nsha='e03763d019af405087a5fa9c6713a7165d2e623f'\np=Path('docs/CURRENT_STATUS.md')\ns=p.read_text()\nold='''The exact acceptance identity is intentionally not duplicated in this status file because the firmware embeds the Git SHA. Final closeout requires the same exact `main` commit to pass the repository guards, host/Python tests, clang-tidy, ESP-IDF builds, canonical GitHub checks and the bounded hardware task `20260912-final-main-hardware-qualification-v1`. The terminal task evidence is authoritative for physical qualification.'''
+new=f'''Final release-readiness code-bearing identity: `{sha}`. That exact commit passed 500 Python tests (12 hardware/UI skips), all 50 host C++ tests, all five repository boundary/config guards, host clang-tidy, the required ESP-IDF builds, GitHub CI #865, Sandbox Pack #63, and bounded current-board task `20260912-final-main-hardware-qualification-v1`. The hardware task used real inputs with physical outputs fake-locked (`real outputs=0`, `RF loopback=0`, `thermal test=0`); its strict 120-second `soak_v=3` run completed with no violations.'''
+assert old in s
+s=s.replace(old,new)
+old2='''`0a7097a30280ec0f7bb408799c07093761d63e88` is the software-verified structural-cleanup baseline. Current `main` adds the final release-readiness hardening above. Treat the current executable as hardware-qualified only when `20260912-final-main-hardware-qualification-v1` is terminal PASS on that exact same commit; do not infer qualification from an ancestor or a documentation-only descendant.\n\nQualified Growbox serial device for the next physical qualification: `/dev/cu.usbserial-1130`.'''
+new2=f'''`0a7097a30280ec0f7bb408799c07093761d63e88` remains the software-verified structural-cleanup baseline. Final release-readiness code-bearing identity `{sha}` is additionally bounded-hardware-qualified by `20260912-final-main-hardware-qualification-v1`: the strict soak reported zero violations, zero resets/disconnects/unexpected SHA records, and the first valid SCD41 sample (27.56 C) immediately reported `safety_latched=0` / `safety_reason=0`, proving startup sensor warm-up no longer creates a false 10-minute recovery hold. This is a safe real-input/fake-locked qualification, not a replacement for the historical full Physical H run with real RF outputs.\n\nDocumentation-only descendants do not change that executable evidence; keep hardware claims attached to `{sha}`.\n\nQualified Growbox serial device for future physical qualification: `/dev/cu.usbserial-1130`.'''
+assert old2 in s
+s=s.replace(old2,new2)
+old3='''After the exact current `main` commit has green canonical checks and terminal PASS from `20260912-final-main-hardware-qualification-v1`, resume normal product development from `docs/PROJECT_ROADMAP.md`. The cleanup/hardening line is closed at that point; avoid another broad architecture rewrite unless concrete evidence exposes a new responsibility or ownership problem.'''
+new3='''The architecture cleanup and release-readiness hardening line is closed. Resume normal product development from `docs/PROJECT_ROADMAP.md`; do not start another broad architecture rewrite unless concrete evidence exposes a new responsibility, ownership or safety problem.'''
+assert old3 in s
+s=s.replace(old3,new3)
+p.write_text(s)\n\np=Path('docs/CHANGELOG.md')\ns=p.read_text()\nneedle='''- Confirmed the intended long-lived remote branches are only `main`, `agent-control` and `gh-pages`; the latter two are required control/publishing branches, not cleanup candidates.\n'''
+add=f'''- Final release-readiness code-bearing identity `{sha}` passed 500 Python tests (12 hardware/UI skips), 50/50 host C++ tests, five boundary/config guards, clang-tidy, the required ESP-IDF builds, GitHub CI #865 and Sandbox Pack #63.\n- Bounded current-board qualification `20260912-final-main-hardware-qualification-v1` passed on that exact SHA with real inputs and fake-locked physical outputs; strict 120-second `soak_v=3` reported no violations and the first valid SCD41 sample released startup fail-closed state immediately without `RecoveryHold`.\n'''
+assert needle in s
+s=s.replace(needle,needle+add)
+p.write_text(s)\nPY\ngit diff --check",
+    "(pre-commit run --all-files || pre-commit run --all-files) && git diff --check",
+    "git add docs/CURRENT_STATUS.md docs/CHANGELOG.md && git diff --cached --check && git commit -m 'Close release-readiness qualification' && git push origin HEAD:main && git rev-parse HEAD",
+    "test -z \"$(git status --porcelain)\" && printf '%s\\n' '=== REMOTE BRANCHES ===' && git ls-remote --heads origin | sed 's#.*refs/heads/##' | sort && printf '%s\\n' '=== READY ===' && git status --short --branch"
+  ]
+}
