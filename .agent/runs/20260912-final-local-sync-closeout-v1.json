@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260912-final-local-sync-closeout-v1",
+  "task_digest": "a51a7128123b429380ef2c4feafda47f96f78cd48b7cdc1443d0fc2869ec7b39",
+  "idle_timeout": 120,
+  "task_timeout": 900,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-12T14:40:06.428222+00:00",
+  "attempt_id": "a9927eee4abdf33c5101ce2a",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 21513,
+  "updated_at": "2026-09-12T14:40:06.428400+00:00",
+  "pid": 21513
+}
