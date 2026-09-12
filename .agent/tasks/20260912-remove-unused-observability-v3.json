@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "id": "20260912-remove-unused-observability-v3",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": true,
+  "command_timeout": 1800,
+  "idle_timeout": 300,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "test -z \"$(git status --porcelain)\" && git fetch -q origin main agent-control && git merge --ff-only origin/main && test \"$(git rev-parse HEAD)\" = \"bd67573ea99d7e718ce26d3f8c1ec90d7d84f59e\"",
+    "git show cb29b296119622cfd3d0725125e86888df49b886:.agent/helpers/remove_unused_observability.py > /tmp/remove_unused_observability.py && python3 /tmp/remove_unused_observability.py",
+    "! git grep -n -E 'ClimateObservabilityMetrics|climate_observability_metrics' -- src test scripts .github CMakeLists.txt && git diff --check",
+    "pre-commit run --all-files || true; pre-commit run --all-files && python3 scripts/check_runtime_config_ssot.py && python3 scripts/check_app_mode_boundaries.py && python3 scripts/check_runtime_boundaries.py && python3 scripts/check_service_console_boundaries.py && python3 scripts/check_output_rf_ownership.py",
+    "cmake -S test/host -B build/host-tests && cmake --build build/host-tests --parallel 2 && ctest --test-dir build/host-tests --output-on-failure",
+    "STAGE27C_BUILD_DIR=build/idf-observability-cleanup-real-inputs GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 bash scripts/stage27c_crowpanel.sh build",
+    "git diff --check && git add -u && git commit -m 'Remove unused observability metrics' && git push origin HEAD:main && git rev-parse HEAD"
+  ]
+}
