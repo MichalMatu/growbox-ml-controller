@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260912-idf-python-env-probe-v1",
+  "task_digest": "3d67559257ab22df3a9ab048edc184513e2fd9c4f8734ca0ef44eb737307f2c7",
+  "idle_timeout": 120,
+  "task_timeout": 600,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-12T12:20:50.421627+00:00",
+  "attempt_id": "b75351bb6133e16a7a603e1b",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 16632,
+  "updated_at": "2026-09-12T12:20:50.421759+00:00",
+  "pid": 16632
+}
