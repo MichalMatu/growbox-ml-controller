@@ -1,0 +1,60 @@
+{
+  "id": "20260912-output-top-level-move-v2",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": true,
+  "started_at": "2026-09-12T10:53:57.650164+00:00",
+  "command_timeout": 7200,
+  "edits": {},
+  "commands": [
+    {
+      "command": "test \"$(git rev-parse HEAD)\" = \"ba25b925591ad391102750e1fba6fa5b36488a83\" && test -n \"$(git status --porcelain)\" && git diff --check",
+      "exit_code": 1,
+      "output": "",
+      "elapsed_seconds": 0.419,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": null,
+      "output_policy": "stream",
+      "captured_output_chars": 0,
+      "output_truncated": false,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 7,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 7,
+      "stage_phase": "commands",
+      "outcome": "failed",
+      "elapsed_seconds": 0.419
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.096
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.066
+  },
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-12T10:53:59.853673+00:00",
+  "task_digest": "9569c95eb13f128135fc3acdfa9c81febc324a92ed29644121e533116ae970fb",
+  "idle_timeout": 600,
+  "task_timeout": 10800,
+  "memory_limit_mb": 4096,
+  "attempt_id": "4a97ebd4e649064e063aefaf",
+  "daemon_version": "4.18.20"
+}
