@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "id": "20260912-phase2-input-i2c-rtc-move-v1",
+  "repository_id": "growbox-ml-controller",
+  "repository": "MichalMatu/growbox-ml-controller",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "work_branch": "main",
+  "resources": [],
+  "allow_write": true,
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch -q origin main && git reset --hard origin/main && test \"$(git rev-parse HEAD)\" = \"2e894b96bcdb39f32764d5e8396facb8ebb388d7\" && test -z \"$(git status --porcelain)\"",
+    "mkdir -p src/climate/input/i2c src/climate/input/rtc && git mv src/climate/native/NativeI2cBus.h src/climate/input/i2c/ && git mv src/climate/native/NativeI2cBus.cpp src/climate/input/i2c/ && git mv src/climate/native/Ds3231Codec.h src/climate/input/rtc/ && git mv src/climate/native/Ds3231Codec.cpp src/climate/input/rtc/ && git mv src/climate/native/Ds3231ClockSource.h src/climate/input/rtc/ && git mv src/climate/native/Ds3231ClockSource.cpp src/climate/input/rtc/",
+    "git grep -Il -e 'climate/native/NativeI2cBus' -e 'climate/native/Ds3231Codec' -e 'climate/native/Ds3231ClockSource' -- src test tests scripts | xargs perl -pi -e 's#climate/native/NativeI2cBus#climate/input/i2c/NativeI2cBus#g; s#climate/native/Ds3231Codec#climate/input/rtc/Ds3231Codec#g; s#climate/native/Ds3231ClockSource#climate/input/rtc/Ds3231ClockSource#g'; git diff --check; ! git grep -n -e 'climate/native/NativeI2cBus' -e 'climate/native/Ds3231Codec' -e 'climate/native/Ds3231ClockSource' -- src test tests scripts",
+    "pre-commit run --all-files || true; pre-commit run --all-files && python3 scripts/check_runtime_config_ssot.py && python3 scripts/check_app_mode_boundaries.py && python3 scripts/check_runtime_boundaries.py && python3 scripts/check_service_console_boundaries.py && python3 scripts/check_output_rf_ownership.py",
+    "cmake -S test/host -B build/host-tests && cmake --build build/host-tests --target stage27_native_inputs_tests --parallel && ctest --test-dir build/host-tests -R '^stage27_native_inputs_tests$' --output-on-failure",
+    "git diff --check && git add src test tests scripts && git commit -m 'Group I2C and RTC input components' && git push origin HEAD:main && git rev-parse HEAD"
+  ]
+}
