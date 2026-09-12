@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 5,
+  "index": 6,
   "total": 7,
-  "command": "pre-commit run --all-files || true; pre-commit run --all-files && python3 scripts/check_runtime_config_ssot.py && python3 scripts/check_app_mode_boundaries.py && python3 scripts/check_runtime_boundaries.py && python3 scripts/check_service_console_boundaries.py && python3 scripts/check_output_rf_ownership.py",
-  "pid": 94375,
+  "command": "cmake -S test/host -B build/host-tests && cmake --build build/host-tests --parallel && ctest --test-dir build/host-tests --output-on-failure",
+  "pid": 94834,
   "timeout": 900,
   "idle_timeout": 300,
   "memory_limit_mb": 4096,
-  "started_at": "2026-09-12T06:43:52.841546+00:00",
-  "stage_name": "command-5",
-  "stage_index": 5,
+  "started_at": "2026-09-12T06:44:03.383964+00:00",
+  "stage_name": "command-6",
+  "stage_index": 6,
   "stage_total": 7,
   "stage_phase": "commands",
   "task_id": "20260912-phase5-output-bindings-file-rename-v1",
@@ -18,5 +18,5 @@
   "task_digest": "cdfdcd7ea5ae3ac0c4f18b67ee02d653a894d8fe44382de5fed543d8395c4465",
   "daemon_version": "4.18.20",
   "daemon_pid": 93987,
-  "updated_at": "2026-09-12T06:43:52.923776+00:00"
+  "updated_at": "2026-09-12T06:44:03.442340+00:00"
 }
