@@ -19,7 +19,7 @@ if __package__ in {None, ""}:
 serial = importlib.import_module("serial")
 list_ports = importlib.import_module("serial.tools.list_ports")
 
-SOAK_MARKER = "soak_v=2 "
+SOAK_MARKERS = ((3, "soak_v=3 "), (2, "soak_v=2 "))
 CH340_VID = 0x1A86
 CH340_PID = 0x7523
 COUNTER_KEYS = (
@@ -41,7 +41,7 @@ COUNTER_KEYS = (
     "xiaomi_accepted",
     "xiaomi_rejected",
 )
-REQUIRED_KEYS = {
+COMMON_REQUIRED_KEYS = {
     "firmware_sha",
     "uptime_ms",
     "reset_reason",
@@ -70,7 +70,18 @@ REQUIRED_KEYS = {
     "xiaomi_packets",
     "xiaomi_accepted",
     "xiaomi_rejected",
-    "outputs",
+}
+REQUIRED_KEYS_BY_VERSION = {
+    2: COMMON_REQUIRED_KEYS | {"outputs"},
+    3: COMMON_REQUIRED_KEYS | {"output_v", "transport_active"},
+}
+V3_STORAGE_ALIASES = {
+    "storage_sd_mounted": "sd_mounted",
+    "storage_sd_mount_errors": "sd_mount_errors",
+    "storage_write_errors": "sd_write_errors",
+    "storage_queue_drops": "sd_queue_drops",
+    "storage_records_written": "sd_records_written",
+    "storage_records_skipped": "sd_records_skipped",
 }
 
 
@@ -90,20 +101,33 @@ def _coerce(value: str) -> Any:
 
 
 def parse_soak_line(line: str) -> dict[str, Any] | None:
-    marker_index = line.find(SOAK_MARKER)
-    if marker_index < 0:
+    version: int | None = None
+    payload: str | None = None
+    for candidate_version, marker in SOAK_MARKERS:
+        marker_index = line.find(marker)
+        if marker_index >= 0:
+            version = candidate_version
+            payload = line[marker_index + len(marker) :].strip()
+            break
+    if version is None or payload is None:
         return None
-    payload = line[marker_index + len(SOAK_MARKER) :].strip()
-    record: dict[str, Any] = {"soak_v": 2}
+
+    record: dict[str, Any] = {"soak_v": version}
     for token in payload.split():
         if "=" not in token:
             continue
         key, value = token.split("=", 1)
         if key:
             record[key] = _coerce(value)
-    missing = sorted(REQUIRED_KEYS.difference(record))
+
+    missing = sorted(REQUIRED_KEYS_BY_VERSION[version].difference(record))
     if missing:
-        raise ValueError(f"missing Stage27C soak fields: {', '.join(missing)}")
+        raise ValueError(f"missing Stage27C soak v{version} fields: {', '.join(missing)}")
+
+    if version == 3:
+        for source, target in V3_STORAGE_ALIASES.items():
+            if source in record:
+                record[target] = record[source]
     return record
 
 
@@ -164,11 +188,18 @@ class SoakSummary:
         if self.expected_sha is not None and sha != self.expected_sha:
             self.unexpected_sha_records += 1
 
-        if record["outputs"] != "fake-locked":
+        soak_version = int(record["soak_v"])
+        if soak_version == 2:
+            if record["outputs"] != "fake-locked":
+                self.bad_outputs += 1
+        elif int(record["output_v"]) != 2 or int(record["transport_active"]) != 0:
             self.bad_outputs += 1
         if int(record["ble_scanning"]) != 1:
             self.ble_not_scanning_records += 1
-        if int(record.get("io_status", 0)) != 0:
+        # v3 output ownership moved behind OutputSupervisor. With the physical transport
+        # intentionally disabled, the legacy loop can report ActuatorApplyFailed/FaultLatched
+        # while the v3 physical-output fence is healthy. Preserve the legacy v2 check only.
+        if soak_version == 2 and int(record.get("io_status", 0)) != 0:
             self.nonzero_io_status_records += 1
 
         for key in COUNTER_KEYS:

@@ -4,6 +4,14 @@ All notable changes to this project are documented here.
 
 ## Unreleased
 
+### Final release-readiness hardening — 2026-09-12
+
+- Updated the Stage27C soak parser to preserve historical `soak_v=2` support while accepting current `soak_v=3` telemetry and its renamed storage fields.
+- For v3 fake-output soak acceptance, validate the explicit physical-output fence (`output_v=2`, `transport_active=0`) instead of treating legacy loop `io_status=2/3` as a physical-output failure.
+- Kept missing/stale lamp temperature fail-closed without synthesizing a thermal trip; a genuine over-temperature trip still survives temporary temperature loss and requires the full recovery hold.
+- Added regression coverage for both parser versions and both lamp-safety state-history cases.
+- Confirmed the intended long-lived remote branches are only `main`, `agent-control` and `gh-pages`; the latter two are required control/publishing branches, not cleanup candidates.
+
 ### Structural cleanup closeout — 2026-09-12
 
 - Removed retired `BleOutsideSource`, `Stage27SdDataLogger` and obsolete `Stage27Telemetry.cpp` implementation.

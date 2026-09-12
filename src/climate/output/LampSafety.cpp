@@ -45,7 +45,6 @@ LampSafetyDecision LampSafetyController::evaluate(const LampSafetyInput& input) 
   const bool temperature_usable = temperature.valid && std::isfinite(temperature.value) &&
                                   temperature.age_ms <= config_.temperature_timeout_ms;
   if (!temperature_usable) {
-    thermal_latched_ = true;
     recovery_running_ = false;
     output.effective_lamp_on = false;
     output.force_exhaust_on = input.exhaust_fan_available;

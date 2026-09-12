@@ -104,6 +104,55 @@ void testStaleInvalidAndNonFiniteTemperatureFailClosed() {
   assert(nonfinite.force_exhaust_on);
 }
 
+void testInitialTemperatureUnavailableDoesNotStartThermalRecovery() {
+  LampSafetyController controller;
+  const auto unavailable = controller.evaluate(input(1.0F, 24.0F, false, 0U, 1U));
+  assert(!unavailable.effective_lamp_on);
+  assert(unavailable.force_exhaust_on);
+  assert(unavailable.thermal_latched);
+  assert(unavailable.reason == LampSafetyReason::TemperatureUnavailable);
+
+  const auto valid = controller.evaluate(input(1.0F, 27.0F, true, 0U, 2U));
+  assert(valid.effective_lamp_on);
+  assert(!valid.force_exhaust_on);
+  assert(!valid.thermal_latched);
+  assert(!valid.recovery_running);
+  assert(valid.reason == LampSafetyReason::Safe);
+}
+
+void testTemperatureUnavailablePreservesRealOvertemperatureLatch() {
+  LampSafetyController controller;
+  const auto tripped = controller.evaluate(input(1.0F, 29.0F, true, 0U, 0U));
+  assert(tripped.thermal_latched);
+  assert(tripped.reason == LampSafetyReason::OverTemperature);
+
+  const auto unavailable = controller.evaluate(input(1.0F, 24.0F, false, 0U, 100U));
+  assert(!unavailable.effective_lamp_on);
+  assert(unavailable.thermal_latched);
+  assert(unavailable.reason == LampSafetyReason::TemperatureUnavailable);
+
+  const auto warm = controller.evaluate(input(1.0F, 27.0F, true, 0U, 200U));
+  assert(!warm.effective_lamp_on);
+  assert(warm.thermal_latched);
+  assert(!warm.recovery_running);
+  assert(warm.reason == LampSafetyReason::RecoveryHold);
+
+  const auto recovery_start = controller.evaluate(input(1.0F, 25.5F, true, 0U, 1'000U));
+  assert(!recovery_start.effective_lamp_on);
+  assert(recovery_start.thermal_latched);
+  assert(recovery_start.recovery_running);
+
+  const auto almost = controller.evaluate(input(1.0F, 25.5F, true, 0U, 600'999U));
+  assert(!almost.effective_lamp_on);
+  assert(almost.thermal_latched);
+
+  const auto recovered = controller.evaluate(input(1.0F, 25.5F, true, 0U, 601'000U));
+  assert(recovered.effective_lamp_on);
+  assert(!recovered.thermal_latched);
+  assert(!recovered.recovery_running);
+  assert(recovered.reason == LampSafetyReason::Safe);
+}
+
 void testNoFanCapabilityDoesNotInventActuation() {
   LampSafetyController controller;
   auto decision = controller.evaluate(input(1.0F, 28.5F, true, 0U, 0U, false));
@@ -213,6 +262,8 @@ int main() {
   testRecoveryRequires26OrBelowForTenMinutes();
   testRecoveryHoldResetsAbove26();
   testStaleInvalidAndNonFiniteTemperatureFailClosed();
+  testInitialTemperatureUnavailableDoesNotStartThermalRecovery();
+  testTemperatureUnavailablePreservesRealOvertemperatureLatch();
   testNoFanCapabilityDoesNotInventActuation();
   testInvalidConfigFailsClosed();
   testEnvelopeLeavesScheduleAuthorityUnconstrainedWhenThermallySafe();

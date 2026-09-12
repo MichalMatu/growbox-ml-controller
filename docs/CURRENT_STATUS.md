@@ -10,25 +10,12 @@ Product roadmap: `docs/PROJECT_ROADMAP.md`
 
 ## Current phase
 
-The architecture/quality refactor and the follow-up structural cleanup are complete. The code-bearing `main` state is software-verified and ready to be flashed for bounded hardware qualification.
+The architecture/quality refactor and the follow-up structural cleanup are complete. Final release-readiness hardening on current `main` closes two issues found by the bounded post-flash inspection:
 
-The latest code-bearing software-verified identity is:
+- `tools/stage27c_soak.py` accepts both historical `soak_v=2` and current `soak_v=3`; v3 fake-output acceptance uses the explicit `output_v=2` / `transport_active=0` physical-output fence rather than the legacy loop `io_status`;
+- startup `TemperatureUnavailable` remains fail-closed for the current cycle but no longer invents an over-temperature latch or a 10-minute recovery hold; a real thermal trip remains latched across later temporary temperature unavailability.
 
-`0a7097a30280ec0f7bb408799c07093761d63e88`
-
-Verification completed for that code line:
-
-- runtime/config/service-console/app-mode/output-ownership guards: PASS;
-- host C++ suite: `50/50` PASS;
-- host clang-tidy: PASS;
-- CrowPanel ESP-IDF real-input build: PASS;
-- generated firmware binary size: `0xbc950` bytes, with 82% of the configured app partition free;
-- GitHub CI run #863: PASS;
-- Sandbox Pack run #61: PASS;
-- final read-only structure re-audit: PASS;
-- physical hardware qualification for this SHA: **pending**.
-
-Documentation-only descendants do not replace this code-bearing firmware identity.
+The exact acceptance identity is intentionally not duplicated in this status file because the firmware embeds the Git SHA. Final closeout requires the same exact `main` commit to pass the repository guards, host/Python tests, clang-tidy, ESP-IDF builds, canonical GitHub checks and the bounded hardware task `20260912-final-main-hardware-qualification-v1`. The terminal task evidence is authoritative for physical qualification.
 
 ## Structural cleanup closeout
 
@@ -86,7 +73,7 @@ Historical full Physical H remains valid evidence only for its exact executable 
 
 Terminal historical evidence: `20260910-output-supervisor-physical-h-v3`.
 
-The current code-bearing identity `0a7097a30280ec0f7bb408799c07093761d63e88` has passed software/build/CI verification but has **not** yet completed a new bounded physical qualification. It is ready to flash; do not call it hardware-qualified until the physical run finishes successfully.
+`0a7097a30280ec0f7bb408799c07093761d63e88` is the software-verified structural-cleanup baseline. Current `main` adds the final release-readiness hardening above. Treat the current executable as hardware-qualified only when `20260912-final-main-hardware-qualification-v1` is terminal PASS on that exact same commit; do not infer qualification from an ancestor or a documentation-only descendant.
 
 Qualified Growbox serial device for the next physical qualification: `/dev/cu.usbserial-1130`.
 
@@ -116,6 +103,4 @@ Use direct GitHub for bounded source/config/docs changes. Use Local Agent when M
 
 ## Immediate next work
 
-The next release-readiness step is bounded physical qualification of the current `main` firmware on `/dev/cu.usbserial-1130`. Build/flash the current tree, record the exact code-bearing identity above, and only promote that identity to hardware-qualified after the physical checks pass.
-
-After hardware qualification, resume normal product development from `docs/PROJECT_ROADMAP.md`. Avoid another broad architecture rewrite unless concrete evidence exposes a new responsibility or ownership problem.
+After the exact current `main` commit has green canonical checks and terminal PASS from `20260912-final-main-hardware-qualification-v1`, resume normal product development from `docs/PROJECT_ROADMAP.md`. The cleanup/hardening line is closed at that point; avoid another broad architecture rewrite unless concrete evidence exposes a new responsibility or ownership problem.
