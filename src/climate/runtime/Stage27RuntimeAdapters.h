@@ -3,7 +3,7 @@
 #include "climate/ClimateRuntimeController.h"
 #include "climate/application/ClimateCompositeInput.h"
 #include "climate/input/ble/BleClimateScanner.h"
-#include "climate/native/Scd41InsideSource.h"
+#include "climate/input/sensors/Scd41InsideSource.h"
 
 #include <cstdint>
 

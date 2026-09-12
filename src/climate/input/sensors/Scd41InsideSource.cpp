@@ -1,4 +1,4 @@
-#include "climate/native/Scd41InsideSource.h"
+#include "climate/input/sensors/Scd41InsideSource.h"
 
 extern "C" {
 #include "growbox_sensirion_i2c_hal.h"

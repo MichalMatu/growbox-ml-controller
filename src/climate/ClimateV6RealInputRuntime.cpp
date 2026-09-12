@@ -5,7 +5,7 @@
 #include "climate/input/ble/BleClimateScanner.h"
 #include "climate/input/i2c/NativeI2cBus.h"
 #include "climate/input/rtc/Ds3231ClockSource.h"
-#include "climate/native/Scd41InsideSource.h"
+#include "climate/input/sensors/Scd41InsideSource.h"
 #include "climate/runtime/RuntimeBuildConfig.h"
 #include "climate/runtime/Stage27RuntimeAdapters.h"
 #include "climate/runtime/console/Stage28ServiceConsole.h"

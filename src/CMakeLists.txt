@@ -130,7 +130,7 @@ elseif(GROWBOX_APP_MODE STREQUAL "climate-v6-real-inputs")
       "climate/input/ble/BleClimateScanner.cpp"
       "climate/input/rtc/Ds3231Codec.cpp"
       "climate/input/i2c/NativeI2cBus.cpp"
-      "climate/native/Scd41InsideSource.cpp"
+      "climate/input/sensors/Scd41InsideSource.cpp"
       "climate/input/rtc/Ds3231ClockSource.cpp"
       "climate/rf433/Rf433ProtocolCodec.cpp"
       "climate/rf433/Rf433RmtLoopback.cpp"

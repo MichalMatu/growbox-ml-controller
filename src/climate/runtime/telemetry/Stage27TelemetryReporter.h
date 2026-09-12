@@ -4,7 +4,7 @@
 #include "climate/application/ClimateCompositeInput.h"
 #include "climate/input/ble/BleClimateScanner.h"
 #include "climate/input/rtc/Ds3231ClockSource.h"
-#include "climate/native/Scd41InsideSource.h"
+#include "climate/input/sensors/Scd41InsideSource.h"
 #include "climate/output/OutputExecutionTelemetry.h"
 #include "climate/storage/Stage27TelemetryLogger.h"
 #include "climate/telemetry/Stage27Telemetry.h"
