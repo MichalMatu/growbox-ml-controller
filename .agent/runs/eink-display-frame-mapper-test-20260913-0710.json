@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "eink-display-frame-mapper-test-20260913-0710",
+  "task_digest": "c39890a0f9c865b96e17bfe0ab213c6d853f4685eb79581249d325ce7a5a0b3e",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-13T07:00:49.687319+00:00",
+  "attempt_id": "ea6ca0b71abd0a68a87bdab6",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 20316,
+  "updated_at": "2026-09-13T07:00:49.687395+00:00",
+  "pid": 20316
+}
