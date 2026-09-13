@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "eink-display-ssd1680-backend-compile-20260913-0718",
+  "task_digest": "38872046c69b26cea8f8eb7b50841066aaed8563ec367d0af4e2dba13893b2eb",
+  "idle_timeout": 300,
+  "task_timeout": 2400,
+  "memory_limit_mb": 3072,
+  "started_at": "2026-09-13T07:05:03.200491+00:00",
+  "attempt_id": "81940f27b8495551cb949eb0",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 23993,
+  "updated_at": "2026-09-13T07:05:03.200586+00:00",
+  "pid": 23993
+}
