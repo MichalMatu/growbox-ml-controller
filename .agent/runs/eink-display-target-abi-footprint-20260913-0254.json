@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "eink-display-target-abi-footprint-20260913-0254",
+  "task_digest": "c9837ee66b61b84e92d1a36a609861c5ed802a246e2f3d57030bbf721eaa9cb8",
+  "idle_timeout": 300,
+  "task_timeout": 600,
+  "memory_limit_mb": 1024,
+  "started_at": "2026-09-13T00:56:04.160913+00:00",
+  "attempt_id": "a4fc6988f95981584fffc27b",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 31577,
+  "updated_at": "2026-09-13T00:56:04.160962+00:00",
+  "pid": 31577
+}
