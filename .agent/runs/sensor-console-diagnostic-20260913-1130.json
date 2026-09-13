@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "sensor-console-diagnostic-20260913-1130",
+  "task_digest": "7ec2104c7a01e841ab602d88563b20250bd105cd4630341dd2fc37cf971dd782",
+  "idle_timeout": 300,
+  "task_timeout": 180,
+  "memory_limit_mb": 1024,
+  "started_at": "2026-09-13T09:28:07.310577+00:00",
+  "attempt_id": "42bc816487e1995a6060abf7",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 50787,
+  "updated_at": "2026-09-13T09:28:07.310670+00:00",
+  "pid": 50787
+}
