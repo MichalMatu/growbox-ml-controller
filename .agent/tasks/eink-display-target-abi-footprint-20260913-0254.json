@@ -1,0 +1,14 @@
+{
+  "id": "eink-display-target-abi-footprint-20260913-0254",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "feature/eink-clay-status",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 300,
+  "task_timeout": 600,
+  "memory_limit_mb": 1024,
+  "commands": [
+    "set -euo pipefail; expected=86472b3585d41ec874d47608e066e458f12f9f88; actual=$(git rev-parse HEAD); echo HEAD=$actual; test \"$actual\" = \"$expected\"; source scripts/source_idf.sh >/dev/null; CXX=$(command -v xtensa-esp32s3-elf-g++); NM=$(command -v xtensa-esp32s3-elf-nm); echo CXX=$CXX; cat > /tmp/growbox_display_sizes_target.cpp <<'EOF'\n#include \"climate/display/DisplayTelemetryObserver.h\"\n#include \"climate/display/DisplayClayCoordinator.h\"\nusing namespace growbox::app::climate_io::display;\nextern \"C\" {\nchar size_DisplaySnapshot[sizeof(DisplaySnapshot)];\nchar size_DisplayPageModel[sizeof(DisplayPageModel)];\nchar size_DisplayRenderList[sizeof(DisplayRenderList)];\nchar size_DisplayRuntimeFrame[sizeof(DisplayRuntimeFrame)];\nchar size_DisplayRuntimeController[sizeof(DisplayRuntimeController)];\nchar size_DisplayTelemetryObserver[sizeof(DisplayTelemetryObserver)];\nchar size_ClayDisplayTextElement[sizeof(ClayDisplayTextElement)];\n}\nEOF\n\"$CXX\" -std=c++17 -Wall -Wextra -Wpedantic -Isrc -Ilib/environment_control/src -c /tmp/growbox_display_sizes_target.cpp -o /tmp/growbox_display_sizes_target.o; \"$NM\" -S --size-sort /tmp/growbox_display_sizes_target.o | grep 'size_'; git diff --check; git status --short"
+  ]
+}
