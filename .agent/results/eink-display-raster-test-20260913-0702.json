@@ -1,0 +1,60 @@
+{
+  "id": "eink-display-raster-test-20260913-0702",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "feature/eink-clay-status",
+  "allow_write": false,
+  "started_at": "2026-09-13T06:57:23.936648+00:00",
+  "command_timeout": 900,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; expected=84e3a637de11f1563a714f49d3887c3e12d7f97d; actual=$(git rev-parse HEAD); echo HEAD=$actual; test \"$actual\" = \"$expected\"; /usr/bin/python3 scripts/check_runtime_config_ssot.py; HOST_BUILD_JOBS=2 bash scripts/test_display_host.sh; source scripts/source_idf.sh >/tmp/growbox-eink-raster-idf.log 2>&1; compiler=$(command -v xtensa-esp32s3-elf-g++); echo XTENSA_COMPILER=$compiler; test -n \"$compiler\"; \"$compiler\" -std=c++17 -Wall -Wextra -Wpedantic -Werror -Isrc -c src/climate/display/DisplayMonochromeRaster.cpp -o /tmp/growbox-display-raster.o; cat >/tmp/growbox-display-raster-size.cpp <<'CPP'\n#include \"climate/display/DisplayMonochromeRaster.h\"\nusing namespace growbox::app::climate_io::display;\nstatic_assert(DisplayMonochromeRaster::kBufferBytes == 4736U);\nstatic_assert(sizeof(DisplayMonochromeRaster::Buffer) == 4736U);\nint raster_probe() { return static_cast<int>(sizeof(DisplayMonochromeRaster)); }\nCPP\n\"$compiler\" -std=c++17 -Wall -Wextra -Wpedantic -Werror -Isrc -c /tmp/growbox-display-raster-size.cpp -o /tmp/growbox-display-raster-size.o; git diff --check; test -z \"$(git status --short)\"",
+      "exit_code": 0,
+      "output": "HEAD=84e3a637de11f1563a714f49d3887c3e12d7f97d\nRUNTIME_CONFIG_SSOT_PASS\n==> display-presenter\n-- Configuring done (0.1s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-presenter\n[100%] Built target display_presenter_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-presenter\n    Start 1: display_presenter_tests\n1/1 Test #1: display_presenter_tests ..........   Passed    0.00 sec\n\n100% tests passed, 0 tests failed out of 1\n\nTotal Test time (real) =   0.01 sec\n==> display-runtime\n-- Configuring done (0.1s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-runtime\n[100%] Built target display_runtime_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-runtime\n    Start 1: display_runtime_tests\n1/1 Test #1: display_runtime_tests ............   Passed    0.00 sec\n\n100% tests passed, 0 tests failed out of 1\n\nTotal Test time (real) =   0.01 sec\n==> display-observer\n-- Configuring done (0.1s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-observer\n[100%] Built target display_observer_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-observer\n    Start 1: display_observer_tests\n1/1 Test #1: display_observer_tests ...........   Passed    0.00 sec\n\n100% tests passed, 0 tests failed out of 1\n\nTotal Test time (real) =   0.01 sec\n==> display-raster\n-- The CXX compiler identification is AppleClang 21.0.0.21000101\n-- Detecting CXX compiler ABI info\n-- Detecting CXX compiler ABI info - done\n-- Check for working CXX compiler: /usr/bin/c++ - skipped\n-- Detecting CXX compile features\n-- Detecting CXX compile features - done\n-- Configuring done (0.7s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-raster\n[ 66%] Building CXX object CMakeFiles/display_raster_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/src/climate/display/DisplayMonochromeRaster.cpp.o\n[ 66%] Building CXX object CMakeFiles/display_raster_tests.dir/test_main.cpp.o\n[100%] Linking CXX executable display_raster_tests\n[100%] Built target display_raster_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-raster\n    Start 1: display_raster_tests\n1/1 Test #1: display_raster_tests .............   Passed    0.58 sec\n\n100% tests passed, 0 tests failed out of 1\n\nTotal Test time (real) =   0.58 sec\nXTENSA_COMPILER=/Users/michal/.espressif/tools/xtensa-esp-elf/esp-14.2.0_20260121/xtensa-esp-elf/bin/xtensa-esp32s3-elf-g++\n",
+      "elapsed_seconds": 5.314,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 2048,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 89.02,
+      "output_policy": "stream",
+      "captured_output_chars": 2905,
+      "output_truncated": false,
+      "current_rss_mb": 89.02,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 5.314
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.112
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.071
+  },
+  "finished_at": "2026-09-13T06:57:31.320221+00:00",
+  "task_digest": "24f68be9ef6d8b4b8d3362acc078d7b7d4ef630dc54ef22e6150ae0894d2c946",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 2048,
+  "attempt_id": "534ef2096891e3559d0b53ad",
+  "daemon_version": "4.18.20"
+}
