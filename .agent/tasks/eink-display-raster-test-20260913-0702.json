@@ -1,0 +1,14 @@
+{
+  "id": "eink-display-raster-test-20260913-0702",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "feature/eink-clay-status",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 900,
+  "task_timeout": 1800,
+  "memory_limit_mb": 2048,
+  "commands": [
+    "set -euo pipefail; expected=84e3a637de11f1563a714f49d3887c3e12d7f97d; actual=$(git rev-parse HEAD); echo HEAD=$actual; test \"$actual\" = \"$expected\"; /usr/bin/python3 scripts/check_runtime_config_ssot.py; HOST_BUILD_JOBS=2 bash scripts/test_display_host.sh; source scripts/source_idf.sh >/tmp/growbox-eink-raster-idf.log 2>&1; compiler=$(command -v xtensa-esp32s3-elf-g++); echo XTENSA_COMPILER=$compiler; test -n \"$compiler\"; \"$compiler\" -std=c++17 -Wall -Wextra -Wpedantic -Werror -Isrc -c src/climate/display/DisplayMonochromeRaster.cpp -o /tmp/growbox-display-raster.o; cat >/tmp/growbox-display-raster-size.cpp <<'CPP'\n#include \"climate/display/DisplayMonochromeRaster.h\"\nusing namespace growbox::app::climate_io::display;\nstatic_assert(DisplayMonochromeRaster::kBufferBytes == 4736U);\nstatic_assert(sizeof(DisplayMonochromeRaster::Buffer) == 4736U);\nint raster_probe() { return static_cast<int>(sizeof(DisplayMonochromeRaster)); }\nCPP\n\"$compiler\" -std=c++17 -Wall -Wextra -Wpedantic -Werror -Isrc -c /tmp/growbox-display-raster-size.cpp -o /tmp/growbox-display-raster-size.o; git diff --check; test -z \"$(git status --short)\""
+  ]
+}
