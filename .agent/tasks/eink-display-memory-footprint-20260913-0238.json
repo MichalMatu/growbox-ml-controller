@@ -1,0 +1,14 @@
+{
+  "id": "eink-display-memory-footprint-20260913-0238",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "feature/eink-clay-status",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 300,
+  "task_timeout": 600,
+  "memory_limit_mb": 1024,
+  "commands": [
+    "set -euo pipefail; expected=86472b3585d41ec874d47608e066e458f12f9f88; actual=$(git rev-parse HEAD); echo HEAD=$actual; test \"$actual\" = \"$expected\"; cat > /tmp/growbox_display_sizes.cpp <<'EOF'\n#include \"climate/display/DisplayTelemetryObserver.h\"\n#include \"climate/display/DisplayClayCoordinator.h\"\n#include <cstdio>\nusing namespace growbox::app::climate_io::display;\nint main() {\n  std::printf(\"DisplaySnapshot=%zu align=%zu\\n\", sizeof(DisplaySnapshot), alignof(DisplaySnapshot));\n  std::printf(\"DisplayPageModel=%zu align=%zu\\n\", sizeof(DisplayPageModel), alignof(DisplayPageModel));\n  std::printf(\"DisplayRenderList=%zu align=%zu\\n\", sizeof(DisplayRenderList), alignof(DisplayRenderList));\n  std::printf(\"DisplayRuntimeFrame=%zu align=%zu\\n\", sizeof(DisplayRuntimeFrame), alignof(DisplayRuntimeFrame));\n  std::printf(\"DisplayRuntimeController=%zu align=%zu\\n\", sizeof(DisplayRuntimeController), alignof(DisplayRuntimeController));\n  std::printf(\"DisplayTelemetryObserver=%zu align=%zu\\n\", sizeof(DisplayTelemetryObserver), alignof(DisplayTelemetryObserver));\n  std::printf(\"ClayDisplayTextElement=%zu align=%zu\\n\", sizeof(ClayDisplayTextElement), alignof(ClayDisplayTextElement));\n  return 0;\n}\nEOF\nc++ -std=c++17 -Wall -Wextra -Wpedantic -Isrc -Ilib/environment_control/src /tmp/growbox_display_sizes.cpp -o /tmp/growbox_display_sizes; /tmp/growbox_display_sizes; git diff --check; git status --short"
+  ]
+}
