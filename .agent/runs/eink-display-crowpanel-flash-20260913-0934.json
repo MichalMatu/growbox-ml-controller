@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "eink-display-crowpanel-flash-20260913-0934",
+  "task_digest": "08eb4b75bcf2b0a3aee33ace4f0abf8101e030639fb81d5594cfd48566404cd3",
+  "idle_timeout": 300,
+  "task_timeout": 3000,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-13T07:41:03.045797+00:00",
+  "attempt_id": "45128aecad1d5ae67ee1951d",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 85592,
+  "updated_at": "2026-09-13T07:41:03.045949+00:00",
+  "pid": 85592
+}
