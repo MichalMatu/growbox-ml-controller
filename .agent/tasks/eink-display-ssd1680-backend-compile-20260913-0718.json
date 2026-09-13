@@ -1,0 +1,14 @@
+{
+  "id": "eink-display-ssd1680-backend-compile-20260913-0718",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "feature/eink-clay-status",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 1200,
+  "task_timeout": 2400,
+  "memory_limit_mb": 3072,
+  "commands": [
+    "set -euo pipefail; expected=8d14041a71c8fbc3563ee969ba1dc61ed764a7cd; actual=$(git rev-parse HEAD); echo HEAD=$actual; test \"$actual\" = \"$expected\"; /usr/bin/python3 scripts/check_runtime_config_ssot.py; HOST_BUILD_JOBS=2 bash scripts/test_display_host.sh; source scripts/source_idf.sh >/tmp/growbox-eink-backend-idf.log 2>&1; build=$(mktemp -d)/idf; idf.py -B \"$build\" -D \"SDKCONFIG=$build/sdkconfig\" -D \"SDKCONFIG_DEFAULTS=config/idf/sdkconfig.defaults;config/idf/sdkconfig.defaults.n8r8\" -D GROWBOX_APP_MODE=climate-v6-real-inputs -D GROWBOX_BOARD_PROFILE=crowpanel-esp32s3-2_9-n8r8 -D GROWBOX_EINK_DISPLAY_ENABLED=1 -D GROWBOX_RF433_LOOPBACK_ENABLED=0 -D GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 -D GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 reconfigure; target=$(ninja -C \"$build\" -t targets all | awk -F': ' '/CrowPanelSsd1680DisplayBackend.cpp.obj/{print $1; exit}'); echo BACKEND_TARGET=$target; test -n \"$target\"; ninja -C \"$build\" \"$target\"; for name in DisplayMonochromeRaster Ssd1680FrameMapper; do t=$(ninja -C \"$build\" -t targets all | awk -F': ' -v n=\"$name\" '$0 ~ n \".cpp.obj\" {print $1; exit}'); echo ${name}_TARGET=$t; test -n \"$t\"; ninja -C \"$build\" \"$t\"; done; if grep -nE '\\b(new|delete|malloc|calloc|realloc)\\b' src/climate/display/CrowPanelSsd1680DisplayBackend.cpp src/climate/display/CrowPanelSsd1680DisplayBackend.h src/climate/display/DisplayMonochromeRaster.cpp src/climate/display/Ssd1680FrameMapper.cpp; then echo dynamic-allocation-token-found >&2; exit 1; fi; git diff --check; test -z \"$(git status --short)\""
+  ]
+}
