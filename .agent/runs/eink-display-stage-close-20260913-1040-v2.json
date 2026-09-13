@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "eink-display-stage-close-20260913-1040-v2",
+  "task_digest": "04f63925463a510b163855c74934a1c02824a8bd897f696fb7dd1ec1b97c20e5",
+  "idle_timeout": 300,
+  "task_timeout": 3000,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-13T08:40:38.114588+00:00",
+  "attempt_id": "4befc4a4f5629e078a5c2371",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 81451,
+  "updated_at": "2026-09-13T08:40:38.114640+00:00",
+  "pid": 81451
+}
