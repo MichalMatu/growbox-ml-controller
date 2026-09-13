@@ -1,0 +1,14 @@
+{
+  "id": "eink-display-stage-close-20260913-1040-v2",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "feature/eink-clay-status",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 2400,
+  "task_timeout": 3000,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "set -euo pipefail; expected=a191f4bcb70037828e8b9570917e1350e6c2acdd; actual=$(git rev-parse HEAD); echo HEAD=$actual; test \"$actual\" = \"$expected\"; /usr/bin/python3 scripts/check_runtime_config_ssot.py; HOST_BUILD_JOBS=2 bash scripts/test_display_host.sh; grep -q 'Ssd1680Rotation::CounterClockwise90' src/climate/ClimateV6RealInputRuntime.cpp; grep -q 'bool show_title{false};' src/climate/display/DisplayRenderList.h; grep -q 'kFullUpdate = 0xF7U' src/climate/display/CrowPanelSsd1680DisplayBackend.cpp; grep -q 'kPartialUpdate = 0xFCU' src/climate/display/CrowPanelSsd1680DisplayBackend.cpp; grep -q 'Physical refresh completed generation=.*kind=.*reason=' src/climate/display/CrowPanelDisplayService.cpp; build=$(mktemp -d)/stage27c; export STAGE27C_BUILD_DIR=\"$build\"; export GROWBOX_EINK_DISPLAY_ENABLED=1; export GROWBOX_RF433_LOOPBACK_ENABLED=0; export GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0; export GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0; set +e; bash scripts/stage27c_crowpanel.sh build >/tmp/growbox-eink-stage-close-v2-build.log 2>&1; rc=$?; set -e; echo FULL_BUILD_EXIT=$rc; if [ \"$rc\" -ne 0 ]; then tail -n 220 /tmp/growbox-eink-stage-close-v2-build.log; exit 1; fi; tail -n 100 /tmp/growbox-eink-stage-close-v2-build.log; generated=$(find \"$build\" -path '*/generated/climate/runtime/RuntimeBuildConfig.h' -print -quit); test -n \"$generated\"; grep -q 'kEinkDisplayEnabled = 1 != 0' \"$generated\"; grep -q 'kRf433LoopbackEnabled = 0 != 0' \"$generated\"; grep -q 'kRealOutputsEnabled = 0 != 0' \"$generated\"; grep -q 'kThermalTestSequenceEnabled = 0 != 0' \"$generated\"; test -f \"$build/growbox_ml_controller.bin\"; ls -lh \"$build/growbox_ml_controller.bin\"; git diff --check; test -z \"$(git status --short)\""
+  ]
+}
