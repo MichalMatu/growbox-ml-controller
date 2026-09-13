@@ -1,0 +1,9 @@
+{
+  "id": "sensor-console-diagnostic-20260913-1125",
+  "status": "failed",
+  "failure_reason": "invalid_task_file",
+  "started_at": null,
+  "finished_at": "2026-09-13T09:26:48.075897+00:00",
+  "daemon_version": "4.18.20",
+  "error": "JSONDecodeError: Unterminated string starting at: line 1 column 274 (char 273)"
+}
