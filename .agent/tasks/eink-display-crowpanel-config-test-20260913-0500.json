@@ -1,0 +1,14 @@
+{
+  "id": "eink-display-crowpanel-config-test-20260913-0500",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "feature/eink-clay-status",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 900,
+  "task_timeout": 1800,
+  "memory_limit_mb": 2048,
+  "commands": [
+    "set -euo pipefail; expected=19d4419797e5c6d1f2229cd207b56b9b8385ef2d; actual=$(git rev-parse HEAD); echo HEAD=$actual; test \"$actual\" = \"$expected\"; /usr/bin/python3 scripts/check_runtime_config_ssot.py; tmp=$(mktemp -d); cat >\"$tmp/CMakeLists.txt\" <<EOF\ncmake_minimum_required(VERSION 3.16)\nproject(growbox_eink_config NONE)\nset(GROWBOX_APP_CLIMATE_V6_REAL_INPUTS 1)\nset(GROWBOX_BOARD_PROFILE \"crowpanel-esp32s3-2_9-n8r8\" CACHE STRING \"\" FORCE)\nset(GROWBOX_EINK_DISPLAY_ENABLED \"1\" CACHE STRING \"\" FORCE)\ninclude(\"$(pwd)/config/runtime/GrowboxRuntimeConfig.cmake\")\nfile(WRITE \"${CMAKE_BINARY_DIR}/pins.txt\" \"${GROWBOX_EINK_SCLK_GPIO},${GROWBOX_EINK_MOSI_GPIO},${GROWBOX_EINK_CS_GPIO},${GROWBOX_EINK_DC_GPIO},${GROWBOX_EINK_RST_GPIO},${GROWBOX_EINK_BUSY_GPIO},${GROWBOX_EINK_POWER_GPIO}\")\nEOF\ncmake -S \"$tmp\" -B \"$tmp/build\"; cat \"$tmp/build/pins.txt\"; test \"$(cat \"$tmp/build/pins.txt\")\" = \"12,11,45,46,47,48,7\"; bad=$(mktemp -d); cp \"$tmp/CMakeLists.txt\" \"$bad/CMakeLists.txt\"; sed -i '' '/include(/i\\set(GROWBOX_EINK_MOSI_GPIO \"21\" CACHE STRING \"\" FORCE)' \"$bad/CMakeLists.txt\"; if cmake -S \"$bad\" -B \"$bad/build\" >\"$bad/out.log\" 2>&1; then cat \"$bad/out.log\"; echo expected GPIO conflict >&2; exit 1; fi; grep -q 'GPIO conflict' \"$bad/out.log\"; HOST_BUILD_JOBS=2 bash scripts/test_display_host.sh; git diff --check; test -z \"$(git status --short)\""
+  ]
+}
