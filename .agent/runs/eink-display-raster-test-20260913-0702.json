@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "eink-display-raster-test-20260913-0702",
+  "task_digest": "24f68be9ef6d8b4b8d3362acc078d7b7d4ef630dc54ef22e6150ae0894d2c946",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-13T06:57:23.936515+00:00",
+  "attempt_id": "534ef2096891e3559d0b53ad",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 16829,
+  "updated_at": "2026-09-13T06:57:23.936721+00:00",
+  "pid": 16829
+}
