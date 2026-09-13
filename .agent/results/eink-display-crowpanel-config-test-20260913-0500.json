@@ -1,0 +1,61 @@
+{
+  "id": "eink-display-crowpanel-config-test-20260913-0500",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "feature/eink-clay-status",
+  "allow_write": false,
+  "started_at": "2026-09-13T06:50:49.766229+00:00",
+  "command_timeout": 900,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; expected=19d4419797e5c6d1f2229cd207b56b9b8385ef2d; actual=$(git rev-parse HEAD); echo HEAD=$actual; test \"$actual\" = \"$expected\"; /usr/bin/python3 scripts/check_runtime_config_ssot.py; tmp=$(mktemp -d); cat >\"$tmp/CMakeLists.txt\" <<EOF\ncmake_minimum_required(VERSION 3.16)\nproject(growbox_eink_config NONE)\nset(GROWBOX_APP_CLIMATE_V6_REAL_INPUTS 1)\nset(GROWBOX_BOARD_PROFILE \"crowpanel-esp32s3-2_9-n8r8\" CACHE STRING \"\" FORCE)\nset(GROWBOX_EINK_DISPLAY_ENABLED \"1\" CACHE STRING \"\" FORCE)\ninclude(\"$(pwd)/config/runtime/GrowboxRuntimeConfig.cmake\")\nfile(WRITE \"${CMAKE_BINARY_DIR}/pins.txt\" \"${GROWBOX_EINK_SCLK_GPIO},${GROWBOX_EINK_MOSI_GPIO},${GROWBOX_EINK_CS_GPIO},${GROWBOX_EINK_DC_GPIO},${GROWBOX_EINK_RST_GPIO},${GROWBOX_EINK_BUSY_GPIO},${GROWBOX_EINK_POWER_GPIO}\")\nEOF\ncmake -S \"$tmp\" -B \"$tmp/build\"; cat \"$tmp/build/pins.txt\"; test \"$(cat \"$tmp/build/pins.txt\")\" = \"12,11,45,46,47,48,7\"; bad=$(mktemp -d); cp \"$tmp/CMakeLists.txt\" \"$bad/CMakeLists.txt\"; sed -i '' '/include(/i\\set(GROWBOX_EINK_MOSI_GPIO \"21\" CACHE STRING \"\" FORCE)' \"$bad/CMakeLists.txt\"; if cmake -S \"$bad\" -B \"$bad/build\" >\"$bad/out.log\" 2>&1; then cat \"$bad/out.log\"; echo expected GPIO conflict >&2; exit 1; fi; grep -q 'GPIO conflict' \"$bad/out.log\"; HOST_BUILD_JOBS=2 bash scripts/test_display_host.sh; git diff --check; test -z \"$(git status --short)\"",
+      "exit_code": 1,
+      "output": "HEAD=19d4419797e5c6d1f2229cd207b56b9b8385ef2d\nRUNTIME_CONFIG_SSOT_PASS\n/bin/sh: CMAKE_BINARY_DIR: unbound variable\n",
+      "elapsed_seconds": 0.786,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 2048,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 8.39,
+      "output_policy": "stream",
+      "captured_output_chars": 115,
+      "output_truncated": false,
+      "current_rss_mb": 8.39,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "failed",
+      "elapsed_seconds": 0.786
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.103
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.075
+  },
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-13T06:50:52.648748+00:00",
+  "task_digest": "cb3ee347e7ae349ec4053ddbdedf42c8fa0ec830f0f62ad2315deb1322c8db22",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 2048,
+  "attempt_id": "020aef748da09f9d69082a25",
+  "daemon_version": "4.18.20"
+}
