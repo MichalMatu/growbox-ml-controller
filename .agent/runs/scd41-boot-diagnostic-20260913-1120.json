@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "scd41-boot-diagnostic-20260913-1120",
   "task_digest": "118a19e442791d7f021dd4392fbde8e41b299fe2f47045da2139806ebabe50a6",
-  "idle_timeout": 300,
-  "task_timeout": 300,
-  "memory_limit_mb": 1024,
-  "started_at": "2026-09-13T09:12:28.292581+00:00",
+  "status": "failed",
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-13T09:12:30.115226+00:00",
   "attempt_id": "43d87ee49ee881f6e7bc0a62",
   "daemon_version": "4.18.20",
   "daemon_pid": 31783,
-  "updated_at": "2026-09-13T09:12:28.292630+00:00",
+  "updated_at": "2026-09-13T09:12:30.314803+00:00",
   "pid": 31783
 }
