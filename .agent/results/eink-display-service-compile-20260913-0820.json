@@ -1,0 +1,60 @@
+{
+  "id": "eink-display-service-compile-20260913-0820",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "feature/eink-clay-status",
+  "allow_write": false,
+  "started_at": "2026-09-13T07:20:18.497929+00:00",
+  "command_timeout": 1200,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; expected=e566a8ccdd6e88c1a280e59a32fcdfb494c92097; actual=$(git rev-parse HEAD); echo HEAD=$actual; test \"$actual\" = \"$expected\"; /usr/bin/python3 scripts/check_runtime_config_ssot.py; HOST_BUILD_JOBS=2 bash scripts/test_display_host.sh; source scripts/source_idf.sh >/tmp/growbox-eink-service-idf.log 2>&1; root=$(pwd); build=$(mktemp -d)/idf; idf.py -B \"$build\" -D \"SDKCONFIG=$build/sdkconfig\" -D \"SDKCONFIG_DEFAULTS=$root/config/idf/sdkconfig.defaults;$root/config/idf/sdkconfig.defaults.n8r8\" -D GROWBOX_APP_MODE=climate-v6-real-inputs -D GROWBOX_BOARD_PROFILE=crowpanel-esp32s3-2_9-n8r8 -D GROWBOX_EINK_DISPLAY_ENABLED=1 -D GROWBOX_RF433_LOOPBACK_ENABLED=0 -D GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 -D GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 reconfigure >/tmp/growbox-eink-service-reconfigure.log 2>&1; for name in CrowPanelDisplayService CrowPanelSsd1680DisplayBackend DisplayMonochromeRaster Ssd1680FrameMapper; do target=$(ninja -C \"$build\" -t targets all | awk -F': ' -v n=\"$name\" '$0 ~ n \".cpp.obj\" {print $1; exit}'); echo ${name}_TARGET=$target; test -n \"$target\"; set +e; ninja -C \"$build\" -v \"$target\" >/tmp/growbox-eink-service-${name}.log 2>&1; rc=$?; set -e; echo ${name}_COMPILE_EXIT=$rc; if [ \"$rc\" -ne 0 ]; then tail -n 140 /tmp/growbox-eink-service-${name}.log; exit 1; fi; done; git diff --check; test -z \"$(git status --short)\"",
+      "exit_code": 0,
+      "output": "HEAD=e566a8ccdd6e88c1a280e59a32fcdfb494c92097\nRUNTIME_CONFIG_SSOT_PASS\n==> display-presenter\n-- Configuring done (0.1s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-presenter\n[100%] Built target display_presenter_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-presenter\n    Start 1: display_presenter_tests\n1/1 Test #1: display_presenter_tests ..........   Passed    0.00 sec\n\n100% tests passed, 0 tests failed out of 1\n\nTotal Test time (real) =   0.01 sec\n==> display-runtime\n-- Configuring done (0.1s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-runtime\n[100%] Built target display_runtime_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-runtime\n    Start 1: display_runtime_tests\n1/1 Test #1: display_runtime_tests ............   Passed    0.00 sec\n\n100% tests passed, 0 tests failed out of 1\n\nTotal Test time (real) =   0.01 sec\n==> display-observer\n-- Configuring done (0.1s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-observer\n[100%] Built target display_observer_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-observer\n    Start 1: display_observer_tests\n1/1 Test #1: display_observer_tests ...........   Passed    0.00 sec\n\n100% tests passed, 0 tests failed out of 1\n\nTotal Test time (real) =   0.01 sec\n==> display-raster\n-- Configuring done (0.1s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-raster\n[100%] Built target display_raster_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-raster\n    Start 1: display_raster_tests\n1/1 Test #1: display_raster_tests .............   Passed    0.00 sec\n\n100% tests passed, 0 tests failed out of 1\n\nTotal Test time (real) =   0.01 sec\n==> display-async\n-- Configuring done (0.1s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-async\n[100%] Built target display_async_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-async\n    Start 1: display_async_tests\n1/1 Test #1: display_async_tests ..............   Passed    0.00 sec\n\n100% tests passed, 0 tests failed out of 1\n\nTotal Test time (real) =   0.01 sec\nCrowPanelDisplayService_TARGET=esp-idf/src/CMakeFiles/__idf_src.dir/climate/display/CrowPanelDisplayService.cpp.obj\nCrowPanelDisplayService_COMPILE_EXIT=0\nCrowPanelSsd1680DisplayBackend_TARGET=esp-idf/src/CMakeFiles/__idf_src.dir/climate/display/CrowPanelSsd1680DisplayBackend.cpp.obj\nCrowPanelSsd1680DisplayBackend_COMPILE_EXIT=0\nDisplayMonochromeRaster_TARGET=esp-idf/src/CMakeFiles/__idf_src.dir/climate/display/DisplayMonochromeRaster.cpp.obj\nDisplayMonochromeRaster_COMPILE_EXIT=0\nSsd1680FrameMapper_TARGET=esp-idf/src/CMakeFiles/__idf_src.dir/climate/display/Ssd1680FrameMapper.cpp.obj\nSsd1680FrameMapper_COMPILE_EXIT=0\n",
+      "elapsed_seconds": 30.238,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 2048,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 99.02,
+      "output_policy": "stream",
+      "captured_output_chars": 3347,
+      "output_truncated": false,
+      "current_rss_mb": 14.39,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 30.238
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.095
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.073
+  },
+  "finished_at": "2026-09-13T07:20:50.864010+00:00",
+  "task_digest": "6b8276ca4598eb579a314c65b1c2bc8ea096d8c43758bcbb0dd8e13d8034c1f2",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 2048,
+  "attempt_id": "09f2584cbac91ff6c9e69954",
+  "daemon_version": "4.18.20"
+}
