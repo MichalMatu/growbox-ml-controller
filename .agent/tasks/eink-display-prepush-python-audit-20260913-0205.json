@@ -1,0 +1,14 @@
+{
+  "id": "eink-display-prepush-python-audit-20260913-0205",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "feature/eink-clay-status",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 300,
+  "task_timeout": 600,
+  "memory_limit_mb": 1024,
+  "commands": [
+    "set -euo pipefail; expected=86472b3585d41ec874d47608e066e458f12f9f88; actual=$(git rev-parse HEAD); echo HEAD=$actual; test \"$actual\" = \"$expected\"; echo PATH=$PATH; echo repo_venv_python=$([ -x .venv/bin/python ] && echo yes || echo no); for py in \"$(command -v python3 2>/dev/null || true)\" /usr/bin/python3 /opt/homebrew/bin/python3 /usr/local/bin/python3; do if [ -n \"$py\" ] && [ -x \"$py\" ]; then echo ===$py===; \"$py\" --version; \"$py\" -c 'import sys; print(sys.executable); import importlib.util; print(\"pytest=\" + str(importlib.util.find_spec(\"pytest\") is not None))'; fi; done"
+  ]
+}
