@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "eink-display-memory-footprint-20260913-0238",
   "task_digest": "877317407db6439da76b624a3d230d61bdbf76384a2de51df99f3366ce9247cc",
-  "idle_timeout": 300,
-  "task_timeout": 600,
-  "memory_limit_mb": 1024,
-  "started_at": "2026-09-13T00:38:16.539748+00:00",
+  "status": "done",
+  "failure_reason": null,
+  "finished_at": "2026-09-13T00:38:19.789257+00:00",
   "attempt_id": "65655c368e73bb931ac0929a",
   "daemon_version": "4.18.20",
   "daemon_pid": 16241,
-  "updated_at": "2026-09-13T00:38:16.539802+00:00",
+  "updated_at": "2026-09-13T00:38:20.057178+00:00",
   "pid": 16241
 }
