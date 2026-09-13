@@ -1,0 +1,61 @@
+{
+  "id": "eink-display-host-regression-20260913-1043-v3",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "feature/eink-clay-status",
+  "allow_write": false,
+  "started_at": "2026-09-13T08:42:40.479875+00:00",
+  "command_timeout": 1200,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; expected=4b414bdb3410e5358c37ee5c240506f9c2a54fe7; actual=$(git rev-parse HEAD); echo HEAD=$actual; test \"$actual\" = \"$expected\"; /usr/bin/python3 scripts/check_runtime_config_ssot.py; HOST_BUILD_JOBS=2 bash scripts/test_display_host.sh; git diff --check; test -z \"$(git status --short)\"",
+      "exit_code": 8,
+      "output": "HEAD=4b414bdb3410e5358c37ee5c240506f9c2a54fe7\nRUNTIME_CONFIG_SSOT_PASS\n==> display-presenter\n-- Configuring done (0.0s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-presenter\n[100%] Built target display_presenter_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-presenter\n    Start 1: display_presenter_tests\n1/1 Test #1: display_presenter_tests ..........   Passed    0.00 sec\n\n100% tests passed, 0 tests failed out of 1\n\nTotal Test time (real) =   0.00 sec\n==> display-runtime\n-- Configuring done (0.0s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-runtime\n[ 25%] Building CXX object CMakeFiles/display_runtime_tests.dir/test_main.cpp.o\n[ 50%] Linking CXX executable display_runtime_tests\n[100%] Built target display_runtime_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-runtime\n    Start 1: display_runtime_tests\n1/1 Test #1: display_runtime_tests ............   Passed    0.40 sec\n\n100% tests passed, 0 tests failed out of 1\n\nTotal Test time (real) =   0.40 sec\n==> display-observer\n-- Configuring done (0.1s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-observer\n[ 25%] Building CXX object CMakeFiles/display_observer_tests.dir/test_main.cpp.o\n[ 50%] Linking CXX executable display_observer_tests\n[100%] Built target display_observer_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-observer\n    Start 1: display_observer_tests\n1/1 Test #1: display_observer_tests ...........Subprocess aborted***Exception:   0.32 sec\nAssertion failed: (initial_frame.render_list.command_count == 21U), function testObserverProjectsAuthoritativeTelemetryIntoDisplayRuntime, file test_main.cpp, line 173.\n\n\n0% tests passed, 1 tests failed out of 1\n\nTotal Test time (real) =   0.33 sec\n\nThe following tests FAILED:\n\t  1 - display_observer_tests (Subprocess aborted)\nErrors while running CTest\n",
+      "elapsed_seconds": 2.215,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 2048,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 3.44,
+      "output_policy": "stream",
+      "captured_output_chars": 2238,
+      "output_truncated": false,
+      "current_rss_mb": 3.44,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "failed",
+      "elapsed_seconds": 2.215
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.091
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.069
+  },
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-13T08:42:44.754758+00:00",
+  "task_digest": "1f3b2b27c284e28cb1ece09c94e1ebdd9b10a023d783261908b514672a5a3332",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 2048,
+  "attempt_id": "5ecfae346c31f87a9e8df01f",
+  "daemon_version": "4.18.20"
+}
