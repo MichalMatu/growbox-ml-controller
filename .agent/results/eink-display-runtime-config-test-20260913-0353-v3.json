@@ -1,0 +1,60 @@
+{
+  "id": "eink-display-runtime-config-test-20260913-0353-v3",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "feature/eink-clay-status",
+  "allow_write": false,
+  "started_at": "2026-09-13T01:55:49.166225+00:00",
+  "command_timeout": 600,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; expected=0ac9a5306f9af7f914a178e16dffc70dfabf01bd; actual=$(git rev-parse HEAD); echo HEAD=$actual; test \"$actual\" = \"$expected\"; /usr/bin/python3 scripts/check_runtime_config_ssot.py; root=$(pwd); cat > /tmp/growbox-eink-defaults.cmake <<EOF\nset(GROWBOX_APP_CLIMATE_V6_REAL_INPUTS 1)\ninclude(\"$root/config/runtime/GrowboxRuntimeConfig.cmake\")\nconfigure_file(\"$root/src/climate/runtime/RuntimeBuildConfig.h.in\" \"/tmp/growbox-eink-RuntimeBuildConfig.h\" @ONLY)\nEOF\ncmake -P /tmp/growbox-eink-defaults.cmake; grep -F 'inline constexpr bool kEinkDisplayEnabled = 0 != 0;' /tmp/growbox-eink-RuntimeBuildConfig.h; grep -F 'inline constexpr int kEinkCsGpio = -1;' /tmp/growbox-eink-RuntimeBuildConfig.h; grep -F 'inline constexpr int kEinkDcGpio = -1;' /tmp/growbox-eink-RuntimeBuildConfig.h; grep -F 'inline constexpr int kEinkRstGpio = -1;' /tmp/growbox-eink-RuntimeBuildConfig.h; grep -F 'inline constexpr int kEinkBusyGpio = -1;' /tmp/growbox-eink-RuntimeBuildConfig.h; ! grep -F '@GROWBOX_EINK' /tmp/growbox-eink-RuntimeBuildConfig.h; cat > /tmp/growbox-eink-missing.cmake <<EOF\nset(GROWBOX_APP_CLIMATE_V6_REAL_INPUTS 1)\nset(GROWBOX_EINK_DISPLAY_ENABLED 1)\ninclude(\"$root/config/runtime/GrowboxRuntimeConfig.cmake\")\nEOF\nif cmake -P /tmp/growbox-eink-missing.cmake >/tmp/growbox-eink-missing.out 2>&1; then echo expected_missing_pin_failure; exit 1; fi; grep -F 'must be an assigned non-negative GPIO' /tmp/growbox-eink-missing.out; cat > /tmp/growbox-eink-valid.cmake <<EOF\nset(GROWBOX_APP_CLIMATE_V6_REAL_INPUTS 1)\nset(GROWBOX_EINK_DISPLAY_ENABLED 1)\nset(GROWBOX_EINK_CS_GPIO 1)\nset(GROWBOX_EINK_DC_GPIO 2)\nset(GROWBOX_EINK_RST_GPIO 3)\nset(GROWBOX_EINK_BUSY_GPIO 4)\ninclude(\"$root/config/runtime/GrowboxRuntimeConfig.cmake\")\nEOF\ncmake -P /tmp/growbox-eink-valid.cmake; cat > /tmp/growbox-eink-i2c-conflict.cmake <<EOF\nset(GROWBOX_APP_CLIMATE_V6_REAL_INPUTS 1)\nset(GROWBOX_EINK_DISPLAY_ENABLED 1)\nset(GROWBOX_EINK_CS_GPIO 8)\nset(GROWBOX_EINK_DC_GPIO 2)\nset(GROWBOX_EINK_RST_GPIO 3)\nset(GROWBOX_EINK_BUSY_GPIO 4)\ninclude(\"$root/config/runtime/GrowboxRuntimeConfig.cmake\")\nEOF\nif cmake -P /tmp/growbox-eink-i2c-conflict.cmake >/tmp/growbox-eink-i2c-conflict.out 2>&1; then echo expected_i2c_conflict_failure; exit 1; fi; grep -F 'e-ink display and I2C enabled together' /tmp/growbox-eink-i2c-conflict.out; cat > /tmp/growbox-eink-duplicate.cmake <<EOF\nset(GROWBOX_APP_CLIMATE_V6_REAL_INPUTS 1)\nset(GROWBOX_EINK_DISPLAY_ENABLED 1)\nset(GROWBOX_EINK_CS_GPIO 1)\nset(GROWBOX_EINK_DC_GPIO 1)\nset(GROWBOX_EINK_RST_GPIO 3)\nset(GROWBOX_EINK_BUSY_GPIO 4)\ninclude(\"$root/config/runtime/GrowboxRuntimeConfig.cmake\")\nEOF\nif cmake -P /tmp/growbox-eink-duplicate.cmake >/tmp/growbox-eink-duplicate.out 2>&1; then echo expected_duplicate_pin_failure; exit 1; fi; grep -F 'e-ink display control pins' /tmp/growbox-eink-duplicate.out; cat > /tmp/growbox-eink-wrong-mode.cmake <<EOF\nset(GROWBOX_APP_CLIMATE_V6_REAL_INPUTS 0)\nset(GROWBOX_EINK_DISPLAY_ENABLED 1)\nset(GROWBOX_EINK_CS_GPIO 1)\nset(GROWBOX_EINK_DC_GPIO 2)\nset(GROWBOX_EINK_RST_GPIO 3)\nset(GROWBOX_EINK_BUSY_GPIO 4)\ninclude(\"$root/config/runtime/GrowboxRuntimeConfig.cmake\")\nEOF\nif cmake -P /tmp/growbox-eink-wrong-mode.cmake >/tmp/growbox-eink-wrong-mode.out 2>&1; then echo expected_wrong_mode_failure; exit 1; fi; grep -F 'GROWBOX_EINK_DISPLAY_ENABLED requires' /tmp/growbox-eink-wrong-mode.out; grep -F 'GROWBOX_APP_MODE=climate-v6-real-inputs' /tmp/growbox-eink-wrong-mode.out; cat > /tmp/growbox-eink-rf-conflict.cmake <<EOF\nset(GROWBOX_APP_CLIMATE_V6_REAL_INPUTS 1)\nset(GROWBOX_RF433_LOOPBACK_ENABLED 1)\nset(GROWBOX_RF433_TX_GPIO 5)\nset(GROWBOX_RF433_RX_GPIO 14)\nset(GROWBOX_EINK_DISPLAY_ENABLED 1)\nset(GROWBOX_EINK_CS_GPIO 14)\nset(GROWBOX_EINK_DC_GPIO 2)\nset(GROWBOX_EINK_RST_GPIO 3)\nset(GROWBOX_EINK_BUSY_GPIO 4)\ninclude(\"$root/config/runtime/GrowboxRuntimeConfig.cmake\")\nEOF\nif cmake -P /tmp/growbox-eink-rf-conflict.cmake >/tmp/growbox-eink-rf-conflict.out 2>&1; then echo expected_rf_conflict_failure; exit 1; fi; grep -F 'e-ink display and RF433 enabled together' /tmp/growbox-eink-rf-conflict.out; cat > /tmp/growbox-eink-sd-conflict.cmake <<EOF\nset(GROWBOX_APP_CLIMATE_V6_REAL_INPUTS 1)\nset(GROWBOX_STAGE27_SD_ENABLED 1)\nset(GROWBOX_EINK_DISPLAY_ENABLED 1)\nset(GROWBOX_EINK_CS_GPIO 10)\nset(GROWBOX_EINK_DC_GPIO 2)\nset(GROWBOX_EINK_RST_GPIO 3)\nset(GROWBOX_EINK_BUSY_GPIO 4)\ninclude(\"$root/config/runtime/GrowboxRuntimeConfig.cmake\")\nEOF\nif cmake -P /tmp/growbox-eink-sd-conflict.cmake >/tmp/growbox-eink-sd-conflict.out 2>&1; then echo expected_sd_conflict_failure; exit 1; fi; grep -F 'e-ink display control and SD enabled together' /tmp/growbox-eink-sd-conflict.out; bash scripts/test_display_host.sh; git diff --check; test -z \"$(git status --short)\"",
+      "exit_code": 0,
+      "output": "HEAD=0ac9a5306f9af7f914a178e16dffc70dfabf01bd\nRUNTIME_CONFIG_SSOT_PASS\ninline constexpr bool kEinkDisplayEnabled = 0 != 0;\ninline constexpr int kEinkCsGpio = -1;\ninline constexpr int kEinkDcGpio = -1;\ninline constexpr int kEinkRstGpio = -1;\ninline constexpr int kEinkBusyGpio = -1;\n  GROWBOX_EINK_CS_GPIO must be an assigned non-negative GPIO (e-ink display\n  GPIO conflict (e-ink display and I2C enabled together):\n  GPIO conflict (e-ink display control pins): GROWBOX_EINK_CS_GPIO=1 and\n  GROWBOX_EINK_DISPLAY_ENABLED requires\n  GROWBOX_APP_MODE=climate-v6-real-inputs\n  GPIO conflict (e-ink display and RF433 enabled together):\n  GPIO conflict (e-ink display control and SD enabled together):\n==> display-presenter\n-- Configuring done (0.1s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-presenter\n[100%] Built target display_presenter_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-presenter\n    Start 1: display_presenter_tests\n1/1 Test #1: display_presenter_tests ..........   Passed    0.00 sec\n\n100% tests passed, 0 tests failed out of 1\n\nTotal Test time (real) =   0.01 sec\n==> display-runtime\n-- Configuring done (0.0s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-runtime\n[100%] Built target display_runtime_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-runtime\n    Start 1: display_runtime_tests\n1/1 Test #1: display_runtime_tests ............   Passed    0.01 sec\n\n100% tests passed, 0 tests failed out of 1\n\nTotal Test time (real) =   0.01 sec\n==> display-observer\n-- Configuring done (0.1s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-observer\n[100%] Built target display_observer_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-observer\n    Start 1: display_observer_tests\n1/1 Test #1: display_observer_tests ...........   Passed    0.00 sec\n\n100% tests passed, 0 tests failed out of 1\n\nTotal Test time (real) =   0.01 sec\n",
+      "elapsed_seconds": 1.37,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 2048,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 1.72,
+      "output_policy": "stream",
+      "captured_output_chars": 2301,
+      "output_truncated": false,
+      "current_rss_mb": 1.72,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 1.37
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.1
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.067
+  },
+  "finished_at": "2026-09-13T01:55:52.272750+00:00",
+  "task_digest": "aa6a2264b5c4255aa3b340e7000ae58187dd717ff0ea4a2d1b117880ce58253c",
+  "idle_timeout": 300,
+  "task_timeout": 1200,
+  "memory_limit_mb": 2048,
+  "attempt_id": "758adc06f33af757371a2c69",
+  "daemon_version": "4.18.20"
+}
