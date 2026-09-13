@@ -1,0 +1,14 @@
+{
+  "id": "eink-display-stage-close-flash-20260913-1052-v6b",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "feature/eink-clay-status",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 2400,
+  "task_timeout": 3000,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "set -euo pipefail; test \"$(git rev-parse HEAD)\" = 01db8228e6d822b5c64359abd8bf2d85341b5919; PORT=/dev/cu.usbserial-1130; source scripts/source_idf.sh >/tmp/eink-v6b-idf.log 2>&1; python -m esptool --chip esp32s3 -p \"$PORT\" chip_id 2>&1 | tee /tmp/eink-v6b-chip.log; grep -q 'ESP32-S3' /tmp/eink-v6b-chip.log; build=$(mktemp -d)/stage27c; export STAGE27C_BUILD_DIR=\"$build\" PORT GROWBOX_EINK_DISPLAY_ENABLED=1 GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0; bash scripts/stage27c_crowpanel.sh flash; generated=$(find \"$build\" -path '*/generated/climate/runtime/RuntimeBuildConfig.h' -print -quit); grep -q 'kEinkDisplayEnabled = 1 != 0' \"$generated\"; grep -q 'kRealOutputsEnabled = 0 != 0' \"$generated\"; grep -q 'kThermalTestSequenceEnabled = 0 != 0' \"$generated\"; git diff --check; test -z \"$(git status --short)\""
+  ]
+}
