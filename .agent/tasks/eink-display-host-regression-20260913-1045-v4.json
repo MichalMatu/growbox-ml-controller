@@ -1,0 +1,14 @@
+{
+  "id": "eink-display-host-regression-20260913-1045-v4",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "feature/eink-clay-status",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 1200,
+  "task_timeout": 1800,
+  "memory_limit_mb": 2048,
+  "commands": [
+    "set -euo pipefail; expected=01db8228e6d822b5c64359abd8bf2d85341b5919; actual=$(git rev-parse HEAD); echo HEAD=$actual; test \"$actual\" = \"$expected\"; /usr/bin/python3 scripts/check_runtime_config_ssot.py; HOST_BUILD_JOBS=2 bash scripts/test_display_host.sh; git diff --check; test -z \"$(git status --short)\""
+  ]
+}
