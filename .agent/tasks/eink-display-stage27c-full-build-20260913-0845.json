@@ -1,0 +1,14 @@
+{
+  "id": "eink-display-stage27c-full-build-20260913-0845",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "feature/eink-clay-status",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 2400,
+  "task_timeout": 3000,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "set -euo pipefail; expected=950076ace1d41b10dfdd7a20e494e03e976a5339; actual=$(git rev-parse HEAD); echo HEAD=$actual; test \"$actual\" = \"$expected\"; /usr/bin/python3 scripts/check_runtime_config_ssot.py; bash -n scripts/stage27c_crowpanel.sh; build=$(mktemp -d)/stage27c; export STAGE27C_BUILD_DIR=\"$build\"; export GROWBOX_EINK_DISPLAY_ENABLED=1; export GROWBOX_RF433_LOOPBACK_ENABLED=0; export GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0; export GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0; set +e; bash scripts/stage27c_crowpanel.sh build >/tmp/growbox-eink-stage27c-full-build.log 2>&1; rc=$?; set -e; echo FULL_BUILD_EXIT=$rc; if [ \"$rc\" -ne 0 ]; then tail -n 200 /tmp/growbox-eink-stage27c-full-build.log; exit 1; fi; tail -n 80 /tmp/growbox-eink-stage27c-full-build.log; generated=$(find \"$build\" -path '*/generated/climate/runtime/RuntimeBuildConfig.h' -print -quit); test -n \"$generated\"; grep -q 'kEinkDisplayEnabled = 1 != 0' \"$generated\"; grep -q 'kEinkSclkGpio = 12' \"$generated\"; grep -q 'kEinkMosiGpio = 11' \"$generated\"; grep -q 'kEinkPowerGpio = 7' \"$generated\"; grep -q '^CONFIG_BT_NIMBLE_ENABLED=y' \"$build/sdkconfig\"; grep -q '^CONFIG_ESP_MAIN_TASK_STACK_SIZE=12288' \"$build/sdkconfig\"; test -f \"$build/growbox_ml_controller.bin\"; ls -lh \"$build/growbox_ml_controller.bin\"; git diff --check; test -z \"$(git status --short)\""
+  ]
+}
