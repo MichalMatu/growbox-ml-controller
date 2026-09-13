@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "eink-display-host-regression-20260913-1043-v3",
+  "task_digest": "1f3b2b27c284e28cb1ece09c94e1ebdd9b10a023d783261908b514672a5a3332",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-13T08:42:40.479829+00:00",
+  "attempt_id": "5ecfae346c31f87a9e8df01f",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 83894,
+  "updated_at": "2026-09-13T08:42:40.479917+00:00",
+  "pid": 83894
+}
