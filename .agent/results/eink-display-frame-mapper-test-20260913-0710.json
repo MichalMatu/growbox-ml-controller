@@ -1,0 +1,60 @@
+{
+  "id": "eink-display-frame-mapper-test-20260913-0710",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "feature/eink-clay-status",
+  "allow_write": false,
+  "started_at": "2026-09-13T07:00:49.687356+00:00",
+  "command_timeout": 900,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -euo pipefail; expected=0b8d2a42b7fcfbe0d9b4bd83c5950d29c72cbc57; actual=$(git rev-parse HEAD); echo HEAD=$actual; test \"$actual\" = \"$expected\"; HOST_BUILD_JOBS=2 bash scripts/test_display_host.sh; source scripts/source_idf.sh >/tmp/growbox-eink-mapper-idf.log 2>&1; compiler=$(command -v xtensa-esp32s3-elf-g++); test -n \"$compiler\"; \"$compiler\" -std=c++17 -Wall -Wextra -Wpedantic -Werror -Isrc -c src/climate/display/Ssd1680FrameMapper.cpp -o /tmp/growbox-ssd1680-mapper.o; git diff --check; test -z \"$(git status --short)\"",
+      "exit_code": 0,
+      "output": "HEAD=0b8d2a42b7fcfbe0d9b4bd83c5950d29c72cbc57\n==> display-presenter\n-- Configuring done (0.1s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-presenter\n[100%] Built target display_presenter_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-presenter\n    Start 1: display_presenter_tests\n1/1 Test #1: display_presenter_tests ..........   Passed    0.00 sec\n\n100% tests passed, 0 tests failed out of 1\n\nTotal Test time (real) =   0.01 sec\n==> display-runtime\n-- Configuring done (0.0s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-runtime\n[100%] Built target display_runtime_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-runtime\n    Start 1: display_runtime_tests\n1/1 Test #1: display_runtime_tests ............   Passed    0.00 sec\n\n100% tests passed, 0 tests failed out of 1\n\nTotal Test time (real) =   0.01 sec\n==> display-observer\n-- Configuring done (0.0s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-observer\n[100%] Built target display_observer_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-observer\n    Start 1: display_observer_tests\n1/1 Test #1: display_observer_tests ...........   Passed    0.00 sec\n\n100% tests passed, 0 tests failed out of 1\n\nTotal Test time (real) =   0.01 sec\n==> display-raster\n-- Configuring done (0.0s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-raster\n[ 50%] Building CXX object CMakeFiles/display_raster_tests.dir/test_main.cpp.o\n[ 50%] Building CXX object CMakeFiles/display_raster_tests.dir/Users/michal/agent-workspace/repos/growbox-ml-controller/work/src/climate/display/Ssd1680FrameMapper.cpp.o\n[ 75%] Linking CXX executable display_raster_tests\n[100%] Built target display_raster_tests\nTest project /Users/michal/agent-workspace/repos/growbox-ml-controller/work/build/host-display-raster\n    Start 1: display_raster_tests\n1/1 Test #1: display_raster_tests .............   Passed    0.49 sec\n\n100% tests passed, 0 tests failed out of 1\n\nTotal Test time (real) =   0.49 sec\n",
+      "elapsed_seconds": 4.012,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 2048,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 2.11,
+      "output_policy": "stream",
+      "captured_output_chars": 2476,
+      "output_truncated": false,
+      "current_rss_mb": 2.11,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 1,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 4.012
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.105
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.066
+  },
+  "finished_at": "2026-09-13T07:00:55.881660+00:00",
+  "task_digest": "c39890a0f9c865b96e17bfe0ab213c6d853f4685eb79581249d325ce7a5a0b3e",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 2048,
+  "attempt_id": "ea6ca0b71abd0a68a87bdab6",
+  "daemon_version": "4.18.20"
+}
