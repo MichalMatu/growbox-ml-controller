@@ -1,0 +1,14 @@
+{
+  "id": "eink-display-crowpanel-port-verify-20260913-0931-v2",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "feature/eink-clay-status",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 300,
+  "task_timeout": 600,
+  "memory_limit_mb": 1024,
+  "commands": [
+    "set -euo pipefail; expected=950076ace1d41b10dfdd7a20e494e03e976a5339; actual=$(git rev-parse HEAD); echo HEAD=$actual; test \"$actual\" = \"$expected\"; port=/dev/cu.usbserial-1130; test -e \"$port\"; source scripts/source_idf.sh >/tmp/growbox-eink-port-idf.log 2>&1; esptool.py --port \"$port\" chip_id; git diff --check; test -z \"$(git status --short)\""
+  ]
+}
