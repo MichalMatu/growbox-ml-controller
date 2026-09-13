@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "eink-display-crowpanel-bootlog-20260913-0950",
+  "task_digest": "11af98a9b86b2526559f5d81040189bb0955ea609b73a6a67993569557b5292b",
+  "idle_timeout": 300,
+  "task_timeout": 300,
+  "memory_limit_mb": 1024,
+  "started_at": "2026-09-13T07:49:48.831528+00:00",
+  "attempt_id": "3fabfa7bf6811e7e1fcd4afa",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 98983,
+  "updated_at": "2026-09-13T07:49:48.831580+00:00",
+  "pid": 98983
+}
