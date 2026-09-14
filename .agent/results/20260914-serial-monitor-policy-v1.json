@@ -1,0 +1,9 @@
+{
+  "id": "20260914-serial-monitor-policy-v1",
+  "status": "failed",
+  "failure_reason": "invalid_task_file",
+  "started_at": null,
+  "finished_at": "2026-09-14T09:01:45.008072+00:00",
+  "daemon_version": "4.18.20",
+  "error": "JSONDecodeError: Expecting ',' delimiter: line 13 column 239 (char 676)"
+}
