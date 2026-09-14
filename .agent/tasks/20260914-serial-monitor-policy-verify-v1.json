@@ -1,0 +1,17 @@
+{
+  "id": "20260914-serial-monitor-policy-verify-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 180,
+  "task_timeout": 600,
+  "memory_limit_mb": 1024,
+  "commands": [
+    "git fetch origin main && git reset --hard origin/main >/dev/null && test \"$(git rev-parse HEAD)\" = \"880ec9538b19f507310b7ab3fc3eafdb315452bd\" && test -z \"$(git status --porcelain)\"",
+    "/opt/homebrew/bin/pre-commit run --all-files",
+    "python3 -c \"import runpy; d=runpy.run_path('tests/test_serial_monitor_policy.py'); d['test_default_monitor_is_no_reset_and_reset_mode_is_explicit'](); d['test_vscode_monitor_defaults_to_no_reset'](); print('serial monitor policy tests: OK')\"",
+    "test -z \"$(git status --porcelain)\" && git rev-parse HEAD"
+  ]
+}
