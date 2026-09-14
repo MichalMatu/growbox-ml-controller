@@ -1,0 +1,19 @@
+{
+  "id": "20260914-four-page-display-verify-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 600,
+  "idle_timeout": 240,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch origin main && git reset --hard origin/main >/dev/null && test \"$(git rev-parse HEAD)\" = \"f53979923ad47dd9422f5457e8b54596c7fdf093\" && test -z \"$(git status --porcelain)\" && echo EXACT_SHA_OK",
+    "/opt/homebrew/bin/pre-commit run --files src/climate/display/DisplayPresenter.h src/climate/display/DisplayPresenter.cpp test/test_display_presenter/test_main.cpp test/test_display_runtime/test_main.cpp test/test_display_observer/test_main.cpp",
+    "bash scripts/test_display_host.sh",
+    "export GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 GROWBOX_EINK_DISPLAY_ENABLED=1 GROWBOX_FIRMWARE_GIT_SHA=f53979923ad47dd9422f5457e8b54596c7fdf093; bash scripts/stage27c_crowpanel.sh build",
+    "test -z \"$(git status --porcelain)\" && test \"$(git rev-parse HEAD)\" = \"f53979923ad47dd9422f5457e8b54596c7fdf093\" && echo FINAL_CLEAN_SHA_OK"
+  ]
+}
