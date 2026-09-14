@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260914-scd41-ab-after-cable-fix-v1",
+  "task_digest": "cc4e80adf47fe0244fa4bc4251d218fa29af721a4328eadc4bb733a134bd95b2",
+  "idle_timeout": 240,
+  "task_timeout": 1200,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-14T11:34:53.628862+00:00",
+  "attempt_id": "766cfbde307d35c5f584a48e",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 31474,
+  "updated_at": "2026-09-14T11:34:53.628989+00:00",
+  "pid": 31474
+}
