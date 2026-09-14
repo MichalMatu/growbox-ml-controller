@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260914-scd41-eink-enabled-qual-v1",
+  "task_digest": "daf3446a0bb0e5c1a1086461119a86648dc21ebcb9af1631349e19daed188a58",
+  "idle_timeout": 240,
+  "task_timeout": 1200,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-14T11:39:23.957599+00:00",
+  "attempt_id": "1a8ca1e1e61129eb7b5de9f2",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 35865,
+  "updated_at": "2026-09-14T11:39:23.957789+00:00",
+  "pid": 35865
+}
