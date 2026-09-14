@@ -1,0 +1,17 @@
+{
+  "id": "20260914-scd41-command-ownership-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 90,
+  "idle_timeout": 180,
+  "task_timeout": 240,
+  "memory_limit_mb": 1024,
+  "commands": [
+    "git fetch origin main && git reset --hard origin/main >/dev/null && test \"$(git rev-parse HEAD)\" = \"880ec9538b19f507310b7ab3fc3eafdb315452bd\" && test -z \"$(git status --porcelain)\"",
+    "echo SCD4X_CALLS_BEGIN; git grep -n 'scd4x_' -- src components/sensirion_scd4x ':!components/sensirion_scd4x/scd4x_i2c.c' ':!components/sensirion_scd4x/scd4x_i2c.h' || true; echo SCD4X_CALLS_END",
+    "echo HAL_BIND_CALLS_BEGIN; git grep -n 'growbox_sensirion_i2c_bind_device' -- src components || true; echo HAL_BIND_CALLS_END"
+  ]
+}
