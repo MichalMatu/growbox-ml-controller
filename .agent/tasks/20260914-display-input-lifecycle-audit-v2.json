@@ -1,0 +1,20 @@
+{
+  "id": "20260914-display-input-lifecycle-audit-v2",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 120,
+  "idle_timeout": 180,
+  "task_timeout": 480,
+  "memory_limit_mb": 2048,
+  "commands": [
+    "git fetch origin main && git reset --hard origin/main >/dev/null && test \"$(git rev-parse HEAD)\" = \"dd6e0e860b567814a95ffa25bc3516124f254919\" && test -z \"$(git status --porcelain)\" && echo EXACT_SHA_OK",
+    "printf '%s\\n' '=== DISPLAY INPUT/WIRING ==='; grep -RIn -E 'DisplayButton|handleButton\\(|requestRefresh\\(|CrowPanelDisplayService|DisplayRuntimeController|DisplayObserver' src main test tests 2>/dev/null | head -n 500 || true",
+    "printf '%s\\n' '=== DISPLAY PAGE/PRESENTER TESTS ==='; grep -RIn -E 'DisplayPage::|DisplayNavigation|DisplayRefresh|Physical refresh|eink_display|display worker|Clay' test tests src 2>/dev/null | head -n 800 || true",
+    "printf '%s\\n' '=== PANEL INPUT/GPIO REFERENCES ==='; grep -RIn -E 'button|BUTTON|GPIO_MODE_INPUT|rotary|encoder|panel.*input|input.*panel' src main config test tests 2>/dev/null | head -n 600 || true",
+    "printf '%s\\n' '=== DISPLAY TEST TARGET REFERENCES ==='; grep -RIn -E 'DisplayRuntime|DisplayPresenter|DisplayTelemetryObserver|CrowPanelDisplayService|DisplayAsyncTransaction|DisplayClay' test/host tests CMakeLists.txt test/host/CMakeLists.txt 2>/dev/null | head -n 800 || true",
+    "test -z \"$(git status --porcelain)\" && echo FINAL_CLEAN_OK"
+  ]
+}
