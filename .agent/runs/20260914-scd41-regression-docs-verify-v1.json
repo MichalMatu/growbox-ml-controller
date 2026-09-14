@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260914-scd41-regression-docs-verify-v1",
+  "task_digest": "69f7818152ff9b5cd794ee9b84323beacd0b147c9d5ddc83e04bd66666855d74",
+  "idle_timeout": 180,
+  "task_timeout": 600,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-14T11:55:02.954030+00:00",
+  "attempt_id": "545fb7082a83ec858fd83079",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 59152,
+  "updated_at": "2026-09-14T11:55:02.954120+00:00",
+  "pid": 59152
+}
