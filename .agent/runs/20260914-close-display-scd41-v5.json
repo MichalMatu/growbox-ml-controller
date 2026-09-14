@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 3,
+  "index": 4,
   "total": 5,
-  "command": "/opt/homebrew/bin/pre-commit run --files src/climate/display/DisplayPresenter.cpp src/climate/input/sensors/Scd41InsideSource.h src/climate/input/sensors/Scd41InsideSource.cpp test/test_display_presenter/test_main.cpp test/test_display_observer/test_main.cpp test/test_display_runtime/test_main.cpp tests/test_scd41_startup_policy.py && python3 - <<'PY'\nimport runpy\nns = runpy.run_path('tests/test_scd41_startup_policy.py')\nfor name in ('test_scd41_clean_start_sequence_is_preserved','test_scd41_availability_depends_on_periodic_start_result','test_scd41_no_data_recovery_is_one_shot_and_delayed'):\n    ns[name]()\nprint('SCD41_POLICY_TESTS_PASS')\nPY\nbash scripts/test_display_host.sh",
-  "pid": 29985,
+  "command": "export GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 GROWBOX_EINK_DISPLAY_ENABLED=1; bash scripts/stage27c_crowpanel.sh build",
+  "pid": 30370,
   "timeout": 900,
   "idle_timeout": 300,
   "memory_limit_mb": 4096,
-  "started_at": "2026-09-14T12:46:00.901302+00:00",
-  "stage_name": "command-3",
-  "stage_index": 3,
+  "started_at": "2026-09-14T12:46:06.576345+00:00",
+  "stage_name": "command-4",
+  "stage_index": 4,
   "stage_total": 5,
   "stage_phase": "commands",
   "task_id": "20260914-close-display-scd41-v5",
@@ -18,5 +18,5 @@
   "task_digest": "e48387cb9dab351fda6ea6750d4eca3bddd5815332449d4648d7f8c970f0f772",
   "daemon_version": "4.18.20",
   "daemon_pid": 29819,
-  "updated_at": "2026-09-14T12:46:00.974197+00:00"
+  "updated_at": "2026-09-14T12:46:06.655503+00:00"
 }
