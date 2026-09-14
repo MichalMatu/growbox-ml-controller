@@ -1,0 +1,18 @@
+{
+  "id": "20260914-scd41-passive-stall-confirm-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 180,
+  "idle_timeout": 120,
+  "task_timeout": 600,
+  "memory_limit_mb": 2048,
+  "commands": [
+    "git fetch origin main && git reset --hard origin/main >/dev/null && test \"$(git rev-parse HEAD)\" = \"f53979923ad47dd9422f5457e8b54596c7fdf093\" && test -z \"$(git status --porcelain)\" && echo EXACT_SHA_OK",
+    "if test -c /dev/cu.usbserial-1130; then echo TARGET_PRESENT=1; if lsof /dev/cu.usbserial-1130 >/dev/null 2>&1; then echo TARGET_BUSY; exit 3; else echo TARGET_FREE=1; fi; else echo TARGET_PRESENT=0; exit 2; fi",
+    "python3 - <<'PY'\nimport os, serial, time\np='/dev/cu.usbserial-1130'\nif not os.path.exists(p):\n    print('MONITOR_TARGET_MISSING'); raise SystemExit(4)\ns=serial.Serial(); s.port=p; s.baudrate=115200; s.timeout=0.25; s.dtr=False; s.rts=False; s.open()\nstart=time.monotonic(); lines=[]\nwhile time.monotonic()-start < 75.0:\n    raw=s.readline()\n    if raw:\n        lines.append((time.monotonic()-start, raw.decode('utf-8', errors='replace').rstrip()))\ns.close()\nfw='f53979923ad47dd9422f5457e8b54596c7fdf093'\nsamples=[]; ages=[]; errs=[]\nfor dt,x in lines:\n    if 'scd_samples=' in x:\n        try: samples.append((dt,int(x.split('scd_samples=',1)[1].split()[0])))\n        except Exception: pass\n    if 'scd_age_ms=' in x:\n        try: ages.append((dt,int(x.split('scd_age_ms=',1)[1].split()[0])))\n        except Exception: pass\n    if ('scd_read_errors=' in x and 'scd_read_errors=0' not in x) or ('scd_invalid=' in x and 'scd_invalid=0' not in x): errs.append((dt,x))\nprint('TOTAL_LINES',len(lines))\nprint('FIRMWARE_SEEN',int(any(('firmware_sha='+fw) in x for _,x in lines)))\nprint('RESET_LINES',sum(('ESP-ROM:esp32s3' in x or 'rst:0x' in x) for _,x in lines))\nprint('SCD_SAMPLE_POINTS',samples[:3],samples[-3:] if samples else [])\nprint('SCD_MAX_SAMPLES',max((v for _,v in samples), default=-1))\nprint('SCD_LAST_AGE_MS',ages[-1][1] if ages else -1)\nprint('SCD_ERROR_LINES',len(errs))\nprint('EINK_REFRESH_SUCCESS_COUNT',sum('Physical refresh completed' in x for _,x in lines))\nprint('TIMELINE_BEGIN')\nfor dt,x in lines:\n    if ('scd_samples=' in x or 'Physical refresh completed' in x or 'Guru Meditation' in x or 'brownout' in x.lower() or 'rst:0x' in x):\n        print(f'{dt:07.2f}s | {x}')\nprint('TIMELINE_END')\nPY",
+    "test -z \"$(git status --porcelain)\" && test \"$(git rev-parse HEAD)\" = \"f53979923ad47dd9422f5457e8b54596c7fdf093\" && echo FINAL_CLEAN_SHA_OK"
+  ]
+}
