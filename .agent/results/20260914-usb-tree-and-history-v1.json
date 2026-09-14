@@ -1,0 +1,116 @@
+{
+  "id": "20260914-usb-tree-and-history-v1",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "started_at": "2026-09-14T10:58:10.311119+00:00",
+  "command_timeout": 90,
+  "edits": {},
+  "commands": [
+    {
+      "command": "git fetch origin main >/dev/null && test -z \"$(git status --porcelain)\" && echo HEAD=$(git rev-parse HEAD)",
+      "exit_code": 0,
+      "output": "From https://github.com/MichalMatu/growbox-ml-controller\n * branch                main       -> FETCH_HEAD\nHEAD=a92074b74b055c58c0949c7c38f4896638ebf227\n",
+      "elapsed_seconds": 0.862,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 1024,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 3.27,
+      "output_policy": "stream",
+      "captured_output_chars": 153,
+      "output_truncated": false,
+      "current_rss_mb": 3.27,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "python3 - <<'PY'\nimport subprocess,re\np=subprocess.run(['ioreg','-p','IOUSB','-l','-w','0'],capture_output=True,text=True,timeout=30)\nprint('IOUSB_RC',p.returncode)\nprint('IOUSB_RELEVANT_BEGIN')\nblock=[]\nfor line in p.stdout.splitlines():\n    if line.startswith('+-o ') or line.startswith('  +-o ') or line.startswith('    +-o ') or line.startswith('      +-o '):\n        if block:\n            txt='\\n'.join(block); low=txt.lower()\n            if any(k in low for k in ('1a86','303a','10c4','ch34','ch910','qin','wch','espressif','cp210','usb serial','serial')):\n                print(txt)\n        block=[line]\n    elif block:\n        if any(k in line.lower() for k in ('usb product name','usb vendor name','idvendor','idproduct','locationid','usb serial number')):\n            block.append(line)\nif block:\n    txt='\\n'.join(block); low=txt.lower()\n    if any(k in low for k in ('1a86','303a','10c4','ch34','ch910','qin','wch','espressif','cp210','usb serial','serial')): print(txt)\nprint('IOUSB_RELEVANT_END')\nPY",
+      "exit_code": 0,
+      "output": "IOUSB_RC 0\nIOUSB_RELEVANT_BEGIN\n  +-o AppleT8103USBXHCI@00000000  <class AppleT8103USBXHCI, id 0x1000003f6, registered, matched, active, busy 0 (63 ms), retain 59>\n  | |   \"locationID\" = 0\n  |       \"idProduct\" = 29987\n  |       \"USB Product Name\" = \"USB Serial\"\n  |       \"locationID\" = 1048576\n  |       \"idVendor\" = 6790\n      +-o USB Type-C Digital AV Adapter@01140000  <class IOUSBHostDevice, id 0x10001650e, registered, matched, active, busy 0 (31 ms), retain 23>\n            \"USB Serial Number\" = \"000000000000\"\n            \"USB Vendor Name\" = \"xxxxxxxx\"\n            \"USB Product Name\" = \"USB Type-C Digital AV Adapter\"\n            \"idVendor\" = 13372\n            \"idProduct\" = 0\n            \"locationID\" = 18087936\nIOUSB_RELEVANT_END\n",
+      "elapsed_seconds": 0.426,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 1024,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 6.02,
+      "output_policy": "stream",
+      "captured_output_chars": 741,
+      "output_truncated": false,
+      "current_rss_mb": 6.02,
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "python3 - <<'PY'\nimport subprocess\np=subprocess.run(['/usr/bin/log','show','--last','20m','--style','compact','--predicate','eventMessage CONTAINS[c] \"usbserial\" OR eventMessage CONTAINS[c] \"CH34\" OR eventMessage CONTAINS[c] \"CH910\" OR eventMessage CONTAINS[c] \"QinHeng\" OR eventMessage CONTAINS[c] \"IOUSBHost\"'],capture_output=True,text=True,timeout=60)\nprint('USB_LOG_RC',p.returncode)\nlines=p.stdout.splitlines()\nprint('USB_LOG_MATCH_COUNT',len(lines))\nprint('USB_LOG_TAIL_BEGIN')\nfor line in lines[-200:]: print(line)\nprint('USB_LOG_TAIL_END')\nif p.stderr.strip(): print('USB_LOG_STDERR',p.stderr[-2000:])\nPY",
+      "exit_code": 0,
+      "output": "USB_LOG_RC 0\nUSB_LOG_MATCH_COUNT 2\nUSB_LOG_TAIL_BEGIN\nTimestamp               Ty Process[PID:TID]\n2026-09-14 12:58:13.058 Df log[9159:fa430c] [com.apple.log:] log run noninteractively, parent: 9157 (Python), args: '/usr/bin/log' 'show' '--last' '20m' '--style' 'compact' '--predicate' 'eventMessage CONTAINS[c] \"usbserial\" OR eventMessage CONTAINS[c] \"CH34\" OR eventMessage CONTAINS[c] \"CH910\" OR eventMessage CONT\nUSB_LOG_TAIL_END\n",
+      "elapsed_seconds": 3.6,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 1024,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 166.14,
+      "output_policy": "stream",
+      "captured_output_chars": 432,
+      "output_truncated": false,
+      "current_rss_mb": 166.14,
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.862
+    },
+    {
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.426
+    },
+    {
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 3.6
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.077
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.063
+  },
+  "finished_at": "2026-09-14T10:58:16.819118+00:00",
+  "task_digest": "636679365305c5a0a3bdbba672c8b20455399b4f290ee34b506340f6d610175e",
+  "idle_timeout": 120,
+  "task_timeout": 240,
+  "memory_limit_mb": 1024,
+  "attempt_id": "538396c4b37a804528d429fb",
+  "daemon_version": "4.18.20"
+}
