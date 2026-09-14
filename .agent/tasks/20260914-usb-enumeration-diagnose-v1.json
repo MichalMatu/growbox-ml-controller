@@ -1,0 +1,17 @@
+{
+  "id": "20260914-usb-enumeration-diagnose-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 60,
+  "idle_timeout": 120,
+  "task_timeout": 180,
+  "memory_limit_mb": 1024,
+  "commands": [
+    "git fetch origin main >/dev/null && test -z \"$(git status --porcelain)\" && echo HEAD=$(git rev-parse HEAD)",
+    "python3 - <<'PY'\nimport json, subprocess\np=subprocess.run(['system_profiler','SPUSBDataType','-json'],capture_output=True,text=True,timeout=45)\nprint('SYSTEM_PROFILER_RC',p.returncode)\nif p.returncode:\n    print(p.stderr[-4000:]); raise SystemExit(0)\ndata=json.loads(p.stdout or '{}')\ninteresting=[]\ndef walk(x,path=()):\n    if isinstance(x,dict):\n        name=x.get('_name') or x.get('name') or ''\n        np=path+((str(name),) if name else ())\n        fields={k:x.get(k) for k in ('_name','manufacturer','vendor_id','product_id','serial_num','location_id','bcd_device','current_available','current_required','extra_current_used') if x.get(k) is not None}\n        text=' '.join(str(v) for v in fields.values()).lower()\n        if fields and any(k in text for k in ('wch','qin','ch34','ch910','usb serial','uart','silicon labs','cp210','espressif','303a','1a86')):\n            interesting.append((np,fields))\n        for v in x.values(): walk(v,np)\n    elif isinstance(x,list):\n        for v in x: walk(v,path)\nwalk(data)\nprint('USB_INTERESTING_BEGIN')\nfor path,fields in interesting:\n    print('PATH',' > '.join(path)); print('FIELDS',json.dumps(fields,ensure_ascii=False,sort_keys=True))\nprint('USB_INTERESTING_END')\nprint('USB_INTERESTING_COUNT',len(interesting))\nPY",
+    "python3 - <<'PY'\nimport subprocess\np=subprocess.run(['ioreg','-r','-c','IOSerialBSDClient','-l','-w','0'],capture_output=True,text=True,timeout=20)\nprint('IOSERIAL_REGISTRY_BEGIN')\nfor line in p.stdout.splitlines():\n    low=line.lower()\n    if any(k in low for k in ('iocalloutdevice','iodialindevice','usb serial','usbserial','wch','ch34','ch910','cp210','espressif','idvendor','idproduct')):\n        print(line)\nprint('IOSERIAL_REGISTRY_END')\nprint('IOREG_RC',p.returncode)\nPY"
+  ]
+}
