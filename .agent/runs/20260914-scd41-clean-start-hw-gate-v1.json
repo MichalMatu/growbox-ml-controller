@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260914-scd41-clean-start-hw-gate-v1",
   "task_digest": "8f59c72a323bf049474fa18edf0f3b7ea41c5535024d2f926aa0cd47a9bda61d",
-  "idle_timeout": 240,
-  "task_timeout": 600,
-  "memory_limit_mb": 2048,
-  "started_at": "2026-09-14T10:45:25.552665+00:00",
+  "status": "done",
+  "failure_reason": null,
+  "finished_at": "2026-09-14T10:45:28.817930+00:00",
   "attempt_id": "8d470acd7fdc4c50432ea29d",
   "daemon_version": "4.18.20",
   "daemon_pid": 304,
-  "updated_at": "2026-09-14T10:45:25.552892+00:00",
+  "updated_at": "2026-09-14T10:45:29.060934+00:00",
   "pid": 304
 }
