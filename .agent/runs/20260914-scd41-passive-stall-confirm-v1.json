@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260914-scd41-passive-stall-confirm-v1",
+  "task_digest": "a926140050c81f3d7055bd10a789eca6a9eb2e553f92edf0882d2a72ee04516c",
+  "idle_timeout": 120,
+  "task_timeout": 600,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-14T12:24:20.724560+00:00",
+  "attempt_id": "e3f43997a6293b6215dea1b3",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 3923,
+  "updated_at": "2026-09-14T12:24:20.724634+00:00",
+  "pid": 3923
+}
