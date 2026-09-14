@@ -1,0 +1,15 @@
+{
+  "id": "20260914-final-make-monitor-no-reset-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 90,
+  "task_timeout": 180,
+  "memory_limit_mb": 1024,
+  "commands": [
+    "git fetch origin main && git reset --hard origin/main >/dev/null && test \"$(git rev-parse HEAD)\" = \"30ec2908494cb923136aa6e86878828b5211c036\" && test -c /dev/cu.usbserial-1130 && ! lsof /dev/cu.usbserial-1130 >/dev/null 2>&1",
+    "python3 - <<'PY'\nimport os, pty, select, signal, subprocess, time\nmaster, slave = pty.openpty()\ncmd=['make','monitor','PORT=/dev/cu.usbserial-1130']\np=subprocess.Popen(cmd, stdin=slave, stdout=slave, stderr=slave, start_new_session=True, close_fds=True)\nos.close(slave); os.set_blocking(master, False)\nbuf=bytearray(); end=time.time()+18\nwhile time.time()<end and p.poll() is None:\n    ready,_,_=select.select([master],[],[],0.2)\n    if ready:\n        try: data=os.read(master,65536)\n        except (BlockingIOError,OSError): data=b''\n        if data: buf.extend(data)\n    if b'esp-idf-monitor' in buf:\n        time.sleep(8)\n        break\nif p.poll() is None:\n    os.killpg(p.pid, signal.SIGTERM)\n    try: p.wait(timeout=3)\n    except subprocess.TimeoutExpired: os.killpg(p.pid, signal.SIGKILL); p.wait()\ntry: os.close(master)\nexcept OSError: pass\nout=buf.decode('utf-8', errors='replace')\nprint('MONITOR_STARTED', 'esp-idf-monitor' in out)\nprint('ROM_BOOT_MARKER', 'ESP-ROM:esp32s3' in out)\nprint('POWERON_MARKER', 'rst:0x1 (POWERON)' in out)\nfor line in out.splitlines():\n    if 'esp-idf-monitor' in line or 'ESP-ROM:esp32s3' in line or 'rst:0x' in line:\n        print(line)\nassert 'esp-idf-monitor' in out\nassert 'ESP-ROM:esp32s3' not in out\nassert 'rst:0x1 (POWERON)' not in out\nPY"
+  ]
+}
