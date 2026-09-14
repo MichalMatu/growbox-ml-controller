@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260914-four-page-display-verify-v1",
+  "task_digest": "1f82b25f1df172bc3ec7a32949ed565617853126f0a4849ba4858e68305f644a",
+  "idle_timeout": 240,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-14T12:11:15.854582+00:00",
+  "attempt_id": "a33ab4bfb636fb4e0c66c8bf",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 82345,
+  "updated_at": "2026-09-14T12:11:15.854719+00:00",
+  "pid": 82345
+}
