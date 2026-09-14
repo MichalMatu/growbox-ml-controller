@@ -1,0 +1,16 @@
+{
+  "id": "20260914-usb1130-connectivity-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 60,
+  "task_timeout": 180,
+  "memory_limit_mb": 1024,
+  "commands": [
+    "git fetch origin main && test \"$(git rev-parse HEAD)\" = \"b9e165f13841c8b4dc0f65eae77c5dc3e0e460eb\"",
+    "PORT=/dev/cu.usbserial-1130; test -c \"$PORT\"; ls -l \"$PORT\"; lsof \"$PORT\" || true",
+    "if python3 -c 'import serial' >/dev/null 2>&1; then python3 -c 'import serial,time; p=\"/dev/cu.usbserial-1130\"; s=serial.Serial(); s.port=p; s.baudrate=115200; s.timeout=0.25; s.dtr=False; s.rts=False; s.open(); print(\"SERIAL_OPEN_OK\", s.name, s.baudrate); end=time.time()+5; data=bytearray(); [(data.extend(s.read(s.in_waiting or 1))) for _ in iter(lambda: time.time()<end, False)]; s.close(); print(\"SERIAL_READ_BYTES\", len(data)); print(data[:2000].decode(\"utf-8\", errors=\"replace\"))'; else stty -f /dev/cu.usbserial-1130 115200 cs8 -cstopb -parenb && echo STTY_OPEN_OK; fi"
+  ]
+}
