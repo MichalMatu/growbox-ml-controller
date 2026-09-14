@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260914-serial-monitor-policy-verify-v1",
+  "task_digest": "cbc9b221b16a10e798a11da6a513a899899dd1903e16715fe0c9bba5fd736488",
+  "idle_timeout": 300,
+  "task_timeout": 600,
+  "memory_limit_mb": 1024,
+  "started_at": "2026-09-14T09:12:35.649663+00:00",
+  "attempt_id": "3b68c7090d8ad3a50166b565",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 91915,
+  "updated_at": "2026-09-14T09:12:35.649753+00:00",
+  "pid": 91915
+}
