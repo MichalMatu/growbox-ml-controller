@@ -1,0 +1,19 @@
+{
+  "id": "20260914-serial-monitor-policy-v3",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": true,
+  "resources": [],
+  "command_timeout": 300,
+  "task_timeout": 900,
+  "memory_limit_mb": 2048,
+  "commands": [
+    "git fetch origin main && test \"$(git rev-parse HEAD)\" = \"b9e165f13841c8b4dc0f65eae77c5dc3e0e460eb\" && git status --short",
+    "python3 -c \"import base64; from pathlib import Path; Path('tests/test_serial_monitor_policy.py').write_bytes(base64.b64decode('aW1wb3J0IGpzb24KZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCgoKUk9PVCA9IFBhdGgoX19maWxlX18pLnJlc29sdmUoKS5wYXJlbnRzWzFdCgoKZGVmIF9tYWtlX3RhcmdldF9ib2R5KG1ha2VmaWxlOiBzdHIsIHRhcmdldDogc3RyKSAtPiBzdHI6CiAgICBtYXJrZXIgPSBmInt0YXJnZXR9OiIKICAgIHN0YXJ0ID0gbWFrZWZpbGUuaW5kZXgobWFya2VyKQogICAgdGFpbCA9IG1ha2VmaWxlW3N0YXJ0Ol0KICAgIG5leHRfdGFyZ2V0ID0gdGFpbC5maW5kKCJcblxuIiwgbGVuKG1hcmtlcikpCiAgICByZXR1cm4gdGFpbCBpZiBuZXh0X3RhcmdldCA8IDAgZWxzZSB0YWlsWzpuZXh0X3RhcmdldF0KCgpkZWYgdGVzdF9kZWZhdWx0X21vbml0b3JfaXNfbm9fcmVzZXRfYW5kX3Jlc2V0X21vZGVfaXNfZXhwbGljaXQoKSAtPiBOb25lOgogICAgbWFrZWZpbGUgPSAoUk9PVCAvICJNYWtlZmlsZSIpLnJlYWRfdGV4dCgpCiAgICBtb25pdG9yID0gX21ha2VfdGFyZ2V0X2JvZHkobWFrZWZpbGUsICJtb25pdG9yIikKICAgIG1vbml0b3JfcmVzZXQgPSBfbWFrZV90YXJnZXRfYm9keShtYWtlZmlsZSwgIm1vbml0b3ItcmVzZXQiKQogICAgZmxhc2hfbW9uaXRvciA9IF9tYWtlX3RhcmdldF9ib2R5KG1ha2VmaWxlLCAiZmxhc2gtbW9uaXRvciIpCgogICAgYXNzZXJ0ICJFU1BfSURGX01PTklUT1JfTk9fUkVTRVQ9MSIgaW4gbW9uaXRvcgogICAgYXNzZXJ0ICJFU1BfSURGX01PTklUT1JfTk9fUkVTRVQ9MSIgbm90IGluIG1vbml0b3JfcmVzZXQKICAgIGFzc2VydCAiRVNQX0lERl9NT05JVE9SX05PX1JFU0VUPTEiIGluIGZsYXNoX21vbml0b3IKCgpkZWYgdGVzdF92c2NvZGVfbW9uaXRvcl9kZWZhdWx0c190b19ub19yZXNldCgpIC0+IE5vbmU6CiAgICBzZXR0aW5ncyA9IGpzb24ubG9hZHMoKFJPT1QgLyAiLnZzY29kZS9zZXR0aW5ncy5qc29uIikucmVhZF90ZXh0KCkpCiAgICBhc3NlcnQgc2V0dGluZ3NbImlkZi5tb25pdG9yTm9SZXNldCJdIGlzIFRydWUK'))\"",
+    "python3 -c \"import runpy; d=runpy.run_path('tests/test_serial_monitor_policy.py'); d['test_default_monitor_is_no_reset_and_reset_mode_is_explicit'](); d['test_vscode_monitor_defaults_to_no_reset'](); print('serial monitor policy tests: OK')\" && /opt/homebrew/bin/pre-commit run --all-files",
+    "git diff --check && git status --short && git diff -- Makefile .vscode/settings.json docs/ESP32_S3_SERIAL_PORT_RESET.md tests/test_serial_monitor_policy.py",
+    "git add Makefile .vscode/settings.json docs/ESP32_S3_SERIAL_PORT_RESET.md tests/test_serial_monitor_policy.py && git commit -m 'Make serial monitoring no-reset by default' && git push origin HEAD:main",
+    "test -z \"$(git status --porcelain)\" && git rev-parse HEAD"
+  ]
+}
