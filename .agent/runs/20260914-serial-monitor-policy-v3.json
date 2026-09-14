@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260914-serial-monitor-policy-v3",
+  "task_digest": "aa52331129144f606710f20990b9efe9690d6341a4796a2cf28f2b215da592e7",
+  "idle_timeout": 300,
+  "task_timeout": 900,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-14T09:05:16.706677+00:00",
+  "attempt_id": "78d235d9b927d7b8588ea38b",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 84331,
+  "updated_at": "2026-09-14T09:05:16.706875+00:00",
+  "pid": 84331
+}
