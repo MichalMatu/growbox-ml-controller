@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260914-display-test-registration-audit-v1",
   "task_digest": "af045603e24de965445abf6bfc97e8e509c8e4e36bbe1df1f2ed5870854c7ba0",
-  "idle_timeout": 180,
-  "task_timeout": 420,
-  "memory_limit_mb": 2048,
-  "started_at": "2026-09-14T12:02:24.948677+00:00",
+  "status": "done",
+  "failure_reason": null,
+  "finished_at": "2026-09-14T12:02:28.272650+00:00",
   "attempt_id": "56186387268aff27d6f04276",
   "daemon_version": "4.18.20",
   "daemon_pid": 68312,
-  "updated_at": "2026-09-14T12:02:24.948749+00:00",
+  "updated_at": "2026-09-14T12:02:28.483298+00:00",
   "pid": 68312
 }
