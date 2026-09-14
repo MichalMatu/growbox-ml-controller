@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260914-usb-tree-and-history-v1",
+  "task_digest": "636679365305c5a0a3bdbba672c8b20455399b4f290ee34b506340f6d610175e",
+  "idle_timeout": 120,
+  "task_timeout": 240,
+  "memory_limit_mb": 1024,
+  "started_at": "2026-09-14T10:58:10.310986+00:00",
+  "attempt_id": "538396c4b37a804528d429fb",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 9005,
+  "updated_at": "2026-09-14T10:58:10.311227+00:00",
+  "pid": 9005
+}
