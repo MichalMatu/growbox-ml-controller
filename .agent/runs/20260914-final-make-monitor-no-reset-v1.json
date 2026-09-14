@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260914-final-make-monitor-no-reset-v1",
   "task_digest": "24040a6a3067aa11f06b583cbd0d1efb4586c5f7fa591e2f784f36a37e46a2f4",
-  "idle_timeout": 300,
-  "task_timeout": 180,
-  "memory_limit_mb": 1024,
-  "started_at": "2026-09-14T09:10:11.471411+00:00",
+  "status": "failed",
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-14T09:10:13.905745+00:00",
   "attempt_id": "3fac04f3606d14c82367b503",
   "daemon_version": "4.18.20",
   "daemon_pid": 89308,
-  "updated_at": "2026-09-14T09:10:11.471723+00:00",
+  "updated_at": "2026-09-14T09:10:14.154524+00:00",
   "pid": 89308
 }
