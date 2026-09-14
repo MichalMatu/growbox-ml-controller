@@ -1,9 +1,0 @@
-{
-  "id": "20260914-repo-reaudit-v1",
-  "status": "failed",
-  "failure_reason": "invalid_task_file",
-  "started_at": null,
-  "finished_at": "2026-09-14T07:55:25.466229+00:00",
-  "daemon_version": "4.18.20",
-  "error": "JSONDecodeError: Expecting ',' delimiter: line 13 column 484 (char 997)"
-}
