@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260914-idf-pty-no-reset-status-v1",
+  "task_digest": "8f5e4544986b1609d14e4c0f558757601fc38cb1efa52eefae6e53e8144351a9",
+  "idle_timeout": 300,
+  "task_timeout": 180,
+  "memory_limit_mb": 1024,
+  "started_at": "2026-09-14T08:59:51.103111+00:00",
+  "attempt_id": "d46db5ac8d6583da3d8f471d",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 78031,
+  "updated_at": "2026-09-14T08:59:51.103287+00:00",
+  "pid": 78031
+}
