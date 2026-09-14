@@ -1,9 +1,9 @@
 {
   "version": 1,
   "daemon_version": "4.18.20",
-  "state": "idle",
-  "pid": 56694,
-  "updated_at": "2026-09-14T07:06:22.920103+00:00",
+  "state": "running",
+  "pid": 59844,
+  "updated_at": "2026-09-14T07:08:03.675515+00:00",
   "self_revision": "4255bd0ba13b7f14dec67f0bfe8d1def78f8a3c9",
   "poll_seconds": 15,
   "self_update_seconds": 60,
@@ -14,7 +14,7 @@
   "task_timeout_default": 1800,
   "task_timeout_max": 21600,
   "memory_limit_mb_default": 4096,
-  "current_task_id": null,
+  "current_task_id": "20260914-precommit-export-v1",
   "current_attempt_id": null,
   "current_task_digest": null,
   "repository_id": "growbox-ml-controller",
@@ -23,8 +23,8 @@
   "default_branch": "main",
   "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
   "execution_model": "multi_repository_worker",
-  "worker_pid": 56694,
+  "worker_pid": 59844,
   "supervisor_pid": 49829,
-  "last_task_id": "20260914-precommit-worktree-check-v1",
+  "active_resources": [],
   "execution_variant": "parallel"
 }
