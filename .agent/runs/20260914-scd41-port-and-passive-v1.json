@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260914-scd41-port-and-passive-v1",
+  "task_digest": "e079b71506170240b3c64fee81089330099719eb0e839934c15b8ed1a985b76f",
+  "idle_timeout": 180,
+  "task_timeout": 360,
+  "memory_limit_mb": 1024,
+  "started_at": "2026-09-14T09:36:12.370674+00:00",
+  "attempt_id": "2210f516852b9678af93aa32",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 22565,
+  "updated_at": "2026-09-14T09:36:12.378091+00:00",
+  "pid": 22565
+}
