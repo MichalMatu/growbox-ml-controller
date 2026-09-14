@@ -1,0 +1,19 @@
+{
+  "id": "20260914-scd41-clean-start-hw-gate-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 300,
+  "idle_timeout": 240,
+  "task_timeout": 600,
+  "memory_limit_mb": 2048,
+  "commands": [
+    "git fetch origin main && git reset --hard origin/main >/dev/null && test \"$(git rev-parse HEAD)\" = \"a92074b74b055c58c0949c7c38f4896638ebf227\" && test -z \"$(git status --porcelain)\"",
+    "if test -c /dev/cu.usbserial-1130; then echo PORT_PRESENT=1; ls -l /dev/cu.usbserial-1130; echo LSOF_BEGIN; lsof /dev/cu.usbserial-1130 || true; echo LSOF_END; else echo PORT_PRESENT=0; fi",
+    "if test -c /dev/cu.usbserial-1130 && ! lsof /dev/cu.usbserial-1130 >/dev/null 2>&1; then export PORT=/dev/cu.usbserial-1130 GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0; bash scripts/stage27c_crowpanel.sh flash; else echo FLASH_SKIPPED_PORT_UNAVAILABLE; fi",
+    "if test -c /dev/cu.usbserial-1130 && ! lsof /dev/cu.usbserial-1130 >/dev/null 2>&1; then python3 -c 'import os,signal,subprocess,time; cmd=[\"script\",\"-q\",\"/dev/null\",\"bash\",\"scripts/run_idf.sh\",\"-B\",\"build/idf-stage27c-crowpanel\",\"-p\",\"/dev/cu.usbserial-1130\",\"monitor\",\"--no-reset\"]; p=subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,start_new_session=True); time.sleep(90); os.killpg(p.pid,signal.SIGTERM); out,_=p.communicate(timeout=10); print(\"MONITOR_TIMELINE_BEGIN\"); [print(line) for line in out.splitlines() if any(k in line.lower() for k in (\"scd_\",\"scd41\",\"i2c probe\",\"eink_display\",\"firmware_sha\"))]; print(\"MONITOR_TIMELINE_END\"); print(\"ROM_BOOT_MARKER\",\"ESP-ROM:esp32s3\" in out); print(\"POWERON_MARKER\",\"rst:0x1 (POWERON)\" in out)' ; else echo MONITOR_SKIPPED_PORT_UNAVAILABLE; fi",
+    "test -z \"$(git status --porcelain)\" && git rev-parse HEAD"
+  ]
+}
