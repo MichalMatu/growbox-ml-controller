@@ -1,0 +1,88 @@
+{
+  "id": "20260914-scd41-passive-capture-v1",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "started_at": "2026-09-14T09:20:29.428136+00:00",
+  "command_timeout": 120,
+  "edits": {},
+  "commands": [
+    {
+      "command": "git fetch origin main && git reset --hard origin/main >/dev/null && test \"$(git rev-parse HEAD)\" = \"880ec9538b19f507310b7ab3fc3eafdb315452bd\" && test -z \"$(git status --porcelain)\"",
+      "exit_code": 0,
+      "output": "From https://github.com/MichalMatu/growbox-ml-controller\n * branch                main       -> FETCH_HEAD\n",
+      "elapsed_seconds": 0.858,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 1024,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 3.05,
+      "output_policy": "stream",
+      "captured_output_chars": 107,
+      "output_truncated": false,
+      "current_rss_mb": 3.05,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "test -c /dev/cu.usbserial-1130 && { echo DEVICE_OK; ls -l /dev/cu.usbserial-1130; echo LSOF_BEGIN; lsof /dev/cu.usbserial-1130 || true; echo LSOF_END; }",
+      "exit_code": 1,
+      "output": "",
+      "elapsed_seconds": 0.369,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 1024,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": null,
+      "output_policy": "stream",
+      "captured_output_chars": 0,
+      "output_truncated": false,
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.858
+    },
+    {
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "failed",
+      "elapsed_seconds": 0.369
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.084
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.076
+  },
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-14T09:20:32.289009+00:00",
+  "task_digest": "614a171de46a48ed0f7799c4ecbfeb62ad4469e7852cea1cfb8774fc3da5062c",
+  "idle_timeout": 180,
+  "task_timeout": 300,
+  "memory_limit_mb": 1024,
+  "attempt_id": "5e242a4598b57b9d217fcfc6",
+  "daemon_version": "4.18.20"
+}
