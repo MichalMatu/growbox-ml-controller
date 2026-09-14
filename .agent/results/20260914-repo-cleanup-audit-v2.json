@@ -1,0 +1,143 @@
+{
+  "id": "20260914-repo-cleanup-audit-v2",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "feature/eink-clay-status",
+  "allow_write": false,
+  "started_at": "2026-09-14T06:50:01.811840+00:00",
+  "command_timeout": 180,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -eu; git fetch --prune origin; echo '=== HEAD ==='; git rev-parse HEAD; git status --short; echo '=== REMOTE BRANCHES ==='; git for-each-ref refs/remotes/origin --format='%(refname:short) %(objectname)' | sort",
+      "exit_code": 0,
+      "output": "From https://github.com/MichalMatu/growbox-ml-controller\n   843e35b02..06526c61e  agent-control -> origin/agent-control\n=== HEAD ===\nceaaa88801568cccf2f1cbc86021ce3b2b2809d5\n=== REMOTE BRANCHES ===\norigin 3d77da42e5ae63f41dbd26be6f524e11d8cc43fa\norigin/agent-control 06526c61ea972395a31d77a72e62fe8e313d67ab\norigin/feature/eink-clay-status ceaaa88801568cccf2f1cbc86021ce3b2b2809d5\norigin/feature/eink-clay-status-chat-e23bf59b 63e5aea5fa1179593b2d8244ec47f296a038a081\norigin/gh-pages 10774fbf442391910be920cbc322860f12eeaabe\norigin/main 3d77da42e5ae63f41dbd26be6f524e11d8cc43fa\n",
+      "elapsed_seconds": 1.126,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 1024,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 3.62,
+      "output_policy": "stream",
+      "captured_output_chars": 578,
+      "output_truncated": false,
+      "current_rss_mb": 3.62,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 4,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "set -eu; echo '=== DOC FILES ==='; git ls-files 'docs/**' | sort; echo '=== ROOT DOCS ==='; git ls-files '*.md' | sort; echo '=== DOC SIZES ==='; git ls-files 'docs/**' '*.md' | sort -u > /tmp/growbox-doc-list.txt; while IFS= read -r f; do if [ -f \"$f\" ]; then bytes=$(wc -c < \"$f\" | tr -d ' '); lines=$(wc -l < \"$f\" | tr -d ' '); printf '%7s %6s %s\\n' \"$bytes\" \"$lines\" \"$f\"; fi; done < /tmp/growbox-doc-list.txt",
+      "exit_code": 0,
+      "output": "=== DOC FILES ===\ndocs/ARCHITECTURE.md\ndocs/ARCHITECTURE_HANDOFF.md\ndocs/AUTONOMOUS_TEST_RUNBOOK.md\ndocs/CHANGELOG.md\ndocs/CONFIG_MATRIX.csv\ndocs/CONFIG_MATRIX.md\ndocs/CONTINUATION_PLAN.md\ndocs/CURRENT_STATUS.md\ndocs/DATA_CONTRACT.md\ndocs/EINK_SCD41_CONTINUATION_HANDOFF_20260913.md\ndocs/EINK_SCD41_NEW_CHAT_PROMPT_20260913.md\ndocs/EINK_UI_HANDOFF.md\ndocs/EINK_UI_NEW_CHAT_PROMPT.md\ndocs/ESP32_S3_SERIAL_PORT_RESET.md\ndocs/FRESH_CHAT_BOOTSTRAP.md\ndocs/GUIDANCE.md\ndocs/HARDWARE_BRINGUP_CHECKLIST.md\ndocs/INTEGRATION_CONVERGENCE.md\ndocs/IO_MAP.md\ndocs/ML_DECISION_REPORT.json\ndocs/ML_DECISION_REPORT.md\ndocs/MODEL_PIPELINE.md\ndocs/MVP_ENVIRONMENT_CONTROLLER.md\ndocs/MVP_HARDWARE_SENSOR_SET.md\ndocs/MVP_REBUILD_CLEANUP_PLAN.md\ndocs/OBSERVABILITY_AND_INFERENCE_PLAN.md\ndocs/OUTPUT_EXECUTION_ARCHITECTURE.md\ndocs/OUTPUT_EXECUTION_ARCHITECTURE_AUDIT.md\ndocs/OUTPUT_EXECUTION_ARCHITECTURE_R5_AUDIT.md\ndocs/OUTPUT_EXECUTION_IMPLEMENTATION_PLAN.md\ndocs/OUTPUT_EXECUTION_IMPLEMENTATION_PLAN_REAUDIT.md\ndocs/PORTING_TO_LITEGRAPH.md\ndocs/PRESTAGE28D_GOLDEN_CHECKPOINT.md\ndocs/PROJECT_LAYOUT.md\ndocs/PROJECT_ROADMAP.md\ndocs/QUALITY_FREEZE_PLAN.md\ndocs/RF433_DEVICE_CODES.md\ndocs/SANDBOX_EXECUTION_FLOW.md\ndocs/SHELLY_POWER_FEEDBACK.md\ndocs/STAGE27A_NATIVE_FEASIBILITY_FREEZE.md\ndocs/STAGE27C_CONTINUATION_HANDOFF.md\ndocs/STAGE27C_CROWPANEL_BRINGUP.md\ndocs/STAGE27C_FINAL_EVIDENCE.md\ndocs/STAGE27C_PRE_SOAK_HANDOFF.md\ndocs/STAGE27_NATIVE_IDF_HANDOFF.md\ndocs/STAGE28B_FINAL_EVIDENCE.md\ndocs/STAGE28C_FINAL_EVIDENCE.md\ndocs/STAGE28D_AH_ARBITER_HANDOFF.md\ndocs/STAGE28E_OUTPUT_SUPERVISOR_H_QUALIFICATION.md\ndocs/STAGE28E_PHASE_A_HANDOFF.md\ndocs/STAGE28E_PHASE_B_HANDOFF.md\ndocs/STAGE28E_PHASE_C_HANDOFF.md\ndocs/STAGE28E_PHASE_D_HANDOFF.md\ndocs/STAGE28E_PHASE_E_HANDOFF.md\ndocs/STAGE28E_PHASE_F_HANDOFF.md\ndocs/STAGE28E_PHASE_G_HANDOFF.md\ndocs/STAGE28E_PHASE_H_HANDOFF.md\ndocs/simulator/CALIBRATION.md\ndocs/simulator/DEPENDENCIES.md\ndocs/simulator/FORMULAS.md\ndocs/simulator/IO_INVENTORY.md\ndocs/simulator/PHYSICS_SCOPE.md\ndocs/simulator/README.md\ndocs/simulator/SLOT_MAP.md\ndocs/simulator/SOURCES.md\ndocs/simulator/TWIN_VIEW.md\ndocs/simulator/VALIDATION.md\n=== ROOT DOCS ===\nAGENTS.md\nREADME.md\ncomponents/emlearn_runtime/README.md\ncomponents/sensirion_scd4x/README.growbox.md\nconfig/README.md\ncontinuation.md\ndocs/ARCHITECTURE.md\ndocs/ARCHITECTURE_HANDOFF.md\ndocs/AUTONOMOUS_TEST_RUNBOOK.md\ndocs/CHANGELOG.md\ndocs/CONFIG_MATRIX.md\ndocs/CONTINUATION_PLAN.md\ndocs/CURRENT_STATUS.md\ndocs/DATA_CONTRACT.md\ndocs/EINK_SCD41_CONTINUATION_HANDOFF_20260913.md\ndocs/EINK_SCD41_NEW_CHAT_PROMPT_20260913.md\ndocs/EINK_UI_HANDOFF.md\ndocs/EINK_UI_NEW_CHAT_PROMPT.md\ndocs/ESP32_S3_SERIAL_PORT_RESET.md\ndocs/FRESH_CHAT_BOOTSTRAP.md\ndocs/GUIDANCE.md\ndocs/HARDWARE_BRINGUP_CHECKLIST.md\ndocs/INTEGRATION_CONVERGENCE.md\ndocs/IO_MAP.md\ndocs/ML_DECISION_REPORT.md\ndocs/MODEL_PIPELINE.md\ndocs/MVP_ENVIRONMENT_CONTROLLER.md\ndocs/MVP_HARDWARE_SENSOR_SET.md\ndocs/MVP_REBUILD_CLEANUP_PLAN.md\ndocs/OBSERVABILITY_AND_INFERENCE_PLAN.md\ndocs/OUTPUT_EXECUTION_ARCHITECTURE.md\ndocs/OUTPUT_EXECUTION_ARCHITECTURE_AUDIT.md\ndocs/OUTPUT_EXECUTION_ARCHITECTURE_R5_AUDIT.md\ndocs/OUTPUT_EXECUTION_IMPLEMENTATION_PLAN.md\ndocs/OUTPUT_EXECUTION_IMPLEMENTATION_PLAN_REAUDIT.md\ndocs/PORTING_TO_LITEGRAPH.md\ndocs/PRESTAGE28D_GOLDEN_CHECKPOINT.md\ndocs/PROJECT_LAYOUT.md\ndocs/PROJECT_ROADMAP.md\ndocs/QUALITY_FREEZE_PLAN.md\ndocs/RF433_DEVICE_CODES.md\ndocs/SANDBOX_EXECUTION_FLOW.md\ndocs/SHELLY_POWER_FEEDBACK.md\ndocs/STAGE27A_NATIVE_FEASIBILITY_FREEZE.md\ndocs/STAGE27C_CONTINUATION_HANDOFF.md\ndocs/STAGE27C_CROWPANEL_BRINGUP.md\ndocs/STAGE27C_FINAL_EVIDENCE.md\ndocs/STAGE27C_PRE_SOAK_HANDOFF.md\ndocs/STAGE27_NATIVE_IDF_HANDOFF.md\ndocs/STAGE28B_FINAL_EVIDENCE.md\ndocs/STAGE28C_FINAL_EVIDENCE.md\ndocs/STAGE28D_AH_ARBITER_HANDOFF.md\ndocs/STAGE28E_OUTPUT_SUPERVISOR_H_QUALIFICATION.md\ndocs/STAGE28E_PHASE_A_HANDOFF.md\ndocs/STAGE28E_PHASE_B_HANDOFF.md\ndocs/STAGE28E_PHASE_C_HANDOFF.md\ndocs/STAGE28E_PHASE_D_HANDOFF.md\ndocs/STAGE28E_PHASE_E_HANDOFF.md\ndocs/STAGE28E_PHASE_F_HANDOFF.md\ndocs/STAGE28E_PHASE_G_HANDOFF.md\ndocs/STAGE28E_PHASE_H_HANDOFF.md\ndocs/simulator/CALIBRATION.md\ndocs/simulator/DEPENDENCIES.md\ndocs/simulator/FORMULAS.md\ndocs/simulator/IO_INVENTORY.md\ndocs/simulator/PHYSICS_SCOPE.md\ndocs/simulator/README.md\ndocs/simulator/SLOT_MAP.md\ndocs/simulator/SOURCES.md\ndocs/simulator/TWIN_VIEW.md\ndocs/simulator/VALIDATION.md\nthird_party/README.md\nweb/README.md\nweb/public/textures/growtent/ATTRIBUTION.md\n=== DOC SIZES ===\n  11435    120 AGENTS.md\n  11146    224 README.md\n    711     13 components/emlearn_runtime/README.md\n    426     11 components/sensirion_scd4x/README.growbox.md\n    606     20 config/README.md\n    998     18 continuation.md\n   5962    116 docs/ARCHITECTURE.md\n   2875     65 docs/ARCHITECTURE_HANDOFF.md\n  10831    290 docs/AUTONOMOUS_TEST_RUNBOOK.md\n   8267     78 docs/CHANGELOG.md\n  33140     60 docs/CONFIG_MATRIX.csv\n  15226    196 docs/CONFIG_MATRIX.md\n   5925    108 docs/CONTINUATION_PLAN.md\n   6546    161 docs/CURRENT_STATUS.md\n   1603     33 docs/DATA_CONTRACT.md\n   8256    177 docs/EINK_SCD41_CONTINUATION_HANDOFF_20260913.md\n   4541     96 docs/EINK_SCD41_NEW_CHAT_PROMPT_20260913.md\n  11442    215 docs/EINK_UI_HANDOFF.md\n   5061     53 docs/EINK_UI_NEW_CHAT_PROMPT.md\n   4884     94 docs/ESP32_S3_SERIAL_PORT_RESET.md\n   3752     78 docs/FRESH_CHAT_BOOTSTRAP.md\n  27974    870 docs/GUIDANCE.md\n   7586    138 docs/HARDWARE_BRINGUP_CHECKLIST.md\n   3523     63 docs/INTEGRATION_CONVERGENCE.md\n  17376    354 docs/IO_MAP.md\n   1097     48 docs/ML_DECISION_REPORT.json\n   5150    119 docs/ML_DECISION_REPORT.md\n   3988     87 docs/MODEL_PIPELINE.md\n  30899    852 docs/MVP_ENVIRONMENT_CONTROLLER.md\n   5382    128 docs/MVP_HARDWARE_SENSOR_SET.md\n  11884    298 docs/MVP_REBUILD_CLEANUP_PLAN.md\n  12402    310 docs/OBSERVABILITY_AND_INFERENCE_PLAN.md\n  20718    428 docs/OUTPUT_EXECUTION_ARCHITECTURE.md\n  38575    718 docs/OUTPUT_EXECUTION_ARCHITECTURE_AUDIT.md\n   3369     63 docs/OUTPUT_EXECUTION_ARCHITECTURE_R5_AUDIT.md\n  41647   1168 docs/OUTPUT_EXECUTION_IMPLEMENTATION_PLAN.md\n  13802    315 docs/OUTPUT_EXECUTION_IMPLEMENTATION_PLAN_REAUDIT.md\n  11743    238 docs/PORTING_TO_LITEGRAPH.md\n   2426     43 docs/PRESTAGE28D_GOLDEN_CHECKPOINT.md\n   3616     84 docs/PROJECT_LAYOUT.md\n   6267    116 docs/PROJECT_ROADMAP.md\n   5420    109 docs/QUALITY_FREEZE_PLAN.md\n   5887    119 docs/RF433_DEVICE_CODES.md\n   6915    217 docs/SANDBOX_EXECUTION_FLOW.md\n   9396    178 docs/SHELLY_POWER_FEEDBACK.md\n   7025    107 docs/STAGE27A_NATIVE_FEASIBILITY_FREEZE.md\n  20993    375 docs/STAGE27C_CONTINUATION_HANDOFF.md\n   8106    107 docs/STAGE27C_CROWPANEL_BRINGUP.md\n   8883    177 docs/STAGE27C_FINAL_EVIDENCE.md\n   6723    176 docs/STAGE27C_PRE_SOAK_HANDOFF.md\n  14568    291 docs/STAGE27_NATIVE_IDF_HANDOFF.md\n   3740    116 docs/STAGE28B_FINAL_EVIDENCE.md\n   2813     47 docs/STAGE28C_FINAL_EVIDENCE.md\n  11995    274 docs/STAGE28D_AH_ARBITER_HANDOFF.md\n  11782    288 docs/STAGE28E_OUTPUT_SUPERVISOR_H_QUALIFICATION.md\n   9040    232 docs/STAGE28E_PHASE_A_HANDOFF.md\n  12891    296 docs/STAGE28E_PHASE_B_HANDOFF.md\n  12650    219 docs/STAGE28E_PHASE_C_HANDOFF.md\n   4833    102 docs/STAGE28E_PHASE_D_HANDOFF.md\n   9278    225 docs/STAGE28E_PHASE_E_HANDOFF.md\n   5431    105 docs/STAGE28E_PHASE_F_HANDOFF.md\n   8296    201 docs/STAGE28E_PHASE_G_HANDOFF.md\n  19845    466 docs/STAGE28E_PHASE_H_HANDOFF.md\n   4159    121 docs/simulator/CALIBRATION.md\n  10240    247 docs/simulator/DEPENDENCIES.md\n  10844    311 docs/simulator/FORMULAS.md\n   2621     70 docs/simulator/IO_INVENTORY.md\n   3284     63 docs/simulator/PHYSICS_SCOPE.md\n   4926     90 docs/simulator/README.md\n   7336    144 docs/simulator/SLOT_MAP.md\n  12593    222 docs/simulator/SOURCES.md\n   7554    188 docs/simulator/TWIN_VIEW.md\n   3077     58 docs/simulator/VALIDATION.md\n   2525     58 third_party/README.md\n   2926     98 web/README.md\n    994     20 web/public/textures/growtent/ATTRIBUTION.md\n",
+      "elapsed_seconds": 0.669,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 1024,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 2.39,
+      "output_policy": "stream",
+      "captured_output_chars": 7941,
+      "output_truncated": false,
+      "current_rss_mb": 2.39,
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 4,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "set -eu; echo '=== LIKELY DUPLICATE/HANDOFF REFERENCES ==='; rg -n 'FRESH_CHAT_BOOTSTRAP|CONTINUATION_PLAN|EINK_UI_HANDOFF|EINK_UI_NEW_CHAT_PROMPT|EINK_SCD41|ARCHITECTURE_HANDOFF|CURRENT_STATUS|PROJECT_ROADMAP' --glob '*.md' . || true",
+      "exit_code": 0,
+      "output": "=== LIKELY DUPLICATE/HANDOFF REFERENCES ===\n/bin/sh: rg: command not found\n",
+      "elapsed_seconds": 0.111,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 1024,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": null,
+      "output_policy": "stream",
+      "captured_output_chars": 75,
+      "output_truncated": false,
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 4,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "set -eu; echo '=== DOC HEADINGS ==='; git ls-files 'docs/*.md' | sort > /tmp/growbox-doc-md-list.txt; while IFS= read -r f; do echo \"--- $f\"; rg -m 10 '^#{1,3} ' \"$f\" || true; done < /tmp/growbox-doc-md-list.txt",
+      "exit_code": 0,
+      "output": "=== DOC HEADINGS ===\n--- docs/ARCHITECTURE.md\n/bin/sh: rg: command not found\n--- docs/ARCHITECTURE_HANDOFF.md\n/bin/sh: rg: command not found\n--- docs/AUTONOMOUS_TEST_RUNBOOK.md\n/bin/sh: rg: command not found\n--- docs/CHANGELOG.md\n/bin/sh: rg: command not found\n--- docs/CONFIG_MATRIX.md\n/bin/sh: rg: command not found\n--- docs/CONTINUATION_PLAN.md\n/bin/sh: rg: command not found\n--- docs/CURRENT_STATUS.md\n/bin/sh: rg: command not found\n--- docs/DATA_CONTRACT.md\n/bin/sh: rg: command not found\n--- docs/EINK_SCD41_CONTINUATION_HANDOFF_20260913.md\n/bin/sh: rg: command not found\n--- docs/EINK_SCD41_NEW_CHAT_PROMPT_20260913.md\n/bin/sh: rg: command not found\n--- docs/EINK_UI_HANDOFF.md\n/bin/sh: rg: command not found\n--- docs/EINK_UI_NEW_CHAT_PROMPT.md\n/bin/sh: rg: command not found\n--- docs/ESP32_S3_SERIAL_PORT_RESET.md\n/bin/sh: rg: command not found\n--- docs/FRESH_CHAT_BOOTSTRAP.md\n/bin/sh: rg: command not found\n--- docs/GUIDANCE.md\n/bin/sh: rg: command not found\n--- docs/HARDWARE_BRINGUP_CHECKLIST.md\n/bin/sh: rg: command not found\n--- docs/INTEGRATION_CONVERGENCE.md\n/bin/sh: rg: command not found\n--- docs/IO_MAP.md\n/bin/sh: rg: command not found\n--- docs/ML_DECISION_REPORT.md\n/bin/sh: rg: command not found\n--- docs/MODEL_PIPELINE.md\n/bin/sh: rg: command not found\n--- docs/MVP_ENVIRONMENT_CONTROLLER.md\n/bin/sh: rg: command not found\n--- docs/MVP_HARDWARE_SENSOR_SET.md\n/bin/sh: rg: command not found\n--- docs/MVP_REBUILD_CLEANUP_PLAN.md\n/bin/sh: rg: command not found\n--- docs/OBSERVABILITY_AND_INFERENCE_PLAN.md\n/bin/sh: rg: command not found\n--- docs/OUTPUT_EXECUTION_ARCHITECTURE.md\n/bin/sh: rg: command not found\n--- docs/OUTPUT_EXECUTION_ARCHITECTURE_AUDIT.md\n/bin/sh: rg: command not found\n--- docs/OUTPUT_EXECUTION_ARCHITECTURE_R5_AUDIT.md\n/bin/sh: rg: command not found\n--- docs/OUTPUT_EXECUTION_IMPLEMENTATION_PLAN.md\n/bin/sh: rg: command not found\n--- docs/OUTPUT_EXECUTION_IMPLEMENTATION_PLAN_REAUDIT.md\n/bin/sh: rg: command not found\n--- docs/PORTING_TO_LITEGRAPH.md\n/bin/sh: rg: command not found\n--- docs/PRESTAGE28D_GOLDEN_CHECKPOINT.md\n/bin/sh: rg: command not found\n--- docs/PROJECT_LAYOUT.md\n/bin/sh: rg: command not found\n--- docs/PROJECT_ROADMAP.md\n/bin/sh: rg: command not found\n--- docs/QUALITY_FREEZE_PLAN.md\n/bin/sh: rg: command not found\n--- docs/RF433_DEVICE_CODES.md\n/bin/sh: rg: command not found\n--- docs/SANDBOX_EXECUTION_FLOW.md\n/bin/sh: rg: command not found\n--- docs/SHELLY_POWER_FEEDBACK.md\n/bin/sh: rg: command not found\n--- docs/STAGE27A_NATIVE_FEASIBILITY_FREEZE.md\n/bin/sh: rg: command not found\n--- docs/STAGE27C_CONTINUATION_HANDOFF.md\n/bin/sh: rg: command not found\n--- docs/STAGE27C_CROWPANEL_BRINGUP.md\n/bin/sh: rg: command not found\n--- docs/STAGE27C_FINAL_EVIDENCE.md\n/bin/sh: rg: command not found\n--- docs/STAGE27C_PRE_SOAK_HANDOFF.md\n/bin/sh: rg: command not found\n--- docs/STAGE27_NATIVE_IDF_HANDOFF.md\n/bin/sh: rg: command not found\n--- docs/STAGE28B_FINAL_EVIDENCE.md\n/bin/sh: rg: command not found\n--- docs/STAGE28C_FINAL_EVIDENCE.md\n/bin/sh: rg: command not found\n--- docs/STAGE28D_AH_ARBITER_HANDOFF.md\n/bin/sh: rg: command not found\n--- docs/STAGE28E_OUTPUT_SUPERVISOR_H_QUALIFICATION.md\n/bin/sh: rg: command not found\n--- docs/STAGE28E_PHASE_A_HANDOFF.md\n/bin/sh: rg: command not found\n--- docs/STAGE28E_PHASE_B_HANDOFF.md\n/bin/sh: rg: command not found\n--- docs/STAGE28E_PHASE_C_HANDOFF.md\n/bin/sh: rg: command not found\n--- docs/STAGE28E_PHASE_D_HANDOFF.md\n/bin/sh: rg: command not found\n--- docs/STAGE28E_PHASE_E_HANDOFF.md\n/bin/sh: rg: command not found\n--- docs/STAGE28E_PHASE_F_HANDOFF.md\n/bin/sh: rg: command not found\n--- docs/STAGE28E_PHASE_G_HANDOFF.md\n/bin/sh: rg: command not found\n--- docs/STAGE28E_PHASE_H_HANDOFF.md\n/bin/sh: rg: command not found\n--- docs/simulator/CALIBRATION.md\n/bin/sh: rg: command not found\n--- docs/simulator/DEPENDENCIES.md\n/bin/sh: rg: command not found\n--- docs/simulator/FORMULAS.md\n/bin/sh: rg: command not found\n--- docs/simulator/IO_INVENTORY.md\n/bin/sh: rg: command not found\n--- docs/simulator/PHYSICS_SCOPE.md\n/bin/sh: rg: command not found\n--- docs/simulator/README.md\n/bin/sh: rg: command not found\n--- docs/simulator/SLOT_MAP.md\n/bin/sh: rg: command not found\n--- docs/simulator/SOURCES.md\n/bin/sh: rg: command not found\n--- docs/simulator/TWIN_VIEW.md\n/bin/sh: rg: command not found\n--- docs/simulator/VALIDATION.md\n/bin/sh: rg: command not found\n",
+      "elapsed_seconds": 0.405,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 1024,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 3.27,
+      "output_policy": "stream",
+      "captured_output_chars": 4367,
+      "output_truncated": false,
+      "current_rss_mb": 3.27,
+      "stage_name": "command-4",
+      "stage_index": 4,
+      "stage_total": 4,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 4,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 1.126
+    },
+    {
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 4,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.669
+    },
+    {
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 4,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.111
+    },
+    {
+      "stage_name": "command-4",
+      "stage_index": 4,
+      "stage_total": 4,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.405
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.073
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.067
+  },
+  "finished_at": "2026-09-14T06:50:05.548254+00:00",
+  "task_digest": "3e04477a99dbd14786923f8d4a0fe49ffc75f6e139ddae4fb46a3594960f579a",
+  "idle_timeout": 300,
+  "task_timeout": 600,
+  "memory_limit_mb": 1024,
+  "attempt_id": "9a09a38002ddac7ac9579dc3",
+  "daemon_version": "4.18.20"
+}
