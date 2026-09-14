@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260914-repo-cleanup-audit-v2",
+  "task_digest": "3e04477a99dbd14786923f8d4a0fe49ffc75f6e139ddae4fb46a3594960f579a",
+  "idle_timeout": 300,
+  "task_timeout": 600,
+  "memory_limit_mb": 1024,
+  "started_at": "2026-09-14T06:50:01.811794+00:00",
+  "attempt_id": "9a09a38002ddac7ac9579dc3",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 32689,
+  "updated_at": "2026-09-14T06:50:01.811874+00:00",
+  "pid": 32689
+}
