@@ -1,0 +1,21 @@
+{
+  "id": "20260914-final-cleanup-verify-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": true,
+  "resources": [],
+  "command_timeout": 1800,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch --prune origin && test \"$(git rev-parse HEAD)\" = \"b9e165f13841c8b4dc0f65eae77c5dc3e0e460eb\" && git status --short",
+    "git push origin --delete audit-temp-should-not-exist",
+    "/opt/homebrew/bin/pre-commit run --all-files",
+    ".venv/bin/python -m pytest tests/test_panel_layout.py -q",
+    ".venv/bin/python -m pytest",
+    "set +e; output=$(make test-board-exhaustive 2>&1); rc=$?; set -e; printf '%s\\n' \"$output\"; test \"$rc\" -eq 2; printf '%s\\n' \"$output\" | grep -q 'test sprzętowy nie zgaduje urządzenia'",
+    "test ! -e docs/AUTONOMOUS_TEST_RUNBOOK.md && test ! -e docs/PORTING_TO_LITEGRAPH.md && test ! -e .github/workflows/stage11-format-cleanup.yml && test ! -e .github/workflows/stage27c-storage-gate.yml && test ! -e .github/workflows/ml-dagger-stage11-resume.yml && ! git grep -n -F 'OUTPUT_EXECUTION_ARCHITECTURE.md' -- docs/ARCHITECTURE.md && ! git grep -n -F '/dev/cu.usbserial-10' -- tools/serial/capture.py Makefile",
+    "git diff --check && git status --short"
+  ]
+}
