@@ -1,0 +1,17 @@
+{
+  "id": "20260914-repo-cleanup-audit-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "feature/eink-clay-status",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 1024,
+  "command_timeout": 180,
+  "task_timeout": 600,
+  "commands": [
+    "set -euo pipefail; git fetch --prune origin; echo '=== HEAD ==='; git rev-parse HEAD; git status --short; echo '=== REMOTE BRANCHES ==='; git for-each-ref refs/remotes/origin --format='%(refname:short) %(objectname)' | sort",
+    "set -euo pipefail; echo '=== BRANCH RELATIONS ==='; for b in origin/main origin/feature/eink-clay-status origin/feature/eink-clay-status-chat-e23bf59b; do echo \"--- $b\"; git rev-list --left-right --count origin/main...$b || true; git merge-base origin/main $b || true; done; echo '=== FEATURE VS CHAT ==='; git rev-list --left-right --count origin/feature/eink-clay-status...origin/feature/eink-clay-status-chat-e23bf59b; git merge-base origin/feature/eink-clay-status origin/feature/eink-clay-status-chat-e23bf59b",
+    "set -euo pipefail; echo '=== DOC FILES ==='; git ls-files 'docs/**' | sort; echo '=== ROOT DOCS ==='; git ls-files '*.md' | sort; echo '=== DOC SIZES ==='; while IFS= read -r f; do [ -f \"$f\" ] && printf '%7s %6s %s\\n' \"$(wc -c <\"$f\")\" \"$(wc -l <\"$f\")\" \"$f\"; done < <(git ls-files 'docs/**' '*.md' | sort -u)",
+    "set -euo pipefail; echo '=== LIKELY DUPLICATE/HANDOFF REFERENCES ==='; rg -n 'FRESH_CHAT_BOOTSTRAP|CONTINUATION_PLAN|EINK_UI_HANDOFF|EINK_UI_NEW_CHAT_PROMPT|EINK_SCD41|ARCHITECTURE_HANDOFF|CURRENT_STATUS|PROJECT_ROADMAP' --glob '*.md' . || true; echo '=== DOC HEADINGS ==='; while IFS= read -r f; do echo \"--- $f\"; rg -m 8 '^#{1,3} ' \"$f\" || true; done < <(git ls-files 'docs/*.md' | sort)"
+  ]
+}
