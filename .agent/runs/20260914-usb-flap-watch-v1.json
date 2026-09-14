@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260914-usb-flap-watch-v1",
+  "task_digest": "bdf9a538063c5458f691ff796b5f9e2df2f62f7a9ff03bf584396a4048fd5cd5",
+  "idle_timeout": 140,
+  "task_timeout": 220,
+  "memory_limit_mb": 1024,
+  "started_at": "2026-09-14T10:59:02.494045+00:00",
+  "attempt_id": "94a87958f561caa0e119af91",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 9895,
+  "updated_at": "2026-09-14T10:59:02.494198+00:00",
+  "pid": 9895
+}
