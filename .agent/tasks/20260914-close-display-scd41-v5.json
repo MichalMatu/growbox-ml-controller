@@ -1,0 +1,19 @@
+{
+  "id": "20260914-close-display-scd41-v5",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": true,
+  "resources": [],
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch origin main agent-control && git checkout main && git reset --hard origin/main >/dev/null && test \"$(git rev-parse HEAD)\" = \"f53979923ad47dd9422f5457e8b54596c7fdf093\" && test -z \"$(git status --porcelain)\" && echo EXACT_SHA_OK",
+    "python3 - <<'PY'\nimport json, subprocess\ntask = json.loads(subprocess.check_output(['git','show','origin/agent-control:.agent/tasks/20260914-close-display-scd41-v4.json'], text=True))\nsubprocess.run(task['commands'][1], shell=True, executable='/bin/bash', check=True)\nPY",
+    "/opt/homebrew/bin/pre-commit run --files src/climate/display/DisplayPresenter.cpp src/climate/input/sensors/Scd41InsideSource.h src/climate/input/sensors/Scd41InsideSource.cpp test/test_display_presenter/test_main.cpp test/test_display_observer/test_main.cpp test/test_display_runtime/test_main.cpp tests/test_scd41_startup_policy.py && python3 - <<'PY'\nimport runpy\nns = runpy.run_path('tests/test_scd41_startup_policy.py')\nfor name in ('test_scd41_clean_start_sequence_is_preserved','test_scd41_availability_depends_on_periodic_start_result','test_scd41_no_data_recovery_is_one_shot_and_delayed'):\n    ns[name]()\nprint('SCD41_POLICY_TESTS_PASS')\nPY\nbash scripts/test_display_host.sh",
+    "export GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 GROWBOX_EINK_DISPLAY_ENABLED=1; bash scripts/stage27c_crowpanel.sh build",
+    "git diff --check && git add src/climate/display/DisplayPresenter.cpp src/climate/input/sensors/Scd41InsideSource.h src/climate/input/sensors/Scd41InsideSource.cpp test/test_display_presenter/test_main.cpp test/test_display_observer/test_main.cpp test/test_display_runtime/test_main.cpp tests/test_scd41_startup_policy.py && git commit -m 'Close e-ink status and SCD41 recovery' && git push origin HEAD:main && echo PUSHED_SHA=$(git rev-parse HEAD) && test -z \"$(git status --porcelain)\""
+  ]
+}
