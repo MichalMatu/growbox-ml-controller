@@ -1,9 +1,0 @@
-{
-  "id": "eink-display-crowpanel-port-verify-20260913-0931",
-  "status": "failed",
-  "failure_reason": "invalid_task_file",
-  "started_at": null,
-  "finished_at": "2026-09-13T07:31:19.565559+00:00",
-  "daemon_version": "4.18.20",
-  "error": "ValueError: resources must be declared explicitly"
-}
