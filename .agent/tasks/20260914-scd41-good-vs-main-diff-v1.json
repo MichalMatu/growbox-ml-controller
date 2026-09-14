@@ -1,0 +1,18 @@
+{
+  "id": "20260914-scd41-good-vs-main-diff-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 120,
+  "idle_timeout": 180,
+  "task_timeout": 300,
+  "memory_limit_mb": 1024,
+  "commands": [
+    "git fetch origin main && git fetch origin a1a05a91a6928f672a8f4f43963f979fefa7d79d || true; git reset --hard origin/main >/dev/null; test \"$(git rev-parse HEAD)\" = \"880ec9538b19f507310b7ab3fc3eafdb315452bd\" && test -z \"$(git status --porcelain)\"",
+    "echo '=== CHANGED RELEVANT FILES ==='; git diff --find-renames --name-status a1a05a91a6928f672a8f4f43963f979fefa7d79d..880ec9538b19f507310b7ab3fc3eafdb315452bd -- src/climate components/sensirion_scd4x main config CMakeLists.txt | grep -Ei 'scd|i2c|display|panel|runtime|climatev6|main|board|gpio|rtc|sensirion' || true",
+    "echo '=== CLIMATE RUNTIME DIFF ==='; git diff --find-renames --unified=20 a1a05a91a6928f672a8f4f43963f979fefa7d79d..880ec9538b19f507310b7ab3fc3eafdb315452bd -- src/climate/ClimateV6RealInputRuntime.cpp src/climate/native/Scd41InsideSource.cpp src/climate/input/sensors/Scd41InsideSource.cpp src/climate/native/NativeI2cBus.cpp src/climate/input/i2c/NativeI2cBus.cpp components/sensirion_scd4x/sensirion_i2c_hal.c | sed -n '1,1200p'",
+    "echo '=== INIT/LIFECYCLE HINTS ==='; git diff --find-renames --unified=8 a1a05a91a6928f672a8f4f43963f979fefa7d79d..880ec9538b19f507310b7ab3fc3eafdb315452bd -- src/climate | grep -Ein -B6 -A18 'display|panel|task|worker|i2c|gpio|begin\(|start\(|init|sleep|delay|mutex|spi' | sed -n '1,1400p'"
+  ]
+}
