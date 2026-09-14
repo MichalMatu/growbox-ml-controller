@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260914-last-check-v1",
+  "task_digest": "fd1a310ebed89857c7cdc108bf55150340e1c17549fc135526aa7de22dcaf049",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-14T07:34:16.131284+00:00",
+  "attempt_id": "257a0bc1f287f2a52c5e194d",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 92043,
+  "updated_at": "2026-09-14T07:34:16.131338+00:00",
+  "pid": 92043
+}
