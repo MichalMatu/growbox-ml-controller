@@ -1,0 +1,116 @@
+{
+  "id": "20260914-usb-enumeration-diagnose-v1",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "started_at": "2026-09-14T10:56:51.897429+00:00",
+  "command_timeout": 60,
+  "edits": {},
+  "commands": [
+    {
+      "command": "git fetch origin main >/dev/null && test -z \"$(git status --porcelain)\" && echo HEAD=$(git rev-parse HEAD)",
+      "exit_code": 0,
+      "output": "From https://github.com/MichalMatu/growbox-ml-controller\n * branch                main       -> FETCH_HEAD\nHEAD=a92074b74b055c58c0949c7c38f4896638ebf227\n",
+      "elapsed_seconds": 0.853,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 1024,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 3.02,
+      "output_policy": "stream",
+      "captured_output_chars": 153,
+      "output_truncated": false,
+      "current_rss_mb": 3.02,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "python3 - <<'PY'\nimport json, subprocess\np=subprocess.run(['system_profiler','SPUSBDataType','-json'],capture_output=True,text=True,timeout=45)\nprint('SYSTEM_PROFILER_RC',p.returncode)\nif p.returncode:\n    print(p.stderr[-4000:]); raise SystemExit(0)\ndata=json.loads(p.stdout or '{}')\ninteresting=[]\ndef walk(x,path=()):\n    if isinstance(x,dict):\n        name=x.get('_name') or x.get('name') or ''\n        np=path+((str(name),) if name else ())\n        fields={k:x.get(k) for k in ('_name','manufacturer','vendor_id','product_id','serial_num','location_id','bcd_device','current_available','current_required','extra_current_used') if x.get(k) is not None}\n        text=' '.join(str(v) for v in fields.values()).lower()\n        if fields and any(k in text for k in ('wch','qin','ch34','ch910','usb serial','uart','silicon labs','cp210','espressif','303a','1a86')):\n            interesting.append((np,fields))\n        for v in x.values(): walk(v,np)\n    elif isinstance(x,list):\n        for v in x: walk(v,path)\nwalk(data)\nprint('USB_INTERESTING_BEGIN')\nfor path,fields in interesting:\n    print('PATH',' > '.join(path)); print('FIELDS',json.dumps(fields,ensure_ascii=False,sort_keys=True))\nprint('USB_INTERESTING_END')\nprint('USB_INTERESTING_COUNT',len(interesting))\nPY",
+      "exit_code": 0,
+      "output": "SYSTEM_PROFILER_RC 0\nUSB_INTERESTING_BEGIN\nUSB_INTERESTING_END\nUSB_INTERESTING_COUNT 0\n",
+      "elapsed_seconds": 0.51,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 1024,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 2.67,
+      "output_policy": "stream",
+      "captured_output_chars": 87,
+      "output_truncated": false,
+      "current_rss_mb": 2.67,
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "python3 - <<'PY'\nimport subprocess\np=subprocess.run(['ioreg','-r','-c','IOSerialBSDClient','-l','-w','0'],capture_output=True,text=True,timeout=20)\nprint('IOSERIAL_REGISTRY_BEGIN')\nfor line in p.stdout.splitlines():\n    low=line.lower()\n    if any(k in low for k in ('iocalloutdevice','iodialindevice','usb serial','usbserial','wch','ch34','ch910','cp210','espressif','idvendor','idproduct')):\n        print(line)\nprint('IOSERIAL_REGISTRY_END')\nprint('IOREG_RC',p.returncode)\nPY",
+      "exit_code": 0,
+      "output": "IOSERIAL_REGISTRY_BEGIN\n      \"IOCalloutDevice\" = \"/dev/cu.wlan-debug\"\n      \"IODialinDevice\" = \"/dev/tty.wlan-debug\"\n      \"IOCalloutDevice\" = \"/dev/cu.debug-console\"\n      \"IODialinDevice\" = \"/dev/tty.debug-console\"\n      \"IOTTYBaseName\" = \"usbserial-\"\n      \"IOTTYDevice\" = \"usbserial-10\"\n      \"IOCalloutDevice\" = \"/dev/cu.usbserial-10\"\n      \"IODialinDevice\" = \"/dev/tty.usbserial-10\"\n      \"IOCalloutDevice\" = \"/dev/cu.Bluetooth-Incoming-Port\"\n      \"IODialinDevice\" = \"/dev/tty.Bluetooth-Incoming-Port\"\n      \"IOCalloutDevice\" = \"/dev/cu.BoseQCUltraHeadphones\"\n      \"IODialinDevice\" = \"/dev/tty.BoseQCUltraHeadphones\"\nIOSERIAL_REGISTRY_END\nIOREG_RC 0\n",
+      "elapsed_seconds": 0.416,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 1024,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 2.12,
+      "output_policy": "stream",
+      "captured_output_chars": 659,
+      "output_truncated": false,
+      "current_rss_mb": 2.12,
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.853
+    },
+    {
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.51
+    },
+    {
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 3,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.416
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.078
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.067
+  },
+  "finished_at": "2026-09-14T10:56:55.250885+00:00",
+  "task_digest": "94822db1a0f3327d4448895db41365c052c87886dfe4cd9f1aff8be6652601d5",
+  "idle_timeout": 120,
+  "task_timeout": 180,
+  "memory_limit_mb": 1024,
+  "attempt_id": "c4d489e44bf8ae23fd95f8cf",
+  "daemon_version": "4.18.20"
+}
