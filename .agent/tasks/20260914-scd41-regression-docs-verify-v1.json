@@ -1,0 +1,18 @@
+{
+  "id": "20260914-scd41-regression-docs-verify-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 300,
+  "idle_timeout": 180,
+  "task_timeout": 600,
+  "memory_limit_mb": 2048,
+  "commands": [
+    "git fetch origin main && git reset --hard origin/main >/dev/null && test \"$(git rev-parse HEAD)\" = \"dd6e0e860b567814a95ffa25bc3516124f254919\" && test -z \"$(git status --porcelain)\" && echo EXACT_SHA_OK",
+    "/opt/homebrew/bin/pre-commit run --files tests/test_scd41_startup_policy.py docs/CURRENT_STATUS.md docs/CHANGELOG.md docs/HISTORY.md",
+    "python3 -m pytest -q tests/test_scd41_startup_policy.py",
+    "test -z \"$(git status --porcelain)\" && test \"$(git rev-parse HEAD)\" = \"dd6e0e860b567814a95ffa25bc3516124f254919\" && echo FINAL_CLEAN_SHA_OK"
+  ]
+}
