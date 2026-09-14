@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260914-scd41-clean-start-build-v1",
+  "task_digest": "f7f3e0082e5d1f9f6f845dac976097b123305516cdfe2918d784c488e6354048",
+  "idle_timeout": 600,
+  "task_timeout": 2400,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-14T10:43:15.630147+00:00",
+  "attempt_id": "0538cbecba60595c6d9a70a8",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 92791,
+  "updated_at": "2026-09-14T10:43:15.630276+00:00",
+  "pid": 92791
+}
