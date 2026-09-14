@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260914-display-ci-local-verify-v1",
+  "task_digest": "967d2c5430311077efad6ec73e7420d21a006e5f6ac98718d3564be4ebcd1553",
+  "idle_timeout": 180,
+  "task_timeout": 900,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-14T12:04:01.807191+00:00",
+  "attempt_id": "62212101fc0fbc55c5947192",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 70512,
+  "updated_at": "2026-09-14T12:04:01.807251+00:00",
+  "pid": 70512
+}
