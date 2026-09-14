@@ -1,0 +1,19 @@
+{
+  "id": "20260914-scd41-eink-enabled-qual-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 600,
+  "idle_timeout": 240,
+  "task_timeout": 1200,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch origin main && git reset --hard origin/main >/dev/null && test \"$(git rev-parse HEAD)\" = \"a92074b74b055c58c0949c7c38f4896638ebf227\" && test -z \"$(git status --porcelain)\"",
+    "if test -c /dev/cu.usbserial-1130; then echo TARGET_PRESENT=1; lsof /dev/cu.usbserial-1130 || true; else echo TARGET_PRESENT=0; fi",
+    "if test -c /dev/cu.usbserial-1130 && ! lsof /dev/cu.usbserial-1130 >/dev/null 2>&1; then export PORT=/dev/cu.usbserial-1130 GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 GROWBOX_EINK_DISPLAY_ENABLED=1 GROWBOX_FIRMWARE_GIT_SHA=a92074b74b055c58c0949c7c38f4896638ebf227; bash scripts/stage27c_crowpanel.sh flash; else echo FLASH_SKIPPED_TARGET_UNAVAILABLE_OR_BUSY; fi",
+    "python3 - <<'PY'\nimport os, subprocess, time\nt='/dev/cu.usbserial-1130'\nif not os.path.exists(t):\n    print('CAPTURE_SKIPPED target_missing'); raise SystemExit(0)\nbusy=subprocess.run(['lsof',t],capture_output=True,text=True).stdout.strip()\nif busy:\n    print('CAPTURE_SKIPPED target_busy'); print(busy); raise SystemExit(0)\nimport serial\ns=serial.Serial(); s.port=t; s.baudrate=115200; s.timeout=0.25; s.dtr=False; s.rts=False; s.open()\nprint('SERIAL_OPEN_OK',t)\nstart=time.monotonic(); lines=[]\nwhile time.monotonic()-start < 90:\n    raw=s.readline()\n    if raw: lines.append((time.monotonic()-start,raw.decode('utf-8',errors='replace').rstrip()))\ns.close()\nprint('TOTAL_LINES',len(lines))\nprint('ROM_BOOT_COUNT',sum('ESP-ROM:esp32s3' in x for _,x in lines))\nprint('RST_COUNT',sum('rst:0x' in x for _,x in lines))\nprint('PANIC_COUNT',sum(('Guru Meditation' in x or 'panic' in x.lower() or 'abort' in x.lower()) for _,x in lines))\nprint('BROWNOUT_COUNT',sum('brownout' in x.lower() for _,x in lines))\nprint('EINK_REFRESH_SUCCESS_COUNT',sum('Physical refresh completed' in x for _,x in lines))\nprint('TIMELINE_BEGIN')\nkeys=('ESP-ROM:esp32s3','rst:0x','Guru Meditation','panic','abort','watchdog','wdt','brownout','Backtrace','firmware_sha','i2c probe','scd_','scd41','eink_display','Stage27 real-input runtime')\nfor dt,x in lines:\n    if any(k.lower() in x.lower() for k in keys): print(f'{dt:07.2f}s | {x}')\nprint('TIMELINE_END')\nPY",
+    "test -z \"$(git status --porcelain)\" && echo FINAL_HEAD=$(git rev-parse HEAD)"
+  ]
+}
