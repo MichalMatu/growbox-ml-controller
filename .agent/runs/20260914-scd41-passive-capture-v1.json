@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260914-scd41-passive-capture-v1",
+  "task_digest": "614a171de46a48ed0f7799c4ecbfeb62ad4469e7852cea1cfb8774fc3da5062c",
+  "idle_timeout": 180,
+  "task_timeout": 300,
+  "memory_limit_mb": 1024,
+  "started_at": "2026-09-14T09:20:29.428055+00:00",
+  "attempt_id": "5e242a4598b57b9d217fcfc6",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 2053,
+  "updated_at": "2026-09-14T09:20:29.428196+00:00",
+  "pid": 2053
+}
