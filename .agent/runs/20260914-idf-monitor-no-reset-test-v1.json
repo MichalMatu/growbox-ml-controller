@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260914-idf-monitor-no-reset-test-v1",
+  "task_digest": "64a553eb38a209a91c435ad2dc3dfa6d4af54bfe9b888e4a5cb798c6ddac9714",
+  "idle_timeout": 300,
+  "task_timeout": 180,
+  "memory_limit_mb": 1024,
+  "started_at": "2026-09-14T08:55:24.990077+00:00",
+  "attempt_id": "cdbc67cc6ced25faf7d06ab5",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 69438,
+  "updated_at": "2026-09-14T08:55:24.990226+00:00",
+  "pid": 69438
+}
