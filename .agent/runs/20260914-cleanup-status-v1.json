@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260914-cleanup-status-v1",
   "task_digest": "6f9015aaaabed8c8caf55645e6068bc6f7fbb14b9f6445f7b49d07ff40113c0d",
-  "idle_timeout": 300,
-  "task_timeout": 1800,
-  "memory_limit_mb": 4096,
-  "started_at": "2026-09-14T07:29:16.283388+00:00",
+  "status": "done",
+  "failure_reason": null,
+  "finished_at": "2026-09-14T07:29:18.501756+00:00",
   "attempt_id": "8b09e472d235870f3f1390ce",
   "daemon_version": "4.18.20",
   "daemon_pid": 86020,
-  "updated_at": "2026-09-14T07:29:16.283502+00:00",
+  "updated_at": "2026-09-14T07:29:18.785998+00:00",
   "pid": 86020
 }
