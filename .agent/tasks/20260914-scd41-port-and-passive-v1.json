@@ -1,0 +1,17 @@
+{
+  "id": "20260914-scd41-port-and-passive-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 140,
+  "idle_timeout": 180,
+  "task_timeout": 360,
+  "memory_limit_mb": 1024,
+  "commands": [
+    "git fetch origin main && git reset --hard origin/main >/dev/null && test \"$(git rev-parse HEAD)\" = \"880ec9538b19f507310b7ab3fc3eafdb315452bd\" && test -z \"$(git status --porcelain)\"",
+    "if test -c /dev/cu.usbserial-1130; then echo PORT_PRESENT=1; ls -l /dev/cu.usbserial-1130; echo LSOF_BEGIN; lsof /dev/cu.usbserial-1130 || true; echo LSOF_END; else echo PORT_PRESENT=0; fi",
+    "if test -c /dev/cu.usbserial-1130 && ! lsof /dev/cu.usbserial-1130 >/dev/null 2>&1; then python3 - <<'PY'\nimport time\nimport serial\nport='/dev/cu.usbserial-1130'\ns=serial.Serial()\ns.port=port\ns.baudrate=115200\ns.timeout=0.25\ns.dtr=False\ns.rts=False\ns.open()\nprint('SERIAL_OPEN_OK', s.name, s.baudrate)\nstart=time.monotonic(); lines=[]; total=0\nwhile time.monotonic()-start < 90.0:\n    raw=s.readline()\n    if not raw:\n        continue\n    total += len(raw)\n    lines.append((time.monotonic()-start, raw.decode('utf-8', errors='replace').rstrip()))\ns.close()\nprint('SERIAL_BYTES', total)\nprint('SERIAL_LINES', len(lines))\nprint('SCD_TIMELINE_BEGIN')\nfor t,txt in lines:\n    low=txt.lower()\n    if 'scd_' in low or 'scd41' in low or 'eink_display' in low or 'i2c probe' in low:\n        print(f'{t:07.2f}s | {txt}')\nprint('SCD_TIMELINE_END')\nelse echo PASSIVE_CAPTURE_SKIPPED; fi"
+  ]
+}
