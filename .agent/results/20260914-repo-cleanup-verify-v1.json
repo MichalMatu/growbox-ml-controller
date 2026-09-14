@@ -1,0 +1,117 @@
+{
+  "id": "20260914-repo-cleanup-verify-v1",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": true,
+  "started_at": "2026-09-14T06:53:53.882875+00:00",
+  "command_timeout": 900,
+  "edits": {},
+  "commands": [
+    {
+      "command": "set -eu; git fetch --prune origin; test \"$(git rev-parse HEAD)\" = c77b750ba66d35784af0a1dce4763f0c1e9dc062; test \"$(git rev-parse origin/main)\" = c77b750ba66d35784af0a1dce4763f0c1e9dc062; git status --short; echo 'main exact SHA verified'",
+      "exit_code": 0,
+      "output": "From https://github.com/MichalMatu/growbox-ml-controller\n   06526c61e..edb46aeff  agent-control -> origin/agent-control\n   ceaaa8880..c77b750ba  feature/eink-clay-status -> origin/feature/eink-clay-status\nmain exact SHA verified\n",
+      "elapsed_seconds": 1.034,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 2.7,
+      "output_policy": "stream",
+      "captured_output_chars": 229,
+      "output_truncated": false,
+      "current_rss_mb": 2.7,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 4,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "set -eu; echo '=== stale live-doc references ==='; git grep -n -E 'ARCHITECTURE_HANDOFF|CONTINUATION_PLAN|FRESH_CHAT_BOOTSTRAP|EINK_(UI|SCD41).*(HANDOFF|PROMPT)|STAGE27.*HANDOFF|STAGE28E_PHASE_[A-H]_HANDOFF|OUTPUT_EXECUTION_ARCHITECTURE_.*AUDIT|OUTPUT_EXECUTION_IMPLEMENTATION_PLAN|PRESTAGE28D_GOLDEN_CHECKPOINT|QUALITY_FREEZE_PLAN|MVP_REBUILD_CLEANUP_PLAN|docs/GUIDANCE.md|INTEGRATION_CONVERGENCE' -- '*.md' || true",
+      "exit_code": 0,
+      "output": "=== stale live-doc references ===\ndocs/CHANGELOG.md:10:- Added `docs/EINK_UI_HANDOFF.md` with the autonomous implementation plan, architecture boundaries, unattended hardware-safety rules and required log/memory/panic qualification evidence.\ndocs/CHANGELOG.md:11:- Added `docs/EINK_UI_NEW_CHAT_PROMPT.md` as a ready copy/paste fresh-chat prompt for the overnight implementation.\ndocs/HARDWARE_BRINGUP_CHECKLIST.md:138:See `docs/STAGE27_NATIVE_IDF_HANDOFF.md` for the fresh-chat bootstrap and hybrid GitHub + Local Agent workflow.\ndocs/OUTPUT_EXECUTION_ARCHITECTURE.md:405:The audit should produce `docs/OUTPUT_EXECUTION_ARCHITECTURE_AUDIT.md` before production behavior is changed.\ndocs/STAGE27C_CROWPANEL_BRINGUP.md:9:> **Final status:** Stage27C points 1-7 are closed for the requested scope. The exact final firmware-under-test, seven accepted long-soak chunks, point-6 host validation and closure decision are frozen in `docs/STAGE27C_FINAL_EVIDENCE.md`. `docs/STAGE27C_PRE_SOAK_HANDOFF.md` and `docs/STAGE27C_CONTINUATION_HANDOFF.md` are historical handoffs and must not be used to resume the completed soak.\nweb/README.md:98:See `../docs/INTEGRATION_CONVERGENCE.md` for preservation rules and deletion criteria.\n",
+      "elapsed_seconds": 0.407,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 4.41,
+      "output_policy": "stream",
+      "captured_output_chars": 1218,
+      "output_truncated": false,
+      "current_rss_mb": 4.41,
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 4,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "set -eu; python3 - <<'PY'\nfrom pathlib import Path\nimport re, subprocess, sys\nfiles = subprocess.check_output(['git','ls-files','*.md'], text=True).splitlines()\nmissing=[]\npat=re.compile(r'\\[[^\\]]*\\]\\(([^)]+)\\)')\nfor name in files:\n    p=Path(name)\n    text=p.read_text(encoding='utf-8', errors='replace')\n    for raw in pat.findall(text):\n        target=raw.split('#',1)[0].strip()\n        if not target or target.startswith(('http://','https://','mailto:')):\n            continue\n        target=target.split(' ',1)[0]\n        q=(p.parent/target).resolve()\n        if not q.exists():\n            missing.append(f'{name}: {raw}')\nif missing:\n    print('Missing local markdown links:')\n    print('\\n'.join(missing))\n    sys.exit(1)\nprint(f'Local markdown links OK across {len(files)} tracked markdown files')\nPY",
+      "exit_code": 1,
+      "output": "Missing local markdown links:\ndocs/IO_MAP.md: plan.md\ndocs/IO_MAP.md: plan.md\ndocs/IO_MAP.md: plan.md\ndocs/IO_MAP.md: plan.md\ndocs/simulator/IO_INVENTORY.md: ../plan.md\n",
+      "elapsed_seconds": 0.415,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 4096,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 2.5,
+      "output_policy": "stream",
+      "captured_output_chars": 169,
+      "output_truncated": false,
+      "current_rss_mb": 2.5,
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 4,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 4,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 1.034
+    },
+    {
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 4,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.407
+    },
+    {
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 4,
+      "stage_phase": "commands",
+      "outcome": "failed",
+      "elapsed_seconds": 0.415
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.073
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.066
+  },
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-14T06:53:57.753752+00:00",
+  "task_digest": "6a9bfe8c7024006915c3cea374d05350db1ee461773a4443042a8a7517241b3b",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "attempt_id": "b40364e5b90aeb0bb890afd2",
+  "daemon_version": "4.18.20"
+}
