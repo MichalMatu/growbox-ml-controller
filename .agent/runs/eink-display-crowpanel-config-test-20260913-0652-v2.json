@@ -1,9 +1,0 @@
-{
-  "event": "invalid_task_rejected",
-  "status": "failed",
-  "failure_reason": "invalid_task_file",
-  "updated_at": "2026-09-13T06:52:27.165523+00:00",
-  "task_id": "eink-display-crowpanel-config-test-20260913-0652-v2",
-  "daemon_version": "4.18.20",
-  "pid": 11748
-}
