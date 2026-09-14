@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260914-usb-enumeration-diagnose-v1",
+  "task_digest": "94822db1a0f3327d4448895db41365c052c87886dfe4cd9f1aff8be6652601d5",
+  "idle_timeout": 120,
+  "task_timeout": 180,
+  "memory_limit_mb": 1024,
+  "started_at": "2026-09-14T10:56:51.897329+00:00",
+  "attempt_id": "c4d489e44bf8ae23fd95f8cf",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 7919,
+  "updated_at": "2026-09-14T10:56:51.897501+00:00",
+  "pid": 7919
+}
