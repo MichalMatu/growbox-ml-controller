@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260914-repo-cleanup-verify-v1",
+  "task_digest": "6a9bfe8c7024006915c3cea374d05350db1ee461773a4443042a8a7517241b3b",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-14T06:53:53.882780+00:00",
+  "attempt_id": "b40364e5b90aeb0bb890afd2",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 36953,
+  "updated_at": "2026-09-14T06:53:53.882961+00:00",
+  "pid": 36953
+}
