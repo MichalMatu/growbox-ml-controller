@@ -1,0 +1,17 @@
+{
+  "id": "20260914-repo-cleanup-audit-v2",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "feature/eink-clay-status",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 1024,
+  "command_timeout": 180,
+  "task_timeout": 600,
+  "commands": [
+    "set -eu; git fetch --prune origin; echo '=== HEAD ==='; git rev-parse HEAD; git status --short; echo '=== REMOTE BRANCHES ==='; git for-each-ref refs/remotes/origin --format='%(refname:short) %(objectname)' | sort",
+    "set -eu; echo '=== DOC FILES ==='; git ls-files 'docs/**' | sort; echo '=== ROOT DOCS ==='; git ls-files '*.md' | sort; echo '=== DOC SIZES ==='; git ls-files 'docs/**' '*.md' | sort -u > /tmp/growbox-doc-list.txt; while IFS= read -r f; do if [ -f \"$f\" ]; then bytes=$(wc -c < \"$f\" | tr -d ' '); lines=$(wc -l < \"$f\" | tr -d ' '); printf '%7s %6s %s\\n' \"$bytes\" \"$lines\" \"$f\"; fi; done < /tmp/growbox-doc-list.txt",
+    "set -eu; echo '=== LIKELY DUPLICATE/HANDOFF REFERENCES ==='; rg -n 'FRESH_CHAT_BOOTSTRAP|CONTINUATION_PLAN|EINK_UI_HANDOFF|EINK_UI_NEW_CHAT_PROMPT|EINK_SCD41|ARCHITECTURE_HANDOFF|CURRENT_STATUS|PROJECT_ROADMAP' --glob '*.md' . || true",
+    "set -eu; echo '=== DOC HEADINGS ==='; git ls-files 'docs/*.md' | sort > /tmp/growbox-doc-md-list.txt; while IFS= read -r f; do echo \"--- $f\"; rg -m 10 '^#{1,3} ' \"$f\" || true; done < /tmp/growbox-doc-md-list.txt"
+  ]
+}
