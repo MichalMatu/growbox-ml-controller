@@ -1,0 +1,16 @@
+{
+  "id": "20260914-serial-monitor-policy-ruff-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": true,
+  "resources": [],
+  "command_timeout": 120,
+  "task_timeout": 300,
+  "memory_limit_mb": 1024,
+  "commands": [
+    "git fetch origin main && test \"$(git rev-parse HEAD)\" = \"30ec2908494cb923136aa6e86878828b5211c036\" && test -z \"$(git status --porcelain)\"",
+    "/opt/homebrew/bin/pre-commit run ruff --files tests/test_serial_monitor_policy.py || true; /opt/homebrew/bin/pre-commit run ruff-format --files tests/test_serial_monitor_policy.py || true; git diff -- tests/test_serial_monitor_policy.py",
+    "git checkout -- tests/test_serial_monitor_policy.py && test -z \"$(git status --porcelain)\""
+  ]
+}
