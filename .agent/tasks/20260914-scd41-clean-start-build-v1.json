@@ -1,0 +1,18 @@
+{
+  "id": "20260914-scd41-clean-start-build-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 1800,
+  "idle_timeout": 600,
+  "task_timeout": 2400,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch origin main && git reset --hard origin/main >/dev/null && test \"$(git rev-parse HEAD)\" = \"a92074b74b055c58c0949c7c38f4896638ebf227\" && test -z \"$(git status --porcelain)\"",
+    "/opt/homebrew/bin/pre-commit run --files src/climate/input/sensors/Scd41InsideSource.cpp",
+    "export GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0; bash scripts/stage27c_crowpanel.sh build",
+    "test -z \"$(git status --porcelain)\" && git rev-parse HEAD"
+  ]
+}
