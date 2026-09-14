@@ -1,0 +1,19 @@
+{
+  "id": "20260914-serial-monitor-modes-audit-v2",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 120,
+  "task_timeout": 300,
+  "memory_limit_mb": 1024,
+  "commands": [
+    "git fetch origin main && test \"$(git rev-parse HEAD)\" = \"b9e165f13841c8b4dc0f65eae77c5dc3e0e460eb\" && git status --short",
+    "echo '--- restart and console references ---'; git grep -n -E 'esp_restart|restart|reboot|ServiceConsole|service console' -- src components lib tools scripts Makefile docs || true",
+    "echo '--- serial monitor references ---'; git grep -n -E 'idf.py monitor|esp_idf_monitor|DTR|RTS|hupcl|HUPCL|usbserial-1130' -- Makefile scripts tools docs config src components lib || true",
+    "echo '--- console-like files ---'; find src components lib tools -type f | grep -Ei 'console|serial|diagnostic' | sort || true",
+    "echo '--- installed monitor help ---'; if command -v idf.py >/dev/null 2>&1; then idf.py monitor --help | sed -n '1,220p'; elif python3 -m esp_idf_monitor --help >/dev/null 2>&1; then python3 -m esp_idf_monitor --help | sed -n '1,220p'; else echo IDF_MONITOR_NOT_ON_DEFAULT_PATH; fi",
+    "echo '--- pyserial version ---'; python3 -c 'import serial; print(serial.VERSION)'; echo '--- stty settings supported ---'; stty -a </dev/null 2>&1 || true"
+  ]
+}
