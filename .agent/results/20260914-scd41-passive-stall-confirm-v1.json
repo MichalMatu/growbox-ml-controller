@@ -1,0 +1,143 @@
+{
+  "id": "20260914-scd41-passive-stall-confirm-v1",
+  "status": "done",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "started_at": "2026-09-14T12:24:20.724600+00:00",
+  "command_timeout": 180,
+  "edits": {},
+  "commands": [
+    {
+      "command": "git fetch origin main && git reset --hard origin/main >/dev/null && test \"$(git rev-parse HEAD)\" = \"f53979923ad47dd9422f5457e8b54596c7fdf093\" && test -z \"$(git status --porcelain)\" && echo EXACT_SHA_OK",
+      "exit_code": 0,
+      "output": "From https://github.com/MichalMatu/growbox-ml-controller\n * branch                main       -> FETCH_HEAD\nEXACT_SHA_OK\n",
+      "elapsed_seconds": 0.954,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 2048,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 2.98,
+      "output_policy": "stream",
+      "captured_output_chars": 120,
+      "output_truncated": false,
+      "current_rss_mb": 2.98,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 4,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "if test -c /dev/cu.usbserial-1130; then echo TARGET_PRESENT=1; if lsof /dev/cu.usbserial-1130 >/dev/null 2>&1; then echo TARGET_BUSY; exit 3; else echo TARGET_FREE=1; fi; else echo TARGET_PRESENT=0; exit 2; fi",
+      "exit_code": 0,
+      "output": "TARGET_PRESENT=1\nTARGET_FREE=1\n",
+      "elapsed_seconds": 0.321,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 2048,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": null,
+      "output_policy": "stream",
+      "captured_output_chars": 31,
+      "output_truncated": false,
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 4,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "python3 - <<'PY'\nimport os, serial, time\np='/dev/cu.usbserial-1130'\nif not os.path.exists(p):\n    print('MONITOR_TARGET_MISSING'); raise SystemExit(4)\ns=serial.Serial(); s.port=p; s.baudrate=115200; s.timeout=0.25; s.dtr=False; s.rts=False; s.open()\nstart=time.monotonic(); lines=[]\nwhile time.monotonic()-start < 75.0:\n    raw=s.readline()\n    if raw:\n        lines.append((time.monotonic()-start, raw.decode('utf-8', errors='replace').rstrip()))\ns.close()\nfw='f53979923ad47dd9422f5457e8b54596c7fdf093'\nsamples=[]; ages=[]; errs=[]\nfor dt,x in lines:\n    if 'scd_samples=' in x:\n        try: samples.append((dt,int(x.split('scd_samples=',1)[1].split()[0])))\n        except Exception: pass\n    if 'scd_age_ms=' in x:\n        try: ages.append((dt,int(x.split('scd_age_ms=',1)[1].split()[0])))\n        except Exception: pass\n    if ('scd_read_errors=' in x and 'scd_read_errors=0' not in x) or ('scd_invalid=' in x and 'scd_invalid=0' not in x): errs.append((dt,x))\nprint('TOTAL_LINES',len(lines))\nprint('FIRMWARE_SEEN',int(any(('firmware_sha='+fw) in x for _,x in lines)))\nprint('RESET_LINES',sum(('ESP-ROM:esp32s3' in x or 'rst:0x' in x) for _,x in lines))\nprint('SCD_SAMPLE_POINTS',samples[:3],samples[-3:] if samples else [])\nprint('SCD_MAX_SAMPLES',max((v for _,v in samples), default=-1))\nprint('SCD_LAST_AGE_MS',ages[-1][1] if ages else -1)\nprint('SCD_ERROR_LINES',len(errs))\nprint('EINK_REFRESH_SUCCESS_COUNT',sum('Physical refresh completed' in x for _,x in lines))\nprint('TIMELINE_BEGIN')\nfor dt,x in lines:\n    if ('scd_samples=' in x or 'Physical refresh completed' in x or 'Guru Meditation' in x or 'brownout' in x.lower() or 'rst:0x' in x):\n        print(f'{dt:07.2f}s | {x}')\nprint('TIMELINE_END')\nPY",
+      "exit_code": 0,
+      "output": "TOTAL_LINES 147\nFIRMWARE_SEEN 1\nRESET_LINES 2\nSCD_SAMPLE_POINTS [(2.066095874994062, 0), (12.315336917003151, 1), (22.56785024999408, 2)] [(53.32470591700985, 5), (63.576505750010256, 6), (73.82615366700338, 7)]\nSCD_MAX_SAMPLES 7\nSCD_LAST_AGE_MS 0\nSCD_ERROR_LINES 0\nEINK_REFRESH_SUCCESS_COUNT 5\nTIMELINE_BEGIN\n0000.02s | rst:0x1 (POWERON),boot:0xb (SPI_FAST_FLASH_BOOT)\n0002.07s |   rtc set-unix <epoch>96 outputs=fake-lockedu=1148 b=6f456db7 s=2 INFO/WATCHDOG main/c0 heartbeat seq=1 uptime_ms=1125 internal_free=206016 internal_min=206016I (1916) climate_stage27: soak_v=3 firmware_sha=f53979923ad47dd9422f5457e8b54596c7fdf093 uptime_ms=1125 reset_reason=1 input_sampled=1 io_status=2 heap_internal=206016 heap_internal_min=206016 heap_internal_largest=163840 heap_psram=8372904 heap_psram_min=8372904 heap_psram_largest=8257536 stack_free=7176 scd_available=1 scd_sample=0 scd_t=0.00 scd_rh=0.00 scd_co2=0 scd_age_ms=0 scd_read_errors=0 scd_invalid=0 scd_samples=0 rtc_available=1 rtc_trusted=1 rtc_reads=2 rtc_read_errors=0 rtc_untrusted=0 rtc_last_success_ms=1125 rtc_last_trusted_ms=1125 rtc_unix_time_s=1789388645 ble_scanning=1 ble_scan_starts=1 ble_scan_errors=0 ble_scan_restarts=0 ble_scan_completes=0 ble_adv_lock_drops=0 tp_sample=0 tp_t=0.00 tp_rh=0.00 tp_age_ms=0 tp_packets=0 tp_accepted=0 tp_rejected=0 xiaomi_sample=0 xiaomi_t=0.00 xiaomi_rh=0.00 xiaomi_age_ms=0 xiaomi_packets=0 xiaomi_accepted=0 xiaomi_rejected=0 runtime_status=0 runtime_mode=0 rule_arb=0 rule_safety=0 requested_fan=0.000 requested_humidifier=0.000 applied_heater=0.000 applied_cooler=0.000 applied_fan=0.000 applied_humidifier=0.000 applied_dehumidifier=0.000 applied_co2=0.000 output_v=2 supervisor_mode=1 transport_active=0 lifecycle_active=1 lifecycle_event=0 automation_requested=0 safety_latched=1 safety_reason=2 storage_backend=none storage_sd_mounted=0 storage_flash_mounted=0 storage_sd_mount_errors=0 storage_flash_mount_errors=0 storage_write_errors=0 storage_queue_drops=0 storage_records_written=0 storage_records_skipped=0 storage_fallbacks=0 storage_sd_recoveries=0 storage_last_write_ms=0\n0004.29s | I (4286) eink_display: Physical refresh completed generation=1 kind=2 reason=1 successes=1\n0012.32s | u=11408 b=6f456db7 s=3 INFO/WATCHDOG main/c0 heartbeat seq=2 uptime_ms=11387 internal_free=201664 internal_min=201132I (12166) climate_stage27: soak_v=3 firmware_sha=f53979923ad47dd9422f5457e8b54596c7fdf093 uptime_ms=11387 reset_reason=1 input_sampled=0 io_status=3 heap_internal=201664 heap_internal_min=201132 heap_internal_largest=155648 heap_psram=8355956 heap_psram_min=8355956 heap_psram_largest=8257536 stack_free=3720 scd_available=1 scd_sample=1 scd_t=24.16 scd_rh=58.05 scd_co2=699 scd_age_ms=0 scd_read_errors=0 scd_invalid=0 scd_samples=1 rtc_available=1 rtc_trusted=1 rtc_reads=12 rtc_read_errors=0 rtc_untrusted=0 rtc_last_success_ms=11387 rtc_last_trusted_ms=11387 rtc_unix_time_s=1789388655 ble_scanning=1 ble_scan_starts=1 ble_scan_errors=0 ble_scan_restarts=0 ble_scan_completes=0 ble_adv_lock_drops=0 tp_sample=1 tp_t=23.60 tp_rh=76.00 tp_age_ms=1412 tp_packets=7 tp_accepted=7 tp_rejected=0 xiaomi_sample=1 xiaomi_t=23.63 xiaomi_rh=64.46 xiaomi_age_ms=1843 xiaomi_packets=10 xiaomi_accepted=5 xiaomi_rejected=5 runtime_status=0 runtime_mode=0 rule_arb=0 rule_safety=0 requested_fan=0.000 requested_humidifier=0.000 applied_heater=0.000 applied_cooler=0.000 applied_fan=0.000 applied_humidifier=0.000 applied_dehumidifier=0.000 applied_co2=0.000 output_v=2 supervisor_mode=5 transport_active=0 lifecycle_active=0 lifecycle_event=3 automation_requested=0 safety_latched=0 safety_reason=0 storage_backend=sd storage_sd_mounted=1 storage_flash_mounted=0 storage_sd_mount_errors=0 storage_flash_mount_errors=0 storage_write_errors=0 storage_queue_drops=0 storage_records_written=2 storage_records_skipped=0 storage_fallbacks=0 storage_sd_recoveries=0 storage_last_write_ms=1125\n0014.49s | I (14486) eink_display: Physical refresh completed generation=2 kind=2 reason=3 successes=2\n0022.57s | u=21658 b=6f456db7 s=4 INFO/WATCHDOG main/c0 heartbeat seq=3 uptime_ms=21637 internal_free=201664 internal_min=201132I (22416) climate_stage27: soak_v=3 firmware_sha=f53979923ad47dd9422f5457e8b54596c7fdf093 uptime_ms=21637 reset_reason=1 input_sampled=0 io_status=3 heap_internal=201664 heap_internal_min=201132 heap_internal_largest=155648 heap_psram=8355956 heap_psram_min=8355956 heap_psram_largest=8257536 stack_free=3720 scd_available=1 scd_sample=1 scd_t=24.10 scd_rh=59.26 scd_co2=667 scd_age_ms=0 scd_read_errors=0 scd_invalid=0 scd_samples=2 rtc_available=1 rtc_trusted=1 rtc_reads=22 rtc_read_errors=0 rtc_untrusted=0 rtc_last_success_ms=21637 rtc_last_trusted_ms=21637 rtc_unix_time_s=1789388665 ble_scanning=1 ble_scan_starts=1 ble_scan_errors=0 ble_scan_restarts=0 ble_scan_completes=0 ble_adv_lock_drops=0 tp_sample=1 tp_t=23.50 tp_rh=76.00 tp_age_ms=1651 tp_packets=14 tp_accepted=14 tp_rejected=0 xiaomi_sample=1 xiaomi_t=23.63 xiaomi_rh=64.46 xiaomi_age_ms=6079 xiaomi_packets=17 xiaomi_accepted=8 xiaomi_rejected=9 runtime_status=0 runtime_mode=0 rule_arb=0 rule_safety=0 requested_fan=0.000 requested_humidifier=0.000 applied_heater=0.000 applied_cooler=0.000 applied_fan=0.000 applied_humidifier=0.000 applied_dehumidifier=0.000 applied_co2=0.000 output_v=2 supervisor_mode=5 transport_active=0 lifecycle_active=0 lifecycle_event=3 automation_requested=0 safety_latched=0 safety_reason=0 storage_backend=sd storage_sd_mounted=1 storage_flash_mounted=0 storage_sd_mount_errors=0 storage_flash_mount_errors=0 storage_write_errors=0 storage_queue_drops=0 storage_records_written=3 storage_records_skipped=0 storage_fallbacks=0 storage_sd_recoveries=0 storage_last_write_ms=11387\n0032.82s | u=31909 b=6f456db7 s=5 INFO/WATCHDOG main/c0 heartbeat seq=4 uptime_ms=31887 internal_free=201664 internal_min=201132I (32666) climate_stage27: soak_v=3 firmware_sha=f53979923ad47dd9422f5457e8b54596c7fdf093 uptime_ms=31887 reset_reason=1 input_sampled=0 io_status=3 heap_internal=201664 heap_internal_min=201132 heap_internal_largest=155648 heap_psram=8355956 heap_psram_min=8355956 heap_psram_largest=8257536 stack_free=3720 scd_available=1 scd_sample=1 scd_t=24.02 scd_rh=60.41 scd_co2=664 scd_age_ms=0 scd_read_errors=0 scd_invalid=0 scd_samples=3 rtc_available=1 rtc_trusted=1 rtc_reads=32 rtc_read_errors=0 rtc_untrusted=0 rtc_last_success_ms=31887 rtc_last_trusted_ms=31887 rtc_unix_time_s=1789388676 ble_scanning=1 ble_scan_starts=1 ble_scan_errors=0 ble_scan_restarts=0 ble_scan_completes=0 ble_adv_lock_drops=0 tp_sample=1 tp_t=23.60 tp_rh=76.00 tp_age_ms=332 tp_packets=20 tp_accepted=20 tp_rejected=0 xiaomi_sample=1 xiaomi_t=23.63 xiaomi_rh=64.38 xiaomi_age_ms=277 xiaomi_packets=27 xiaomi_accepted=13 xiaomi_rejected=14 runtime_status=0 runtime_mode=0 rule_arb=0 rule_safety=0 requested_fan=0.000 requested_humidifier=0.000 applied_heater=0.000 applied_cooler=0.000 applied_fan=0.000 applied_humidifier=0.000 applied_dehumidifier=0.000 applied_co2=0.000 output_v=2 supervisor_mode=5 transport_active=0 lifecycle_active=0 lifecycle_event=3 automation_requested=0 safety_latched=0 safety_reason=0 storage_backend=sd storage_sd_mounted=1 storage_flash_mounted=0 storage_sd_mount_errors=0 storage_flash_mount_errors=0 storage_write_errors=0 storage_queue_drops=0 storage_records_written=4 storage_records_skipped=0 storage_fallbacks=0 storage_sd_recoveries=0 storage_last_write_ms=21637\n0033.25s | I (33236) eink_display: Physical refresh completed generation=3 kind=1 reason=4 successes=3\n0043.07s | u=42158 b=6f456db7 s=6 INFO/WATCHDOG main/c0 heartbeat seq=5 uptime_ms=42137 internal_free=201664 internal_min=201132I (42916) climate_stage27: soak_v=3 firmware_sha=f53979923ad47dd9422f5457e8b54596c7fdf093 uptime_ms=42137 reset_reason=1 input_sampled=0 io_status=3 heap_internal=201664 heap_internal_min=201132 heap_internal_largest=155648 heap_psram=8355956 heap_psram_min=8355956 heap_psram_largest=8257536 stack_free=3720 scd_available=1 scd_sample=1 scd_t=23.93 scd_rh=61.45 scd_co2=665 scd_age_ms=0 scd_read_errors=0 scd_invalid=0 scd_samples=4 rtc_available=1 rtc_trusted=1 rtc_reads=42 rtc_read_errors=0 rtc_untrusted=0 rtc_last_success_ms=42137 rtc_last_trusted_ms=42137 rtc_unix_time_s=1789388686 ble_scanning=1 ble_scan_starts=1 ble_scan_errors=0 ble_scan_restarts=0 ble_scan_completes=0 ble_adv_lock_drops=0 tp_sample=1 tp_t=23.60 tp_rh=76.00 tp_age_ms=649 tp_packets=26 tp_accepted=26 tp_rejected=0 xiaomi_sample=1 xiaomi_t=23.63 xiaomi_rh=64.59 xiaomi_age_ms=501 xiaomi_packets=37 xiaomi_accepted=18 xiaomi_rejected=19 runtime_status=0 runtime_mode=0 rule_arb=0 rule_safety=0 requested_fan=0.000 requested_humidifier=0.000 applied_heater=0.000 applied_cooler=0.000 applied_fan=0.000 applied_humidifier=0.000 applied_dehumidifier=0.000 applied_co2=0.000 output_v=2 supervisor_mode=5 transport_active=0 lifecycle_active=0 lifecycle_event=3 automation_requested=0 safety_latched=0 safety_reason=0 storage_backend=sd storage_sd_mounted=1 storage_flash_mounted=0 storage_sd_mount_errors=0 storage_flash_mount_errors=0 storage_write_errors=0 storage_queue_drops=0 storage_records_written=5 storage_records_skipped=0 storage_fallbacks=0 storage_sd_recoveries=0 storage_last_write_ms=31887\n0053.32s | u=52408 b=6f456db7 s=7 INFO/WATCHDOG main/c0 heartbeat seq=6 uptime_ms=52387 internal_free=201664 internal_min=201132u=52409 b=6f456db7 s=8 INFO/MEM main/c0 heap_integrity_ok check=1 uptime_ms=52387 internal_free=201664 internal_largest=155648I (53166) climate_stage27: soak_v=3 firmware_sha=f53979923ad47dd9422f5457e8b54596c7fdf093 uptime_ms=52387 reset_reason=1 input_sampled=0 io_status=3 heap_internal=201664 heap_internal_min=201132 heap_internal_largest=155648 heap_psram=8355956 heap_psram_min=8355956 heap_psram_largest=8257536 stack_free=3720 scd_available=1 scd_sample=1 scd_t=23.87 scd_rh=62.46 scd_co2=664 scd_age_ms=0 scd_read_errors=0 scd_invalid=0 scd_samples=5 rtc_available=1 rtc_trusted=1 rtc_reads=52 rtc_read_errors=0 rtc_untrusted=0 rtc_last_success_ms=52387 rtc_last_trusted_ms=52387 rtc_unix_time_s=1789388696 ble_scanning=1 ble_scan_starts=1 ble_scan_errors=0 ble_scan_restarts=0 ble_scan_completes=0 ble_adv_lock_drops=0 tp_sample=1 tp_t=23.60 tp_rh=76.00 tp_age_ms=844 tp_packets=32 tp_accepted=32 tp_rejected=0 xiaomi_sample=1 xiaomi_t=23.62 xiaomi_rh=64.46 xiaomi_age_ms=735 xiaomi_packets=44 xiaomi_accepted=22 xiaomi_rejected=22 runtime_status=0 runtime_mode=0 rule_arb=0 rule_safety=0 requested_fan=0.000 requested_humidifier=0.000 applied_heater=0.000 applied_cooler=0.000 applied_fan=0.000 applied_humidifier=0.000 applied_dehumidifier=0.000 applied_co2=0.000 output_v=2 supervisor_mode=5 transport_active=0 lifecycle_active=0 lifecycle_event=3 automation_requested=0 safety_latched=0 safety_reason=0 storage_backend=sd storage_sd_mounted=1 storage_flash_mounted=0 storage_sd_mount_errors=0 storage_flash_mount_errors=0 storage_write_errors=0 storage_queue_drops=0 storage_records_written=6 storage_records_skipped=0 storage_fallbacks=0 storage_sd_recoveries=0 storage_last_write_ms=42137\n0053.77s | I (53746) eink_display: Physical refresh completed generation=4 kind=1 reason=4 successes=4\n0063.58s | u=62669 b=6f456db7 s=9 INFO/WATCHDOG main/c0 heartbeat seq=7 uptime_ms=62647 internal_free=201664 internal_min=201132I (63426) climate_stage27: soak_v=3 firmware_sha=f53979923ad47dd9422f5457e8b54596c7fdf093 uptime_ms=62647 reset_reason=1 input_sampled=0 io_status=3 heap_internal=201664 heap_internal_min=201132 heap_internal_largest=155648 heap_psram=8355956 heap_psram_min=8355956 heap_psram_largest=8257536 stack_free=3720 scd_available=1 scd_sample=1 scd_t=23.76 scd_rh=63.82 scd_co2=665 scd_age_ms=0 scd_read_errors=0 scd_invalid=0 scd_samples=6 rtc_available=1 rtc_trusted=1 rtc_reads=62 rtc_read_errors=0 rtc_untrusted=0 rtc_last_success_ms=62647 rtc_last_trusted_ms=62647 rtc_unix_time_s=1789388706 ble_scanning=1 ble_scan_starts=1 ble_scan_errors=0 ble_scan_restarts=0 ble_scan_completes=0 ble_adv_lock_drops=0 tp_sample=1 tp_t=23.50 tp_rh=76.00 tp_age_ms=1166 tp_packets=38 tp_accepted=38 tp_rejected=0 xiaomi_sample=1 xiaomi_t=23.64 xiaomi_rh=64.38 xiaomi_age_ms=966 xiaomi_packets=51 xiaomi_accepted=25 xiaomi_rejected=26 runtime_status=0 runtime_mode=0 rule_arb=0 rule_safety=0 requested_fan=0.000 requested_humidifier=0.000 applied_heater=0.000 applied_cooler=0.000 applied_fan=0.000 applied_humidifier=0.000 applied_dehumidifier=0.000 applied_co2=0.000 output_v=2 supervisor_mode=5 transport_active=0 lifecycle_active=0 lifecycle_event=3 automation_requested=0 safety_latched=0 safety_reason=0 storage_backend=sd storage_sd_mounted=1 storage_flash_mounted=0 storage_sd_mount_errors=0 storage_flash_mount_errors=0 storage_write_errors=0 storage_queue_drops=0 storage_records_written=7 storage_records_skipped=0 storage_fallbacks=0 storage_sd_recoveries=0 storage_last_write_ms=52387\n0073.83s | u=72918 b=6f456db7 s=10 INFO/WATCHDOG main/c0 heartbeat seq=8 uptime_ms=72897 internal_free=201664 internal_min=201132I (73676) climate_stage27: soak_v=3 firmware_sha=f53979923ad47dd9422f5457e8b54596c7fdf093 uptime_ms=72897 reset_reason=1 input_sampled=0 io_status=3 heap_internal=201664 heap_internal_min=201132 heap_internal_largest=155648 heap_psram=8355956 heap_psram_min=8355956 heap_psram_largest=8257536 stack_free=3720 scd_available=1 scd_sample=1 scd_t=23.73 scd_rh=64.55 scd_co2=665 scd_age_ms=0 scd_read_errors=0 scd_invalid=0 scd_samples=7 rtc_available=1 rtc_trusted=1 rtc_reads=72 rtc_read_errors=0 rtc_untrusted=0 rtc_last_success_ms=72897 rtc_last_trusted_ms=72897 rtc_unix_time_s=1789388717 ble_scanning=1 ble_scan_starts=1 ble_scan_errors=0 ble_scan_restarts=0 ble_scan_completes=0 ble_adv_lock_drops=0 tp_sample=1 tp_t=23.50 tp_rh=76.00 tp_age_ms=1417 tp_packets=45 tp_accepted=45 tp_rejected=0 xiaomi_sample=1 xiaomi_t=23.61 xiaomi_rh=64.30 xiaomi_age_ms=1188 xiaomi_packets=61 xiaomi_accepted=30 xiaomi_rejected=31 runtime_status=0 runtime_mode=0 rule_arb=0 rule_safety=0 requested_fan=0.000 requested_humidifier=0.000 applied_heater=0.000 applied_cooler=0.000 applied_fan=0.000 applied_humidifier=0.000 applied_dehumidifier=0.000 applied_co2=0.000 output_v=2 supervisor_mode=5 transport_active=0 lifecycle_active=0 lifecycle_event=3 automation_requested=0 safety_latched=0 safety_reason=0 storage_backend=sd storage_sd_mounted=1 storage_flash_mounted=0 storage_sd_mount_errors=0 storage_flash_mount_errors=0 storage_write_errors=0 storage_queue_drops=0 storage_records_written=9 storage_records_skipped=0 storage_fallbacks=0 storage_sd_recoveries=0 storage_last_write_ms=62647\n0074.26s | I (74246) eink_display: Physical refresh completed generation=5 kind=1 reason=4 successes=5\nTIMELINE_END\n",
+      "elapsed_seconds": 75.362,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 2048,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 12.98,
+      "output_policy": "stream",
+      "captured_output_chars": 14698,
+      "output_truncated": false,
+      "current_rss_mb": 10.14,
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 4,
+      "stage_phase": "commands"
+    },
+    {
+      "command": "test -z \"$(git status --porcelain)\" && test \"$(git rev-parse HEAD)\" = \"f53979923ad47dd9422f5457e8b54596c7fdf093\" && echo FINAL_CLEAN_SHA_OK",
+      "exit_code": 0,
+      "output": "FINAL_CLEAN_SHA_OK\n",
+      "elapsed_seconds": 0.424,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 2048,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 7.89,
+      "output_policy": "stream",
+      "captured_output_chars": 19,
+      "output_truncated": false,
+      "current_rss_mb": 7.89,
+      "stage_name": "command-4",
+      "stage_index": 4,
+      "stage_total": 4,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 4,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.954
+    },
+    {
+      "stage_name": "command-2",
+      "stage_index": 2,
+      "stage_total": 4,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.321
+    },
+    {
+      "stage_name": "command-3",
+      "stage_index": 3,
+      "stage_total": 4,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 75.362
+    },
+    {
+      "stage_name": "command-4",
+      "stage_index": 4,
+      "stage_total": 4,
+      "stage_phase": "commands",
+      "outcome": "passed",
+      "elapsed_seconds": 0.424
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.078
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.069
+  },
+  "finished_at": "2026-09-14T12:25:39.304340+00:00",
+  "task_digest": "a926140050c81f3d7055bd10a789eca6a9eb2e553f92edf0882d2a72ee04516c",
+  "idle_timeout": 120,
+  "task_timeout": 600,
+  "memory_limit_mb": 2048,
+  "attempt_id": "e3f43997a6293b6215dea1b3",
+  "daemon_version": "4.18.20"
+}
