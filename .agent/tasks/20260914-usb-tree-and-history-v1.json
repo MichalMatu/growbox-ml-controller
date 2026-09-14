@@ -1,0 +1,17 @@
+{
+  "id": "20260914-usb-tree-and-history-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 90,
+  "idle_timeout": 120,
+  "task_timeout": 240,
+  "memory_limit_mb": 1024,
+  "commands": [
+    "git fetch origin main >/dev/null && test -z \"$(git status --porcelain)\" && echo HEAD=$(git rev-parse HEAD)",
+    "python3 - <<'PY'\nimport subprocess,re\np=subprocess.run(['ioreg','-p','IOUSB','-l','-w','0'],capture_output=True,text=True,timeout=30)\nprint('IOUSB_RC',p.returncode)\nprint('IOUSB_RELEVANT_BEGIN')\nblock=[]\nfor line in p.stdout.splitlines():\n    if line.startswith('+-o ') or line.startswith('  +-o ') or line.startswith('    +-o ') or line.startswith('      +-o '):\n        if block:\n            txt='\\n'.join(block); low=txt.lower()\n            if any(k in low for k in ('1a86','303a','10c4','ch34','ch910','qin','wch','espressif','cp210','usb serial','serial')):\n                print(txt)\n        block=[line]\n    elif block:\n        if any(k in line.lower() for k in ('usb product name','usb vendor name','idvendor','idproduct','locationid','usb serial number')):\n            block.append(line)\nif block:\n    txt='\\n'.join(block); low=txt.lower()\n    if any(k in low for k in ('1a86','303a','10c4','ch34','ch910','qin','wch','espressif','cp210','usb serial','serial')): print(txt)\nprint('IOUSB_RELEVANT_END')\nPY",
+    "python3 - <<'PY'\nimport subprocess\np=subprocess.run(['/usr/bin/log','show','--last','20m','--style','compact','--predicate','eventMessage CONTAINS[c] \"usbserial\" OR eventMessage CONTAINS[c] \"CH34\" OR eventMessage CONTAINS[c] \"CH910\" OR eventMessage CONTAINS[c] \"QinHeng\" OR eventMessage CONTAINS[c] \"IOUSBHost\"'],capture_output=True,text=True,timeout=60)\nprint('USB_LOG_RC',p.returncode)\nlines=p.stdout.splitlines()\nprint('USB_LOG_MATCH_COUNT',len(lines))\nprint('USB_LOG_TAIL_BEGIN')\nfor line in lines[-200:]: print(line)\nprint('USB_LOG_TAIL_END')\nif p.stderr.strip(): print('USB_LOG_STDERR',p.stderr[-2000:])\nPY"
+  ]
+}
