@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260914-scd41-command-ownership-v1",
   "task_digest": "8272af79836c429a9922ff42dc2f0fe3227ba3ce49db799c3c5567088bd183f0",
-  "idle_timeout": 180,
-  "task_timeout": 240,
-  "memory_limit_mb": 1024,
-  "started_at": "2026-09-14T09:34:42.203768+00:00",
+  "status": "done",
+  "failure_reason": null,
+  "finished_at": "2026-09-14T09:34:45.884208+00:00",
   "attempt_id": "7c9318926bd7497f82d8b358",
   "daemon_version": "4.18.20",
   "daemon_pid": 20318,
-  "updated_at": "2026-09-14T09:34:42.204115+00:00",
+  "updated_at": "2026-09-14T09:34:46.181546+00:00",
   "pid": 20318
 }
