@@ -1,0 +1,19 @@
+{
+  "id": "20260914-four-page-display-hw-qual-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 600,
+  "idle_timeout": 240,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch origin main && git reset --hard origin/main >/dev/null && test \"$(git rev-parse HEAD)\" = \"f53979923ad47dd9422f5457e8b54596c7fdf093\" && test -z \"$(git status --porcelain)\" && echo EXACT_SHA_OK",
+    "if test -c /dev/cu.usbserial-1130; then echo TARGET_PRESENT=1; lsof /dev/cu.usbserial-1130 || true; else echo TARGET_PRESENT=0; exit 2; fi",
+    "if ! lsof /dev/cu.usbserial-1130 >/dev/null 2>&1; then export PORT=/dev/cu.usbserial-1130 GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 GROWBOX_EINK_DISPLAY_ENABLED=1 GROWBOX_FIRMWARE_GIT_SHA=f53979923ad47dd9422f5457e8b54596c7fdf093; bash scripts/stage27c_crowpanel.sh flash; else echo TARGET_BUSY; exit 3; fi",
+    "python3 - <<'PY'\nimport os, subprocess, time\np='/dev/cu.usbserial-1130'\nif not os.path.exists(p):\n    print('MONITOR_TARGET_MISSING'); raise SystemExit(4)\nimport serial\ns=serial.Serial(); s.port=p; s.baudrate=115200; s.timeout=0.25; s.dtr=False; s.rts=False; s.open()\nstart=time.monotonic(); lines=[]\nwhile time.monotonic()-start < 90.0:\n    raw=s.readline()\n    if raw: lines.append((time.monotonic()-start, raw.decode('utf-8', errors='replace').rstrip()))\ns.close()\nfw='f53979923ad47dd9422f5457e8b54596c7fdf093'\nprint('TOTAL_LINES',len(lines))\nprint('FIRMWARE_OK',int(any(('firmware_sha='+fw) in x for _,x in lines)))\nprint('ROM_BOOT_COUNT',sum('ESP-ROM:esp32s3' in x for _,x in lines))\nprint('RST_COUNT',sum('rst:0x' in x for _,x in lines))\nprint('PANIC_COUNT',sum(('Guru Meditation' in x or 'panic' in x.lower() or 'abort' in x.lower()) for _,x in lines))\nprint('BROWNOUT_COUNT',sum('brownout' in x.lower() for _,x in lines))\nprint('EINK_READY',int(any('eink_requested=1 eink_ready=1' in x for _,x in lines)))\nprint('EINK_REFRESH_SUCCESS_COUNT',sum('Physical refresh completed' in x for _,x in lines))\nsamples=[]\nfor _,x in lines:\n    if 'scd_sample=1' in x and 'scd_samples=' in x:\n        try:\n            samples.append(int(x.split('scd_samples=',1)[1].split()[0]))\n        except Exception:\n            pass\nprint('SCD_MAX_SAMPLES',max(samples) if samples else 0)\nprint('SCD_ERROR_LINES',sum(('scd_read_errors=' in x and 'scd_read_errors=0' not in x) or ('scd_invalid=' in x and 'scd_invalid=0' not in x) for _,x in lines))\nprint('TIMELINE_BEGIN')\nkeys=('ESP-ROM:esp32s3','rst:0x','firmware_sha','I2C probe','scd_','scd41','eink_display','Guru Meditation','panic','brownout')\nfor dt,x in lines:\n    if any(k.lower() in x.lower() for k in keys): print(f'{dt:07.2f}s | {x}')\nprint('TIMELINE_END')\nif not any(('firmware_sha='+fw) in x for _,x in lines): raise SystemExit(5)\nif not any('eink_requested=1 eink_ready=1' in x for _,x in lines): raise SystemExit(6)\nif sum('Physical refresh completed' in x for _,x in lines) < 2: raise SystemExit(7)\nif not samples: raise SystemExit(8)\nif any(('Guru Meditation' in x or 'panic' in x.lower() or 'abort' in x.lower() or 'brownout' in x.lower()) for _,x in lines): raise SystemExit(9)\nPY",
+    "test -z \"$(git status --porcelain)\" && test \"$(git rev-parse HEAD)\" = \"f53979923ad47dd9422f5457e8b54596c7fdf093\" && echo FINAL_CLEAN_SHA_OK"
+  ]
+}
