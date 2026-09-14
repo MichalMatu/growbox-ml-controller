@@ -1,0 +1,61 @@
+{
+  "id": "20260914-final-make-monitor-no-reset-v1",
+  "status": "failed",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "started_at": "2026-09-14T09:10:11.471655+00:00",
+  "command_timeout": 90,
+  "edits": {},
+  "commands": [
+    {
+      "command": "git fetch origin main && git reset --hard origin/main >/dev/null && test \"$(git rev-parse HEAD)\" = \"30ec2908494cb923136aa6e86878828b5211c036\" && test -c /dev/cu.usbserial-1130 && ! lsof /dev/cu.usbserial-1130 >/dev/null 2>&1",
+      "exit_code": 1,
+      "output": "From https://github.com/MichalMatu/growbox-ml-controller\n * branch                main       -> FETCH_HEAD\n",
+      "elapsed_seconds": 0.867,
+      "timed_out": false,
+      "idle_timed_out": false,
+      "memory_limit_mb": 1024,
+      "memory_limited": false,
+      "background_process_leak": false,
+      "peak_rss_mb": 1.86,
+      "output_policy": "stream",
+      "captured_output_chars": 107,
+      "output_truncated": false,
+      "current_rss_mb": 1.86,
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 2,
+      "stage_phase": "commands"
+    }
+  ],
+  "verification": [],
+  "stages": [
+    {
+      "stage_name": "command-1",
+      "stage_index": 1,
+      "stage_total": 2,
+      "stage_phase": "commands",
+      "outcome": "failed",
+      "elapsed_seconds": 0.867
+    }
+  ],
+  "git_status": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.073
+  },
+  "git_diff": {
+    "exit_code": 0,
+    "output": "",
+    "elapsed_seconds": 0.074
+  },
+  "failure_reason": "command_failed",
+  "finished_at": "2026-09-14T09:10:13.905745+00:00",
+  "task_digest": "24040a6a3067aa11f06b583cbd0d1efb4586c5f7fa591e2f784f36a37e46a2f4",
+  "idle_timeout": 300,
+  "task_timeout": 180,
+  "memory_limit_mb": 1024,
+  "attempt_id": "3fac04f3606d14c82367b503",
+  "daemon_version": "4.18.20"
+}
