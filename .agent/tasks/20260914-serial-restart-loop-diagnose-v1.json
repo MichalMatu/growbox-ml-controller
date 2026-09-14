@@ -1,0 +1,17 @@
+{
+  "id": "20260914-serial-restart-loop-diagnose-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 120,
+  "idle_timeout": 180,
+  "task_timeout": 300,
+  "memory_limit_mb": 1024,
+  "commands": [
+    "git fetch origin main >/dev/null && test -z \"$(git status --porcelain)\" && echo HEAD=$(git rev-parse HEAD) && echo ORIGIN_MAIN=$(git rev-parse origin/main)",
+    "python3 - <<'PY'\nimport glob, os\npatterns=['/dev/cu.usbserial-*','/dev/cu.wchusbserial*','/dev/cu.SLAB_USBtoUART*','/dev/cu.usbmodem*']\nports=sorted(set(p for pat in patterns for p in glob.glob(pat)))\nprint('SERIAL_PORTS_BEGIN')\nfor p in ports:\n    protected=os.path.basename(p).endswith('10')\n    print(('PROTECTED_NO_TOUCH ' if protected else 'CANDIDATE ')+p)\nprint('SERIAL_PORTS_END')\nprint('UNPROTECTED_COUNT', sum(not os.path.basename(p).endswith('10') for p in ports))\nPY",
+    "python3 - <<'PY'\nimport glob, os, subprocess, time\npatterns=['/dev/cu.usbserial-*','/dev/cu.wchusbserial*','/dev/cu.SLAB_USBtoUART*','/dev/cu.usbmodem*']\ndef ports():\n    return sorted(set(p for pat in patterns for p in glob.glob(pat)))\ndef protected(p):\n    return os.path.basename(p).endswith('10')\ncandidates=[p for p in ports() if not protected(p)]\nprint('DIAG_CANDIDATES', candidates)\nif len(candidates) != 1:\n    print('PASSIVE_CAPTURE_SKIPPED expected_exactly_one_unprotected_candidate')\n    raise SystemExit(0)\np=candidates[0]\ntry:\n    busy=subprocess.run(['lsof',p],capture_output=True,text=True).stdout.strip()\nexcept Exception as e:\n    busy=f'LSOF_ERROR {e}'\nprint('TARGET',p)\nprint('LSOF_TARGET_BEGIN')\nprint(busy)\nprint('LSOF_TARGET_END')\nif busy and not busy.startswith('LSOF_ERROR'):\n    print('PASSIVE_CAPTURE_SKIPPED target_busy')\n    raise SystemExit(0)\nimport serial\ns=serial.Serial()\ns.port=p; s.baudrate=115200; s.timeout=0.25; s.dtr=False; s.rts=False\ntry:\n    s.open()\nexcept Exception as e:\n    print('SERIAL_OPEN_FAILED',repr(e)); raise SystemExit(0)\nprint('SERIAL_OPEN_OK',p)\nstart=time.monotonic(); lines=[]; read_errors=[]\nwhile time.monotonic()-start < 60.0:\n    try:\n        raw=s.readline()\n    except Exception as e:\n        read_errors.append((time.monotonic()-start,repr(e)))\n        break\n    if raw:\n        lines.append((time.monotonic()-start,raw.decode('utf-8',errors='replace').rstrip()))\ntry: s.close()\nexcept Exception: pass\nkeys=('ESP-ROM:esp32s3','rst:0x','Guru Meditation','panic','abort','watchdog','wdt','brownout','rebooting','Backtrace','ELF file SHA256','firmware_sha','i2c probe','scd_','scd41','eink_display','assert')\nprint('CAPTURE_SECONDS',round(time.monotonic()-start,2))\nprint('TOTAL_LINES',len(lines))\nprint('ROM_BOOT_COUNT',sum('ESP-ROM:esp32s3' in t for _,t in lines))\nprint('RST_COUNT',sum('rst:0x' in t for _,t in lines))\nprint('PANIC_COUNT',sum(('Guru Meditation' in t or 'panic' in t.lower() or 'abort' in t.lower()) for _,t in lines))\nprint('BROWNOUT_COUNT',sum('brownout' in t.lower() for _,t in lines))\nprint('REBOOTING_COUNT',sum('rebooting' in t.lower() for _,t in lines))\nprint('READ_ERRORS',read_errors)\nprint('PORTS_AFTER',ports())\nprint('DIAG_TIMELINE_BEGIN')\nfor dt,t in lines:\n    if any(k.lower() in t.lower() for k in keys): print(f'{dt:07.2f}s | {t}')\nprint('DIAG_TIMELINE_END')\nPY"
+  ]
+}
