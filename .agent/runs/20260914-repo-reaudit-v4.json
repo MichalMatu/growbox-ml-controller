@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260914-repo-reaudit-v4",
+  "task_digest": "4bd5edb0dc130c546941c20faef18ee4d0580c678e6e111f429a2b88c921c4fd",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-14T08:01:22.663511+00:00",
+  "attempt_id": "48d456686e2063a578f240ba",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 21386,
+  "updated_at": "2026-09-14T08:01:22.663690+00:00",
+  "pid": 21386
+}
