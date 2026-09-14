@@ -1,0 +1,15 @@
+{
+  "id": "20260914-quality-tools-audit-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": [],
+  "memory_limit_mb": 1024,
+  "command_timeout": 120,
+  "task_timeout": 300,
+  "commands": [
+    "git fetch --prune origin && git rev-parse HEAD && command -v pre-commit || true; command -v clang-format || true; command -v ruff || true; python3 -c 'import pre_commit; print(pre_commit.__file__)' || true; python3 -c 'import ruff; print(ruff.__file__)' || true",
+    "git diff --check HEAD && python3 -c \"from pathlib import Path; import subprocess; files=subprocess.check_output(['git','ls-files'],text=True).splitlines(); bad=[f for f in files if Path(f).is_file() and Path(f).read_bytes() and not Path(f).read_bytes().endswith(b'\\n')]; print('missing_eof_newline',bad[:100]); raise SystemExit(bool(bad))\""
+  ]
+}
