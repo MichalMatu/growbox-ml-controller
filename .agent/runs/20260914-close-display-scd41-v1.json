@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260914-close-display-scd41-v1",
+  "task_digest": "0f65248c55b0036bcac91bbe45d239099acf09ec6e779d8d761e9cbd88b37f1d",
+  "idle_timeout": 300,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-14T12:41:09.179007+00:00",
+  "attempt_id": "853f58dbba6a61ba7f00715a",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 24368,
+  "updated_at": "2026-09-14T12:41:09.179173+00:00",
+  "pid": 24368
+}
