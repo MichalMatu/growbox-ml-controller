@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260914-display-input-lifecycle-audit-v2",
+  "task_digest": "09887dbf44c786e489b9d8bf7eb8b9177306a0e079df95634be443683b153503",
+  "idle_timeout": 180,
+  "task_timeout": 480,
+  "memory_limit_mb": 2048,
+  "started_at": "2026-09-14T12:00:20.495134+00:00",
+  "attempt_id": "68068ca7d5d031d55522c130",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 65711,
+  "updated_at": "2026-09-14T12:00:20.495348+00:00",
+  "pid": 65711
+}
