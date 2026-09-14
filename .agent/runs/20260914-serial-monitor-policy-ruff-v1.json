@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260914-serial-monitor-policy-ruff-v1",
   "task_digest": "970027d9a40cf634c308238f7c13cd006e2a241ef7fdd982baf3d3d9f291f75f",
-  "idle_timeout": 300,
-  "task_timeout": 300,
-  "memory_limit_mb": 1024,
-  "started_at": "2026-09-14T09:11:38.917293+00:00",
+  "status": "done",
+  "failure_reason": null,
+  "finished_at": "2026-09-14T09:11:42.637536+00:00",
   "attempt_id": "c89239d2b14b83eb0d783e99",
   "daemon_version": "4.18.20",
   "daemon_pid": 90696,
-  "updated_at": "2026-09-14T09:11:38.917365+00:00",
+  "updated_at": "2026-09-14T09:11:42.886036+00:00",
   "pid": 90696
 }
