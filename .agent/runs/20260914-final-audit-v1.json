@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260914-final-audit-v1",
+  "task_digest": "9902101d4d1f0f1b008cbf9331db943d3e5d28f55a527286bbfabf48ba853809",
+  "idle_timeout": 300,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-14T07:33:46.829761+00:00",
+  "attempt_id": "2a56997d31eda2320980fe16",
+  "daemon_version": "4.18.20",
+  "daemon_pid": 91454,
+  "updated_at": "2026-09-14T07:33:46.829927+00:00",
+  "pid": 91454
+}
