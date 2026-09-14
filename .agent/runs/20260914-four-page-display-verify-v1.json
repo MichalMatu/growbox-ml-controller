@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 3,
+  "index": 4,
   "total": 5,
-  "command": "bash scripts/test_display_host.sh",
-  "pid": 82810,
+  "command": "export GROWBOX_RF433_LOOPBACK_ENABLED=0 GROWBOX_STAGE28_REAL_OUTPUTS_ENABLED=0 GROWBOX_STAGE28_THERMAL_TEST_SEQUENCE_ENABLED=0 GROWBOX_EINK_DISPLAY_ENABLED=1 GROWBOX_FIRMWARE_GIT_SHA=f53979923ad47dd9422f5457e8b54596c7fdf093; bash scripts/stage27c_crowpanel.sh build",
+  "pid": 83276,
   "timeout": 600,
   "idle_timeout": 240,
   "memory_limit_mb": 4096,
-  "started_at": "2026-09-14T12:11:20.795263+00:00",
-  "stage_name": "command-3",
-  "stage_index": 3,
+  "started_at": "2026-09-14T12:11:28.014761+00:00",
+  "stage_name": "command-4",
+  "stage_index": 4,
   "stage_total": 5,
   "stage_phase": "commands",
   "task_id": "20260914-four-page-display-verify-v1",
@@ -18,5 +18,5 @@
   "task_digest": "1f82b25f1df172bc3ec7a32949ed565617853126f0a4849ba4858e68305f644a",
   "daemon_version": "4.18.20",
   "daemon_pid": 82345,
-  "updated_at": "2026-09-14T12:11:20.901585+00:00"
+  "updated_at": "2026-09-14T12:11:28.090546+00:00"
 }
