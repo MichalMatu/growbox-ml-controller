@@ -1,0 +1,19 @@
+{
+  "id": "20260919-nvs-persistence-hardening-verify-v3",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "agent/nvs-persistence-hardening",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 600,
+  "idle_timeout": 180,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch origin agent/nvs-persistence-hardening && git checkout -B agent/nvs-persistence-hardening origin/agent/nvs-persistence-hardening && test -z \"$(git status --porcelain)\" && echo BRANCH_CLEAN",
+    "git diff --check && echo DIFF_CHECK_PASS",
+    "printf '%s\\n' '=== NVS LIFECYCLE OWNERSHIP ==='; grep -RIn -e nvs_flash_init -e nvs_flash_erase -e nvs_flash_deinit src lib components 2>/dev/null || true; test \"$(grep -RIl -e nvs_flash_init -e nvs_flash_erase src lib components 2>/dev/null | wc -l | tr -d ' ')\" = \"1\" && grep -q 'nvs_flash_init' src/climate/runtime/core/RealInputRuntimeComposition.cpp && ! grep -q 'nvs_flash_' src/climate/input/ble/BleClimateScanner.cpp && echo NVS_OWNERSHIP_PASS",
+    "if command -v clang-format >/dev/null 2>&1; then clang-format --dry-run --Werror src/climate/ClimateV6RealInputRuntime.cpp src/climate/input/ble/BleClimateScanner.cpp src/climate/output/persistence/OutputPersistenceCoordinator.cpp src/climate/output/persistence/OutputPersistenceCoordinator.h src/climate/runtime/core/RealInputRuntimeComposition.cpp src/climate/runtime/core/RealInputRuntimeComposition.h src/climate/runtime/core/RealInputRuntimeCoordinator.cpp src/climate/runtime/core/RealInputRuntimeCoordinator.h test/test_output_persistence_coordinator/test_main.cpp && echo CLANG_FORMAT_PASS; else echo CLANG_FORMAT_UNAVAILABLE; fi",
+    "test -z \"$(git status --porcelain)\" && echo FINAL_CLEAN"
+  ]
+}
