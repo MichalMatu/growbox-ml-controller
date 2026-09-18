@@ -1,0 +1,9 @@
+{
+  "id": "20260919-nvs-ownership-audit-v1",
+  "status": "failed",
+  "failure_reason": "invalid_task_file",
+  "started_at": null,
+  "finished_at": "2026-09-18T22:31:19.795039+00:00",
+  "daemon_version": "4.18.22",
+  "error": "JSONDecodeError: Invalid \\escape: line 15 column 75 (char 757)"
+}
