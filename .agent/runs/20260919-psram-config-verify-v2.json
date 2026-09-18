@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260919-psram-config-verify-v2",
+  "task_digest": "ec1566cdc38e3a8e803fcbf21cf7635d7fec26cc78d1869cf8b134f92004ef5e",
+  "idle_timeout": 300,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-18T23:01:35.374494+00:00",
+  "attempt_id": "b37437bbb8175893f546c36c",
+  "daemon_version": "4.18.22",
+  "daemon_pid": 6907,
+  "updated_at": "2026-09-18T23:01:35.374553+00:00",
+  "pid": 6907
+}
