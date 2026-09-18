@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 4,
+  "index": 5,
   "total": 7,
-  "command": "make test-host",
-  "pid": 73402,
+  "command": "make build",
+  "pid": 75423,
   "timeout": 1800,
   "idle_timeout": 300,
   "memory_limit_mb": 4096,
-  "started_at": "2026-09-18T22:41:37.570724+00:00",
-  "stage_name": "command-4",
-  "stage_index": 4,
+  "started_at": "2026-09-18T22:42:17.011970+00:00",
+  "stage_name": "command-5",
+  "stage_index": 5,
   "stage_total": 7,
   "stage_phase": "commands",
   "task_id": "20260919-nvs-persistence-hardening-verify-v2",
@@ -18,5 +18,5 @@
   "task_digest": "68aff91c1cf8c88385535b07ffaa637fe1d259768933c793f175a73bf887d87b",
   "daemon_version": "4.18.22",
   "daemon_pid": 73157,
-  "updated_at": "2026-09-18T22:41:37.645765+00:00"
+  "updated_at": "2026-09-18T22:42:17.088703+00:00"
 }
