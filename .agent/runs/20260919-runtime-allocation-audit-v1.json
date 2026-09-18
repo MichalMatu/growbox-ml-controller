@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260919-runtime-allocation-audit-v1",
+  "task_digest": "284849fca70a673cb495948505b3763cfc5b4fafc3d47e5f532649f52f1132a8",
+  "idle_timeout": 180,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-18T22:46:07.533115+00:00",
+  "attempt_id": "4aa0efe24549778281e21ce1",
+  "daemon_version": "4.18.22",
+  "daemon_pid": 82873,
+  "updated_at": "2026-09-18T22:46:07.533171+00:00",
+  "pid": 82873
+}
