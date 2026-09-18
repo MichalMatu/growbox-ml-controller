@@ -1,16 +1,16 @@
 {
   "event": "command_started",
   "phase": "commands",
-  "index": 4,
+  "index": 5,
   "total": 5,
-  "command": "make build",
-  "pid": 96829,
+  "command": "test -z \"$(git status --porcelain)\" && echo FINAL_CLEAN",
+  "pid": 98058,
   "timeout": 1800,
   "idle_timeout": 300,
   "memory_limit_mb": 4096,
-  "started_at": "2026-09-18T22:52:11.131268+00:00",
-  "stage_name": "command-4",
-  "stage_index": 4,
+  "started_at": "2026-09-18T22:52:28.641468+00:00",
+  "stage_name": "command-5",
+  "stage_index": 5,
   "stage_total": 5,
   "stage_phase": "commands",
   "task_id": "20260919-retry-state-verify-v1",
@@ -18,5 +18,5 @@
   "task_digest": "53fce089d18bc53009fcc1fc3bdfd6c6c4fa5aabef15212777d0907cd0ae57b5",
   "daemon_version": "4.18.22",
   "daemon_pid": 96489,
-  "updated_at": "2026-09-18T22:52:11.206875+00:00"
+  "updated_at": "2026-09-18T22:52:28.687395+00:00"
 }
