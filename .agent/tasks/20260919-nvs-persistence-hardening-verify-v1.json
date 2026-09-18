@@ -1,0 +1,19 @@
+{
+  "id": "20260919-nvs-persistence-hardening-verify-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "agent/nvs-persistence-hardening",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 1200,
+  "idle_timeout": 300,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch origin agent/nvs-persistence-hardening && git checkout -B agent/nvs-persistence-hardening origin/agent/nvs-persistence-hardening && test -z \"$(git status --porcelain)\" && echo BRANCH_CLEAN",
+    "cmake -S test/host -B build/host-tests >/dev/null && cmake --build build/host-tests --target output_persistence_coordinator_tests -j1 && ./build/host-tests/output_persistence_coordinator_tests && echo PERSISTENCE_TEST_PASS",
+    "git diff --check && ! grep -RIn 'SuppressedDuplicate' src test docs && echo DIFF_AND_DEAD_STATUS_CHECK_PASS",
+    "make build",
+    "test -z \"$(git status --porcelain)\" && echo FINAL_CLEAN"
+  ]
+}
