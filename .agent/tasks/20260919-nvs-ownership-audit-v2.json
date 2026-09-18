@@ -1,0 +1,18 @@
+{
+  "id": "20260919-nvs-ownership-audit-v2",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 300,
+  "idle_timeout": 180,
+  "task_timeout": 900,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch origin main && git reset --hard origin/main >/dev/null && test \"$(git rev-parse HEAD)\" = \"fff9d3a8c024ca19dcf6fc39619c2b7559a546ac\" && test -z \"$(git status --porcelain)\" && echo EXACT_SHA_OK",
+    "printf '%s\\n' '=== ALL NVS LIFECYCLE CALLS ==='; grep -RIn -e nvs_flash_init -e nvs_flash_erase -e nvs_flash_deinit -e nvs_open -e nvs_commit src lib components 2>/dev/null || true",
+    "printf '%s\\n' '=== BLE/PERSISTENCE STARTUP ORDER ==='; grep -n -e 'ble.begin' -e 'persistence_owner.initialize' -e 'RuntimePersistenceOwner' src/climate/ClimateV6RealInputRuntime.cpp src/climate/runtime/core/RealInputRuntimeComposition.cpp src/climate/runtime/core/RealInputRuntimeComposition.h || true",
+    "test -z \"$(git status --porcelain)\" && test \"$(git rev-parse HEAD)\" = \"fff9d3a8c024ca19dcf6fc39619c2b7559a546ac\" && echo FINAL_CLEAN_SHA_OK"
+  ]
+}
