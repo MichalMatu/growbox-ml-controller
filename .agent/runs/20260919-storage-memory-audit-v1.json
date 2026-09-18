@@ -1,14 +1,13 @@
 {
-  "event": "task_started",
+  "event": "task_finished",
   "task_id": "20260919-storage-memory-audit-v1",
   "task_digest": "2d17509d6a5c441fabc978164cebadeb571c64663a6bc0228b69a4d3ac719c26",
-  "idle_timeout": 180,
-  "task_timeout": 1800,
-  "memory_limit_mb": 4096,
-  "started_at": "2026-09-18T22:46:53.184170+00:00",
+  "status": "done",
+  "failure_reason": null,
+  "finished_at": "2026-09-18T22:46:57.814213+00:00",
   "attempt_id": "7da8387c32456bb9a114eef9",
   "daemon_version": "4.18.22",
   "daemon_pid": 84377,
-  "updated_at": "2026-09-18T22:46:53.184249+00:00",
+  "updated_at": "2026-09-18T22:46:58.048667+00:00",
   "pid": 84377
 }
