@@ -1,0 +1,20 @@
+{
+  "id": "20260919-runtime-allocation-audit-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "agent/nvs-persistence-hardening",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 600,
+  "idle_timeout": 180,
+  "task_timeout": 1800,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch origin agent/nvs-persistence-hardening && git checkout -B agent/nvs-persistence-hardening origin/agent/nvs-persistence-hardening && test -z \"$(git status --porcelain)\" && echo BRANCH_CLEAN",
+    "printf '%s\\n' '=== DYNAMIC FREERTOS OBJECTS ==='; grep -RInE 'xTaskCreate\\(|xTaskCreatePinnedToCore\\(|xQueueCreate\\(|xSemaphoreCreate(Mutex|Binary|Counting)\\(' src 2>/dev/null || true",
+    "printf '%s\\n' '=== STACK WATERMARK COVERAGE ==='; grep -RIn 'uxTaskGetStackHighWaterMark' src 2>/dev/null || true",
+    "printf '%s\\n' '=== STORAGE STATUS CONSUMERS ==='; grep -RInE 'Stage27StorageStatus|storageLogger\\(\\)\\.status|storage_logger.*status\\(' src test docs 2>/dev/null || true",
+    "printf '%s\\n' '=== LARGE PERMANENT ARRAYS / STACKS ==='; grep -RInE 'taskStackBytes|StaticTask_t|StaticQueue_t|std::array<.*[0-9]{3,}' src/climate 2>/dev/null | head -n 300 || true",
+    "test -z \"$(git status --porcelain)\" && echo FINAL_CLEAN"
+  ]
+}
