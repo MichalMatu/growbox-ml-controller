@@ -1,0 +1,18 @@
+{
+  "id": "20260919-persistence-audit-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 600,
+  "idle_timeout": 180,
+  "task_timeout": 1200,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch origin main && git reset --hard origin/main >/dev/null && test \"$(git rev-parse HEAD)\" = \"fff9d3a8c024ca19dcf6fc39619c2b7559a546ac\" && test -z \"$(git status --porcelain)\" && echo EXACT_SHA_OK",
+    "printf '%s\\n' '=== PERSISTENCE STATUS/COUNTER CONSUMERS ==='; grep -RInE 'syncFromStateStore|applyPolicy|writeAttemptCount|writeSuccessCount|SuppressedDuplicate|StoreError' src test docs | head -n 500 || true",
+    "cmake -S test/host -B build/host-tests >/dev/null && cmake --build build/host-tests --target output_persistence_coordinator_tests -j1 && ./build/host-tests/output_persistence_coordinator_tests && echo PERSISTENCE_TEST_PASS",
+    "test -z \"$(git status --porcelain)\" && test \"$(git rev-parse HEAD)\" = \"fff9d3a8c024ca19dcf6fc39619c2b7559a546ac\" && echo FINAL_CLEAN_SHA_OK"
+  ]
+}
