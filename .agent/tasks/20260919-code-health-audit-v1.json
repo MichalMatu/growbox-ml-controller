@@ -1,0 +1,23 @@
+{
+  "id": "20260919-code-health-audit-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 2400,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch origin main && git reset --hard origin/main >/dev/null && test \"$(git rev-parse HEAD)\" = \"fff9d3a8c024ca19dcf6fc39619c2b7559a546ac\" && test -z \"$(git status --porcelain)\" && echo EXACT_SHA_OK",
+    "printf '%s\\n' '=== LARGEST SOURCE FILES (LINES) ==='; git ls-files 'src/*' 'lib/*' 'tools/*' 'test/*' 'tests/*' | grep -E '\\.(c|cc|cpp|h|hpp|py)$' | while read -r f; do test -f \"$f\" && printf '%8d %s\\n' \"$(wc -l < \"$f\")\" \"$f\"; done | sort -nr | head -n 80",
+    "printf '%s\\n' '=== C++ DYNAMIC/HEAP/CONTAINER HOTSPOTS ==='; grep -RInE 'std::(string|vector|map|unordered_map|function)|\\b(new|delete|malloc|calloc|realloc|free)\\b|heap_caps_' src lib 2>/dev/null | head -n 800 || true",
+    "printf '%s\\n' '=== RTOS/TIMING HOTSPOTS ==='; grep -RInE 'xTaskCreate|xTaskCreatePinnedToCore|xQueueCreate|xSemaphoreCreate|vTaskDelay|vTaskDelayUntil|pdMS_TO_TICKS|uxTaskGetStackHighWaterMark' src 2>/dev/null | head -n 1000 || true",
+    "printf '%s\\n' '=== TODO/FIXME/HACK/XXX ==='; grep -RInE 'TODO|FIXME|HACK|XXX' src lib tools test tests docs 2>/dev/null | head -n 500 || true",
+    "printf '%s\\n' '=== SOURCE FANOUT / LARGE INCLUDE COUNTS ==='; for f in $(git ls-files 'src/*.cpp' 'src/**/*.cpp' 'lib/**/*.cpp'); do c=$(grep -c '^#include' \"$f\" 2>/dev/null || true); test \"${c:-0}\" -ge 12 && printf '%4d %s\\n' \"$c\" \"$f\"; done | sort -nr | head -n 80",
+    "printf '%s\\n' '=== HOST TESTS ==='; make test-host",
+    "printf '%s\\n' '=== CLANG TIDY HOST ==='; bash scripts/run_clang_tidy_host.sh",
+    "printf '%s\\n' '=== FINAL STATUS ==='; test -z \"$(git status --porcelain)\" && test \"$(git rev-parse HEAD)\" = \"fff9d3a8c024ca19dcf6fc39619c2b7559a546ac\" && echo FINAL_CLEAN_SHA_OK"
+  ]
+}
