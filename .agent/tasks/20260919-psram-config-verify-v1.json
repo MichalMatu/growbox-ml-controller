@@ -1,0 +1,19 @@
+{
+  "id": "20260919-psram-config-verify-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "agent/nvs-persistence-hardening",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 1800,
+  "idle_timeout": 300,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch origin agent/nvs-persistence-hardening && git checkout -B agent/nvs-persistence-hardening origin/agent/nvs-persistence-hardening && test -z \"$(git status --porcelain)\" && echo BRANCH_CLEAN",
+    "git diff --check && echo DIFF_CHECK_PASS",
+    "rm -rf build/idf sdkconfig sdkconfig.old && bash -lc 'set -o pipefail; make build 2>&1 | tee /tmp/growbox-psram-build.log' && ! grep -q 'Choice SPIRAM_USE has multiple active selections' /tmp/growbox-psram-build.log && echo PSRAM_CHOICE_WARNING_GONE",
+    "grep -E '^CONFIG_SPIRAM_USE_|^CONFIG_SPIRAM_MALLOC_|^CONFIG_SPIRAM_TRY_ALLOCATE_WIFI_LWIP|^CONFIG_SPIRAM_IGNORE_NOTFOUND' sdkconfig || true",
+    "test -z \"$(git status --porcelain)\" && echo FINAL_CLEAN"
+  ]
+}
