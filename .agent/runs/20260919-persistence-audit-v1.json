@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260919-persistence-audit-v1",
+  "task_digest": "d667eed6ad425aaf9412ffcdeb15adc6c12b45e9472093a8dadd6d6bc0eec37a",
+  "idle_timeout": 180,
+  "task_timeout": 1200,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-18T22:30:06.595044+00:00",
+  "attempt_id": "ae90f7042691134540500efc",
+  "daemon_version": "4.18.22",
+  "daemon_pid": 54338,
+  "updated_at": "2026-09-18T22:30:06.595118+00:00",
+  "pid": 54338
+}
