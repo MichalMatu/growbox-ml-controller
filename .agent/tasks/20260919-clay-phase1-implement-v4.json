@@ -1,0 +1,21 @@
+{
+  "id": "20260919-clay-phase1-implement-v4",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "agent/clay-ui-phase1",
+  "allow_write": true,
+  "resources": [],
+  "command_timeout": 1800,
+  "idle_timeout": 300,
+  "task_timeout": 7200,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch origin main agent/clay-ui-phase1 agent/nvs-persistence-hardening && git checkout -B agent/clay-ui-phase1 origin/agent/clay-ui-phase1 && git reset --hard origin/agent/clay-ui-phase1 && git clean -fd && test \"$(git rev-parse HEAD)\" = \"0b605d4c9f3f17f99b799a5248e5b4cfb3d740f6\" && test \"$(git rev-parse origin/main)\" = \"0b605d4c9f3f17f99b799a5248e5b4cfb3d740f6\" && test -z \"$(git status --porcelain)\" && echo BASELINE_CLEAN",
+    "checkpoint=/Users/michal/agent-workspace/repos/growbox-ml-controller/checkpoints/20260919-clay-phase1-implement-v3/1789808871706685000-task-exit; test -f \"$checkpoint/tracked.patch\" && git apply \"$checkpoint/tracked.patch\" && tmp=$(mktemp -d) && git -C \"$tmp\" init -q && git -C \"$tmp\" remote add origin https://github.com/MichalMatu/esp32s3_LiteGraph.git && git -C \"$tmp\" fetch -q --depth=1 origin 5b8c758c365547ddeaab65bbe9f849bdd071695d && git -C \"$tmp\" show FETCH_HEAD:lib/thirdparty/clay/include/clay/clay.h > lib/growbox_clay_ui/third_party/clay/include/clay/clay.h && rm -rf \"$tmp\" && test \"$(git hash-object lib/growbox_clay_ui/third_party/clay/include/clay/clay.h)\" = \"58006d208f7e58d646578b42524068f44445a4dc\" && echo CHECKPOINT_AND_EXACT_PIN_READY",
+    "perl -0pi -e 's/default_install_hook_types: \\[pre-commit, pre-push\\]\\n/default_install_hook_types: [pre-commit, pre-push]\\nexclude: ^lib\\/growbox_clay_ui\\/third_party\\/clay\\/include\\/clay\\/clay\\.h$\\n/' .pre-commit-config.yaml && grep -q '^exclude: ^lib/growbox_clay_ui/third_party/clay/include/clay/clay\\.h$$' .pre-commit-config.yaml && grep -v 'third_party/clay/include' lib/growbox_clay_ui/CMakeLists.txt > lib/growbox_clay_ui/CMakeLists.txt.tmp && mv lib/growbox_clay_ui/CMakeLists.txt.tmp lib/growbox_clay_ui/CMakeLists.txt && printf '%s\\n' '' 'target_include_directories(growbox_clay_ui SYSTEM PRIVATE \"${CMAKE_CURRENT_LIST_DIR}/third_party/clay/include\")' 'target_include_directories(growbox_clay_ui_tests SYSTEM PRIVATE \"${CMAKE_CURRENT_LIST_DIR}/third_party/clay/include\")' >> lib/growbox_clay_ui/CMakeLists.txt && grep -q 'growbox_clay_ui SYSTEM PRIVATE' lib/growbox_clay_ui/CMakeLists.txt && grep -q 'growbox_clay_ui_tests SYSTEM PRIVATE' lib/growbox_clay_ui/CMakeLists.txt && echo IMMUTABLE_PIN_AND_SYSTEM_INCLUDE_CONFIGURED",
+    "git add -N .pre-commit-config.yaml scripts/test_display_host.sh lib/growbox_clay_ui && set +e; pre-commit run --all-files; first_rc=$?; set -e; echo PRECOMMIT_FIRST_RC=$first_rc; test \"$first_rc\" -eq 0 -o \"$first_rc\" -eq 1; pre-commit run --all-files && git diff --check && test \"$(git hash-object lib/growbox_clay_ui/third_party/clay/include/clay/clay.h)\" = \"58006d208f7e58d646578b42524068f44445a4dc\" && echo PRECOMMIT_PIN_PRESERVED_PASS",
+    "rm -rf build/host-clay-ui && cmake -S lib/growbox_clay_ui -B build/host-clay-ui && cmake --build build/host-clay-ui --parallel 2 && ctest --test-dir build/host-clay-ui --output-on-failure && ./build/host-clay-ui/growbox_clay_sim --self-check && ./build/host-clay-ui/growbox_clay_sim --pbm build/host-clay-ui/phase1.pbm && python3 -c \"from pathlib import Path; d=Path('build/host-clay-ui/phase1.pbm').read_bytes(); h=b'P4\\n296 128\\n'; assert d.startswith(h); assert len(d)==len(h)+4736; print('PBM_296X128_4736_PASS')\" && echo CLAY_STANDALONE_PASS",
+    "bash scripts/test_display_host.sh && make build && echo DISPLAY_AND_FIRMWARE_GATES_PASS",
+    "test -z \"$(git diff --name-only -- src)\" && echo NO_FIRMWARE_SRC_CHANGE; test \"$(git hash-object lib/growbox_clay_ui/third_party/clay/include/clay/clay.h)\" = \"58006d208f7e58d646578b42524068f44445a4dc\" && echo CLAY_PIN_PASS; if grep -R 'Clay_' lib/growbox_clay_ui/include; then exit 3; else echo PUBLIC_API_NO_CLAY_TYPES_PASS; fi; git diff --check && git status --short && git diff --stat && echo PHASE1_WORKTREE_READY"
+  ]
+}
