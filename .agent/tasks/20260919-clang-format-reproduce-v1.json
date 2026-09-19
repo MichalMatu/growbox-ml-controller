@@ -1,0 +1,20 @@
+{
+  "id": "20260919-clang-format-reproduce-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "agent/nvs-persistence-hardening",
+  "allow_write": true,
+  "resources": [],
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch origin main agent/nvs-persistence-hardening && git checkout -B agent/nvs-persistence-hardening origin/agent/nvs-persistence-hardening && test \"$(git rev-parse HEAD)\" = \"fa261b2909eafb8c49cfcdad4efd21a1ce7b1755\" && test -z \"$(git status --porcelain)\" && echo BASELINE_OK",
+    "set +e; pre-commit run clang-format --all-files; rc=$?; set -e; echo CLANG_FORMAT_FIRST_RC=$rc; git status --short; git diff --stat; git diff --color=never",
+    "python3 - <<'PY'\nimport pathlib, re, subprocess, sys\nfiles = subprocess.check_output(['git','diff','--name-only','--diff-filter=AM'], text=True).splitlines()\nif not files:\n    print('NO_FORMAT_DIFF')\n    sys.exit(2)\nfor name in files:\n    p = pathlib.Path(name)\n    before = subprocess.check_output(['git','show',f'HEAD:{name}'])\n    after = p.read_bytes()\n    strip = lambda b: re.sub(rb'\\s+', b'', b)\n    if strip(before) != strip(after):\n        print(f'NON_WHITESPACE_CHANGE {name}')\n        sys.exit(3)\nprint('FORMAT_ONLY_NONWHITESPACE_IDENTITY_PASS')\nprint('CHANGED_FILES=' + ','.join(files))\nPY",
+    "pre-commit run clang-format --all-files && echo CLANG_FORMAT_SECOND_PASS",
+    "git diff --check && echo DIFF_CHECK_PASS",
+    "git checkout -- . && test -z \"$(git status --porcelain)\" && echo RESTORED_CLEAN"
+  ]
+}
