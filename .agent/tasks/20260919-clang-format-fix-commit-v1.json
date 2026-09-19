@@ -1,0 +1,20 @@
+{
+  "id": "20260919-clang-format-fix-commit-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "agent/nvs-persistence-hardening",
+  "allow_write": true,
+  "resources": [],
+  "command_timeout": 1200,
+  "idle_timeout": 300,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch origin main agent/nvs-persistence-hardening && git checkout -B agent/nvs-persistence-hardening origin/agent/nvs-persistence-hardening && test \"$(git rev-parse HEAD)\" = \"fa261b2909eafb8c49cfcdad4efd21a1ce7b1755\" && test -z \"$(git status --porcelain)\" && echo BASELINE_OK",
+    "set +e; pre-commit run clang-format --all-files; rc=$?; set -e; test \"$rc\" = 1; test \"$(git diff --name-only | sort)\" = \"$(printf '%s\\n' src/climate/display/CrowPanelDisplayService.cpp src/climate/runtime/core/RuntimeCycleState.cpp | sort)\"; git diff --stat; git diff --color=never; echo EXPECTED_FORMAT_DIFF",
+    "python3 - <<'PY'\nimport pathlib, re, subprocess, sys\nfiles = subprocess.check_output(['git','diff','--name-only','--diff-filter=AM'], text=True).splitlines()\nfor name in files:\n    before = subprocess.check_output(['git','show',f'HEAD:{name}'])\n    after = pathlib.Path(name).read_bytes()\n    if re.sub(rb'\\s+', b'', before) != re.sub(rb'\\s+', b'', after):\n        print(f'NON_WHITESPACE_CHANGE {name}')\n        sys.exit(3)\nprint('FORMAT_ONLY_NONWHITESPACE_IDENTITY_PASS')\nPY",
+    "pre-commit run --all-files && git diff --check && echo FULL_PRECOMMIT_PASS",
+    "git add src/climate/display/CrowPanelDisplayService.cpp src/climate/runtime/core/RuntimeCycleState.cpp && git commit -m 'Apply clang-format to hardening changes' && git push origin HEAD:agent/nvs-persistence-hardening && echo FORMAT_COMMIT=$(git rev-parse HEAD)",
+    "test -z \"$(git status --porcelain)\" && echo FINAL_CLEAN"
+  ]
+}
