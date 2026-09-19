@@ -1,0 +1,9 @@
+{
+  "event": "invalid_task_rejected",
+  "status": "failed",
+  "failure_reason": "invalid_task_file",
+  "updated_at": "2026-09-19T09:06:31.004029+00:00",
+  "task_id": "20260919-clay-phase1-implement-v2",
+  "daemon_version": "4.18.22",
+  "pid": 23769
+}
