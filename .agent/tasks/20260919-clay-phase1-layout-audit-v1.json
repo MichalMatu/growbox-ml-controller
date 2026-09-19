@@ -1,0 +1,20 @@
+{
+  "id": "20260919-clay-phase1-layout-audit-v1",
+  "agent_binding": "815cf40f-8d2a-4e1f-b7cc-c0f4e37b6cb5",
+  "mode": "commands",
+  "work_branch": "main",
+  "allow_write": false,
+  "resources": [],
+  "command_timeout": 900,
+  "idle_timeout": 300,
+  "task_timeout": 3600,
+  "memory_limit_mb": 4096,
+  "commands": [
+    "git fetch origin main agent/nvs-persistence-hardening && git checkout -B main origin/main && test \"$(git rev-parse HEAD)\" = \"0b605d4c9f3f17f99b799a5248e5b4cfb3d740f6\" && test -z \"$(git status --porcelain)\" && echo BASELINE_OK",
+    "printf '%s\\n' '=== PHASE1 CONTRACT ==='; sed -n '/### Phase 1/,/### Phase 2/p' docs/DISPLAY_UI_PORT.md; printf '%s\\n' '=== VENDOR CONTRACT ==='; cat vendor/litegraph_epd_port/README.md; printf '%s\\n' '=== SOURCE MANIFEST ==='; cat vendor/litegraph_epd_port/SOURCE_MANIFEST.md",
+    "printf '%s\\n' '=== BUILD FILES ==='; find src components lib test tools -name CMakeLists.txt -o -name '*.cmake' 2>/dev/null | sort; printf '%s\\n' '=== DISPLAY HOST SCRIPT ==='; sed -n '1,240p' scripts/test_display_host.sh; printf '%s\\n' '=== MAKE TARGETS ==='; grep -nE 'display|host|build:' Makefile | head -120",
+    "printf '%s\\n' '=== VENDOR LOCKS ==='; find vendor/litegraph_epd_port/source -type f -name '*.lock' -print -exec sh -c 'echo --- $1; cat \"$1\"' _ {} \\;; printf '%s\\n' '=== VENDOR GENERIC FILES ==='; find vendor/litegraph_epd_port/source -maxdepth 8 -type f | sort | sed -n '1,240p'",
+    "printf '%s\\n' '=== CURRENT DISPLAY CMAKE ==='; find test -path '*display*' -name CMakeLists.txt -print -exec sh -c 'echo --- $1; sed -n \"1,220p\" \"$1\"' _ {} \\;; printf '%s\\n' '=== SRC COMPONENT CMAKE ==='; sed -n '1,260p' src/CMakeLists.txt",
+    "test -z \"$(git status --porcelain)\" && echo FINAL_CLEAN"
+  ]
+}
