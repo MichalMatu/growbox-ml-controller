@@ -1,0 +1,14 @@
+{
+  "event": "task_started",
+  "task_id": "20260919-clay-phase1-implement-v6",
+  "task_digest": "9121f2378dbc61fdc5699b4cae70ddeb1bd4493cce93b39d9e34b1a2bed6f0dc",
+  "idle_timeout": 300,
+  "task_timeout": 7200,
+  "memory_limit_mb": 4096,
+  "started_at": "2026-09-19T09:12:15.710784+00:00",
+  "attempt_id": "1a7438f391346cddb8016527",
+  "daemon_version": "4.18.22",
+  "daemon_pid": 29752,
+  "updated_at": "2026-09-19T09:12:15.710860+00:00",
+  "pid": 29752
+}
